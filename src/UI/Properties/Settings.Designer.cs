@@ -74,12 +74,28 @@ namespace WindowsFormsApp2.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool log_everything {
-            get {
+        public bool log_everything
+        {
+            get
+            {
                 return ((bool)(this["log_everything"]));
             }
-            set {
+            set
+            {
                 this["log_everything"] = value;
+            }
+        }
+
+         [global::System.Configuration.UserScopedSettingAttribute()]
+         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+         [global::System.Configuration.DefaultSettingValueAttribute("100")]
+         public int file_access_delay {
+            get {
+                return ((int)(this["file_access_delay"]));
+            }
+            set
+            {
+                this["file_access_delay"] = value;
             }
         }
     }

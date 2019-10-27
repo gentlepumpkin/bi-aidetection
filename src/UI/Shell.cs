@@ -42,7 +42,7 @@ namespace WindowsFormsApp2
         public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
         public int errors = 0; //error counter
         public bool detection_running = false; //is detection running right now or not
-
+        public int file_access_delay = Properties.Settings.Default.file_access_delay; //delay before accessing new file in ms
         List<Camera> CameraList = new List<Camera>(); //list containing all cameras
 
         static HttpClient client = new HttpClient();
@@ -167,6 +167,7 @@ namespace WindowsFormsApp2
             tb_telegram_chatid.Text = telegram_chatid;
             tb_telegram_token.Text = telegram_token;
             cb_log.Checked = log_everything;
+            tb_file_access_delay.Text = file_access_delay.ToString();
 
 
             //---------------------------------------------------------------------------
@@ -1517,7 +1518,7 @@ namespace WindowsFormsApp2
         //EVENT: new image added to input_path -> START AI DETECTION
         async void OnCreatedAsync(object source, FileSystemEventArgs e)
         {
-            System.Threading.Thread.Sleep(100); //shorty wait to ensure that the whole image is saved correctly
+            System.Threading.Thread.Sleep(file_access_delay); //shorty wait to ensure that the whole image is saved correctly
 
             while (detection_running == true) { } //wait until other detection process is finished
             detection_running = true; //set marker variable to show that a new detection process is running
@@ -2107,6 +2108,7 @@ namespace WindowsFormsApp2
             Properties.Settings.Default.telegram_chatid = tb_telegram_chatid.Text;
             Properties.Settings.Default.telegram_token = tb_telegram_token.Text;
             Properties.Settings.Default.log_everything = cb_log.Checked;
+            Properties.Settings.Default.file_access_delay = int.Parse(tb_file_access_delay.Text);
             Properties.Settings.Default.Save();
 
             //update variables
@@ -2115,6 +2117,7 @@ namespace WindowsFormsApp2
             telegram_chatid = Properties.Settings.Default.telegram_chatid;
             telegram_token = Properties.Settings.Default.telegram_token;
             log_everything = Properties.Settings.Default.log_everything;
+            file_access_delay = Properties.Settings.Default.file_access_delay;
 
             //update fswatcher to watch new input folder
             UpdateFSWatcher();
