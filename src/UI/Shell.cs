@@ -37,7 +37,7 @@ namespace WindowsFormsApp2
         public string input_path = Properties.Settings.Default.input_path; //image input path
         public static string deepstack_url = Properties.Settings.Default.deepstack_url; //deepstack url
         public static bool log_everything = Properties.Settings.Default.log_everything; //save every action sent to Log() into the log file?
-
+        public static bool send_errors = Properties.Settings.Default.send_errors; //send error messages to Telegram?
         public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
         public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
         public int errors = 0; //error counter
@@ -168,7 +168,7 @@ namespace WindowsFormsApp2
             tb_telegram_token.Text = telegram_token;
             cb_log.Checked = log_everything;
             tb_file_access_delay.Text = file_access_delay.ToString();
-
+            cb_send_errors.Checked = send_errors;
 
             //---------------------------------------------------------------------------
             //STATS TAB
@@ -720,7 +720,7 @@ namespace WindowsFormsApp2
                 Invoke(LabelUpdate);
             }
 
-            if(text.Contains("ERROR") || text.Contains("WARNING"))
+            if(send_errors == true && text.Contains("ERROR") || text.Contains("WARNING"))
             {
                 //upload text to Telegram
                 try
@@ -2109,6 +2109,7 @@ namespace WindowsFormsApp2
             Properties.Settings.Default.telegram_token = tb_telegram_token.Text;
             Properties.Settings.Default.log_everything = cb_log.Checked;
             Properties.Settings.Default.file_access_delay = int.Parse(tb_file_access_delay.Text);
+            Properties.Settings.Default.send_errors = cb_send_errors.Checked;
             Properties.Settings.Default.Save();
 
             //update variables
@@ -2118,6 +2119,7 @@ namespace WindowsFormsApp2
             telegram_token = Properties.Settings.Default.telegram_token;
             log_everything = Properties.Settings.Default.log_everything;
             file_access_delay = Properties.Settings.Default.file_access_delay;
+            send_errors = Properties.Settings.Default.send_errors;
 
             //update fswatcher to watch new input folder
             UpdateFSWatcher();
