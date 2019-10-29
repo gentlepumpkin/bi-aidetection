@@ -139,7 +139,6 @@ namespace WindowsFormsApp2
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
-            this.label4 = new System.Windows.Forms.Label();
             this.lbl_deepstackurl = new System.Windows.Forms.Label();
             this.lbl_input = new System.Windows.Forms.Label();
             this.tbDeepstackUrl = new System.Windows.Forms.TextBox();
@@ -150,13 +149,13 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel18 = new System.Windows.Forms.TableLayoutPanel();
             this.tbInput = new System.Windows.Forms.TextBox();
             this.btn_input_path = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
-            this.tb_file_access_delay = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel25 = new System.Windows.Forms.TableLayoutPanel();
             this.label12 = new System.Windows.Forms.Label();
             this.cb_log = new System.Windows.Forms.CheckBox();
             this.cb_send_errors = new System.Windows.Forms.CheckBox();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
+            this.tableLayoutPanel25 = new System.Windows.Forms.TableLayoutPanel();
+            this.btn_open_log = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel21.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -542,7 +541,7 @@ namespace WindowsFormsApp2
             this.lbl_version.Name = "lbl_version";
             this.lbl_version.Size = new System.Drawing.Size(932, 23);
             this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.64";
+            this.lbl_version.Text = "Version 1.65";
             this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // lbl_errors
@@ -1568,6 +1567,9 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 85F));
             this.tableLayoutPanel5.Controls.Add(this.label4, 0, 4);
+            this.tableLayoutPanel5.Controls.Add(this.tableLayoutPanel25, 1, 4);
+            this.tableLayoutPanel5.Controls.Add(this.label12, 0, 5);
+            this.tableLayoutPanel5.Controls.Add(this.cb_send_errors, 1, 5);
             this.tableLayoutPanel5.Controls.Add(this.lbl_deepstackurl, 0, 1);
             this.tableLayoutPanel5.Controls.Add(this.lbl_input, 0, 0);
             this.tableLayoutPanel5.Controls.Add(this.tbDeepstackUrl, 1, 1);
@@ -1576,9 +1578,6 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel5.Controls.Add(this.tb_telegram_token, 1, 2);
             this.tableLayoutPanel5.Controls.Add(this.tb_telegram_chatid, 1, 3);
             this.tableLayoutPanel5.Controls.Add(this.tableLayoutPanel18, 1, 0);
-            this.tableLayoutPanel5.Controls.Add(this.label11, 0, 5);
-            this.tableLayoutPanel5.Controls.Add(this.tb_file_access_delay, 1, 5);
-            this.tableLayoutPanel5.Controls.Add(this.tableLayoutPanel25, 1, 4);
             this.tableLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel5.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
@@ -1591,17 +1590,6 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
             this.tableLayoutPanel5.Size = new System.Drawing.Size(940, 367);
             this.tableLayoutPanel5.TabIndex = 3;
-            // 
-            // label4
-            // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(4, 262);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(30, 17);
-            this.label4.TabIndex = 16;
-            this.label4.Text = "Log";
             // 
             // lbl_deepstackurl
             // 
@@ -1710,55 +1698,12 @@ namespace WindowsFormsApp2
             this.btn_input_path.UseVisualStyleBackColor = true;
             this.btn_input_path.Click += new System.EventHandler(this.btn_input_path_Click);
             // 
-            // label11
-            // 
-            this.label11.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.label11.Location = new System.Drawing.Point(4, 325);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(106, 17);
-            this.label11.TabIndex = 13;
-            this.label11.Text = "File Access Delay";
-            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // tb_file_access_delay
-            // 
-            this.tb_file_access_delay.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.tb_file_access_delay.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.tb_file_access_delay.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.tb_file_access_delay.Location = new System.Drawing.Point(145, 321);
-            this.tb_file_access_delay.Name = "tb_file_access_delay";
-            this.tb_file_access_delay.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.tb_file_access_delay.Size = new System.Drawing.Size(106, 25);
-            this.tb_file_access_delay.TabIndex = 14;
-            // 
-            // tableLayoutPanel25
-            // 
-            this.tableLayoutPanel25.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel25.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
-            this.tableLayoutPanel25.ColumnCount = 3;
-            this.tableLayoutPanel25.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70.92511F));
-            this.tableLayoutPanel25.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 29.07489F));
-            this.tableLayoutPanel25.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 337F));
-            this.tableLayoutPanel25.Controls.Add(this.label12, 1, 0);
-            this.tableLayoutPanel25.Controls.Add(this.cb_log, 0, 0);
-            this.tableLayoutPanel25.Controls.Add(this.cb_send_errors, 2, 0);
-            this.tableLayoutPanel25.Location = new System.Drawing.Point(145, 244);
-            this.tableLayoutPanel25.Name = "tableLayoutPanel25";
-            this.tableLayoutPanel25.RowCount = 1;
-            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel25.Size = new System.Drawing.Size(791, 53);
-            this.tableLayoutPanel25.TabIndex = 15;
-            // 
             // label12
             // 
             this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(324, 18);
+            this.label12.Location = new System.Drawing.Point(4, 325);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(77, 17);
             this.label12.TabIndex = 13;
@@ -1769,9 +1714,9 @@ namespace WindowsFormsApp2
             this.cb_log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cb_log.Location = new System.Drawing.Point(4, 4);
+            this.cb_log.Location = new System.Drawing.Point(3, 3);
             this.cb_log.Name = "cb_log";
-            this.cb_log.Size = new System.Drawing.Size(313, 45);
+            this.cb_log.Size = new System.Drawing.Size(705, 47);
             this.cb_log.TabIndex = 11;
             this.cb_log.Text = "Log everything";
             this.cb_log.UseVisualStyleBackColor = true;
@@ -1781,11 +1726,11 @@ namespace WindowsFormsApp2
             this.cb_send_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cb_send_errors.Location = new System.Drawing.Point(455, 4);
+            this.cb_send_errors.Location = new System.Drawing.Point(145, 304);
             this.cb_send_errors.Name = "cb_send_errors";
-            this.cb_send_errors.Size = new System.Drawing.Size(332, 45);
+            this.cb_send_errors.Size = new System.Drawing.Size(791, 59);
             this.cb_send_errors.TabIndex = 12;
-            this.cb_send_errors.Text = "Send Errors to Telegram";
+            this.cb_send_errors.Text = "Send Errors and Warnings to Telegram";
             this.cb_send_errors.UseVisualStyleBackColor = true;
             // 
             // BtnSettingsSave
@@ -1799,6 +1744,44 @@ namespace WindowsFormsApp2
             this.BtnSettingsSave.Text = "Save";
             this.BtnSettingsSave.UseVisualStyleBackColor = true;
             this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
+            // 
+            // tableLayoutPanel25
+            // 
+            this.tableLayoutPanel25.ColumnCount = 2;
+            this.tableLayoutPanel25.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 90F));
+            this.tableLayoutPanel25.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.tableLayoutPanel25.Controls.Add(this.btn_open_log, 1, 0);
+            this.tableLayoutPanel25.Controls.Add(this.cb_log, 0, 0);
+            this.tableLayoutPanel25.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel25.Location = new System.Drawing.Point(145, 244);
+            this.tableLayoutPanel25.Name = "tableLayoutPanel25";
+            this.tableLayoutPanel25.RowCount = 1;
+            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 53F));
+            this.tableLayoutPanel25.Size = new System.Drawing.Size(791, 53);
+            this.tableLayoutPanel25.TabIndex = 14;
+            // 
+            // btn_open_log
+            // 
+            this.btn_open_log.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btn_open_log.Location = new System.Drawing.Point(714, 15);
+            this.btn_open_log.Name = "btn_open_log";
+            this.btn_open_log.Size = new System.Drawing.Size(74, 23);
+            this.btn_open_log.TabIndex = 2;
+            this.btn_open_log.Text = "Open Log";
+            this.btn_open_log.UseVisualStyleBackColor = true;
+            this.btn_open_log.Click += new System.EventHandler(this.btn_open_log_Click);
+            // 
+            // label4
+            // 
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(4, 262);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(30, 17);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Log";
             // 
             // Shell
             // 
@@ -1868,7 +1851,6 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel18.ResumeLayout(false);
             this.tableLayoutPanel18.PerformLayout();
             this.tableLayoutPanel25.ResumeLayout(false);
-            this.tableLayoutPanel25.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1980,12 +1962,11 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.TextBox tb_threshold_lower;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox tb_file_access_delay;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel25;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.CheckBox cb_send_errors;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel25;
+        private System.Windows.Forms.Button btn_open_log;
     }
 }
 
