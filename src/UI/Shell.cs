@@ -451,15 +451,22 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
                     break; //end retries if code was successful
                 }
-                catch (System.IO.IOException ex)
+                catch (System.IO.IOException ex) //exception if the image could not be loaded (because the image file is in use)
                 {
                     Log($"{ex.Message.ToString()} (code: {ex.HResult} )");
                     //this was a file exception error - retry file access
                     Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
                 }
-                catch
+                catch //all other exceptions
                 {
-                    Log($"ERROR: Processing the image {image_path} failed. {error}");
+                    Log($"ERROR: Processing the following image {image_path} failed. {error}");
+
+                    //upload the alert image which could not be analyzed to Telegram
+                    if (send_errors == true)
+                    {
+                        await TelegramUpload(image_path);
+                    }
+                
                     break; //end retries - this was not a file access error
                 }
                 
@@ -491,8 +498,9 @@ namespace WindowsFormsApp2
                     Log($"trigger url: {x}");
                     var content = client.DownloadString(x);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Log(ex.Message);
                     Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
                 }
                 
@@ -543,7 +551,7 @@ namespace WindowsFormsApp2
             }
         }
 
-        //send image to Telegram
+        //send text to Telegram
         public async Task TelegramText(string text)
         {
             if (telegram_chatid != "" && telegram_token != "")
