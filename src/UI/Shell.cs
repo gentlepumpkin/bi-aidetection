@@ -436,13 +436,13 @@ namespace WindowsFormsApp2
                     {
                         if (list2.SelectedItems.Count > 0)
                         {
-                        //load only stats from Camera.cs object
+                            //load only stats from Camera.cs object
 
-                        //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                        int i = CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
+                            //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                            int i = CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
 
-                        //load cameras stats
-                        string stats = $"Alerts: {CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {CameraList[i].stats_false_alerts.ToString()}";
+                            //load cameras stats
+                            string stats = $"Alerts: {CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {CameraList[i].stats_false_alerts.ToString()}";
                             lbl_camstats.Text = stats;
                         }
 
@@ -451,18 +451,16 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
                     break; //end retries if code was successful
                 }
-                catch (Exception ex)
+                catch (System.IO.IOException ex)
                 {
-                    if (ex.Message.Contains("being used by another process"))
-                    {
-                        //this was a file exception error - retry file access
-                        Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
-                    }
-                    else
-                    {
-                        Log($"ERROR: Processing the image {image_path} failed. {error}");
-                        break; //end retries - this was not a file access error
-                    }
+                    Log($"{ex.Message.ToString()} (code: {ex.HResult} )");
+                    //this was a file exception error - retry file access
+                    Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
+                }
+                catch
+                {
+                    Log($"ERROR: Processing the image {image_path} failed. {error}");
+                    break; //end retries - this was not a file access error
                 }
                 
                 System.Threading.Thread.Sleep(retry_delay * attempts);
@@ -490,12 +488,12 @@ namespace WindowsFormsApp2
             {
                 try
                 {
-                    Log($"trigger url: {x.ToString()}");
+                    Log($"trigger url: {x}");
                     var content = client.DownloadString(x);
                 }
                 catch
                 {
-                    Log("ERROR: Could not trigger URL 'x', please check if 'x' is correct and reachable.");
+                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
                 }
                 
             }
@@ -576,7 +574,6 @@ namespace WindowsFormsApp2
                     if (CameraList[index].trigger_urls.Length > 0)
                     {
                         CallTriggerURLs(CameraList[index].trigger_urls);
-                        Log("-> Trigger URLs called.");
                     }
 
                     //upload to telegram
