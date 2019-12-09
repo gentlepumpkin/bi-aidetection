@@ -198,7 +198,7 @@ namespace WindowsFormsApp2
             {
                 try
                 {
-
+                    error = "loading image failed";
                     using (var image_data = System.IO.File.OpenRead(image_path))
                     {
                         Log("(1/6) uploading image to DeepQuestAI Server ...");
@@ -451,25 +451,33 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
                     break; //end retries if code was successful
                 }
-                catch (System.IO.IOException ex) //exception if the image could not be loaded (because the image file is in use)
+                catch (Exception ex) 
                 {
-                    Log($"{ex.Message.ToString()} (code: {ex.HResult} )");
-                    //this was a file exception error - retry file access
-                    Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
-                }
-                catch //all other exceptions
-                {
-                    Log($"ERROR: Processing the following image {image_path} failed. {error}");
+                    Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
 
-                    //upload the alert image which could not be analyzed to Telegram
-                    if (send_errors == true)
+                    if (error == "loading image failed") //this was a file exception error - retry file access
                     {
-                        await TelegramUpload(image_path);
+                        if (attempts != 9) //failure at attempt 1-8
+                        {
+                            Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
+                        }
+                        else //last attempt failed
+                        {
+                            Log($"ERROR: Could not access image '{image_path}'.");
+                        }
                     }
-                
-                    break; //end retries - this was not a file access error
+                    else //all other exceptions
+                    {
+                        Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                        //upload the alert image which could not be analyzed to Telegram
+                        if (send_errors == true)
+                        {
+                            await TelegramUpload(image_path);
+                        }
+                        break; //end retries - this was not a file access error
+                    }
+                    
                 }
-                
                 System.Threading.Thread.Sleep(retry_delay * attempts);
                 Log($"Retrying image processing - retry  {attempts}");
             }
