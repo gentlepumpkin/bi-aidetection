@@ -151,7 +151,8 @@ namespace WindowsFormsApp2
             }
 
 
-
+            //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
+            CleanCSVList();
 
             //load entries from history.csv into history ListView
             //LoadFromCSV(); not neccessary because comboBox_filter_camera.SelectedIndex already calls LoadFromCSV()
@@ -912,7 +913,7 @@ namespace WindowsFormsApp2
             }
             else if(tabControl1.SelectedIndex == 2)
             {
-                CleanCSVList();
+                //CleanCSVList(); //removed to load the history list faster
             }
         }
 
@@ -1490,7 +1491,7 @@ namespace WindowsFormsApp2
                 Log("Loading history list from cameras/history.csv ...");
 
                 //delete obsolete entries from history.csv
-                CleanCSVList();
+                //CleanCSVList(); //removed to load the history list faster
 
                 List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
@@ -1509,17 +1510,18 @@ namespace WindowsFormsApp2
                     //load all List elements into the ListView for each row
                     foreach (var val in result)
                     {
-                        string filename = val.Split('|')[0];
-                        string date = val.Split('|')[1];
                         string camera = val.Split('|')[2];
+                        string success = val.Split('|')[5];
+                        if (!checkListFilters(camera, success)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
+                        string filename = val.Split('|')[0];
+                        string date = val.Split('|')[1];                       
                         string objects_and_confidence = val.Split('|')[3];
                         string object_positions = val.Split('|')[4];
-                        string success = val.Split('|')[5];
+                        
+
 
                         
 
-                        if (!checkListFilters(camera, success)) { continue; } //do not load the entry if a filter applies
-                        
                         ListViewItem item;
                         if (success == "true")
                         {
@@ -1529,7 +1531,7 @@ namespace WindowsFormsApp2
                         {
                             item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
                         }
-                        
+
                         list1.Items.Insert(0, item);
                     }
 
