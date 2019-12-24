@@ -39,6 +39,7 @@ namespace WindowsFormsApp2
         public static bool log_everything = Properties.Settings.Default.log_everything; //save every action sent to Log() into the log file?
         public static bool send_errors = Properties.Settings.Default.send_errors; //send error messages to Telegram?
         public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
+        public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
         public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
         public int errors = 0; //error counter
         public bool detection_running = false; //is detection running right now or not
@@ -202,16 +203,15 @@ namespace WindowsFormsApp2
                     error = "loading image failed";
                     using (var image_data = System.IO.File.OpenRead(image_path))
                     {
-                        Log("(1/6) uploading image to DeepQuestAI Server ...");
+                        Log("(1/6) Uploading image to DeepQuestAI Server");
                         error = $"Can't reach DeepQuestAI Server at {deepstack_url}.";
                         request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
                         var output = await client.PostAsync("http://" + deepstack_url + "/v1/vision/detection", request);
-                        Log("(2/6) Waiting for results ...");
+                        Log("(2/6) Waiting for results");
                         var jsonString = await output.Content.ReadAsStringAsync();
-                        Log("(3a/6) Deserializing results ...");
                         Response response = JsonConvert.DeserializeObject<Response>(jsonString);
 
-                        Log("(3b/6) Processing results:");
+                        Log("(3/6) Processing results:");
                         error = $"Failure in AI Tool processing the image.";
 
                         //print every detected object with the according confidence-level
@@ -222,7 +222,6 @@ namespace WindowsFormsApp2
                             outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
                         }
                         Log(outputtext);
-                        Log(" -All objects read.");
 
                         if (response.success == true)
                         {
@@ -234,16 +233,16 @@ namespace WindowsFormsApp2
                             //if there is no camera with the same prefix
                             if (index == -1)
                             {
-                                Log("(4a/6) No camera with the same prefix found...");
+                                Log("   No camera with the same prefix found...");
                                 //check if there is a default camera which accepts any prefix, select it
                                 if (CameraList.Exists(x => x.prefix == ""))
                                 {
                                     index = CameraList.FindIndex(x => x.prefix == "");
-                                    Log("(4b/6) Found a default camera.");
+                                    Log("(   Found a default camera.");
                                 }
                                 else
                                 {
-                                    Log("(4b/6) WARNING: No default camera found. Aborting.");
+                                    Log("WARNING: No default camera found. Aborting.");
                                 }
                             }
 
@@ -274,11 +273,11 @@ namespace WindowsFormsApp2
                                         int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
                                         int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
 
-                                        Log("(5/6) Objects found, checking if one of the Relevant objects and if within confidence limits...");
+                                        Log("(4/6) Checking if detected object is relevant and within confidence limits:");
                                         //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
                                         foreach (var user in response.predictions)
                                         {
-                                            Log($" {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+                                            Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
 
                                             using (var img = new Bitmap(image_path))
                                             {
@@ -292,7 +291,6 @@ namespace WindowsFormsApp2
                                                     //if confidence limits are satisfied
                                                     if (user.confidence * 100 >= CameraList[index].threshold_lower && user.confidence * 100 <= CameraList[index].threshold_upper)
                                                     {
-                                                        Log($"man kennt ihn {user.confidence * 100}<= {CameraList[index].threshold_upper.ToString()}");
                                                         // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                                         //only if the object is outside of the masked area
@@ -304,7 +302,7 @@ namespace WindowsFormsApp2
                                                             objects_confidence.Add(user.confidence);
                                                             string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                             objects_position.Add(position);
-                                                            Log($" { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                            Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
                                                         }
                                                         else //if the object is in a masked area
                                                         {
@@ -330,7 +328,7 @@ namespace WindowsFormsApp2
                                                     irrelevant_objects_confidence.Add(user.confidence);
                                                     string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                     irrelevant_objects_position.Add(position);
-                                                    Log($" { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                    Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
                                                 }
                                             }
 
@@ -340,7 +338,7 @@ namespace WindowsFormsApp2
                                         if (objects.Count() > 0)
                                         {
                                             //RELEVANT ALERT
-
+                                            Log("(5/6) Performing alert actions:");
                                             await Trigger(index, image_path); //make TRIGGER
                                             CameraList[index].IncrementAlerts(); //stats update
                                             Log($"(6/6) SUCCESS.");
@@ -504,7 +502,7 @@ namespace WindowsFormsApp2
             {
                 try
                 {
-                    Log($"trigger url: {x}");
+                    Log($"   trigger url: {x}");
                     var content = client.DownloadString(x);
                 }
                 catch(Exception ex)
@@ -517,11 +515,11 @@ namespace WindowsFormsApp2
 
             if (trigger_urls.Length > 1)
             {
-                Log($"           -> {trigger_urls.Length} trigger URLs called.");
+                Log($"   -> {trigger_urls.Length} trigger URLs called.");
             }
             else
             {
-                Log("           -> Trigger URL called.");
+                Log("   -> Trigger URL called.");
             }
         }
 
@@ -535,9 +533,19 @@ namespace WindowsFormsApp2
                 {
                     using (var image_telegram = System.IO.File.OpenRead(image_path))
                     {
-                        var botClient = new TelegramBotClient(telegram_token);
-                        InputOnlineFile inputOnlineFile = new InputOnlineFile(image_telegram, "image.jpg");
-                        await botClient.SendPhotoAsync(telegram_chatid, inputOnlineFile);
+                        var bot = new TelegramBotClient(telegram_token);
+
+                        //upload image to Telegram servers and send to first chat
+                        Log($"      uploading image to chat \"{telegram_chatids[0]}\"");
+                        var message = await bot.SendPhotoAsync(telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"));
+                        string file_id = message.Photo[0].FileId; //get file_id of uploaded image
+
+                        //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
+                        foreach (string chatid in telegram_chatids.Skip(1))
+                        {
+                            Log($"      uploading image to chat \"{chatid}\"");
+                            await bot.SendPhotoAsync(chatid, file_id);
+                        }     
                     }
                 }
                 catch
@@ -569,11 +577,28 @@ namespace WindowsFormsApp2
                 try
                 {
                     var bot = new Telegram.Bot.TelegramBotClient(telegram_token);
-                    await bot.SendTextMessageAsync(telegram_chatid, text);
+                    foreach (string chatid in telegram_chatids)
+                    {
+                        await bot.SendTextMessageAsync(chatid, text);
+                    }
+
                 }
                 catch
                 {
-                    Log($"ERROR: Could not send text \"{text}\" to Telegram.");
+                    if(send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
+                    {
+                        send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
+                        Log($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        send_errors = true;
+
+                        //inform on main tab that Telegram upload failed
+                        MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't upload error message to Telegram!"; };
+                        Invoke(LabelUpdate);
+                    }
+                    else
+                    {
+                        Log($"ERROR: Could not send text \"{text}\" to Telegram.");
+                    }
                 }
 
             }
@@ -596,14 +621,15 @@ namespace WindowsFormsApp2
                     //upload to telegram
                     if (CameraList[index].telegram_enabled)
                     {
+                        Log("   Uploading image to Telegram...");
                         await TelegramUpload(image_path);
-                        Log("-> Sent image to Telegram.");
+                        Log("   -> Sent image to Telegram.");
                     }
                 }
                 else
                 {
                     //log that nothing was done
-                    Log($"Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                    Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
                 }
 
                 CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
@@ -620,8 +646,8 @@ namespace WindowsFormsApp2
         //check if detected object is outside the mask for the specific camera
         public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
-            Log($"  Checking if object is outside privacy mask of {cameraname}:");
-            Log("     Loading mask file...");
+            Log($"      Checking if object is outside privacy mask of {cameraname}:");
+            Log("         Loading mask file...");
             try
             {
                 if (System.IO.File.Exists("./cameras/" + cameraname + ".png")) //only check if mask image exists
@@ -636,7 +662,7 @@ namespace WindowsFormsApp2
                             return true;
                         }
 
-                        Log("     Checking if the object is in a masked area...");
+                        Log("         Checking if the object is in a masked area...");
 
                         //relative x and y locations of the 9 detection points
                         double[] x_factor = new double[] { 0.25, 0.5, 0.75, 0.25, 0.5, 0.75, 0.25, 0.5, 0.75 };
@@ -661,16 +687,16 @@ namespace WindowsFormsApp2
                             }
                         }
 
-                        Log($"     { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
+                        Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
 
                         if (result > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
                         {
-                            Log("  ->The object is OUTSIDE of masked area(s).");
+                            Log("      ->The object is OUTSIDE of masked area(s).");
                             return true;
                         }
                         else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
                         {
-                            Log("  ->The object is INSIDE a masked area.");
+                            Log("      ->The object is INSIDE a masked area.");
                             return false;
                         }
 
@@ -678,7 +704,7 @@ namespace WindowsFormsApp2
                 }
                 else //if mask image does not exist, object is outside the non-existing masked area
                 {
-                    Log(" ->Camera has no mask, the object is OUTSIDE of the masked area.");
+                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
                     return true;
                 }
                 
@@ -761,17 +787,7 @@ namespace WindowsFormsApp2
 
             if(send_errors == true && text.Contains("ERROR") || text.Contains("WARNING"))
             {
-                //upload text to Telegram
-                try
-                {
-                    var bot = new Telegram.Bot.TelegramBotClient(telegram_token);
-                    await bot.SendTextMessageAsync(telegram_chatid, $"[{time}]: {text}");
-                }
-                catch
-                {
-                    MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't upload error message to Telegram!"; };
-                    Invoke(LabelUpdate);
-                }
+                await TelegramText($"[{time}]: {text}"); //upload text to Telegram
             }
             
           
@@ -2156,6 +2172,7 @@ namespace WindowsFormsApp2
             input_path = Properties.Settings.Default.input_path;
             deepstack_url = Properties.Settings.Default.deepstack_url;
             telegram_chatid = Properties.Settings.Default.telegram_chatid;
+            telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
             telegram_token = Properties.Settings.Default.telegram_token;
             log_everything = Properties.Settings.Default.log_everything;
             send_errors = Properties.Settings.Default.send_errors;
