@@ -1,4 +1,4 @@
-# AI Person Detection for Blue Iris
+# AI Detection for Blue Iris
 Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to Telegram.
 
 ### Install
