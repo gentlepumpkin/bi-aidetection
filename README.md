@@ -12,6 +12,5 @@ Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to T
 ### Install
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
 
-
-
+### Screenshot
 ![Screenshot](https://ipcamtalk.com/attachments/processing1-53-png.44807/)
