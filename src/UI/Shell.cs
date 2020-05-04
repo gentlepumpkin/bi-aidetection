@@ -1399,7 +1399,7 @@ namespace WindowsFormsApp2
             }
             MethodInvoker LabelUpdate = delegate
             {
-                if (checkListFilters(camera, success)) //only show the entry in the history list if no filter applies
+                if (checkListFilters(camera, success, objects_and_confidence)) //only show the entry in the history list if no filter applies
                 {
                     ListViewItem item;
                     if (success == "true")
@@ -1528,10 +1528,10 @@ namespace WindowsFormsApp2
                     {
                         string camera = val.Split('|')[2];
                         string success = val.Split('|')[5];
-                        if (!checkListFilters(camera, success)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
-                        string filename = val.Split('|')[0];
-                        string date = val.Split('|')[1];                       
                         string objects_and_confidence = val.Split('|')[3];
+                        if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
+                        string filename = val.Split('|')[0];
+                        string date = val.Split('|')[1];
                         string object_positions = val.Split('|')[4];
                         
 
@@ -1560,8 +1560,23 @@ namespace WindowsFormsApp2
         }
 
         //check if a filter applies on given string of history list entry 
-        private bool checkListFilters(string cameraname, string success)
+        private bool checkListFilters(string cameraname, string success, string objects_and_confidence)
         {
+            if (!objects_and_confidence.Contains("person") && cb_filter_person.Checked) { return false; }
+            if (!(objects_and_confidence.Contains("car") || 
+                  objects_and_confidence.Contains("boat") || 
+                  objects_and_confidence.Contains("bicycle") ||
+                  objects_and_confidence.Contains("truck") ||
+                  objects_and_confidence.Contains("airplane") ||
+                  objects_and_confidence.Contains("motorcycle") ||
+                  objects_and_confidence.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
+            if (!(objects_and_confidence.Contains("dog") ||
+                  objects_and_confidence.Contains("sheep") ||
+                  objects_and_confidence.Contains("bird") || 
+                  objects_and_confidence.Contains("cow") ||
+                  objects_and_confidence.Contains("cat") || 
+                  objects_and_confidence.Contains("horse") || 
+                  objects_and_confidence.Contains("bear")) && cb_filter_animal.Checked) { return false; }
             if (success != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
             if (success == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
             if (comboBox_filter_camera.Text != "All Cameras" && cameraname != comboBox_filter_camera.Text.Substring(3)) { return false; }
@@ -1677,6 +1692,24 @@ namespace WindowsFormsApp2
 
         //event: filter "only revelant alerts" checked or unchecked
         private void cb_filter_success_CheckedChanged(object sender, EventArgs e)
+        {
+            LoadFromCSV();
+        }
+        
+        //event: filter "only alerts with people" checked or unchecked
+        private void cb_filter_person_CheckedChanged(object sender, EventArgs e)
+        {
+            LoadFromCSV();
+        }
+        
+        //event: filter "only alerts with people" checked or unchecked
+        private void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
+        {
+            LoadFromCSV();
+        }
+        
+        //event: filter "only alerts with animals" checked or unchecked
+        private void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
             LoadFromCSV();
         }
