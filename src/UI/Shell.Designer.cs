@@ -62,6 +62,9 @@ namespace WindowsFormsApp2
             this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
             this.cb_filter_nosuccess = new System.Windows.Forms.CheckBox();
             this.cb_filter_success = new System.Windows.Forms.CheckBox();
+            this.cb_filter_person = new System.Windows.Forms.CheckBox();
+            this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
+            this.cb_filter_animal = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel14 = new System.Windows.Forms.TableLayoutPanel();
@@ -387,6 +390,9 @@ namespace WindowsFormsApp2
             this.panel1.Controls.Add(this.comboBox_filter_camera);
             this.panel1.Controls.Add(this.cb_filter_nosuccess);
             this.panel1.Controls.Add(this.cb_filter_success);
+            this.panel1.Controls.Add(this.cb_filter_person);
+            this.panel1.Controls.Add(this.cb_filter_vehicle);
+            this.panel1.Controls.Add(this.cb_filter_animal);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
@@ -405,6 +411,18 @@ namespace WindowsFormsApp2
             this.comboBox_filter_camera.TabIndex = 2;
             this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
             // 
+            // cb_filter_success
+            // 
+            this.cb_filter_success.AutoSize = true;
+            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_success.Location = new System.Drawing.Point(6, 37);
+            this.cb_filter_success.Name = "cb_filter_success";
+            this.cb_filter_success.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_success.TabIndex = 0;
+            this.cb_filter_success.Text = "only relevant alerts";
+            this.cb_filter_success.UseVisualStyleBackColor = true;
+            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
+            // 
             // cb_filter_nosuccess
             // 
             this.cb_filter_nosuccess.AutoSize = true;
@@ -417,17 +435,41 @@ namespace WindowsFormsApp2
             this.cb_filter_nosuccess.UseVisualStyleBackColor = true;
             this.cb_filter_nosuccess.CheckedChanged += new System.EventHandler(this.cb_filter_nosuccess_CheckedChanged);
             // 
-            // cb_filter_success
+            // cb_filter_person
             // 
-            this.cb_filter_success.AutoSize = true;
-            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_success.Location = new System.Drawing.Point(6, 37);
-            this.cb_filter_success.Name = "cb_filter_success";
-            this.cb_filter_success.Size = new System.Drawing.Size(137, 21);
-            this.cb_filter_success.TabIndex = 0;
-            this.cb_filter_success.Text = "only relevant alerts";
-            this.cb_filter_success.UseVisualStyleBackColor = true;
-            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
+            this.cb_filter_person.AutoSize = true;
+            this.cb_filter_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_person.Location = new System.Drawing.Point(6, 91);
+            this.cb_filter_person.Name = "cb_filter_person";
+            this.cb_filter_person.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_person.TabIndex = 0;
+            this.cb_filter_person.Text = "only alerts with people";
+            this.cb_filter_person.UseVisualStyleBackColor = true;
+            this.cb_filter_person.CheckedChanged += new System.EventHandler(this.cb_filter_person_CheckedChanged);
+            // 
+            // cb_filter_vehicle
+            // 
+            this.cb_filter_vehicle.AutoSize = true;
+            this.cb_filter_vehicle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_vehicle.Location = new System.Drawing.Point(6, 118);
+            this.cb_filter_vehicle.Name = "cb_filter_vehicle";
+            this.cb_filter_vehicle.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_vehicle.TabIndex = 0;
+            this.cb_filter_vehicle.Text = "only alerts with vehicles";
+            this.cb_filter_vehicle.UseVisualStyleBackColor = true;
+            this.cb_filter_vehicle.CheckedChanged += new System.EventHandler(this.cb_filter_vehicle_CheckedChanged);
+            // 
+            // cb_filter_animal
+            // 
+            this.cb_filter_animal.AutoSize = true;
+            this.cb_filter_animal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_animal.Location = new System.Drawing.Point(6, 145);
+            this.cb_filter_animal.Name = "cb_filter_animal";
+            this.cb_filter_animal.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_animal.TabIndex = 0;
+            this.cb_filter_animal.Text = "only alerts with animals";
+            this.cb_filter_animal.UseVisualStyleBackColor = true;
+            this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
             // 
             // tabControl1
             // 
@@ -541,7 +583,7 @@ namespace WindowsFormsApp2
             this.lbl_version.Name = "lbl_version";
             this.lbl_version.Size = new System.Drawing.Size(932, 23);
             this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.65";
+            this.lbl_version.Text = "Version 1.66";
             this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // lbl_errors
@@ -1932,6 +1974,9 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.CheckBox cb_filter_nosuccess;
         private System.Windows.Forms.CheckBox cb_filter_success;
+        private System.Windows.Forms.CheckBox cb_filter_person;
+        private System.Windows.Forms.CheckBox cb_filter_vehicle;
+        private System.Windows.Forms.CheckBox cb_filter_animal;
         private System.Windows.Forms.ComboBox comboBox_filter_camera;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel23;
         private System.Windows.Forms.Label label8;
