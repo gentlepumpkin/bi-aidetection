@@ -52,6 +52,7 @@ namespace WindowsFormsApp2
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel22 = new System.Windows.Forms.TableLayoutPanel();
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
+            this.cb_showOverlayText = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -264,6 +265,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel22.Controls.Add(this.cb_showOverlayText, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.cb_showObjects, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.cb_showMask, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.lbl_objects, 2, 0);
@@ -290,6 +292,23 @@ namespace WindowsFormsApp2
             this.cb_showObjects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cb_showObjects.UseVisualStyleBackColor = true;
             this.cb_showObjects.MouseUp += new System.Windows.Forms.MouseEventHandler(this.cb_showObjects_MouseUp);
+            // 
+            // cb_showOverlayText
+            // 
+            this.cb_showOverlayText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Left)));
+            this.cb_showOverlayText.Appearance = System.Windows.Forms.Appearance.Button;
+            this.cb_showOverlayText.AutoSize = true;
+            this.cb_showOverlayText.Checked = true;
+            this.cb_showOverlayText.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cb_showOverlayText.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_showOverlayText.Location = new System.Drawing.Point(161, 4);
+            this.cb_showOverlayText.Name = "cb_showOverlayText";
+            this.cb_showOverlayText.Size = new System.Drawing.Size(123, 27);
+            this.cb_showOverlayText.TabIndex = 9;
+            this.cb_showOverlayText.Text = "Show Overlay Text";
+            this.cb_showOverlayText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.cb_showOverlayText.UseVisualStyleBackColor = true;
+            this.cb_showOverlayText.MouseUp += new System.Windows.Forms.MouseEventHandler(this.cb_showOverlayText_MouseUp);
             // 
             // cb_showMask
             // 
@@ -1966,6 +1985,7 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel22;
         private System.Windows.Forms.CheckBox cb_showMask;
         private System.Windows.Forms.CheckBox cb_showObjects;
+        private System.Windows.Forms.CheckBox cb_showOverlayText;
         private System.Windows.Forms.Label lbl_objects;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel19;

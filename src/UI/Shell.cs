@@ -1324,31 +1324,39 @@ namespace WindowsFormsApp2
                 if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                 {
                     scale = boxWidth / imgWidth; //get scale factor
-                    absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                    absY = (int) (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
                 }
                 else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
                 {
                     scale = boxHeight / imgHeight; //get scale factor
-                    absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                    absX = (int) (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                 }
 
                 //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                int xmin = (int)(scale * _xmin) + absX;
-                int xmax = (int)(scale * _xmax) + absX;
-                int ymin = (int)(scale * _ymin) + absY;
-                int ymax = (int)(scale * _ymax) + absY;
+                int xmin = (int) (scale * _xmin) + absX;
+                int xmax = (int) (scale * _xmax) + absX;
+                int ymin = (int) (scale * _ymin) + absY;
+                int ymax = (int) (scale * _ymax) + absY;
 
                 //3. paint rectangle
-                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
+                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
                 using (Pen pen = new Pen(color, 2))
                 {
                     e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                 }
-                rect = new System.Drawing.Rectangle(xmin, ymax, (int)boxWidth, (int)boxHeight);
-                Brush brush = new SolidBrush(Color.DarkGray);
-                System.Drawing.SizeF size = e.Graphics.MeasureString (text, new Font("Tahoma",8));
-                e.Graphics.FillRectangle(brush, xmin, ymax, size.Width, size.Height);
-                e.Graphics.DrawString(text, new Font("Tahoma",8), Brushes.Black, rect);
+
+                if (cb_showOverlayText.Checked)
+                {
+                    rect = new System.Drawing.Rectangle(xmin, ymax, (int) boxWidth,
+                        (int) boxHeight); //sets bounding box for drawn text
+                    Brush brush = new SolidBrush(Color.DarkGray); //sets background rectangle color
+                    System.Drawing.SizeF
+                        size = e.Graphics.MeasureString(text,
+                            new Font("Segoe UI", 8)); //finds size of text to draw the background rectangle
+                    e.Graphics.FillRectangle(brush, xmin, ymax, size.Width,
+                        size.Height); //draw grey background rectangle for detection text
+                    e.Graphics.DrawString(text, new Font("Segoe UI", 8), Brushes.Black, rect); //draw detection text
+                }
             }
         }
 
@@ -1374,7 +1382,7 @@ namespace WindowsFormsApp2
                 //display a rectangle around each relevant object
                 for(int i = 0; i< countr-1; i++)
                 {
-                    string[] detectionsArray = detections.Split(';');
+                    string[] detectionsArray = detections.Split(';');//creates array of detected objects, used for adding text overlay
                     //load 'xmin,ymin,xmax,ymax' from third column into a string
                     string position = list1.SelectedItems[0].SubItems[4].Text.Split(';')[i];
 
@@ -1386,7 +1394,7 @@ namespace WindowsFormsApp2
 
                     Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
-                    showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method
+                    showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
                     Log("Done.");
                 }
@@ -1673,6 +1681,15 @@ namespace WindowsFormsApp2
 
         //event: show objects button clicked
         private void cb_showObjects_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (list1.SelectedItems.Count > 0)
+            {
+                pictureBox1.Refresh();
+            }
+        }
+        
+        //event: show overlay text button clicked
+        private void cb_showOverlayText_MouseUp(object sender, MouseEventArgs e)
         {
             if (list1.SelectedItems.Count > 0)
             {
