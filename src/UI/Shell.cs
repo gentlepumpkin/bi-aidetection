@@ -27,7 +27,9 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 
-using Microsoft.WindowsAPICodePack.Dialogs; //for file dialog
+using Microsoft.WindowsAPICodePack.Dialogs;
+using Size = SixLabors.Primitives.Size;
+using SizeF = SixLabors.Primitives.SizeF; //for file dialog
 
 namespace WindowsFormsApp2
 {
@@ -1298,7 +1300,7 @@ namespace WindowsFormsApp2
         }
 
         //show rectangle overlay
-        private void showObject(PaintEventArgs e, Color color, int _xmin, int _ymin, int _xmax, int _ymax)
+        private void showObject(PaintEventArgs e, Color color, int _xmin, int _ymin, int _xmax, int _ymax, string text)
         {
             if (list1.SelectedItems.Count > 0)
             {
@@ -1342,6 +1344,11 @@ namespace WindowsFormsApp2
                 {
                     e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                 }
+                rect = new System.Drawing.Rectangle(xmin, ymax, (int)boxWidth, (int)boxHeight);
+                Brush brush = new SolidBrush(Color.DarkGray);
+                System.Drawing.SizeF size = e.Graphics.MeasureString (text, new Font("Tahoma",8));
+                e.Graphics.FillRectangle(brush, xmin, ymax, size.Width, size.Height);
+                e.Graphics.DrawString(text, new Font("Tahoma",8), Brushes.Black, rect);
             }
         }
 
@@ -1367,6 +1374,7 @@ namespace WindowsFormsApp2
                 //display a rectangle around each relevant object
                 for(int i = 0; i< countr-1; i++)
                 {
+                    string[] detectionsArray = detections.Split(';');
                     //load 'xmin,ymin,xmax,ymax' from third column into a string
                     string position = list1.SelectedItems[0].SubItems[4].Text.Split(';')[i];
 
@@ -1378,7 +1386,7 @@ namespace WindowsFormsApp2
 
                     Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
-                    showObject(e, color, xmin, ymin, xmax, ymax); //call rectangle drawing method
+                    showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method
 
                     Log("Done.");
                 }
