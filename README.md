@@ -13,3 +13,8 @@ https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-ir
 
 ### Screenshot
 ![Screenshot](https://ipcamtalk.com/attachments/processing1-53-png.44807/)
+
+### How to contribute
+1. install Visual Studio
+2. download project as .zip and unpack somewhere
+3. go to ./src/ and open bi-aidetection.sln with Visual Studio.
