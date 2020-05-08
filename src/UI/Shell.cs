@@ -195,7 +195,17 @@ namespace WindowsFormsApp2
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
             Log("");
             Log($"Starting analysis of {image_path}");
-            var fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
+            
+            //allows both "http://ip:port" and "ip:port"
+            if(!deepstack_url.Contains("http://") //"ip:port"
+            {
+                var fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
+            }
+            else //"http://ip:port"
+            {
+                var fullDeepstackUrl = deepstack_url + "/v1/vision/detection";
+            }
+            
             var request = new MultipartFormDataContent();
             for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
             {
