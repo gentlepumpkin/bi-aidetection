@@ -196,14 +196,15 @@ namespace WindowsFormsApp2
             Log("");
             Log($"Starting analysis of {image_path}");
             
+            var fullDeepstackUrl = "";
             //allows both "http://ip:port" and "ip:port"
-            if(!deepstack_url.Contains("http://") //"ip:port"
+            if(!deepstack_url.Contains("http://")) //"ip:port"
             {
-                var fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
+                fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
             }
             else //"http://ip:port"
             {
-                var fullDeepstackUrl = deepstack_url + "/v1/vision/detection";
+                fullDeepstackUrl = deepstack_url + "/v1/vision/detection";
             }
             
             var request = new MultipartFormDataContent();
