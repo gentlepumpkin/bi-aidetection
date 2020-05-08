@@ -195,6 +195,7 @@ namespace WindowsFormsApp2
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
             Log("");
             Log($"Starting analysis of {image_path}");
+            var fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
             var request = new MultipartFormDataContent();
             for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
             {
@@ -204,9 +205,9 @@ namespace WindowsFormsApp2
                     using (var image_data = System.IO.File.OpenRead(image_path))
                     {
                         Log("(1/6) Uploading image to DeepQuestAI Server");
-                        error = $"Can't reach DeepQuestAI Server at {deepstack_url}.";
+                        error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
                         request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
-                        var output = await client.PostAsync("http://" + deepstack_url + "/v1/vision/detection", request);
+                        var output = await client.PostAsync(fullDeepstackUrl, request);
                         Log("(2/6) Waiting for results");
                         var jsonString = await output.Content.ReadAsStringAsync();
                         Response response = JsonConvert.DeserializeObject<Response>(jsonString);
