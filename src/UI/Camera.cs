@@ -23,6 +23,11 @@ namespace WindowsFormsApp2
         public int threshold_lower;
         public int threshold_upper;
 
+        public List<string> last_detections = new List<string>(); //stores objects that were detected last
+        public List<float> last_confidences = new List<float>(); //stores last objects confidences
+        public List<string> last_positions = new List<string>(); //stores last objects positions
+
+
         //stats
         public int stats_alerts; //alert image contained relevant object counter
         public int stats_false_alerts; //alert image contained no object counter

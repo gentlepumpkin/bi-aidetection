@@ -349,11 +349,20 @@ namespace WindowsFormsApp2
                                         //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
                                         if (objects.Count() > 0)
                                         {
+                                            //store these last detections for the specific camera
+                                            CameraList[index].last_detections = objects;
+                                            CameraList[index].last_confidences = objects_confidence;
+                                            CameraList[index].last_positions = objects_position;
+
                                             //RELEVANT ALERT
                                             Log("(5/6) Performing alert actions:");
                                             await Trigger(index, image_path); //make TRIGGER
                                             CameraList[index].IncrementAlerts(); //stats update
                                             Log($"(6/6) SUCCESS.");
+
+
+                                            
+
 
                                             //create text string objects and confidences
                                             string objects_and_confidences = "";
@@ -508,7 +517,7 @@ namespace WindowsFormsApp2
         //call trigger urls
         public void CallTriggerURLs(string[] trigger_urls)
         {
-            
+
             var client = new WebClient();
             foreach (string x in trigger_urls)
             {
@@ -619,41 +628,50 @@ namespace WindowsFormsApp2
         //trigger actions
         public async Task Trigger(int index, string image_path)
         {
-            try
+            //only trigger if cameras cooldown time since last detection has passed
+            if ((DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= CameraList[index].cooldown_time)
             {
-                //only trigger if cameras cooldown time since last detection has passed
-                if ((DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= CameraList[index].cooldown_time)
+                //call trigger urls
+                if (CameraList[index].trigger_urls.Length > 0)
                 {
-                    //call trigger urls
-                    if (CameraList[index].trigger_urls.Length > 0)
+                    //replace url paramters with according values
+                    string[] urls = new string[CameraList[index].trigger_urls.Count()];
+                    int c = 0;
+                    //call urls
+                    foreach (string url in CameraList[index].trigger_urls)
                     {
-                        CallTriggerURLs(CameraList[index].trigger_urls);
+                        urls[c] = url.Replace("[camera]", CameraList[index].name)
+                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(1))
+                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(1))
+                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(1).ToString())
+                                     .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
+                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()));
+                        c++;
                     }
 
-                    //upload to telegram
-                    if (CameraList[index].telegram_enabled)
-                    {
-                        Log("   Uploading image to Telegram...");
-                        await TelegramUpload(image_path);
-                        Log("   -> Sent image to Telegram.");
-                    }
+                    CallTriggerURLs(urls);
                 }
-                else
+
+
+                //upload to telegram
+                if (CameraList[index].telegram_enabled)
                 {
-                    //log that nothing was done
-                    Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                    Log("   Uploading image to Telegram...");
+                    await TelegramUpload(image_path);
+                    Log("   -> Sent image to Telegram.");
                 }
-
-                CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-
             }
-            catch
+            else
             {
-                Log($"ERROR: Could not trigger camera {CameraList[index].name}.");
+                //log that nothing was done
+                Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
             }
-            
+
+            CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
         }
+
+
 
         //check if detected object is outside the mask for the specific camera
         public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
