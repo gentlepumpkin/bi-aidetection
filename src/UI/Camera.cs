@@ -19,7 +19,9 @@ namespace WindowsFormsApp2
         public bool telegram_enabled;
         public bool enabled;
         public DateTime last_trigger_time;
+        public DateTime last_telegram_time;
         public double cooldown_time;
+        public double telegram_cooldown_time;
         public int threshold_lower;
         public int threshold_upper;
 
@@ -34,7 +36,7 @@ namespace WindowsFormsApp2
         public int stats_irrelevant_alerts; //alert image contained irrelevant object counter
 
         //write config to file
-        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper)
+        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, bool _enabled, double _cooldown_time, double _telegram_cooldown_time, int _threshold_lower, int _threshold_upper)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             if(name != _name)
@@ -52,6 +54,7 @@ namespace WindowsFormsApp2
                 telegram_enabled = _telegram_enabled;
                 enabled = _enabled;
                 cooldown_time = _cooldown_time;
+                telegram_cooldown_time = _telegram_cooldown_time;
                 threshold_lower = _threshold_lower;
                 threshold_upper = _threshold_upper;
 
@@ -97,8 +100,7 @@ namespace WindowsFormsApp2
                 sw.WriteLine($"Cooldown time: \"{cooldown_time}\" minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one alert.)");
                 sw.WriteLine($"Certainty threshold: \"{threshold_lower},{threshold_upper}\" (format: \"lower % limit, upper % limit\")");
                 sw.WriteLine($"STATS: alerts,irrelevant alerts,false alerts: \"{stats_alerts.ToString()}, {stats_irrelevant_alerts.ToString()}, {stats_false_alerts.ToString()}\" ");
-
-
+                sw.WriteLine($"Telegram cooldown time: \"{telegram_cooldown_time}\" minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)");
             }
         }
 
@@ -180,6 +182,12 @@ namespace WindowsFormsApp2
             Int32.TryParse(content[7].Split('"')[1].Split(',')[0], out stats_alerts); //bedeutet: Zeile 7 (6+1), aufgetrennt an ", 2tes (1+1) Resultat, aufgeteilt an ',', davon 1. Resultat  
             Int32.TryParse(content[7].Split('"')[1].Split(',')[1], out stats_irrelevant_alerts);
             Int32.TryParse(content[7].Split('"')[1].Split(',')[2], out stats_false_alerts);
+
+            //read telegram cooldown time
+            if (content.Length >= 9)
+            {
+                Double.TryParse(content[8].Split('"')[1], out telegram_cooldown_time);
+            }
         }
 
 
@@ -187,21 +195,21 @@ namespace WindowsFormsApp2
         public void IncrementAlerts()
         {
             stats_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper);
         }
 
         //one alarm that contained no objects counter
         public void IncrementFalseAlerts()
         {
             stats_false_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper);
         }
 
         //one alarm that contained irrelevant objects counter
         public void IncrementIrrelevantAlerts()
         {
             stats_irrelevant_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper);
         }
 
 
