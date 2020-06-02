@@ -1630,7 +1630,7 @@ namespace WindowsFormsApp2
             Invoke(LabelUpdate);
 
             
-            await DetectObjects(input_path + "/" + e.Name); //ai process image
+            await DetectObjects(Path.Combine(input_path, e.Name)); //ai process image
             
             //output Running on Overview Tab
             LabelUpdate = delegate { label2.Text = "Running"; };
