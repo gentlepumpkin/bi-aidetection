@@ -641,9 +641,9 @@ namespace WindowsFormsApp2
                     foreach (string url in CameraList[index].trigger_urls)
                     {
                         urls[c] = url.Replace("[camera]", CameraList[index].name)
-                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(1))
-                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(1))
-                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(1).ToString())
+                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(0))
+                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(0))
+                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(0).ToString())
                                      .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
                                      .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()));
                         c++;
