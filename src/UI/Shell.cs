@@ -651,8 +651,16 @@ namespace WindowsFormsApp2
 
                     CallTriggerURLs(urls);
                 }
-
-
+            }
+            else
+            {
+                //log that nothing was done
+                Log($"   Camera {CameraList[index].name} is still in trigger cooldown. Trigger URL wasn't called. and no image will be uploaded to Telegram.");
+            }
+            
+            //only telegram if cameras cooldown time since last detection has passed
+            if ((DateTime.Now - CameraList[index].last_telegram_time).TotalMinutes >= CameraList[index].telegram_cooldown_time)
+            {
                 //upload to telegram
                 if (CameraList[index].telegram_enabled)
                 {
@@ -664,11 +672,12 @@ namespace WindowsFormsApp2
             else
             {
                 //log that nothing was done
-                Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                Log($"   Camera {CameraList[index].name} is still in telegram cooldown. No image will be uploaded to Telegram.");
             }
 
-            CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-
+            //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+            CameraList[index].last_trigger_time = DateTime.Now;
+            CameraList[index].last_telegram_time = DateTime.Now;
         }
 
 
@@ -1834,7 +1843,7 @@ namespace WindowsFormsApp2
         }
 
         //add camera
-        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
+        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, double telegram_cooldown_time, int threshold_lower, int threshold_upper)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in CameraList)
@@ -1854,7 +1863,7 @@ namespace WindowsFormsApp2
             }
 
             Camera cam = new Camera(); //create new camera object
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
+            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper); //set parameters
             CameraList.Add(cam); //add created camera object to CameraList
 
             //add camera to list2
@@ -1876,7 +1885,7 @@ namespace WindowsFormsApp2
         }
 
         //change settings of camera
-        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
+        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, double telegram_cooldown_time, int threshold_lower, int threshold_upper)
         {
         //1. CHECK NEW VALUES 
             //check if name is empty
@@ -1912,7 +1921,7 @@ namespace WindowsFormsApp2
             }
 
         //2. WRITE CONFIG
-            CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
+            CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper); //set parameters
         
         //3. UPDATE LIST2
             //update list2 entry
@@ -2033,6 +2042,7 @@ namespace WindowsFormsApp2
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
                 tbTriggerUrl.Text = CameraList[i].trigger_urls_as_string; //load trigger url
                 tb_cooldown.Text = CameraList[i].cooldown_time.ToString(); //load cooldown time
+                tb_telegram_cooldown.Text = CameraList[i].telegram_cooldown_time.ToString(); //load telegram cooldown time
                 tb_threshold_lower.Text = CameraList[i].threshold_lower.ToString(); //load lower threshold value
                 tb_threshold_upper.Text = CameraList[i].threshold_upper.ToString(); // load upper threshold value
 
@@ -2116,7 +2126,7 @@ namespace WindowsFormsApp2
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
-                    AddCamera(name, name, "", "person", false, true, 0, 0, 100);
+                    AddCamera(name, name, "", "person", false, true, 0, 0, 0, 100);
                 }
             }
         }
@@ -2145,6 +2155,9 @@ namespace WindowsFormsApp2
                 //get cooldown time from textbox
                 Double.TryParse(tb_cooldown.Text, out double cooldown_time);
 
+                //get telegram cooldown time from textbox
+                Double.TryParse(tb_telegram_cooldown.Text, out double telegram_cooldown_time);
+
                 //get lower and upper threshold values from textboxes
                 Int32.TryParse(tb_threshold_lower.Text, out int threshold_lower);
                 Int32.TryParse(tb_threshold_upper.Text, out int threshold_upper);
@@ -2152,7 +2165,7 @@ namespace WindowsFormsApp2
 
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper);
+                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, telegram_cooldown_time, threshold_lower, threshold_upper);
 
             }
             DisplayCameraSettings();
