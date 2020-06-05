@@ -38,12 +38,14 @@ namespace WindowsFormsApp2
         public static string deepstack_url = Properties.Settings.Default.deepstack_url; //deepstack url
         public static bool log_everything = Properties.Settings.Default.log_everything; //save every action sent to Log() into the log file?
         public static bool send_errors = Properties.Settings.Default.send_errors; //send error messages to Telegram?
+        public static bool minimize_on_close = Properties.Settings.Default.minimize_on_close;
         public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
         public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
         public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
         public int errors = 0; //error counter
         public bool detection_running = false; //is detection running right now or not
         public int file_access_delay = 10; //delay before accessing new file in ms
+        public bool manual_shutdown = false; //indicates if the application is being manually shutdown
         public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
         List<Camera> CameraList = new List<Camera>(); //list containing all cameras
 
@@ -56,6 +58,7 @@ namespace WindowsFormsApp2
             InitializeComponent();
 
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing); ; // minimize to tray, don't close
 
             //if camera settings folder does not exist, create it
             if (!Directory.Exists("./cameras/")) 
@@ -171,6 +174,7 @@ namespace WindowsFormsApp2
             tb_telegram_token.Text = telegram_token;
             cb_log.Checked = log_everything;
             cb_send_errors.Checked = send_errors;
+            cb_minimize_on_close.Checked = minimize_on_close;
 
             //---------------------------------------------------------------------------
             //STATS TAB
@@ -184,9 +188,9 @@ namespace WindowsFormsApp2
         }
 
 
-//----------------------------------------------------------------------------------------------------------
-//CORE
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //CORE
+        //----------------------------------------------------------------------------------------------------------
 
         //analyze image with AI
         public async Task DetectObjects(string image_path)
@@ -245,7 +249,7 @@ namespace WindowsFormsApp2
                             //if there is no camera with the same prefix
                             if (index == -1)
                             {
-                                Log("   No camera with the same prefix found...");
+                                Log("   No camera with the same prefix found: " + fileprefix);
                                 //check if there is a default camera which accepts any prefix, select it
                                 if (CameraList.Exists(x => x.prefix == ""))
                                 {
@@ -871,6 +875,20 @@ namespace WindowsFormsApp2
                 ResizeListViews();
             }
         }
+
+        // close to tray
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // if the option is enabled to minimize on close and this isn't a
+            // manual shutdown, cancel this event and minimize
+            if (minimize_on_close && !manual_shutdown)
+            {
+                e.Cancel = true;
+                this.WindowState = FormWindowState.Minimized;
+            }
+        }
+
 
         //open from tray
         private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -2229,6 +2247,7 @@ namespace WindowsFormsApp2
             Properties.Settings.Default.telegram_token = tb_telegram_token.Text;
             Properties.Settings.Default.log_everything = cb_log.Checked;
             Properties.Settings.Default.send_errors = cb_send_errors.Checked;
+            Properties.Settings.Default.minimize_on_close = cb_minimize_on_close.Checked;
             Properties.Settings.Default.Save();
 
             //update variables
@@ -2239,6 +2258,7 @@ namespace WindowsFormsApp2
             telegram_token = Properties.Settings.Default.telegram_token;
             log_everything = Properties.Settings.Default.log_everything;
             send_errors = Properties.Settings.Default.send_errors;
+            minimize_on_close = Properties.Settings.Default.minimize_on_close;
 
             //update fswatcher to watch new input folder
             UpdateFSWatcher();
@@ -2275,6 +2295,15 @@ namespace WindowsFormsApp2
                 MessageBox.Show("log missing");
             }
 
+        }
+
+        private void BtnShutdown_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to shutdown the AI Tool?", "Confirm Shutdown", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                manual_shutdown = true;
+                this.Close();
+            }
         }
     }
 
