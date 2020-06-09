@@ -358,6 +358,20 @@ namespace WindowsFormsApp2
                                             CameraList[index].last_confidences = objects_confidence;
                                             CameraList[index].last_positions = objects_position;
 
+                                            StringBuilder detectionsTextSb = new StringBuilder();
+
+                                            for (int i = 0; i < objects.Count(); i++)
+                                            {
+                                                detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));                                                                                                
+                                            }
+
+                                            if (detectionsTextSb.Length >= 3)
+                                            {
+                                                detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
+                                            }
+
+                                            CameraList[index].last_detections_summary = detectionsTextSb.ToString();
+
                                             //RELEVANT ALERT
                                             Log("(5/6) Performing alert actions:");
                                             await Trigger(index, image_path); //make TRIGGER
@@ -649,7 +663,8 @@ namespace WindowsFormsApp2
                                      .Replace("[position]", CameraList[index].last_positions.ElementAt(0))
                                      .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(0).ToString())
                                      .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
-                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()));
+                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()))
+                                     .Replace("[summary]", Uri.EscapeUriString(CameraList[index].last_detections_summary));
                         c++;
                     }
 
