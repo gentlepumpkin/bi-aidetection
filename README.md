@@ -18,3 +18,7 @@ https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-ir
 1. install Visual Studio
 2. download project as .zip and unpack somewhere
 3. go to ./src/ and open bi-aidetection.sln with Visual Studio.
+
+Using the Github extension for Visual Studio: 
+2. Click the green button "clone or download"
+3. Select "Open in Visual Studio"
