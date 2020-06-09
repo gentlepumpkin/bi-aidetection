@@ -647,11 +647,13 @@ namespace WindowsFormsApp2
                     foreach (string url in CameraList[index].trigger_urls)
                     {
                         urls[c] = url.Replace("[camera]", CameraList[index].name)
-                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(1))
-                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(1))
-                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(1).ToString())
+                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(0))
+                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(0))
+                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(0).ToString())
                                      .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
-                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()));
+                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()))
+                                     .Replace("[imagepath]", image_path) //gives the full path of the image that caused the trigger
+                                     .Replace("[imagefilename]", image_path.Split('/').Last()); //gives the image name of the image that caused the trigger
                         c++;
                     }
 
@@ -1652,7 +1654,7 @@ namespace WindowsFormsApp2
             Invoke(LabelUpdate);
 
             
-            await DetectObjects(input_path + "/" + e.Name); //ai process image
+            await DetectObjects(Path.Combine(input_path, e.Name)); //ai process image
             
             //output Running on Overview Tab
             LabelUpdate = delegate { label2.Text = "Running"; };
