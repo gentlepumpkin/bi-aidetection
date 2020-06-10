@@ -604,7 +604,7 @@ namespace WindowsFormsApp2
             this.lbl_version.Name = "lbl_version";
             this.lbl_version.Size = new System.Drawing.Size(932, 23);
             this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.66";
+            this.lbl_version.Text = "Version 1.67";
             this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // lbl_errors
