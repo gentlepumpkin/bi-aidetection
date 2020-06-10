@@ -1108,10 +1108,10 @@ namespace WindowsFormsApp2
             }
 
             //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
-            int[] relevant = new int[48];
-            int[] irrelevant = new int[48];
-            int[] falses = new int[48];
             int[] all = new int[48];
+            int[] falses = new int[48];
+            int[] irrelevant = new int[48];
+            int[] relevant = new int[48];
 
             //fill arrays with amount of calls/half hour
             foreach (var val in result)
@@ -1176,20 +1176,17 @@ namespace WindowsFormsApp2
 
             timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
 
+            //add to graph "falses":
 
-
-            //add to graph "relevant":
-
-            timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
+            timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
             //and now add all visible points 
             x = 0.25;
-            foreach (int halfhour in relevant)
+            foreach (int halfhour in falses)
             {
-                int index = timeline.Series[3].Points.AddXY(x, halfhour);
+                int index = timeline.Series[1].Points.AddXY(x, halfhour);
                 x = x + 0.5;
             }
-            timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
-
+            timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
 
             //add to graph "irrelevant":
 
@@ -1203,18 +1200,18 @@ namespace WindowsFormsApp2
             }
             timeline.Series[2].Points.AddXY(24.25, irrelevant[0]); // finally add last point with value of first visible point
 
+            //add to graph "relevant":
 
-            //add to graph "falses":
-
-            timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
+            timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
             //and now add all visible points 
             x = 0.25;
-            foreach (int halfhour in falses)
+            foreach (int halfhour in relevant)
             {
-                int index = timeline.Series[1].Points.AddXY(x, halfhour);
+                int index = timeline.Series[3].Points.AddXY(x, halfhour);
                 x = x + 0.5;
             }
-            timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
+            timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
+
 
         }
 
