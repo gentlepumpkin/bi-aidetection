@@ -12,13 +12,16 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="deepstack_url" Type="System.String" Scope="User">
-      <Value Profile="(Default)">localhost:81</Value>
+      <Value Profile="(Default)">127.0.0.1:81</Value>
     </Setting>
     <Setting Name="log_everything" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="send_errors" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="close_instantly" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-1</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -1180,15 +1180,15 @@ namespace WindowsFormsApp2
 
             //add to graph "relevant":
 
-            timeline.Series[1].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
+            timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
             //and now add all visible points 
             x = 0.25;
             foreach (int halfhour in relevant)
             {
-                int index = timeline.Series[1].Points.AddXY(x, halfhour);
+                int index = timeline.Series[3].Points.AddXY(x, halfhour);
                 x = x + 0.5;
             }
-            timeline.Series[1].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
+            timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
 
 
             //add to graph "irrelevant":
@@ -1206,15 +1206,15 @@ namespace WindowsFormsApp2
 
             //add to graph "falses":
 
-            timeline.Series[3].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
+            timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
             //and now add all visible points 
             x = 0.25;
             foreach (int halfhour in falses)
             {
-                int index = timeline.Series[3].Points.AddXY(x, halfhour);
+                int index = timeline.Series[1].Points.AddXY(x, halfhour);
                 x = x + 0.5;
             }
-            timeline.Series[3].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
+            timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
 
         }
 
@@ -2347,6 +2347,37 @@ namespace WindowsFormsApp2
                 MessageBox.Show("log missing");
             }
 
+        }
+
+        //ask before closing AI Tool to prevent accidently closing
+        private void Shell_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(Properties.Settings.Default.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+            {
+                using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
+                {
+                    var result = form.ShowDialog();
+                    if (Properties.Settings.Default.close_instantly == -1)
+                    {
+                        //if it's the first time, ask if the confirmation dialog should ever appear again
+                        using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO, Never!", "YES"))
+                        {
+                            var result1 = form1.ShowDialog();
+                            if (result1 == DialogResult.Cancel)
+                            {
+                                Properties.Settings.Default.close_instantly = 0;
+                            }
+                            else
+                            {
+                                Properties.Settings.Default.close_instantly = 1;
+                            }
+                        }
+                    }
+
+                    e.Cancel = (result == DialogResult.Cancel);
+                }
+            }
+            
         }
     }
 

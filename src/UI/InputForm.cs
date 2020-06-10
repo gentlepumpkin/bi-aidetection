@@ -29,6 +29,23 @@ namespace WindowsFormsApp2
             }
         }
 
+        public InputForm(string label, string title, bool show_textbox, string text_OK, string text_Cancel)
+        {
+            InitializeComponent();
+            lbl_1.Text = label;
+            this.Text = title;
+            if (show_textbox)
+            {
+                tb_1.Show();
+            }
+            else
+            {
+                tb_1.Hide();
+            }
+            btn_1.Text = text_OK;
+            btn_2.Text = text_Cancel;
+        }
+
         private void btn_2_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
