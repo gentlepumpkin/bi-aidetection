@@ -1761,15 +1761,6 @@ namespace WindowsFormsApp2
                 pictureBox1.Refresh();
             }
         }
-        
-        //event: show overlay text button clicked
-        private void cb_showOverlayText_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (list1.SelectedItems.Count > 0)
-            {
-                pictureBox1.Refresh();
-            }
-        }
 
         //event: show history list filters button clicked
         private void cb_showFilters_CheckedChanged(object sender, EventArgs e)
