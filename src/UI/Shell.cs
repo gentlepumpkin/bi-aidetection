@@ -216,7 +216,7 @@ namespace WindowsFormsApp2
             int index = CameraList.FindIndex(x => x.prefix == fileprefix); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
-            if ((DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= (CameraList[index].cooldown_time / 2))
+            if (index == -1 || (DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= (CameraList[index].cooldown_time / 2)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
             {
                 var request = new MultipartFormDataContent();
                 for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
@@ -1423,18 +1423,17 @@ namespace WindowsFormsApp2
                     e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                 }
 
-                if (cb_showOverlayText.Checked)
-                {
-                    rect = new System.Drawing.Rectangle(xmin, ymax, (int) boxWidth,
-                        (int) boxHeight); //sets bounding box for drawn text
-                    Brush brush = new SolidBrush(Color.DarkGray); //sets background rectangle color
-                    System.Drawing.SizeF
-                        size = e.Graphics.MeasureString(text,
-                            new Font("Segoe UI", 8)); //finds size of text to draw the background rectangle
-                    e.Graphics.FillRectangle(brush, xmin, ymax, size.Width,
-                        size.Height); //draw grey background rectangle for detection text
-                    e.Graphics.DrawString(text, new Font("Segoe UI", 8), Brushes.Black, rect); //draw detection text
-                }
+                //object name text below rectangle
+                rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth,
+                        (int)boxHeight); //sets bounding box for drawn text
+                Brush brush = new SolidBrush(color); //sets background rectangle color
+                System.Drawing.SizeF
+                    size = e.Graphics.MeasureString(text,
+                        new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
+                e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width,
+                    size.Height); //draw grey background rectangle for detection text
+                e.Graphics.DrawString(text, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
+
             }
         }
 
@@ -1749,7 +1748,7 @@ namespace WindowsFormsApp2
         }
 
         //event: show mask button clicked
-        private void cb_showMask_CheckedChanged_1(object sender, EventArgs e)
+        private void cb_showMask_CheckedChanged(object sender, EventArgs e)
         {
             if (list1.SelectedItems.Count > 0)
             {

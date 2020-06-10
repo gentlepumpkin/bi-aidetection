@@ -52,10 +52,8 @@ namespace WindowsFormsApp2
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel22 = new System.Windows.Forms.TableLayoutPanel();
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
-            this.cb_showOverlayText = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
-            this.lbl_info = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel19 = new System.Windows.Forms.TableLayoutPanel();
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
@@ -67,6 +65,7 @@ namespace WindowsFormsApp2
             this.cb_filter_person = new System.Windows.Forms.CheckBox();
             this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
             this.cb_filter_animal = new System.Windows.Forms.CheckBox();
+            this.lbl_info = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel14 = new System.Windows.Forms.TableLayoutPanel();
@@ -240,7 +239,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel21.Name = "tableLayoutPanel21";
             this.tableLayoutPanel21.RowCount = 2;
             this.tableLayoutPanel21.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanel21.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
+            this.tableLayoutPanel21.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
             this.tableLayoutPanel21.Size = new System.Drawing.Size(652, 424);
             this.tableLayoutPanel21.TabIndex = 5;
             // 
@@ -248,9 +247,9 @@ namespace WindowsFormsApp2
             // 
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pictureBox1.Location = new System.Drawing.Point(3, 45);
+            this.pictureBox1.Location = new System.Drawing.Point(3, 50);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(646, 376);
+            this.pictureBox1.Size = new System.Drawing.Size(646, 371);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -266,7 +265,6 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel22.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel22.Controls.Add(this.cb_showOverlayText, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.cb_showObjects, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.cb_showMask, 0, 0);
             this.tableLayoutPanel22.Controls.Add(this.lbl_objects, 2, 0);
@@ -274,8 +272,8 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel22.Name = "tableLayoutPanel22";
             this.tableLayoutPanel22.RowCount = 1;
             this.tableLayoutPanel22.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel22.Size = new System.Drawing.Size(646, 36);
-            this.tableLayoutPanel22.TabIndex = 7;
+            this.tableLayoutPanel22.Size = new System.Drawing.Size(646, 41);
+            this.tableLayoutPanel22.TabIndex = 9;
             // 
             // cb_showObjects
             // 
@@ -285,31 +283,14 @@ namespace WindowsFormsApp2
             this.cb_showObjects.Checked = true;
             this.cb_showObjects.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cb_showObjects.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_showObjects.Location = new System.Drawing.Point(132, 4);
+            this.cb_showObjects.Location = new System.Drawing.Point(132, 7);
             this.cb_showObjects.Name = "cb_showObjects";
             this.cb_showObjects.Size = new System.Drawing.Size(123, 27);
-            this.cb_showObjects.TabIndex = 9;
+            this.cb_showObjects.TabIndex = 12;
             this.cb_showObjects.Text = "Show Objects";
             this.cb_showObjects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cb_showObjects.UseVisualStyleBackColor = true;
             this.cb_showObjects.MouseUp += new System.Windows.Forms.MouseEventHandler(this.cb_showObjects_MouseUp);
-            // 
-            // cb_showOverlayText
-            // 
-            this.cb_showOverlayText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Left)));
-            this.cb_showOverlayText.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_showOverlayText.AutoSize = true;
-            this.cb_showOverlayText.Checked = true;
-            this.cb_showOverlayText.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cb_showOverlayText.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_showOverlayText.Location = new System.Drawing.Point(161, 4);
-            this.cb_showOverlayText.Name = "cb_showOverlayText";
-            this.cb_showOverlayText.Size = new System.Drawing.Size(123, 27);
-            this.cb_showOverlayText.TabIndex = 9;
-            this.cb_showOverlayText.Text = "Show Overlay Text";
-            this.cb_showOverlayText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cb_showOverlayText.UseVisualStyleBackColor = true;
-            this.cb_showOverlayText.MouseUp += new System.Windows.Forms.MouseEventHandler(this.cb_showOverlayText_MouseUp);
             // 
             // cb_showMask
             // 
@@ -317,25 +298,25 @@ namespace WindowsFormsApp2
             this.cb_showMask.Appearance = System.Windows.Forms.Appearance.Button;
             this.cb_showMask.AutoSize = true;
             this.cb_showMask.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_showMask.Location = new System.Drawing.Point(3, 4);
+            this.cb_showMask.Location = new System.Drawing.Point(3, 7);
             this.cb_showMask.Name = "cb_showMask";
             this.cb_showMask.Size = new System.Drawing.Size(123, 27);
-            this.cb_showMask.TabIndex = 8;
+            this.cb_showMask.TabIndex = 11;
             this.cb_showMask.Text = "Show Mask";
             this.cb_showMask.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cb_showMask.UseVisualStyleBackColor = true;
-            this.cb_showMask.CheckedChanged += new System.EventHandler(this.cb_showMask_CheckedChanged_1);
             // 
             // lbl_objects
             // 
-            this.lbl_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.lbl_objects.AutoSize = true;
+            this.lbl_objects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_objects.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_objects.Location = new System.Drawing.Point(261, 9);
+            this.lbl_objects.Location = new System.Drawing.Point(261, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(382, 17);
-            this.lbl_objects.TabIndex = 10;
+            this.lbl_objects.Size = new System.Drawing.Size(382, 41);
+            this.lbl_objects.TabIndex = 14;
+            this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // splitContainer1
             // 
@@ -354,7 +335,7 @@ namespace WindowsFormsApp2
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
             this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(3);
             this.splitContainer1.Size = new System.Drawing.Size(276, 424);
-            this.splitContainer1.SplitterDistance = 316;
+            this.splitContainer1.SplitterDistance = 240;
             this.splitContainer1.TabIndex = 6;
             // 
             // tableLayoutPanel19
@@ -369,7 +350,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel19.RowCount = 2;
             this.tableLayoutPanel19.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel19.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-            this.tableLayoutPanel19.Size = new System.Drawing.Size(276, 316);
+            this.tableLayoutPanel19.Size = new System.Drawing.Size(276, 240);
             this.tableLayoutPanel19.TabIndex = 0;
             // 
             // cb_showFilters
@@ -377,7 +358,7 @@ namespace WindowsFormsApp2
             this.cb_showFilters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.cb_showFilters.Appearance = System.Windows.Forms.Appearance.Button;
             this.cb_showFilters.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_showFilters.Location = new System.Drawing.Point(3, 289);
+            this.cb_showFilters.Location = new System.Drawing.Point(3, 213);
             this.cb_showFilters.MinimumSize = new System.Drawing.Size(0, 27);
             this.cb_showFilters.Name = "cb_showFilters";
             this.cb_showFilters.Size = new System.Drawing.Size(270, 27);
@@ -398,7 +379,7 @@ namespace WindowsFormsApp2
             this.list1.HideSelection = false;
             this.list1.Location = new System.Drawing.Point(3, 3);
             this.list1.Name = "list1";
-            this.list1.Size = new System.Drawing.Size(270, 280);
+            this.list1.Size = new System.Drawing.Size(270, 204);
             this.list1.TabIndex = 3;
             this.list1.UseCompatibleStateImageBehavior = false;
             this.list1.View = System.Windows.Forms.View.Details;
@@ -416,7 +397,7 @@ namespace WindowsFormsApp2
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(270, 98);
+            this.panel1.Size = new System.Drawing.Size(270, 174);
             this.panel1.TabIndex = 2;
             // 
             // comboBox_filter_camera
@@ -431,18 +412,6 @@ namespace WindowsFormsApp2
             this.comboBox_filter_camera.TabIndex = 2;
             this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
             // 
-            // cb_filter_success
-            // 
-            this.cb_filter_success.AutoSize = true;
-            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_success.Location = new System.Drawing.Point(6, 37);
-            this.cb_filter_success.Name = "cb_filter_success";
-            this.cb_filter_success.Size = new System.Drawing.Size(137, 21);
-            this.cb_filter_success.TabIndex = 0;
-            this.cb_filter_success.Text = "only relevant alerts";
-            this.cb_filter_success.UseVisualStyleBackColor = true;
-            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
-            // 
             // cb_filter_nosuccess
             // 
             this.cb_filter_nosuccess.AutoSize = true;
@@ -455,13 +424,25 @@ namespace WindowsFormsApp2
             this.cb_filter_nosuccess.UseVisualStyleBackColor = true;
             this.cb_filter_nosuccess.CheckedChanged += new System.EventHandler(this.cb_filter_nosuccess_CheckedChanged);
             // 
+            // cb_filter_success
+            // 
+            this.cb_filter_success.AutoSize = true;
+            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_success.Location = new System.Drawing.Point(6, 37);
+            this.cb_filter_success.Name = "cb_filter_success";
+            this.cb_filter_success.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_success.TabIndex = 0;
+            this.cb_filter_success.Text = "only relevant alerts";
+            this.cb_filter_success.UseVisualStyleBackColor = true;
+            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
+            // 
             // cb_filter_person
             // 
             this.cb_filter_person.AutoSize = true;
             this.cb_filter_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cb_filter_person.Location = new System.Drawing.Point(6, 91);
             this.cb_filter_person.Name = "cb_filter_person";
-            this.cb_filter_person.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_person.Size = new System.Drawing.Size(159, 21);
             this.cb_filter_person.TabIndex = 0;
             this.cb_filter_person.Text = "only alerts with people";
             this.cb_filter_person.UseVisualStyleBackColor = true;
@@ -473,7 +454,7 @@ namespace WindowsFormsApp2
             this.cb_filter_vehicle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cb_filter_vehicle.Location = new System.Drawing.Point(6, 118);
             this.cb_filter_vehicle.Name = "cb_filter_vehicle";
-            this.cb_filter_vehicle.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_vehicle.Size = new System.Drawing.Size(163, 21);
             this.cb_filter_vehicle.TabIndex = 0;
             this.cb_filter_vehicle.Text = "only alerts with vehicles";
             this.cb_filter_vehicle.UseVisualStyleBackColor = true;
@@ -485,11 +466,23 @@ namespace WindowsFormsApp2
             this.cb_filter_animal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cb_filter_animal.Location = new System.Drawing.Point(6, 145);
             this.cb_filter_animal.Name = "cb_filter_animal";
-            this.cb_filter_animal.Size = new System.Drawing.Size(137, 21);
+            this.cb_filter_animal.Size = new System.Drawing.Size(162, 21);
             this.cb_filter_animal.TabIndex = 0;
             this.cb_filter_animal.Text = "only alerts with animals";
             this.cb_filter_animal.UseVisualStyleBackColor = true;
             this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
+            // 
+            // lbl_info
+            // 
+            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_info.AutoSize = true;
+            this.lbl_info.Location = new System.Drawing.Point(3, 386);
+            this.lbl_info.Name = "lbl_info";
+            this.lbl_info.Size = new System.Drawing.Size(932, 20);
+            this.lbl_info.TabIndex = 8;
+            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tabControl1
             // 
@@ -562,7 +555,7 @@ namespace WindowsFormsApp2
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.pictureBox2.Image = global::WindowsFormsApp2.Properties.Resources.logo;
-            this.pictureBox2.Location = new System.Drawing.Point(3, 84);
+            this.pictureBox2.Location = new System.Drawing.Point(3, 74);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(932, 124);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -575,7 +568,7 @@ namespace WindowsFormsApp2
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.Font = new System.Drawing.Font("Segoe UI", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.ForeColor = System.Drawing.Color.Green;
-            this.label2.Location = new System.Drawing.Point(3, 215);
+            this.label2.Location = new System.Drawing.Point(3, 205);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(932, 92);
             this.label2.TabIndex = 3;
@@ -587,7 +580,7 @@ namespace WindowsFormsApp2
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label3.Location = new System.Drawing.Point(60, 211);
+            this.label3.Location = new System.Drawing.Point(60, 201);
             this.label3.Margin = new System.Windows.Forms.Padding(60, 0, 60, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(818, 2);
@@ -600,9 +593,9 @@ namespace WindowsFormsApp2
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lbl_version.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_version.Location = new System.Drawing.Point(3, 405);
+            this.lbl_version.Location = new System.Drawing.Point(3, 406);
             this.lbl_version.Name = "lbl_version";
-            this.lbl_version.Size = new System.Drawing.Size(932, 23);
+            this.lbl_version.Size = new System.Drawing.Size(932, 22);
             this.lbl_version.TabIndex = 6;
             this.lbl_version.Text = "Version 1.67";
             this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
@@ -614,25 +607,13 @@ namespace WindowsFormsApp2
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lbl_errors.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_errors.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbl_errors.Location = new System.Drawing.Point(3, 343);
+            this.lbl_errors.Location = new System.Drawing.Point(3, 327);
             this.lbl_errors.Name = "lbl_errors";
-            this.lbl_errors.Size = new System.Drawing.Size(932, 62);
+            this.lbl_errors.Size = new System.Drawing.Size(932, 59);
             this.lbl_errors.TabIndex = 7;
             this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lbl_errors.Visible = false;
             this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
-            // 
-            // lbl_info
-            // 
-            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-                                                                          | System.Windows.Forms.AnchorStyles.Left) 
-                                                                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_info.AutoSize = true;
-            this.lbl_info.Location = new System.Drawing.Point(3, 375);
-            this.lbl_info.Name = "lbl_info";
-            this.lbl_info.Size = new System.Drawing.Size(932, 29);
-            this.lbl_info.TabIndex = 8;
-            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tabStats
             // 
@@ -1201,7 +1182,7 @@ namespace WindowsFormsApp2
             this.cb_truck.Location = new System.Drawing.Point(147, 37);
             this.cb_truck.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
             this.cb_truck.Name = "cb_truck";
-            this.cb_truck.Size = new System.Drawing.Size(57, 21);
+            this.cb_truck.Size = new System.Drawing.Size(58, 21);
             this.cb_truck.TabIndex = 6;
             this.cb_truck.Text = "Truck";
             this.cb_truck.UseVisualStyleBackColor = true;
@@ -1271,7 +1252,7 @@ namespace WindowsFormsApp2
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(20, 0, 3, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(80, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
-            this.lblTriggerUrl.Size = new System.Drawing.Size(91, 17);
+            this.lblTriggerUrl.Size = new System.Drawing.Size(92, 17);
             this.lblTriggerUrl.TabIndex = 1;
             this.lblTriggerUrl.Text = "Trigger URL(s)";
             // 
@@ -1777,7 +1758,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_telegram_token.Location = new System.Drawing.Point(4, 142);
             this.lbl_telegram_token.Name = "lbl_telegram_token";
-            this.lbl_telegram_token.Size = new System.Drawing.Size(100, 17);
+            this.lbl_telegram_token.Size = new System.Drawing.Size(102, 17);
             this.lbl_telegram_token.TabIndex = 6;
             this.lbl_telegram_token.Text = "Telegram Token";
             // 
@@ -1788,7 +1769,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_telegram_chatid.Location = new System.Drawing.Point(4, 202);
             this.lbl_telegram_chatid.Name = "lbl_telegram_chatid";
-            this.lbl_telegram_chatid.Size = new System.Drawing.Size(108, 17);
+            this.lbl_telegram_chatid.Size = new System.Drawing.Size(109, 17);
             this.lbl_telegram_chatid.TabIndex = 7;
             this.lbl_telegram_chatid.Text = "Telegram Chat ID";
             // 
@@ -1887,6 +1868,7 @@ namespace WindowsFormsApp2
             this.tabOverview.ResumeLayout(false);
             this.tableLayoutPanel14.ResumeLayout(false);
             this.tableLayoutPanel15.ResumeLayout(false);
+            this.tableLayoutPanel15.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.tabStats.ResumeLayout(false);
             this.tableLayoutPanel16.ResumeLayout(false);
@@ -1996,11 +1978,6 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel21;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel22;
-        private System.Windows.Forms.CheckBox cb_showMask;
-        private System.Windows.Forms.CheckBox cb_showOverlayText;
-        private System.Windows.Forms.CheckBox cb_showObjects;
-        private System.Windows.Forms.Label lbl_objects;
         private System.Windows.Forms.Label lbl_info;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel19;
@@ -2047,6 +2024,10 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel25;
         private System.Windows.Forms.Button btn_open_log;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel22;
+        private System.Windows.Forms.CheckBox cb_showObjects;
+        private System.Windows.Forms.CheckBox cb_showMask;
+        private System.Windows.Forms.Label lbl_objects;
     }
 }
 
