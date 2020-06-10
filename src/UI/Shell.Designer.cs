@@ -55,6 +55,7 @@ namespace WindowsFormsApp2
             this.cb_showOverlayText = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
+            this.lbl_info = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel19 = new System.Windows.Forms.TableLayoutPanel();
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
@@ -541,6 +542,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel15.Controls.Add(this.label3, 0, 1);
             this.tableLayoutPanel15.Controls.Add(this.lbl_version, 0, 4);
             this.tableLayoutPanel15.Controls.Add(this.lbl_errors, 0, 3);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_info, 0, 4);
             this.tableLayoutPanel15.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel15.Location = new System.Drawing.Point(4, 4);
             this.tableLayoutPanel15.Name = "tableLayoutPanel15";
@@ -619,6 +621,18 @@ namespace WindowsFormsApp2
             this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lbl_errors.Visible = false;
             this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
+            // 
+            // lbl_info
+            // 
+            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+                                                                          | System.Windows.Forms.AnchorStyles.Left) 
+                                                                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_info.AutoSize = true;
+            this.lbl_info.Location = new System.Drawing.Point(3, 375);
+            this.lbl_info.Name = "lbl_info";
+            this.lbl_info.Size = new System.Drawing.Size(932, 29);
+            this.lbl_info.TabIndex = 8;
+            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tabStats
             // 
@@ -1984,9 +1998,10 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel22;
         private System.Windows.Forms.CheckBox cb_showMask;
-        private System.Windows.Forms.CheckBox cb_showObjects;
         private System.Windows.Forms.CheckBox cb_showOverlayText;
+        private System.Windows.Forms.CheckBox cb_showObjects;
         private System.Windows.Forms.Label lbl_objects;
+        private System.Windows.Forms.Label lbl_info;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel19;
         private System.Windows.Forms.CheckBox cb_showFilters;
