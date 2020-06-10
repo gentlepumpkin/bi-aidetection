@@ -2366,10 +2366,12 @@ namespace WindowsFormsApp2
                             if (result1 == DialogResult.Cancel)
                             {
                                 Properties.Settings.Default.close_instantly = 0;
+                                Properties.Settings.Default.Save();
                             }
                             else
                             {
                                 Properties.Settings.Default.close_instantly = 1;
+                                Properties.Settings.Default.Save();
                             }
                         }
                     }
