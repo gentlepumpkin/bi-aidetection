@@ -1,7 +1,10 @@
 # AI Detection for Blue Iris
 Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to Telegram.
 
-### Install
+### Download
+https://github.com/gentlepumpkin/bi-aidetection/releases
+
+### Install guide and discussion
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
 
 ### Key Features
