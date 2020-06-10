@@ -653,7 +653,7 @@ namespace WindowsFormsApp2
                                      .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
                                      .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()))
                                      .Replace("[imagepath]", image_path) //gives the full path of the image that caused the trigger
-                                     .Replace("[imagefilename]", Path.GetFileName(image_path); //gives the image name of the image that caused the trigger
+                                     .Replace("[imagefilename]", Path.GetFileName(image_path)); //gives the image name of the image that caused the trigger
                         c++;
                     }
 
