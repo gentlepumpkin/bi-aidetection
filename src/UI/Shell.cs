@@ -249,7 +249,7 @@ namespace WindowsFormsApp2
                                 //if there is no camera with the same prefix
                                 if (index == -1)
                                 {
-                                    Log("   No camera with the same prefix found...");
+                                    Log("   No camera with the same prefix found: " + fileprefix);
                                     //check if there is a default camera which accepts any prefix, select it
                                     if (CameraList.Exists(x => x.prefix == ""))
                                     {
@@ -357,6 +357,21 @@ namespace WindowsFormsApp2
                                                 CameraList[index].last_detections = objects;
                                                 CameraList[index].last_confidences = objects_confidence;
                                                 CameraList[index].last_positions = objects_position;
+
+
+                                                //create summary string for this detection
+                                                StringBuilder detectionsTextSb = new StringBuilder();
+                                                for (int i = 0; i < objects.Count(); i++)
+                                                {
+                                                    detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                }
+                                                if (detectionsTextSb.Length >= 3)
+                                                {
+                                                    detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
+                                                }
+                                                CameraList[index].last_detections_summary = detectionsTextSb.ToString();
+                                                Log("The summary:" + CameraList[index].last_detections_summary);
+
 
                                                 //RELEVANT ALERT
                                                 Log("(5/6) Performing alert actions:");
@@ -646,14 +661,23 @@ namespace WindowsFormsApp2
                     //call urls
                     foreach (string url in CameraList[index].trigger_urls)
                     {
-                        urls[c] = url.Replace("[camera]", CameraList[index].name)
-                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(0))
+                        try
+                        {
+                            urls[c] = url.Replace("[camera]", CameraList[index].name)
+                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(0)) //only gives first detection (maybe not most relevant one)
                                      .Replace("[position]", CameraList[index].last_positions.ElementAt(0))
                                      .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(0).ToString())
                                      .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
                                      .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()))
                                      .Replace("[imagepath]", image_path) //gives the full path of the image that caused the trigger
-                                     .Replace("[imagefilename]", Path.GetFileName(image_path); //gives the image name of the image that caused the trigger
+                                     .Replace("[imagefilename]", Path.GetFileName(image_path)) //gives the image name of the image that caused the trigger
+                                     .Replace("[summary]", Uri.EscapeUriString(CameraList[index].last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        }
+                        catch (Exception ex)
+                        {
+                            Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                        }
+                        
                         c++;
                     }
 
@@ -2299,21 +2323,6 @@ namespace WindowsFormsApp2
                 MessageBox.Show("log missing");
             }
 
-        }
-
-        private async void button1_Click(object sender, EventArgs e)
-        {
-            await Trigger(0, "C:/image0.jpg");
-        }
-
-        private async void button2_Click(object sender, EventArgs e)
-        {
-            await Trigger(1, "C:/image0.jpg");
-        }
-
-        private async void button3_Click(object sender, EventArgs e)
-        {
-            await Trigger(2, "C:/image0.jpg");
         }
     }
 

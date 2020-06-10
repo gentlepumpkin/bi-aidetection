@@ -26,6 +26,7 @@ namespace WindowsFormsApp2
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         public List<float> last_confidences = new List<float>(); //stores last objects confidences
         public List<string> last_positions = new List<string>(); //stores last objects positions
+        public String last_detections_summary; //summary text of last detection
 
 
         //stats
