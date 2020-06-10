@@ -3,7 +3,7 @@ Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to T
 
 ### Download
 https://github.com/gentlepumpkin/bi-aidetection/releases
-The .zip archives are in the Assets dropdown.
+Click "> Assets" to find the .zip file.
 
 ### Install guide and discussion
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
