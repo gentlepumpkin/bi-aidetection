@@ -31,31 +31,52 @@ namespace WindowsFormsApp2
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Shell));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint1 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint2 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint3 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series13 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series14 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint4 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint5 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint6 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.tableLayoutPanel1 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel21 = new DBLayoutPanel(this.components);
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabOverview = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel14 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel15 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.lbl_version = new System.Windows.Forms.Label();
+            this.lbl_errors = new System.Windows.Forms.Label();
+            this.lbl_info = new System.Windows.Forms.Label();
+            this.tabStats = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel16 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel23 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.label8 = new System.Windows.Forms.Label();
+            this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.label7 = new System.Windows.Forms.Label();
+            this.tableLayoutPanel17 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.tabHistory = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel1 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel21 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.tableLayoutPanel22 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel22 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tableLayoutPanel19 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel19 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
             this.list1 = new System.Windows.Forms.ListView();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -65,35 +86,14 @@ namespace WindowsFormsApp2
             this.cb_filter_person = new System.Windows.Forms.CheckBox();
             this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
             this.cb_filter_animal = new System.Windows.Forms.CheckBox();
-            this.lbl_info = new System.Windows.Forms.Label();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabOverview = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel14 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel15 = new DBLayoutPanel(this.components);
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.lbl_version = new System.Windows.Forms.Label();
-            this.lbl_errors = new System.Windows.Forms.Label();
-            this.tabStats = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel16 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel23 = new DBLayoutPanel(this.components);
-            this.label8 = new System.Windows.Forms.Label();
-            this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.label7 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel17 = new DBLayoutPanel(this.components);
-            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.tabHistory = new System.Windows.Forms.TabPage();
             this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel2 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel3 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel2 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel3 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
             this.btnCameraAdd = new System.Windows.Forms.Button();
-            this.tableLayoutPanel6 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel7 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel8 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel6 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel7 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel8 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.cb_person = new System.Windows.Forms.CheckBox();
             this.cb_bicycle = new System.Windows.Forms.CheckBox();
             this.cb_motorcycle = new System.Windows.Forms.CheckBox();
@@ -110,41 +110,41 @@ namespace WindowsFormsApp2
             this.cb_truck = new System.Windows.Forms.CheckBox();
             this.cb_car = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel9 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel10 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel9 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel10 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.lblTriggerUrl = new System.Windows.Forms.Label();
             this.tbTriggerUrl = new System.Windows.Forms.TextBox();
             this.cb_telegram = new System.Windows.Forms.CheckBox();
-            this.tableLayoutPanel20 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel20 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.label5 = new System.Windows.Forms.Label();
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.lblPrefix = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
-            this.tableLayoutPanel12 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel12 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.tbPrefix = new System.Windows.Forms.TextBox();
             this.lbl_prefix = new System.Windows.Forms.Label();
-            this.tableLayoutPanel13 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel13 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.tbName = new System.Windows.Forms.TextBox();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.lblRelevantObjects = new System.Windows.Forms.Label();
             this.lbl_threshold = new System.Windows.Forms.Label();
-            this.tableLayoutPanel24 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel24 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.lbl_threshold_lower = new System.Windows.Forms.Label();
             this.tb_threshold_upper = new System.Windows.Forms.TextBox();
             this.lbl_threshold_upper = new System.Windows.Forms.Label();
             this.tb_threshold_lower = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel11 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel11 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.btnCameraDel = new System.Windows.Forms.Button();
             this.lbl_camstats = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel4 = new DBLayoutPanel(this.components);
-            this.tableLayoutPanel5 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel4 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
+            this.tableLayoutPanel5 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.label4 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel25 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel25 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.btn_open_log = new System.Windows.Forms.Button();
             this.cb_log = new System.Windows.Forms.CheckBox();
             this.label12 = new System.Windows.Forms.Label();
@@ -156,20 +156,17 @@ namespace WindowsFormsApp2
             this.lbl_telegram_chatid = new System.Windows.Forms.Label();
             this.tb_telegram_token = new System.Windows.Forms.TextBox();
             this.tb_telegram_chatid = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel18 = new DBLayoutPanel(this.components);
+            this.tableLayoutPanel18 = new WindowsFormsApp2.Shell.DBLayoutPanel(this.components);
             this.tbInput = new System.Windows.Forms.TextBox();
             this.btn_input_path = new System.Windows.Forms.Button();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
-            this.tableLayoutPanel1.SuspendLayout();
-            this.tableLayoutPanel21.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.tableLayoutPanel22.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.tableLayoutPanel19.SuspendLayout();
-            this.panel1.SuspendLayout();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.pictureBox3 = new System.Windows.Forms.PictureBox();
+            this.label_face = new System.Windows.Forms.Label();
+            this.button2 = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
+            this.lbl_facelist = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -183,6 +180,16 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel17.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.tabHistory.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
+            this.tableLayoutPanel21.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.tableLayoutPanel22.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.tableLayoutPanel19.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.tabCameras.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -201,6 +208,8 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel25.SuspendLayout();
             this.tableLayoutPanel18.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -210,6 +219,393 @@ namespace WindowsFormsApp2
             this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
             this.notifyIcon.Text = "AI Tool";
             this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseDoubleClick);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabOverview);
+            this.tabControl1.Controls.Add(this.tabStats);
+            this.tabControl1.Controls.Add(this.tabHistory);
+            this.tabControl1.Controls.Add(this.tabCameras);
+            this.tabControl1.Controls.Add(this.tabSettings);
+            this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(954, 462);
+            this.tabControl1.TabIndex = 4;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
+            this.tabControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseDown);
+            // 
+            // tabOverview
+            // 
+            this.tabOverview.Controls.Add(this.tableLayoutPanel14);
+            this.tabOverview.Location = new System.Drawing.Point(4, 22);
+            this.tabOverview.Name = "tabOverview";
+            this.tabOverview.Size = new System.Drawing.Size(946, 436);
+            this.tabOverview.TabIndex = 4;
+            this.tabOverview.Text = "Overview";
+            this.tabOverview.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel14
+            // 
+            this.tableLayoutPanel14.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
+            this.tableLayoutPanel14.ColumnCount = 1;
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel14.Controls.Add(this.tableLayoutPanel15, 0, 0);
+            this.tableLayoutPanel14.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel14.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel14.Name = "tableLayoutPanel14";
+            this.tableLayoutPanel14.RowCount = 1;
+            this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel14.Size = new System.Drawing.Size(946, 436);
+            this.tableLayoutPanel14.TabIndex = 3;
+            // 
+            // tableLayoutPanel15
+            // 
+            this.tableLayoutPanel15.ColumnCount = 1;
+            this.tableLayoutPanel15.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel15.Controls.Add(this.pictureBox2, 0, 0);
+            this.tableLayoutPanel15.Controls.Add(this.label2, 0, 2);
+            this.tableLayoutPanel15.Controls.Add(this.label3, 0, 1);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_version, 0, 4);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_errors, 0, 3);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_info, 0, 4);
+            this.tableLayoutPanel15.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel15.Location = new System.Drawing.Point(4, 4);
+            this.tableLayoutPanel15.Name = "tableLayoutPanel15";
+            this.tableLayoutPanel15.RowCount = 5;
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 49.5F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 1F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.5F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 5F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel15.Size = new System.Drawing.Size(938, 428);
+            this.tableLayoutPanel15.TabIndex = 0;
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox2.Image = global::WindowsFormsApp2.Properties.Resources.logo;
+            this.pictureBox2.Location = new System.Drawing.Point(3, 74);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(932, 124);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox2.TabIndex = 4;
+            this.pictureBox2.TabStop = false;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.Color.Green;
+            this.label2.Location = new System.Drawing.Point(3, 205);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(932, 92);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Running";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.label3.Location = new System.Drawing.Point(60, 201);
+            this.label3.Margin = new System.Windows.Forms.Padding(60, 0, 60, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(818, 2);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "label3";
+            // 
+            // lbl_version
+            // 
+            this.lbl_version.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_version.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_version.Location = new System.Drawing.Point(3, 406);
+            this.lbl_version.Name = "lbl_version";
+            this.lbl_version.Size = new System.Drawing.Size(932, 22);
+            this.lbl_version.TabIndex = 6;
+            this.lbl_version.Text = "Version 1.67 preview 4";
+            this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            // 
+            // lbl_errors
+            // 
+            this.lbl_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_errors.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_errors.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.lbl_errors.Location = new System.Drawing.Point(3, 327);
+            this.lbl_errors.Name = "lbl_errors";
+            this.lbl_errors.Size = new System.Drawing.Size(932, 59);
+            this.lbl_errors.TabIndex = 7;
+            this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lbl_errors.Visible = false;
+            this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
+            // 
+            // lbl_info
+            // 
+            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_info.AutoSize = true;
+            this.lbl_info.Location = new System.Drawing.Point(3, 386);
+            this.lbl_info.Name = "lbl_info";
+            this.lbl_info.Size = new System.Drawing.Size(932, 20);
+            this.lbl_info.TabIndex = 8;
+            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tabStats
+            // 
+            this.tabStats.Controls.Add(this.tableLayoutPanel16);
+            this.tabStats.Location = new System.Drawing.Point(4, 22);
+            this.tabStats.Name = "tabStats";
+            this.tabStats.Size = new System.Drawing.Size(946, 436);
+            this.tabStats.TabIndex = 5;
+            this.tabStats.Text = "Stats";
+            this.tabStats.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel16
+            // 
+            this.tableLayoutPanel16.ColumnCount = 2;
+            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel23, 0, 0);
+            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel17, 0, 0);
+            this.tableLayoutPanel16.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel16.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel16.Name = "tableLayoutPanel16";
+            this.tableLayoutPanel16.RowCount = 1;
+            this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel16.Size = new System.Drawing.Size(946, 436);
+            this.tableLayoutPanel16.TabIndex = 0;
+            // 
+            // tableLayoutPanel23
+            // 
+            this.tableLayoutPanel23.ColumnCount = 1;
+            this.tableLayoutPanel23.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel23.Controls.Add(this.label8, 0, 2);
+            this.tableLayoutPanel23.Controls.Add(this.chart_confidence, 0, 2);
+            this.tableLayoutPanel23.Controls.Add(this.timeline, 0, 1);
+            this.tableLayoutPanel23.Controls.Add(this.label7, 0, 0);
+            this.tableLayoutPanel23.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel23.Location = new System.Drawing.Point(286, 3);
+            this.tableLayoutPanel23.Name = "tableLayoutPanel23";
+            this.tableLayoutPanel23.RowCount = 3;
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel23.Size = new System.Drawing.Size(657, 430);
+            this.tableLayoutPanel23.TabIndex = 7;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label8.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(3, 218);
+            this.label8.Margin = new System.Windows.Forms.Padding(3);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(651, 27);
+            this.label8.TabIndex = 9;
+            this.label8.Text = "Frequencies of alert result confidences";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // chart_confidence
+            // 
+            this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
+            this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea5.AxisX.Interval = 10D;
+            chartArea5.AxisX.MajorGrid.Interval = 6D;
+            chartArea5.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea5.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea5.AxisX.MajorTickMark.Interval = 1D;
+            chartArea5.AxisX.Maximum = 100D;
+            chartArea5.AxisX.Minimum = 0D;
+            chartArea5.AxisX.Title = "Alert confidence";
+            chartArea5.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea5.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea5.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea5.AxisY.Title = "Frequency";
+            chartArea5.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea5.BackColor = System.Drawing.Color.Transparent;
+            chartArea5.Name = "ChartArea1";
+            this.chart_confidence.ChartAreas.Add(chartArea5);
+            this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chart_confidence.Location = new System.Drawing.Point(3, 251);
+            this.chart_confidence.Name = "chart_confidence";
+            series9.BorderWidth = 4;
+            series9.ChartArea = "ChartArea1";
+            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series9.Color = System.Drawing.Color.Orange;
+            series9.Name = "no alert";
+            series10.BorderWidth = 3;
+            series10.ChartArea = "ChartArea1";
+            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series10.Color = System.Drawing.Color.Green;
+            series10.Legend = "Legend1";
+            series10.Name = "alert";
+            this.chart_confidence.Series.Add(series9);
+            this.chart_confidence.Series.Add(series10);
+            this.chart_confidence.Size = new System.Drawing.Size(651, 176);
+            this.chart_confidence.TabIndex = 8;
+            // 
+            // timeline
+            // 
+            this.timeline.BackColor = System.Drawing.Color.Transparent;
+            this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea6.AxisX.Interval = 3D;
+            chartArea6.AxisX.MajorGrid.Interval = 6D;
+            chartArea6.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea6.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea6.AxisX.MajorTickMark.Interval = 1D;
+            chartArea6.AxisX.Maximum = 24D;
+            chartArea6.AxisX.Minimum = 0D;
+            chartArea6.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea6.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea6.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea6.AxisY.Title = "Number";
+            chartArea6.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea6.BackColor = System.Drawing.Color.Transparent;
+            chartArea6.Name = "ChartArea1";
+            this.timeline.ChartAreas.Add(chartArea6);
+            this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.timeline.Location = new System.Drawing.Point(3, 36);
+            this.timeline.Name = "timeline";
+            series11.ChartArea = "ChartArea1";
+            series11.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
+            series11.Color = System.Drawing.Color.Silver;
+            series11.Legend = "Legend1";
+            series11.Name = "all";
+            series12.BorderWidth = 3;
+            series12.ChartArea = "ChartArea1";
+            series12.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series12.Color = System.Drawing.Color.OrangeRed;
+            series12.Legend = "Legend1";
+            series12.Name = "falses";
+            series13.BorderWidth = 3;
+            series13.ChartArea = "ChartArea1";
+            series13.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series13.Color = System.Drawing.Color.Orange;
+            series13.Legend = "Legend1";
+            series13.Name = "irrelevant";
+            series14.BorderWidth = 4;
+            series14.ChartArea = "ChartArea1";
+            series14.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series14.Color = System.Drawing.Color.Green;
+            series14.Legend = "Legend1";
+            series14.Name = "relevant";
+            this.timeline.Series.Add(series11);
+            this.timeline.Series.Add(series12);
+            this.timeline.Series.Add(series13);
+            this.timeline.Series.Add(series14);
+            this.timeline.Size = new System.Drawing.Size(651, 176);
+            this.timeline.TabIndex = 6;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(3, 3);
+            this.label7.Margin = new System.Windows.Forms.Padding(3);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(651, 27);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "Timeline";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // tableLayoutPanel17
+            // 
+            this.tableLayoutPanel17.ColumnCount = 1;
+            this.tableLayoutPanel17.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel17.Controls.Add(this.chart1, 0, 1);
+            this.tableLayoutPanel17.Controls.Add(this.comboBox1, 0, 0);
+            this.tableLayoutPanel17.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel17.Name = "tableLayoutPanel17";
+            this.tableLayoutPanel17.RowCount = 2;
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel17.Size = new System.Drawing.Size(277, 430);
+            this.tableLayoutPanel17.TabIndex = 3;
+            // 
+            // chart1
+            // 
+            this.chart1.BackColor = System.Drawing.Color.Transparent;
+            this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea4.Area3DStyle.Enable3D = true;
+            chartArea4.Area3DStyle.Inclination = 35;
+            chartArea4.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
+            chartArea4.BackColor = System.Drawing.Color.Transparent;
+            chartArea4.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea4);
+            this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
+            legend2.Alignment = System.Drawing.StringAlignment.Center;
+            legend2.BackColor = System.Drawing.Color.Transparent;
+            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            legend2.IsTextAutoFit = false;
+            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
+            legend2.Name = "Legend1";
+            this.chart1.Legends.Add(legend2);
+            this.chart1.Location = new System.Drawing.Point(3, 36);
+            this.chart1.Name = "chart1";
+            series8.ChartArea = "ChartArea1";
+            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
+            series8.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            series8.IsValueShownAsLabel = true;
+            series8.Legend = "Legend1";
+            series8.Name = "s1";
+            dataPoint4.IsVisibleInLegend = true;
+            series8.Points.Add(dataPoint4);
+            series8.Points.Add(dataPoint5);
+            series8.Points.Add(dataPoint6);
+            this.chart1.Series.Add(series8);
+            this.chart1.Size = new System.Drawing.Size(271, 391);
+            this.chart1.TabIndex = 2;
+            this.chart1.Text = "chart1";
+            title2.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            title2.Name = "Title1";
+            title2.Text = "Input Rates";
+            this.chart1.Titles.Add(title2);
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(3, 3);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(271, 25);
+            this.comboBox1.TabIndex = 3;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
+            // 
+            // tabHistory
+            // 
+            this.tabHistory.Controls.Add(this.tableLayoutPanel1);
+            this.tabHistory.Location = new System.Drawing.Point(4, 22);
+            this.tabHistory.Name = "tabHistory";
+            this.tabHistory.Padding = new System.Windows.Forms.Padding(3);
+            this.tabHistory.Size = new System.Drawing.Size(946, 436);
+            this.tabHistory.TabIndex = 0;
+            this.tabHistory.Text = "History";
+            this.tabHistory.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel1
             // 
@@ -472,392 +868,6 @@ namespace WindowsFormsApp2
             this.cb_filter_animal.Text = "only alerts with animals";
             this.cb_filter_animal.UseVisualStyleBackColor = true;
             this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
-            // 
-            // lbl_info
-            // 
-            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_info.AutoSize = true;
-            this.lbl_info.Location = new System.Drawing.Point(3, 386);
-            this.lbl_info.Name = "lbl_info";
-            this.lbl_info.Size = new System.Drawing.Size(932, 20);
-            this.lbl_info.TabIndex = 8;
-            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tabControl1
-            // 
-            this.tabControl1.Controls.Add(this.tabOverview);
-            this.tabControl1.Controls.Add(this.tabStats);
-            this.tabControl1.Controls.Add(this.tabHistory);
-            this.tabControl1.Controls.Add(this.tabCameras);
-            this.tabControl1.Controls.Add(this.tabSettings);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(0, 0);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(954, 462);
-            this.tabControl1.TabIndex = 4;
-            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
-            this.tabControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseDown);
-            // 
-            // tabOverview
-            // 
-            this.tabOverview.Controls.Add(this.tableLayoutPanel14);
-            this.tabOverview.Location = new System.Drawing.Point(4, 22);
-            this.tabOverview.Name = "tabOverview";
-            this.tabOverview.Size = new System.Drawing.Size(946, 436);
-            this.tabOverview.TabIndex = 4;
-            this.tabOverview.Text = "Overview";
-            this.tabOverview.UseVisualStyleBackColor = true;
-            // 
-            // tableLayoutPanel14
-            // 
-            this.tableLayoutPanel14.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
-            this.tableLayoutPanel14.ColumnCount = 1;
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel14.Controls.Add(this.tableLayoutPanel15, 0, 0);
-            this.tableLayoutPanel14.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel14.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel14.Name = "tableLayoutPanel14";
-            this.tableLayoutPanel14.RowCount = 1;
-            this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel14.Size = new System.Drawing.Size(946, 436);
-            this.tableLayoutPanel14.TabIndex = 3;
-            // 
-            // tableLayoutPanel15
-            // 
-            this.tableLayoutPanel15.ColumnCount = 1;
-            this.tableLayoutPanel15.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel15.Controls.Add(this.pictureBox2, 0, 0);
-            this.tableLayoutPanel15.Controls.Add(this.label2, 0, 2);
-            this.tableLayoutPanel15.Controls.Add(this.label3, 0, 1);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_version, 0, 4);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_errors, 0, 3);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_info, 0, 4);
-            this.tableLayoutPanel15.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel15.Location = new System.Drawing.Point(4, 4);
-            this.tableLayoutPanel15.Name = "tableLayoutPanel15";
-            this.tableLayoutPanel15.RowCount = 5;
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 49.5F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 1F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.5F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 5F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel15.Size = new System.Drawing.Size(938, 428);
-            this.tableLayoutPanel15.TabIndex = 0;
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBox2.Image = global::WindowsFormsApp2.Properties.Resources.logo;
-            this.pictureBox2.Location = new System.Drawing.Point(3, 74);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(932, 124);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox2.TabIndex = 4;
-            this.pictureBox2.TabStop = false;
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 48F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.Green;
-            this.label2.Location = new System.Drawing.Point(3, 205);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(932, 92);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Running";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label3.Location = new System.Drawing.Point(60, 201);
-            this.label3.Margin = new System.Windows.Forms.Padding(60, 0, 60, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(818, 2);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "label3";
-            // 
-            // lbl_version
-            // 
-            this.lbl_version.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_version.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_version.Location = new System.Drawing.Point(3, 406);
-            this.lbl_version.Name = "lbl_version";
-            this.lbl_version.Size = new System.Drawing.Size(932, 22);
-            this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.67 preview 4";
-            this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            // 
-            // lbl_errors
-            // 
-            this.lbl_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_errors.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_errors.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbl_errors.Location = new System.Drawing.Point(3, 327);
-            this.lbl_errors.Name = "lbl_errors";
-            this.lbl_errors.Size = new System.Drawing.Size(932, 59);
-            this.lbl_errors.TabIndex = 7;
-            this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lbl_errors.Visible = false;
-            this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
-            // 
-            // tabStats
-            // 
-            this.tabStats.Controls.Add(this.tableLayoutPanel16);
-            this.tabStats.Location = new System.Drawing.Point(4, 22);
-            this.tabStats.Name = "tabStats";
-            this.tabStats.Size = new System.Drawing.Size(946, 436);
-            this.tabStats.TabIndex = 5;
-            this.tabStats.Text = "Stats";
-            this.tabStats.UseVisualStyleBackColor = true;
-            // 
-            // tableLayoutPanel16
-            // 
-            this.tableLayoutPanel16.ColumnCount = 2;
-            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
-            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
-            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel23, 0, 0);
-            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel17, 0, 0);
-            this.tableLayoutPanel16.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel16.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel16.Name = "tableLayoutPanel16";
-            this.tableLayoutPanel16.RowCount = 1;
-            this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel16.Size = new System.Drawing.Size(946, 436);
-            this.tableLayoutPanel16.TabIndex = 0;
-            // 
-            // tableLayoutPanel23
-            // 
-            this.tableLayoutPanel23.ColumnCount = 1;
-            this.tableLayoutPanel23.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel23.Controls.Add(this.label8, 0, 2);
-            this.tableLayoutPanel23.Controls.Add(this.chart_confidence, 0, 2);
-            this.tableLayoutPanel23.Controls.Add(this.timeline, 0, 1);
-            this.tableLayoutPanel23.Controls.Add(this.label7, 0, 0);
-            this.tableLayoutPanel23.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel23.Location = new System.Drawing.Point(286, 3);
-            this.tableLayoutPanel23.Name = "tableLayoutPanel23";
-            this.tableLayoutPanel23.RowCount = 3;
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel23.Size = new System.Drawing.Size(657, 430);
-            this.tableLayoutPanel23.TabIndex = 7;
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label8.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(3, 218);
-            this.label8.Margin = new System.Windows.Forms.Padding(3);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(651, 27);
-            this.label8.TabIndex = 9;
-            this.label8.Text = "Frequencies of alert result confidences";
-            this.label8.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // chart_confidence
-            // 
-            this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
-            this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.Interval = 10D;
-            chartArea1.AxisX.MajorGrid.Interval = 6D;
-            chartArea1.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea1.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea1.AxisX.MajorTickMark.Interval = 1D;
-            chartArea1.AxisX.Maximum = 100D;
-            chartArea1.AxisX.Minimum = 0D;
-            chartArea1.AxisX.Title = "Alert confidence";
-            chartArea1.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea1.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea1.AxisY.Title = "Frequency";
-            chartArea1.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea1.BackColor = System.Drawing.Color.Transparent;
-            chartArea1.Name = "ChartArea1";
-            this.chart_confidence.ChartAreas.Add(chartArea1);
-            this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chart_confidence.Location = new System.Drawing.Point(3, 251);
-            this.chart_confidence.Name = "chart_confidence";
-            series1.BorderWidth = 4;
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Color = System.Drawing.Color.Orange;
-            series1.Name = "no alert";
-            series2.BorderWidth = 3;
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Color = System.Drawing.Color.Green;
-            series2.Legend = "Legend1";
-            series2.Name = "alert";
-            this.chart_confidence.Series.Add(series1);
-            this.chart_confidence.Series.Add(series2);
-            this.chart_confidence.Size = new System.Drawing.Size(651, 176);
-            this.chart_confidence.TabIndex = 8;
-            // 
-            // timeline
-            // 
-            this.timeline.BackColor = System.Drawing.Color.Transparent;
-            this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea2.AxisX.Interval = 3D;
-            chartArea2.AxisX.MajorGrid.Interval = 6D;
-            chartArea2.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea2.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea2.AxisX.MajorTickMark.Interval = 1D;
-            chartArea2.AxisX.Maximum = 24D;
-            chartArea2.AxisX.Minimum = 0D;
-            chartArea2.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea2.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea2.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea2.AxisY.Title = "Number";
-            chartArea2.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea2.BackColor = System.Drawing.Color.Transparent;
-            chartArea2.Name = "ChartArea1";
-            this.timeline.ChartAreas.Add(chartArea2);
-            this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.timeline.Location = new System.Drawing.Point(3, 36);
-            this.timeline.Name = "timeline";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
-            series3.Color = System.Drawing.Color.Silver;
-            series3.Legend = "Legend1";
-            series3.Name = "all";
-            series4.BorderWidth = 3;
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series4.Color = System.Drawing.Color.OrangeRed;
-            series4.Legend = "Legend1";
-            series4.Name = "falses";
-            series5.BorderWidth = 3;
-            series5.ChartArea = "ChartArea1";
-            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series5.Color = System.Drawing.Color.Orange;
-            series5.Legend = "Legend1";
-            series5.Name = "irrelevant";
-            series6.BorderWidth = 4;
-            series6.ChartArea = "ChartArea1";
-            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series6.Color = System.Drawing.Color.Green;
-            series6.Legend = "Legend1";
-            series6.Name = "relevant";
-            this.timeline.Series.Add(series3);
-            this.timeline.Series.Add(series4);
-            this.timeline.Series.Add(series5);
-            this.timeline.Series.Add(series6);
-            this.timeline.Size = new System.Drawing.Size(651, 176);
-            this.timeline.TabIndex = 6;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label7.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(3, 3);
-            this.label7.Margin = new System.Windows.Forms.Padding(3);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(651, 27);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "Timeline";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // tableLayoutPanel17
-            // 
-            this.tableLayoutPanel17.ColumnCount = 1;
-            this.tableLayoutPanel17.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel17.Controls.Add(this.chart1, 0, 1);
-            this.tableLayoutPanel17.Controls.Add(this.comboBox1, 0, 0);
-            this.tableLayoutPanel17.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanel17.Name = "tableLayoutPanel17";
-            this.tableLayoutPanel17.RowCount = 2;
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 33F));
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel17.Size = new System.Drawing.Size(277, 430);
-            this.tableLayoutPanel17.TabIndex = 3;
-            // 
-            // chart1
-            // 
-            this.chart1.BackColor = System.Drawing.Color.Transparent;
-            this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea3.Area3DStyle.Enable3D = true;
-            chartArea3.Area3DStyle.Inclination = 35;
-            chartArea3.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
-            chartArea3.BackColor = System.Drawing.Color.Transparent;
-            chartArea3.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea3);
-            this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.BackColor = System.Drawing.Color.Transparent;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            legend1.IsTextAutoFit = false;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
-            legend1.Name = "Legend1";
-            this.chart1.Legends.Add(legend1);
-            this.chart1.Location = new System.Drawing.Point(3, 36);
-            this.chart1.Name = "chart1";
-            series7.ChartArea = "ChartArea1";
-            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
-            series7.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            series7.IsValueShownAsLabel = true;
-            series7.Legend = "Legend1";
-            series7.Name = "s1";
-            dataPoint1.IsVisibleInLegend = true;
-            series7.Points.Add(dataPoint1);
-            series7.Points.Add(dataPoint2);
-            series7.Points.Add(dataPoint3);
-            this.chart1.Series.Add(series7);
-            this.chart1.Size = new System.Drawing.Size(271, 391);
-            this.chart1.TabIndex = 2;
-            this.chart1.Text = "chart1";
-            title1.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            title1.Name = "Title1";
-            title1.Text = "Input Rates";
-            this.chart1.Titles.Add(title1);
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(3, 3);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(271, 25);
-            this.comboBox1.TabIndex = 3;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
-            // 
-            // tabHistory
-            // 
-            this.tabHistory.Controls.Add(this.tableLayoutPanel1);
-            this.tabHistory.Location = new System.Drawing.Point(4, 22);
-            this.tabHistory.Name = "tabHistory";
-            this.tabHistory.Padding = new System.Windows.Forms.Padding(3);
-            this.tabHistory.Size = new System.Drawing.Size(946, 436);
-            this.tabHistory.TabIndex = 0;
-            this.tabHistory.Text = "History";
-            this.tabHistory.UseVisualStyleBackColor = true;
             // 
             // tabCameras
             // 
@@ -1840,6 +1850,80 @@ namespace WindowsFormsApp2
             this.BtnSettingsSave.UseVisualStyleBackColor = true;
             this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.lbl_facelist);
+            this.tabPage1.Controls.Add(this.button3);
+            this.tabPage1.Controls.Add(this.pictureBox3);
+            this.tabPage1.Controls.Add(this.label_face);
+            this.tabPage1.Controls.Add(this.button2);
+            this.tabPage1.Controls.Add(this.button1);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(946, 436);
+            this.tabPage1.TabIndex = 6;
+            this.tabPage1.Text = "Faces";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabPage1.Click += new System.EventHandler(this.tabPage1_Click);
+            // 
+            // pictureBox3
+            // 
+            this.pictureBox3.Location = new System.Drawing.Point(480, 58);
+            this.pictureBox3.Name = "pictureBox3";
+            this.pictureBox3.Size = new System.Drawing.Size(346, 372);
+            this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox3.TabIndex = 5;
+            this.pictureBox3.TabStop = false;
+            // 
+            // label_face
+            // 
+            this.label_face.AutoSize = true;
+            this.label_face.Location = new System.Drawing.Point(477, 25);
+            this.label_face.Name = "label_face";
+            this.label_face.Size = new System.Drawing.Size(53, 13);
+            this.label_face.TabIndex = 4;
+            this.label_face.Text = "Detection";
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(270, 25);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(159, 43);
+            this.button2.TabIndex = 1;
+            this.button2.Text = "detect";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(49, 25);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(159, 43);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "register a face";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(49, 153);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(159, 43);
+            this.button3.TabIndex = 6;
+            this.button3.Text = "list faces";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // lbl_facelist
+            // 
+            this.lbl_facelist.AutoSize = true;
+            this.lbl_facelist.Location = new System.Drawing.Point(89, 214);
+            this.lbl_facelist.Name = "lbl_facelist";
+            this.lbl_facelist.Size = new System.Drawing.Size(23, 13);
+            this.lbl_facelist.TabIndex = 7;
+            this.lbl_facelist.Text = "List";
+            // 
             // Shell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1854,18 +1938,6 @@ namespace WindowsFormsApp2
             this.Text = "AI Tool";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Shell_FormClosing);
             this.Resize += new System.EventHandler(this.Form1_Resize);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel21.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.tableLayoutPanel22.ResumeLayout(false);
-            this.tableLayoutPanel22.PerformLayout();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.tableLayoutPanel19.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabOverview.ResumeLayout(false);
             this.tableLayoutPanel14.ResumeLayout(false);
@@ -1881,6 +1953,18 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel17.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.tabHistory.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel21.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.tableLayoutPanel22.ResumeLayout(false);
+            this.tableLayoutPanel22.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.tableLayoutPanel19.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.tabCameras.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
@@ -1910,6 +1994,9 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel25.ResumeLayout(false);
             this.tableLayoutPanel18.ResumeLayout(false);
             this.tableLayoutPanel18.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -2030,6 +2117,13 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.CheckBox cb_showMask;
         private System.Windows.Forms.Label lbl_objects;
         private DBLayoutPanel tableLayoutPanel6;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.PictureBox pictureBox3;
+        private System.Windows.Forms.Label label_face;
+        private System.Windows.Forms.Label lbl_facelist;
+        private System.Windows.Forms.Button button3;
     }
 }
 

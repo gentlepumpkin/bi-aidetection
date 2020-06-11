@@ -50,6 +50,10 @@ namespace WindowsFormsApp2
         public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
         List<Camera> CameraList = new List<Camera>(); //list containing all cameras
 
+
+        string facelist = "";
+        public string facetext = "";
+
         static HttpClient client = new HttpClient();
 
         FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
@@ -61,7 +65,7 @@ namespace WindowsFormsApp2
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
 
             //if camera settings folder does not exist, create it
-            if (!Directory.Exists("./cameras/")) 
+            if (!Directory.Exists("./cameras/"))
             {
                 //create folder
                 DirectoryInfo di = Directory.CreateDirectory("./cameras");
@@ -187,21 +191,21 @@ namespace WindowsFormsApp2
         }
 
 
-//----------------------------------------------------------------------------------------------------------
-//CORE
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //CORE
+        //----------------------------------------------------------------------------------------------------------
 
         //analyze image with AI
         public async Task DetectObjects(string image_path)
         {
-            
+
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
             Log("");
             Log($"Starting analysis of {image_path}");
-            
+
             var fullDeepstackUrl = "";
             //allows both "http://ip:port" and "ip:port"
-            if(!deepstack_url.Contains("http://")) //"ip:port"
+            if (!deepstack_url.Contains("http://")) //"ip:port"
             {
                 fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
             }
@@ -524,7 +528,7 @@ namespace WindowsFormsApp2
                     Log($"Retrying image processing - retry  {attempts}");
                 }
             }
-                
+
             /*
             try
             {
@@ -550,12 +554,12 @@ namespace WindowsFormsApp2
                     Log($"   trigger url: {x}");
                     var content = client.DownloadString(x);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Log(ex.Message);
                     Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
                 }
-                
+
             }
 
             if (trigger_urls.Length > 1)
@@ -590,7 +594,7 @@ namespace WindowsFormsApp2
                         {
                             Log($"      uploading image to chat \"{chatid}\"");
                             await bot.SendPhotoAsync(chatid, file_id);
-                        }     
+                        }
                     }
                 }
                 catch
@@ -630,7 +634,7 @@ namespace WindowsFormsApp2
                 }
                 catch
                 {
-                    if(send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
+                    if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
                     {
                         send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
                         Log($"ERROR: Could not send text \"{text}\" to Telegram.");
@@ -680,7 +684,7 @@ namespace WindowsFormsApp2
                         {
                             Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
                         }
-                        
+
                         c++;
                     }
 
@@ -703,10 +707,13 @@ namespace WindowsFormsApp2
             }
 
             CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                                                                
+
             Task ignoredAwaitableResult = this.LastTriggerInfo(index, CameraList[index].cooldown_time); //write info to label
 
         }
+
+
+
 
 
 
@@ -723,7 +730,7 @@ namespace WindowsFormsApp2
                     using (var mask_img = new Bitmap($"./cameras/{cameraname}.png"))
                     {
                         //if any coordinates of the object are outside of the mask image, th mask image must be too small.
-                        if(mask_img.Width != width || mask_img.Height != height)
+                        if (mask_img.Width != width || mask_img.Height != height)
                         {
                             Log($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
                             return true;
@@ -774,14 +781,14 @@ namespace WindowsFormsApp2
                     Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
                     return true;
                 }
-                
+
             }
             catch
             {
                 Log($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
                 return true;
             }
-            
+
         }
 
         //save how many times an error happened
@@ -801,7 +808,7 @@ namespace WindowsFormsApp2
         {
 
             //if log everything is disabled and the text is neighter an ERROR, nor a WARNING: write only to console and ABORT
-            if (log_everything == false && !text.Contains("ERROR") && !text.Contains("WARNING" ) )
+            if (log_everything == false && !text.Contains("ERROR") && !text.Contains("WARNING"))
             {
                 text += "Enabling \'Log everything\' might give more information.";
                 Console.WriteLine($"{text}");
@@ -817,7 +824,7 @@ namespace WindowsFormsApp2
             {
                 time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
             }
-            
+
 
             //if log file does not exist, create it
             if (!System.IO.File.Exists("./log.txt"))
@@ -835,7 +842,7 @@ namespace WindowsFormsApp2
                     MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't create log.txt file!"; };
                     Invoke(LabelUpdate);
                 }
-                
+
             }
 
             //add text to log
@@ -852,12 +859,12 @@ namespace WindowsFormsApp2
                 Invoke(LabelUpdate);
             }
 
-            if(send_errors == true && text.Contains("ERROR") || text.Contains("WARNING"))
+            if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING"))
             {
                 await TelegramText($"[{time}]: {text}"); //upload text to Telegram
             }
-            
-          
+
+
 
             //add log text to console
             Console.WriteLine($"[{time}]: {text}");
@@ -915,7 +922,7 @@ namespace WindowsFormsApp2
             this.Show();
             this.WindowState = FormWindowState.Normal;
             notifyIcon.Visible = false;
-        } 
+        }
 
         //open Log when clicking or error message
         private void lbl_errors_Click(object sender, EventArgs e)
@@ -929,7 +936,7 @@ namespace WindowsFormsApp2
             {
                 MessageBox.Show("log missing");
             }
-                
+
         }
 
         //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
@@ -989,7 +996,7 @@ namespace WindowsFormsApp2
         //add last trigger time to label on Overview page
         private async Task LastTriggerInfo(int index, double minutes)
         {
-            string text1 = $"{CameraList[index].name} last triggered at {CameraList[index].last_trigger_time}. Sleeping for {minutes/2} minutes."; //write last trigger time to label on Overview page
+            string text1 = $"{CameraList[index].name} last triggered at {CameraList[index].last_trigger_time}. Sleeping for {minutes / 2} minutes."; //write last trigger time to label on Overview page
             lbl_info.Text = text1;
 
             int time = 30 * Convert.ToInt32(1000 * minutes);
@@ -1016,16 +1023,16 @@ namespace WindowsFormsApp2
             {
                 UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
             }
-            else if(tabControl1.SelectedIndex == 2)
+            else if (tabControl1.SelectedIndex == 2)
             {
                 //CleanCSVList(); //removed to load the history list faster
             }
         }
 
 
-//----------------------------------------------------------------------------------------------------------
-//STATS TAB
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //STATS TAB
+        //----------------------------------------------------------------------------------------------------------
 
         //other camera in combobox selected, display according PieChart
         private void comboBox1_SelectedIndexChanged_1(object sender, EventArgs e)
@@ -1109,10 +1116,10 @@ namespace WindowsFormsApp2
                 //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
                 foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
                 {
-                    if(line.Split('|')[2] == cameraname )
+                    if (line.Split('|')[2] == cameraname)
                     {
                         result.Add(line);
-                    } 
+                    }
                 }
             }
 
@@ -1148,12 +1155,12 @@ namespace WindowsFormsApp2
                 }
 
                 //if detection was successful
-                if (val.Split('|')[5] == "true") 
+                if (val.Split('|')[5] == "true")
                 {
                     relevant[halfhour]++;
                 }
                 //if it was a false alert
-                else if (val.Split('|')[3] =="false alert")
+                else if (val.Split('|')[3] == "false alert")
                 {
                     falses[halfhour]++;
                 }
@@ -1174,13 +1181,13 @@ namespace WindowsFormsApp2
             * last point is at 24.25 and has the value of the first visible point. */
 
             timeline.Series[0].Points.AddXY(-0.25, all[47]); // beginning point with value of last visible point
-            
+
             //and now add all visible points 
             double x = 0.25;
-            foreach(int halfhour in all)
+            foreach (int halfhour in all)
             {
                 int index = timeline.Series[0].Points.AddXY(x, halfhour);
-                x = x + 0.5;  
+                x = x + 0.5;
             }
 
             timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
@@ -1253,7 +1260,7 @@ namespace WindowsFormsApp2
                     if (line.Split('|')[2] == cameraname)
                     {
                         result.Add(line);
-                        
+
                     }
                 }
             }
@@ -1298,7 +1305,7 @@ namespace WindowsFormsApp2
                             green_values[x_value]++;
                         }
                     }
-                } 
+                }
             }
 
 
@@ -1321,9 +1328,9 @@ namespace WindowsFormsApp2
         }
 
 
-//----------------------------------------------------------------------------------------------------------
-//HISTORY TAB
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //HISTORY TAB
+        //----------------------------------------------------------------------------------------------------------
 
         // load images from input_path to left list
         /*public void LoadList()
@@ -1357,7 +1364,7 @@ namespace WindowsFormsApp2
         //show or hide the privacy mask overlay
         private void showHideMask()
         {
-            if(cb_showMask.Checked == true) //show overlay
+            if (cb_showMask.Checked == true) //show overlay
             {
                 Log("Show mask toggled.");
                 if (list1.SelectedItems.Count > 0)
@@ -1373,14 +1380,14 @@ namespace WindowsFormsApp2
                     {
                         pictureBox1.Image = null; //if file does not exist, empty mask overlay (from possible overlays of previous images)
                     }
-                    
+
                 }
             }
             else //if showmask toggle-button is not checked, hide the mask overlay
             {
                 pictureBox1.Image = null;
             }
-            
+
         }
 
         //show rectangle overlay
@@ -1408,19 +1415,19 @@ namespace WindowsFormsApp2
                 if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                 {
                     scale = boxWidth / imgWidth; //get scale factor
-                    absY = (int) (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                    absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
                 }
                 else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
                 {
                     scale = boxHeight / imgHeight; //get scale factor
-                    absX = (int) (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                    absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                 }
 
                 //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                int xmin = (int) (scale * _xmin) + absX;
-                int xmax = (int) (scale * _xmax) + absX;
-                int ymin = (int) (scale * _ymin) + absY;
-                int ymax = (int) (scale * _ymax) + absY;
+                int xmin = (int)(scale * _xmin) + absX;
+                int xmax = (int)(scale * _xmax) + absX;
+                int ymin = (int)(scale * _ymin) + absY;
+                int ymax = (int)(scale * _ymax) + absY;
 
                 //3. paint rectangle
                 System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
@@ -1463,7 +1470,7 @@ namespace WindowsFormsApp2
                 }
 
                 //display a rectangle around each relevant object
-                for(int i = 0; i< countr-1; i++)
+                for (int i = 0; i < countr - 1; i++)
                 {
                     string[] detectionsArray = detections.Split(';');//creates array of detected objects, used for adding text overlay
                     //load 'xmin,ymin,xmax,ymax' from third column into a string
@@ -1485,7 +1492,7 @@ namespace WindowsFormsApp2
         }
 
         // add new entry in left list
-        public void CreateListItem( string filename, string date, string camera, string objects_and_confidence, string object_positions )
+        public void CreateListItem(string filename, string date, string camera, string objects_and_confidence, string object_positions)
         {
             string success;
             if (objects_and_confidence.Contains("%") && !objects_and_confidence.Contains(':'))
@@ -1514,7 +1521,7 @@ namespace WindowsFormsApp2
 
                     ResizeListViews();
                 }
-                
+
 
 
                 //update history CSV
@@ -1530,11 +1537,11 @@ namespace WindowsFormsApp2
             };
             Invoke(LabelUpdate);
 
-            
+
         }
 
         //remove entry from left list
-        public void DeleteListItem( string filename )
+        public void DeleteListItem(string filename)
         {
             Log($"Removing alert image {filename} from history list and from cameras/history.csv ...");
             MethodInvoker LabelUpdate = delegate
@@ -1582,7 +1589,7 @@ namespace WindowsFormsApp2
 
                     foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
                     {
-                        if(System.IO.File.Exists(input_path + "/" + line.Split('|')[0]) && input_path != "")
+                        if (System.IO.File.Exists(input_path + "/" + line.Split('|')[0]) && input_path != "")
                         {
                             newLines.Add(line);
                         }
@@ -1632,10 +1639,10 @@ namespace WindowsFormsApp2
                         string filename = val.Split('|')[0];
                         string date = val.Split('|')[1];
                         string object_positions = val.Split('|')[4];
-                        
 
 
-                        
+
+
 
                         ListViewItem item;
                         if (success == "true")
@@ -1662,8 +1669,8 @@ namespace WindowsFormsApp2
         private bool checkListFilters(string cameraname, string success, string objects_and_confidence)
         {
             if (!objects_and_confidence.Contains("person") && cb_filter_person.Checked) { return false; }
-            if (!(objects_and_confidence.Contains("car") || 
-                  objects_and_confidence.Contains("boat") || 
+            if (!(objects_and_confidence.Contains("car") ||
+                  objects_and_confidence.Contains("boat") ||
                   objects_and_confidence.Contains("bicycle") ||
                   objects_and_confidence.Contains("truck") ||
                   objects_and_confidence.Contains("airplane") ||
@@ -1671,10 +1678,10 @@ namespace WindowsFormsApp2
                   objects_and_confidence.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
             if (!(objects_and_confidence.Contains("dog") ||
                   objects_and_confidence.Contains("sheep") ||
-                  objects_and_confidence.Contains("bird") || 
+                  objects_and_confidence.Contains("bird") ||
                   objects_and_confidence.Contains("cow") ||
-                  objects_and_confidence.Contains("cat") || 
-                  objects_and_confidence.Contains("horse") || 
+                  objects_and_confidence.Contains("cat") ||
+                  objects_and_confidence.Contains("horse") ||
                   objects_and_confidence.Contains("bear")) && cb_filter_animal.Checked) { return false; }
             if (success != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
             if (success == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
@@ -1695,24 +1702,25 @@ namespace WindowsFormsApp2
             detection_running = true; //set marker variable to show that a new detection process is running
 
             //output "Processing Image" to Overview Tab
-            MethodInvoker LabelUpdate = delegate{ label2.Text = $"Processing Image..."; };
+            MethodInvoker LabelUpdate = delegate { label2.Text = $"Processing Image..."; };
             Invoke(LabelUpdate);
 
-            
+
             await DetectObjects(Path.Combine(input_path, e.Name)); //ai process image
-            
+
             //output Running on Overview Tab
             LabelUpdate = delegate { label2.Text = "Running"; };
             Invoke(LabelUpdate);
 
             //only update charts if stats tab is open
 
-            LabelUpdate = delegate {
+            LabelUpdate = delegate
+            {
                 Console.WriteLine(tabControl1.SelectedIndex);
 
                 if (tabControl1.SelectedIndex == 1)
                 {
-                    
+
                     UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
                     Console.WriteLine("updated");
                 }
@@ -1794,19 +1802,19 @@ namespace WindowsFormsApp2
         {
             LoadFromCSV();
         }
-        
+
         //event: filter "only alerts with people" checked or unchecked
         private void cb_filter_person_CheckedChanged(object sender, EventArgs e)
         {
             LoadFromCSV();
         }
-        
+
         //event: filter "only alerts with people" checked or unchecked
         private void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
         {
             LoadFromCSV();
         }
-        
+
         //event: filter "only alerts with animals" checked or unchecked
         private void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
@@ -1825,9 +1833,9 @@ namespace WindowsFormsApp2
             LoadFromCSV();
         }
 
-//----------------------------------------------------------------------------------------------------------
-//CAMERAS TAB
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //CAMERAS TAB
+        //----------------------------------------------------------------------------------------------------------
 
         //BASIC METHODS
 
@@ -1858,7 +1866,7 @@ namespace WindowsFormsApp2
                     item.Tag = file;
                     list2.Items.Add(item);
                     i++;
-                    
+
                 }
             }
             catch
@@ -1870,7 +1878,7 @@ namespace WindowsFormsApp2
             //select first camera
             if (list2.Items.Count > 0)
             {
-                list2.Items[0].Selected = true; 
+                list2.Items[0].Selected = true;
             }
         }
 
@@ -1896,8 +1904,8 @@ namespace WindowsFormsApp2
             CameraList.Add(cam); //add created camera object to CameraList
 
             //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items.Add($"   {cam.name}"); 
-            comboBox_filter_camera.Items.Add($"   {cam.name}"); 
+            comboBox1.Items.Add($"   {cam.name}");
+            comboBox_filter_camera.Items.Add($"   {cam.name}");
 
             return ($"SUCCESS: {Path.GetFileNameWithoutExtension(config_path)} loaded.");
         }
@@ -1947,7 +1955,7 @@ namespace WindowsFormsApp2
         //change settings of camera
         private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
         {
-        //1. CHECK NEW VALUES 
+            //1. CHECK NEW VALUES 
             //check if name is empty
             if (name == "")
             {
@@ -1968,22 +1976,22 @@ namespace WindowsFormsApp2
                 return ($"WARNING: Camera name must be unique, but new camera name {name} already exists.");
             }
 
-            int index = -1; 
+            int index = -1;
             index = CameraList.FindIndex(x => x.name == oldname); //index of specified camera in list
 
-            if(index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
+            if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
 
             //check if new prefix isn't already taken by another camera
-            if (prefix != CameraList[index].prefix  &&  CameraList.Exists(x => x.prefix == prefix ))
+            if (prefix != CameraList[index].prefix && CameraList.Exists(x => x.prefix == prefix))
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {name} already exists.");
             }
 
-        //2. WRITE CONFIG
+            //2. WRITE CONFIG
             CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
-        
-        //3. UPDATE LIST2
+
+            //3. UPDATE LIST2
             //update list2 entry
             var item = list2.FindItemWithText(oldname);
             list2.Items[list2.Items.IndexOf(item)].Text = name;
@@ -2010,7 +2018,7 @@ namespace WindowsFormsApp2
                     int index = -1;
 
                     //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
-                    for(int i = 0; i < CameraList.Count; i++)
+                    for (int i = 0; i < CameraList.Count; i++)
                     {
                         if (CameraList[i].name.Equals(name))
                         {
@@ -2019,7 +2027,7 @@ namespace WindowsFormsApp2
                         }
                     }
 
-                    if(index != -1) //only delete camera if index is known (!= its default value -1)
+                    if (index != -1) //only delete camera if index is known (!= its default value -1)
                     {
                         CameraList[index].Delete(); //delete settings file of specified camera
 
@@ -2065,7 +2073,7 @@ namespace WindowsFormsApp2
                     {
                         Log("ERROR: Can't find the selected camera, camera wasn't deleted.");
                     }
-                    
+
 
                 }
             }
@@ -2141,7 +2149,7 @@ namespace WindowsFormsApp2
 
 
 
-// SPECIAL METHODS
+        // SPECIAL METHODS
 
         //input file begins with live preview
         private void tbPrefix_TextChanged(object sender, EventArgs e)
@@ -2152,7 +2160,7 @@ namespace WindowsFormsApp2
         //event: if SPACE is pressed in trigger url field, automatically add a comma
         private void tbTriggerUrl_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.Space)
+            if (e.KeyCode == Keys.Space)
             {
                 tbTriggerUrl.Text += ","; //add comma
                 tbTriggerUrl.Select(tbTriggerUrl.Text.Length, 0); //move cursor to end
@@ -2241,7 +2249,7 @@ namespace WindowsFormsApp2
                         RemoveCamera(list2.SelectedItems[0].Text);
                     }
                 }
-            } 
+            }
         }
 
         //event: DELETE key pressed
@@ -2283,9 +2291,9 @@ namespace WindowsFormsApp2
 
 
 
-//----------------------------------------------------------------------------------------------------------
-//SETTING TAB
-//----------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
+        //SETTING TAB
+        //----------------------------------------------------------------------------------------------------------
 
 
         //settings save button
@@ -2315,7 +2323,7 @@ namespace WindowsFormsApp2
             //clean history.csv database
             CleanCSVList();
 
-        //LoadList();
+            //LoadList();
         }
 
         //input path select dialog button
@@ -2350,7 +2358,7 @@ namespace WindowsFormsApp2
         //ask before closing AI Tool to prevent accidently closing
         private void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(Properties.Settings.Default.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+            if (Properties.Settings.Default.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
             {
                 using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                 {
@@ -2377,50 +2385,205 @@ namespace WindowsFormsApp2
                     e.Cancel = (result == DialogResult.Cancel);
                 }
             }
+
+        }
+
+
+
+        //-------------------------------------------------------------------------------------------
+        // TESTING FACE DETECTION 
+
+        //register new face
+        public async Task RegisterFace(string userid, string image_path)
+        {
+            using (var image_data = System.IO.File.OpenRead(image_path))
+            {
+                var fullDeepstackUrl = "";
+
+                //get Deepstack URL, allows both "http://ip:port" and "ip:port"
+                if (!deepstack_url.Contains("http://")) //"ip:port"
+                {
+                    fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/face/register";
+                }
+                else //"http://ip:port"
+                {
+                    fullDeepstackUrl = deepstack_url + "/v1/vision/face/register";
+                }
+
+                var request = new MultipartFormDataContent();
+                request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
+                request.Add(new StringContent(userid), "userid");
+                var output = await client.PostAsync(fullDeepstackUrl, request);
+                var jsonString = await output.Content.ReadAsStringAsync();
+                Console.WriteLine(jsonString);
+            }
+        }
+
+        //recognize face in image
+        public async Task recognizeFace(string image_path)
+        {
+            var fullDeepstackUrl = "";
+
+            //get Deepstack URL, allows both "http://ip:port" and "ip:port"
+            if (!deepstack_url.Contains("http://")) //"ip:port"
+            {
+                fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/face/recognize";
+            }
+            else //"http://ip:port"
+            {
+                fullDeepstackUrl = deepstack_url + "/v1/vision/face/recognize";
+            }
+
+            using (var image_data = System.IO.File.OpenRead(image_path))
+            {
+                pictureBox3.Image = new Bitmap(image_path);
+                var request = new MultipartFormDataContent();
+                request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
+                var output = await client.PostAsync(fullDeepstackUrl, request);
+                var jsonString = await output.Content.ReadAsStringAsync();
+                FaceResponse response = JsonConvert.DeserializeObject<FaceResponse>(jsonString);
+
+                facetext = "";
+                foreach (var user in response.predictions)
+                {
+                    facetext += $"{user.userid.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%)";
+
+                }
+            }
+        }
+
+        
+        public async Task ListFaces()
+        {
+            var fullDeepstackUrl = "";
+            //get Deepstack URL, allows both "http://ip:port" and "ip:port"
+            if (!deepstack_url.Contains("http://")) //"ip:port"
+            {
+                fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/face/list";
+            }
+            else //"http://ip:port"
+            {
+                fullDeepstackUrl = deepstack_url + "/v1/vision/face/list";}
+            var output = await client.PostAsync(fullDeepstackUrl, null);
+            var jsonString = await output.Content.ReadAsStringAsync();
+            facelist = jsonString;
+
+
+        }
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                dialog.Multiselect = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    string[] selected_imgs = dialog.FileNames.ToArray();
+
+                    using (var form = new InputForm($"Name of this person:", "AI Tool", true))
+                    {
+                        var result = form.ShowDialog();
+                        string name = form.text;
+                        if (result == DialogResult.OK)
+                        {
+                            foreach(string img in selected_imgs)
+                            {
+                                await RegisterFace(name, img);
+                            }
+                            
+                        }
+                    }
+                    
+                }
+            }
             
         }
-    }
 
 
-    //classes for AI analysis
 
-    class Response
-    {
+        private async void button2_Click(object sender, EventArgs e)
+        {
+            await recognizeFace("C:/Users/v/Desktop/test.jpg");
+            label_face.Text = facetext;
+        }
 
-        public bool success { get; set; }
-        public Object[] predictions { get; set; }
 
-    }
+        private async void button3_Click(object sender, EventArgs e)
+        {
+            await ListFaces();
+            lbl_facelist.Text = facelist;
+        }
 
-    class Object
-    {
+        class FaceResponse
+        {
 
-        public string label { get; set; }
-        public float confidence { get; set; }
-        public int y_min { get; set; }
-        public int x_min { get; set; }
-        public int y_max { get; set; }
-        public int x_max { get; set; }
+            public bool success { get; set; }
+            public Face[] predictions { get; set; }
 
-    }
+        }
 
-}
+        class Face
+        {
 
-//enhanced TableLayoutPanel loads faster
-public partial class DBLayoutPanel : TableLayoutPanel
-{
-    public DBLayoutPanel()
-    {
-        SetStyle(ControlStyles.AllPaintingInWmPaint |
-          ControlStyles.OptimizedDoubleBuffer |
-          ControlStyles.UserPaint, true);
-    }
+            public string userid { get; set; }
+            public float confidence { get; set; }
+            public int y_min { get; set; }
+            public int x_min { get; set; }
+            public int y_max { get; set; }
+            public int x_max { get; set; }
 
-    public DBLayoutPanel(IContainer container)
-    {
-        container.Add(this);
-        SetStyle(ControlStyles.AllPaintingInWmPaint |
-          ControlStyles.OptimizedDoubleBuffer |
-          ControlStyles.UserPaint, true);
+        }
+
+        //END OF TESTING FACE DETECTION
+        //-----------------------------------------------------------------------------------------------
+
+        //classes for AI analysis
+
+        class Response
+        {
+
+            public bool success { get; set; }
+            public Object[] predictions { get; set; }
+            
+
+        }
+
+        class Object
+        {
+
+            public string label { get; set; }
+            public float confidence { get; set; }
+            public int y_min { get; set; }
+            public int x_min { get; set; }
+            public int y_max { get; set; }
+            public int x_max { get; set; }
+
+        }
+
+
+
+        //enhanced TableLayoutPanel loads faster
+        public partial class DBLayoutPanel : TableLayoutPanel
+        {
+            public DBLayoutPanel()
+            {
+                SetStyle(ControlStyles.AllPaintingInWmPaint |
+                  ControlStyles.OptimizedDoubleBuffer |
+                  ControlStyles.UserPaint, true);
+            }
+
+            public DBLayoutPanel(IContainer container)
+            {
+                container.Add(this);
+                SetStyle(ControlStyles.AllPaintingInWmPaint |
+                  ControlStyles.OptimizedDoubleBuffer |
+                  ControlStyles.UserPaint, true);
+            }
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
