@@ -31,6 +31,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using Size = SixLabors.Primitives.Size;
 using SizeF = SixLabors.Primitives.SizeF; //for file dialog
 
+
 namespace WindowsFormsApp2
 {
 
@@ -934,6 +935,11 @@ namespace WindowsFormsApp2
         //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
         private void ResizeListViews()
         {
+            //suspend layout of most complex tablelayout elements (gives a few milliseconds)
+            tableLayoutPanel7.SuspendLayout();
+            tableLayoutPanel8.SuspendLayout();
+            tableLayoutPanel9.SuspendLayout();
+
             //variable storing list1 effective width
             int width = list1.Width;
 
@@ -949,7 +955,6 @@ namespace WindowsFormsApp2
             {
                 Log("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
             }
-            
 
             if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
             {
@@ -974,6 +979,11 @@ namespace WindowsFormsApp2
             }
 
             list2.Columns[0].Width = list2.Width - 4; //resize camera list column
+
+            //resume layout again
+            tableLayoutPanel7.ResumeLayout();
+            tableLayoutPanel8.ResumeLayout();
+            tableLayoutPanel9.ResumeLayout();
         }
 
         //add last trigger time to label on Overview page
@@ -987,9 +997,8 @@ namespace WindowsFormsApp2
             if (lbl_info.Text == text1)
             {
                 lbl_info.Text = $"{CameraList[index].name} last triggered at {CameraList[index].last_trigger_time}."; //Remove "sleeping for ..."
-            } 
+            }
         }
-
 
 
         //EVENTS:
@@ -2323,6 +2332,7 @@ namespace WindowsFormsApp2
             }
         }
 
+        //open log button
         private void btn_open_log_Click(object sender, EventArgs e)
         {
             if (System.IO.File.Exists("log.txt"))
@@ -2394,4 +2404,23 @@ namespace WindowsFormsApp2
 
     }
 
+}
+
+//enhanced TableLayoutPanel loads faster
+public partial class DBLayoutPanel : TableLayoutPanel
+{
+    public DBLayoutPanel()
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint |
+          ControlStyles.OptimizedDoubleBuffer |
+          ControlStyles.UserPaint, true);
+    }
+
+    public DBLayoutPanel(IContainer container)
+    {
+        container.Add(this);
+        SetStyle(ControlStyles.AllPaintingInWmPaint |
+          ControlStyles.OptimizedDoubleBuffer |
+          ControlStyles.UserPaint, true);
+    }
 }
