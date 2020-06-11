@@ -122,6 +122,12 @@ namespace WindowsFormsApp2
             }
 
 
+            //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
+            CleanCSVList();
+            
+            //load entries from history.csv into history ListView
+            //LoadFromCSV(); not neccessary because below, comboBox_filter_camera.SelectedIndex will call LoadFromCSV()
+            
             splitContainer1.Panel2Collapsed = true; //collapse filter panel under left list
             comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
             comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
@@ -155,11 +161,7 @@ namespace WindowsFormsApp2
             }
 
 
-            //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
-            CleanCSVList();
-
-            //load entries from history.csv into history ListView
-            //LoadFromCSV(); not neccessary because comboBox_filter_camera.SelectedIndex already calls LoadFromCSV()
+            
 
 
 
