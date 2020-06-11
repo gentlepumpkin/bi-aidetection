@@ -2503,7 +2503,18 @@ namespace WindowsFormsApp2
 
         private async void button2_Click(object sender, EventArgs e)
         {
-            await recognizeFace("C:/Users/v/Desktop/test.jpg");
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                dialog.Multiselect = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    string[] selected_imgs = dialog.FileNames.ToArray();
+                    foreach(string img in selected_imgs)
+                    {
+                        await recognizeFace(img);
+                    }
+                }
+            }
             label_face.Text = facetext;
         }
 
