@@ -1744,15 +1744,35 @@ namespace WindowsFormsApp2
         //event: load selected image to picturebox
         private void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
         {
-            if (list1.SelectedItems.Count > 0)
+            try
             {
-                using (var img = new Bitmap(input_path + "/" + list1.SelectedItems[0].Text))
+                if (list1.SelectedItems.Count > 0)
                 {
-                    pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                    using (var img = new Bitmap(input_path + "/" + list1.SelectedItems[0].Text))
+                    {
+                        pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                    }
+                    showHideMask();
+                    lbl_objects.Text = list1.SelectedItems[0].SubItems[3].Text;
                 }
-                showHideMask();
-                lbl_objects.Text = list1.SelectedItems[0].SubItems[3].Text;
             }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+
+                //delete entry that caused the issue
+                try
+                {
+                    DeleteListItem(list1.SelectedItems[0].Text);
+                }
+                //if deleting fails because the filename could not be retrieved, do a complete clean up
+                catch
+                {
+                    CleanCSVList();
+                    LoadFromCSV();
+                }
+            }
+            
 
         }
 
