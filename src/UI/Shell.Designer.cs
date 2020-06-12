@@ -49,10 +49,6 @@ namespace WindowsFormsApp2
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
-            this.tabStats = new System.Windows.Forms.TabPage();
-            this.tabHistory = new System.Windows.Forms.TabPage();
-            this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel14 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.tableLayoutPanel15 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -61,6 +57,7 @@ namespace WindowsFormsApp2
             this.lbl_version = new System.Windows.Forms.Label();
             this.lbl_errors = new System.Windows.Forms.Label();
             this.lbl_info = new System.Windows.Forms.Label();
+            this.tabStats = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel16 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.tableLayoutPanel23 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.label8 = new System.Windows.Forms.Label();
@@ -70,6 +67,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel17 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.tabHistory = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.tableLayoutPanel21 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -88,6 +86,7 @@ namespace WindowsFormsApp2
             this.cb_filter_person = new System.Windows.Forms.CheckBox();
             this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
             this.cb_filter_animal = new System.Windows.Forms.CheckBox();
+            this.tabCameras = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel2 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.tableLayoutPanel3 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
@@ -141,6 +140,7 @@ namespace WindowsFormsApp2
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.btnCameraDel = new System.Windows.Forms.Button();
             this.lbl_camstats = new System.Windows.Forms.Label();
+            this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.tableLayoutPanel5 = new WindowsFormsApp2.DBLayoutPanel(this.components);
             this.label4 = new System.Windows.Forms.Label();
@@ -162,19 +162,17 @@ namespace WindowsFormsApp2
             this.BtnSettingsSave = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
-            this.tabStats.SuspendLayout();
-            this.tabHistory.SuspendLayout();
-            this.tabCameras.SuspendLayout();
-            this.tabSettings.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
             this.tableLayoutPanel15.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.tabStats.SuspendLayout();
             this.tableLayoutPanel16.SuspendLayout();
             this.tableLayoutPanel23.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.timeline)).BeginInit();
             this.tableLayoutPanel17.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
+            this.tabHistory.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel21.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -185,6 +183,7 @@ namespace WindowsFormsApp2
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel19.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.tabCameras.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
@@ -197,6 +196,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel13.SuspendLayout();
             this.tableLayoutPanel24.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
+            this.tabSettings.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel25.SuspendLayout();
@@ -236,48 +236,6 @@ namespace WindowsFormsApp2
             this.tabOverview.TabIndex = 4;
             this.tabOverview.Text = "Overview";
             this.tabOverview.UseVisualStyleBackColor = true;
-            // 
-            // tabStats
-            // 
-            this.tabStats.Controls.Add(this.tableLayoutPanel16);
-            this.tabStats.Location = new System.Drawing.Point(4, 22);
-            this.tabStats.Name = "tabStats";
-            this.tabStats.Size = new System.Drawing.Size(946, 436);
-            this.tabStats.TabIndex = 5;
-            this.tabStats.Text = "Stats";
-            this.tabStats.UseVisualStyleBackColor = true;
-            // 
-            // tabHistory
-            // 
-            this.tabHistory.Controls.Add(this.tableLayoutPanel1);
-            this.tabHistory.Location = new System.Drawing.Point(4, 22);
-            this.tabHistory.Name = "tabHistory";
-            this.tabHistory.Padding = new System.Windows.Forms.Padding(3);
-            this.tabHistory.Size = new System.Drawing.Size(946, 436);
-            this.tabHistory.TabIndex = 0;
-            this.tabHistory.Text = "History";
-            this.tabHistory.UseVisualStyleBackColor = true;
-            // 
-            // tabCameras
-            // 
-            this.tabCameras.Controls.Add(this.tableLayoutPanel2);
-            this.tabCameras.Location = new System.Drawing.Point(4, 22);
-            this.tabCameras.Name = "tabCameras";
-            this.tabCameras.Padding = new System.Windows.Forms.Padding(3);
-            this.tabCameras.Size = new System.Drawing.Size(946, 436);
-            this.tabCameras.TabIndex = 2;
-            this.tabCameras.Text = "Cameras";
-            this.tabCameras.UseVisualStyleBackColor = true;
-            // 
-            // tabSettings
-            // 
-            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
-            this.tabSettings.Location = new System.Drawing.Point(4, 22);
-            this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Size = new System.Drawing.Size(946, 436);
-            this.tabSettings.TabIndex = 3;
-            this.tabSettings.Text = "Settings";
-            this.tabSettings.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel14
             // 
@@ -366,7 +324,7 @@ namespace WindowsFormsApp2
             this.lbl_version.Name = "lbl_version";
             this.lbl_version.Size = new System.Drawing.Size(932, 22);
             this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.67 preview 6";
+            this.lbl_version.Text = "Version 1.67 preview 7";
             this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // lbl_errors
@@ -395,6 +353,16 @@ namespace WindowsFormsApp2
             this.lbl_info.Size = new System.Drawing.Size(932, 20);
             this.lbl_info.TabIndex = 8;
             this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tabStats
+            // 
+            this.tabStats.Controls.Add(this.tableLayoutPanel16);
+            this.tabStats.Location = new System.Drawing.Point(4, 22);
+            this.tabStats.Name = "tabStats";
+            this.tabStats.Size = new System.Drawing.Size(946, 436);
+            this.tabStats.TabIndex = 5;
+            this.tabStats.Text = "Stats";
+            this.tabStats.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel16
             // 
@@ -617,6 +585,17 @@ namespace WindowsFormsApp2
             this.comboBox1.Size = new System.Drawing.Size(271, 25);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
+            // 
+            // tabHistory
+            // 
+            this.tabHistory.Controls.Add(this.tableLayoutPanel1);
+            this.tabHistory.Location = new System.Drawing.Point(4, 22);
+            this.tabHistory.Name = "tabHistory";
+            this.tabHistory.Padding = new System.Windows.Forms.Padding(3);
+            this.tabHistory.Size = new System.Drawing.Size(946, 436);
+            this.tabHistory.TabIndex = 0;
+            this.tabHistory.Text = "History";
+            this.tabHistory.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel1
             // 
@@ -879,6 +858,17 @@ namespace WindowsFormsApp2
             this.cb_filter_animal.Text = "only alerts with animals";
             this.cb_filter_animal.UseVisualStyleBackColor = true;
             this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
+            // 
+            // tabCameras
+            // 
+            this.tabCameras.Controls.Add(this.tableLayoutPanel2);
+            this.tabCameras.Location = new System.Drawing.Point(4, 22);
+            this.tabCameras.Name = "tabCameras";
+            this.tabCameras.Padding = new System.Windows.Forms.Padding(3);
+            this.tabCameras.Size = new System.Drawing.Size(946, 436);
+            this.tabCameras.TabIndex = 2;
+            this.tabCameras.Text = "Cameras";
+            this.tabCameras.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel2
             // 
@@ -1193,7 +1183,7 @@ namespace WindowsFormsApp2
             this.cb_truck.Location = new System.Drawing.Point(147, 37);
             this.cb_truck.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
             this.cb_truck.Name = "cb_truck";
-            this.cb_truck.Size = new System.Drawing.Size(58, 21);
+            this.cb_truck.Size = new System.Drawing.Size(57, 21);
             this.cb_truck.TabIndex = 6;
             this.cb_truck.Text = "Truck";
             this.cb_truck.UseVisualStyleBackColor = true;
@@ -1263,7 +1253,7 @@ namespace WindowsFormsApp2
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(20, 0, 3, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(80, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
-            this.lblTriggerUrl.Size = new System.Drawing.Size(92, 17);
+            this.lblTriggerUrl.Size = new System.Drawing.Size(91, 17);
             this.lblTriggerUrl.TabIndex = 1;
             this.lblTriggerUrl.Text = "Trigger URL(s)";
             // 
@@ -1601,6 +1591,16 @@ namespace WindowsFormsApp2
             this.lbl_camstats.TabIndex = 4;
             this.lbl_camstats.Text = "Stats";
             // 
+            // tabSettings
+            // 
+            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
+            this.tabSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Size = new System.Drawing.Size(946, 436);
+            this.tabSettings.TabIndex = 3;
+            this.tabSettings.Text = "Settings";
+            this.tabSettings.UseVisualStyleBackColor = true;
+            // 
             // tableLayoutPanel4
             // 
             this.tableLayoutPanel4.ColumnCount = 1;
@@ -1759,7 +1759,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_telegram_token.Location = new System.Drawing.Point(4, 142);
             this.lbl_telegram_token.Name = "lbl_telegram_token";
-            this.lbl_telegram_token.Size = new System.Drawing.Size(102, 17);
+            this.lbl_telegram_token.Size = new System.Drawing.Size(100, 17);
             this.lbl_telegram_token.TabIndex = 6;
             this.lbl_telegram_token.Text = "Telegram Token";
             // 
@@ -1770,7 +1770,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_telegram_chatid.Location = new System.Drawing.Point(4, 202);
             this.lbl_telegram_chatid.Name = "lbl_telegram_chatid";
-            this.lbl_telegram_chatid.Size = new System.Drawing.Size(109, 17);
+            this.lbl_telegram_chatid.Size = new System.Drawing.Size(108, 17);
             this.lbl_telegram_chatid.TabIndex = 7;
             this.lbl_telegram_chatid.Text = "Telegram Chat ID";
             // 
@@ -1856,14 +1856,11 @@ namespace WindowsFormsApp2
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.tabControl1.ResumeLayout(false);
             this.tabOverview.ResumeLayout(false);
-            this.tabStats.ResumeLayout(false);
-            this.tabHistory.ResumeLayout(false);
-            this.tabCameras.ResumeLayout(false);
-            this.tabSettings.ResumeLayout(false);
             this.tableLayoutPanel14.ResumeLayout(false);
             this.tableLayoutPanel15.ResumeLayout(false);
             this.tableLayoutPanel15.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.tabStats.ResumeLayout(false);
             this.tableLayoutPanel16.ResumeLayout(false);
             this.tableLayoutPanel23.ResumeLayout(false);
             this.tableLayoutPanel23.PerformLayout();
@@ -1871,6 +1868,7 @@ namespace WindowsFormsApp2
             ((System.ComponentModel.ISupportInitialize)(this.timeline)).EndInit();
             this.tableLayoutPanel17.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
+            this.tabHistory.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel21.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -1883,6 +1881,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel19.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.tabCameras.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel6.ResumeLayout(false);
@@ -1904,6 +1903,7 @@ namespace WindowsFormsApp2
             this.tableLayoutPanel24.ResumeLayout(false);
             this.tableLayoutPanel24.PerformLayout();
             this.tableLayoutPanel11.ResumeLayout(false);
+            this.tabSettings.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
             this.tableLayoutPanel5.ResumeLayout(false);
             this.tableLayoutPanel5.PerformLayout();
@@ -1956,7 +1956,6 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.TabPage tabOverview;
         private System.Windows.Forms.Label lblTriggerUrl;
         private System.Windows.Forms.Label lbl_camstats;
-        private DBLayoutPanel tableLayoutPanel14;
         private DBLayoutPanel tableLayoutPanel15;
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Label label2;
@@ -2030,6 +2029,7 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.CheckBox cb_showMask;
         private System.Windows.Forms.Label lbl_objects;
         private DBLayoutPanel tableLayoutPanel6;
+        private DBLayoutPanel tableLayoutPanel14;
     }
 }
 

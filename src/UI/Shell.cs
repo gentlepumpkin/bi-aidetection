@@ -1458,6 +1458,7 @@ namespace WindowsFormsApp2
                 if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
                 {
                     color = Color.Silver;
+                    detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
                 }
                 else
                 {
