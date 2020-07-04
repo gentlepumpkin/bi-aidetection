@@ -44,6 +44,21 @@ namespace WindowsFormsApp2
         public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
         public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
         public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
+
+        //deepstack server tab settings
+        public static string ds_AdminKey = Properties.Settings.Default.ds_adminkey;
+        public static string ds_APIKey = Properties.Settings.Default.ds_apikey;
+        public static string ds_Mode = Properties.Settings.Default.ds_mode;
+        public static string ds_Port = Properties.Settings.Default.ds_port;
+        public static string ds_InstallFolder = Properties.Settings.Default.ds_installfolder;
+        public static bool ds_DetectionAPIEnabled = Properties.Settings.Default.ds_detectionapienabled;
+        public static bool ds_FaceAPIEnabled = Properties.Settings.Default.ds_faceapienabled;
+        public static bool ds_SceneAPIEnabled = Properties.Settings.Default.ds_sceneapienabled;
+        public static bool ds_AutoStart = Properties.Settings.Default.ds_autostart;
+        public static DeepStack DeepStackServerControl = null;
+        public static IProgress<string> DeepStackProgressLogger = null;
+        public static SharedFunctions.TextBoxLogger Logger = null;
+
         public int errors = 0; //error counter
         public bool detection_running = false; //is detection running right now or not
         public int file_access_delay = 10; //delay before accessing new file in ms
@@ -57,6 +72,9 @@ namespace WindowsFormsApp2
         public Shell()
         {
             InitializeComponent();
+
+
+            Logger = new SharedFunctions.TextBoxLogger(RTF_Log);
 
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
 
@@ -162,10 +180,6 @@ namespace WindowsFormsApp2
 
 
 
-
-
-
-
             //---------------------------------------------------------------------------
             //SETTINGS TAB
 
@@ -183,12 +197,35 @@ namespace WindowsFormsApp2
             comboBox1.SelectedIndex = comboBox1.FindStringExact("All Cameras"); //select all cameras entry
 
 
+            //---------------------------------------------------------------------------
+            //Deepstack server TAB
+
+            DeepStackProgressLogger = new Progress<string>(DeepStackMessage);
+
+            //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
+            //allows for stopping and starting of its service
+            DeepStackServerControl = new DeepStack(ds_AdminKey, ds_APIKey, ds_Mode, ds_SceneAPIEnabled, ds_FaceAPIEnabled, ds_DetectionAPIEnabled, ds_Port, DeepStackProgressLogger);
+
+            if (DeepStackServerControl.NeedsSaving)
+            {
+                //this may happen if the already running instance has a different port, etc, so we update the config
+                SaveDeepStackTab();
+            }
+            LoadDeepStackTab();
+            
+               
+
             this.Opacity = 1;
 
             Log("APP START complete.");
         }
 
-
+        void DeepStackMessage(string message)
+        {
+            //output to the text log window
+            //Logger.Log(message);
+            Log(message);
+        }
         //----------------------------------------------------------------------------------------------------------
         //CORE
         //----------------------------------------------------------------------------------------------------------
@@ -805,8 +842,10 @@ namespace WindowsFormsApp2
             //if log everything is disabled and the text is neighter an ERROR, nor a WARNING: write only to console and ABORT
             if (log_everything == false && !text.Contains("ERROR") && !text.Contains("WARNING"))
             {
-                text += "Enabling \'Log everything\' might give more information.";
+                //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
+                //text += "Enabling \'Log everything\' might give more information.";
                 Console.WriteLine($"{text}");
+                Logger.Log(text);
                 return;
             }
 
@@ -843,6 +882,7 @@ namespace WindowsFormsApp2
             //add text to log
             try
             {
+                Logger.Log($"[{time}]: {text}");
                 using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt", append: true))
                 {
                     sw.WriteLine($"[{time}]: {text}");
@@ -958,29 +998,35 @@ namespace WindowsFormsApp2
                 Log("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
             }
 
-            if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
+            //fix an exception where form_resize calls this function too early:
+            if (list1.Columns.Count > 0)
             {
-                //set left list column width segmentation
-                list1.Columns[0].Width = width * 0 / 100; //filename
-                list1.Columns[1].Width = 120 + (width - 350) * 25 / 1000; //date
-                list1.Columns[2].Width = 120 + (width - 350) * 25 / 1000; //cam name
-                list1.Columns[3].Width = 80 + (width - 350) * 95 / 100; //obj and confidences
-                list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
-                list1.Columns[5].Width = 30; //checkmark if something relevant detected or not
+                if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
+                {
+                    //set left list column width segmentation
+                    list1.Columns[0].Width = width * 0 / 100; //filename
+                    list1.Columns[1].Width = 120 + (width - 350) * 25 / 1000; //date
+                    list1.Columns[2].Width = 120 + (width - 350) * 25 / 1000; //cam name
+                    list1.Columns[3].Width = 80 + (width - 350) * 95 / 100; //obj and confidences
+                    list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
+                    list1.Columns[5].Width = 30; //checkmark if something relevant detected or not
+
+                }
+                else //if the form is smaller than 350px in width, don't show the detections column
+                {
+                    //set left list column width segmentation
+                    list1.Columns[0].Width = width * 0 / 100; //filename
+                    list1.Columns[1].Width = width * 47 / 100; //date
+                    list1.Columns[2].Width = width * 43 / 100; //cam name
+                    list1.Columns[3].Width = width * 0 / 100; //obj and confidences
+                    list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
+                    list1.Columns[5].Width = width * 10 / 100; //checkmark if something relevant detected or not
+                }
 
             }
-            else //if the form is smaller than 350px in width, don't show the detections column
-            {
-                //set left list column width segmentation
-                list1.Columns[0].Width = width * 0 / 100; //filename
-                list1.Columns[1].Width = width * 47 / 100; //date
-                list1.Columns[2].Width = width * 43 / 100; //cam name
-                list1.Columns[3].Width = width * 0 / 100; //obj and confidences
-                list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
-                list1.Columns[5].Width = width * 10 / 100; //checkmark if something relevant detected or not
-            }
 
-            list2.Columns[0].Width = list2.Width - 4; //resize camera list column
+            if (list2.Columns.Count > 0)
+                list2.Columns[0].Width = list2.Width - 4; //resize camera list column
 
             //resume layout again
             tableLayoutPanel7.ResumeLayout();
@@ -1022,6 +1068,11 @@ namespace WindowsFormsApp2
             {
                 //CleanCSVList(); //removed to load the history list faster
             }
+            else if (tabControl1.SelectedTab == tabControl1.TabPages["tabDeepStack"])
+            {
+                LoadDeepStackTab();
+            }
+
         }
 
 
@@ -2402,6 +2453,150 @@ namespace WindowsFormsApp2
                 }
             }
 
+        }
+
+        private void Shell_Load(object sender, EventArgs e)
+        {
+
+        }
+        private void SaveDeepStackTab()
+        {
+
+            DeepStackServerControl.GetBlueStackRunningProcesses();
+
+            if (RB_Medium.Checked)
+                ds_Mode = "Medium";
+            if (RB_Low.Checked)
+                ds_Mode = "Low";
+            if (RB_High.Checked)
+                ds_Mode = "High";
+
+            ds_DetectionAPIEnabled = Chk_DetectionAPI.Checked;
+            ds_FaceAPIEnabled = Chk_FaceAPI.Checked;
+            ds_SceneAPIEnabled = Chk_SceneAPI.Checked;
+            ds_AutoStart = Chk_AutoStart.Checked;
+            ds_AdminKey = Txt_AdminKey.Text.Trim();
+            ds_APIKey = Txt_APIKey.Text.Trim();
+            ds_InstallFolder = Txt_DeepStackInstallFolder.Text.Trim();
+            ds_Port = Txt_Port.Text.Trim();
+
+
+            Properties.Settings.Default.ds_adminkey = ds_AdminKey;
+            Properties.Settings.Default.ds_apikey = ds_APIKey;
+            Properties.Settings.Default.ds_autostart = ds_AutoStart;
+            Properties.Settings.Default.ds_detectionapienabled = ds_DetectionAPIEnabled;
+            Properties.Settings.Default.ds_faceapienabled = ds_FaceAPIEnabled;
+            Properties.Settings.Default.ds_installfolder = ds_InstallFolder;
+            Properties.Settings.Default.ds_mode = ds_Mode;
+            Properties.Settings.Default.ds_port = ds_Port;
+            Properties.Settings.Default.ds_sceneapienabled = ds_SceneAPIEnabled;
+            Properties.Settings.Default.Save();
+
+
+            if (DeepStackServerControl.IsInstalled)
+            {
+                if (DeepStackServerControl.IsStarted)
+                {
+                    Lbl_BlueStackRunning.Text = "*RUNNING*";
+                    Btn_Start.Enabled = false;
+                    Btn_Stop.Enabled = true;
+
+                    if (!DeepStackServerControl.IsActivated)
+                    {
+                        Lbl_BlueStackRunning.Text = "*RUNNING BUT NOT ACTIVATED*";
+                    }
+                }
+                else
+                {
+                    Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                    Btn_Start.Enabled = true;
+                    Btn_Stop.Enabled = false;
+                }
+            }
+            else
+            {
+                Btn_Start.Enabled = false;
+                Btn_Stop.Enabled = false;
+                Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
+
+            }
+
+            DeepStackServerControl.Update(ds_AdminKey, ds_APIKey, ds_Mode, ds_SceneAPIEnabled,ds_FaceAPIEnabled,ds_DetectionAPIEnabled,ds_Port);
+
+        }
+
+        private void LoadDeepStackTab()
+        {
+            DeepStackServerControl.GetBlueStackRunningProcesses();
+
+            if (DeepStackServerControl.Mode.ToLower() == "medium")
+                RB_Medium.Checked = true;
+            if (DeepStackServerControl.Mode.ToLower() == "low")
+                RB_Low.Checked = true;
+            if (DeepStackServerControl.Mode.ToLower() == "high")
+                RB_High.Checked = true;
+
+            Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
+            Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
+            Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
+
+            Chk_AutoStart.Checked = ds_AutoStart;
+
+            Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
+            Txt_APIKey.Text = DeepStackServerControl.APIKey;
+            Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
+            Txt_Port.Text = DeepStackServerControl.Port;
+
+            if (DeepStackServerControl.IsInstalled)
+            {
+                if (DeepStackServerControl.IsStarted)
+                {
+                    Lbl_BlueStackRunning.Text = "*RUNNING*";
+                    Btn_Start.Enabled = false;
+                    Btn_Stop.Enabled = true;
+                }
+                else
+                {
+                    Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                    Btn_Start.Enabled = true;
+                    Btn_Stop.Enabled = false;
+                    if (Chk_AutoStart.Checked)
+                    {
+                        DeepStackServerControl.Start();
+                        if (DeepStackServerControl.IsStarted)
+                        {
+                            Lbl_BlueStackRunning.Text = "*RUNNING*";
+                            Btn_Start.Enabled = false;
+                            Btn_Stop.Enabled = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Btn_Start.Enabled = false;
+                Btn_Stop.Enabled = false;
+                Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
+
+            }
+        }
+
+        private void Btn_Start_Click(object sender, EventArgs e)
+        {
+            SaveDeepStackTab();
+            DeepStackServerControl.Start();
+            LoadDeepStackTab();
+        }
+
+        private void Btn_Save_Click(object sender, EventArgs e)
+        {
+            SaveDeepStackTab();
+        }
+
+        private void Btn_Stop_Click(object sender, EventArgs e)
+        {
+            DeepStackServerControl.Stop();
+            LoadDeepStackTab();
         }
     }
 
