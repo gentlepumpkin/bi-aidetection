@@ -2,52 +2,52 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="WindowsFormsApp2.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="telegram_token" Type="System.String" Scope="User">
+    <Setting Name="telegram_token" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="telegram_chatid" Type="System.String" Scope="User">
+    <Setting Name="telegram_chatid" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="input_path" Type="System.String" Scope="User">
+    <Setting Name="input_path" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="deepstack_url" Type="System.String" Scope="User">
+    <Setting Name="deepstack_url" Type="System.String" Scope="Application">
       <Value Profile="(Default)">127.0.0.1:81</Value>
     </Setting>
-    <Setting Name="log_everything" Type="System.Boolean" Scope="User">
+    <Setting Name="log_everything" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="send_errors" Type="System.Boolean" Scope="User">
+    <Setting Name="send_errors" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="close_instantly" Type="System.Int32" Scope="User">
+    <Setting Name="close_instantly" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="ds_adminkey" Type="System.String" Scope="User">
+    <Setting Name="ds_adminkey" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ds_apikey" Type="System.String" Scope="User">
+    <Setting Name="ds_apikey" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ds_sceneapienabled" Type="System.Boolean" Scope="User">
+    <Setting Name="ds_sceneapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_faceapienabled" Type="System.Boolean" Scope="User">
+    <Setting Name="ds_faceapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_detectionapienabled" Type="System.Boolean" Scope="User">
+    <Setting Name="ds_detectionapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ds_port" Type="System.String" Scope="User">
+    <Setting Name="ds_port" Type="System.String" Scope="Application">
       <Value Profile="(Default)">81</Value>
     </Setting>
-    <Setting Name="ds_mode" Type="System.String" Scope="User">
+    <Setting Name="ds_mode" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Medium</Value>
     </Setting>
-    <Setting Name="ds_autostart" Type="System.Boolean" Scope="User">
+    <Setting Name="ds_autostart" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_installfolder" Type="System.String" Scope="User">
+    <Setting Name="ds_installfolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\DeepStack</Value>
     </Setting>
   </Settings>

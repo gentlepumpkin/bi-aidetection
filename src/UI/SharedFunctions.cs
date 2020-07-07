@@ -7,9 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32.SafeHandles;
 
@@ -17,6 +20,278 @@ namespace WindowsFormsApp2
 {
     public static class SharedFunctions
     {
+
+        public static Regex RegEx_ValidDate = new Regex("(19|20)[0-9]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])_[0-9][0-9]_[0-9][0-9]_[0-9][0-9]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private extern static SafeFileHandle CreateFile(string lpFileName, FileSystemRights dwDesiredAccess, FileShare dwShareMode, IntPtr securityAttrs, FileMode dwCreationDisposition, FileOptions dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        private const int ERROR_SHARING_VIOLATION = 32;
+        private const int ERROR_LOCK_VIOLATION = 33;
+        public static async Task<bool> WaitForFileAccessAsync(string filename)
+        {
+            //run the function in another thread
+            return await Task.Run(() => WaitForFileAccess(filename));
+        }
+
+        private static async Task<bool> WaitForFileAccess(string filename)
+        {
+            bool Success = false;
+
+            try
+            {
+                if (File.Exists(filename))
+                {
+                    int errs = 0;
+                    Stopwatch SW = new Stopwatch();
+                    SW.Start();
+
+                    while ((errs < 2000) && (SW.ElapsedMilliseconds < 30000))
+                    {
+
+                        using (SafeFileHandle fileHandle = CreateFile(filename, FileSystemRights.Read, FileShare.Read, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
+                        {
+
+                            if (fileHandle.IsInvalid)
+                            {
+                                int LastErr = Marshal.GetLastWin32Error();
+                                errs += 1;
+
+                                if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
+                                {
+                                    //unexpected error, break out
+                                    Console.WriteLine("Unexpected Win32Error waiting for access: " + new Win32Exception(LastErr));
+                                    break;
+                                }
+
+                            }
+                            else
+                            {
+                                Success = true;
+                                break;
+                            }
+
+                            if (!fileHandle.IsClosed)
+                            {
+                                fileHandle.Close();
+                            }
+
+                            await Task.Delay(10);
+
+                        }
+                    }
+                    SW.Stop();
+
+                    if (errs > 0)
+                    {
+                        Console.WriteLine("WaitForFileAccess lock time: " + SW.ElapsedMilliseconds + "ms, errcount=" + errs);
+                    }
+
+                }
+                else
+                {
+                    Console.WriteLine("Error: File not found: " + filename);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("WaitForFileAccess Error: " + ex.Message);
+            }
+
+
+            return Success;
+
+        }
+
+
+        public static DateTime RetrieveLinkerTimestamp()
+        {
+            DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0);
+
+            try
+            {
+                string filePath = System.Reflection.Assembly.GetCallingAssembly().Location;
+                const int c_PeHeaderOffset = 60;
+                const int c_LinkerTimestampOffset = 8;
+                byte[] b = new byte[2048];
+                using (System.IO.Stream s = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                {
+
+                    try
+                    {
+                        //s = New System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read)
+                        s.Read(b, 0, 2048);
+                    }
+                    finally
+                    {
+                        if (s != null)
+                        {
+                            s.Close();
+                        }
+                    }
+
+                    int i = System.BitConverter.ToInt32(b, c_PeHeaderOffset);
+                    int secondsSince1970 = System.BitConverter.ToInt32(b, i + c_LinkerTimestampOffset);
+                    dt = dt.AddSeconds(secondsSince1970);
+                    dt = dt.AddHours(System.TimeZone.CurrentTimeZone.GetUtcOffset(dt).Hours);
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+
+            return dt;
+
+        }
+
+
+        public static DateTime GetTimeFromFileName(string FileName)
+        {
+            DateTime OutDate = DateTime.MinValue;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(FileName))
+                {
+                    return OutDate;
+                }
+                string Fil = Path.GetFileNameWithoutExtension(FileName);
+                string StrDate = "";
+                MatchCollection Matches = RegEx_ValidDate.Matches(Fil);
+                if (Matches != null && Matches.Count > 0)
+                {
+                    StrDate = Matches[0].Value;
+                    StrDate = StrDate.Replace("_", ":");
+                    //pos 10=T
+                    StrDate = StrDate.Remove(10, 1).Insert(10, "T");
+                    if (!GetDateStrict(StrDate, ref OutDate))
+                    {
+                        Console.WriteLine("Error: There was a problem parsing '" + FileName + "' for a date.");
+                        OutDate = DateTime.MinValue;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+
+            return OutDate;
+
+        }
+
+        public class ClsDateFormat
+        {
+            public string Fmt = "";
+            public long Cnt = 0;
+            public override string ToString()
+            {
+                return $"Cnt='{Cnt}', Fmt='{Fmt}'";
+            }
+        }
+
+        public static long DateFormatHitCnt = 0;
+
+        public static List<ClsDateFormat> DateFormatList = new List<ClsDateFormat>();
+
+        public static void CreateFormatList()
+        {
+            //28-Feb-2015 17:21:56.155
+            //11/8/2012 09:28:33:941
+            //15-May-2018 18:19:20.173
+            //15-May-2018 18:05:28.457
+            //dd-MMMM-yyyy HH:mm:ss.fff
+            //7/15/2015 13:10:46:788
+            //8/7/2017 13:00:15:330
+            //6/14/2016 15:03:01:360
+            //2018-04-10T14:32:26
+            //yyyy-MM-ddTHH:mm:ss
+
+            //most popular first
+            DateFormatList.Add(new ClsDateFormat { Fmt = "dd-MMM-yyyy HH:mm:ss.fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "yyyy-MM-dd HH:mm:ss.fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/d/yyyy HH:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "dd-MMMM-yyyy HH:mm:ss.fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "yyyy-MM-ddTHH:mm:ss" });
+
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/d/yyyy H:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy hh:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy HH:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy H:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy hh:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy HH:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "M/dd/yyyy H:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "MM/dd/yyyy hh:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "MM/dd/yyyy HH:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "MM/dd/yyyy H:mm:ss:fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "d-MMMM-yyyy HH:mm:ss.fff" });
+            DateFormatList.Add(new ClsDateFormat { Fmt = "d-MMM-yyyy HH:mm:ss.fff" });
+
+        }
+        public static bool GetDateStrict(string InpDate, ref DateTime OutDate)
+        {
+            bool Ret = false;
+            try
+            {
+                if (DateFormatList.Count == 0)
+                {
+                    CreateFormatList();
+                }
+                int CurCnt = 0;
+                foreach (ClsDateFormat df in DateFormatList)
+                {
+                    CurCnt = CurCnt + 1;
+                    Ret = DateTime.TryParseExact(InpDate, df.Fmt, null, System.Globalization.DateTimeStyles.None, out OutDate); //New CultureInfo("en-US")
+                    if (Ret)
+                    {
+                        //First double check that date is in normal-ish range..
+                        if (OutDate > new DateTime(2000, 1, 1) && OutDate <= DateTime.Now.AddHours(12))
+                        {
+                            df.Cnt = df.Cnt + 1;
+                            DateFormatHitCnt = DateFormatHitCnt + 1;
+                            //If DateFormatHitCnt < 15 OrElse (CurCnt > 1 AndAlso (DateFormatHitCnt Mod 25 = 0)) Then
+                            //    'Sort the list by most frequent found cnt
+                            //    DateFormatList = DateFormatList.OrderByDescending(Function(d) d.Cnt).ToList
+                            //End If                        
+                            break;
+                        }
+                        else
+                        {
+                            Ret = false;
+                        }
+                    }
+                }
+
+                if (!Ret)
+                {
+                    //last ditch
+                    Ret = DateTime.TryParse(InpDate, out OutDate);
+                    if (Ret)
+                    {
+                        if (OutDate > new DateTime(2010, 1, 1) && OutDate < new DateTime(2050, 1, 1))
+                        {
+                        }
+                        else
+                        {
+                            Ret = false;
+                            OutDate = DateTime.MinValue;
+                        }
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                Ret = false;
+            }
+            return Ret;
+        }
+
         public static Process GetaProcess(string processname)
         {
             try
@@ -284,37 +559,7 @@ namespace WindowsFormsApp2
         }
 
         
-        public class TextBoxLogger
-
-        {
-
-            private RichTextBox _textbox = null;
-
-            public TextBoxLogger(RichTextBox RTFBoxCtl)
-            {
-                    this._textbox = RTFBoxCtl;
-                    this._textbox.WordWrap = false;
-                    this._textbox.Multiline = true;
-
-
-            }
-
-            public void Log(string Message)
-            {
-                InvokeIFRequired(this._textbox, () =>
-                {
-                    if (this._textbox.TextLength + Message.Length >= this._textbox.MaxLength)
-                    {
-                        this._textbox.Clear();
-                        this._textbox.Text = "(Log cleared)\r\n";
-                    }
-                    this._textbox.AppendText(Message + "\r\n");
-
-                });
-
-            }
-
-        }
+       
 
         public static void InvokeIFRequired(Control control, MethodInvoker action)
         {
