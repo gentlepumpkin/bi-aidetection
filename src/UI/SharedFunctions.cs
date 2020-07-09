@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -14,7 +15,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Windows.Forms.VisualStyles;
+using System.Xml.Linq;
 using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
 
 namespace WindowsFormsApp2
 {
@@ -104,6 +107,118 @@ namespace WindowsFormsApp2
 
         }
 
+
+        public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true)
+        {
+            List<string> Ret = new List<string>();
+            if (!string.IsNullOrWhiteSpace(InList))
+            {
+                string[] splt = InList.Split(new string(Separators.ToCharArray())[0], (RemoveEmpty ? ((int)StringSplitOptions.RemoveEmptyEntries).ToString()[0] : ((int)StringSplitOptions.None).ToString()[0]));
+                foreach (string str in splt)
+                {
+                    if (RemoveEmpty && !string.IsNullOrWhiteSpace(str))
+                    {
+                        if (TrimStr)
+                        {
+                            Ret.Add(str.Trim());
+                        }
+                        else
+                        {
+                            Ret.Add(str);
+                        }
+                    }
+                    else if (!RemoveEmpty)
+                    {
+                        if (TrimStr)
+                        {
+                            Ret.Add(str.Trim());
+                        }
+                        else
+                        {
+                            Ret.Add(str);
+                        }
+                    }
+                }
+            }
+            return Ret;
+        }
+
+
+        /// <summary>
+        /// Writes the given object instance to a Json file.
+        /// <para>Object type must have a parameterless constructor.</para>
+        /// <para>Only Public properties and variables will be written to the file. These can be any type though, even other classes.</para>
+        /// <para>If there are public properties/variables that you do not want written to the file, decorate them with the [JsonIgnore] attribute.</para>
+        /// </summary>
+        /// <typeparam name="T">The type of object being written to the file.</typeparam>
+        /// <param name="filePath">The file path to write the object instance to.</param>
+        /// <param name="objectToWrite">The object instance to write to the file.</param>
+        /// <param name="append">If false the file will be overwritten if it already exists. If true the contents will be appended to the file.</param>
+        public static bool WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()
+        {
+            bool Ret = false;
+            TextWriter writer = null;
+            try
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings { } ;
+                string contentsToWriteToFile = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,settings);
+                if (settings.Error == null)
+                {
+                    writer = new StreamWriter(filePath, append);
+                    writer.Write(contentsToWriteToFile);
+                    Ret = true;
+                }
+                else
+                {
+                    Console.WriteLine($"Error: While writing '{filePath}', got: " + settings.Error.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: While writing '{filePath}', got: " + ex.Message);
+            }
+            finally
+            {
+                if (writer != null)
+                    writer.Close();
+            }
+            return Ret;
+
+        }
+
+        /// <summary>
+        /// Reads an object instance from an Json file.
+        /// <para>Object type must have a parameterless constructor.</para>
+        /// </summary>
+        /// <typeparam name="T">The type of object to read from the file.</typeparam>
+        /// <param name="filePath">The file path to read the object instance from.</param>
+        /// <returns>Returns a new instance of the object read from the Json file.</returns>
+        public static T ReadFromJsonFile<T>(string filePath) where T : new()
+        {
+
+
+            T Ret = default(T);
+
+            TextReader reader = null;
+            try
+            {
+                reader = new StreamReader(filePath);
+                var fileContents = reader.ReadToEnd();
+                Ret = JsonConvert.DeserializeObject<T>(fileContents);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: While reading '{filePath}', got: " + ex.Message);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Close();
+            }
+
+            return Ret;
+
+        }
 
         public static DateTime RetrieveLinkerTimestamp()
         {
@@ -579,6 +694,121 @@ namespace WindowsFormsApp2
 
             }
         }
+
+        public static string GetXValue(XElement XE, string Name, string AttributeName = "")
+        {
+            string Ret = "";
+            try
+            {
+                if (XE.HasElements)
+                {
+                    if (XE.Element(Name) != null)
+                    {
+                        if (string.IsNullOrEmpty(AttributeName))
+                        {
+                            Ret = XE.Element(Name).Value;
+                        }
+                        else
+                        {
+                            if (XE.Element(Name).HasAttributes)
+                            {
+                                if (XE.Element(Name).Attribute(AttributeName) != null)
+                                {
+                                    Ret = XE.Element(Name).Attribute(AttributeName).Value;
+                                }
+                                else
+                                {
+                                    //M.DbgLog($"Warning: Attribute not found '{AttributeName}' for Element '{Name}'.");
+                                }
+                            }
+                            else
+                            {
+                                //M.DbgLog($"Warning: Attribute not found '{AttributeName}' for Element '{Name}'.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //M.DbgLog($"Warning: Elements not found '{Name}'.");
+                    }
+                }
+                else
+                {
+                    //M.Log($"Error: No elements found While getting '{Name}'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                //M.Log($"Error: While getting '{Name}', got error '{ex.Message}'.");
+            }
+            return Ret;
+        }
+
+        public static List<System.IO.FileInfo> GetFiles(string CurDirectory, string FileName = "*", System.IO.SearchOption SearchOptions = System.IO.SearchOption.AllDirectories, DateTime? LastWriteTime = null)
+        {
+
+            List<System.IO.FileInfo> files = new List<System.IO.FileInfo>();
+            try
+            {
+                //If Directory.Exists(CurDirectory) Then
+                List<string> Folders = CurDirectory.Split(";|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
+                List<string> Names = FileName.Split(";|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
+                bool HasDate = LastWriteTime.HasValue;
+                foreach (string fldr in Folders)
+                {
+                    if (Directory.Exists(fldr))
+                    {
+                        DirectoryInfo DirInfo = new DirectoryInfo(fldr);
+                        foreach (string nam in Names)
+                        {
+                            //M.DbgLog($"Getting '{nam}' files from folder '{fldr}'...");
+                            if (!string.IsNullOrWhiteSpace(nam))
+                            {
+                                try
+                                {
+                                    foreach (FileInfo fi in DirInfo.EnumerateFiles(nam, SearchOptions))
+                                    {
+                                        if (HasDate)
+                                        {
+                                            if (fi.LastWriteTime == LastWriteTime.Value)
+                                            {
+                                                files.Add(fi);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            files.Add(fi);
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine("Error: While getting file list, received error: " + ex.Message);
+                                }
+                            }
+                        }
+
+                    }
+                }
+                //files.AddRange(IO.Directory.GetFiles(CurDirectory, nam, SearchOptions).Select(Function(p) New IO.FileInfo(p)).ToList)
+                //M.DbgLog("Found " & files.Count & " " & FileName & " files in " & CurDirectory)
+                //Else
+                //M.DbgLog("Error: Folder does not exist: " & CurDirectory)
+                //End If
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: While getting file list, received error: " + ex.Message);
+            }
+            finally
+            {
+            }
+
+            return files;
+
+        }
+
     }
 
     internal static class Utility
@@ -1241,4 +1471,9 @@ namespace WindowsFormsApp2
             processHandle = IntPtr.Zero;
         }
     }
+
+
+
+   
 }
+

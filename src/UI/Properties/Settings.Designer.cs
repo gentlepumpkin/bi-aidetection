@@ -89,81 +89,81 @@ namespace WindowsFormsApp2.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ds_adminkey {
+        public string deepstack_adminkey {
             get {
-                return ((string)(this["ds_adminkey"]));
+                return ((string)(this["deepstack_adminkey"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ds_apikey {
+        public string deepstack_apikey {
             get {
-                return ((string)(this["ds_apikey"]));
+                return ((string)(this["deepstack_apikey"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ds_sceneapienabled {
+        public bool deepstack_sceneapienabled {
             get {
-                return ((bool)(this["ds_sceneapienabled"]));
+                return ((bool)(this["deepstack_sceneapienabled"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ds_faceapienabled {
+        public bool deepstack_faceapienabled {
             get {
-                return ((bool)(this["ds_faceapienabled"]));
+                return ((bool)(this["deepstack_faceapienabled"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ds_detectionapienabled {
+        public bool deepstack_detectionapienabled {
             get {
-                return ((bool)(this["ds_detectionapienabled"]));
+                return ((bool)(this["deepstack_detectionapienabled"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("81")]
-        public string ds_port {
+        public string deepstack_port {
             get {
-                return ((string)(this["ds_port"]));
+                return ((string)(this["deepstack_port"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Medium")]
-        public string ds_mode {
+        public string deepstack_mode {
             get {
-                return ((string)(this["ds_mode"]));
+                return ((string)(this["deepstack_mode"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ds_autostart {
+        public bool deepstack_autostart {
             get {
-                return ((bool)(this["ds_autostart"]));
+                return ((bool)(this["deepstack_autostart"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("C:\\DeepStack")]
-        public string ds_installfolder {
+        public string deepstack_installfolder {
             get {
-                return ((string)(this["ds_installfolder"]));
+                return ((string)(this["deepstack_installfolder"]));
             }
         }
     }

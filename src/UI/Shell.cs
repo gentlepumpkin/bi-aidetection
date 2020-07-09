@@ -42,26 +42,28 @@ namespace WindowsFormsApp2
 
     public partial class Shell : Form
     {
-        public string input_path = Properties.Settings.Default.input_path; //image input path
-        public static string deepstack_url = Properties.Settings.Default.deepstack_url; //deepstack url
-        public static bool log_everything = Properties.Settings.Default.log_everything; //save every action sent to Log() into the log file?
-        public static bool send_errors = Properties.Settings.Default.send_errors; //send error messages to Telegram?
-        public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
-        public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
-        public static string telegram_token = Properties.Settings.Default.telegram_token; //telegram bot token
 
-        //deepstack, logging and blueiris settings added by Vorlon
-        public static string ds_AdminKey = Properties.Settings.Default.ds_adminkey;
-        public static string ds_APIKey = Properties.Settings.Default.ds_apikey;
-        public static string ds_Mode = Properties.Settings.Default.ds_mode;
-        public static string ds_Port = Properties.Settings.Default.ds_port;
-        public static string ds_InstallFolder = Properties.Settings.Default.ds_installfolder;
-        public static bool ds_DetectionAPIEnabled = Properties.Settings.Default.ds_detectionapienabled;
-        public static bool ds_FaceAPIEnabled = Properties.Settings.Default.ds_faceapienabled;
-        public static bool ds_SceneAPIEnabled = Properties.Settings.Default.ds_sceneapienabled;
-        public static bool ds_AutoStart = Properties.Settings.Default.ds_autostart;
-        public static DeepStack DeepStackServerControl = null;
+        //Use AppSettings.Settings.originalsetting from now on...
+        //public string input_path = AppSettings.Settings.input_path; //image input path
+        //public static string deepstack_url = AppSettings.Settings.deepstack_url; //deepstack url
+        //public static bool log_everything = AppSettings.Settings.log_everything; //save every action sent to Log() into the log file?
+        //public static bool send_errors = AppSettings.Settings.send_errors; //send error messages to Telegram?
+        //public static string telegram_chatid = AppSettings.Settings.telegram_chatid; //telegram chat id
+        //public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
+        //public static string telegram_token = AppSettings.Settings.telegram_token; //telegram bot token
+
+        ////deepstack, logging and blueiris settings added by Vorlon
+        //public static string deepstack_adminkey = AppSettings.Settings.deepstack_adminkey;
+        //public static string deepstack_apikey = AppSettings.Settings.deepstack_apikey;
+        //public static string deepstack_mode = AppSettings.Settings.deepstack_mode;
+        //public static string deepstack_port = AppSettings.Settings.deepstack_port;
+        //public static string deepstack_installfolder = AppSettings.Settings.deepstack_installfolder;
+        //public static bool deepstack_detectionapienabled = AppSettings.Settings.deepstack_detectionapienabled;
+        //public static bool deepstack_faceapienabled = AppSettings.Settings.deepstack_faceapienabled;
+        //public static bool deepstack_sceneapienabled = AppSettings.Settings.deepstack_sceneapienabled;
+        //public static bool deepstack_autostart = AppSettings.Settings.deepstack_autostart;
         public static IProgress<string> DeepStackProgressLogger = null;
+        public static DeepStack DeepStackServerControl = null;
         public static RichTextBoxEx RTFLogger = null;
         public static LogFileWriter LogWriter = null;
         public static LogFileWriter HistoryWriter = null;
@@ -75,9 +77,10 @@ namespace WindowsFormsApp2
 
         //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
         public static SemaphoreSlim semaphore_detection_running = new SemaphoreSlim(1, 1);
+        //thread safe dictionary to prevent more than one file being processed at one time
         public static ConcurrentDictionary<string, string> detection_dictionary = new ConcurrentDictionary<string, string>();
-        public int file_access_delay = 50; //delay before accessing new file in ms - increased to 50, 10 was still giving frequent access denied errors -Vorlon
-        public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
+        //public int file_access_delay = 50; //delay before accessing new file in ms - increased to 50, 10 was still giving frequent access denied errors -Vorlon
+        //public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
         List<Camera> CameraList = new List<Camera>(); //list containing all cameras
 
         static HttpClient client = new HttpClient();
@@ -91,14 +94,16 @@ namespace WindowsFormsApp2
             //---------------------------------------------------------------------------------------------------------
             // Section added by Vorlon
             //---------------------------------------------------------------------------------------------------------
+            //load settings
+            AppSettings.Load();
             //Initialize the rich text log window writer.   You can use any 'color' name in your log text
             //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
             RTFLogger = new RichTextBoxEx(RTF_Log);
             //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
             //is locked for any reason, it will wait in the queue until it can be written
             //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
-            LogWriter = new LogFileWriter(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt"));
-            HistoryWriter = new LogFileWriter(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv"));
+            LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
+            HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Log("");
@@ -197,7 +202,7 @@ namespace WindowsFormsApp2
             //configure fswatcher to checks input_path for new images, images deleted and renamed images
             try
             {
-                watcher.Path = input_path;
+                watcher.Path = AppSettings.Settings.input_path;
                 watcher.Filter = "*.jpg";
 
                 // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
@@ -212,13 +217,13 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                if (input_path == "")
+                if (AppSettings.Settings.input_path == "")
                 {
                     Log("ATTENTION: No input folder defined.");
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{input_path}': {ex.Message}");
+                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {ex.Message}");
                 }
 
             }
@@ -230,7 +235,7 @@ namespace WindowsFormsApp2
 
             //fill settings tab with stored settings 
           
-            cmbInput.Text = input_path;
+            cmbInput.Text = AppSettings.Settings.input_path;
             foreach (string pth in BlueIrisInfo.ClipPaths)
             {
                 cmbInput.Items.Add(pth);
@@ -240,11 +245,11 @@ namespace WindowsFormsApp2
                     cmbInput.Text = pth;
                 }
             }
-            tbDeepstackUrl.Text = deepstack_url;
-            tb_telegram_chatid.Text = telegram_chatid;
-            tb_telegram_token.Text = telegram_token;
-            cb_log.Checked = log_everything;
-            cb_send_errors.Checked = send_errors;
+            tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
+            tb_telegram_chatid.Text = String.Join(",",AppSettings.Settings.telegram_chatids);
+            tb_telegram_token.Text = AppSettings.Settings.telegram_token;
+            cb_log.Checked = AppSettings.Settings.log_everything;
+            cb_send_errors.Checked = AppSettings.Settings.send_errors;
 
             //---------------------------------------------------------------------------
             //STATS TAB
@@ -259,7 +264,7 @@ namespace WindowsFormsApp2
 
             //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
             //allows for stopping and starting of its service
-            DeepStackServerControl = new DeepStack(ds_AdminKey, ds_APIKey, ds_Mode, ds_SceneAPIEnabled, ds_FaceAPIEnabled, ds_DetectionAPIEnabled, ds_Port, DeepStackProgressLogger);
+            DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, DeepStackProgressLogger);
 
             if (DeepStackServerControl.NeedsSaving)
             {
@@ -296,13 +301,13 @@ namespace WindowsFormsApp2
 
             var fullDeepstackUrl = "";
             //allows both "http://ip:port" and "ip:port"
-            if (!deepstack_url.Contains("http://")) //"ip:port"
+            if (!AppSettings.Settings.deepstack_url.Contains("http://")) //"ip:port"
             {
-                fullDeepstackUrl = "http://" + deepstack_url + "/v1/vision/detection";
+                fullDeepstackUrl = "http://" + AppSettings.Settings.deepstack_url + "/v1/vision/detection";
             }
             else //"http://ip:port"
             {
-                fullDeepstackUrl = deepstack_url + "/v1/vision/detection";
+                fullDeepstackUrl = AppSettings.Settings.deepstack_url + "/v1/vision/detection";
             }
 
 
@@ -326,13 +331,13 @@ namespace WindowsFormsApp2
                             error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
                             request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
                             Stopwatch swpost = Stopwatch.StartNew();
-                            var output = await client.PostAsync(fullDeepstackUrl, request);
-                            Log($"(2/6) Posted in {swpost.ElapsedMilliseconds}ms, waiting for results...");
+                            HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request);
+                            Log($"(2/6) Posted in {{yellow}}{swpost.ElapsedMilliseconds}ms{{white}}, waiting for results...");
                             swpost.Restart();
-                            var jsonString = await output.Content.ReadAsStringAsync();
+                            string jsonString = await output.Content.ReadAsStringAsync();
                             Response response = JsonConvert.DeserializeObject<Response>(jsonString);
-
-                            Log($"(3/6) Received response in {swpost.ElapsedMilliseconds}ms, processing results...");
+                            
+                            Log($"(3/6) Received a {jsonString.Length} byte response, processing results...");
                             
                             error = $"Failure in AI Tool processing the image.";
 
@@ -419,7 +424,7 @@ namespace WindowsFormsApp2
                                                                 objects_confidence.Add(user.confidence);
                                                                 string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                                 objects_position.Add(position);
-                                                                Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
                                                             }
                                                             else //if the object is in a masked area
                                                             {
@@ -599,7 +604,7 @@ namespace WindowsFormsApp2
                         {
                             if (attempts != 9) //failure at attempt 1-8
                             {
-                                Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
+                                Log($"Could not access file - will retry after {{yellow}}{attempts * AppSettings.Settings.retry_delay}{{white}}ms delay");
                             }
                             else //last attempt failed
                             {
@@ -610,7 +615,7 @@ namespace WindowsFormsApp2
                         {
                             Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
                             //upload the alert image which could not be analyzed to Telegram
-                            if (send_errors == true)
+                            if (AppSettings.Settings.send_errors == true)
                             {
                                 await TelegramUpload(image_path);
                             }
@@ -619,13 +624,13 @@ namespace WindowsFormsApp2
 
                     }
                     //System.Threading.Thread.Sleep(retry_delay * attempts);
-                    await Task.Delay(retry_delay * attempts);
+                    await Task.Delay(AppSettings.Settings.retry_delay * attempts);
                     Log($"Retrying image processing - retry  {attempts}");
                 }
 
-                if (log_everything)
+                if (AppSettings.Settings.log_everything)
                 {
-                    Log($"...Object detection finished in {sw.ElapsedMilliseconds}ms.");
+                    Log($"...Object detection finished in {{yellow}}{sw.ElapsedMilliseconds}ms.");
                 }
             }
 
@@ -675,22 +680,22 @@ namespace WindowsFormsApp2
         //send image to Telegram
         public async Task TelegramUpload(string image_path)
         {
-            if (telegram_chatid != "" && telegram_token != "")
+            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
             {
                 //telegram upload sometimes fails
                 try
                 {
                     using (var image_telegram = System.IO.File.OpenRead(image_path))
                     {
-                        var bot = new TelegramBotClient(telegram_token);
+                        var bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
 
                         //upload image to Telegram servers and send to first chat
-                        Log($"      uploading image to chat \"{telegram_chatids[0]}\"");
-                        var message = await bot.SendPhotoAsync(telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"));
+                        Log($"      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
+                        var message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"));
                         string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
                         //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                        foreach (string chatid in telegram_chatids.Skip(1))
+                        foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
                         {
                             Log($"      uploading image to chat \"{chatid}\"");
                             await bot.SendPhotoAsync(chatid, file_id);
@@ -720,13 +725,13 @@ namespace WindowsFormsApp2
         //send text to Telegram
         public async Task TelegramText(string text)
         {
-            if (telegram_chatid != "" && telegram_token != "")
+            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
             {
                 //telegram upload sometimes fails
                 try
                 {
-                    var bot = new Telegram.Bot.TelegramBotClient(telegram_token);
-                    foreach (string chatid in telegram_chatids)
+                    var bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
+                    foreach (string chatid in AppSettings.Settings.telegram_chatids)
                     {
                         await bot.SendTextMessageAsync(chatid, text);
                     }
@@ -734,11 +739,11 @@ namespace WindowsFormsApp2
                 }
                 catch
                 {
-                    if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
+                    if (AppSettings.Settings.send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
                     {
-                        send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
+                        AppSettings.Settings.send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
                         Log($"ERROR: Could not send text \"{text}\" to Telegram.");
-                        send_errors = true;
+                        AppSettings.Settings.send_errors = true;
 
                         //inform on main tab that Telegram upload failed
                         MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't upload error message to Telegram!"; };
@@ -925,7 +930,7 @@ namespace WindowsFormsApp2
             if (memberName == ".ctor")
                 memberName = "Constructor";
 
-            if (log_everything == true)
+            if (AppSettings.Settings.log_everything == true)
             {
                 time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
                 rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
@@ -957,7 +962,7 @@ namespace WindowsFormsApp2
             }
 
             //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
-            if (log_everything == false && !HasError && !HasWarning)
+            if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
             {
                 //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
                 //text += "Enabling \'Log everything\' might give more information.";
@@ -1003,7 +1008,7 @@ namespace WindowsFormsApp2
                 Invoke(LabelUpdate);
             }
 
-            if (send_errors == true && HasError || HasWarning)
+            if (AppSettings.Settings.send_errors == true && HasError || HasWarning)
             {
                 await TelegramText($"[{time}]: {text}"); //upload text to Telegram
             }
@@ -1026,17 +1031,17 @@ namespace WindowsFormsApp2
         {
             try
             {
-                watcher.Path = input_path;
+                watcher.Path = AppSettings.Settings.input_path;
             }
             catch
             {
-                if (input_path == "")
+                if (AppSettings.Settings.input_path == "")
                 {
                     Log("ATTENTION: No input folder defined.");
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{input_path}'.");
+                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}'.");
                 }
 
             }
@@ -1671,6 +1676,7 @@ namespace WindowsFormsApp2
                     if (success == "true")
                     {
                         item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                        item.ForeColor = Color.Green;
                     }
                     else
                     {
@@ -1704,7 +1710,6 @@ namespace WindowsFormsApp2
         //remove entry from left list
         public void DeleteListItem(string filename)
         {
-            Log($"Removing alert image {filename} from history list and from cameras/history.csv ...");
 
             Stopwatch SW = Stopwatch.StartNew();
             Int32 csvlines = 0;
@@ -1729,13 +1734,7 @@ namespace WindowsFormsApp2
                     string[] oldLines = System.IO.File.ReadAllLines(@"cameras/history.csv");
                     string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
                     csvlines = newLines.Count();
-                    //getting errors writing to the file, use the History writer instead
-                    //System.IO.File.WriteAllLines(@"cameras/history.csv", newLines);
-                    foreach (string lin in newLines)
-                    {
-                        HistoryWriter.WriteToLog(lin,true);
-                        asdf
-                    }
+                    System.IO.File.WriteAllLines(@"cameras/history.csv", newLines);
                 }
                 catch (Exception ex)
                 {
@@ -1750,9 +1749,9 @@ namespace WindowsFormsApp2
             detection_dictionary.TryRemove(filename.ToLower(), out val);
 
             //try to get a better feel how much time this function consumes - Vorlon
-            if (log_everything)
+            if (AppSettings.Settings.log_everything)
             {
-                Log($"...Removed item in {SW.ElapsedMilliseconds}ms, {list1.Items.Count} list items, {csvlines} history.csv lines.");
+                Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
             }
 
         }
@@ -1770,22 +1769,30 @@ namespace WindowsFormsApp2
             {
                 try
                 {
-                    string[] oldLines = System.IO.File.ReadAllLines(@"cameras/history.csv"); //old history.csv
-                    oldcsvlines = oldLines.Count();
-
-                    List<string> newLines = new List<string>(); //new history.csv
-                    newLines.Add(oldLines[0]); // add title line from old to new history.csv
-
-                    foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
+                    if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                     {
-                        if (System.IO.File.Exists(input_path + "/" + line.Split('|')[0]) && input_path != "")
-                        {
-                            newLines.Add(line);
-                        }
-                    }
-                    newcsvlines = newLines.Count;
+                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
+                        oldcsvlines = oldLines.Count();
 
-                    System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                        List<string> newLines = new List<string>(); //new history.csv
+                        newLines.Add(oldLines[0]); // add title line from old to new history.csv
+
+                        foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
+                        {
+                            if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
+                            {
+                                newLines.Add(line);
+                            }
+                        }
+                        newcsvlines = newLines.Count;
+
+                        System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+
+                    }
+                    else
+                    {
+                        Log("File does not exist yet: cameras/history.csv");
+                    }
                 }
                 catch
                 {
@@ -1796,9 +1803,9 @@ namespace WindowsFormsApp2
             Invoke(LabelUpdate);
 
             //try to get a better feel how much time this function consumes - Vorlon
-            if (log_everything)
+            if (AppSettings.Settings.log_everything)
             {
-                Log($"...Cleaned list in {SW.ElapsedMilliseconds}ms, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
+                Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
             }
 
         }
@@ -1808,62 +1815,68 @@ namespace WindowsFormsApp2
         {
             try
             {
-                Log("Loading history list from cameras/history.csv ...");
-
-                Stopwatch SW = Stopwatch.StartNew();
-                Int32 oldcsvlines = 0;
-                Int32 newcsvlines = 0;
-
-                //delete obsolete entries from history.csv
-                //CleanCSVList(); //removed to load the history list faster
-
-                List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
-
-                //load all lines except the first line into List (the first line is the table heading and not an alert entry)
-                foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
+                if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                 {
-                    result.Add(line);
-                }
+                    Log("Loading history list from cameras/history.csv ...");
 
-                List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
+                    Stopwatch SW = Stopwatch.StartNew();
 
-                MethodInvoker LabelUpdate = delegate
-                {
-                    list1.Items.Clear();
+                    //delete obsolete entries from history.csv
+                    //CleanCSVList(); //removed to load the history list faster
 
-                    //load all List elements into the ListView for each row
-                    foreach (var val in result)
+                    List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
+
+                    //load all lines except the first line into List (the first line is the table heading and not an alert entry)
+                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
                     {
-                        string camera = val.Split('|')[2];
-                        string success = val.Split('|')[5];
-                        string objects_and_confidence = val.Split('|')[3];
-                        if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
-                        string filename = val.Split('|')[0];
-                        string date = val.Split('|')[1];
-                        string object_positions = val.Split('|')[4];
-
-                        ListViewItem item;
-                        if (success == "true")
-                        {
-                            item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
-                        }
-                        else
-                        {
-                            item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
-                        }
-
-                        list1.Items.Insert(0, item);
+                        result.Add(line);
                     }
 
-                    ResizeListViews();
+                    List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
 
-                };
-                Invoke(LabelUpdate);
+                    MethodInvoker LabelUpdate = delegate
+                    {
+                        list1.Items.Clear();
 
-                //try to get a better feel how much time this function consumes - Vorlon
-                if (log_everything)
+                        //load all List elements into the ListView for each row
+                        foreach (var val in result)
+                        {
+                            string camera = val.Split('|')[2];
+                            string success = val.Split('|')[5];
+                            string objects_and_confidence = val.Split('|')[3];
+                            if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
+                            string filename = val.Split('|')[0];
+                            string date = val.Split('|')[1];
+                            string object_positions = val.Split('|')[4];
+
+                            ListViewItem item;
+                            if (success == "true")
+                            {
+                                item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                            }
+                            else
+                            {
+                                item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                            }
+
+                            list1.Items.Insert(0, item);
+                        }
+
+                        ResizeListViews();
+
+                    };
+                    Invoke(LabelUpdate);
+
+                    //try to get a better feel how much time this function consumes - Vorlon
+                    if (AppSettings.Settings.log_everything)
+                    {
+                        Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
+                    }
+
+                }
+                else
                 {
-                    Log($"...Loaded list in {SW.ElapsedMilliseconds}ms, {list1.Items.Count} lines.");
+                    Log("File does not exist yet - cameras/history.csv");
                 }
 
             }
@@ -1901,7 +1914,7 @@ namespace WindowsFormsApp2
         //EVENT: new image added to input_path -> START AI DETECTION
         async void OnCreatedAsync(object source, FileSystemEventArgs e)
         {
-            string filename = Path.Combine(input_path, e.Name);
+            string filename = Path.Combine(AppSettings.Settings.input_path, e.Name);
 
             //make sure we are not processing a duplicate file...
             if (detection_dictionary.ContainsKey(filename.ToLower()))
@@ -1930,9 +1943,9 @@ namespace WindowsFormsApp2
                 if (success)
                 {
                     //try to get a better feel how much time this function consumes - Vorlon
-                    if (log_everything && WaitedMS >= 20)
+                    if (AppSettings.Settings.log_everything && WaitedMS >= 500)
                     {
-                        Log($"...had to wait {WaitedMS}ms in thread queue for {e.Name}");
+                        Log($"{{red}}...had to wait {{yellow}}{WaitedMS}ms{{red}} in thread queue for {e.Name}");
                     }
 
                     //output "Processing Image" to Overview Tab
@@ -1965,7 +1978,7 @@ namespace WindowsFormsApp2
                 else
                 {
                     //could not access the file for 30 seconds??   Or unexpected error
-                    Log($"Error: Could not gain access to {filename} for {sw.Elapsed.TotalSeconds} seconds, giving up.");
+                    Log($"Error: Could not gain access to {filename} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.");
                 }
 
             }
@@ -2003,7 +2016,7 @@ namespace WindowsFormsApp2
             {
                 if (list1.SelectedItems.Count > 0)
                 {
-                    using (var img = new Bitmap(input_path + "/" + list1.SelectedItems[0].Text))
+                    using (var img = new Bitmap(AppSettings.Settings.input_path + "\\" + list1.SelectedItems[0].Text))
                     {
                         pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
                     }
@@ -2577,22 +2590,22 @@ namespace WindowsFormsApp2
         private void BtnSettingsSave_Click_1(object sender, EventArgs e)
         {
             //save inputted settings into App.settings
-            Properties.Settings.Default.input_path = cmbInput.Text;
-            Properties.Settings.Default.deepstack_url = tbDeepstackUrl.Text;
-            Properties.Settings.Default.telegram_chatid = tb_telegram_chatid.Text;
-            Properties.Settings.Default.telegram_token = tb_telegram_token.Text;
-            Properties.Settings.Default.log_everything = cb_log.Checked;
-            Properties.Settings.Default.send_errors = cb_send_errors.Checked;
-            Properties.Settings.Default.Save();
+            AppSettings.Settings.input_path = cmbInput.Text;
+            AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
+            AppSettings.Settings.telegram_chatids = SharedFunctions.Split(tb_telegram_chatid.Text,",",true,true);
+            AppSettings.Settings.telegram_token = tb_telegram_token.Text;
+            AppSettings.Settings.log_everything = cb_log.Checked;
+            AppSettings.Settings.send_errors = cb_send_errors.Checked;
+            AppSettings.Save();
 
             //update variables
-            input_path = Properties.Settings.Default.input_path;
-            deepstack_url = Properties.Settings.Default.deepstack_url;
-            telegram_chatid = Properties.Settings.Default.telegram_chatid;
-            telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
-            telegram_token = Properties.Settings.Default.telegram_token;
-            log_everything = Properties.Settings.Default.log_everything;
-            send_errors = Properties.Settings.Default.send_errors;
+            //input_path = AppSettings.Settings.input_path;
+            //deepstack_url = AppSettings.Settings.deepstack_url;
+            //telegram_chatid = AppSettings.Settings.telegram_chatid;
+            //telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
+            //telegram_token = AppSettings.Settings.telegram_token;
+            //log_everything = AppSettings.Settings.log_everything;
+            //send_errors = AppSettings.Settings.send_errors;
 
             //update fswatcher to watch new input folder
             UpdateFSWatcher();
@@ -2635,12 +2648,12 @@ namespace WindowsFormsApp2
         //ask before closing AI Tool to prevent accidentally closing
         private void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Properties.Settings.Default.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+            if (AppSettings.Settings.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
             {
                 using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                 {
                     var result = form.ShowDialog();
-                    if (Properties.Settings.Default.close_instantly == -1)
+                    if (AppSettings.Settings.close_instantly == -1)
                     {
                         //if it's the first time, ask if the confirmation dialog should ever appear again
                         using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO, Never!", "YES"))
@@ -2648,13 +2661,13 @@ namespace WindowsFormsApp2
                             var result1 = form1.ShowDialog();
                             if (result1 == DialogResult.Cancel)
                             {
-                                Properties.Settings.Default.close_instantly = 0;
-                                Properties.Settings.Default.Save();
+                                AppSettings.Settings.close_instantly = 0;
+                                AppSettings.Save();
                             }
                             else
                             {
-                                Properties.Settings.Default.close_instantly = 1;
-                                Properties.Settings.Default.Save();
+                                AppSettings.Settings.close_instantly = 1;
+                                AppSettings.Save();
                             }
                         }
                     }
@@ -2675,32 +2688,23 @@ namespace WindowsFormsApp2
             DeepStackServerControl.GetBlueStackRunningProcesses();
 
             if (RB_Medium.Checked)
-                ds_Mode = "Medium";
+                AppSettings.Settings.deepstack_mode = "Medium";
             if (RB_Low.Checked)
-                ds_Mode = "Low";
+                AppSettings.Settings.deepstack_mode = "Low";
             if (RB_High.Checked)
-                ds_Mode = "High";
+                AppSettings.Settings.deepstack_mode = "High";
 
-            ds_DetectionAPIEnabled = Chk_DetectionAPI.Checked;
-            ds_FaceAPIEnabled = Chk_FaceAPI.Checked;
-            ds_SceneAPIEnabled = Chk_SceneAPI.Checked;
-            ds_AutoStart = Chk_AutoStart.Checked;
-            ds_AdminKey = Txt_AdminKey.Text.Trim();
-            ds_APIKey = Txt_APIKey.Text.Trim();
-            ds_InstallFolder = Txt_DeepStackInstallFolder.Text.Trim();
-            ds_Port = Txt_Port.Text.Trim();
+            AppSettings.Settings.deepstack_detectionapienabled = Chk_DetectionAPI.Checked;
+            AppSettings.Settings.deepstack_faceapienabled = Chk_FaceAPI.Checked;
+            AppSettings.Settings.deepstack_sceneapienabled = Chk_SceneAPI.Checked;
+            AppSettings.Settings.deepstack_autostart = Chk_AutoStart.Checked;
+            AppSettings.Settings.deepstack_adminkey = Txt_AdminKey.Text.Trim();
+            AppSettings.Settings.deepstack_apikey = Txt_APIKey.Text.Trim();
+            AppSettings.Settings.deepstack_installfolder = Txt_DeepStackInstallFolder.Text.Trim();
+            AppSettings.Settings.deepstack_port = Txt_Port.Text.Trim();
 
 
-            Properties.Settings.Default.ds_adminkey = ds_AdminKey;
-            Properties.Settings.Default.ds_apikey = ds_APIKey;
-            Properties.Settings.Default.ds_autostart = ds_AutoStart;
-            Properties.Settings.Default.ds_detectionapienabled = ds_DetectionAPIEnabled;
-            Properties.Settings.Default.ds_faceapienabled = ds_FaceAPIEnabled;
-            Properties.Settings.Default.ds_installfolder = ds_InstallFolder;
-            Properties.Settings.Default.ds_mode = ds_Mode;
-            Properties.Settings.Default.ds_port = ds_Port;
-            Properties.Settings.Default.ds_sceneapienabled = ds_SceneAPIEnabled;
-            Properties.Settings.Default.Save();
+            AppSettings.Save();
 
 
             if (DeepStackServerControl.IsInstalled)
@@ -2731,14 +2735,14 @@ namespace WindowsFormsApp2
 
             }
 
-            DeepStackServerControl.Update(ds_AdminKey, ds_APIKey, ds_Mode, ds_SceneAPIEnabled,ds_FaceAPIEnabled,ds_DetectionAPIEnabled,ds_Port);
+            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
 
         }
 
         private void LoadDeepStackTab(bool StartIfNeeded)
         {
             //first update the port in the deepstack_url if found
-            string prt = SharedFunctions.GetWordBetween(deepstack_url, ":", " |/");
+            string prt = SharedFunctions.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
             if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
             {
                 DeepStackServerControl.Port = prt;
@@ -2758,7 +2762,7 @@ namespace WindowsFormsApp2
             Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
             Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
 
-            Chk_AutoStart.Checked = ds_AutoStart;
+            Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
 
             Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
             Txt_APIKey.Text = DeepStackServerControl.APIKey;
@@ -2768,13 +2772,13 @@ namespace WindowsFormsApp2
             if (prt != Txt_Port.Text)
             {
                 //server:port/maybe/more/path
-                string serv = SharedFunctions.GetWordBetween(deepstack_url, "", ":");
+                string serv = SharedFunctions.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
                 if (!string.IsNullOrEmpty(serv))
                 {
                     tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
-                    deepstack_url = serv + ":" + Txt_Port.Text;
-                    Properties.Settings.Default.deepstack_url = tbDeepstackUrl.Text;
-                    Properties.Settings.Default.Save();
+                    //AppSettings.Settings.deepstack_url = serv + ":" + Txt_Port.Text;
+                    //AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
+                    //AppSettings.Save();
                 }
             }
 
@@ -2814,7 +2818,11 @@ namespace WindowsFormsApp2
 
         private void Btn_Start_Click(object sender, EventArgs e)
         {
+            Lbl_BlueStackRunning.Text = "STARTING...";
+            Btn_Start.Enabled = false;
+            Btn_Stop.Enabled = false;
             SaveDeepStackTab();
+            DeepStackServerControl.Start();
             LoadDeepStackTab(true);
         }
 
@@ -2825,6 +2833,9 @@ namespace WindowsFormsApp2
 
         private void Btn_Stop_Click(object sender, EventArgs e)
         {
+            Lbl_BlueStackRunning.Text = "STOPPING...";
+            Btn_Start.Enabled = false;
+            Btn_Stop.Enabled = false;
             DeepStackServerControl.Stop();
             LoadDeepStackTab(false);
         }

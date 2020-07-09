@@ -23,31 +23,31 @@
     <Setting Name="close_instantly" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="ds_adminkey" Type="System.String" Scope="Application">
+    <Setting Name="deepstack_adminkey" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ds_apikey" Type="System.String" Scope="Application">
+    <Setting Name="deepstack_apikey" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ds_sceneapienabled" Type="System.Boolean" Scope="Application">
+    <Setting Name="deepstack_sceneapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_faceapienabled" Type="System.Boolean" Scope="Application">
+    <Setting Name="deepstack_faceapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_detectionapienabled" Type="System.Boolean" Scope="Application">
+    <Setting Name="deepstack_detectionapienabled" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ds_port" Type="System.String" Scope="Application">
+    <Setting Name="deepstack_port" Type="System.String" Scope="Application">
       <Value Profile="(Default)">81</Value>
     </Setting>
-    <Setting Name="ds_mode" Type="System.String" Scope="Application">
+    <Setting Name="deepstack_mode" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Medium</Value>
     </Setting>
-    <Setting Name="ds_autostart" Type="System.Boolean" Scope="Application">
+    <Setting Name="deepstack_autostart" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ds_installfolder" Type="System.String" Scope="Application">
+    <Setting Name="deepstack_installfolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\DeepStack</Value>
     </Setting>
   </Settings>

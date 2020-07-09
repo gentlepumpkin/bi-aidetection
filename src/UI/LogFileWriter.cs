@@ -253,6 +253,53 @@ public class LogFileWriter:IDisposable
 		}
 	}
 
+
+	public void WriteABunchToLog(string[] DetailItms, bool Flush = false)
+	{
+
+		try
+		{
+			if (NoLog)
+			{
+				return;
+			}
+
+            foreach (string lin in DetailItms)
+            {
+                if (lin != null)
+                {
+					// Create the entry and push to the Queue
+					ClsLogDetailItem DetailItm = new ClsLogDetailItem();
+					
+					LogWriteCount = LogWriteCount + 1;
+				
+					DetailItm.Idx = LogWriteCount;
+					DetailItm.TimeUTC = DateTime.UtcNow;
+					DetailItm.Message = lin;
+					logQueue.Enqueue(DetailItm);
+					if (LogWriteCount == long.MaxValue - 8)
+					{
+						LogWriteCount = 1;
+					}
+				}
+            }
+			
+			// If we have reached the Queue Size then flush the Queue
+			if (Flush) 
+			{
+				//Await FlushLog()
+				FlushRightAway = true;
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Error: " + ex.Message);
+		}
+		finally
+		{
+
+		}
+	}
 	public void WriteToLog(ClsLogDetailItem DetailItm, bool Flush = false)
 	{
 
@@ -319,7 +366,7 @@ public class LogFileWriter:IDisposable
 				sw.Stop();
 				if (sw.ElapsedMilliseconds >= 1000)
 				{
-					Console.WriteLine($"LogWriter:FlushLog: DONE Flushing in {sw.ElapsedMilliseconds.ToString()}ms, LogQueue: {LastQCnt} items, File: {this.LogFile}");
+					Console.WriteLine($"LogWriter:FlushLog: DONE Flushing in {sw.ElapsedMilliseconds}ms, LogQueue: {LastQCnt} items, File: {this.LogFile}");
 				}
 			}
 			LastLogFlushedTimeUTC = DateTime.UtcNow;

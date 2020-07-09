@@ -143,6 +143,8 @@ public class RichTextBoxEx
 	public Dictionary<string, RtfColor> RtfColors = new Dictionary<string, RtfColor>();
 
 	public int CurrentTextLength = 0;
+	public int MaxTextLength = 65536;
+
 	private RichTextBox _RTF;
 	private Dictionary<string, Color> KnownColors { get; set; } = new Dictionary<string, Color>();
 	public RichTextBoxEx(RichTextBox RTF)
@@ -189,10 +191,11 @@ public class RichTextBoxEx
 
 			UIOp(this._RTF, () =>
 			{
-				if (this._RTF.TextLength + Msg.Length >= 65536)
+				if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)
 				{
 					this._RTF.Clear();
-					Msg = $"(Log window cleared for performance reasons)\r\n{Msg}";
+					this.CurrentTextLength = 0;
+					Msg = $"(Log window cleared for performance reasons @ {this.MaxTextLength} bytes)\r\n{Msg}";
 				}
 			});
 
