@@ -174,7 +174,7 @@ namespace WindowsFormsApp2
                 Log("ATTENTION: Creating database cameras/history.csv .");
                 try
                 {
-                    HistoryWriter.WriteToLog("filename|date and time|camera|detections|positions of detections|success");
+                    HistoryWriter.WriteToLog("filename|date and time|camera|detections|positions of detections|success",true);
 
                     //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "cameras/history.csv"))
                     //{
@@ -671,9 +671,10 @@ namespace WindowsFormsApp2
                 catch (Exception ex)
                 {
 
-                    //We should never get here due to all the null checks and function to wait for file to become available...
+                    //We should almost never get here due to all the null checks and function to wait for file to become available...
+                    //When the connection to deepstack fails we will get here
                     //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
-                    error = $"{SharedFunctions.ExMsg(ex)}";
+                    error = $"ERROR: {SharedFunctions.ExMsg(ex)}";
                     Log(error);
 
                     //if (error == "loading image failed") //this was a file exception error - retry file access
@@ -1168,9 +1169,9 @@ namespace WindowsFormsApp2
         //open Log when clicking or error message
         private void lbl_errors_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists("log.txt"))
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
             {
-                System.Diagnostics.Process.Start("log.txt");
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
                 lbl_errors.Text = "";
             }
             else
@@ -1806,7 +1807,7 @@ namespace WindowsFormsApp2
             Stopwatch SW = Stopwatch.StartNew();
             Int32 csvlines = 0;
 
-            MethodInvoker LabelUpdate = delegate
+            MethodInvoker LabelUpdate = async delegate
             {
                 ListViewItem listviewitem = new ListViewItem();
                 for (int i = 0; i < list1.Items.Count; i++)
@@ -1823,10 +1824,20 @@ namespace WindowsFormsApp2
                 //remove entry from history csv
                 try
                 {
-                    string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
-                    string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
-                    csvlines = newLines.Count();
-                    System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                    bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+                    if (Success)
+                    {
+                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
+                        string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
+                        csvlines = newLines.Count();
+                        System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                    }
+                    else
+                    {
+                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -1854,28 +1865,38 @@ namespace WindowsFormsApp2
             Int32 oldcsvlines = 0;
             Int32 newcsvlines = 0;
 
-            MethodInvoker LabelUpdate = delegate
+            MethodInvoker LabelUpdate = async delegate
             {
                 try
                 {
                     if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                     {
-                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
-                        oldcsvlines = oldLines.Count();
+                        
+                        bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
 
-                        List<string> newLines = new List<string>(); //new history.csv
-                        newLines.Add(oldLines[0]); // add title line from old to new history.csv
-
-                        foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
+                        if (Success)
                         {
-                            if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
-                            {
-                                newLines.Add(line);
-                            }
-                        }
-                        newcsvlines = newLines.Count;
+                            string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
+                            oldcsvlines = oldLines.Count();
 
-                        System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                            List<string> newLines = new List<string>(); //new history.csv
+                            newLines.Add(oldLines[0]); // add title line from old to new history.csv
+
+                            foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
+                            {
+                                if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
+                                {
+                                    newLines.Add(line);
+                                }
+                            }
+                            newcsvlines = newLines.Count;
+
+                            System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                        }
+                        else
+                        {
+                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                        }
 
                     }
                     else
@@ -1897,7 +1918,7 @@ namespace WindowsFormsApp2
         }
 
         //load stored entries in history CSV into history ListView
-        private void LoadFromCSV()
+        private async Task LoadFromCSVAsync()
         {
             try
             {
@@ -1912,50 +1933,61 @@ namespace WindowsFormsApp2
 
                     List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-                    //load all lines except the first line into List (the first line is the table heading and not an alert entry)
-                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
+                    bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+
+                    if (Success)
                     {
-                        result.Add(line);
-                    }
-
-                    List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
-
-                    MethodInvoker LabelUpdate = delegate
-                    {
-                        list1.Items.Clear();
-
-                        //load all List elements into the ListView for each row
-                        foreach (var val in result)
+                        //load all lines except the first line into List (the first line is the table heading and not an alert entry)
+                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
                         {
-                            string camera = val.Split('|')[2];
-                            string success = val.Split('|')[5];
-                            string objects_and_confidence = val.Split('|')[3];
-                            if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
-                            string filename = val.Split('|')[0];
-                            string date = val.Split('|')[1];
-                            string object_positions = val.Split('|')[4];
-
-                            ListViewItem item;
-                            if (success == "true")
-                            {
-                                item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
-                                item.ForeColor = Color.Green;
-                            }
-                            else
-                            {
-                                item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
-                            }
-
-                            list1.Items.Insert(0, item);
+                            result.Add(line);
                         }
 
-                        ResizeListViews();
+                        List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
 
-                    };
-                    Invoke(LabelUpdate);
+                        MethodInvoker LabelUpdate = delegate
+                        {
+                            list1.Items.Clear();
 
-                    //try to get a better feel how much time this function consumes - Vorlon
-                    Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
+                            //load all List elements into the ListView for each row
+                            foreach (var val in result)
+                            {
+                                string camera = val.Split('|')[2];
+                                string success = val.Split('|')[5];
+                                string objects_and_confidence = val.Split('|')[3];
+                                if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
+                                string filename = val.Split('|')[0];
+                                string date = val.Split('|')[1];
+                                string object_positions = val.Split('|')[4];
+
+                                ListViewItem item;
+                                if (success == "true")
+                                {
+                                    item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                                    item.ForeColor = Color.Green;
+                                }
+                                else
+                                {
+                                    item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                                }
+
+                                list1.Items.Insert(0, item);
+                            }
+
+                            ResizeListViews();
+
+                        };
+                        Invoke(LabelUpdate);
+
+                        //try to get a better feel how much time this function consumes - Vorlon
+                        Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
+
+                    }
+                    else
+                    {
+                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+                    }
 
                 }
                 else
@@ -2126,7 +2158,7 @@ namespace WindowsFormsApp2
                 catch
                 {
                     CleanCSVList();
-                    LoadFromCSV();
+                    LoadFromCSVAsync();
                 }
             }
             
@@ -2172,37 +2204,37 @@ namespace WindowsFormsApp2
         //event: filter "only revelant alerts" checked or unchecked
         private void cb_filter_success_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private void cb_filter_person_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with animals" checked or unchecked
         private void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //event: filter "only false / irrevelant alerts" checked or unchecked
         private void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //event: filter camera dropdown changed
         private void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadFromCSV();
+            LoadFromCSVAsync();
         }
 
         //----------------------------------------------------------------------------------------------------------
