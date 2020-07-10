@@ -118,7 +118,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: Got error while reading BlueIris registry: " + ex.Message);
+                Console.WriteLine("Error: Got error while reading BlueIris registry: " + SharedFunctions.ExMsg(ex));
                 this.IsValid = false;
             }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using Microsoft.Win32;
@@ -31,6 +32,7 @@ namespace WindowsFormsApp2
         public bool FaceAPIEnabled = false;
         public bool DetectionAPIEnabled = true;
         public bool IsStarted = false;
+        public bool HasError = false;
         public bool IsInstalled = false;
         public bool IsActivated = false;
         public bool NeedsSaving = false;
@@ -134,11 +136,12 @@ namespace WindowsFormsApp2
                 catch (Exception ex)
                 {
 
-                    LogProgress("Error: While trying to access DeepStack server.exe process, got: " + ex.Message);
+                    LogProgress("Error: While trying to access DeepStack server.exe process, got: " + SharedFunctions.ExMsg(ex));
                 }
                 this.IsInstalled = true;
                 if (!HasExited)
                 {
+                    this.HasError = false;
                     LogProgress("DeepStack Desktop IS running from " + ServerProc.FileName);
 
                     this.IsStarted = true;
@@ -238,10 +241,16 @@ namespace WindowsFormsApp2
                     this.DeepStackProc.process = null;
                 }
             }
+            else if (this.ServerProc.process != null || this.PythonProc.process != null || this.RedisProc.process != null)
+            {
+                LogProgress("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
+                this.HasError = true;
+            }
             else
             {
                 LogProgress("DeepStack Desktop NOT running.");
                 this.IsStarted = false;
+                this.HasError = false;
             }
 
             return Ret;
@@ -321,7 +330,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                LogProgress("Error: While detecting DeepStack, got: " + ex.Message);
+                LogProgress("Error: While detecting DeepStack, got: " + SharedFunctions.ExMsg(ex));
             }
 
             if (key != null)
@@ -401,15 +410,18 @@ namespace WindowsFormsApp2
 
 
                 this.IsStarted = true;
+                this.HasError = false;
+                Ret = true;
+
                 LogProgress("Started in " + SW.ElapsedMilliseconds + "ms");
 
-                Ret = true;
 
             }
             catch (Exception ex)
             {
                 this.IsStarted = false;
-                LogProgress("Error: Cannot start: " + ex.Message);
+                this.HasError = true;
+                LogProgress("Error: Cannot start: " + SharedFunctions.ExMsg(ex));
             }
 
             return Ret;
@@ -420,7 +432,7 @@ namespace WindowsFormsApp2
         {
             LogProgress(line.Data);
         }
-        public bool Stop()
+        public async Task<bool> StopAsync()
         {
             bool Ret = false;
             bool err = false;
@@ -428,46 +440,64 @@ namespace WindowsFormsApp2
             LogProgress("Stopping Deepstack...");
             Stopwatch sw = Stopwatch.StartNew();
 
-            try
+            //more than one python process we need to take care of...
+            for (int i = 0; i < 5; i++)
             {
                 if (!(this.PythonProc.process == null))
-                    this.PythonProc.process.Kill();
+                {
+                    try
+                    {
+                        await Task.Run(() => this.PythonProc.process.Kill());
+                        await Task.Delay(100);
+                        this.PythonProc = SharedFunctions.GetaProcessByFullPath(this.PythonEXE);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        LogProgress("Error: Could not stop DeepStack python.exe process: " + SharedFunctions.ExMsg(ex));
+                        err = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+
             }
-            catch (Exception ex)
-            {
-                LogProgress("Error: Could not stop DeepStack python.exe process: " + ex.Message);
-                err = true;
-            }
+
             try
             {
                 if (!(this.RedisProc.process == null))
-                    this.RedisProc.process.Kill();
+                    await Task.Run(() => this.RedisProc.process.Kill());
             }
             catch (Exception ex)
             {
-                LogProgress("Error: Could not stop DeepStack redis.exe process: " + ex.Message);
+                LogProgress("Error: Could not stop DeepStack redis-server.exe process: " + SharedFunctions.ExMsg(ex));
                 err = true;
             }
             try
             {
                 if (!(this.ServerProc.process == null))
-                    this.ServerProc.process.Kill();
+                    await Task.Run(() => this.ServerProc.process.Kill());
             }
             catch (Exception ex)
             {
-                LogProgress("Could not stop DeepStack server.exe process: " + ex.Message);
+                LogProgress("Could not stop DeepStack server.exe process: " + SharedFunctions.ExMsg(ex));
                 err = true;
             }
             try
             {
                 if (!(this.DeepStackProc.process == null))
-                    this.DeepStackProc.process.Kill();
+                    await Task.Run(() => this.DeepStackProc.process.Kill());
             }
             catch (Exception ex)
             {
-                LogProgress("Error: Could not stop DeepStack.exe process: " + ex.Message);
+                LogProgress("Error: Could not stop DeepStack.exe process: " + SharedFunctions.ExMsg(ex));
                 err = true;
             }
+
+            //takes a while for other python.exe processes to fully stop
+            await Task.Delay(250);
 
             if (!err)
             {
@@ -484,6 +514,8 @@ namespace WindowsFormsApp2
                 LogProgress("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
             }
 
+
+            this.HasError = !Ret;
             return Ret;
 
         }

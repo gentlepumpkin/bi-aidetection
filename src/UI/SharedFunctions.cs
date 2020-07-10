@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Windows.Forms.VisualStyles;
 using System.Xml.Linq;
+using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 
@@ -99,7 +101,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("WaitForFileAccess Error: " + ex.Message);
+                Console.WriteLine("WaitForFileAccess Error: " + SharedFunctions.ExMsg(ex));
             }
 
 
@@ -143,6 +145,157 @@ namespace WindowsFormsApp2
             return Ret;
         }
 
+        public static string ExMsg(Exception MyEx2, [CallerMemberName] string MemberName = null)
+        {
+            //Gets the nested/inner exception if found, and also line and column of error - assuming PDB is in same folder
+            string msg = "";
+            try
+            {
+                string typ = "";
+                Exception BaseEx = MyEx2.GetBaseException();
+                Exception InnerEx = MyEx2.InnerException;
+                if (InnerEx != null)
+                {
+                    typ = InnerEx.GetType().Name;
+                    string Extra = GetExtraExceptionInfo(MyEx2);
+                    msg = InnerEx.Message + " [" + typ + "] " + Extra;
+                }
+                else if (BaseEx != null)
+                {
+                    typ = BaseEx.GetType().Name;
+                    string Extra = GetExtraExceptionInfo(MyEx2);
+                    msg = BaseEx.Message + " [" + typ + "] " + Extra;
+                }
+                else
+                {
+                    typ = MyEx2.GetType().Name;
+                    string Extra = GetExtraExceptionInfo(MyEx2);
+                    msg = MyEx2.Message + " [" + typ + "] " + Extra;
+                }
+
+                //ExtraInfo = $"Mod: {LastMod} Line:{Frames(Frames.Count - 1).GetFileLineNumber}:{Frames(Frames.Count - 1).GetFileColumnNumber}"
+
+                if (msg.IndexOf(MemberName, StringComparison.OrdinalIgnoreCase) == -1)
+                {
+                    msg = $"{msg} ({MemberName})";
+                }
+
+            }
+            catch (Exception ex)
+            {
+            }
+
+            msg = msg.Replace("\r\n", " | ");
+            return msg;
+
+        }
+
+        public static string GetExtraExceptionInfo(Exception ThisEX)
+        {
+            string ExtraInfo = "";
+            try
+            {
+                //Dim st As StackTrace = New StackTrace(ThisEX, True)
+                if (ThisEX.StackTrace != null)
+                {
+                    string ST = ThisEX.StackTrace;
+                    string[] SpltStr = new string[1] { " at " };
+                    string[] Splt = ST.Split(SpltStr, StringSplitOptions.None);
+                    //at FreeDNSUpdateTool.SharedModule.VB$StateMachine_1_GetPublicIPAddress.MoveNext() in
+                    //                                  VB$StateMachine_16_GetPublicIPAddress
+                    string Lst = Splt[Splt.Count() - 1].Replace(".MoveNext()", "").Trim();
+                    Lst = GetWordBetween(Lst, "", " in ");
+                    //FreeDNSUpdateTool.SharedModule.VB$StateMachine_1_GetPublicIPAddress
+                    string[] Splt2 = Lst.Split('.');
+                    string LastMod = Splt2[Splt2.Count() - 1].Trim();
+                    for (int statenum = 0; statenum <= 256; statenum++)
+                    {
+                        LastMod = LastMod.Replace($"VB$StateMachine_{statenum}_", "");
+                    }
+                    //GetPublicIPAddress
+                    StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
+                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}:{Frames[Frames.Count() - 1].GetFileColumnNumber()}";
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return ExtraInfo;
+        }
+
+        public static void Startup(bool Enable)
+        {
+            try
+            {
+
+                using (RegistryKey RK = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+                {
+
+                    string AppName = Path.GetFileNameWithoutExtension(Application.ExecutablePath);
+                    string AppCmd = Application.ExecutablePath; //+ " /min";
+                    bool Enabled = false;
+                    object CurVal = RK.GetValue(AppName, null);
+
+                    if (CurVal == null || string.IsNullOrWhiteSpace(CurVal.ToString()))
+                    {
+                        Console.WriteLine("Application is NOT set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+
+                        Enabled = false;
+                    }
+                    else
+                    {
+                        if (CurVal.ToString().ToLower() == AppCmd.ToLower())
+                        {
+                            Console.WriteLine("Application is already set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                            Enabled = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Application is NOT set to start with Windows (bad path={CurVal}): HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                        }
+
+                    }
+
+                    if (Enable && !Enabled)
+                    {
+                        Console.WriteLine("Enabling Application startup: " + AppCmd);
+                        if (!Debugger.IsAttached)
+                        {
+                            RK.SetValue(AppName, AppCmd);
+                        }
+                    }
+                    else if (!Enable && Enabled)
+                    {
+                        Console.WriteLine("Disabling Application startup.");
+                        if (!Debugger.IsAttached)
+                        {
+                            RK.DeleteValue(AppName);
+                        }
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+            }
+        }
+
+        public static string CleanString(string inp)
+        {
+            if (inp == null)
+            {
+                return "";
+            }
+            else
+            {
+                return inp.Replace("\0", ".").Replace("\r", ".").Replace("\n", ".");
+            }
+        }
 
         /// <summary>
         /// Writes the given object instance to a Json file.
@@ -175,7 +328,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: While writing '{filePath}', got: " + ex.Message);
+                Console.WriteLine($"Error: While writing '{filePath}', got: " + SharedFunctions.ExMsg(ex));
             }
             finally
             {
@@ -208,7 +361,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: While reading '{filePath}', got: " + ex.Message);
+                Console.WriteLine($"Error: While reading '{filePath}', got: " + SharedFunctions.ExMsg(ex));
             }
             finally
             {
@@ -255,7 +408,7 @@ namespace WindowsFormsApp2
             }
             catch (System.Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
             }
 
             return dt;
@@ -292,7 +445,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
             }
 
             return OutDate;
@@ -491,7 +644,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
             }
 
             return Ret;
@@ -660,7 +813,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not get command line: " + ex.Message);
+                Console.WriteLine("Error: Could not get command line: " + SharedFunctions.ExMsg(ex));
             }
             return Ret;
         }
@@ -783,7 +936,7 @@ namespace WindowsFormsApp2
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Error: While getting file list, received error: " + ex.Message);
+                                    Console.WriteLine("Error: While getting file list, received error: " + SharedFunctions.ExMsg(ex));
                                 }
                             }
                         }
@@ -799,7 +952,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: While getting file list, received error: " + ex.Message);
+                Console.WriteLine("Error: While getting file list, received error: " + SharedFunctions.ExMsg(ex));
             }
             finally
             {

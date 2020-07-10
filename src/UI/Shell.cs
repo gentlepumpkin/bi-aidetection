@@ -36,6 +36,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Globalization;
 
 namespace WindowsFormsApp2
 {
@@ -68,7 +69,7 @@ namespace WindowsFormsApp2
         public static LogFileWriter LogWriter = null;
         public static LogFileWriter HistoryWriter = null;
         public static BlueIris BlueIrisInfo = null;
-
+        public static List<long> DetectionTimeList = new List<long>();
         public int errors = 0; //error counter
 
         //this is not thread safe, and I believe events run in diff threads - this is why we are still getting access deined errors for jpgs:
@@ -223,7 +224,7 @@ namespace WindowsFormsApp2
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {ex.Message}");
+                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {SharedFunctions.ExMsg(ex)}");
                 }
 
             }
@@ -250,6 +251,7 @@ namespace WindowsFormsApp2
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
             cb_log.Checked = AppSettings.Settings.log_everything;
             cb_send_errors.Checked = AppSettings.Settings.send_errors;
+            cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
             //---------------------------------------------------------------------------
             //STATS TAB
@@ -266,6 +268,7 @@ namespace WindowsFormsApp2
             //allows for stopping and starting of its service
             DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, DeepStackProgressLogger);
 
+            
             if (DeepStackServerControl.NeedsSaving)
             {
                 //this may happen if the already running instance has a different port, etc, so we update the config
@@ -292,7 +295,7 @@ namespace WindowsFormsApp2
         //analyze image with AI
         public async Task DetectObjects(string image_path)
         {
-
+            //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
             Log("");
             Log($"Starting analysis of {image_path}");
@@ -319,268 +322,337 @@ namespace WindowsFormsApp2
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             if (index == -1 || (DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= (CameraList[index].cooldown_time / 2)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
             {
-                var request = new MultipartFormDataContent();
-                for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
+                //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
+                //being accessed -Vorlon
+                //for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
+                //{
+                try
                 {
-                    try
+                    //error = "loading image failed";
+
+                    using (FileStream image_data = System.IO.File.OpenRead(image_path))
                     {
-                        error = "loading image failed";
-                        using (var image_data = System.IO.File.OpenRead(image_path))
+                        Log($"(1/6) Uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
+
+                        //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
+
+                        var request = new MultipartFormDataContent();
+                        request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
+
+                        Stopwatch swpost = Stopwatch.StartNew();
+
+                        using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
                         {
-                            Log($"(1/6) Attempt #{attempts}, uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
-                            error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
-                            request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
-                            Stopwatch swpost = Stopwatch.StartNew();
-                            HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request);
-                            Log($"(2/6) Posted in {{yellow}}{swpost.ElapsedMilliseconds}ms{{white}}, waiting for results...");
-                            swpost.Restart();
-                            string jsonString = await output.Content.ReadAsStringAsync();
-                            Response response = JsonConvert.DeserializeObject<Response>(jsonString);
-                            
-                            Log($"(3/6) Received a {jsonString.Length} byte response, processing results...");
-                            
-                            error = $"Failure in AI Tool processing the image.";
-
-                            //print every detected object with the according confidence-level
-                            string outputtext = "   Detected objects:";
-
-                            foreach (var user in response.predictions)
+                            if (output.IsSuccessStatusCode)
                             {
-                                outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
-                            }
-                            Log(outputtext);
+                                string jsonString = await output.Content.ReadAsStringAsync();
+                                string cleanjsonString = SharedFunctions.CleanString(jsonString);
 
-                            if (response.success == true)
-                            {
-                                //if there is no camera with the same prefix
-                                if (index == -1)
+                                if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
                                 {
-                                    Log("   No camera with the same prefix found: " + fileprefix);
-                                    //check if there is a default camera which accepts any prefix, select it
-                                    if (CameraList.Exists(x => x.prefix == ""))
+                                    Log($"(2/6) Posted in {{yellow}}{swpost.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
+                                    Log($"(3/6) Processing results...");
+
+                                    Response response = null;
+                                    try
                                     {
-                                        index = CameraList.FindIndex(x => x.prefix == "");
-                                        Log("(   Found a default camera.");
+                                        //This can throw an exception
+                                        response = JsonConvert.DeserializeObject<Response>(jsonString);
                                     }
-                                    else
+                                    catch (Exception ex)
                                     {
-                                        Log("WARNING: No default camera found. Aborting.");
+                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {SharedFunctions.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                        Log(error);
                                     }
-                                }
 
-                                //index == -1 now means that no camera has the same prefix and no default camera exists. The alert therefore won't be used. 
-
-
-                                //if a camera finally is associated with the inputted alert image
-                                if (index != -1)
-                                {
-
-                                    //if camera is enabled
-                                    if (CameraList[index].enabled == true)
+                                    if (response != null)
                                     {
 
-                                        //if something was detected
-                                        if (response.predictions.Length > 0)
+                                        //error = $"Failure in DeepStack processing the image.";
+
+                                        //print every detected object with the according confidence-level
+                                        string outputtext = "   Detected objects:";
+
+                                        if (response.predictions != null)
                                         {
-                                            List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                                            List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
-                                            List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
-
-                                            List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                                            List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
-                                            List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
-
-
-                                            int masked_counter = 0; //this value is incremented if an object is in a masked area
-                                            int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
-                                            int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
-
-                                            Log("(4/6) Checking if detected object is relevant and within confidence limits:");
-                                            //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
-                                            foreach (var user in response.predictions)
+                                            foreach (Object user in response.predictions)
                                             {
-                                                Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
-
-                                                using (var img = new Bitmap(image_path))
+                                                if (user != null && !string.IsNullOrEmpty(user.label))
                                                 {
-                                                    bool irrelevant_object = false;
-
-                                                    //if object detected is one of the objects that is relevant
-                                                    if (CameraList[index].triggering_objects_as_string.Contains(user.label))
-                                                    {
-                                                        // -> OBJECT IS RELEVANT
-
-                                                        //if confidence limits are satisfied
-                                                        if (user.confidence * 100 >= CameraList[index].threshold_lower && user.confidence * 100 <= CameraList[index].threshold_upper)
-                                                        {
-                                                            // -> OBJECT IS WITHIN CONFIDENCE LIMITS
-
-                                                            //only if the object is outside of the masked area
-                                                            if (Outsidemask(CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
-                                                            {
-                                                                // -> OBJECT IS OUTSIDE OF MASKED AREAS
-
-                                                                objects.Add(user.label);
-                                                                objects_confidence.Add(user.confidence);
-                                                                string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                objects_position.Add(position);
-                                                                Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
-                                                            }
-                                                            else //if the object is in a masked area
-                                                            {
-                                                                masked_counter++;
-                                                                irrelevant_object = true;
-                                                            }
-                                                        }
-                                                        else //if confidence limits are not satisfied
-                                                        {
-                                                            threshold_counter++;
-                                                            irrelevant_object = true;
-                                                        }
-                                                    }
-                                                    else //if object is not relevant
-                                                    {
-                                                        irrelevant_counter++;
-                                                        irrelevant_object = true;
-                                                    }
-
-                                                    if (irrelevant_object == true)
-                                                    {
-                                                        irrelevant_objects.Add(user.label);
-                                                        irrelevant_objects_confidence.Add(user.confidence);
-                                                        string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                        irrelevant_objects_position.Add(position);
-                                                        Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
-                                                    }
+                                                    outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
                                                 }
-
-                                            }
-
-                                            //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                            if (objects.Count() > 0)
-                                            {
-                                                //store these last detections for the specific camera
-                                                CameraList[index].last_detections = objects;
-                                                CameraList[index].last_confidences = objects_confidence;
-                                                CameraList[index].last_positions = objects_position;
-
-
-                                                //create summary string for this detection
-                                                StringBuilder detectionsTextSb = new StringBuilder();
-                                                for (int i = 0; i < objects.Count(); i++)
+                                                else
                                                 {
-                                                    detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                    outputtext += "(null prediction? DeepStack may not be started with correct switches.), ";
                                                 }
-                                                if (detectionsTextSb.Length >= 3)
-                                                {
-                                                    detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
-                                                }
-                                                CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                Log("The summary:" + CameraList[index].last_detections_summary);
-
-
-                                                //RELEVANT ALERT
-                                                Log("(5/6) Performing alert actions:");
-                                                await Trigger(index, image_path); //make TRIGGER
-                                                CameraList[index].IncrementAlerts(); //stats update
-                                                Log($"(6/6) SUCCESS.");
-
-
-
-
-
-                                                //create text string objects and confidences
-                                                string objects_and_confidences = "";
-                                                string object_positions_as_string = "";
-                                                for (int i = 0; i < objects.Count; i++)
-                                                {
-                                                    objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
-                                                    object_positions_as_string += $"{objects_position[i]};";
-                                                }
-
-                                                //add to history list
-                                                Log("Adding detection to history list.");
-                                                CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, objects_and_confidences, object_positions_as_string);
-
-                                            }
-                                            //if no object fulfills all 3 requirements but there are other objects: 
-                                            else if (irrelevant_objects.Count() > 0)
-                                            {
-                                                //IRRELEVANT ALERT
-
-
-                                                CameraList[index].IncrementIrrelevantAlerts(); //stats update
-                                                Log($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
-                                                Log("Adding irrelevant detection to history list.");
-
-                                                //retrieve confidences and positions
-                                                string objects_and_confidences = "";
-                                                string object_positions_as_string = "";
-                                                for (int i = 0; i < irrelevant_objects.Count; i++)
-                                                {
-                                                    objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                    object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                                }
-
-                                                //string text contains what is written in the log and in the history list
-                                                string text = "";
-                                                if (masked_counter > 0)//if masked objects, add them
-                                                {
-                                                    text += $"{masked_counter}x masked; ";
-                                                }
-                                                if (threshold_counter > 0)//if objects out of confidence range, add them
-                                                {
-                                                    text += $"{threshold_counter}x not in confidence range; ";
-                                                }
-                                                if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                                {
-                                                    text += $"{irrelevant_counter}x irrelevant; ";
-                                                }
-
-                                                if (text != "") //remove last ";"
-                                                {
-                                                    text = text.Remove(text.Length - 2);
-                                                }
-
-                                                Log($"{text}, so it's an irrelevant alert.");
-                                                //add to history list
-                                                CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                             }
                                         }
-                                        //if no object was detected
-                                        else if (response.predictions.Length == 0)
+                                        else
                                         {
-                                            // FALSE ALERT
-
-                                            CameraList[index].IncrementFalseAlerts(); //stats update
-                                            Log($"(6/6) Camera {CameraList[index].name} caused a false alert, nothing detected.");
-
-                                            //add to history list
-                                            Log("Adding false to history list.");
-                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, "false alert", "");
+                                            outputtext = $"(No predictions?  JSON: '{cleanjsonString}')";
                                         }
-                                    }
 
-                                    //if camera is disabled.
-                                    else if (CameraList[index].enabled == false)
+                                        Log(outputtext);
+
+                                        if (response.success == true)
+                                        {
+                                            //if there is no camera with the same prefix
+                                            if (index == -1)
+                                            {
+                                                Log("   No camera with the same prefix found: " + fileprefix);
+                                                //check if there is a default camera which accepts any prefix, select it
+                                                if (CameraList.Exists(x => x.prefix == ""))
+                                                {
+                                                    index = CameraList.FindIndex(x => x.prefix == "");
+                                                    Log("(   Found a default camera.");
+                                                }
+                                                else
+                                                {
+                                                    Log("WARNING: No default camera found. Aborting.");
+                                                }
+                                            }
+
+                                            //index == -1 now means that no camera has the same prefix and no default camera exists. The alert therefore won't be used. 
+
+
+                                            //if a camera finally is associated with the inputted alert image
+                                            if (index != -1)
+                                            {
+
+                                                //if camera is enabled
+                                                if (CameraList[index].enabled == true)
+                                                {
+
+                                                    //if something was detected
+                                                    if (response.predictions.Length > 0)
+                                                    {
+                                                        List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
+                                                        List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                                                        List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
+
+                                                        List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
+                                                        List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                                                        List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
+
+
+                                                        int masked_counter = 0; //this value is incremented if an object is in a masked area
+                                                        int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
+                                                        int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
+
+                                                        Log("(4/6) Checking if detected object is relevant and within confidence limits:");
+                                                        //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
+                                                        foreach (Object user in response.predictions)
+                                                        {
+                                                            // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+
+                                                            using (var img = new Bitmap(image_path))
+                                                            {
+                                                                bool irrelevant_object = false;
+
+                                                                //if object detected is one of the objects that is relevant
+                                                                if (CameraList[index].triggering_objects_as_string.Contains(user.label))
+                                                                {
+                                                                    // -> OBJECT IS RELEVANT
+
+                                                                    //if confidence limits are satisfied
+                                                                    if (user.confidence * 100 >= CameraList[index].threshold_lower && user.confidence * 100 <= CameraList[index].threshold_upper)
+                                                                    {
+                                                                        // -> OBJECT IS WITHIN CONFIDENCE LIMITS
+
+                                                                        //only if the object is outside of the masked area
+                                                                        if (Outsidemask(CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
+                                                                        {
+                                                                            // -> OBJECT IS OUTSIDE OF MASKED AREAS
+
+                                                                            objects.Add(user.label);
+                                                                            objects_confidence.Add(user.confidence);
+                                                                            string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                            objects_position.Add(position);
+                                                                            Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                        }
+                                                                        else //if the object is in a masked area
+                                                                        {
+                                                                            masked_counter++;
+                                                                            irrelevant_object = true;
+                                                                        }
+                                                                    }
+                                                                    else //if confidence limits are not satisfied
+                                                                    {
+                                                                        threshold_counter++;
+                                                                        irrelevant_object = true;
+                                                                    }
+                                                                }
+                                                                else //if object is not relevant
+                                                                {
+                                                                    irrelevant_counter++;
+                                                                    irrelevant_object = true;
+                                                                }
+
+                                                                if (irrelevant_object == true)
+                                                                {
+                                                                    irrelevant_objects.Add(user.label);
+                                                                    irrelevant_objects_confidence.Add(user.confidence);
+                                                                    string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                    irrelevant_objects_position.Add(position);
+                                                                    Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                                }
+                                                            }
+
+                                                        }
+
+                                                        //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
+                                                        if (objects.Count() > 0)
+                                                        {
+                                                            //store these last detections for the specific camera
+                                                            CameraList[index].last_detections = objects;
+                                                            CameraList[index].last_confidences = objects_confidence;
+                                                            CameraList[index].last_positions = objects_position;
+
+
+                                                            //create summary string for this detection
+                                                            StringBuilder detectionsTextSb = new StringBuilder();
+                                                            for (int i = 0; i < objects.Count(); i++)
+                                                            {
+                                                                detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                            }
+                                                            if (detectionsTextSb.Length >= 3)
+                                                            {
+                                                                detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
+                                                            }
+                                                            CameraList[index].last_detections_summary = detectionsTextSb.ToString();
+                                                            Log("The summary:" + CameraList[index].last_detections_summary);
+
+
+                                                            //RELEVANT ALERT
+                                                            Log("(5/6) Performing alert actions:");
+                                                            await Trigger(index, image_path); //make TRIGGER
+                                                            CameraList[index].IncrementAlerts(); //stats update
+                                                            Log($"(6/6) SUCCESS.");
+
+
+
+
+
+                                                            //create text string objects and confidences
+                                                            string objects_and_confidences = "";
+                                                            string object_positions_as_string = "";
+                                                            for (int i = 0; i < objects.Count; i++)
+                                                            {
+                                                                objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
+                                                                object_positions_as_string += $"{objects_position[i]};";
+                                                            }
+
+                                                            //add to history list
+                                                            Log("Adding detection to history list.");
+                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, objects_and_confidences, object_positions_as_string);
+
+                                                        }
+                                                        //if no object fulfills all 3 requirements but there are other objects: 
+                                                        else if (irrelevant_objects.Count() > 0)
+                                                        {
+                                                            //IRRELEVANT ALERT
+
+
+                                                            CameraList[index].IncrementIrrelevantAlerts(); //stats update
+                                                            Log($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
+                                                            //Log("Adding irrelevant detection to history list.");
+
+                                                            //retrieve confidences and positions
+                                                            string objects_and_confidences = "";
+                                                            string object_positions_as_string = "";
+                                                            for (int i = 0; i < irrelevant_objects.Count; i++)
+                                                            {
+                                                                objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                                                object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                            }
+
+                                                            //string text contains what is written in the log and in the history list
+                                                            string text = "";
+                                                            if (masked_counter > 0)//if masked objects, add them
+                                                            {
+                                                                text += $"{masked_counter}x masked; ";
+                                                            }
+                                                            if (threshold_counter > 0)//if objects out of confidence range, add them
+                                                            {
+                                                                text += $"{threshold_counter}x not in confidence range; ";
+                                                            }
+                                                            if (irrelevant_counter > 0) //if other irrelevant objects, add them
+                                                            {
+                                                                text += $"{irrelevant_counter}x irrelevant; ";
+                                                            }
+
+                                                            if (text != "") //remove last ";"
+                                                            {
+                                                                text = text.Remove(text.Length - 2);
+                                                            }
+
+                                                            Log($"{text}, so it's an irrelevant alert.");
+                                                            //add to history list
+                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
+                                                        }
+                                                    }
+                                                    //if no object was detected
+                                                    else if (response.predictions.Length == 0)
+                                                    {
+                                                        // FALSE ALERT
+
+                                                        CameraList[index].IncrementFalseAlerts(); //stats update
+                                                        Log($"(6/6) Camera {CameraList[index].name} caused a false alert, nothing detected.");
+
+                                                        //add to history list
+                                                        Log("Adding false to history list.");
+                                                        CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, "false alert", "");
+                                                    }
+                                                }
+
+                                                //if camera is disabled.
+                                                else if (CameraList[index].enabled == false)
+                                                {
+                                                    Log("(6/6) Selected camera is disabled.");
+                                                }
+
+                                            }
+
+                                        }
+                                        else if (response.success == false) //if nothing was detected
+                                        {
+                                            error = $"ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
+                                            Log(error);
+                                        }
+
+                                    }
+                                    else if (string.IsNullOrEmpty(error))
                                     {
-                                        Log("(6/6) Selected camera is disabled.");
+                                        //deserialization did not cause exception, it just gave a null response in the object?
+                                        //probably wont happen but just making sure
+                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                        Log(error);
                                     }
+                                    
 
+                                }
+                                else
+                                {
+                                    error = "ERROR: Empty string returned from HTTP post.";
+                                    Log(error);
                                 }
 
                             }
-                            else if (response.success == false) //if nothing was detected
+                            else
                             {
-                                Log("ERROR: no response from AI Server");
+                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swpost.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
+                                Log(error);
                             }
+
                         }
 
-                        //load updated camera stats info in camera tab if a camera is selected
-                        MethodInvoker LabelUpdate = delegate
+                    }
+
+                    //load updated camera stats info in camera tab if a camera is selected
+                    MethodInvoker LabelUpdate = delegate
+                    {
+                        if (list2.SelectedItems.Count > 0)
                         {
-                            if (list2.SelectedItems.Count > 0)
-                            {
                                 //load only stats from Camera.cs object
 
                                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
@@ -588,50 +660,64 @@ namespace WindowsFormsApp2
 
                                 //load cameras stats
                                 string stats = $"Alerts: {CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {CameraList[i].stats_false_alerts.ToString()}";
-                                lbl_camstats.Text = stats;
-                            }
-
-
-                        };
-                        Invoke(LabelUpdate);
-                        break; //end retries if code was successful
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
-
-                        if (error == "loading image failed") //this was a file exception error - retry file access
-                        {
-                            if (attempts != 9) //failure at attempt 1-8
-                            {
-                                Log($"Could not access file - will retry after {{yellow}}{attempts * AppSettings.Settings.retry_delay}{{white}}ms delay");
-                            }
-                            else //last attempt failed
-                            {
-                                Log($"ERROR: Could not access image '{image_path}'.");
-                            }
-                        }
-                        else //all other exceptions
-                        {
-                            Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
-                            //upload the alert image which could not be analyzed to Telegram
-                            if (AppSettings.Settings.send_errors == true)
-                            {
-                                await TelegramUpload(image_path);
-                            }
-                            break; //end retries - this was not a file access error
+                            lbl_camstats.Text = stats;
                         }
 
-                    }
-                    //System.Threading.Thread.Sleep(retry_delay * attempts);
-                    await Task.Delay(AppSettings.Settings.retry_delay * attempts);
-                    Log($"Retrying image processing - retry  {attempts}");
+
+                    };
+                    Invoke(LabelUpdate);
+                    //break; //end retries if code was successful
                 }
-
-                if (AppSettings.Settings.log_everything)
+                catch (Exception ex)
                 {
-                    Log($"...Object detection finished in {{yellow}}{sw.ElapsedMilliseconds}ms.");
+
+                    //We should never get here due to all the null checks and function to wait for file to become available...
+                    //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
+                    error = $"{SharedFunctions.ExMsg(ex)}";
+                    Log(error);
+
+                    //if (error == "loading image failed") //this was a file exception error - retry file access
+                    //{
+                    //    if (attempts != 9) //failure at attempt 1-8
+                    //    {
+                    //        Log($"Could not access file - will retry after {{yellow}}{attempts * AppSettings.Settings.retry_delay}{{white}}ms delay");
+                    //    }
+                    //    else //last attempt failed
+                    //    {
+                    //        Log($"ERROR: Could not access image '{image_path}'.");
+                    //    }
+                    //}
+                    //else //all other exceptions
+                    //{
+                    //    Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                    //    //upload the alert image which could not be analyzed to Telegram
+                    //    if (AppSettings.Settings.send_errors == true)
+                    //    {
+                    //        await TelegramUpload(image_path);
+                    //    }
+                    //    break; //end retries - this was not a file access error
+                    //}
+
                 }
+                //System.Threading.Thread.Sleep(retry_delay * attempts);
+                //await Task.Delay(AppSettings.Settings.retry_delay * attempts);
+                //Log($"Retrying image processing - retry  {attempts}");
+                //}
+
+                if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
+                {
+                    //upload the alert image which could not be analyzed to Telegram
+                    if (AppSettings.Settings.send_errors == true)
+                    {
+                        await TelegramUpload(image_path);
+                    }
+
+                }
+
+                DetectionTimeList.Add(sw.ElapsedMilliseconds);
+                
+                Log($"...Object detection finished in {{yellow}}{sw.ElapsedMilliseconds}ms. (Count={DetectionTimeList.Count()}, Min={DetectionTimeList.Min()}ms, Max={DetectionTimeList.Max()}ms, Avg={DetectionTimeList.Average().ToString("#####")}ms)");
+                
             }
 
             /*
@@ -661,8 +747,7 @@ namespace WindowsFormsApp2
                 }
                 catch (Exception ex)
                 {
-                    Log(ex.Message);
-                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
+                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable: {SharedFunctions.ExMsg(ex)}");
                 }
 
             }
@@ -683,6 +768,7 @@ namespace WindowsFormsApp2
             if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
             {
                 //telegram upload sometimes fails
+                Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
                     using (var image_telegram = System.IO.File.OpenRead(image_path))
@@ -718,6 +804,9 @@ namespace WindowsFormsApp2
                         image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(image_path) + ".jpg");
                     }
                 }
+
+                
+                Log($"...Finished in {{yellow}}{sw.ElapsedMilliseconds}ms{{white}}");
 
             }
         }
@@ -787,7 +876,7 @@ namespace WindowsFormsApp2
                         }
                         catch (Exception ex)
                         {
-                            Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                            Log($"{SharedFunctions.ExMsg(ex)}");
                         }
 
                         c++;
@@ -946,20 +1035,23 @@ namespace WindowsFormsApp2
             //set the color for RTF text window:
             if (HasError)
             {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{Red}}{text}";
+                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{red}}{text}";
             }
             else if (HasWarning)
             {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{MediumOrchid}}{text}";
+                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{mediumorchid}}{text}";
             }
             else if (IsDeepStackMsg)
             {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{Lime}}{text}";
+                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
             }
             else
             {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{White}}{text}";
+                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
             }
+
+            //get rid of any common color coding before logging to file or console
+            text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
 
             //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
             if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
@@ -973,7 +1065,7 @@ namespace WindowsFormsApp2
 
 
             //if log file does not exist, create it
-            if (!System.IO.File.Exists("./log.txt"))
+            if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
             {
                 Console.WriteLine("ATTENTION: Creating log file.");
                 try
@@ -1731,14 +1823,14 @@ namespace WindowsFormsApp2
                 //remove entry from history csv
                 try
                 {
-                    string[] oldLines = System.IO.File.ReadAllLines(@"cameras/history.csv");
+                    string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
                     string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
                     csvlines = newLines.Count();
-                    System.IO.File.WriteAllLines(@"cameras/history.csv", newLines);
+                    System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
                 }
                 catch (Exception ex)
                 {
-                    Log("ERROR: Can't write to cameras/history.csv: " + ex.Message);
+                    Log("ERROR: Can't write to cameras/history.csv: " + SharedFunctions.ExMsg(ex));
                 }
 
             };
@@ -1749,10 +1841,7 @@ namespace WindowsFormsApp2
             detection_dictionary.TryRemove(filename.ToLower(), out val);
 
             //try to get a better feel how much time this function consumes - Vorlon
-            if (AppSettings.Settings.log_everything)
-            {
-                Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
-            }
+            Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
 
         }
 
@@ -1803,10 +1892,7 @@ namespace WindowsFormsApp2
             Invoke(LabelUpdate);
 
             //try to get a better feel how much time this function consumes - Vorlon
-            if (AppSettings.Settings.log_everything)
-            {
-                Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
-            }
+            Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
 
         }
 
@@ -1853,6 +1939,7 @@ namespace WindowsFormsApp2
                             if (success == "true")
                             {
                                 item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                                item.ForeColor = Color.Green;
                             }
                             else
                             {
@@ -1868,10 +1955,7 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
 
                     //try to get a better feel how much time this function consumes - Vorlon
-                    if (AppSettings.Settings.log_everything)
-                    {
-                        Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
-                    }
+                    Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
 
                 }
                 else
@@ -1928,14 +2012,15 @@ namespace WindowsFormsApp2
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            //wait until other detection process is finished
+            //wait until other detection process is finished so we dont get duplicate requests
             await semaphore_detection_running.WaitAsync();
 
             try
             {
                 detection_dictionary.TryAdd(filename.ToLower(), filename);
 
-                //Wait only as long as we need to get file access...
+                //Wait up to 30 seconds to gain access to the file that was just created.  This should
+                //prevent the need to retry in the detection routine
                 bool success = await SharedFunctions.WaitForFileAccessAsync(filename);
 
                 long WaitedMS = sw.ElapsedMilliseconds;
@@ -1943,9 +2028,13 @@ namespace WindowsFormsApp2
                 if (success)
                 {
                     //try to get a better feel how much time this function consumes - Vorlon
-                    if (AppSettings.Settings.log_everything && WaitedMS >= 500)
+                    if (WaitedMS >= 500)
                     {
                         Log($"{{red}}...had to wait {{yellow}}{WaitedMS}ms{{red}} in thread queue for {e.Name}");
+                    }
+                    else
+                    {
+                        Log($"...had to wait {{yellow}}{WaitedMS}ms{{white}} in thread queue for {e.Name}");
                     }
 
                     //output "Processing Image" to Overview Tab
@@ -1985,7 +2074,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Log("Error: " + ex.Message);
+                Log("Error: " + SharedFunctions.ExMsg(ex));
             }
             finally
             {
@@ -2026,7 +2115,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {SharedFunctions.ExMsg(ex)} )");
 
                 //delete entry that caused the issue
                 try
@@ -2218,7 +2307,7 @@ namespace WindowsFormsApp2
             if (BlueIrisInfo.IsValid && BlueIrisInfo.URL != null)
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&memo=[summary]";
+                trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
             }
 
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
@@ -2596,6 +2685,10 @@ namespace WindowsFormsApp2
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
             AppSettings.Settings.log_everything = cb_log.Checked;
             AppSettings.Settings.send_errors = cb_send_errors.Checked;
+            AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
+
+            SharedFunctions.Startup(AppSettings.Settings.startwithwindows);
+
             AppSettings.Save();
 
             //update variables
@@ -2621,6 +2714,11 @@ namespace WindowsFormsApp2
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
+                if (!string.IsNullOrEmpty(cmbInput.Text))
+                {
+                    dialog.InitialDirectory = cmbInput.Text;
+
+                }
                 dialog.InitialDirectory = "C:\\";
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
@@ -2633,9 +2731,9 @@ namespace WindowsFormsApp2
         //open log button
         private void btn_open_log_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists("log.txt"))
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
             {
-                System.Diagnostics.Process.Start("log.txt");
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
                 lbl_errors.Text = "";
             }
             else
@@ -2762,6 +2860,13 @@ namespace WindowsFormsApp2
             Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
             Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
 
+            //have seen a few cases nothing is checked but it is required
+            if (!Chk_DetectionAPI.Checked && !Chk_FaceAPI.Checked && !Chk_SceneAPI.Checked)
+            {
+                Chk_DetectionAPI.Checked = true;
+                DeepStackServerControl.DetectionAPIEnabled = true;
+            }
+
             Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
 
             Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
@@ -2784,11 +2889,18 @@ namespace WindowsFormsApp2
 
             if (DeepStackServerControl.IsInstalled)
             {
-                if (DeepStackServerControl.IsStarted)
+                if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                 {
                     Lbl_BlueStackRunning.Text = "*RUNNING*";
                     Btn_Start.Enabled = false;
                     Btn_Stop.Enabled = true;
+                    
+                }
+                else if (DeepStackServerControl.HasError)
+                {
+                    Lbl_BlueStackRunning.Text = "*ERROR*";
+                    Btn_Start.Enabled = false;
+                    Btn_Stop.Enabled = false;
                 }
                 else
                 {
@@ -2797,12 +2909,27 @@ namespace WindowsFormsApp2
                     Btn_Stop.Enabled = false;
                     if (Chk_AutoStart.Checked && StartIfNeeded)
                     {
-                        DeepStackServerControl.Start();
-                        if (DeepStackServerControl.IsStarted)
+                        if (DeepStackServerControl.Start())
                         {
-                            Lbl_BlueStackRunning.Text = "*RUNNING*";
+                            if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                            {
+                                Lbl_BlueStackRunning.Text = "*RUNNING*";
+                                Btn_Start.Enabled = false;
+                                Btn_Stop.Enabled = true;
+                            }
+                            else if (DeepStackServerControl.HasError)
+                            {
+                                Lbl_BlueStackRunning.Text = "*ERROR*";
+                                Btn_Start.Enabled = false;
+                                Btn_Stop.Enabled = false;
+                            }
+
+                        }
+                        else
+                        {
+                            Lbl_BlueStackRunning.Text = "*ERROR*";
                             Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = true;
+                            Btn_Stop.Enabled = false;
                         }
                     }
                 }
@@ -2831,12 +2958,12 @@ namespace WindowsFormsApp2
             SaveDeepStackTab();
         }
 
-        private void Btn_Stop_Click(object sender, EventArgs e)
+        private async void Btn_Stop_Click(object sender, EventArgs e)
         {
             Lbl_BlueStackRunning.Text = "STOPPING...";
             Btn_Start.Enabled = false;
             Btn_Stop.Enabled = false;
-            DeepStackServerControl.Stop();
+            await DeepStackServerControl.StopAsync();
             LoadDeepStackTab(false);
         }
     }

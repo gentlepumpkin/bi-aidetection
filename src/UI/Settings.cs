@@ -19,14 +19,15 @@ namespace WindowsFormsApp2
 
         public class ClsSettings
         {
-            public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings.json");
-            public string LogFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log.txt");
+            public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.json");
+            public string LogFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".log");
             public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             public string telegram_token = "";
             public string input_path = "";
             public List<string> telegram_chatids = new List<string>();
             public bool log_everything = false;
             public bool send_errors = true;
+            public bool startwithwindows = false;
             public int close_instantly = -1;
             public string deepstack_url = "127.0.0.1:81";
             public string deepstack_adminkey = "";
@@ -70,7 +71,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not save settings: " + ex.Message);
+                Console.WriteLine("Error: Could not save settings: " + SharedFunctions.ExMsg(ex));
             }
 
             if (!Ret)
@@ -204,7 +205,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not save settings: " + ex.Message);
+                Console.WriteLine("Error: Could not save settings: " + SharedFunctions.ExMsg(ex));
             }
 
             return Ret;
