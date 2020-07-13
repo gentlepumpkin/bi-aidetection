@@ -69,7 +69,13 @@ namespace WindowsFormsApp2
         public static LogFileWriter LogWriter = null;
         public static LogFileWriter HistoryWriter = null;
         public static BlueIris BlueIrisInfo = null;
-        public static List<long> DetectionTimeList = new List<long>();
+
+        //keep track of timing
+        //moving average will be faster for long running process with 1000's of samples
+        public static MovingCalcs tcalc = new MovingCalcs(500);
+        public static MovingCalcs dcalc = new MovingCalcs(500);
+        public static MovingCalcs wcalc = new MovingCalcs(500);
+
         public int errors = 0; //error counter
 
         //this is not thread safe, and I believe events run in diff threads - this is why we are still getting access deined errors for jpgs:
@@ -82,7 +88,7 @@ namespace WindowsFormsApp2
         public static ConcurrentDictionary<string, string> detection_dictionary = new ConcurrentDictionary<string, string>();
         //public int file_access_delay = 50; //delay before accessing new file in ms - increased to 50, 10 was still giving frequent access denied errors -Vorlon
         //public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
-        List<Camera> CameraList = new List<Camera>(); //list containing all cameras
+        //List<Camera> CameraList = new List<Camera>(); //list containing all cameras
 
         static HttpClient client = new HttpClient();
 
@@ -293,14 +299,19 @@ namespace WindowsFormsApp2
         //----------------------------------------------------------------------------------------------------------
 
         //analyze image with AI
-        public async Task DetectObjects(string image_path)
+        public async Task DetectObjects(string image_path, long WaitedMS)
         {
             //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
             Log("");
-            Log($"Starting analysis of {image_path}");
+
+            string filename = Path.GetFileName(image_path);
+
+            Log($"Starting analysis of {filename}...");
+
 
             Stopwatch sw = Stopwatch.StartNew();
+            Stopwatch swposttime = Stopwatch.StartNew();
 
             var fullDeepstackUrl = "";
             //allows both "http://ip:port" and "ip:port"
@@ -317,10 +328,12 @@ namespace WindowsFormsApp2
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
 
             string fileprefix = Path.GetFileNameWithoutExtension(image_path).Split('.')[0]; //get prefix of inputted file
-            int index = CameraList.FindIndex(x => x.prefix == fileprefix); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+            int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == fileprefix); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
-            if (index == -1 || (DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= (CameraList[index].cooldown_time / 2)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
+            double mins = (DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes;
+            double halfcool = AppSettings.Settings.CameraList[index].cooldown_time / 2;
+            if (index == -1 || (mins >= halfcool)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
             {
                 //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
                 //being accessed -Vorlon
@@ -339,18 +352,21 @@ namespace WindowsFormsApp2
                         var request = new MultipartFormDataContent();
                         request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
 
-                        Stopwatch swpost = Stopwatch.StartNew();
+                        swposttime = Stopwatch.StartNew();
 
                         using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
                         {
+                            swposttime.Stop();
+
                             if (output.IsSuccessStatusCode)
                             {
                                 string jsonString = await output.Content.ReadAsStringAsync();
+
                                 string cleanjsonString = SharedFunctions.CleanString(jsonString);
 
                                 if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
                                 {
-                                    Log($"(2/6) Posted in {{yellow}}{swpost.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
+                                    Log($"(2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
                                     Log($"(3/6) Processing results...");
 
                                     Response response = null;
@@ -401,9 +417,9 @@ namespace WindowsFormsApp2
                                             {
                                                 Log("   No camera with the same prefix found: " + fileprefix);
                                                 //check if there is a default camera which accepts any prefix, select it
-                                                if (CameraList.Exists(x => x.prefix == ""))
+                                                if (AppSettings.Settings.CameraList.Exists(x => x.prefix == ""))
                                                 {
-                                                    index = CameraList.FindIndex(x => x.prefix == "");
+                                                    index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == "");
                                                     Log("(   Found a default camera.");
                                                 }
                                                 else
@@ -420,7 +436,7 @@ namespace WindowsFormsApp2
                                             {
 
                                                 //if camera is enabled
-                                                if (CameraList[index].enabled == true)
+                                                if (AppSettings.Settings.CameraList[index].enabled == true)
                                                 {
 
                                                     //if something was detected
@@ -450,17 +466,17 @@ namespace WindowsFormsApp2
                                                                 bool irrelevant_object = false;
 
                                                                 //if object detected is one of the objects that is relevant
-                                                                if (CameraList[index].triggering_objects_as_string.Contains(user.label))
+                                                                if (AppSettings.Settings.CameraList[index].triggering_objects_as_string.Contains(user.label))
                                                                 {
                                                                     // -> OBJECT IS RELEVANT
 
                                                                     //if confidence limits are satisfied
-                                                                    if (user.confidence * 100 >= CameraList[index].threshold_lower && user.confidence * 100 <= CameraList[index].threshold_upper)
+                                                                    if (user.confidence * 100 >= AppSettings.Settings.CameraList[index].threshold_lower && user.confidence * 100 <= AppSettings.Settings.CameraList[index].threshold_upper)
                                                                     {
                                                                         // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                                                         //only if the object is outside of the masked area
-                                                                        if (Outsidemask(CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
+                                                                        if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
                                                                         {
                                                                             // -> OBJECT IS OUTSIDE OF MASKED AREAS
 
@@ -504,9 +520,9 @@ namespace WindowsFormsApp2
                                                         if (objects.Count() > 0)
                                                         {
                                                             //store these last detections for the specific camera
-                                                            CameraList[index].last_detections = objects;
-                                                            CameraList[index].last_confidences = objects_confidence;
-                                                            CameraList[index].last_positions = objects_position;
+                                                            AppSettings.Settings.CameraList[index].last_detections = objects;
+                                                            AppSettings.Settings.CameraList[index].last_confidences = objects_confidence;
+                                                            AppSettings.Settings.CameraList[index].last_positions = objects_position;
 
 
                                                             //create summary string for this detection
@@ -519,14 +535,14 @@ namespace WindowsFormsApp2
                                                             {
                                                                 detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
                                                             }
-                                                            CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                            Log("The summary:" + CameraList[index].last_detections_summary);
+                                                            AppSettings.Settings.CameraList[index].last_detections_summary = detectionsTextSb.ToString();
+                                                            Log("The summary:" + AppSettings.Settings.CameraList[index].last_detections_summary);
 
 
                                                             //RELEVANT ALERT
                                                             Log("(5/6) Performing alert actions:");
                                                             await Trigger(index, image_path); //make TRIGGER
-                                                            CameraList[index].IncrementAlerts(); //stats update
+                                                            AppSettings.Settings.CameraList[index].IncrementAlerts(); //stats update
                                                             Log($"(6/6) SUCCESS.");
 
 
@@ -544,7 +560,7 @@ namespace WindowsFormsApp2
 
                                                             //add to history list
                                                             Log("Adding detection to history list.");
-                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, objects_and_confidences, object_positions_as_string);
+                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
 
                                                         }
                                                         //if no object fulfills all 3 requirements but there are other objects: 
@@ -553,8 +569,8 @@ namespace WindowsFormsApp2
                                                             //IRRELEVANT ALERT
 
 
-                                                            CameraList[index].IncrementIrrelevantAlerts(); //stats update
-                                                            Log($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
+                                                            AppSettings.Settings.CameraList[index].IncrementIrrelevantAlerts(); //stats update
+                                                            Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused an irrelevant alert.");
                                                             //Log("Adding irrelevant detection to history list.");
 
                                                             //retrieve confidences and positions
@@ -588,7 +604,7 @@ namespace WindowsFormsApp2
 
                                                             Log($"{text}, so it's an irrelevant alert.");
                                                             //add to history list
-                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
+                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                         }
                                                     }
                                                     //if no object was detected
@@ -596,17 +612,17 @@ namespace WindowsFormsApp2
                                                     {
                                                         // FALSE ALERT
 
-                                                        CameraList[index].IncrementFalseAlerts(); //stats update
-                                                        Log($"(6/6) Camera {CameraList[index].name} caused a false alert, nothing detected.");
+                                                        AppSettings.Settings.CameraList[index].IncrementFalseAlerts(); //stats update
+                                                        Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused a false alert, nothing detected.");
 
                                                         //add to history list
                                                         Log("Adding false to history list.");
-                                                        CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, "false alert", "");
+                                                        CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
                                                     }
                                                 }
 
                                                 //if camera is disabled.
-                                                else if (CameraList[index].enabled == false)
+                                                else if (AppSettings.Settings.CameraList[index].enabled == false)
                                                 {
                                                     Log("(6/6) Selected camera is disabled.");
                                                 }
@@ -640,7 +656,7 @@ namespace WindowsFormsApp2
                             }
                             else
                             {
-                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swpost.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
+                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
                                 Log(error);
                             }
 
@@ -656,10 +672,10 @@ namespace WindowsFormsApp2
                                 //load only stats from Camera.cs object
 
                                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                                int i = CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
+                                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
 
                                 //load cameras stats
-                                string stats = $"Alerts: {CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {CameraList[i].stats_false_alerts.ToString()}";
+                                string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
                             lbl_camstats.Text = stats;
                         }
 
@@ -715,12 +731,39 @@ namespace WindowsFormsApp2
 
                 }
 
-                DetectionTimeList.Add(sw.ElapsedMilliseconds);
-                
-                Log($"...Object detection finished in {{yellow}}{sw.ElapsedMilliseconds}ms. (Count={DetectionTimeList.Count()}, Min={DetectionTimeList.Min()}ms, Max={DetectionTimeList.Max()}ms, Avg={DetectionTimeList.Average().ToString("#####")}ms)");
-                
-            }
+                //dont show time calculations if we had an error
+                if (string.IsNullOrEmpty(error))
+                {
+                    
+                    //I notice deepstack takes a lot longer the very first run?
 
+                    long TotalTime = sw.ElapsedMilliseconds + WaitedMS;
+                    long DeepStackTime = swposttime.ElapsedMilliseconds;
+
+                    tcalc.AddToCalc(TotalTime);
+                    dcalc.AddToCalc(DeepStackTime);
+                    wcalc.AddToCalc(WaitedMS);
+
+                    Log($"...Object detection finished: ");
+                    Log($"       Total Time:   {{yellow}}{TotalTime}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
+                    Log($"   DeepStack Time:   {{yellow}}{DeepStackTime}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
+                    //I want to highlight when we have to wait for the last detection (or for the file to become readable) too long
+                    if (WaitedMS >= 500)
+                    {
+                        Log($"       {{red}}Queue Time:   {{yellow}}{WaitedMS}ms{{red}} (Count={wcalc.Count}, Min={wcalc.Min}ms, Max={wcalc.Max}ms, Avg={wcalc.Average.ToString("#####")}ms)");
+                    }
+                    else
+                    {
+                        Log($"       {{white}}Queue Time:   {{yellow}}{WaitedMS}ms{{white}} (Count={wcalc.Count}, Min={wcalc.Min}ms, Max={wcalc.Max}ms, Avg={wcalc.Average.ToString("#####")}ms)");
+                    }
+
+                }
+
+            }
+            else
+            {
+                Log($"Skipping detection. Found='{index}', Mins since last submission='{mins}', halfcool={halfcool}");
+            }
             /*
             try
             {
@@ -852,28 +895,28 @@ namespace WindowsFormsApp2
         public async Task Trigger(int index, string image_path)
         {
             //only trigger if cameras cooldown time since last detection has passed
-            if ((DateTime.Now - CameraList[index].last_trigger_time).TotalMinutes >= CameraList[index].cooldown_time)
+            if ((DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes >= AppSettings.Settings.CameraList[index].cooldown_time)
             {
                 //call trigger urls
-                if (CameraList[index].trigger_urls.Length > 0)
+                if (AppSettings.Settings.CameraList[index].trigger_urls.Length > 0)
                 {
                     //replace url paramters with according values
-                    string[] urls = new string[CameraList[index].trigger_urls.Count()];
+                    string[] urls = new string[AppSettings.Settings.CameraList[index].trigger_urls.Count()];
                     int c = 0;
                     //call urls
-                    foreach (string url in CameraList[index].trigger_urls)
+                    foreach (string url in AppSettings.Settings.CameraList[index].trigger_urls)
                     {
                         try
                         {
-                            urls[c] = url.Replace("[camera]", CameraList[index].name)
-                                     .Replace("[detection]", CameraList[index].last_detections.ElementAt(0)) //only gives first detection (maybe not most relevant one)
-                                     .Replace("[position]", CameraList[index].last_positions.ElementAt(0))
-                                     .Replace("[confidence]", CameraList[index].last_confidences.ElementAt(0).ToString())
-                                     .Replace("[detections]", string.Join(",", CameraList[index].last_detections))
-                                     .Replace("[confidences]", string.Join(",", CameraList[index].last_confidences.ToString()))
+                            urls[c] = url.Replace("[camera]", AppSettings.Settings.CameraList[index].name)
+                                     .Replace("[detection]", AppSettings.Settings.CameraList[index].last_detections.ElementAt(0)) //only gives first detection (maybe not most relevant one)
+                                     .Replace("[position]", AppSettings.Settings.CameraList[index].last_positions.ElementAt(0))
+                                     .Replace("[confidence]", AppSettings.Settings.CameraList[index].last_confidences.ElementAt(0).ToString())
+                                     .Replace("[detections]", string.Join(",", AppSettings.Settings.CameraList[index].last_detections))
+                                     .Replace("[confidences]", string.Join(",", AppSettings.Settings.CameraList[index].last_confidences.ToString()))
                                      .Replace("[imagepath]", image_path) //gives the full path of the image that caused the trigger
                                      .Replace("[imagefilename]", Path.GetFileName(image_path)) //gives the image name of the image that caused the trigger
-                                     .Replace("[summary]", Uri.EscapeUriString(CameraList[index].last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                                     .Replace("[summary]", Uri.EscapeUriString(AppSettings.Settings.CameraList[index].last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
                         }
                         catch (Exception ex)
                         {
@@ -888,7 +931,7 @@ namespace WindowsFormsApp2
 
 
                 //upload to telegram
-                if (CameraList[index].telegram_enabled)
+                if (AppSettings.Settings.CameraList[index].telegram_enabled)
                 {
                     Log("   Uploading image to Telegram...");
                     await TelegramUpload(image_path);
@@ -898,12 +941,12 @@ namespace WindowsFormsApp2
             else
             {
                 //log that nothing was done
-                Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                Log($"   Camera {AppSettings.Settings.CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
             }
 
-            CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+            AppSettings.Settings.CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
-            Task ignoredAwaitableResult = this.LastTriggerInfo(index, CameraList[index].cooldown_time); //write info to label
+            Task ignoredAwaitableResult = this.LastTriggerInfo(index, AppSettings.Settings.CameraList[index].cooldown_time); //write info to label
 
         }
 
@@ -1244,14 +1287,14 @@ namespace WindowsFormsApp2
         //add last trigger time to label on Overview page
         private async Task LastTriggerInfo(int index, double minutes)
         {
-            string text1 = $"{CameraList[index].name} last triggered at {CameraList[index].last_trigger_time}. Sleeping for {minutes / 2} minutes."; //write last trigger time to label on Overview page
+            string text1 = $"{AppSettings.Settings.CameraList[index].name} last triggered at {AppSettings.Settings.CameraList[index].last_trigger_time}. Sleeping for {minutes / 2} minutes."; //write last trigger time to label on Overview page
             lbl_info.Text = text1;
 
             int time = 30 * Convert.ToInt32(1000 * minutes);
             await Task.Delay(time); // wait while the analysis is sleeping for this camera
             if (lbl_info.Text == text1)
             {
-                lbl_info.Text = $"{CameraList[index].name} last triggered at {CameraList[index].last_trigger_time}."; //Remove "sleeping for ..."
+                lbl_info.Text = $"{AppSettings.Settings.CameraList[index].name} last triggered at {AppSettings.Settings.CameraList[index].last_trigger_time}."; //Remove "sleeping for ..."
             }
         }
 
@@ -1306,7 +1349,7 @@ namespace WindowsFormsApp2
 
             if (comboBox1.Text == "All Cameras")
             {
-                foreach (Camera cam in CameraList)
+                foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
                     alerts += cam.stats_alerts;
                     irrelevantalerts += cam.stats_irrelevant_alerts;
@@ -1315,10 +1358,10 @@ namespace WindowsFormsApp2
             }
             else
             {
-                int i = CameraList.FindIndex(x => x.name == comboBox1.Text.Substring(3));
-                alerts = CameraList[i].stats_alerts;
-                irrelevantalerts = CameraList[i].stats_irrelevant_alerts;
-                falsealerts = CameraList[i].stats_false_alerts;
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == comboBox1.Text.Substring(3));
+                alerts = AppSettings.Settings.CameraList[i].stats_alerts;
+                irrelevantalerts = AppSettings.Settings.CameraList[i].stats_irrelevant_alerts;
+                falsealerts = AppSettings.Settings.CameraList[i].stats_false_alerts;
             }
 
             chart1.Series[0].Points.Clear();
@@ -2059,22 +2102,13 @@ namespace WindowsFormsApp2
 
                 if (success)
                 {
-                    //try to get a better feel how much time this function consumes - Vorlon
-                    if (WaitedMS >= 500)
-                    {
-                        Log($"{{red}}...had to wait {{yellow}}{WaitedMS}ms{{red}} in thread queue for {e.Name}");
-                    }
-                    else
-                    {
-                        Log($"...had to wait {{yellow}}{WaitedMS}ms{{white}} in thread queue for {e.Name}");
-                    }
-
+                    
                     //output "Processing Image" to Overview Tab
                     LabelUpdate = delegate { label2.Text = $"Processing New Image {e.Name}..."; };
                     Invoke(LabelUpdate);
 
 
-                    await DetectObjects(filename); //ai process image
+                    await DetectObjects(filename, WaitedMS); //ai process image
 
                     //output Running on Overview Tab
                     LabelUpdate = delegate { label2.Text = "Running"; };
@@ -2131,7 +2165,7 @@ namespace WindowsFormsApp2
         }
 
         //event: load selected image to picturebox
-        private void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
+        private async void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
         {
             try
             {
@@ -2158,7 +2192,7 @@ namespace WindowsFormsApp2
                 catch
                 {
                     CleanCSVList();
-                    LoadFromCSVAsync();
+                    await LoadFromCSVAsync();
                 }
             }
             
@@ -2202,39 +2236,39 @@ namespace WindowsFormsApp2
         }
 
         //event: filter "only revelant alerts" checked or unchecked
-        private void cb_filter_success_CheckedChanged(object sender, EventArgs e)
+        private async void cb_filter_success_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
-        private void cb_filter_person_CheckedChanged(object sender, EventArgs e)
+        private async void cb_filter_person_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
-        private void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
+        private async void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //event: filter "only alerts with animals" checked or unchecked
-        private void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
+        private async void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //event: filter "only false / irrevelant alerts" checked or unchecked
-        private void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
+        private async void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //event: filter camera dropdown changed
-        private void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
+        private async void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadFromCSVAsync();
+            await LoadFromCSVAsync();
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -2246,32 +2280,74 @@ namespace WindowsFormsApp2
         // load cameras to camera list
         public void LoadCameras()
         {
-            list2.Items.Clear();
 
             try
             {
-                string[] files = Directory.GetFiles("./cameras", $"*.txt"); //load all settings files in a string array
 
-                //create a camera object for every camera settings file
+                //start by getting last selected camera if any
+                string oldname = "";
+                if (list2.SelectedItems != null && list2.SelectedItems.Count > 0)
+                    oldname = list2.SelectedItems[0].Text;
+
+                list2.Items.Clear();
+                comboBox1.Items.Clear();
+                comboBox_filter_camera.Items.Clear();
                 int i = 0;
-                foreach (string file in files)
+                int oldidx = 0;
+                foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
-                    string result = LoadCamera(file); //do LoadCamera() and save returned result in string
-                    Log(result);
-
-                    //if LoadCamera() returned an error
-                    if (result.Contains("ERROR"))
-                    {
-                        MessageBox.Show($"Could not load config file {file}: {result}");
-                    }
-
                     //Add loaded camera to list2
-                    ListViewItem item = new ListViewItem(new string[] { CameraList[i].name });
-                    item.Tag = file;
+                    ListViewItem item = new ListViewItem(new string[] { cam.name });
+                    //item.Tag = file; //tag is not used anywhere I can see
                     list2.Items.Add(item);
+                    //add camera to combobox on overview tab and to camera filter combobox in the History tab 
+                    comboBox1.Items.Add($"   {cam.name}");
+                    comboBox_filter_camera.Items.Add($"   {cam.name}");
+                    if (oldname.ToLower() == cam.name.ToLower())
+                    {
+                        oldidx = i;
+                    }
                     i++;
 
                 }
+
+                //select first camera, or last selected camera
+                if (list2.Items.Count > 0 && list2.Items.Count >= oldidx)
+                {
+                    list2.Items[oldidx].Selected = true;
+                }
+
+                ////3. UPDATE LIST2
+                ////update list2 entry
+                //var item = list2.FindItemWithText(oldname);
+                //list2.Items[list2.Items.IndexOf(item)].Text = name;
+
+
+                //update camera  combobox on overview tab and to camera filter combobox in the History tab 
+                //comboBox1.Items[comboBox1.Items.IndexOf($"   {oldname}")] = $"   {name}";
+                //comboBox_filter_camera.Items[comboBox_filter_camera.Items.IndexOf($"   {oldname}")] = $"   {name}";
+                //string[] files = Directory.GetFiles("./cameras", $"*.txt"); //load all settings files in a string array
+
+                ////create a camera object for every camera settings file
+                //int i = 0;
+                //foreach (string file in files)
+                //{
+                //    string result = LoadCamera(file); //do LoadCamera() and save returned result in string
+                //    Log(result);
+
+                //    //if LoadCamera() returned an error
+                //    if (result.Contains("ERROR"))
+                //    {
+                //        MessageBox.Show($"Could not load config file {file}: {result}");
+                //    }
+
+                //    //Add loaded camera to list2
+                //    ListViewItem item = new ListViewItem(new string[] { AppSettings.Settings.CameraList[i].name });
+                //    item.Tag = file;
+                //    list2.Items.Add(item);
+                //    i++;
+
+                //}
             }
             catch
             {
@@ -2279,46 +2355,41 @@ namespace WindowsFormsApp2
                 MessageBox.Show("ERROR LoadCameras() failed.");
             }
 
-            //select first camera
-            if (list2.Items.Count > 0)
-            {
-                list2.Items[0].Selected = true;
-            }
         }
 
         //load existing camera (settings file exists) into CameraList, into Stats dropdown and into History filter dropdown 
-        private string LoadCamera(string config_path)
-        {
-            //check if camera with specified name or its prefix already exists. If yes, then abort.
-            foreach (Camera c in CameraList)
-            {
-                if (c.name == Path.GetFileNameWithoutExtension(config_path))
-                {
-                    return ($"ERROR: Camera name must be unique,{Path.GetFileNameWithoutExtension(config_path)} already exists.");
-                }
-                if (c.prefix == System.IO.File.ReadAllLines(config_path)[2].Split('"')[1])
-                {
-                    return ($"ERROR: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {Path.GetFileNameWithoutExtension(config_path)} equals the prefix of the existing camera {c.name} .");
-                }
-            }
-            Camera cam = new Camera(); //create new camera object
-            Log("read config");
-            cam.ReadConfig(config_path); //read camera's config from file
-            Log("add");
-            CameraList.Add(cam); //add created camera object to CameraList
+        //private string LoadCamera(string config_path)
+        //{
+        //    //check if camera with specified name or its prefix already exists. If yes, then abort.
+        //    foreach (Camera c in AppSettings.Settings.CameraList)
+        //    {
+        //        if (c.name == Path.GetFileNameWithoutExtension(config_path))
+        //        {
+        //            return ($"ERROR: Camera name must be unique,{Path.GetFileNameWithoutExtension(config_path)} already exists.");
+        //        }
+        //        if (c.prefix == System.IO.File.ReadAllLines(config_path)[2].Split('"')[1])
+        //        {
+        //            return ($"ERROR: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {Path.GetFileNameWithoutExtension(config_path)} equals the prefix of the existing camera {c.name} .");
+        //        }
+        //    }
+        //    Camera cam = new Camera(); //create new camera object
+        //    Log("read config");
+        //    cam.ReadConfig(config_path); //read camera's config from file
+        //    Log("add");
+        //    AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
-            //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items.Add($"   {cam.name}");
-            comboBox_filter_camera.Items.Add($"   {cam.name}");
+        //    //add camera to combobox on overview tab and to camera filter combobox in the History tab 
+        //    comboBox1.Items.Add($"   {cam.name}");
+        //    comboBox_filter_camera.Items.Add($"   {cam.name}");
 
-            return ($"SUCCESS: {Path.GetFileNameWithoutExtension(config_path)} loaded.");
-        }
+        //    return ($"SUCCESS: {Path.GetFileNameWithoutExtension(config_path)} loaded.");
+        //}
 
         //add camera
         private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
         {
             //check if camera with specified name already exists. If yes, then abort.
-            foreach (Camera c in CameraList)
+            foreach (Camera c in AppSettings.Settings.CameraList)
             {
                 if (c.name == name)
                 {
@@ -2343,22 +2414,18 @@ namespace WindowsFormsApp2
             }
 
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
-            CameraList.Add(cam); //add created camera object to CameraList
+            AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
-            //add camera to list2
-            ListViewItem item = new ListViewItem(new string[] { name });
-            item.Tag = name;
-            list2.Items.Add(item);
+            ////add camera to list2
+            //ListViewItem item = new ListViewItem(new string[] { name });
+            //item.Tag = name;
+            //list2.Items.Add(item);
 
-            //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items.Add($"   {cam.name}");
-            comboBox_filter_camera.Items.Add($"   {cam.name}");
+            ////add camera to combobox on overview tab and to camera filter combobox in the History tab 
+            //comboBox1.Items.Add($"   {cam.name}");
+            //comboBox_filter_camera.Items.Add($"   {cam.name}");
 
-            //select first camera
-            if (list2.Items.Count == 1)
-            {
-                list2.Items[0].Selected = true;
-            }
+            LoadCameras();
 
             return ($"SUCCESS: {name} created.");
         }
@@ -2375,42 +2442,34 @@ namespace WindowsFormsApp2
             }
 
             //check if camera with specified name exists. If no, then abort.
-            if (!CameraList.Exists(x => x.name == oldname))
+            if (!AppSettings.Settings.CameraList.Exists(x => x.name == oldname))
             {
                 return ($"WARNING: Camera can't be modified because old name {oldname} wasn't found.");
             }
 
             // check if the new name isn't taken by another camera already (in case the name was changed)
-            if (name != oldname && CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
+            if (name != oldname && AppSettings.Settings.CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Camera name must be unique, but new camera name {name} already exists.");
             }
 
             int index = -1;
-            index = CameraList.FindIndex(x => x.name == oldname); //index of specified camera in list
+            index = AppSettings.Settings.CameraList.FindIndex(x => x.name == oldname); //index of specified camera in list
 
             if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
 
             //check if new prefix isn't already taken by another camera
-            if (prefix != CameraList[index].prefix && CameraList.Exists(x => x.prefix == prefix))
+            if (prefix != AppSettings.Settings.CameraList[index].prefix && AppSettings.Settings.CameraList.Exists(x => x.prefix == prefix))
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {name} already exists.");
             }
 
             //2. WRITE CONFIG
-            CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
+            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
 
-            //3. UPDATE LIST2
-            //update list2 entry
-            var item = list2.FindItemWithText(oldname);
-            list2.Items[list2.Items.IndexOf(item)].Text = name;
-
-
-            //update camera  combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items[comboBox1.Items.IndexOf($"   {oldname}")] = $"   {name}";
-            comboBox_filter_camera.Items[comboBox_filter_camera.Items.IndexOf($"   {oldname}")] = $"   {name}";
+            LoadCameras();
 
 
             return ($"SUCCESS: Camera {oldname} was updated to {name}.");
@@ -2422,16 +2481,16 @@ namespace WindowsFormsApp2
             Log($"Removing camera {name}...");
             if (list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
-                if (CameraList.Exists(x => x.name == name)) //check if camera with specified name exists in list
+                if (AppSettings.Settings.CameraList.Exists(x => x.name == name)) //check if camera with specified name exists in list
                 {
 
                     //find index of specified camera in list
                     int index = -1;
 
                     //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
-                    for (int i = 0; i < CameraList.Count; i++)
+                    for (int i = 0; i < AppSettings.Settings.CameraList.Count; i++)
                     {
-                        if (CameraList[i].name.Equals(name))
+                        if (AppSettings.Settings.CameraList[i].name.Equals(name))
                         {
                             index = i;
 
@@ -2440,16 +2499,16 @@ namespace WindowsFormsApp2
 
                     if (index != -1) //only delete camera if index is known (!= its default value -1)
                     {
-                        CameraList[index].Delete(); //delete settings file of specified camera
+                        //AppSettings.Settings.CameraList[index].Delete(); //delete settings file of specified camera
 
                         //move all cameras following the specified camera one position forward in the list
                         //the position of the specified camera is overridden with the following camera, the position of the following camera is overridden with its follower, and so on
-                        for (int i = index; i < CameraList.Count - 1; i++)
+                        for (int i = index; i < AppSettings.Settings.CameraList.Count - 1; i++)
                         {
-                            CameraList[i] = CameraList[i + 1];
+                            AppSettings.Settings.CameraList[i] = AppSettings.Settings.CameraList[i + 1];
                         }
 
-                        CameraList.Remove(CameraList[CameraList.Count - 1]); //lastly, remove camera from list
+                        AppSettings.Settings.CameraList.Remove(AppSettings.Settings.CameraList[AppSettings.Settings.CameraList.Count - 1]); //lastly, remove camera from list
 
                         //remove list2 entry
                         var item = list2.FindItemWithText(name);
@@ -2501,15 +2560,15 @@ namespace WindowsFormsApp2
                 //load remaining settings from Camera.cs object
 
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
 
                 //load cameras stats
 
-                string stats = $"Alerts: {CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {CameraList[i].stats_false_alerts.ToString()}";
+                string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
                 lbl_camstats.Text = stats;
 
                 //load if ai detection is active for the camera
-                if (CameraList[i].enabled == true)
+                if (AppSettings.Settings.CameraList[i].enabled == true)
                 {
                     cb_enabled.Checked = true;
                 }
@@ -2517,15 +2576,15 @@ namespace WindowsFormsApp2
                 {
                     cb_enabled.Checked = false;
                 }
-                tbPrefix.Text = CameraList[i].prefix; //load 'input file begins with'
+                tbPrefix.Text = AppSettings.Settings.CameraList[i].prefix; //load 'input file begins with'
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
-                tbTriggerUrl.Text = CameraList[i].trigger_urls_as_string; //load trigger url
-                tb_cooldown.Text = CameraList[i].cooldown_time.ToString(); //load cooldown time
-                tb_threshold_lower.Text = CameraList[i].threshold_lower.ToString(); //load lower threshold value
-                tb_threshold_upper.Text = CameraList[i].threshold_upper.ToString(); // load upper threshold value
+                tbTriggerUrl.Text = AppSettings.Settings.CameraList[i].trigger_urls_as_string; //load trigger url
+                tb_cooldown.Text = AppSettings.Settings.CameraList[i].cooldown_time.ToString(); //load cooldown time
+                tb_threshold_lower.Text = AppSettings.Settings.CameraList[i].threshold_lower.ToString(); //load lower threshold value
+                tb_threshold_upper.Text = AppSettings.Settings.CameraList[i].threshold_upper.ToString(); // load upper threshold value
 
                 //load telegram image sending on/off option
-                if (CameraList[i].telegram_enabled)
+                if (AppSettings.Settings.CameraList[i].telegram_enabled)
                 {
                     cb_telegram.Checked = true;
                 }
@@ -2550,7 +2609,7 @@ namespace WindowsFormsApp2
                 //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
                 for (int j = 0; j < cbarray.Length; j++)
                 {
-                    if (CameraList[i].triggering_objects_as_string.Contains(cbstringarray[j]))
+                    if (AppSettings.Settings.CameraList[i].triggering_objects_as_string.Contains(cbstringarray[j]))
                     {
                         cbarray[j].Checked = true;
                     }
@@ -2792,12 +2851,10 @@ namespace WindowsFormsApp2
                             if (result1 == DialogResult.Cancel)
                             {
                                 AppSettings.Settings.close_instantly = 0;
-                                AppSettings.Save();
                             }
                             else
                             {
                                 AppSettings.Settings.close_instantly = 1;
-                                AppSettings.Save();
                             }
                         }
                     }
@@ -2805,6 +2862,9 @@ namespace WindowsFormsApp2
                     e.Cancel = (result == DialogResult.Cancel);
                 }
             }
+
+            AppSettings.Save();  //save settings in any case
+
 
         }
 

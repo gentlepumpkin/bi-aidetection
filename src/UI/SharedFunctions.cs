@@ -307,19 +307,18 @@ namespace WindowsFormsApp2
         /// <param name="filePath">The file path to write the object instance to.</param>
         /// <param name="objectToWrite">The object instance to write to the file.</param>
         /// <param name="append">If false the file will be overwritten if it already exists. If true the contents will be appended to the file.</param>
-        public static bool WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()
+        public static string WriteToJsonFile<T>(string filePath, T objectToWrite, bool append = false) where T : new()
         {
-            bool Ret = false;
+            string Ret = "";
             TextWriter writer = null;
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings { } ;
-                string contentsToWriteToFile = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,settings);
+                Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,settings);
                 if (settings.Error == null)
                 {
                     writer = new StreamWriter(filePath, append);
-                    writer.Write(contentsToWriteToFile);
-                    Ret = true;
+                    writer.Write(Ret);
                 }
                 else
                 {
@@ -372,7 +371,40 @@ namespace WindowsFormsApp2
             return Ret;
 
         }
+        public static bool IsClassEqual(string clsjson, object cls2)
+        {
 
+            bool Ret = false;
+            try
+            {
+
+                    JsonSerializerSettings settings2 = new JsonSerializerSettings { };
+                    string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, settings2);
+                    if (settings2.Error == null)
+                    {
+
+                        if (clsjson == contents2)
+                        {
+                            Ret = true;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error: " + settings2.Error.ToString());
+                    }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: " + SharedFunctions.ExMsg(ex));
+            }
+            finally
+            {
+            }
+
+            return Ret;
+
+        }
         public static DateTime RetrieveLinkerTimestamp()
         {
             DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0);
@@ -1626,7 +1658,51 @@ namespace WindowsFormsApp2
     }
 
 
+    public class MovingCalcs
+    {
+        private Queue<Decimal> samples = new Queue<Decimal>();
+        private int windowSize = 16;
+        private Decimal sampleAccumulator;
+        public Decimal Average { get; private set; }
+        public Decimal Min { get; private set; }
+        public Decimal Max { get; private set; }
+        public Decimal Count { get; private set; }
 
-   
+
+        public MovingCalcs(int windowSize)
+        {
+            this.windowSize = windowSize;
+        }
+
+        public void AddToCalc(double newSample)
+        {
+            AddToCalc(Convert.ToDecimal(newSample));
+        }
+        public void AddToCalc(int newSample)
+        {
+            AddToCalc(Convert.ToDecimal(newSample));
+        }
+        public void AddToCalc(long newSample)
+        {
+            AddToCalc(Convert.ToDecimal(newSample));
+        }
+        public void AddToCalc(Decimal newSample)
+        {
+            this.Count++;
+            this.sampleAccumulator += newSample;
+            this.samples.Enqueue(newSample);
+
+            if (samples.Count > windowSize)
+            {
+                this.sampleAccumulator -= this.samples.Dequeue();
+            }
+
+            this.Average = this.sampleAccumulator / samples.Count;
+            this.Min = Math.Min(newSample, this.Min);
+            this.Max = Math.Max(newSample, this.Max);
+
+        }
+    }
+
 }
 

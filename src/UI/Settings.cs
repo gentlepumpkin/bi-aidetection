@@ -16,6 +16,7 @@ namespace WindowsFormsApp2
     public static class AppSettings
     {
         public static ClsSettings Settings = new ClsSettings();
+        private static string LastSettingsJSON = "";
 
         public class ClsSettings
         {
@@ -29,6 +30,7 @@ namespace WindowsFormsApp2
             public bool send_errors = true;
             public bool startwithwindows = false;
             public int close_instantly = -1;
+            public List<Camera> CameraList = new List<Camera>();
             public string deepstack_url = "127.0.0.1:81";
             public string deepstack_adminkey = "";
             public string deepstack_apikey = "";
@@ -49,23 +51,40 @@ namespace WindowsFormsApp2
             bool Ret = false;
             try
             {
-                //keep a backup file in case of corruption
-                if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
+
+                
+                if (!SharedFunctions.IsClassEqual(AppSettings.LastSettingsJSON, AppSettings.Settings))
                 {
-                    File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
+                    //keep a backup file in case of corruption
+                    if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
+                    {
+                        File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
+                    }
+                    if (File.Exists(AppSettings.Settings.SettingsFileName))
+                    {
+                        File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
+                    }
+
+                    Settings.SettingsValid = true;
+                    String CurSettingsJSON = SharedFunctions.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
+
+                    if (!string.IsNullOrEmpty(CurSettingsJSON))
+                    {
+                        Settings.SettingsValid = true;
+                    }
+                    else
+                    {
+                        Settings.SettingsValid = false;
+                    }
+
+                    AppSettings.LastSettingsJSON = CurSettingsJSON;
+
                 }
-                if (File.Exists(AppSettings.Settings.SettingsFileName))
+                else
                 {
-                    File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
-                }
-
-                Settings.SettingsValid = true;
-
-                Ret = SharedFunctions.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
-
-                if (!Ret)
-                {
-                    Settings.SettingsValid = false;
+                    //does not need saving
+                    Ret = true;
+                    Settings.SettingsValid = true;
                 }
             }
             catch (Exception ex)
@@ -196,6 +215,45 @@ namespace WindowsFormsApp2
                     }
                     if (Settings != null && Settings.SettingsValid == true)
                     {
+                        //load cameras the old way if needed
+                        if (Settings.CameraList.Count == 0)
+                        {
+                            List<FileInfo> files = SharedFunctions.GetFiles(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras"), "*.txt"); //load all settings files in a string array
+                            //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
+                            //I *think* this logic works?
+                            files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
+                            //create a camera object for every camera settings file
+                            foreach (FileInfo file in files)
+                            {
+
+                                //check if camera with specified name or its prefix already exists. If yes, then abort.
+                                bool fnd = false;
+                                foreach (Camera c in AppSettings.Settings.CameraList)
+                                {
+                                    if (c.name.ToLower() == Path.GetFileNameWithoutExtension(file.FullName).ToLower())
+                                    {
+                                        fnd = true;
+                                    }
+                                    else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
+                                    {
+                                        fnd = true;
+                                    }
+                                }
+                                if (!fnd)
+                                {
+                                    Camera cam = new Camera(); //create new camera object
+                                    cam.ReadConfig(file.FullName); //read camera's config from file
+                                    AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Skipped duplicate camera: " + file);
+                                }
+
+                            }
+
+                        }
+
                         Ret = true;
                     }
                 }
