@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -14,7 +15,7 @@ using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 
 
-namespace WindowsFormsApp2
+namespace AITool
 {
     public class DeepStack
     {
@@ -36,68 +37,16 @@ namespace WindowsFormsApp2
         public bool IsInstalled = false;
         public bool IsActivated = false;
         public bool NeedsSaving = false;
-        public SharedFunctions.ClsProcess DeepStackProc;
-        public SharedFunctions.ClsProcess ServerProc;
-        public SharedFunctions.ClsProcess PythonProc;
-        public SharedFunctions.ClsProcess RedisProc;
+        public Global.ClsProcess DeepStackProc;
+        public Global.ClsProcess ServerProc;
+        public Global.ClsProcess PythonProc;
+        public Global.ClsProcess RedisProc;
         public List<double> ResponseTimeList = new List<double>();  //From this you can get min/max/avg
-        public IProgress<string> ProgressEventLogger = null;
 
-        private void LogProgress(string Message, [CallerMemberName] string memberName = null)
+        
+        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port)
         {
 
-            try
-            {
-                if (string.IsNullOrWhiteSpace(Message) || this.ProgressEventLogger == null)
-                {
-                    return;
-                }
-
-                //Console.WriteLine(Message);
-                if (Message.ToLower().Contains("visit localhost to activate deepstack"))
-                {
-                    this.IsActivated = false;
-                }
-                else if (Message.ToLower().Contains("deepstack is active"))
-                {
-                    this.IsActivated = true;
-                }
-
-                //Keep a list of the times for each image to be processed - later can use List.Min/max/avg if needed
-                string[] splt = Message.Split("|".ToCharArray());
-                if (splt.Count() >= 4)
-                {
-                    double tim = 0;
-                    if (splt[2].Contains("ms"))
-                    {
-                        tim = Convert.ToDouble(splt[2].Replace("ms", "").Trim());
-                    }
-                    else if (splt[2].Contains("ms"))
-                    {
-                        tim = Convert.ToInt32(splt[2].Replace("s", "").Trim());
-                        tim = TimeSpan.FromSeconds(tim).TotalMilliseconds;
-                    }
-                    if (tim > 0)
-                    {
-                        this.ResponseTimeList.Add(tim);
-                    }
-                }
-
-                this.ProgressEventLogger.Report($"{memberName}> {Message}");
-
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-
-
-        }
-        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, IProgress<string> ProgressEventLogger)
-        {
-
-            this.ProgressEventLogger = ProgressEventLogger;
             this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port);
 
         }
@@ -115,19 +64,19 @@ namespace WindowsFormsApp2
             bool found = RefreshInfo();
 
         }
-        public bool GetBlueStackRunningProcesses()
+        public bool GetDeepStackRun()
         {
             bool Ret = false;
 
             //Note - deepstack.exe does NOT need to be running
-            this.DeepStackProc = SharedFunctions.GetaProcessByFullPath(this.DeepStackEXE);
-            this.ServerProc = SharedFunctions.GetaProcessByFullPath(this.ServerEXE);
-            this.PythonProc = SharedFunctions.GetaProcessByFullPath(this.PythonEXE);
-            this.RedisProc = SharedFunctions.GetaProcessByFullPath(this.RedisEXE);
+            this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
+            this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
+            this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
+            this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
             if (this.ServerProc.process != null && this.PythonProc.process != null && this.RedisProc.process != null)
             {
-                //access denied may happen
+                //access denied may happen if our own process did not start the deepstack process and we are not running as administrator
                 bool HasExited = false;
                 try
                 {
@@ -136,13 +85,13 @@ namespace WindowsFormsApp2
                 catch (Exception ex)
                 {
 
-                    LogProgress("Error: While trying to access DeepStack server.exe process, got: " + SharedFunctions.ExMsg(ex));
+                    Global.Log("Cannot access already running 'server.exe', must be running as administrator.");
                 }
                 this.IsInstalled = true;
                 if (!HasExited)
                 {
                     this.HasError = false;
-                    LogProgress("DeepStack Desktop IS running from " + ServerProc.FileName);
+                    Global.Log("DeepStack Desktop IS running from " + ServerProc.FileName);
 
                     this.IsStarted = true;
                     //C:\DeepStack\server\server.exe
@@ -150,7 +99,7 @@ namespace WindowsFormsApp2
                     if (!this.ServerProc.FileName.ToLower().StartsWith(this.DeepStackFolder.ToLower()))
                     {
                         string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
-                        LogProgress("Deepstack running from non-default path: " + dspath);
+                        Global.Log("Deepstack running from non-default path: " + dspath);
                         this.DeepStackFolder = dspath;
                         this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
                         this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
@@ -162,55 +111,55 @@ namespace WindowsFormsApp2
                     //Try to get command line params to fill in correct running port, etc
                     //"C:\DeepStack\server\server.exe" -VISION-FACE=False -VISION-SCENE=True -VISION-DETECTION=True -ADMIN-KEY= -API-KEY= -PORT=84
 
-                    string face = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-VISION-FACE=", " |-");
+                    string face = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-FACE=", " |-");
                     if (!string.IsNullOrEmpty(face))
                         if (this.FaceAPIEnabled != Convert.ToBoolean(face))
                         {
-                            LogProgress($"...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
+                            Global.Log($"...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
                             this.FaceAPIEnabled = Convert.ToBoolean(face);
                             this.NeedsSaving = true;
                         }
 
-                    string scene = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
+                    string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
                     if (!string.IsNullOrEmpty(scene))
                         if (Convert.ToBoolean(scene) != this.SceneAPIEnabled) {
-                            LogProgress($"...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
+                            Global.Log($"...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
                             this.SceneAPIEnabled = Convert.ToBoolean(scene);
                             this.NeedsSaving = true;
                         };
                     
-                    string detect = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-VISION-DETECTION=", " |-");
+                    string detect = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-DETECTION=", " |-");
                     if (!string.IsNullOrEmpty(detect))
                         if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
                         {
-                            LogProgress($"...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
+                            Global.Log($"...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
                             this.DetectionAPIEnabled = Convert.ToBoolean(detect);
                             this.NeedsSaving = true;
                         }
 
-                    string admin = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-ADMIN-KEY=", " |-");
+                    string admin = Global.GetWordBetween(this.ServerProc.CommandLine, "-ADMIN-KEY=", " |-");
                     if (!string.IsNullOrEmpty(admin))
                         if (this.AdminKey != admin)
                         {
-                            LogProgress($"...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
+                            Global.Log($"...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
                             this.AdminKey = admin;
                             this.NeedsSaving = true;
                         }
 
-                    string api = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-API-KEY=", " |-");
+                    string api = Global.GetWordBetween(this.ServerProc.CommandLine, "-API-KEY=", " |-");
                     if (!string.IsNullOrEmpty(api))
                         if (this.APIKey != api)
                         {
-                            LogProgress($"...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
+                            Global.Log($"...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
                             this.APIKey = api;
                             this.NeedsSaving = true;
                         }
 
-                    string port = SharedFunctions.GetWordBetween(this.ServerProc.CommandLine, "-PORT=", " |-");
+                    string port = Global.GetWordBetween(this.ServerProc.CommandLine, "-PORT=", " |-");
                     if (!string.IsNullOrEmpty(port))
                         if (this.Port != port)
                         {
-                            LogProgress($"...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
+                            Global.Log($"...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
                             this.Port = port;
                             this.NeedsSaving = true;
                         }
@@ -218,11 +167,11 @@ namespace WindowsFormsApp2
                     //Get mode:
                     //"C:\DeepStack\interpreter\python.exe" ../intelligence.py -MODE=Medium -VFACE=False -VSCENE=True -VDETECTION=True
 
-                    string mode = SharedFunctions.GetWordBetween(this.PythonProc.CommandLine, "-MODE=", " |-");
+                    string mode = Global.GetWordBetween(this.PythonProc.CommandLine, "-MODE=", " |-");
                     if (!string.IsNullOrEmpty(port))
                         if (this.Mode != mode)
                         {
-                            LogProgress($"...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
+                            Global.Log($"...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
                             this.Mode = mode;
                             this.NeedsSaving = true;
                         }
@@ -233,7 +182,7 @@ namespace WindowsFormsApp2
                 }
                 else
                 {
-                    LogProgress("DeepStack Desktop NOT running.");
+                    Global.Log("DeepStack Desktop NOT running.");
                     this.IsStarted = false;
                     this.PythonProc.process = null;
                     this.RedisProc.process = null;
@@ -243,12 +192,12 @@ namespace WindowsFormsApp2
             }
             else if (this.ServerProc.process != null || this.PythonProc.process != null || this.RedisProc.process != null)
             {
-                LogProgress("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
+                Global.Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
                 this.HasError = true;
             }
             else
             {
-                LogProgress("DeepStack Desktop NOT running.");
+                Global.Log("DeepStack Desktop NOT running.");
                 this.IsStarted = false;
                 this.HasError = false;
             }
@@ -275,7 +224,7 @@ namespace WindowsFormsApp2
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
                     if (!string.IsNullOrWhiteSpace(dspath))
                     {
-                        LogProgress("Deepstack Desktop install path found in Uninstall registry: " + dspath);
+                        Global.Log("Deepstack Desktop install path found in Uninstall registry: " + dspath);
 
                         string exepth = Path.Combine(dspath, "DeepStack.exe");
                         if (File.Exists(exepth))
@@ -285,7 +234,7 @@ namespace WindowsFormsApp2
                             this.DeepStackEXE = exepth;
                             if (dspath.ToLower() != this.DeepStackFolder.ToLower())
                             {
-                                LogProgress("Deepstack running from non-default path: " + dspath);
+                                Global.Log("Deepstack running from non-default path: " + dspath);
                                 this.PythonEXE = Path.Combine(dspath, @"interpreter\python.exe");
                                 this.RedisEXE = Path.Combine(dspath, @"redis\redis-server.exe");
                                 this.ServerEXE = Path.Combine(dspath, @"server\server.exe");
@@ -294,7 +243,7 @@ namespace WindowsFormsApp2
                         }
                         else
                         {
-                            LogProgress("Error: File not found " + exepth);
+                            Global.Log("Error: File not found " + exepth);
                         }
                     }
 
@@ -307,12 +256,12 @@ namespace WindowsFormsApp2
                     if (File.Exists(this.DeepStackEXE))
                     {
                         this.IsInstalled = true;
-                        LogProgress("DeepStack is installed: " + this.DeepStackEXE);
+                        Global.Log("DeepStack is installed: " + this.DeepStackEXE);
                     }
                     else
                     {
                         this.IsInstalled = false;
-                        LogProgress("DeepStack NOT installed");
+                        Global.Log("DeepStack NOT installed");
                     }
                 }
                 else
@@ -322,7 +271,7 @@ namespace WindowsFormsApp2
 
 
                 //Try to get running processes in any case
-                bool success = GetBlueStackRunningProcesses();
+                bool success = GetDeepStackRun();
 
                 Ret = true;
 
@@ -330,7 +279,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                LogProgress("Error: While detecting DeepStack, got: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: While detecting DeepStack, got: " + Global.ExMsg(ex));
             }
 
             if (key != null)
@@ -348,13 +297,13 @@ namespace WindowsFormsApp2
 
                 if (!this.IsInstalled)
                 {
-                    LogProgress("Error: Cannot start because not installed.");
+                    Global.Log("Error: Cannot start because not installed.");
                     this.IsStarted = false;
                     return Ret;
                 }
                 else
                 {
-                    LogProgress("Starting DeepStack...");
+                    Global.Log("Starting DeepStack...");
                 }
 
                 Stopwatch SW = Stopwatch.StartNew();
@@ -367,7 +316,7 @@ namespace WindowsFormsApp2
                 InitProc.StartInfo.Arguments = "../init.py";
                 InitProc.StartInfo.UseShellExecute = false;
                 InitProc.StartInfo.CreateNoWindow = true;
-                LogProgress($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
+                Global.Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
                 InitProc.Start();
 
                 //next start the redis server...
@@ -377,7 +326,7 @@ namespace WindowsFormsApp2
                 this.RedisProc.process.StartInfo.UseShellExecute = false;
                 this.RedisProc.process.StartInfo.CreateNoWindow = true;
                 this.RedisProc.FileName = this.RedisEXE;
-                LogProgress($"Starting {this.RedisEXE}...");
+                Global.Log($"Starting {this.RedisEXE}...");
                 this.RedisProc.process.Start();
 
                 //next, start the server
@@ -389,10 +338,10 @@ namespace WindowsFormsApp2
                 this.ServerProc.process.StartInfo.CreateNoWindow = true;
                 this.ServerProc.process.StartInfo.UseShellExecute = false;
                 this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
-                this.ServerProc.process.OutputDataReceived += this.handlelogs;
+                this.ServerProc.process.OutputDataReceived += this.handleprocmsg;
                 this.ServerProc.FileName = this.ServerEXE;
                 this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
-                LogProgress($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
+                Global.Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
                 this.ServerProc.process.Start();
                 this.ServerProc.process.BeginOutputReadLine();
 
@@ -405,7 +354,7 @@ namespace WindowsFormsApp2
                 this.PythonProc.process.StartInfo.CreateNoWindow = true;
                 this.PythonProc.FileName = this.PythonEXE;
                 this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
-                LogProgress($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
+                Global.Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
                 this.PythonProc.process.Start();
 
 
@@ -413,7 +362,7 @@ namespace WindowsFormsApp2
                 this.HasError = false;
                 Ret = true;
 
-                LogProgress("Started in " + SW.ElapsedMilliseconds + "ms");
+                Global.Log("Started in " + SW.ElapsedMilliseconds + "ms");
 
 
             }
@@ -421,23 +370,48 @@ namespace WindowsFormsApp2
             {
                 this.IsStarted = false;
                 this.HasError = true;
-                LogProgress("Error: Cannot start: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Cannot start: " + Global.ExMsg(ex));
             }
 
             return Ret;
 
         }
 
-        private void handlelogs(object sender, DataReceivedEventArgs line)
+        private void handleprocmsg(object sender, DataReceivedEventArgs line)
         {
-            LogProgress(line.Data);
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                //Console.WriteLine(Message);
+                if (line.Data.ToLower().Contains("visit localhost to activate deepstack"))
+                {
+                    this.IsActivated = false;
+                }
+                else if (line.Data.ToLower().Contains("deepstack is active"))
+                {
+                    this.IsActivated = true;
+                }
+
+
+                Global.Log($"DeepStack>> {line.Data}","");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
         public async Task<bool> StopAsync()
         {
             bool Ret = false;
             bool err = false;
 
-            LogProgress("Stopping Deepstack...");
+            Global.Log("Stopping Deepstack...");
             Stopwatch sw = Stopwatch.StartNew();
 
             //more than one python process we need to take care of...
@@ -449,12 +423,12 @@ namespace WindowsFormsApp2
                     {
                         await Task.Run(() => this.PythonProc.process.Kill());
                         await Task.Delay(100);
-                        this.PythonProc = SharedFunctions.GetaProcessByFullPath(this.PythonEXE);
+                        this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
                     }
                     catch (Exception ex)
                     {
 
-                        LogProgress("Error: Could not stop DeepStack python.exe process: " + SharedFunctions.ExMsg(ex));
+                        Global.Log("Error: Could not stop DeepStack python.exe process: " + Global.ExMsg(ex));
                         err = true;
                     }
                 }
@@ -472,7 +446,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                LogProgress("Error: Could not stop DeepStack redis-server.exe process: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Could not stop DeepStack redis-server.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
             try
@@ -482,7 +456,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                LogProgress("Could not stop DeepStack server.exe process: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
             try
@@ -492,7 +466,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                LogProgress("Error: Could not stop DeepStack.exe process: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Could not stop DeepStack.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
 
@@ -506,12 +480,12 @@ namespace WindowsFormsApp2
                 this.ServerProc.process = null;
                 this.DeepStackProc.process = null;
                 this.IsStarted = false;
-                LogProgress("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
+                Global.Log("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
                 Ret = true;
             }
             else
             {
-                LogProgress("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
+                Global.Log("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
             }
 
 

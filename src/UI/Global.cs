@@ -1,48 +1,184 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net.Configuration;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.DataVisualization.Charting;
-using System.Windows.Forms.VisualStyles;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
-    public static class SharedFunctions
+    public static class Global
     {
+        public static IProgress<string> progress = null;
+        public static void Log(string Message, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
 
+            //this is for logging in non-gui classes.  Reports back to real logger
+            //progress needs to be subscribed to in main gui
+            string mn = "";
+            if (memberName !=null && !string.IsNullOrEmpty(memberName))
+            {
+                mn = $"{memberName}>> ";
+            }
+            progress.Report($"{mn}{Message}");
+        }
         public static Regex RegEx_ValidDate = new Regex("(19|20)[0-9]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])_[0-9][0-9]_[0-9][0-9]_[0-9][0-9]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        //[DllImport("ntdll.dll")]
+        //public static extern int RtlNtStatusToDosError(int status);
+
+        /// <summary>
+    /// Flags used by <see cref="WinError.FormatMessage"/> method.
+    /// </summary>
+    [Flags]
+    public enum FormatMessageFlags:uint
+    {
+        /// <summary>
+        /// The function allocates a buffer large enough to hold the formatted message, and places a pointer to the
+        /// allocated buffer at the address specified by <c>lpBuffer</c>. The <c>lpBuffer</c> parameter is a pointer
+        /// to an <c>LPTSTR</c>. The <c>nSize</c> parameter specifies the minimum number of <c>TCHARs</c> to allocate
+        /// for an output message buffer. The caller should use the <c>LocalFree</c> function to free the buffer when
+        /// it is no longer needed.
+        /// If the length of the formatted message exceeds 128K bytes, then <c>FormatMessage</c> will fail and a
+        /// subsequent call to <c>GetLastError</c> will return <c>ERROR_MORE_DATA</c>.
+        /// This value is not available for use when compiling Windows Store apps.
+        /// </summary>
+        FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100,
+
+        /// <summary>
+        /// Insert sequences in the message definition are to be ignored and passed through to the output buffer
+        /// unchanged. This flag is useful for fetching a message for later formatting. If this flag is set, the
+        /// <c>Arguments</c> parameter is ignored.
+        /// </summary>
+        FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200,
+
+        /// <summary>
+        /// The <c>lpSource</c> parameter is a pointer to a null-terminated string that contains a message definition.
+        /// The message definition may contain insert sequences, just as the message text in a message table resource
+        /// may. This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/> or
+        /// <see cref="FORMAT_MESSAGE_FROM_SYSTEM"/>.
+        /// </summary>
+        FORMAT_MESSAGE_FROM_STRING = 0x00000400,
+
+        /// <summary>
+        /// The <c>lpSource</c> parameter is a module handle containing the message-table resource(s) to search. If
+        /// this <c>lpSource</c> handle is <c>null</c>, the current process's application image file will be searched.
+        /// This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
+        /// If the module has no message table resource, the function fails with <c>ERROR_RESOURCE_TYPE_NOT_FOUND</c>.
+        /// </summary>
+        FORMAT_MESSAGE_FROM_HMODULE = 0x00000800,
+
+        /// <summary>
+        /// The function should search the system message-table resource(s) for the requested message. If this flag is
+        /// specified with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/>, the function searches the system message table
+        /// if the message is not found in the module specified by <c>lpSource</c>. This flag cannot be used with
+        /// <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
+        /// If this flag is specified, an application can pass the result of the <c>GetLastError</c> function to
+        /// retrieve the message text for a system-defined error.
+        /// </summary>
+        FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000,
+
+        /// <summary>
+        /// The Arguments parameter is not a <c>va_list</c> structure, but is a pointer to an array of values that
+        /// represent the arguments. This flag cannot be used with 64-bit integer values. If you are using a 64-bit
+        /// integer, you must use the <c>va_list</c> structure.
+        /// </summary>
+        FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000
+    }
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern uint FormatMessage(
+            FormatMessageFlags dwFlags,
+            IntPtr lpSource,
+            uint dwMessageId,
+            uint dwLanguageId,
+            StringBuilder lpBuffer,
+            uint nSize,
+            IntPtr arguments);
+        //[DllImport("Kernel32.dll", SetLastError = true)]
+        //static extern uint FormatMessage(uint dwFlags, IntPtr lpSource, uint dwMessageId, uint dwLanguageId, ref IntPtr lpBuffer, uint nSize, IntPtr pArguments);
+        //[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        //static extern uint FormatMessage(uint dwFlags, IntPtr lpSource, uint dwMessageId, uint dwLanguageId, StringBuilder lpBuffer, uint nSize, IntPtr Arguments);
+        public static string FormatMessageFromHRESULT(int errorcode)
+        {
+            const int nCapacity = 1024; // max error length
+            //const uint FORMAT_MSG_FROM_SYS = 0x01000;
+            
+            //const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100;
+            //const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
+            //const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+            //const uint FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000;
+            //const uint FORMAT_MESSAGE_FROM_HMODULE = 0x00000800;
+            //const uint FORMAT_MESSAGE_FROM_STRING = 0x00000400;
+            //const int HresultWin32Prefix = unchecked((int)0x80070000);
+            StringBuilder defSb = new StringBuilder(nCapacity);
+
+            const FormatMessageFlags Flags = FormatMessageFlags.FORMAT_MESSAGE_FROM_SYSTEM
+                | FormatMessageFlags.FORMAT_MESSAGE_IGNORE_INSERTS
+                | FormatMessageFlags.FORMAT_MESSAGE_ARGUMENT_ARRAY;
+
+            var buffer = new StringBuilder(nCapacity);
+            uint result = FormatMessage(Flags, IntPtr.Zero, (uint)errorcode, 0, buffer, (uint)nCapacity, IntPtr.Zero);
+            string ret = "";
+            if (result != 0)
+            {
+                ret = buffer.ToString().Trim();
+            }
+            return ret;
+            //uint dwChars = FormatMessage(
+            //    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_HMODULE,
+            //    IntPtr.Zero,
+            //    (uint)hresult,
+            //    0, // Default language
+            //    ref lpMsgBuf,
+            //    0,
+            //    IntPtr.Zero);
+            //must specify the FORMAT_MESSAGE_ARGUMENT_ARRAY flag when pass an array
+            //uint length = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, IntPtr.Zero, (uint)code, 0, defSb, nCapacity, IntPtr.Zero);
+
+
+
+            //string sRet = "(unknown)";
+            //if (dwChars > 0)
+            //{
+            //    sRet = Marshal.PtrToStringAnsi(lpMsgBuf).TrimEnd(' ', '.', '\r', '\n');
+            //}
+                    
+            //string sDefMsg = defSb.ToString().TrimEnd(' ', '.', '\r', '\n');
+            ////nothing left to do:
+            //return sDefMsg;
+        }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private extern static SafeFileHandle CreateFile(string lpFileName, FileSystemRights dwDesiredAccess, FileShare dwShareMode, IntPtr securityAttrs, FileMode dwCreationDisposition, FileOptions dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<bool> WaitForFileAccessAsync(string filename)
+        public static async Task<bool> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read)
         {
             //run the function in another thread
             return await Task.Run(() => WaitForFileAccess(filename));
         }
 
-        private static async Task<bool> WaitForFileAccess(string filename)
+        private static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read,FileShare share = FileShare.Read)
         {
             bool Success = false;
-
+            int retrydelayms = 20;
             try
             {
                 if (File.Exists(filename))
@@ -54,7 +190,7 @@ namespace WindowsFormsApp2
                     while ((errs < 2000) && (SW.ElapsedMilliseconds < 30000))
                     {
 
-                        using (SafeFileHandle fileHandle = CreateFile(filename, FileSystemRights.Read, FileShare.Read, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
+                        using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
                         {
 
                             if (fileHandle.IsInvalid)
@@ -65,7 +201,7 @@ namespace WindowsFormsApp2
                                 if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                 {
                                     //unexpected error, break out
-                                    Console.WriteLine("Unexpected Win32Error waiting for access: " + new Win32Exception(LastErr));
+                                    Log("Error: Unexpected Win32Error waiting for access: " + new Win32Exception(LastErr));
                                     break;
                                 }
 
@@ -81,7 +217,7 @@ namespace WindowsFormsApp2
                                 fileHandle.Close();
                             }
 
-                            await Task.Delay(10);
+                            await Task.Delay(retrydelayms);
 
                         }
                     }
@@ -89,19 +225,19 @@ namespace WindowsFormsApp2
 
                     if (errs > 0)
                     {
-                        Console.WriteLine("WaitForFileAccess lock time: " + SW.ElapsedMilliseconds + "ms, errcount=" + errs);
+                        //Log($"WaitForFileAccess lock time: {SW.ElapsedMilliseconds}ms, {errs} retries with {retrydelayms}ms retry delay.");
                     }
 
                 }
                 else
                 {
-                    Console.WriteLine("Error: File not found: " + filename);
+                    Log("Error: File not found: " + filename);
                 }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine("WaitForFileAccess Error: " + SharedFunctions.ExMsg(ex));
+                Log("WaitForFileAccess Error: " + Global.ExMsg(ex));
             }
 
 
@@ -208,10 +344,10 @@ namespace WindowsFormsApp2
                     //FreeDNSUpdateTool.SharedModule.VB$StateMachine_1_GetPublicIPAddress
                     string[] Splt2 = Lst.Split('.');
                     string LastMod = Splt2[Splt2.Count() - 1].Trim();
-                    for (int statenum = 0; statenum <= 256; statenum++)
-                    {
-                        LastMod = LastMod.Replace($"VB$StateMachine_{statenum}_", "");
-                    }
+                    //for (int statenum = 0; statenum <= 256; statenum++)
+                    //{
+                    //    LastMod = LastMod.Replace($"VB$StateMachine_{statenum}_", "");
+                    //}
                     //GetPublicIPAddress
                     StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
                     ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}:{Frames[Frames.Count() - 1].GetFileColumnNumber()}";
@@ -238,7 +374,7 @@ namespace WindowsFormsApp2
 
                     if (CurVal == null || string.IsNullOrWhiteSpace(CurVal.ToString()))
                     {
-                        Console.WriteLine("Application is NOT set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                        Log("Application is NOT set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
 
                         Enabled = false;
                     }
@@ -246,19 +382,19 @@ namespace WindowsFormsApp2
                     {
                         if (CurVal.ToString().ToLower() == AppCmd.ToLower())
                         {
-                            Console.WriteLine("Application is already set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                            Log("Application is already set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
                             Enabled = true;
                         }
                         else
                         {
-                            Console.WriteLine($"Application is NOT set to start with Windows (bad path={CurVal}): HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+                            Log($"Application is NOT set to start with Windows (bad path={CurVal}): HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
                         }
 
                     }
 
                     if (Enable && !Enabled)
                     {
-                        Console.WriteLine("Enabling Application startup: " + AppCmd);
+                        Log("Enabling Application startup: " + AppCmd);
                         if (!Debugger.IsAttached)
                         {
                             RK.SetValue(AppName, AppCmd);
@@ -266,7 +402,7 @@ namespace WindowsFormsApp2
                     }
                     else if (!Enable && Enabled)
                     {
-                        Console.WriteLine("Disabling Application startup.");
+                        Log("Disabling Application startup.");
                         if (!Debugger.IsAttached)
                         {
                             RK.DeleteValue(AppName);
@@ -278,7 +414,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log(ex.Message);
             }
             finally
             {
@@ -313,21 +449,23 @@ namespace WindowsFormsApp2
             TextWriter writer = null;
             try
             {
-                JsonSerializerSettings settings = new JsonSerializerSettings { } ;
-                Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,settings);
-                if (settings.Error == null)
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,jset);
+                if (jset.Error == null)
                 {
                     writer = new StreamWriter(filePath, append);
                     writer.Write(Ret);
                 }
                 else
                 {
-                    Console.WriteLine($"Error: While writing '{filePath}', got: " + settings.Error.ToString());
+                    Log($"Error: While writing '{filePath}', got: " + jset.Error.ToString());
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: While writing '{filePath}', got: " + SharedFunctions.ExMsg(ex));
+                Ret = "";
+                Log($"Error: While writing '{filePath}', got: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -356,11 +494,13 @@ namespace WindowsFormsApp2
             {
                 reader = new StreamReader(filePath);
                 var fileContents = reader.ReadToEnd();
-                Ret = JsonConvert.DeserializeObject<T>(fileContents);
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                Ret = JsonConvert.DeserializeObject<T>(fileContents,jset);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: While reading '{filePath}', got: " + SharedFunctions.ExMsg(ex));
+                Log($"Error: While reading '{filePath}', got: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -378,25 +518,26 @@ namespace WindowsFormsApp2
             try
             {
 
-                    JsonSerializerSettings settings2 = new JsonSerializerSettings { };
-                    string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, settings2);
-                    if (settings2.Error == null)
-                    {
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
+                if (jset.Error == null)
+                {
 
-                        if (clsjson == contents2)
-                        {
-                            Ret = true;
-                        }
-                    }
-                    else
+                    if (clsjson == contents2)
                     {
-                        Console.WriteLine($"Error: " + settings2.Error.ToString());
+                        Ret = true;
                     }
+                }
+                else
+                {
+                    Log($"Error: " + jset.Error.ToString());
+                }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: " + SharedFunctions.ExMsg(ex));
+                Log($"Error: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -440,7 +581,7 @@ namespace WindowsFormsApp2
             }
             catch (System.Exception ex)
             {
-                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
 
             return dt;
@@ -469,7 +610,7 @@ namespace WindowsFormsApp2
                     StrDate = StrDate.Remove(10, 1).Insert(10, "T");
                     if (!GetDateStrict(StrDate, ref OutDate))
                     {
-                        Console.WriteLine("Error: There was a problem parsing '" + FileName + "' for a date.");
+                        Log("Error: There was a problem parsing '" + FileName + "' for a date.");
                         OutDate = DateTime.MinValue;
                     }
                 }
@@ -477,7 +618,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
 
             return OutDate;
@@ -591,6 +732,12 @@ namespace WindowsFormsApp2
             }
             return Ret;
         }
+        public static bool IsAdministrator()
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
 
         public static Process GetaProcess(string processname)
         {
@@ -610,7 +757,7 @@ namespace WindowsFormsApp2
             }
         }
 
-        public static ClsProcess GetaProcessByFullPath(string processname)
+        public static ClsProcess GetaProcessByPath(string processname)
         {
             ClsProcess Ret = new ClsProcess();
             try
@@ -631,20 +778,22 @@ namespace WindowsFormsApp2
 
                         try
                         {
+                            if (IsAdministrator())
+                            {
+                                Process.EnterDebugMode();
+                            } 
                             PD = new ProcessDetail(curproc.Id);
                             Ret.FileName = PD.Win32ProcessImagePath;
                             Ret.CommandLine = PD.CommandLine;  //.Replace((char)34,"");
-                            if (string.IsNullOrEmpty(Ret.CommandLine))
-                            {
-                                Console.WriteLine($"Error: Cannot get command line for {curproc.ProcessName}- Either permissions or due to 32 bit app trying to access 64 bit process.");
-                            }
                         }
                         catch { }
 
-                        //SW.Stop();
-                        //Console.WriteLine($"Time to get command line: {SW.ElapsedMilliseconds}ms");
+                        if (string.IsNullOrEmpty(Ret.CommandLine))
+                        {
+                            Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
+                        }
 
-                        if (string.IsNullOrEmpty(Ret.FileName) || Ret.FileName.ToLower() == processname.ToLower())
+                        if (!string.IsNullOrEmpty(Ret.FileName) && Ret.FileName.ToLower() == processname.ToLower())
                         {
                             Ret.process = curproc;
                             break;
@@ -667,16 +816,16 @@ namespace WindowsFormsApp2
                 Process Proc = GetaProcess(ProcessName);
 
                 if (Proc == null)
-                    Console.WriteLine($"Process is not running: '{ProcessName}'.");
+                    Log($"Process is not running: '{ProcessName}'.");
                 else
                 {
-                    Console.WriteLine($"Process IS running: '{ProcessName}'.");
+                    Log($"Process IS running: '{ProcessName}'.");
                     Ret = true;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
 
             return Ret;
@@ -769,6 +918,9 @@ namespace WindowsFormsApp2
 
         public static string GetWMIPropertyFromProcess(Int32 PID, string PropName)
         {
+            
+            // THIS IS SLOW AS FUCK
+            
             // .net PROCESS object cannot seem to get the command line from processes that we did not start
             // resort to using WMI
             //https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process
@@ -804,7 +956,7 @@ namespace WindowsFormsApp2
                     //ManagementObjectCollection processList = search.Get();
                     //foreach (ManagementObject process in processList)
                     //{
-                    //    //Console.WriteLine("{0,6} - {1} - {2}", process["ProcessId"], process["Name"], process["CommandLine"]);
+                    //    //Log("{0,6} - {1} - {2}", process["ProcessId"], process["Name"], process["CommandLine"]);
                     //    object obj = process[PropName];
 
                     //    if (obj == null)
@@ -839,13 +991,13 @@ namespace WindowsFormsApp2
                 //}
 
                 SW.Stop();
-                Console.WriteLine($"Got '{PropName}' for PID '{PID}' in '{SW.ElapsedMilliseconds}'ms: {Ret}");
+                Log($"Got '{PropName}' for PID '{PID}' in '{SW.ElapsedMilliseconds}'ms: {Ret}");
 
             }
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not get command line: " + SharedFunctions.ExMsg(ex));
+                Log("Error: Could not get command line: " + Global.ExMsg(ex));
             }
             return Ret;
         }
@@ -866,7 +1018,7 @@ namespace WindowsFormsApp2
             // This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
             // See TextBoxLogger.Log for example
 
-            if (control != null)
+            if (control != null && !control.IsDisposed && !control.Disposing )
             {
                 if (control.InvokeRequired)
                 {
@@ -968,7 +1120,7 @@ namespace WindowsFormsApp2
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("Error: While getting file list, received error: " + SharedFunctions.ExMsg(ex));
+                                    Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
                                 }
                             }
                         }
@@ -984,7 +1136,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: While getting file list, received error: " + SharedFunctions.ExMsg(ex));
+                Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -1518,7 +1670,8 @@ namespace WindowsFormsApp2
 
             if (status != LowLevelTypes.NTSTATUS.SUCCESS)
             {
-                throw new Win32Exception();
+                //-1073741820 = STATUS_INFO_LENGTH_MISMATCH  - Probably a 64 bit process accessing 32 bit process memory related error
+                throw new Win32Exception(Convert.ToInt32(status));
             }
 
             cachedProcessBasicInfo = temp;
@@ -1688,18 +1841,30 @@ namespace WindowsFormsApp2
         }
         public void AddToCalc(Decimal newSample)
         {
-            this.Count++;
-            this.sampleAccumulator += newSample;
-            this.samples.Enqueue(newSample);
 
-            if (samples.Count > windowSize)
+            if (newSample > 0)
             {
-                this.sampleAccumulator -= this.samples.Dequeue();
-            }
+                this.Count++;
+                this.sampleAccumulator += newSample;
+                this.samples.Enqueue(newSample);
 
-            this.Average = this.sampleAccumulator / samples.Count;
-            this.Min = Math.Min(newSample, this.Min);
-            this.Max = Math.Max(newSample, this.Max);
+                if (samples.Count > windowSize)
+                {
+                    this.sampleAccumulator -= this.samples.Dequeue();
+                }
+
+                this.Average = this.sampleAccumulator / samples.Count;
+                if (this.Min == 0)
+                {
+                    this.Min = newSample;
+                }
+                else
+                {
+                    this.Min = Math.Min(newSample, this.Min);
+                }
+                this.Max = Math.Max(newSample, this.Max);
+
+            }
 
         }
     }

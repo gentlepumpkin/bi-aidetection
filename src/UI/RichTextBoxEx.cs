@@ -143,12 +143,15 @@ public class RichTextBoxEx
 	public Dictionary<string, RtfColor> RtfColors = new Dictionary<string, RtfColor>();
 
 	public int CurrentTextLength = 0;
-	public int MaxTextLength = 65536;
-
+	public int MaxTextLength = 524288; //65536;
+	public long MaxRTFWriteTime = 75;
+	public long LastRTFWriteTime = 0;
+	public bool AutoScroll = true;
 	private RichTextBox _RTF;
 	private Dictionary<string, Color> KnownColors { get; set; } = new Dictionary<string, Color>();
-	public RichTextBoxEx(RichTextBox RTF)
+	public RichTextBoxEx(RichTextBox RTF, bool AutoScroll)
 	{
+		this.AutoScroll = AutoScroll;
 		this._RTF = RTF;
 		this._RTF.DetectUrls = false;
 		this._RTF.ForeColor = Color.White;
@@ -188,18 +191,32 @@ public class RichTextBoxEx
 
 		try
 		{
-
-			UIOp(this._RTF, () =>
+			 
+			//the more text in the RTF window, the slower it is to update and scroll
+			if (this.LastRTFWriteTime >= this.MaxRTFWriteTime)
 			{
-				if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)
+				UIOp(this._RTF, () =>
+				{
+                    if (this._RTF.Visible)
+                    {
+						this._RTF.Clear();
+						this.CurrentTextLength = 0;
+						Msg = $"(Log window cleared for performance reasons @ {this.LastRTFWriteTime}ms text log time)\r\n{Msg}";
+					}
+				});
+			}
+
+			if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)
+			{
+				UIOp(this._RTF, () =>
 				{
 					this._RTF.Clear();
 					this.CurrentTextLength = 0;
 					Msg = $"(Log window cleared for performance reasons @ {this.MaxTextLength} bytes)\r\n{Msg}";
-				}
-			});
+				});
+			}
 
-			//Console.WriteLine("LogToRTF: " & Msg)
+			Stopwatch sw = Stopwatch.StartNew();
 
 			string[] parts = Msg.Split('{');
 
@@ -279,18 +296,17 @@ public class RichTextBoxEx
 				}
 			}
 
-			if (this._RTF != null && !this._RTF.IsDisposed)
+			UIOp(this._RTF, () =>
 			{
-				UIOp(this._RTF, () =>
+				this._RTF.AppendText("\r\n");
+				this._RTF.SelectionStart = this._RTF.Text.Length;
+				if (this._RTF.Visible && this.AutoScroll)
 				{
-					this._RTF.AppendText("\r\n");
-					this._RTF.SelectionStart = this._RTF.Text.Length;
 					this._RTF.ScrollToCaret();
-					//Me._RTF.Refresh()
-					//Application.DoEvents()
-					//Me._RTF.Update()
-				});
-			}
+				}
+			});
+
+			this.LastRTFWriteTime = sw.ElapsedMilliseconds;
 
 
 		}
@@ -307,13 +323,16 @@ public class RichTextBoxEx
 	private void UIOp(Control c, Action action)
 	{
 		//UIOp(Me._RTF, Sub() Me._RTF.AppendText(txt + CRLF, clr, fs))
-		if (c.InvokeRequired)
+		if (c !=null && !c.IsDisposed && !c.Disposing)
 		{
-			c.Invoke(action);
-		}
-		else
-		{
-			action();
+			if (c.InvokeRequired)
+			{
+				c.Invoke(action);
+			}
+			else
+			{
+				action();
+			}
 		}
 	}
 	public void HighlightRTF(string Source, List<HighlightWord> Tags, Color KeyWordColor, Color SymbolColor)

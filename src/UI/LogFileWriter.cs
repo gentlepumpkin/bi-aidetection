@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using WindowsFormsApp2;
+using AITool;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -137,7 +137,7 @@ public class LogFileWriter:IDisposable
 			foreach (string CurFile in files)
 			{
 				FileInfo fi = new FileInfo(CurFile);
-				DateTime FileNameDate = SharedFunctions.GetTimeFromFileName(CurFile);
+				DateTime FileNameDate = Global.GetTimeFromFileName(CurFile);
 				if (!FileNameDate.Equals(DateTime.MinValue) && (fi.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-MaxLogFileAgeDays)))
 				{
 					DelCnt = DelCnt + 1;
@@ -373,7 +373,7 @@ public class LogFileWriter:IDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine("Error: " + SharedFunctions.ExMsg(ex));
+			Console.WriteLine("Error: " + Global.ExMsg(ex));
 		}
 		finally
 		{
@@ -464,7 +464,7 @@ public class IOFile:IDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine("IsFileInUse Error: " + SharedFunctions.ExMsg(ex));
+			Console.WriteLine("IsFileInUse Error: " + Global.ExMsg(ex));
 			inUse = true;
 		}
 		finally

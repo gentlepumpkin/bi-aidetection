@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
     public class Camera
     {

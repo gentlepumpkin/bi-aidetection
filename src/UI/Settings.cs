@@ -10,7 +10,7 @@ using System.Xml.Linq;
 using Newtonsoft.Json;
 using System.Xml.XPath;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
 
     public static class AppSettings
@@ -53,7 +53,7 @@ namespace WindowsFormsApp2
             {
 
                 
-                if (!SharedFunctions.IsClassEqual(AppSettings.LastSettingsJSON, AppSettings.Settings))
+                if (!Global.IsClassEqual(AppSettings.LastSettingsJSON, AppSettings.Settings))
                 {
                     //keep a backup file in case of corruption
                     if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
@@ -66,23 +66,26 @@ namespace WindowsFormsApp2
                     }
 
                     Settings.SettingsValid = true;
-                    String CurSettingsJSON = SharedFunctions.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
+                    String CurSettingsJSON = Global.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
 
                     if (!string.IsNullOrEmpty(CurSettingsJSON))
                     {
                         Settings.SettingsValid = true;
+                        AppSettings.LastSettingsJSON = CurSettingsJSON;
+                        Global.Log($"Settings saved to {AppSettings.Settings.SettingsFileName}");
                     }
                     else
                     {
                         Settings.SettingsValid = false;
+                        Global.Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
                     }
 
-                    AppSettings.LastSettingsJSON = CurSettingsJSON;
 
                 }
                 else
                 {
                     //does not need saving
+                    Global.Log("Settings have not changed, skipping save.");
                     Ret = true;
                     Settings.SettingsValid = true;
                 }
@@ -90,7 +93,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not save settings: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
             }
 
             if (!Ret)
@@ -109,16 +112,17 @@ namespace WindowsFormsApp2
                     }
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
 
-                    throw;
+                    Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
                 }
             }
 
             return Ret;
         }
 
+       
         public static bool Load()
         {
             bool Ret = false;
@@ -140,9 +144,12 @@ namespace WindowsFormsApp2
                     FileInfo fi = new FileInfo(Path.Combine(AppDomain.CurrentDomain. BaseDirectory, Path.GetFileName(Assembly.GetEntryAssembly().Location) + ".config"));
                     if (fi.Exists)
                         filist.Add(fi);
-                    filist.AddRange(SharedFunctions.GetFiles(Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"),"WindowsFormsApp2"),"user.config"));
+                    filist.AddRange(Global.GetFiles(Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"),"WindowsFormsApp2"),"user.config"));
                     //sort by date
                     filist = filist.OrderByDescending((d) => d.LastWriteTime).ToList();
+                    
+                    Global.Log("First time load, reading old config file: " + filist[0].FullName);
+                    
                     XDocument xmlfile = XDocument.Load(filist[0].FullName);
                     //<configuration>
                     //    <userSettings>
@@ -168,7 +175,7 @@ namespace WindowsFormsApp2
                         if (!string.IsNullOrEmpty(val))
                         {
                             if (el.ToString().Contains("telegram_token"))   { Settings.telegram_token = val; cnt += 1; }
-                            if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = SharedFunctions.Split(val, ","); cnt += 1; }
+                            if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = Global.Split(val, ","); cnt += 1; }
                             if (el.ToString().Contains("input_path"))       { Settings.input_path = val; cnt += 1; }
                             if (el.ToString().Contains("deepstack_url"))    { Settings.deepstack_url = val; cnt += 1; }
                             if (el.ToString().Contains("log_everything"))   { Settings.log_everything = Convert.ToBoolean(val); cnt += 1; }
@@ -195,7 +202,8 @@ namespace WindowsFormsApp2
                 {
                     if (new FileInfo(AppSettings.Settings.SettingsFileName).Length > 32)
                     {
-                        Settings = SharedFunctions.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
+                        Global.Log("Loading settings from " + AppSettings.Settings.SettingsFileName);
+                        Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
                     }
                     else
                     {
@@ -203,13 +211,14 @@ namespace WindowsFormsApp2
                         //Revert to backup copy if exists
                         if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
                         {
-                            Console.WriteLine("Settings save failed, reverting to backup copy...");
 
                             if (File.Exists(AppSettings.Settings.SettingsFileName))
                                 File.Delete(AppSettings.Settings.SettingsFileName);
 
+                            Global.Log("Settings file was corrupt, loading from backup file: " + AppSettings.Settings.SettingsFileName + ".bak");
+
                             File.Move(AppSettings.Settings.SettingsFileName + ".bak", AppSettings.Settings.SettingsFileName);
-                            Settings = SharedFunctions.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
+                            Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
                         }
 
                     }
@@ -218,11 +227,14 @@ namespace WindowsFormsApp2
                         //load cameras the old way if needed
                         if (Settings.CameraList.Count == 0)
                         {
-                            List<FileInfo> files = SharedFunctions.GetFiles(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras"), "*.txt"); //load all settings files in a string array
+                            string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
+                            Global.Log("Loading old camera files from " + camerafolder);
+                            List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
                             //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
                             //I *think* this logic works?
                             files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
                             //create a camera object for every camera settings file
+                            int cnt = 0;
                             foreach (FileInfo file in files)
                             {
 
@@ -241,16 +253,19 @@ namespace WindowsFormsApp2
                                 }
                                 if (!fnd)
                                 {
+                                    cnt++;
                                     Camera cam = new Camera(); //create new camera object
                                     cam.ReadConfig(file.FullName); //read camera's config from file
                                     AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Skipped duplicate camera: " + file);
+                                    Global.Log("Skipped duplicate camera: " + file);
                                 }
 
                             }
+
+                            Global.Log($"...Loaded {cnt} camera files.");
 
                         }
 
@@ -263,7 +278,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Console.WriteLine("Error: Could not save settings: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
             }
 
             return Ret;

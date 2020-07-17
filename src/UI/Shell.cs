@@ -1,44 +1,30 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Configuration;
-
-using System.IO;
-using System.Net.Http;
-using System.Net;
-
+using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
-
 //for image cutting
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
-
 //for telegram
 using Telegram.Bot;
-using Telegram.Bot.Args;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 
-using Microsoft.WindowsAPICodePack.Dialogs;
-using Size = SixLabors.Primitives.Size;
-using SizeF = SixLabors.Primitives.SizeF; //for file dialog
-using System.Runtime.CompilerServices;
-using System.Reflection;
-using System.Diagnostics;
-using System.Threading;
-using System.Collections.Concurrent;
-using System.Windows.Forms.DataVisualization.Charting;
-using System.Globalization;
-
-namespace WindowsFormsApp2
+namespace AITool
 {
 
     public partial class Shell : Form
@@ -63,7 +49,7 @@ namespace WindowsFormsApp2
         //public static bool deepstack_faceapienabled = AppSettings.Settings.deepstack_faceapienabled;
         //public static bool deepstack_sceneapienabled = AppSettings.Settings.deepstack_sceneapienabled;
         //public static bool deepstack_autostart = AppSettings.Settings.deepstack_autostart;
-        public static IProgress<string> DeepStackProgressLogger = null;
+        //public static IProgress<string> ProgressLogger = null;
         public static DeepStack DeepStackServerControl = null;
         public static RichTextBoxEx RTFLogger = null;
         public static LogFileWriter LogWriter = null;
@@ -72,9 +58,10 @@ namespace WindowsFormsApp2
 
         //keep track of timing
         //moving average will be faster for long running process with 1000's of samples
-        public static MovingCalcs tcalc = new MovingCalcs(500);
-        public static MovingCalcs dcalc = new MovingCalcs(500);
-        public static MovingCalcs wcalc = new MovingCalcs(500);
+        public static MovingCalcs tcalc = new MovingCalcs(250);
+        public static MovingCalcs dcalc = new MovingCalcs(250);
+        public static MovingCalcs fcalc = new MovingCalcs(250);
+        public static MovingCalcs qcalc = new MovingCalcs(250);
 
         public int errors = 0; //error counter
 
@@ -101,21 +88,34 @@ namespace WindowsFormsApp2
             //---------------------------------------------------------------------------------------------------------
             // Section added by Vorlon
             //---------------------------------------------------------------------------------------------------------
-            //load settings
-            AppSettings.Load();
+            
+            //this is to log messages from other classes to the RTF in Shell form, and to log file...
+            Global.progress = new Progress<string>(EventMessage);
+
             //Initialize the rich text log window writer.   You can use any 'color' name in your log text
             //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
-            RTFLogger = new RichTextBoxEx(RTF_Log);
+            RTFLogger = new RichTextBoxEx(RTF_Log, true);
             //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
             //is locked for any reason, it will wait in the queue until it can be written
             //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
             LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
             HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
 
+            //if log file does not exist, create it - this used to be in LOG function but doesnt need to be checked everytime log written to
+            if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            {
+                //the logwriter auto creates the file if needed
+                LogWriter.WriteToLog("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.", true);
+
+            }
+
+            //load settings
+            AppSettings.Load();
+
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Log("");
             Log("");
-            Log($"Starting {Application.ProductName} version {lbl_version.Text} ({AssemVer}) built on {SharedFunctions.RetrieveLinkerTimestamp()}");
+            Log($"Starting {Application.ProductName} version {lbl_version.Text} ({AssemVer}) built on {Global.RetrieveLinkerTimestamp()}");
 
             //initialize blueiris info class to get camera names, clip paths, etc
             BlueIrisInfo = new BlueIris();
@@ -230,7 +230,7 @@ namespace WindowsFormsApp2
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {SharedFunctions.ExMsg(ex)}");
+                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {Global.ExMsg(ex)}");
                 }
 
             }
@@ -268,11 +268,10 @@ namespace WindowsFormsApp2
             //---------------------------------------------------------------------------
             //Deepstack server TAB
 
-            DeepStackProgressLogger = new Progress<string>(DeepStackMessage);
 
             //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
             //allows for stopping and starting of its service
-            DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, DeepStackProgressLogger);
+            DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
 
             
             if (DeepStackServerControl.NeedsSaving)
@@ -289,17 +288,17 @@ namespace WindowsFormsApp2
             Log("APP START complete.");
         }
 
-        void DeepStackMessage(string message)
+        void EventMessage(string message)
         {
-            //output messages from the deepstack class to the text log window
-            Log(message);
+            //output messages from the deepstack, blueiris, etc class to the text log window and log file
+            Log(message,"");
         }
         //----------------------------------------------------------------------------------------------------------
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
         //analyze image with AI
-        public async Task DetectObjects(string image_path, long WaitedMS)
+        public async Task DetectObjects(string image_path, long QueueWaitMS, long FileLockMS)
         {
             //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
@@ -362,7 +361,7 @@ namespace WindowsFormsApp2
                             {
                                 string jsonString = await output.Content.ReadAsStringAsync();
 
-                                string cleanjsonString = SharedFunctions.CleanString(jsonString);
+                                string cleanjsonString = Global.CleanString(jsonString);
 
                                 if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
                                 {
@@ -377,7 +376,7 @@ namespace WindowsFormsApp2
                                     }
                                     catch (Exception ex)
                                     {
-                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {SharedFunctions.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
                                         Log(error);
                                     }
 
@@ -399,13 +398,13 @@ namespace WindowsFormsApp2
                                                 }
                                                 else
                                                 {
-                                                    outputtext += "(null prediction? DeepStack may not be started with correct switches.), ";
+                                                    outputtext += "(Error: null prediction? DeepStack may not be started with correct switches.), ";
                                                 }
                                             }
                                         }
                                         else
                                         {
-                                            outputtext = $"(No predictions?  JSON: '{cleanjsonString}')";
+                                            outputtext = $"(Error: No predictions?  JSON: '{cleanjsonString}')";
                                         }
 
                                         Log(outputtext);
@@ -690,7 +689,7 @@ namespace WindowsFormsApp2
                     //We should almost never get here due to all the null checks and function to wait for file to become available...
                     //When the connection to deepstack fails we will get here
                     //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
-                    error = $"ERROR: {SharedFunctions.ExMsg(ex)}";
+                    error = $"ERROR: {Global.ExMsg(ex)}";
                     Log(error);
 
                     //if (error == "loading image failed") //this was a file exception error - retry file access
@@ -737,24 +736,27 @@ namespace WindowsFormsApp2
                     
                     //I notice deepstack takes a lot longer the very first run?
 
-                    long TotalTime = sw.ElapsedMilliseconds + WaitedMS;
+                    long TotalTime = sw.ElapsedMilliseconds + QueueWaitMS + FileLockMS;
                     long DeepStackTime = swposttime.ElapsedMilliseconds;
 
                     tcalc.AddToCalc(TotalTime);
                     dcalc.AddToCalc(DeepStackTime);
-                    wcalc.AddToCalc(WaitedMS);
+                    qcalc.AddToCalc(QueueWaitMS);
+                    fcalc.AddToCalc(FileLockMS);
 
                     Log($"...Object detection finished: ");
                     Log($"       Total Time:   {{yellow}}{TotalTime}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
                     Log($"   DeepStack Time:   {{yellow}}{DeepStackTime}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
                     //I want to highlight when we have to wait for the last detection (or for the file to become readable) too long
-                    if (WaitedMS >= 500)
+                    if (QueueWaitMS + FileLockMS >= 500)
                     {
-                        Log($"       {{red}}Queue Time:   {{yellow}}{WaitedMS}ms{{red}} (Count={wcalc.Count}, Min={wcalc.Min}ms, Max={wcalc.Max}ms, Avg={wcalc.Average.ToString("#####")}ms)");
+                        Log($"{{red}}   File lock Time:   {{yellow}}{FileLockMS}ms{{red}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
+                        Log($"{{red}}Thread Queue Time:   {{yellow}}{QueueWaitMS}ms{{red}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                     }
                     else
                     {
-                        Log($"       {{white}}Queue Time:   {{yellow}}{WaitedMS}ms{{white}} (Count={wcalc.Count}, Min={wcalc.Min}ms, Max={wcalc.Max}ms, Avg={wcalc.Average.ToString("#####")}ms)");
+                        Log($"{{white}}   File lock Time:   {{yellow}}{FileLockMS}ms{{white}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
+                        Log($"{{white}}Thread Queue Time:   {{yellow}}{QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                     }
 
                 }
@@ -786,24 +788,24 @@ namespace WindowsFormsApp2
             {
                 try
                 {
-                    Log($"   trigger url: {x}");
                     var content = client.DownloadString(x);
+                    Log($"   -> trigger URL called: {x}");
                 }
                 catch (Exception ex)
                 {
-                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable: {SharedFunctions.ExMsg(ex)}");
+                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable: {Global.ExMsg(ex)}");
                 }
 
             }
 
-            if (trigger_urls.Length > 1)
-            {
-                Log($"   -> {trigger_urls.Length} trigger URLs called.");
-            }
-            else
-            {
-                Log("   -> Trigger URL called.");
-            }
+            //if (trigger_urls.Length > 1)
+            //{
+            //    Log($"   -> {trigger_urls.Length} trigger URLs called.");
+            //}
+            //else
+            //{
+            //    Log("   -> Trigger URL called.");
+            //}
         }
 
         //send image to Telegram
@@ -920,7 +922,7 @@ namespace WindowsFormsApp2
                         }
                         catch (Exception ex)
                         {
-                            Log($"{SharedFunctions.ExMsg(ex)}");
+                            Log($"{Global.ExMsg(ex)}");
                         }
 
                         c++;
@@ -955,8 +957,8 @@ namespace WindowsFormsApp2
         //check if detected object is outside the mask for the specific camera
         public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
-            Log($"      Checking if object is outside privacy mask of {cameraname}:");
-            Log("         Loading mask file...");
+            //Log($"      Checking if object is outside privacy mask of {cameraname}:");
+            //Log("         Loading mask file...");
             try
             {
                 if (System.IO.File.Exists("./cameras/" + cameraname + ".png")) //only check if mask image exists
@@ -1067,13 +1069,29 @@ namespace WindowsFormsApp2
             {
                 time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
                 rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
-                ModName = memberName.PadLeft(18) + "> ";
+                if (memberName !=null && !string.IsNullOrEmpty(memberName))
+                    ModName = memberName.PadLeft(18) + "> ";
+
+                //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
+
+                int gg = text.IndexOf(">> ");
+                
+                if (gg > 0 && gg <= 24)
+                {
+                    string modfromglobal = Global.GetWordBetween(text, "", ">> ");
+                    if (!string.IsNullOrEmpty(modfromglobal))
+                    {
+                        ModName = modfromglobal.PadLeft(18) + "> ";
+                        text = Global.GetWordBetween(text, ">> ", "");
+                    }
+
+                }
             }
 
             //make the error and warning detection case insensitive:
             bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("fail", StringComparison.InvariantCultureIgnoreCase) > -1);
             bool HasWarning = (text.IndexOf("warning", StringComparison.InvariantCultureIgnoreCase) > -1);
-            bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
+            bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
             string RTFText = "";
 
             //set the color for RTF text window:
@@ -1107,26 +1125,7 @@ namespace WindowsFormsApp2
                 return;
             }
 
-
-            //if log file does not exist, create it
-            if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                Console.WriteLine("ATTENTION: Creating log file.");
-                try
-                {
-                    LogWriter.WriteToLog("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.",true);
-                    //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt"))
-                    //{
-                    //    sw.WriteLine("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.");
-                    //}
-                }
-                catch
-                {
-                    MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't create log.txt file!"; };
-                    Invoke(LabelUpdate);
-                }
-
-            }
+                      
 
             //add text to log
             try
@@ -1321,6 +1320,15 @@ namespace WindowsFormsApp2
             else if (tabControl1.SelectedTab == tabControl1.TabPages["tabDeepStack"])
             {
                 LoadDeepStackTab(true);
+            }
+            else if (tabControl1.SelectedTab == tabControl1.TabPages["tabLog"])
+            {
+                //scroll to bottom, only when tab is active for better performance 
+                Global.InvokeIFRequired(this.RTF_Log, () =>
+                {
+                    this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
+                    this.RTF_Log.ScrollToCaret();
+                });
             }
 
         }
@@ -1867,7 +1875,7 @@ namespace WindowsFormsApp2
                 //remove entry from history csv
                 try
                 {
-                    bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.FullControl, FileShare.ReadWrite);
                     if (Success)
                     {
                         string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
@@ -1884,7 +1892,7 @@ namespace WindowsFormsApp2
                 }
                 catch (Exception ex)
                 {
-                    Log("ERROR: Can't write to cameras/history.csv: " + SharedFunctions.ExMsg(ex));
+                    Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
                 }
 
             };
@@ -1915,7 +1923,7 @@ namespace WindowsFormsApp2
                     if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                     {
                         
-                        bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.FullControl, FileShare.ReadWrite);
 
                         if (Success)
                         {
@@ -1976,7 +1984,7 @@ namespace WindowsFormsApp2
 
                     List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-                    bool Success = await SharedFunctions.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
 
                     if (Success)
                     {
@@ -2090,15 +2098,21 @@ namespace WindowsFormsApp2
             //wait until other detection process is finished so we dont get duplicate requests
             await semaphore_detection_running.WaitAsync();
 
+            long QueueWaitMS = sw.ElapsedMilliseconds;
+
+            long FilelockMS = 0;
+
             try
             {
                 detection_dictionary.TryAdd(filename.ToLower(), filename);
 
                 //Wait up to 30 seconds to gain access to the file that was just created.  This should
                 //prevent the need to retry in the detection routine
-                bool success = await SharedFunctions.WaitForFileAccessAsync(filename);
+                sw.Restart();
 
-                long WaitedMS = sw.ElapsedMilliseconds;
+                bool success = await Global.WaitForFileAccessAsync(filename);
+
+                FilelockMS = sw.ElapsedMilliseconds;
 
                 if (success)
                 {
@@ -2108,7 +2122,7 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
 
 
-                    await DetectObjects(filename, WaitedMS); //ai process image
+                    await DetectObjects(filename, QueueWaitMS, FilelockMS); //ai process image
 
                     //output Running on Overview Tab
                     LabelUpdate = delegate { label2.Text = "Running"; };
@@ -2140,7 +2154,7 @@ namespace WindowsFormsApp2
             catch (Exception ex)
             {
 
-                Log("Error: " + SharedFunctions.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -2181,7 +2195,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {SharedFunctions.ExMsg(ex)} )");
+                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {Global.ExMsg(ex)} )");
 
                 //delete entry that caused the issue
                 try
@@ -2663,7 +2677,8 @@ namespace WindowsFormsApp2
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
-                    AddCamera(name, name, "", "person", false, true, 0, 0, 100);
+                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100);
+                    MessageBox.Show(camresult);
                 }
             }
         }
@@ -2700,6 +2715,12 @@ namespace WindowsFormsApp2
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
                 string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper);
+                
+                AppSettings.Save();
+
+                Log(result);
+                
+                MessageBox.Show(result,"", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
             DisplayCameraSettings();
@@ -2715,7 +2736,7 @@ namespace WindowsFormsApp2
                     var result = form.ShowDialog();
                     if (result == DialogResult.OK)
                     {
-                        Log("about to del cam");
+                        //Log("about to del cam");
                         RemoveCamera(list2.SelectedItems[0].Text);
                     }
                 }
@@ -2769,19 +2790,26 @@ namespace WindowsFormsApp2
         //settings save button
         private void BtnSettingsSave_Click_1(object sender, EventArgs e)
         {
+            Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
             AppSettings.Settings.input_path = cmbInput.Text;
             AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
-            AppSettings.Settings.telegram_chatids = SharedFunctions.Split(tb_telegram_chatid.Text,",",true,true);
+            AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text,",",true,true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
             AppSettings.Settings.log_everything = cb_log.Checked;
             AppSettings.Settings.send_errors = cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
 
-            SharedFunctions.Startup(AppSettings.Settings.startwithwindows);
+            Global.Startup(AppSettings.Settings.startwithwindows);
 
-            AppSettings.Save();
-
+            if (AppSettings.Save())
+            {
+                Log("...Saved.");
+            }
+            else
+            {
+                Log("...Not saved.  No changes?");
+            }
             //update variables
             //input_path = AppSettings.Settings.input_path;
             //deepstack_url = AppSettings.Settings.deepstack_url;
@@ -2810,7 +2838,6 @@ namespace WindowsFormsApp2
                     dialog.InitialDirectory = cmbInput.Text;
 
                 }
-                dialog.InitialDirectory = "C:\\";
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
@@ -2875,7 +2902,7 @@ namespace WindowsFormsApp2
         private void SaveDeepStackTab()
         {
 
-            DeepStackServerControl.GetBlueStackRunningProcesses();
+            DeepStackServerControl.GetDeepStackRun();
 
             if (RB_Medium.Checked)
                 AppSettings.Settings.deepstack_mode = "Medium";
@@ -2932,14 +2959,14 @@ namespace WindowsFormsApp2
         private void LoadDeepStackTab(bool StartIfNeeded)
         {
             //first update the port in the deepstack_url if found
-            string prt = SharedFunctions.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
+            string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
             if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
             {
                 DeepStackServerControl.Port = prt;
             }
 
             //This will OVERRIDE the port if the deepstack processes found running already have a different port, mode, etc:
-            DeepStackServerControl.GetBlueStackRunningProcesses();
+            DeepStackServerControl.GetDeepStackRun();
 
             if (DeepStackServerControl.Mode.ToLower() == "medium")
                 RB_Medium.Checked = true;
@@ -2969,7 +2996,7 @@ namespace WindowsFormsApp2
             if (prt != Txt_Port.Text)
             {
                 //server:port/maybe/more/path
-                string serv = SharedFunctions.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
+                string serv = Global.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
                 if (!string.IsNullOrEmpty(serv))
                 {
                     tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
@@ -3057,6 +3084,49 @@ namespace WindowsFormsApp2
             Btn_Stop.Enabled = false;
             await DeepStackServerControl.StopAsync();
             LoadDeepStackTab(false);
+        }
+
+        private void btnStopscroll_Click(object sender, EventArgs e)
+        {
+            RTFLogger.AutoScroll = false;
+        }
+
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            {
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
+                lbl_errors.Text = "";
+            }
+            else
+            {
+                MessageBox.Show("log missing");
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            {
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
+                lbl_errors.Text = "";
+            }
+            else
+            {
+                MessageBox.Show("log missing");
+            }
+        }
+
+        private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (Chk_AutoScroll.Checked)
+            {
+                RTFLogger.AutoScroll = true;
+            }
+            else
+            {
+                RTFLogger.AutoScroll = false;
+            }
         }
     }
 

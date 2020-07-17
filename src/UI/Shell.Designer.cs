@@ -1,5 +1,5 @@
 ﻿using System.IO;
-namespace WindowsFormsApp2
+namespace AITool
 {
     partial class Shell
     {
@@ -31,26 +31,26 @@ namespace WindowsFormsApp2
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Shell));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint1 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint2 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint3 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea7 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series15 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series16 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series17 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series18 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series19 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series20 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series21 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint7 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint8 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint9 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.Title title3 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel14 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel15 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -58,25 +58,25 @@ namespace WindowsFormsApp2
             this.lbl_errors = new System.Windows.Forms.Label();
             this.lbl_info = new System.Windows.Forms.Label();
             this.tabStats = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel16 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel23 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel16 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel23 = new AITool.DBLayoutPanel(this.components);
             this.label8 = new System.Windows.Forms.Label();
             this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.label7 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel17 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel17 = new AITool.DBLayoutPanel(this.components);
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.tabHistory = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel1 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel21 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel1 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel21 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.tableLayoutPanel22 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel22 = new AITool.DBLayoutPanel(this.components);
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tableLayoutPanel19 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel19 = new AITool.DBLayoutPanel(this.components);
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
             this.list1 = new System.Windows.Forms.ListView();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -87,12 +87,12 @@ namespace WindowsFormsApp2
             this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
             this.cb_filter_animal = new System.Windows.Forms.CheckBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel2 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel3 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel3 = new AITool.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
-            this.tableLayoutPanel6 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel7 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel8 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel6 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel7 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel8 = new AITool.DBLayoutPanel(this.components);
             this.cb_person = new System.Windows.Forms.CheckBox();
             this.cb_bicycle = new System.Windows.Forms.CheckBox();
             this.cb_motorcycle = new System.Windows.Forms.CheckBox();
@@ -109,42 +109,42 @@ namespace WindowsFormsApp2
             this.cb_truck = new System.Windows.Forms.CheckBox();
             this.cb_car = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel9 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel10 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel9 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel10 = new AITool.DBLayoutPanel(this.components);
             this.lblTriggerUrl = new System.Windows.Forms.Label();
             this.tbTriggerUrl = new System.Windows.Forms.TextBox();
             this.cb_telegram = new System.Windows.Forms.CheckBox();
-            this.tableLayoutPanel20 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel20 = new AITool.DBLayoutPanel(this.components);
             this.label5 = new System.Windows.Forms.Label();
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.lblPrefix = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
-            this.tableLayoutPanel12 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel12 = new AITool.DBLayoutPanel(this.components);
             this.tbPrefix = new System.Windows.Forms.TextBox();
             this.lbl_prefix = new System.Windows.Forms.Label();
-            this.tableLayoutPanel13 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel13 = new AITool.DBLayoutPanel(this.components);
             this.tbName = new System.Windows.Forms.TextBox();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.lblRelevantObjects = new System.Windows.Forms.Label();
             this.lbl_threshold = new System.Windows.Forms.Label();
-            this.tableLayoutPanel24 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel24 = new AITool.DBLayoutPanel(this.components);
             this.lbl_threshold_lower = new System.Windows.Forms.Label();
             this.tb_threshold_upper = new System.Windows.Forms.TextBox();
             this.lbl_threshold_upper = new System.Windows.Forms.Label();
             this.tb_threshold_lower = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel11 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel11 = new AITool.DBLayoutPanel(this.components);
             this.btnCameraAdd = new System.Windows.Forms.Button();
             this.btnCameraDel = new System.Windows.Forms.Button();
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.lbl_camstats = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel4 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel5 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel4 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel5 = new AITool.DBLayoutPanel(this.components);
             this.label4 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel25 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel25 = new AITool.DBLayoutPanel(this.components);
             this.btn_open_log = new System.Windows.Forms.Button();
             this.cb_log = new System.Windows.Forms.CheckBox();
             this.label12 = new System.Windows.Forms.Label();
@@ -156,7 +156,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_chatid = new System.Windows.Forms.Label();
             this.tb_telegram_token = new System.Windows.Forms.TextBox();
             this.tb_telegram_chatid = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel18 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel18 = new AITool.DBLayoutPanel(this.components);
             this.btn_input_path = new System.Windows.Forms.Button();
             this.cmbInput = new System.Windows.Forms.ComboBox();
             this.label13 = new System.Windows.Forms.Label();
@@ -186,7 +186,9 @@ namespace WindowsFormsApp2
             this.Btn_Start = new System.Windows.Forms.Button();
             this.Btn_Stop = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
             this.RTF_Log = new System.Windows.Forms.RichTextBox();
+            this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -322,7 +324,7 @@ namespace WindowsFormsApp2
             this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBox2.Image = global::WindowsFormsApp2.Properties.Resources.logo;
+            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
             this.pictureBox2.Location = new System.Drawing.Point(4, 104);
             this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pictureBox2.Name = "pictureBox2";
@@ -465,39 +467,39 @@ namespace WindowsFormsApp2
             // 
             this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
             this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.Interval = 10D;
-            chartArea1.AxisX.MajorGrid.Interval = 6D;
-            chartArea1.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea1.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea1.AxisX.MajorTickMark.Interval = 1D;
-            chartArea1.AxisX.Maximum = 100D;
-            chartArea1.AxisX.Minimum = 0D;
-            chartArea1.AxisX.Title = "Alert confidence";
-            chartArea1.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea1.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea1.AxisY.Title = "Frequency";
-            chartArea1.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea1.BackColor = System.Drawing.Color.Transparent;
-            chartArea1.Name = "ChartArea1";
-            this.chart_confidence.ChartAreas.Add(chartArea1);
+            chartArea7.AxisX.Interval = 10D;
+            chartArea7.AxisX.MajorGrid.Interval = 6D;
+            chartArea7.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea7.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea7.AxisX.MajorTickMark.Interval = 1D;
+            chartArea7.AxisX.Maximum = 100D;
+            chartArea7.AxisX.Minimum = 0D;
+            chartArea7.AxisX.Title = "Alert confidence";
+            chartArea7.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea7.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea7.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea7.AxisY.Title = "Frequency";
+            chartArea7.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea7.BackColor = System.Drawing.Color.Transparent;
+            chartArea7.Name = "ChartArea1";
+            this.chart_confidence.ChartAreas.Add(chartArea7);
             this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chart_confidence.Location = new System.Drawing.Point(4, 376);
             this.chart_confidence.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chart_confidence.Name = "chart_confidence";
-            series1.BorderWidth = 4;
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Color = System.Drawing.Color.Orange;
-            series1.Name = "no alert";
-            series2.BorderWidth = 3;
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Color = System.Drawing.Color.Green;
-            series2.Legend = "Legend1";
-            series2.Name = "alert";
-            this.chart_confidence.Series.Add(series1);
-            this.chart_confidence.Series.Add(series2);
+            series15.BorderWidth = 4;
+            series15.ChartArea = "ChartArea1";
+            series15.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series15.Color = System.Drawing.Color.Orange;
+            series15.Name = "no alert";
+            series16.BorderWidth = 3;
+            series16.ChartArea = "ChartArea1";
+            series16.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series16.Color = System.Drawing.Color.Green;
+            series16.Legend = "Legend1";
+            series16.Name = "alert";
+            this.chart_confidence.Series.Add(series15);
+            this.chart_confidence.Series.Add(series16);
             this.chart_confidence.Size = new System.Drawing.Size(974, 259);
             this.chart_confidence.TabIndex = 8;
             // 
@@ -505,52 +507,52 @@ namespace WindowsFormsApp2
             // 
             this.timeline.BackColor = System.Drawing.Color.Transparent;
             this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea2.AxisX.Interval = 3D;
-            chartArea2.AxisX.MajorGrid.Interval = 6D;
-            chartArea2.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea2.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea2.AxisX.MajorTickMark.Interval = 1D;
-            chartArea2.AxisX.Maximum = 24D;
-            chartArea2.AxisX.Minimum = 0D;
-            chartArea2.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea2.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea2.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea2.AxisY.Title = "Number";
-            chartArea2.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea2.BackColor = System.Drawing.Color.Transparent;
-            chartArea2.Name = "ChartArea1";
-            this.timeline.ChartAreas.Add(chartArea2);
+            chartArea8.AxisX.Interval = 3D;
+            chartArea8.AxisX.MajorGrid.Interval = 6D;
+            chartArea8.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea8.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea8.AxisX.MajorTickMark.Interval = 1D;
+            chartArea8.AxisX.Maximum = 24D;
+            chartArea8.AxisX.Minimum = 0D;
+            chartArea8.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea8.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea8.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea8.AxisY.Title = "Number";
+            chartArea8.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea8.BackColor = System.Drawing.Color.Transparent;
+            chartArea8.Name = "ChartArea1";
+            this.timeline.ChartAreas.Add(chartArea8);
             this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
             this.timeline.Location = new System.Drawing.Point(4, 56);
             this.timeline.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.timeline.Name = "timeline";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
-            series3.Color = System.Drawing.Color.Silver;
-            series3.Legend = "Legend1";
-            series3.Name = "all";
-            series4.BorderWidth = 3;
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series4.Color = System.Drawing.Color.OrangeRed;
-            series4.Legend = "Legend1";
-            series4.Name = "falses";
-            series5.BorderWidth = 3;
-            series5.ChartArea = "ChartArea1";
-            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series5.Color = System.Drawing.Color.Orange;
-            series5.Legend = "Legend1";
-            series5.Name = "irrelevant";
-            series6.BorderWidth = 4;
-            series6.ChartArea = "ChartArea1";
-            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series6.Color = System.Drawing.Color.Green;
-            series6.Legend = "Legend1";
-            series6.Name = "relevant";
-            this.timeline.Series.Add(series3);
-            this.timeline.Series.Add(series4);
-            this.timeline.Series.Add(series5);
-            this.timeline.Series.Add(series6);
+            series17.ChartArea = "ChartArea1";
+            series17.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
+            series17.Color = System.Drawing.Color.Silver;
+            series17.Legend = "Legend1";
+            series17.Name = "all";
+            series18.BorderWidth = 3;
+            series18.ChartArea = "ChartArea1";
+            series18.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series18.Color = System.Drawing.Color.OrangeRed;
+            series18.Legend = "Legend1";
+            series18.Name = "falses";
+            series19.BorderWidth = 3;
+            series19.ChartArea = "ChartArea1";
+            series19.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series19.Color = System.Drawing.Color.Orange;
+            series19.Legend = "Legend1";
+            series19.Name = "irrelevant";
+            series20.BorderWidth = 4;
+            series20.ChartArea = "ChartArea1";
+            series20.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series20.Color = System.Drawing.Color.Green;
+            series20.Legend = "Legend1";
+            series20.Name = "relevant";
+            this.timeline.Series.Add(series17);
+            this.timeline.Series.Add(series18);
+            this.timeline.Series.Add(series19);
+            this.timeline.Series.Add(series20);
             this.timeline.Size = new System.Drawing.Size(974, 259);
             this.timeline.TabIndex = 6;
             // 
@@ -588,42 +590,42 @@ namespace WindowsFormsApp2
             // 
             this.chart1.BackColor = System.Drawing.Color.Transparent;
             this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea3.Area3DStyle.Enable3D = true;
-            chartArea3.Area3DStyle.Inclination = 35;
-            chartArea3.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
-            chartArea3.BackColor = System.Drawing.Color.Transparent;
-            chartArea3.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea3);
+            chartArea9.Area3DStyle.Enable3D = true;
+            chartArea9.Area3DStyle.Inclination = 35;
+            chartArea9.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
+            chartArea9.BackColor = System.Drawing.Color.Transparent;
+            chartArea9.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea9);
             this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Alignment = System.Drawing.StringAlignment.Center;
-            legend1.BackColor = System.Drawing.Color.Transparent;
-            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            legend1.IsTextAutoFit = false;
-            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
-            legend1.Name = "Legend1";
-            this.chart1.Legends.Add(legend1);
+            legend3.Alignment = System.Drawing.StringAlignment.Center;
+            legend3.BackColor = System.Drawing.Color.Transparent;
+            legend3.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            legend3.IsTextAutoFit = false;
+            legend3.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
+            legend3.Name = "Legend1";
+            this.chart1.Legends.Add(legend3);
             this.chart1.Location = new System.Drawing.Point(4, 56);
             this.chart1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chart1.Name = "chart1";
-            series7.ChartArea = "ChartArea1";
-            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
-            series7.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            series7.IsValueShownAsLabel = true;
-            series7.Legend = "Legend1";
-            series7.Name = "s1";
-            dataPoint1.IsVisibleInLegend = true;
-            series7.Points.Add(dataPoint1);
-            series7.Points.Add(dataPoint2);
-            series7.Points.Add(dataPoint3);
-            this.chart1.Series.Add(series7);
+            series21.ChartArea = "ChartArea1";
+            series21.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
+            series21.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            series21.IsValueShownAsLabel = true;
+            series21.Legend = "Legend1";
+            series21.Name = "s1";
+            dataPoint7.IsVisibleInLegend = true;
+            series21.Points.Add(dataPoint7);
+            series21.Points.Add(dataPoint8);
+            series21.Points.Add(dataPoint9);
+            this.chart1.Series.Add(series21);
             this.chart1.Size = new System.Drawing.Size(408, 579);
             this.chart1.TabIndex = 2;
             this.chart1.Text = "chart1";
-            title1.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            title1.Name = "Title1";
-            title1.Text = "Input Rates";
-            this.chart1.Titles.Add(title1);
+            title3.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            title3.Name = "Title1";
+            title3.Text = "Input Rates";
+            this.chart1.Titles.Add(title3);
             // 
             // comboBox1
             // 
@@ -2233,6 +2235,8 @@ namespace WindowsFormsApp2
             // 
             // tabLog
             // 
+            this.tabLog.Controls.Add(this.Chk_AutoScroll);
+            this.tabLog.Controls.Add(this.button1);
             this.tabLog.Controls.Add(this.RTF_Log);
             this.tabLog.Location = new System.Drawing.Point(4, 29);
             this.tabLog.Name = "tabLog";
@@ -2241,17 +2245,43 @@ namespace WindowsFormsApp2
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(9, 11);
+            this.button1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(88, 35);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "Open Log";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // RTF_Log
             // 
+            this.RTF_Log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.RTF_Log.BackColor = System.Drawing.Color.RoyalBlue;
-            this.RTF_Log.Dock = System.Windows.Forms.DockStyle.Fill;
             this.RTF_Log.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.RTF_Log.ForeColor = System.Drawing.Color.White;
-            this.RTF_Log.Location = new System.Drawing.Point(0, 0);
+            this.RTF_Log.Location = new System.Drawing.Point(0, 58);
             this.RTF_Log.Name = "RTF_Log";
-            this.RTF_Log.Size = new System.Drawing.Size(1414, 650);
+            this.RTF_Log.Size = new System.Drawing.Size(1414, 592);
             this.RTF_Log.TabIndex = 0;
             this.RTF_Log.Text = "";
+            // 
+            // Chk_AutoScroll
+            // 
+            this.Chk_AutoScroll.AutoSize = true;
+            this.Chk_AutoScroll.Checked = true;
+            this.Chk_AutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.Chk_AutoScroll.Location = new System.Drawing.Point(124, 17);
+            this.Chk_AutoScroll.Name = "Chk_AutoScroll";
+            this.Chk_AutoScroll.Size = new System.Drawing.Size(203, 24);
+            this.Chk_AutoScroll.TabIndex = 4;
+            this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
+            this.Chk_AutoScroll.UseVisualStyleBackColor = true;
+            this.Chk_AutoScroll.CheckedChanged += new System.EventHandler(this.Chk_AutoScroll_CheckedChanged);
             // 
             // Shell
             // 
@@ -2260,7 +2290,6 @@ namespace WindowsFormsApp2
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1422, 683);
             this.Controls.Add(this.tabControl1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MinimumSize = new System.Drawing.Size(1444, 739);
             this.Name = "Shell";
@@ -2339,6 +2368,7 @@ namespace WindowsFormsApp2
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.tabLog.ResumeLayout(false);
+            this.tabLog.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -2486,6 +2516,8 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.ComboBox cmbInput;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.CheckBox cbStartWithWindows;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.CheckBox Chk_AutoScroll;
     }
 }
 

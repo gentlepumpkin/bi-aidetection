@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
     public class BlueIris
     {
@@ -14,7 +14,7 @@ namespace WindowsFormsApp2
         public string AppPath = "";
         public string URL = "";
         public bool IsValid = false;
-
+        
         public BlueIris()
         {
             //initialize
@@ -25,6 +25,8 @@ namespace WindowsFormsApp2
         {
             try
             {
+                Global.Log("Reading BlueIris settings from registry...");
+
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey("Software\\Perspective Software\\Blue Iris\\clips\\folders"))
                 {
                     if (key != null)
@@ -118,7 +120,7 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: Got error while reading BlueIris registry: " + SharedFunctions.ExMsg(ex));
+                Global.Log("Error: Got error while reading BlueIris registry: " + Global.ExMsg(ex));
                 this.IsValid = false;
             }
 }
