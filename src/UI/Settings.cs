@@ -25,6 +25,7 @@ namespace AITool
             public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             public string telegram_token = "";
             public string input_path = "";
+            public bool input_path_includesubfolders = false;
             public List<string> telegram_chatids = new List<string>();
             public bool log_everything = false;
             public bool send_errors = true;
@@ -68,9 +69,10 @@ namespace AITool
                     Settings.SettingsValid = true;
                     String CurSettingsJSON = Global.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
 
-                    if (!string.IsNullOrEmpty(CurSettingsJSON))
+                    if (!string.IsNullOrEmpty(CurSettingsJSON) && File.Exists(AppSettings.Settings.SettingsFileName) && new FileInfo(AppSettings.Settings.SettingsFileName).Length >= 800)
                     {
                         Settings.SettingsValid = true;
+                        Ret = true;
                         AppSettings.LastSettingsJSON = CurSettingsJSON;
                         Global.Log($"Settings saved to {AppSettings.Settings.SettingsFileName}");
                     }
@@ -103,7 +105,7 @@ namespace AITool
                     //Revert to backup copy if exists
                     if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
                     {
-                        Console.WriteLine("Settings save failed, reverting to backup copy...");
+                        Global.Log("Error: Settings save failed, reverting to backup copy...");
                         
                         if (File.Exists(AppSettings.Settings.SettingsFileName))
                            File.Delete(AppSettings.Settings.SettingsFileName);
@@ -129,8 +131,9 @@ namespace AITool
             try
             {
                 Settings.SettingsValid = false;  //assume failure
+                bool Resave = false;
 
-                //keep a backup file in case of corruption
+                //read the old configuration file
                 if (!File.Exists(AppSettings.Settings.SettingsFileName))
                 {
                     //--------------------------------------------------------------------------------------------------------------------
@@ -185,22 +188,13 @@ namespace AITool
                         }
                     }
 
-                    Ret = (cnt > 0);
-
-                    //if (setel != null)
-                    //{
-                    //    Settings.log_everything = Convert.ToBoolean(SharedFunctions.GetXValue(setel, "log_everything"));
-                    //    Settings.send_errors = Convert.ToBoolean(SharedFunctions.GetXValue(setel, "send_errors"));
-                    //    Settings.close_instantly = Convert.ToInt32(SharedFunctions.GetXValue(setel, "close_instantly"));
-                    //    Ret = true;
-                    //}
-
-                    //}
+                    Resave = (cnt > 0);
+                    Settings.SettingsValid = true;                   
 
                 }
                 else
                 {
-                    if (new FileInfo(AppSettings.Settings.SettingsFileName).Length > 32)
+                    if (new FileInfo(AppSettings.Settings.SettingsFileName).Length > 800)
                     {
                         Global.Log("Loading settings from " + AppSettings.Settings.SettingsFileName);
                         Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
@@ -212,68 +206,85 @@ namespace AITool
                         if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
                         {
 
+                            Global.Log("Settings file was corrupt, loading from backup file: " + AppSettings.Settings.SettingsFileName + ".bak");
+
                             if (File.Exists(AppSettings.Settings.SettingsFileName))
                                 File.Delete(AppSettings.Settings.SettingsFileName);
 
-                            Global.Log("Settings file was corrupt, loading from backup file: " + AppSettings.Settings.SettingsFileName + ".bak");
-
                             File.Move(AppSettings.Settings.SettingsFileName + ".bak", AppSettings.Settings.SettingsFileName);
+
                             Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
                         }
-
-                    }
-                    if (Settings != null && Settings.SettingsValid == true)
-                    {
-                        //load cameras the old way if needed
-                        if (Settings.CameraList.Count == 0)
+                        else
                         {
-                            string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
-                            Global.Log("Loading old camera files from " + camerafolder);
-                            List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
-                            //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
-                            //I *think* this logic works?
-                            files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
-                            //create a camera object for every camera settings file
-                            int cnt = 0;
-                            foreach (FileInfo file in files)
-                            {
-
-                                //check if camera with specified name or its prefix already exists. If yes, then abort.
-                                bool fnd = false;
-                                foreach (Camera c in AppSettings.Settings.CameraList)
-                                {
-                                    if (c.name.ToLower() == Path.GetFileNameWithoutExtension(file.FullName).ToLower())
-                                    {
-                                        fnd = true;
-                                    }
-                                    else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
-                                    {
-                                        fnd = true;
-                                    }
-                                }
-                                if (!fnd)
-                                {
-                                    cnt++;
-                                    Camera cam = new Camera(); //create new camera object
-                                    cam.ReadConfig(file.FullName); //read camera's config from file
-                                    AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
-                                }
-                                else
-                                {
-                                    Global.Log("Skipped duplicate camera: " + file);
-                                }
-
-                            }
-
-                            Global.Log($"...Loaded {cnt} camera files.");
+                            Global.Log("Settings file was corrupt, but no backup file exists to revert to.");
 
                         }
 
-                        Ret = true;
                     }
                 }
 
+                if (Settings != null && Settings.SettingsValid)
+                {
+                    //load cameras the old way if needed
+                    if (Settings.CameraList.Count == 0)
+                    {
+                        string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
+                        Global.Log("No cameras loaded in settings, trying to load old camera files from " + camerafolder);
+                        List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
+                                                                                       //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
+                                                                                       //I *think* this logic works?
+                        files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
+                        //create a camera object for every camera settings file
+                        int cnt = 0;
+                        foreach (FileInfo file in files)
+                        {
 
+                            //check if camera with specified name or its prefix already exists. If yes, then abort.
+                            bool fnd = false;
+                            foreach (Camera c in AppSettings.Settings.CameraList)
+                            {
+                                if (c.name.ToLower() == Path.GetFileNameWithoutExtension(file.FullName).ToLower())
+                                {
+                                    fnd = true;
+                                }
+                                else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
+                                {
+                                    fnd = true;
+                                }
+                            }
+                            if (!fnd)
+                            {
+                                cnt++;
+                                Camera cam = new Camera(); //create new camera object
+                                cam.ReadConfig(file.FullName); //read camera's config from file
+                                AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
+                            }
+                            else
+                            {
+                                Global.Log("Skipped duplicate camera: " + file);
+                            }
+
+                        }
+
+                        Global.Log($"...Loaded {cnt} camera files.");
+
+                        Resave = (cnt > 1);
+
+                    }
+
+                    Ret = true;
+                }
+                else
+                {
+                    Global.Log("Error: Could not load settings?");
+                }
+
+                if (Resave)
+                {
+                    //we imported old settings, save them
+                    Save();
+                }
             }
             catch (Exception ex)
             {

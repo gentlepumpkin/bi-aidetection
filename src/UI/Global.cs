@@ -169,16 +169,15 @@ namespace AITool
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<bool> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read)
+        public static async Task<bool> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             //run the function in another thread
-            return await Task.Run(() => WaitForFileAccess(filename));
+            return await Task.Run(() => WaitForFileAccess(filename,rights,share,WaitMS,RetryDelayMS));
         }
 
-        private static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read,FileShare share = FileShare.Read)
+        private static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             bool Success = false;
-            int retrydelayms = 20;
             try
             {
                 if (File.Exists(filename))
@@ -187,7 +186,7 @@ namespace AITool
                     Stopwatch SW = new Stopwatch();
                     SW.Start();
 
-                    while ((errs < 2000) && (SW.ElapsedMilliseconds < 30000))
+                    while ((errs < 2000) && (SW.ElapsedMilliseconds < WaitMS))
                     {
 
                         using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
@@ -201,7 +200,7 @@ namespace AITool
                                 if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                 {
                                     //unexpected error, break out
-                                    Log("Error: Unexpected Win32Error waiting for access: " + new Win32Exception(LastErr));
+                                    Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
                                     break;
                                 }
 
@@ -214,10 +213,11 @@ namespace AITool
 
                             if (!fileHandle.IsClosed)
                             {
+                                //the using statement should make sure the handle is closed but I just feel better about doing this...
                                 fileHandle.Close();
                             }
 
-                            await Task.Delay(retrydelayms);
+                            await Task.Delay(RetryDelayMS);
 
                         }
                     }
@@ -237,7 +237,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("WaitForFileAccess Error: " + Global.ExMsg(ex));
+                Log($"WaitForFileAccess Error: {filename}: {Global.ExMsg(ex)}");
             }
 
 
@@ -459,6 +459,7 @@ namespace AITool
                 }
                 else
                 {
+                    Ret = "";
                     Log($"Error: While writing '{filePath}', got: " + jset.Error.ToString());
                 }
             }

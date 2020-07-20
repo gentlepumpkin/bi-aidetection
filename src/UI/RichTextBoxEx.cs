@@ -299,9 +299,9 @@ public class RichTextBoxEx
 			UIOp(this._RTF, () =>
 			{
 				this._RTF.AppendText("\r\n");
-				this._RTF.SelectionStart = this._RTF.Text.Length;
 				if (this._RTF.Visible && this.AutoScroll)
 				{
+					this._RTF.SelectionStart = this._RTF.Text.Length;
 					this._RTF.ScrollToCaret();
 				}
 			});

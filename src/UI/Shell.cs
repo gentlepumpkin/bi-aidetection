@@ -79,7 +79,10 @@ namespace AITool
 
         static HttpClient client = new HttpClient();
 
-        FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
+        //FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
+        //handle multiple folders
+        Dictionary<string, FileSystemWatcher> watchers = new Dictionary<string, FileSystemWatcher>();
+
 
         public Shell()
         {
@@ -205,37 +208,7 @@ namespace AITool
             comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
             comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
 
-
-            //configure fswatcher to checks input_path for new images, images deleted and renamed images
-            try
-            {
-                watcher.Path = AppSettings.Settings.input_path;
-                watcher.Filter = "*.jpg";
-
-                // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
-
-                //fswatcher events
-                watcher.Created += new FileSystemEventHandler(OnCreatedAsync);
-                watcher.Renamed += new RenamedEventHandler(OnRenamed);
-                watcher.Deleted += new FileSystemEventHandler(OnDeleted);
-
-                //enable fswatcher
-                watcher.EnableRaisingEvents = true;
-            }
-            catch (Exception ex)
-            {
-                if (AppSettings.Settings.input_path == "")
-                {
-                    Log("ATTENTION: No input folder defined.");
-                }
-                else
-                {
-                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}': {Global.ExMsg(ex)}");
-                }
-
-            }
-
-
+            
 
             //---------------------------------------------------------------------------
             //SETTINGS TAB
@@ -243,15 +216,18 @@ namespace AITool
             //fill settings tab with stored settings 
           
             cmbInput.Text = AppSettings.Settings.input_path;
+            cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
             foreach (string pth in BlueIrisInfo.ClipPaths)
             {
                 cmbInput.Items.Add(pth);
                 //try to automatically pick the path that starts with AI if not already set
-                if (pth.ToLower().Contains("\\ai") && string.IsNullOrWhiteSpace(cmbInput.Text))
+                if (pth.ToLower().Contains(@"\ai") && string.IsNullOrWhiteSpace(cmbInput.Text))
                 {
                     cmbInput.Text = pth;
+                    AppSettings.Settings.input_path = pth;
                 }
             }
+
             tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
             tb_telegram_chatid.Text = String.Join(",",AppSettings.Settings.telegram_chatids);
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
@@ -280,12 +256,113 @@ namespace AITool
                 SaveDeepStackTab();
             }
             LoadDeepStackTab(true);
-            
-               
+
+            //set httpclient timeout:
+            client.Timeout = TimeSpan.FromMinutes(2);
+
+            UpdateWatchers();   
 
             this.Opacity = 1;
 
             Log("APP START complete.");
+        }
+
+        
+        public void UpdateWatchers()
+        {
+
+            try
+            {
+                string pth = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
+                if (!string.IsNullOrWhiteSpace(pth) && Directory.Exists(pth))
+                {
+                    if (!watchers.ContainsKey(pth.ToLower()))
+                    {
+                        FileSystemWatcher curwatch = MyWatcherFatory(pth, AppSettings.Settings.input_path_includesubfolders);
+                        if (curwatch != null)
+                            watchers.Add(pth.ToLower(), curwatch);
+                    }
+                }
+                else
+                {
+                    Log($"Empty or Invalid main input_path '{pth}'");
+                }
+
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    if (cam.enabled)
+                    {
+                        pth = cam.input_path.Trim().TrimEnd(@"\".ToCharArray());
+                        if (!string.IsNullOrWhiteSpace(pth) && Directory.Exists(pth))
+                        {
+                            if (!watchers.ContainsKey(pth.ToLower()))
+                            {
+                                FileSystemWatcher curwatch = MyWatcherFatory(pth, cam.input_path_includesubfolders);
+                                if (curwatch != null)
+                                    watchers.Add(pth.ToLower(), MyWatcherFatory(pth, cam.input_path_includesubfolders));
+                            }
+                        }
+                        else
+                        {
+                            Log($"Empty or Invalid input_path for camera '{cam.name}': '{pth}'");
+                        }
+
+                    }
+                }
+
+                foreach (FileSystemWatcher watcher in watchers.Values)
+                {
+                    if (watcher.EnableRaisingEvents != true)
+                    {
+                        watcher.EnableRaisingEvents = true;
+                        Log($"Watching folder for new files: {watcher.Path}");
+                    }
+                }
+
+                if (watchers.Count() == 0)
+                {
+                    Log("No FileSystemWatcher input folders defined yet.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+        }
+
+        public FileSystemWatcher MyWatcherFatory(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
+        {
+            FileSystemWatcher watcher = null;
+
+            try
+            {
+                // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
+
+                watcher = new FileSystemWatcher(path);
+                watcher.Path = path;
+                watcher.Filter = filter;
+                watcher.IncludeSubdirectories = IncludeSubdirectories;
+
+                //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
+                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+                
+                //fswatcher events
+                watcher.Created += new FileSystemEventHandler(OnCreatedAsync);
+                watcher.Renamed += new RenamedEventHandler(OnRenamed);
+                watcher.Deleted += new FileSystemEventHandler(OnDeleted);
+                watcher.Error += new ErrorEventHandler(OnError);
+
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            return watcher;
         }
 
         void EventMessage(string message)
@@ -352,6 +429,8 @@ namespace AITool
                         request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
 
                         swposttime = Stopwatch.StartNew();
+                        
+                        
 
                         using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
                         {
@@ -731,8 +810,8 @@ namespace AITool
                 }
 
                 //dont show time calculations if we had an error
-                if (string.IsNullOrEmpty(error))
-                {
+                //if (string.IsNullOrEmpty(error))
+                //{
                     
                     //I notice deepstack takes a lot longer the very first run?
 
@@ -759,7 +838,7 @@ namespace AITool
                         Log($"{{white}}Thread Queue Time:   {{yellow}}{QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                     }
 
-                }
+                //}
 
             }
             else
@@ -1161,26 +1240,7 @@ namespace AITool
 
         }
 
-        //update input path for fswatcher
-        public void UpdateFSWatcher()
-        {
-            try
-            {
-                watcher.Path = AppSettings.Settings.input_path;
-            }
-            catch
-            {
-                if (AppSettings.Settings.input_path == "")
-                {
-                    Log("ATTENTION: No input folder defined.");
-                }
-                else
-                {
-                    Log($"ERROR: Can't access input folder '{AppSettings.Settings.input_path}'.");
-                }
-
-            }
-        }
+       
 
         //----------------------------------------------------------------------------------------------------------
         //GUI
@@ -1875,7 +1935,7 @@ namespace AITool
                 //remove entry from history csv
                 try
                 {
-                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.FullControl, FileShare.ReadWrite);
+                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
                     if (Success)
                     {
                         string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
@@ -1923,7 +1983,7 @@ namespace AITool
                     if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                     {
                         
-                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.FullControl, FileShare.ReadWrite);
+                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
 
                         if (Success)
                         {
@@ -2110,7 +2170,7 @@ namespace AITool
                 //prevent the need to retry in the detection routine
                 sw.Restart();
 
-                bool success = await Global.WaitForFileAccessAsync(filename);
+                bool success = await Global.WaitForFileAccessAsync(filename,FileSystemRights.Read,FileShare.Read,30000,20);
 
                 FilelockMS = sw.ElapsedMilliseconds;
 
@@ -2178,6 +2238,10 @@ namespace AITool
             DeleteListItem(e.Name);
         }
 
+        void OnError(object sender, ErrorEventArgs e)
+        {
+            Log("Error: File watcher error: " + e.GetException().Message);
+        }
         //event: load selected image to picturebox
         private async void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
         {
@@ -2400,7 +2464,7 @@ namespace AITool
         //}
 
         //add camera
-        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
+        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, string _input_path, bool _input_path_includesubfolders)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
@@ -2427,7 +2491,7 @@ namespace AITool
                 trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
             }
 
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
+            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, _input_path, _input_path_includesubfolders); //set parameters
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
             ////add camera to list2
@@ -2445,7 +2509,7 @@ namespace AITool
         }
 
         //change settings of camera
-        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper)
+        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, string _input_path, bool _input_path_includesubfolders)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
@@ -2481,7 +2545,7 @@ namespace AITool
             }
 
             //2. WRITE CONFIG
-            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper); //set parameters
+            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, _input_path, _input_path_includesubfolders); //set parameters
 
             LoadCameras();
 
@@ -2593,6 +2657,18 @@ namespace AITool
                 tbPrefix.Text = AppSettings.Settings.CameraList[i].prefix; //load 'input file begins with'
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
                 tbTriggerUrl.Text = AppSettings.Settings.CameraList[i].trigger_urls_as_string; //load trigger url
+                
+                cmbcaminput.Text = AppSettings.Settings.CameraList[i].input_path;
+                foreach (string pth in BlueIrisInfo.ClipPaths)
+                {
+                    cmbcaminput.Items.Add(pth);
+                    //try to automatically pick the path that starts with AI if not already set
+                    if ((pth.ToLower().Contains(tbName.Text.ToLower()) || pth.ToLower().Contains(tbPrefix.Text.ToLower())) && string.IsNullOrWhiteSpace(cmbcaminput.Text))
+                    {
+                        cmbcaminput.Text = pth;
+                    }
+                }
+                cb_monitorCamInputfolder.Checked = AppSettings.Settings.CameraList[i].input_path_includesubfolders;
                 tb_cooldown.Text = AppSettings.Settings.CameraList[i].cooldown_time.ToString(); //load cooldown time
                 tb_threshold_lower.Text = AppSettings.Settings.CameraList[i].threshold_lower.ToString(); //load lower threshold value
                 tb_threshold_upper.Text = AppSettings.Settings.CameraList[i].threshold_upper.ToString(); // load upper threshold value
@@ -2677,7 +2753,7 @@ namespace AITool
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
-                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100);
+                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,"",false);
                     MessageBox.Show(camresult);
                 }
             }
@@ -2690,6 +2766,19 @@ namespace AITool
             {
                 //1. GET SETTINGS INPUTTED
                 //all checkboxes in one array
+
+                //person,   bicycle,   car,   motorcycle,   airplane,
+                //bus,   train,   truck,   boat,   traffic light,   fire hydrant,   stop_sign,
+                //parking meter,   bench,   bird,   cat,   dog,   horse,   sheep,   cow,   elephant,
+                //bear,   zebra, giraffe,   backpack,   umbrella,   handbag,   tie,   suitcase,
+                //frisbee,   skis,   snowboard, sports ball,   kite,   baseball bat,   baseball glove,
+                //skateboard,   surfboard,   tennis racket, bottle,   wine glass,   cup,   fork,
+                //knife,   spoon,   bowl,   banana,   apple,   sandwich,   orange, broccoli,   carrot,
+                //hot dog,   pizza,   donot,   cake,   chair,   couch,   potted plant,   bed, dining table,
+                //toilet,   tv,   laptop,   mouse,   remote,   keyboard,   cell phone,   microwave,
+                //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
+                //hair dryer, toothbrush.
+
                 CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
                 //create array with strings of the triggering_objects related to the checkboxes in the same order
                 string[] cbstringarray = new string[] { "airplane", "bear", "bicycle", "bird", "boat", "bus", "car", "cat", "cow", "dog", "horse", "motorcycle", "person", "sheep", "truck" };
@@ -2714,7 +2803,7 @@ namespace AITool
 
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper);
+                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,cb_inputpathsubfolders.Text,cb_monitorCamInputfolder.Checked);
                 
                 AppSettings.Save();
 
@@ -2793,6 +2882,7 @@ namespace AITool
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
             AppSettings.Settings.input_path = cmbInput.Text;
+            AppSettings.Settings.input_path_includesubfolders = cb_inputpathsubfolders.Checked;
             AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
             AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text,",",true,true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
@@ -2820,7 +2910,7 @@ namespace AITool
             //send_errors = AppSettings.Settings.send_errors;
 
             //update fswatcher to watch new input folder
-            UpdateFSWatcher();
+            UpdateWatchers();
 
             //clean history.csv database
             CleanCSVList();
@@ -3126,6 +3216,28 @@ namespace AITool
             else
             {
                 RTFLogger.AutoScroll = false;
+            }
+        }
+
+        private void tableLayoutPanel7_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                if (!string.IsNullOrEmpty(cmbcaminput.Text))
+                {
+                    dialog.InitialDirectory = cmbcaminput.Text;
+
+                }
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    cmbcaminput.Text = dialog.FileName;
+                }
             }
         }
     }
