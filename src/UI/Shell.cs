@@ -217,15 +217,11 @@ namespace AITool
           
             cmbInput.Text = AppSettings.Settings.input_path;
             cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
+            cmbInput.Items.Clear();
             foreach (string pth in BlueIrisInfo.ClipPaths)
             {
                 cmbInput.Items.Add(pth);
-                //try to automatically pick the path that starts with AI if not already set
-                if (pth.ToLower().Contains(@"\ai") && string.IsNullOrWhiteSpace(cmbInput.Text))
-                {
-                    cmbInput.Text = pth;
-                    AppSettings.Settings.input_path = pth;
-                }
+                
             }
 
             tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
@@ -274,13 +270,20 @@ namespace AITool
             try
             {
                 string pth = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                if (!string.IsNullOrWhiteSpace(pth) && Directory.Exists(pth))
+                if (!string.IsNullOrWhiteSpace(pth) )
                 {
                     if (!watchers.ContainsKey(pth.ToLower()))
                     {
-                        FileSystemWatcher curwatch = MyWatcherFatory(pth, AppSettings.Settings.input_path_includesubfolders);
-                        if (curwatch != null)
-                            watchers.Add(pth.ToLower(), curwatch);
+                        if (Directory.Exists(pth))
+                        {
+                            FileSystemWatcher curwatch = MyWatcherFatory(pth, AppSettings.Settings.input_path_includesubfolders);
+                            if (curwatch != null)
+                                watchers.Add(pth.ToLower(), curwatch);
+                        }
+                        else
+                        {
+                            Log($"Error: Bad main input_path: '{pth}'");
+                        }
                     }
                 }
                 else
@@ -293,27 +296,37 @@ namespace AITool
                     if (cam.enabled)
                     {
                         pth = cam.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                        if (!string.IsNullOrWhiteSpace(pth) && Directory.Exists(pth))
+                        if (!string.IsNullOrWhiteSpace(pth) )
                         {
                             if (!watchers.ContainsKey(pth.ToLower()))
                             {
-                                FileSystemWatcher curwatch = MyWatcherFatory(pth, cam.input_path_includesubfolders);
-                                if (curwatch != null)
-                                    watchers.Add(pth.ToLower(), MyWatcherFatory(pth, cam.input_path_includesubfolders));
+                                if (Directory.Exists(pth))
+                                {
+                                    FileSystemWatcher curwatch = MyWatcherFatory(pth, cam.input_path_includesubfolders);
+                                    if (curwatch != null)
+                                        watchers.Add(pth.ToLower(), MyWatcherFatory(pth, cam.input_path_includesubfolders));
+                                }
+                                else
+                                {
+                                    Log($"Error: Bad input_path for camera '{cam.name}': '{pth}'");
+                                }
                             }
                         }
                         else
                         {
-                            Log($"Empty or Invalid input_path for camera '{cam.name}': '{pth}'");
+                            Log($"Empty input_path for camera '{cam.name}': '{pth}'");
                         }
 
                     }
                 }
 
+                int enabledcnt = 0;
+
                 foreach (FileSystemWatcher watcher in watchers.Values)
                 {
                     if (watcher.EnableRaisingEvents != true)
                     {
+                        enabledcnt++;
                         watcher.EnableRaisingEvents = true;
                         Log($"Watching folder for new files: {watcher.Path}");
                     }
@@ -322,6 +335,17 @@ namespace AITool
                 if (watchers.Count() == 0)
                 {
                     Log("No FileSystemWatcher input folders defined yet.");
+                }
+                else
+                {
+                    if (enabledcnt == 0)
+                    {
+                        Log("No NEW FileSystemWatcher input folders found.");
+                    }
+                    else
+                    {
+                        Log($"Enabled {enabledcnt} FileSystemWatchers.");
+                    }
                 }
 
             }
@@ -404,7 +428,13 @@ namespace AITool
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
 
             string fileprefix = Path.GetFileNameWithoutExtension(image_path).Split('.')[0]; //get prefix of inputted file
-            int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == fileprefix); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+            int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+
+            if (index == -1)
+            {
+                Log($"Warning: Could not find camera prefix '{fileprefix}' for file '{image_path}'.");
+                return;
+            }
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes;
@@ -2181,6 +2211,9 @@ namespace AITool
                     LabelUpdate = delegate { label2.Text = $"Processing New Image {e.Name}..."; };
                     Invoke(LabelUpdate);
 
+                    
+
+                    //Error: Index was out of range. Must be non - negative and less than the size of the collection. | Parameter name: index[ArgumentOutOfRangeException] Mod: < OnCreatedAsync > d__45 Line: 2181:21
 
                     await DetectObjects(filename, QueueWaitMS, FilelockMS); //ai process image
 
@@ -2376,6 +2409,10 @@ namespace AITool
                 {
                     //Add loaded camera to list2
                     ListViewItem item = new ListViewItem(new string[] { cam.name });
+                    if (!cam.enabled)
+                    {
+                        item.ForeColor = Color.Gray;
+                    }
                     //item.Tag = file; //tag is not used anywhere I can see
                     list2.Items.Add(item);
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
@@ -2485,13 +2522,23 @@ namespace AITool
 
             Camera cam = new Camera(); //create new camera object
 
-            if (BlueIrisInfo.IsValid && BlueIrisInfo.URL != null)
+            if (BlueIrisInfo.IsValid && !String.IsNullOrWhiteSpace(BlueIrisInfo.URL))
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
                 trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
             }
 
+            foreach (string pth in BlueIrisInfo.ClipPaths)
+            {
+                //try to automatically pick the path that starts with AI if not already set
+                if ((pth.ToLower().Contains(name.ToLower()) || pth.ToLower().Contains(prefix.ToLower())) && string.IsNullOrWhiteSpace(_input_path))
+                {
+                    _input_path = pth;
+                }
+            }
+
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, _input_path, _input_path_includesubfolders); //set parameters
+            
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
             ////add camera to list2
@@ -2520,25 +2567,25 @@ namespace AITool
             }
 
             //check if camera with specified name exists. If no, then abort.
-            if (!AppSettings.Settings.CameraList.Exists(x => x.name == oldname))
+            if (!AppSettings.Settings.CameraList.Exists(x => x.name.ToLower() == oldname.ToLower()))
             {
                 return ($"WARNING: Camera can't be modified because old name {oldname} wasn't found.");
             }
 
             // check if the new name isn't taken by another camera already (in case the name was changed)
-            if (name != oldname && AppSettings.Settings.CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
+            if (name.ToLower() != oldname.ToLower() && AppSettings.Settings.CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Camera name must be unique, but new camera name {name} already exists.");
             }
 
             int index = -1;
-            index = AppSettings.Settings.CameraList.FindIndex(x => x.name == oldname); //index of specified camera in list
+            index = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower() == oldname.ToLower()); //index of specified camera in list
 
             if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
 
             //check if new prefix isn't already taken by another camera
-            if (prefix != AppSettings.Settings.CameraList[index].prefix && AppSettings.Settings.CameraList.Exists(x => x.prefix == prefix))
+            if (prefix.ToLower() != AppSettings.Settings.CameraList[index].prefix.ToLower() && AppSettings.Settings.CameraList.Exists(x => x.prefix.ToLower() == prefix.ToLower()))
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {name} already exists.");
@@ -2559,7 +2606,7 @@ namespace AITool
             Log($"Removing camera {name}...");
             if (list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
-                if (AppSettings.Settings.CameraList.Exists(x => x.name == name)) //check if camera with specified name exists in list
+                if (AppSettings.Settings.CameraList.Exists(x => x.name.ToLower() == name.ToLower())) //check if camera with specified name exists in list
                 {
 
                     //find index of specified camera in list
@@ -2568,7 +2615,7 @@ namespace AITool
                     //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
                     for (int i = 0; i < AppSettings.Settings.CameraList.Count; i++)
                     {
-                        if (AppSettings.Settings.CameraList[i].name.Equals(name))
+                        if (AppSettings.Settings.CameraList[i].name.ToLower().Equals(name.ToLower()))
                         {
                             index = i;
 
@@ -2659,6 +2706,7 @@ namespace AITool
                 tbTriggerUrl.Text = AppSettings.Settings.CameraList[i].trigger_urls_as_string; //load trigger url
                 
                 cmbcaminput.Text = AppSettings.Settings.CameraList[i].input_path;
+                cmbcaminput.Items.Clear();
                 foreach (string pth in BlueIrisInfo.ClipPaths)
                 {
                     cmbcaminput.Items.Add(pth);
@@ -2800,12 +2848,15 @@ namespace AITool
                 Int32.TryParse(tb_threshold_lower.Text, out int threshold_lower);
                 Int32.TryParse(tb_threshold_upper.Text, out int threshold_upper);
 
+                
 
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,cb_inputpathsubfolders.Text,cb_monitorCamInputfolder.Checked);
+                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,cmbcaminput.Text,cb_monitorCamInputfolder.Checked);
                 
                 AppSettings.Save();
+
+                UpdateWatchers();
 
                 Log(result);
                 
