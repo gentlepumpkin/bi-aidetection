@@ -20,6 +20,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 //for image cutting
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 //for telegram
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
@@ -81,7 +82,7 @@ namespace AITool
 
         //FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
         //handle multiple folders
-        Dictionary<string, FileSystemWatcher> watchers = new Dictionary<string, FileSystemWatcher>();
+        Dictionary<string, MyFileSystemWatcher> watchers = new Dictionary<string, MyFileSystemWatcher>();
 
 
         public Shell()
@@ -263,73 +264,155 @@ namespace AITool
             Log("APP START complete.");
         }
 
-        
+        public class MyFileSystemWatcher 
+        {
+            public string Name = "";
+            public string Path = "";
+            public bool IncludeSubdirectories = false;
+            public FileSystemWatcher watcher = null;
+            public MyFileSystemWatcher(string Name, string Path, FileSystemWatcher Watcher, bool IncludeSubFolders)
+            {
+                this.Name = Name;
+                this.Path = Path;
+                this.watcher = Watcher;
+                this.IncludeSubdirectories = IncludeSubFolders;
+            }
+        }
+
+
         public void UpdateWatchers()
         {
 
             try
             {
-                string pth = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                if (!string.IsNullOrWhiteSpace(pth) )
-                {
-                    if (!watchers.ContainsKey(pth.ToLower()))
-                    {
-                        if (Directory.Exists(pth))
-                        {
-                            FileSystemWatcher curwatch = MyWatcherFatory(pth, AppSettings.Settings.input_path_includesubfolders);
-                            if (curwatch != null)
-                                watchers.Add(pth.ToLower(), curwatch);
-                        }
-                        else
-                        {
-                            Log($"Error: Bad main input_path: '{pth}'");
-                        }
-                    }
-                }
-                else
-                {
-                    Log($"Empty or Invalid main input_path '{pth}'");
-                }
 
+                //first add all the names and paths to check...
+                List<string> names = new List<string>();
+                string pths = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
+                names.Add($"INPUT_PATH|{pths}|{AppSettings.Settings.input_path_includesubfolders}");
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
                     if (cam.enabled)
                     {
-                        pth = cam.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                        if (!string.IsNullOrWhiteSpace(pth) )
+                        pths = cam.input_path.Trim().TrimEnd(@"\".ToCharArray());
+                        names.Add($"{cam.name}|{pths}|{cam.input_path_includesubfolders}");
+                    }
+                }
+
+
+                //check each one to see if needs to be added
+                foreach (string item in names)
+                {
+                    List<string> splt = Global.Split(item,"|",false);
+                    string name = splt[0];
+                    string path = splt[1];
+                    bool include = Convert.ToBoolean(splt[2]);
+                    if (!watchers.ContainsKey(name.ToLower()))
+                    {
+                        //this will return null if the path is invalid...
+                        FileSystemWatcher curwatch = MyWatcherFatory(path, include);
+                        MyFileSystemWatcher mywtc = new MyFileSystemWatcher(name, path, curwatch, include);
+                        //add even if null to keep track of things
+                        watchers.Add(name.ToLower(), mywtc);
+                    }
+                    else
+                    {
+                        //update path if needed, even to empty
+                        watchers[name.ToLower()].Path = path;
+                        if (watchers[name.ToLower()].watcher == null)
                         {
-                            if (!watchers.ContainsKey(pth.ToLower()))
+                            //could be null if path is bad
+                            watchers[name.ToLower()].watcher = MyWatcherFatory(path, include);
+                        }
+                    }
+
+                }
+
+                //check to see if any need disabling - a camera was deleted
+                foreach (MyFileSystemWatcher watcher1 in watchers.Values)
+                {
+                    bool fnd = false;
+                    foreach (string item in names)
+                    {
+                        List<string> splt = Global.Split(item);
+                        string name = splt[0];
+                        if (name.ToLower()==watcher1.Name.ToLower())
+                        {
+                            fnd = true; 
+                            break;
+                        }
+                    }
+                    if (!fnd)
+                    {
+
+                        watcher1.Path = "";
+                    }
+
+                }
+
+
+                //enable or disable watchers
+                int enabledcnt = 0;
+                int disabledcnt = 0;
+
+                Dictionary<string, string> dupes = new Dictionary<string, string>();
+
+                foreach (MyFileSystemWatcher watcher in watchers.Values)
+                {
+                    if (watcher.watcher != null)
+                    {
+                        if (!String.IsNullOrWhiteSpace(watcher.Path))
+                        {
+                            if (!dupes.ContainsKey(watcher.Path.ToLower()))
                             {
-                                if (Directory.Exists(pth))
+                                if (watcher.Path != watcher.watcher.Path)
                                 {
-                                    FileSystemWatcher curwatch = MyWatcherFatory(pth, cam.input_path_includesubfolders);
-                                    if (curwatch != null)
-                                        watchers.Add(pth.ToLower(), MyWatcherFatory(pth, cam.input_path_includesubfolders));
+                                    watcher.watcher.Path = watcher.Path;
+                                    Log($"Watcher '{watcher.Name}' changed from '{watcher.watcher.Path}' to '{watcher.Path}'.");
                                 }
-                                else
+
+                                if (watcher.IncludeSubdirectories != watcher.watcher.IncludeSubdirectories)
                                 {
-                                    Log($"Error: Bad input_path for camera '{cam.name}': '{pth}'");
+                                    watcher.watcher.IncludeSubdirectories = watcher.IncludeSubdirectories;
+                                    Log($"Watcher '{watcher.Name}' IncludeSubdirectories changed from '{watcher.watcher.IncludeSubdirectories}' to '{watcher.IncludeSubdirectories}'.");
                                 }
+
+                                if (watcher.watcher.EnableRaisingEvents != true)
+                                {
+                                    enabledcnt++;
+                                    watcher.watcher.EnableRaisingEvents = true;
+                                    dupes.Add(watcher.Path.ToLower(), watcher.Path);
+                                    Log($"Watcher '{watcher.Name}' is now watching '{watcher.Path}'");
+                                }
+
+                            }
+                            else
+                            {
+                                Log($"Watcher '{watcher.Name}' has a duplicate path, skipping '{watcher.Path}'");
                             }
                         }
                         else
                         {
-                            Log($"Empty input_path for camera '{cam.name}': '{pth}'");
+                            //make sure it is disabled
+                            disabledcnt++;
+
+                            watcher.watcher.EnableRaisingEvents = false;
+                            watcher.watcher.Dispose();
+                            watcher.watcher = null;
+                            Log($"Watcher '{watcher.Name}' has an empty path, just disabled.");
                         }
 
                     }
-                }
-
-                int enabledcnt = 0;
-
-                foreach (FileSystemWatcher watcher in watchers.Values)
-                {
-                    if (watcher.EnableRaisingEvents != true)
+                    else if (!string.IsNullOrEmpty(watcher.Path))
                     {
-                        enabledcnt++;
-                        watcher.EnableRaisingEvents = true;
-                        Log($"Watching folder for new files: {watcher.Path}");
+                        Log($"Error: Watcher '{watcher.Name}' disabled. INVALID PATH='{watcher.Path}'");
                     }
+                    else
+                    {
+                        Log($"Watcher '{watcher.Name}' already disabled.");
+                    }
+
+
                 }
 
                 if (watchers.Count() == 0)
@@ -365,21 +448,23 @@ namespace AITool
             {
                 // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
 
-                watcher = new FileSystemWatcher(path);
-                watcher.Path = path;
-                watcher.Filter = filter;
-                watcher.IncludeSubdirectories = IncludeSubdirectories;
+                if (!String.IsNullOrWhiteSpace(path) && Directory.Exists(path))
+                {
+                    watcher = new FileSystemWatcher(path);
+                    watcher.Path = path;
+                    watcher.Filter = filter;
+                    watcher.IncludeSubdirectories = IncludeSubdirectories;
 
-                //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
-                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-                
-                //fswatcher events
-                watcher.Created += new FileSystemEventHandler(OnCreatedAsync);
-                watcher.Renamed += new RenamedEventHandler(OnRenamed);
-                watcher.Deleted += new FileSystemEventHandler(OnDeleted);
-                watcher.Error += new ErrorEventHandler(OnError);
+                    //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
+                    watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
 
+                    //fswatcher events
+                    watcher.Created += new FileSystemEventHandler(OnCreatedAsync);
+                    watcher.Renamed += new RenamedEventHandler(OnRenamed);
+                    watcher.Deleted += new FileSystemEventHandler(OnDeleted);
+                    watcher.Error += new ErrorEventHandler(OnError);
 
+                }
             }
             catch (Exception ex)
             {
@@ -1853,7 +1938,7 @@ namespace AITool
         {
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
             {
-                Log("Loading object rectangles...");
+                //Log("Loading object rectangles...");
                 int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
                 Color color = new Color();
@@ -1885,7 +1970,7 @@ namespace AITool
 
                     showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
-                    Log("Done.");
+                    //Log("Done.");
                 }
             }
         }

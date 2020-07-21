@@ -191,7 +191,11 @@ public class RichTextBoxEx
 
 		try
 		{
-			 
+
+            if (this._RTF == null || this._RTF.IsDisposed)
+            {
+				return;
+            }
 			//the more text in the RTF window, the slower it is to update and scroll
 			if (this.LastRTFWriteTime >= this.MaxRTFWriteTime)
 			{

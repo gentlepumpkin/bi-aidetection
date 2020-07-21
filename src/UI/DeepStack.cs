@@ -69,10 +69,14 @@ namespace AITool
             bool Ret = false;
 
             //Note - deepstack.exe does NOT need to be running
-            this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
-            this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
-            this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
-            this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
+            if (!Global.ProcessValid(this.DeepStackProc))
+                this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
+            if (!Global.ProcessValid(this.ServerProc))
+                this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
+            if (!Global.ProcessValid(this.PythonProc))
+                this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
+            if (!Global.ProcessValid(this.RedisProc))
+                this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
             if (this.ServerProc.process != null && this.PythonProc.process != null && this.RedisProc.process != null)
             {
@@ -85,7 +89,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Global.Log("Cannot access already running 'server.exe', must be running as administrator.");
+                    Global.Log("Cannot access already running 'server.exe', must be running as administrator: " + ex.Message);
                 }
                 this.IsInstalled = true;
                 if (!HasExited)
@@ -316,8 +320,16 @@ namespace AITool
                 InitProc.StartInfo.Arguments = "../init.py";
                 InitProc.StartInfo.UseShellExecute = false;
                 InitProc.StartInfo.CreateNoWindow = true;
+                InitProc.StartInfo.RedirectStandardOutput = true;
+                InitProc.StartInfo.RedirectStandardError = true;
+                InitProc.EnableRaisingEvents = true;
+                InitProc.OutputDataReceived += this.handleinitprocmsg;
+                InitProc.ErrorDataReceived += this.handleinitprocerror;
+                InitProc.Exited += (sender, e) => myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
                 Global.Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
                 InitProc.Start();
+                InitProc.BeginOutputReadLine();
+                InitProc.BeginErrorReadLine();
 
                 //next start the redis server...
                 this.RedisProc.process = new Process();
@@ -325,9 +337,17 @@ namespace AITool
                 this.RedisProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.RedisEXE);
                 this.RedisProc.process.StartInfo.UseShellExecute = false;
                 this.RedisProc.process.StartInfo.CreateNoWindow = true;
+                this.RedisProc.process.StartInfo.RedirectStandardOutput = true;
+                this.RedisProc.process.StartInfo.RedirectStandardError = true;
+                this.RedisProc.process.EnableRaisingEvents = true;
+                this.RedisProc.process.OutputDataReceived += this.handleredisprocmsg;
+                this.RedisProc.process.ErrorDataReceived += this.handleredisprocerror;
+                this.RedisProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
                 this.RedisProc.FileName = this.RedisEXE;
                 Global.Log($"Starting {this.RedisEXE}...");
                 this.RedisProc.process.Start();
+                this.RedisProc.process.BeginOutputReadLine();
+                this.RedisProc.process.BeginErrorReadLine();
 
                 //next, start the server
 
@@ -338,12 +358,17 @@ namespace AITool
                 this.ServerProc.process.StartInfo.CreateNoWindow = true;
                 this.ServerProc.process.StartInfo.UseShellExecute = false;
                 this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
-                this.ServerProc.process.OutputDataReceived += this.handleprocmsg;
+                this.ServerProc.process.StartInfo.RedirectStandardError = true;
+                this.ServerProc.process.EnableRaisingEvents = true;
+                this.ServerProc.process.OutputDataReceived += this.handleserverprocmsg;
+                this.ServerProc.process.ErrorDataReceived += this.handleserverprocerror;
+                this.ServerProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
                 this.ServerProc.FileName = this.ServerEXE;
                 this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
                 Global.Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
                 this.ServerProc.process.Start();
                 this.ServerProc.process.BeginOutputReadLine();
+                this.ServerProc.process.BeginErrorReadLine();
 
                 //start the python intelligence.py script
                 this.PythonProc.process = new Process();
@@ -352,10 +377,18 @@ namespace AITool
                 this.PythonProc.process.StartInfo.Arguments = $"../intelligence.py -MODE={this.Mode} -VFACE={this.FaceAPIEnabled} -VSCENE={this.SceneAPIEnabled} -VDETECTION={this.DetectionAPIEnabled}";
                 this.PythonProc.process.StartInfo.UseShellExecute = false;
                 this.PythonProc.process.StartInfo.CreateNoWindow = true;
+                this.PythonProc.process.EnableRaisingEvents = true;
+                this.PythonProc.process.StartInfo.RedirectStandardOutput = true;
+                this.PythonProc.process.StartInfo.RedirectStandardError = true;
+                this.PythonProc.process.OutputDataReceived += this.handlepythonprocmsg;
+                this.PythonProc.process.ErrorDataReceived += this.handlepythonprocerror;
+                this.PythonProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
                 this.PythonProc.FileName = this.PythonEXE;
                 this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
                 Global.Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
                 this.PythonProc.process.Start();
+                this.PythonProc.process.BeginOutputReadLine();
+                this.PythonProc.process.BeginErrorReadLine();
 
 
                 this.IsStarted = true;
@@ -377,7 +410,172 @@ namespace AITool
 
         }
 
-        private void handleprocmsg(object sender, DataReceivedEventArgs line)
+
+        private void myProcess_Exited(object sender, System.EventArgs e, string Name)
+        {
+
+            string output = "DeepStack>> Process exited: ";
+            if (sender != null)
+            {
+                Process prc = (Process)sender;
+                try
+                {
+                    //if (!prc.HasExited)
+                    //{
+                        output += $" Name='{Name}'";
+                    //}
+                    output += $", ExitCode='{prc.ExitCode}', Runtime='{Math.Round((prc.ExitTime - prc.StartTime).TotalMilliseconds)}'ms";
+                }
+                catch {
+
+                    output += " (error accessing process properties)";
+                }
+            }
+            if (!Name.Contains("Init:"))
+            {
+                this.IsStarted = false;
+                this.HasError = true;
+            }
+            Global.Log(output, "");
+
+        }
+
+
+
+        private void handleredisprocerror(object sender, DataReceivedEventArgs line)
+        {
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Redis> ERROR: {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+        private void handleredisprocmsg(object sender, DataReceivedEventArgs line)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Redis> {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        private void handleinitprocerror(object sender, DataReceivedEventArgs line)
+        {
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Init> ERROR: {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+        private void handleinitprocmsg(object sender, DataReceivedEventArgs line)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Init> {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        private void handlepythonprocerror(object sender, DataReceivedEventArgs line)
+        {
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Python> ERROR: {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+        private void handlepythonprocmsg(object sender, DataReceivedEventArgs line)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Python> {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        private void handleserverprocerror(object sender, DataReceivedEventArgs line)
+        {
+            
+            try
+            {
+                if (string.IsNullOrWhiteSpace(line.Data) || Global.progress == null)
+                {
+                    return;
+                }
+
+                Global.Log($"DeepStack>> Server> ERROR: {line.Data}", "");
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+        private void handleserverprocmsg(object sender, DataReceivedEventArgs line)
         {
             try
             {
@@ -397,7 +595,7 @@ namespace AITool
                 }
 
 
-                Global.Log($"DeepStack>> {line.Data}","");
+                Global.Log($"DeepStack>> Server> {line.Data}", "");
 
             }
             catch (Exception ex)

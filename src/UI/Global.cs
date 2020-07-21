@@ -758,6 +758,26 @@ namespace AITool
             }
         }
 
+        public static bool ProcessValid(ClsProcess prc)
+        {
+            
+            if (prc != null && prc.process != null)
+            {
+                try
+                {
+                    if (!prc.process.HasExited)
+                    {
+                        if (!string.IsNullOrEmpty(prc.CommandLine) || !string.IsNullOrEmpty(prc.process.StartInfo.Arguments))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch {}
+            }
+            return false;
+        }
+
         public static ClsProcess GetaProcessByPath(string processname)
         {
             ClsProcess Ret = new ClsProcess();
