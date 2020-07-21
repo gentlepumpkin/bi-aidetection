@@ -407,7 +407,7 @@ namespace AITool
 
             string filename = Path.GetFileName(image_path);
 
-            Log($"Starting analysis of {filename}...");
+            Log($"Starting analysis of {image_path}...");
 
 
             Stopwatch sw = Stopwatch.StartNew();
@@ -2171,12 +2171,12 @@ namespace AITool
         //EVENT: new image added to input_path -> START AI DETECTION
         async void OnCreatedAsync(object source, FileSystemEventArgs e)
         {
-            string filename = Path.Combine(AppSettings.Settings.input_path, e.Name);
+            //string filename = Path.Combine(AppSettings.Settings.input_path, e.FullPath);
 
             //make sure we are not processing a duplicate file...
-            if (detection_dictionary.ContainsKey(filename.ToLower()))
+            if (detection_dictionary.ContainsKey(e.FullPath.ToLower()))
             {
-                Log("Skipping duplicate Created File Event: " + filename);
+                Log("Skipping duplicate Created File Event: " + e.FullPath);
                 return;
             }
 
@@ -2194,13 +2194,13 @@ namespace AITool
 
             try
             {
-                detection_dictionary.TryAdd(filename.ToLower(), filename);
+                detection_dictionary.TryAdd(e.FullPath.ToLower(), e.FullPath);
 
                 //Wait up to 30 seconds to gain access to the file that was just created.  This should
                 //prevent the need to retry in the detection routine
                 sw.Restart();
 
-                bool success = await Global.WaitForFileAccessAsync(filename,FileSystemRights.Read,FileShare.Read,30000,20);
+                bool success = await Global.WaitForFileAccessAsync(e.FullPath, FileSystemRights.Read,FileShare.Read,30000,20);
 
                 FilelockMS = sw.ElapsedMilliseconds;
 
@@ -2215,7 +2215,7 @@ namespace AITool
 
                     //Error: Index was out of range. Must be non - negative and less than the size of the collection. | Parameter name: index[ArgumentOutOfRangeException] Mod: < OnCreatedAsync > d__45 Line: 2181:21
 
-                    await DetectObjects(filename, QueueWaitMS, FilelockMS); //ai process image
+                    await DetectObjects(e.FullPath, QueueWaitMS, FilelockMS); //ai process image
 
                     //output Running on Overview Tab
                     LabelUpdate = delegate { label2.Text = "Running"; };
@@ -2240,7 +2240,7 @@ namespace AITool
                 else
                 {
                     //could not access the file for 30 seconds??   Or unexpected error
-                    Log($"Error: Could not gain access to {filename} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.");
+                    Log($"Error: Could not gain access to {e.FullPath} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.");
                 }
 
             }
