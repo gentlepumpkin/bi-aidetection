@@ -668,7 +668,7 @@ namespace AITool
 
                                                             //add to history list
                                                             Log("Adding detection to history list.");
-                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
+                                                            CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
 
                                                         }
                                                         //if no object fulfills all 3 requirements but there are other objects: 
@@ -712,7 +712,7 @@ namespace AITool
 
                                                             Log($"{text}, so it's an irrelevant alert.");
                                                             //add to history list
-                                                            CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
+                                                            CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                         }
                                                     }
                                                     //if no object was detected
@@ -725,7 +725,7 @@ namespace AITool
 
                                                         //add to history list
                                                         Log("Adding false to history list.");
-                                                        CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
+                                                        CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
                                                     }
                                                 }
 
@@ -1909,13 +1909,17 @@ namespace AITool
                     ListViewItem item;
                     if (success == "true")
                     {
-                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                        item = new ListViewItem(new string[] { Path.GetFileName(filename), date, camera, objects_and_confidence, object_positions, "✓" });
                         item.ForeColor = Color.Green;
                     }
                     else
                     {
-                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                        item = new ListViewItem(new string[] { Path.GetFileName(filename), date, camera, objects_and_confidence, object_positions, "X" });
                     }
+
+                    //add the FULL path to the item tag so we dont need to add a column
+                    
+                    item.Tag = filename;
 
                     list1.Items.Insert(0, item);
 
@@ -2282,7 +2286,8 @@ namespace AITool
             {
                 if (list1.SelectedItems.Count > 0)
                 {
-                    using (var img = new Bitmap(AppSettings.Settings.input_path + "\\" + list1.SelectedItems[0].Text))
+                                        
+                    using (var img = new Bitmap(list1.SelectedItems[0].Tag.ToString()))
                     {
                         pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
                     }
