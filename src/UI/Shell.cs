@@ -1259,7 +1259,7 @@ namespace AITool
             if (memberName == ".ctor")
                 memberName = "Constructor";
 
-            if (AppSettings.Settings.log_everything == true)
+            if (AppSettings.Settings.log_everything == true || AppSettings.Settings.deepstack_debug)
             {
                 time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
                 rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
@@ -1279,6 +1279,15 @@ namespace AITool
                         text = Global.GetWordBetween(text, ">> ", "");
                     }
 
+                }
+            }
+
+            //check for messages coming from deepstack processes and kill them if we didnt ask for debugging messages
+            if (!AppSettings.Settings.deepstack_debug)
+            {
+                if (text.ToLower().Contains("redis-server.exe>") || text.ToLower().Contains("python.exe>"))
+                {
+                    return;
                 }
             }
 
@@ -3146,6 +3155,7 @@ namespace AITool
             AppSettings.Settings.deepstack_faceapienabled = Chk_FaceAPI.Checked;
             AppSettings.Settings.deepstack_sceneapienabled = Chk_SceneAPI.Checked;
             AppSettings.Settings.deepstack_autostart = Chk_AutoStart.Checked;
+            AppSettings.Settings.deepstack_debug = Chk_DSDebug.Checked;
             AppSettings.Settings.deepstack_adminkey = Txt_AdminKey.Text.Trim();
             AppSettings.Settings.deepstack_apikey = Txt_APIKey.Text.Trim();
             AppSettings.Settings.deepstack_installfolder = Txt_DeepStackInstallFolder.Text.Trim();
@@ -3218,7 +3228,7 @@ namespace AITool
             }
 
             Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
-
+            Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
             Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
             Txt_APIKey.Text = DeepStackServerControl.APIKey;
             Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;

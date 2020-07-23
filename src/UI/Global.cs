@@ -811,7 +811,8 @@ namespace AITool
 
                         if (string.IsNullOrEmpty(Ret.CommandLine))
                         {
-                            Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
+                            //Having trouble obtaining the command line?
+                            //Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
                         }
 
                         if (!string.IsNullOrEmpty(Ret.FileName) && Ret.FileName.ToLower() == processname.ToLower())

@@ -192,17 +192,17 @@ public class RichTextBoxEx
 		try
 		{
 
-            if (this._RTF == null || this._RTF.IsDisposed)
-            {
+			if (this._RTF == null || this._RTF.IsDisposed)
+			{
 				return;
-            }
+			}
 			//the more text in the RTF window, the slower it is to update and scroll
 			if (this.LastRTFWriteTime >= this.MaxRTFWriteTime)
 			{
 				UIOp(this._RTF, () =>
 				{
-                    if (this._RTF.Visible)
-                    {
+					if (this._RTF.Visible)
+					{
 						this._RTF.Clear();
 						this.CurrentTextLength = 0;
 						Msg = $"(Log window cleared for performance reasons @ {this.LastRTFWriteTime}ms text log time)\r\n{Msg}";

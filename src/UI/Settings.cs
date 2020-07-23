@@ -39,6 +39,7 @@ namespace AITool
             public string deepstack_port = "81";
             public string deepstack_mode = "Medium";
             public bool deepstack_autostart = false;
+            public bool deepstack_debug = false;
             public bool deepstack_sceneapienabled = false;
             public bool deepstack_faceapienabled = false;
             public bool deepstack_detectionapienabled = false;

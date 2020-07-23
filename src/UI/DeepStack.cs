@@ -344,6 +344,7 @@ namespace AITool
                 this.RedisProc.process.ErrorDataReceived += this.handleredisprocerror;
                 this.RedisProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
                 this.RedisProc.FileName = this.RedisEXE;
+                this.RedisProc.CommandLine = this.RedisEXE;
                 Global.Log($"Starting {this.RedisEXE}...");
                 this.RedisProc.process.Start();
                 this.RedisProc.process.BeginOutputReadLine();
@@ -424,7 +425,16 @@ namespace AITool
                     //{
                         output += $" Name='{Name}'";
                     //}
-                    output += $", ExitCode='{prc.ExitCode}', Runtime='{Math.Round((prc.ExitTime - prc.StartTime).TotalMilliseconds)}'ms";
+                    string err = prc.ExitCode.ToString();
+                    if (prc.ExitCode == 0)
+                    {
+                        err += " (Normal exit)";
+                    }
+                    else
+                    {
+                        err += " (Process killed or exited with error)";
+                    }
+                    output += $", ExitCode='{err}', Runtime='{Math.Round((prc.ExitTime - prc.StartTime).TotalMilliseconds)}'ms";
                 }
                 catch {
 
@@ -452,7 +462,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Redis> ERROR: {line.Data}", "");
+                Global.Log($"DeepStack>> Redis-server.exe> ERROR: {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -470,7 +480,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Redis> {line.Data}", "");
+                Global.Log($"DeepStack>> Redis-server.exe> {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -490,7 +500,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Init> ERROR: {line.Data}", "");
+                Global.Log($"DeepStack>> Init:python.exe> ERROR: {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -508,7 +518,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Init> {line.Data}", "");
+                Global.Log($"DeepStack>> Init:python.exe> {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -528,7 +538,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Python> ERROR: {line.Data}", "");
+                Global.Log($"DeepStack>> Python.exe> ERROR: {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -546,7 +556,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Python> {line.Data}", "");
+                Global.Log($"DeepStack>> Python.exe> {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -566,7 +576,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Server> ERROR: {line.Data}", "");
+                Global.Log($"DeepStack>> Server.exe> ERROR: {line.Data}", "");
 
             }
             catch (Exception ex)
@@ -595,7 +605,7 @@ namespace AITool
                 }
 
 
-                Global.Log($"DeepStack>> Server> {line.Data}", "");
+                Global.Log($"DeepStack>> Server.exe> {line.Data}", "");
 
             }
             catch (Exception ex)
