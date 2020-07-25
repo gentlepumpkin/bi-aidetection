@@ -74,6 +74,9 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="ObjectListView, Version=2.9.1.25410, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
+      <HintPath>..\packages\ObjectListView.Official.2.9.2-alpha2\lib\net20\ObjectListView.dll</HintPath>
+    </Reference>
     <Reference Include="SixLabors.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SixLabors.Core.1.0.0-beta0007\lib\netstandard2.0\SixLabors.Core.dll</HintPath>
     </Reference>
@@ -119,6 +122,13 @@
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="DeepStack.cs" />
+    <Compile Include="Frm_Actions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_Actions.Designer.cs">
+      <DependentUpon>Frm_Actions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Global-GUI.cs" />
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="RichTextBoxEx.cs" />
@@ -137,6 +147,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Frm_Actions.resx">
+      <DependentUpon>Frm_Actions.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Shell.resx">
       <DependentUpon>Shell.cs</DependentUpon>
     </EmbeddedResource>

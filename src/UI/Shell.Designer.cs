@@ -51,7 +51,6 @@ namespace AITool
             this.tabOverview = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lbl_version = new System.Windows.Forms.Label();
@@ -70,7 +69,6 @@ namespace AITool
             this.tabHistory = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel21 = new AITool.DBLayoutPanel(this.components);
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel22 = new AITool.DBLayoutPanel(this.components);
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
@@ -169,6 +167,7 @@ namespace AITool
             this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
             this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
             this.Btn_Save = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
@@ -195,13 +194,13 @@ namespace AITool
             this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
             this.button1 = new System.Windows.Forms.Button();
             this.RTF_Log = new System.Windows.Forms.RichTextBox();
-            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
             this.tableLayoutPanel15.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.tabStats.SuspendLayout();
             this.tableLayoutPanel16.SuspendLayout();
             this.tableLayoutPanel23.SuspendLayout();
@@ -212,7 +211,6 @@ namespace AITool
             this.tabHistory.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel21.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tableLayoutPanel22.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -247,6 +245,8 @@ namespace AITool
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tabLog.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -327,19 +327,6 @@ namespace AITool
             this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
             this.tableLayoutPanel15.Size = new System.Drawing.Size(1418, 638);
             this.tableLayoutPanel15.TabIndex = 0;
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBox2.Location = new System.Drawing.Point(4, 104);
-            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(1410, 191);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox2.TabIndex = 4;
-            this.pictureBox2.TabStop = false;
             // 
             // label2
             // 
@@ -696,19 +683,6 @@ namespace AITool
             this.tableLayoutPanel21.Size = new System.Drawing.Size(986, 630);
             this.tableLayoutPanel21.TabIndex = 5;
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pictureBox1.Location = new System.Drawing.Point(4, 75);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(978, 550);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 6;
-            this.pictureBox1.TabStop = false;
-            this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
-            // 
             // tableLayoutPanel22
             // 
             this.tableLayoutPanel22.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -982,7 +956,7 @@ namespace AITool
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 645F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 630F));
             this.tableLayoutPanel3.Size = new System.Drawing.Size(262, 630);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
@@ -1665,7 +1639,7 @@ namespace AITool
             this.tableLayoutPanel26.Name = "tableLayoutPanel26";
             this.tableLayoutPanel26.RowCount = 1;
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 43F));
+            this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
             this.tableLayoutPanel26.Size = new System.Drawing.Size(922, 42);
             this.tableLayoutPanel26.TabIndex = 18;
             // 
@@ -1863,7 +1837,7 @@ namespace AITool
             this.tableLayoutPanel25.Name = "tableLayoutPanel25";
             this.tableLayoutPanel25.RowCount = 1;
             this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 69F));
+            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
             this.tableLayoutPanel25.Size = new System.Drawing.Size(1197, 67);
             this.tableLayoutPanel25.TabIndex = 14;
             // 
@@ -2103,6 +2077,18 @@ namespace AITool
             this.tabDeepStack.TabIndex = 6;
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
+            // 
+            // Chk_DSDebug
+            // 
+            this.Chk_DSDebug.AutoSize = true;
+            this.Chk_DSDebug.Location = new System.Drawing.Point(308, 439);
+            this.Chk_DSDebug.Name = "Chk_DSDebug";
+            this.Chk_DSDebug.Size = new System.Drawing.Size(164, 24);
+            this.Chk_DSDebug.TabIndex = 14;
+            this.Chk_DSDebug.Text = "Debug Deepstack";
+            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
+        "ersion, installed on same machine)");
+            this.Chk_DSDebug.UseVisualStyleBackColor = true;
             // 
             // Lbl_BlueStackRunning
             // 
@@ -2380,17 +2366,31 @@ namespace AITool
             this.RTF_Log.TabIndex = 0;
             this.RTF_Log.Text = "";
             // 
-            // Chk_DSDebug
+            // pictureBox2
             // 
-            this.Chk_DSDebug.AutoSize = true;
-            this.Chk_DSDebug.Location = new System.Drawing.Point(308, 439);
-            this.Chk_DSDebug.Name = "Chk_DSDebug";
-            this.Chk_DSDebug.Size = new System.Drawing.Size(164, 24);
-            this.Chk_DSDebug.TabIndex = 14;
-            this.Chk_DSDebug.Text = "Debug Deepstack";
-            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
-        "ersion, installed on same machine)");
-            this.Chk_DSDebug.UseVisualStyleBackColor = true;
+            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox2.Location = new System.Drawing.Point(4, 104);
+            this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(1410, 191);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox2.TabIndex = 4;
+            this.pictureBox2.TabStop = false;
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBox1.Location = new System.Drawing.Point(4, 75);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(978, 550);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 6;
+            this.pictureBox1.TabStop = false;
+            this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
             // 
             // Shell
             // 
@@ -2412,7 +2412,6 @@ namespace AITool
             this.tableLayoutPanel14.ResumeLayout(false);
             this.tableLayoutPanel15.ResumeLayout(false);
             this.tableLayoutPanel15.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.tabStats.ResumeLayout(false);
             this.tableLayoutPanel16.ResumeLayout(false);
             this.tableLayoutPanel23.ResumeLayout(false);
@@ -2424,7 +2423,6 @@ namespace AITool
             this.tabHistory.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel21.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tableLayoutPanel22.ResumeLayout(false);
             this.tableLayoutPanel22.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -2481,6 +2479,8 @@ namespace AITool
             this.groupBox3.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }

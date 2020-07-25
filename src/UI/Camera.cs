@@ -9,6 +9,23 @@ using Newtonsoft.Json;
 
 namespace AITool
 {
+
+    public enum TriggerType
+    {
+        Unknown,
+        DownloadURL,
+        PostURL,
+        Telegram,
+        MQTT
+    }
+    public class CameraTriggerAction
+    {
+        public TriggerType Type = TriggerType.Unknown;
+        public string ID = "";
+        public string APIKEYorPW = "";
+        public string TriggerData = "";  //the URL for example
+        public string ExtraData = "";
+    }
     public class Camera
     {
         public string name = "";
@@ -17,6 +34,7 @@ namespace AITool
         public string[] triggering_objects;
         public string trigger_urls_as_string = "";
         public string[] trigger_urls;
+        public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
         public bool telegram_enabled;
         public bool enabled;
         public double cooldown_time;

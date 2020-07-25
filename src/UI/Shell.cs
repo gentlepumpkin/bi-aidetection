@@ -486,384 +486,387 @@ namespace AITool
         //analyze image with AI
         public async Task DetectObjects(string image_path, long QueueWaitMS, long FileLockMS)
         {
-            //Only set error when there IS an error...
-            string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
-            Log("");
-
-            string filename = Path.GetFileName(image_path);
-
-            Log($"Starting analysis of {image_path}...");
-
-
-            Stopwatch sw = Stopwatch.StartNew();
-            Stopwatch swposttime = Stopwatch.StartNew();
-
-            var fullDeepstackUrl = "";
-            //allows both "http://ip:port" and "ip:port"
-            if (!AppSettings.Settings.deepstack_url.Contains("http://")) //"ip:port"
+            using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false,false))
             {
-                fullDeepstackUrl = "http://" + AppSettings.Settings.deepstack_url + "/v1/vision/detection";
-            }
-            else //"http://ip:port"
-            {
-                fullDeepstackUrl = AppSettings.Settings.deepstack_url + "/v1/vision/detection";
-            }
+
+                //Only set error when there IS an error...
+                string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
+                Log("");
+
+                string filename = Path.GetFileName(image_path);
+
+                Log($"Starting analysis of {image_path}...");
 
 
-            // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
+                Stopwatch sw = Stopwatch.StartNew();
+                Stopwatch swposttime = Stopwatch.StartNew();
 
-            string fileprefix = Path.GetFileNameWithoutExtension(image_path).Split('.')[0]; //get prefix of inputted file
-            int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
-
-            if (index == -1)
-            {
-                Log($"Warning: Could not find camera prefix '{fileprefix}' for file '{image_path}'.");
-                return;
-            }
-
-            //only analyze if 50% of the cameras cooldown time since last detection has passed
-            double mins = (DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes;
-            double halfcool = AppSettings.Settings.CameraList[index].cooldown_time / 2;
-            if (index == -1 || (mins >= halfcool)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
-            {
-                //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
-                //being accessed -Vorlon
-                //for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
-                //{
-                try
+                var fullDeepstackUrl = "";
+                //allows both "http://ip:port" and "ip:port"
+                if (!AppSettings.Settings.deepstack_url.Contains("http://")) //"ip:port"
                 {
-                    //error = "loading image failed";
+                    fullDeepstackUrl = "http://" + AppSettings.Settings.deepstack_url + "/v1/vision/detection";
+                }
+                else //"http://ip:port"
+                {
+                    fullDeepstackUrl = AppSettings.Settings.deepstack_url + "/v1/vision/detection";
+                }
 
-                    using (FileStream image_data = System.IO.File.OpenRead(image_path))
+
+                // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
+
+                string fileprefix = Path.GetFileNameWithoutExtension(image_path).Split('.')[0]; //get prefix of inputted file
+                int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+
+                if (index == -1)
+                {
+                    Log($"Warning: Could not find camera prefix '{fileprefix}' for file '{image_path}'.");
+                    return;
+                }
+
+                //only analyze if 50% of the cameras cooldown time since last detection has passed
+                double mins = (DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes;
+                double halfcool = AppSettings.Settings.CameraList[index].cooldown_time / 2;
+                if (index == -1 || (mins >= halfcool)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
+                {
+                    //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
+                    //being accessed -Vorlon
+                    //for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
+                    //{
+                    try
                     {
-                        Log($"(1/6) Uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
+                        //error = "loading image failed";
 
-                        //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
-
-                        var request = new MultipartFormDataContent();
-                        request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
-
-                        swposttime = Stopwatch.StartNew();
-                        
-                        
-
-                        using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
+                        using (FileStream image_data = System.IO.File.OpenRead(image_path))
                         {
-                            swposttime.Stop();
+                            Log($"(1/6) Uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
 
-                            if (output.IsSuccessStatusCode)
+                            //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
+
+                            var request = new MultipartFormDataContent();
+                            request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
+
+                            swposttime = Stopwatch.StartNew();
+
+
+
+                            using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
                             {
-                                string jsonString = await output.Content.ReadAsStringAsync();
+                                swposttime.Stop();
 
-                                string cleanjsonString = Global.CleanString(jsonString);
-
-                                if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
+                                if (output.IsSuccessStatusCode)
                                 {
-                                    Log($"(2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
-                                    Log($"(3/6) Processing results...");
+                                    string jsonString = await output.Content.ReadAsStringAsync();
 
-                                    Response response = null;
-                                    try
+                                    string cleanjsonString = Global.CleanString(jsonString);
+
+                                    if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
                                     {
-                                        //This can throw an exception
-                                        response = JsonConvert.DeserializeObject<Response>(jsonString);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                                        Log(error);
-                                    }
+                                        Log($"(2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
+                                        Log($"(3/6) Processing results...");
 
-                                    if (response != null)
-                                    {
-
-                                        //error = $"Failure in DeepStack processing the image.";
-
-                                        //print every detected object with the according confidence-level
-                                        string outputtext = "   Detected objects:";
-
-                                        if (response.predictions != null)
+                                        Response response = null;
+                                        try
                                         {
-                                            DeepStackServerControl.IsActivated = true;
-                                            foreach (Object user in response.predictions)
-                                            {
-                                                if (user != null && !string.IsNullOrEmpty(user.label))
-                                                {
-                                                    DeepStackServerControl.VisionDetectionRunning = true;
-                                                    outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
-                                                }
-                                                else
-                                                {
-                                                    outputtext += "(Error: null prediction? DeepStack may not be started with correct switches.), ";
-                                                }
-                                            }
+                                            //This can throw an exception
+                                            response = JsonConvert.DeserializeObject<Response>(jsonString);
                                         }
-                                        else
+                                        catch (Exception ex)
                                         {
-                                            outputtext = $"(Error: No predictions?  JSON: '{cleanjsonString}')";
-                                        }
-
-                                        Log(outputtext);
-
-                                        if (response.success == true)
-                                        {
-                                            //if there is no camera with the same prefix
-                                            if (index == -1)
-                                            {
-                                                Log("   No camera with the same prefix found: " + fileprefix);
-                                                //check if there is a default camera which accepts any prefix, select it
-                                                if (AppSettings.Settings.CameraList.Exists(x => x.prefix == ""))
-                                                {
-                                                    index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == "");
-                                                    Log("(   Found a default camera.");
-                                                }
-                                                else
-                                                {
-                                                    Log("WARNING: No default camera found. Aborting.");
-                                                }
-                                            }
-
-                                            //index == -1 now means that no camera has the same prefix and no default camera exists. The alert therefore won't be used. 
-
-
-                                            //if a camera finally is associated with the inputted alert image
-                                            if (index != -1)
-                                            {
-
-                                                //if camera is enabled
-                                                if (AppSettings.Settings.CameraList[index].enabled == true)
-                                                {
-
-                                                    //if something was detected
-                                                    if (response.predictions.Length > 0)
-                                                    {
-                                                        List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                                                        List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
-                                                        List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
-
-                                                        List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                                                        List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
-                                                        List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
-
-
-                                                        int masked_counter = 0; //this value is incremented if an object is in a masked area
-                                                        int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
-                                                        int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
-
-                                                        Log("(4/6) Checking if detected object is relevant and within confidence limits:");
-                                                        //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
-                                                        foreach (Object user in response.predictions)
-                                                        {
-                                                            // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
-
-                                                            using (var img = new Bitmap(image_path))
-                                                            {
-                                                                bool irrelevant_object = false;
-
-                                                                //if object detected is one of the objects that is relevant
-                                                                if (AppSettings.Settings.CameraList[index].triggering_objects_as_string.Contains(user.label))
-                                                                {
-                                                                    // -> OBJECT IS RELEVANT
-
-                                                                    //if confidence limits are satisfied
-                                                                    if (user.confidence * 100 >= AppSettings.Settings.CameraList[index].threshold_lower && user.confidence * 100 <= AppSettings.Settings.CameraList[index].threshold_upper)
-                                                                    {
-                                                                        // -> OBJECT IS WITHIN CONFIDENCE LIMITS
-
-                                                                        //only if the object is outside of the masked area
-                                                                        if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
-                                                                        {
-                                                                            // -> OBJECT IS OUTSIDE OF MASKED AREAS
-
-                                                                            objects.Add(user.label);
-                                                                            objects_confidence.Add(user.confidence);
-                                                                            string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                            objects_position.Add(position);
-                                                                            Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
-                                                                        }
-                                                                        else //if the object is in a masked area
-                                                                        {
-                                                                            masked_counter++;
-                                                                            irrelevant_object = true;
-                                                                        }
-                                                                    }
-                                                                    else //if confidence limits are not satisfied
-                                                                    {
-                                                                        threshold_counter++;
-                                                                        irrelevant_object = true;
-                                                                    }
-                                                                }
-                                                                else //if object is not relevant
-                                                                {
-                                                                    irrelevant_counter++;
-                                                                    irrelevant_object = true;
-                                                                }
-
-                                                                if (irrelevant_object == true)
-                                                                {
-                                                                    irrelevant_objects.Add(user.label);
-                                                                    irrelevant_objects_confidence.Add(user.confidence);
-                                                                    string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                    irrelevant_objects_position.Add(position);
-                                                                    Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
-                                                                }
-                                                            }
-
-                                                        }
-
-                                                        //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                                        if (objects.Count() > 0)
-                                                        {
-                                                            //store these last detections for the specific camera
-                                                            AppSettings.Settings.CameraList[index].last_detections = objects;
-                                                            AppSettings.Settings.CameraList[index].last_confidences = objects_confidence;
-                                                            AppSettings.Settings.CameraList[index].last_positions = objects_position;
-
-
-                                                            //create summary string for this detection
-                                                            StringBuilder detectionsTextSb = new StringBuilder();
-                                                            for (int i = 0; i < objects.Count(); i++)
-                                                            {
-                                                                detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
-                                                            }
-                                                            if (detectionsTextSb.Length >= 3)
-                                                            {
-                                                                detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
-                                                            }
-                                                            AppSettings.Settings.CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                            Log("The summary:" + AppSettings.Settings.CameraList[index].last_detections_summary);
-
-
-                                                            //RELEVANT ALERT
-                                                            Log("(5/6) Performing alert actions:");
-                                                            await Trigger(index, image_path); //make TRIGGER
-                                                            AppSettings.Settings.CameraList[index].IncrementAlerts(); //stats update
-                                                            Log($"(6/6) SUCCESS.");
-
-
-
-
-
-                                                            //create text string objects and confidences
-                                                            string objects_and_confidences = "";
-                                                            string object_positions_as_string = "";
-                                                            for (int i = 0; i < objects.Count; i++)
-                                                            {
-                                                                objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
-                                                                object_positions_as_string += $"{objects_position[i]};";
-                                                            }
-
-                                                            //add to history list
-                                                            Log("Adding detection to history list.");
-                                                            CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
-
-                                                        }
-                                                        //if no object fulfills all 3 requirements but there are other objects: 
-                                                        else if (irrelevant_objects.Count() > 0)
-                                                        {
-                                                            //IRRELEVANT ALERT
-
-
-                                                            AppSettings.Settings.CameraList[index].IncrementIrrelevantAlerts(); //stats update
-                                                            Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused an irrelevant alert.");
-                                                            //Log("Adding irrelevant detection to history list.");
-
-                                                            //retrieve confidences and positions
-                                                            string objects_and_confidences = "";
-                                                            string object_positions_as_string = "";
-                                                            for (int i = 0; i < irrelevant_objects.Count; i++)
-                                                            {
-                                                                objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                                object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                                            }
-
-                                                            //string text contains what is written in the log and in the history list
-                                                            string text = "";
-                                                            if (masked_counter > 0)//if masked objects, add them
-                                                            {
-                                                                text += $"{masked_counter}x masked; ";
-                                                            }
-                                                            if (threshold_counter > 0)//if objects out of confidence range, add them
-                                                            {
-                                                                text += $"{threshold_counter}x not in confidence range; ";
-                                                            }
-                                                            if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                                            {
-                                                                text += $"{irrelevant_counter}x irrelevant; ";
-                                                            }
-
-                                                            if (text != "") //remove last ";"
-                                                            {
-                                                                text = text.Remove(text.Length - 2);
-                                                            }
-
-                                                            Log($"{text}, so it's an irrelevant alert.");
-                                                            //add to history list
-                                                            CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
-                                                        }
-                                                    }
-                                                    //if no object was detected
-                                                    else if (response.predictions.Length == 0)
-                                                    {
-                                                        // FALSE ALERT
-
-                                                        AppSettings.Settings.CameraList[index].IncrementFalseAlerts(); //stats update
-                                                        Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused a false alert, nothing detected.");
-
-                                                        //add to history list
-                                                        Log("Adding false to history list.");
-                                                        CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
-                                                    }
-                                                }
-
-                                                //if camera is disabled.
-                                                else if (AppSettings.Settings.CameraList[index].enabled == false)
-                                                {
-                                                    Log("(6/6) Selected camera is disabled.");
-                                                }
-
-                                            }
-
-                                        }
-                                        else if (response.success == false) //if nothing was detected
-                                        {
-                                            error = $"ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
+                                            error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
                                             Log(error);
                                         }
 
+                                        if (response != null)
+                                        {
+
+                                            //error = $"Failure in DeepStack processing the image.";
+
+                                            //print every detected object with the according confidence-level
+                                            string outputtext = "   Detected objects:";
+
+                                            if (response.predictions != null)
+                                            {
+                                                DeepStackServerControl.IsActivated = true;
+                                                foreach (Object user in response.predictions)
+                                                {
+                                                    if (user != null && !string.IsNullOrEmpty(user.label))
+                                                    {
+                                                        DeepStackServerControl.VisionDetectionRunning = true;
+                                                        outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
+                                                    }
+                                                    else
+                                                    {
+                                                        outputtext += "(Error: null prediction? DeepStack may not be started with correct switches.), ";
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                outputtext = $"(Error: No predictions?  JSON: '{cleanjsonString}')";
+                                            }
+
+                                            Log(outputtext);
+
+                                            if (response.success == true)
+                                            {
+                                                //if there is no camera with the same prefix
+                                                if (index == -1)
+                                                {
+                                                    Log("   No camera with the same prefix found: " + fileprefix);
+                                                    //check if there is a default camera which accepts any prefix, select it
+                                                    if (AppSettings.Settings.CameraList.Exists(x => x.prefix == ""))
+                                                    {
+                                                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == "");
+                                                        Log("(   Found a default camera.");
+                                                    }
+                                                    else
+                                                    {
+                                                        Log("WARNING: No default camera found. Aborting.");
+                                                    }
+                                                }
+
+                                                //index == -1 now means that no camera has the same prefix and no default camera exists. The alert therefore won't be used. 
+
+
+                                                //if a camera finally is associated with the inputted alert image
+                                                if (index != -1)
+                                                {
+
+                                                    //if camera is enabled
+                                                    if (AppSettings.Settings.CameraList[index].enabled == true)
+                                                    {
+
+                                                        //if something was detected
+                                                        if (response.predictions.Length > 0)
+                                                        {
+                                                            List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
+                                                            List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                                                            List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
+
+                                                            List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
+                                                            List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                                                            List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
+
+
+                                                            int masked_counter = 0; //this value is incremented if an object is in a masked area
+                                                            int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
+                                                            int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
+
+                                                            Log("(4/6) Checking if detected object is relevant and within confidence limits:");
+                                                            //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
+                                                            foreach (Object user in response.predictions)
+                                                            {
+                                                                // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+
+                                                                using (var img = new Bitmap(image_path))
+                                                                {
+                                                                    bool irrelevant_object = false;
+
+                                                                    //if object detected is one of the objects that is relevant
+                                                                    if (AppSettings.Settings.CameraList[index].triggering_objects_as_string.Contains(user.label))
+                                                                    {
+                                                                        // -> OBJECT IS RELEVANT
+
+                                                                        //if confidence limits are satisfied
+                                                                        if (user.confidence * 100 >= AppSettings.Settings.CameraList[index].threshold_lower && user.confidence * 100 <= AppSettings.Settings.CameraList[index].threshold_upper)
+                                                                        {
+                                                                            // -> OBJECT IS WITHIN CONFIDENCE LIMITS
+
+                                                                            //only if the object is outside of the masked area
+                                                                            if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
+                                                                            {
+                                                                                // -> OBJECT IS OUTSIDE OF MASKED AREAS
+
+                                                                                objects.Add(user.label);
+                                                                                objects_confidence.Add(user.confidence);
+                                                                                string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                                objects_position.Add(position);
+                                                                                Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                            }
+                                                                            else //if the object is in a masked area
+                                                                            {
+                                                                                masked_counter++;
+                                                                                irrelevant_object = true;
+                                                                            }
+                                                                        }
+                                                                        else //if confidence limits are not satisfied
+                                                                        {
+                                                                            threshold_counter++;
+                                                                            irrelevant_object = true;
+                                                                        }
+                                                                    }
+                                                                    else //if object is not relevant
+                                                                    {
+                                                                        irrelevant_counter++;
+                                                                        irrelevant_object = true;
+                                                                    }
+
+                                                                    if (irrelevant_object == true)
+                                                                    {
+                                                                        irrelevant_objects.Add(user.label);
+                                                                        irrelevant_objects_confidence.Add(user.confidence);
+                                                                        string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                        irrelevant_objects_position.Add(position);
+                                                                        Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                                    }
+                                                                }
+
+                                                            }
+
+                                                            //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
+                                                            if (objects.Count() > 0)
+                                                            {
+                                                                //store these last detections for the specific camera
+                                                                AppSettings.Settings.CameraList[index].last_detections = objects;
+                                                                AppSettings.Settings.CameraList[index].last_confidences = objects_confidence;
+                                                                AppSettings.Settings.CameraList[index].last_positions = objects_position;
+
+
+                                                                //create summary string for this detection
+                                                                StringBuilder detectionsTextSb = new StringBuilder();
+                                                                for (int i = 0; i < objects.Count(); i++)
+                                                                {
+                                                                    detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                                }
+                                                                if (detectionsTextSb.Length >= 3)
+                                                                {
+                                                                    detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
+                                                                }
+                                                                AppSettings.Settings.CameraList[index].last_detections_summary = detectionsTextSb.ToString();
+                                                                Log("The summary:" + AppSettings.Settings.CameraList[index].last_detections_summary);
+
+
+                                                                //RELEVANT ALERT
+                                                                Log("(5/6) Performing alert actions:");
+                                                                await Trigger(index, image_path); //make TRIGGER
+                                                                AppSettings.Settings.CameraList[index].IncrementAlerts(); //stats update
+                                                                Log($"(6/6) SUCCESS.");
+
+
+
+
+
+                                                                //create text string objects and confidences
+                                                                string objects_and_confidences = "";
+                                                                string object_positions_as_string = "";
+                                                                for (int i = 0; i < objects.Count; i++)
+                                                                {
+                                                                    objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
+                                                                    object_positions_as_string += $"{objects_position[i]};";
+                                                                }
+
+                                                                //add to history list
+                                                                Log("Adding detection to history list.");
+                                                                CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
+
+                                                            }
+                                                            //if no object fulfills all 3 requirements but there are other objects: 
+                                                            else if (irrelevant_objects.Count() > 0)
+                                                            {
+                                                                //IRRELEVANT ALERT
+
+
+                                                                AppSettings.Settings.CameraList[index].IncrementIrrelevantAlerts(); //stats update
+                                                                Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused an irrelevant alert.");
+                                                                //Log("Adding irrelevant detection to history list.");
+
+                                                                //retrieve confidences and positions
+                                                                string objects_and_confidences = "";
+                                                                string object_positions_as_string = "";
+                                                                for (int i = 0; i < irrelevant_objects.Count; i++)
+                                                                {
+                                                                    objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                                                    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                                }
+
+                                                                //string text contains what is written in the log and in the history list
+                                                                string text = "";
+                                                                if (masked_counter > 0)//if masked objects, add them
+                                                                {
+                                                                    text += $"{masked_counter}x masked; ";
+                                                                }
+                                                                if (threshold_counter > 0)//if objects out of confidence range, add them
+                                                                {
+                                                                    text += $"{threshold_counter}x not in confidence range; ";
+                                                                }
+                                                                if (irrelevant_counter > 0) //if other irrelevant objects, add them
+                                                                {
+                                                                    text += $"{irrelevant_counter}x irrelevant; ";
+                                                                }
+
+                                                                if (text != "") //remove last ";"
+                                                                {
+                                                                    text = text.Remove(text.Length - 2);
+                                                                }
+
+                                                                Log($"{text}, so it's an irrelevant alert.");
+                                                                //add to history list
+                                                                CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
+                                                            }
+                                                        }
+                                                        //if no object was detected
+                                                        else if (response.predictions.Length == 0)
+                                                        {
+                                                            // FALSE ALERT
+
+                                                            AppSettings.Settings.CameraList[index].IncrementFalseAlerts(); //stats update
+                                                            Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused a false alert, nothing detected.");
+
+                                                            //add to history list
+                                                            Log("Adding false to history list.");
+                                                            CreateListItem(image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
+                                                        }
+                                                    }
+
+                                                    //if camera is disabled.
+                                                    else if (AppSettings.Settings.CameraList[index].enabled == false)
+                                                    {
+                                                        Log("(6/6) Selected camera is disabled.");
+                                                    }
+
+                                                }
+
+                                            }
+                                            else if (response.success == false) //if nothing was detected
+                                            {
+                                                error = $"ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
+                                                Log(error);
+                                            }
+
+                                        }
+                                        else if (string.IsNullOrEmpty(error))
+                                        {
+                                            //deserialization did not cause exception, it just gave a null response in the object?
+                                            //probably wont happen but just making sure
+                                            error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                            Log(error);
+                                        }
+
+
                                     }
-                                    else if (string.IsNullOrEmpty(error))
+                                    else
                                     {
-                                        //deserialization did not cause exception, it just gave a null response in the object?
-                                        //probably wont happen but just making sure
-                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                        error = "ERROR: Empty string returned from HTTP post.";
                                         Log(error);
                                     }
-                                    
 
                                 }
                                 else
                                 {
-                                    error = "ERROR: Empty string returned from HTTP post.";
+                                    error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
                                     Log(error);
                                 }
 
                             }
-                            else
-                            {
-                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
-                                Log(error);
-                            }
 
                         }
 
-                    }
-
-                    //load updated camera stats info in camera tab if a camera is selected
-                    MethodInvoker LabelUpdate = delegate
-                    {
-                        if (list2.SelectedItems.Count > 0)
+                        //load updated camera stats info in camera tab if a camera is selected
+                        MethodInvoker LabelUpdate = delegate
                         {
+                            if (list2.SelectedItems.Count > 0)
+                            {
                                 //load only stats from Camera.cs object
 
                                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
@@ -871,65 +874,65 @@ namespace AITool
 
                                 //load cameras stats
                                 string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
-                            lbl_camstats.Text = stats;
+                                lbl_camstats.Text = stats;
+                            }
+
+
+                        };
+                        Invoke(LabelUpdate);
+                        //break; //end retries if code was successful
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //We should almost never get here due to all the null checks and function to wait for file to become available...
+                        //When the connection to deepstack fails we will get here
+                        //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
+                        error = $"ERROR: {Global.ExMsg(ex)}";
+                        Log(error);
+
+                        //if (error == "loading image failed") //this was a file exception error - retry file access
+                        //{
+                        //    if (attempts != 9) //failure at attempt 1-8
+                        //    {
+                        //        Log($"Could not access file - will retry after {{yellow}}{attempts * AppSettings.Settings.retry_delay}{{white}}ms delay");
+                        //    }
+                        //    else //last attempt failed
+                        //    {
+                        //        Log($"ERROR: Could not access image '{image_path}'.");
+                        //    }
+                        //}
+                        //else //all other exceptions
+                        //{
+                        //    Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                        //    //upload the alert image which could not be analyzed to Telegram
+                        //    if (AppSettings.Settings.send_errors == true)
+                        //    {
+                        //        await TelegramUpload(image_path);
+                        //    }
+                        //    break; //end retries - this was not a file access error
+                        //}
+
+                    }
+                    //System.Threading.Thread.Sleep(retry_delay * attempts);
+                    //await Task.Delay(AppSettings.Settings.retry_delay * attempts);
+                    //Log($"Retrying image processing - retry  {attempts}");
+                    //}
+
+                    if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
+                    {
+                        //upload the alert image which could not be analyzed to Telegram
+                        if (AppSettings.Settings.send_errors == true)
+                        {
+                            await TelegramUpload(image_path);
                         }
 
-
-                    };
-                    Invoke(LabelUpdate);
-                    //break; //end retries if code was successful
-                }
-                catch (Exception ex)
-                {
-
-                    //We should almost never get here due to all the null checks and function to wait for file to become available...
-                    //When the connection to deepstack fails we will get here
-                    //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
-                    error = $"ERROR: {Global.ExMsg(ex)}";
-                    Log(error);
-
-                    //if (error == "loading image failed") //this was a file exception error - retry file access
-                    //{
-                    //    if (attempts != 9) //failure at attempt 1-8
-                    //    {
-                    //        Log($"Could not access file - will retry after {{yellow}}{attempts * AppSettings.Settings.retry_delay}{{white}}ms delay");
-                    //    }
-                    //    else //last attempt failed
-                    //    {
-                    //        Log($"ERROR: Could not access image '{image_path}'.");
-                    //    }
-                    //}
-                    //else //all other exceptions
-                    //{
-                    //    Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
-                    //    //upload the alert image which could not be analyzed to Telegram
-                    //    if (AppSettings.Settings.send_errors == true)
-                    //    {
-                    //        await TelegramUpload(image_path);
-                    //    }
-                    //    break; //end retries - this was not a file access error
-                    //}
-
-                }
-                //System.Threading.Thread.Sleep(retry_delay * attempts);
-                //await Task.Delay(AppSettings.Settings.retry_delay * attempts);
-                //Log($"Retrying image processing - retry  {attempts}");
-                //}
-
-                if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
-                {
-                    //upload the alert image which could not be analyzed to Telegram
-                    if (AppSettings.Settings.send_errors == true)
-                    {
-                        await TelegramUpload(image_path);
                     }
 
-                }
+                    //dont show time calculations if we had an error
+                    //if (string.IsNullOrEmpty(error))
+                    //{
 
-                //dont show time calculations if we had an error
-                //if (string.IsNullOrEmpty(error))
-                //{
-                    
                     //I notice deepstack takes a lot longer the very first run?
 
                     long TotalTime = sw.ElapsedMilliseconds + QueueWaitMS + FileLockMS;
@@ -955,22 +958,24 @@ namespace AITool
                         Log($"{{white}}Thread Queue Time:   {{yellow}}{QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                     }
 
-                //}
+                    //}
+
+                }
+                else
+                {
+                    Log($"Skipping detection. Found='{index}', Mins since last submission='{mins}', halfcool={halfcool}");
+                }
+                /*
+                try
+                {
+                    System.IO.File.Delete(image_path);
+                }
+                catch
+                {
+                    Console.WriteLine($"ERROR: Could not delete {image_path} .");
+                }*/
 
             }
-            else
-            {
-                Log($"Skipping detection. Found='{index}', Mins since last submission='{mins}', halfcool={halfcool}");
-            }
-            /*
-            try
-            {
-                System.IO.File.Delete(image_path);
-            }
-            catch
-            {
-                Console.WriteLine($"ERROR: Could not delete {image_path} .");
-            }*/
 
 
         }
@@ -984,8 +989,8 @@ namespace AITool
             {
                 try
                 {
-                    var content = client.DownloadString(x);
-                    Log($"   -> trigger URL called: {x}");
+                    string content = client.DownloadString(x);
+                    Log($"   -> trigger URL called: {x}, response: '{content}'");
                 }
                 catch (Exception ex)
                 {
@@ -2055,116 +2060,126 @@ namespace AITool
         public void DeleteListItem(string filename)
         {
 
-            Stopwatch SW = Stopwatch.StartNew();
-            Int32 csvlines = 0;
-
-            MethodInvoker LabelUpdate = async delegate
+            using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
             {
-                ListViewItem listviewitem = new ListViewItem();
-                for (int i = 0; i < list1.Items.Count; i++)
+                Stopwatch SW = Stopwatch.StartNew();
+                Int32 csvlines = 0;
+
+                MethodInvoker LabelUpdate = async delegate
                 {
-                    listviewitem = list1.Items[i];
-                    if (filename == listviewitem.Text)
+                    ListViewItem listviewitem = new ListViewItem();
+                    for (int i = 0; i < list1.Items.Count; i++)
                     {
-                        list1.Items.Remove(listviewitem);
-                        break;
+                        listviewitem = list1.Items[i];
+                        if (filename == listviewitem.Text)
+                        {
+                            list1.Items.Remove(listviewitem);
+                            break;
+                        }
                     }
-                }
-                ResizeListViews();
+                    ResizeListViews();
 
-                //remove entry from history csv
-                try
-                {
-                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-                    if (Success)
+                    //remove entry from history csv
+                    try
                     {
-                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
-                        string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
-                        csvlines = newLines.Count();
-                        System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                        if (Success)
+                        {
+                            string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
+                            string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
+                            csvlines = newLines.Count();
+                            System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                        }
+                        else
+                        {
+                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+                        }
+
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
+                        Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
                     }
 
-                }
-                catch (Exception ex)
-                {
-                    Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
-                }
+                };
 
-            };
+                Invoke(LabelUpdate);
 
-            Invoke(LabelUpdate);
-            
-            string val = "";
-            detection_dictionary.TryRemove(filename.ToLower(), out val);
+                string val = "";
+                detection_dictionary.TryRemove(filename.ToLower(), out val);
 
-            //try to get a better feel how much time this function consumes - Vorlon
-            Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
+                //try to get a better feel how much time this function consumes - Vorlon
+                Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
+
+            }
 
         }
 
         //remove all obsolete entries (associated image does not exist anymore) from the history.csv 
         public void CleanCSVList()
         {
-            Log($"Cleaning cameras/history.csv if necessary...");
 
-            Stopwatch SW = Stopwatch.StartNew();
-            Int32 oldcsvlines = 0;
-            Int32 newcsvlines = 0;
-
-            MethodInvoker LabelUpdate = async delegate
+            using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
             {
-                try
-                {
-                    if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
-                    {
-                        
-                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
 
-                        if (Success)
+                Log($"Cleaning cameras/history.csv if necessary...");
+
+                Stopwatch SW = Stopwatch.StartNew();
+                Int32 oldcsvlines = 0;
+                Int32 newcsvlines = 0;
+
+                MethodInvoker LabelUpdate = async delegate
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                         {
-                            string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
+
+                            bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+
+                            if (Success)
+                            {
+                                string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
                             oldcsvlines = oldLines.Count();
 
-                            List<string> newLines = new List<string>(); //new history.csv
+                                List<string> newLines = new List<string>(); //new history.csv
                             newLines.Add(oldLines[0]); // add title line from old to new history.csv
 
                             foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
                             {
-                                if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
-                                {
-                                    newLines.Add(line);
+                                    if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
+                                    {
+                                        newLines.Add(line);
+                                    }
                                 }
-                            }
-                            newcsvlines = newLines.Count;
+                                newcsvlines = newLines.Count;
 
-                            System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                                System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                        }
+                            else
+                            {
+                                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                            }
+
                         }
                         else
                         {
-                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                            Log("File does not exist yet: cameras/history.csv");
                         }
-
                     }
-                    else
+                    catch
                     {
-                        Log("File does not exist yet: cameras/history.csv");
+                        Log("ERROR: Can't clean the cameras/history.csv!");
                     }
-                }
-                catch
-                {
-                    Log("ERROR: Can't clean the cameras/history.csv!");
-                }
 
-            };
-            Invoke(LabelUpdate);
+                };
+                Invoke(LabelUpdate);
 
-            //try to get a better feel how much time this function consumes - Vorlon
-            Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
+                //try to get a better feel how much time this function consumes - Vorlon
+                Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
+
+            }
 
         }
 
@@ -2173,77 +2188,82 @@ namespace AITool
         {
             try
             {
-                if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
+                using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
                 {
-                    Log("Loading history list from cameras/history.csv ...");
 
-                    Stopwatch SW = Stopwatch.StartNew();
-
-                    //delete obsolete entries from history.csv
-                    //CleanCSVList(); //removed to load the history list faster
-
-                    List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
-
-                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
-
-                    if (Success)
+                    if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
                     {
-                        //load all lines except the first line into List (the first line is the table heading and not an alert entry)
-                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
-                        {
-                            result.Add(line);
-                        }
+                        Log("Loading history list from cameras/history.csv ...");
 
-                        List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
+                        Stopwatch SW = Stopwatch.StartNew();
 
-                        MethodInvoker LabelUpdate = delegate
+                        //delete obsolete entries from history.csv
+                        //CleanCSVList(); //removed to load the history list faster
+
+                        List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
+
+                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
+
+                        if (Success)
                         {
-                            list1.Items.Clear();
+                            //load all lines except the first line into List (the first line is the table heading and not an alert entry)
+                            foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
+                            {
+                                result.Add(line);
+                            }
+
+                            List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
+
+                            MethodInvoker LabelUpdate = delegate
+                            {
+                                list1.Items.Clear();
 
                             //load all List elements into the ListView for each row
                             foreach (var val in result)
-                            {
-                                string camera = val.Split('|')[2];
-                                string success = val.Split('|')[5];
-                                string objects_and_confidence = val.Split('|')[3];
-                                if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
+                                {
+                                    string camera = val.Split('|')[2];
+                                    string success = val.Split('|')[5];
+                                    string objects_and_confidence = val.Split('|')[3];
+                                    if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
                                 string filename = val.Split('|')[0];
-                                string date = val.Split('|')[1];
-                                string object_positions = val.Split('|')[4];
+                                    string date = val.Split('|')[1];
+                                    string object_positions = val.Split('|')[4];
 
-                                ListViewItem item;
-                                if (success == "true")
-                                {
-                                    item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
-                                    item.ForeColor = Color.Green;
+                                    ListViewItem item;
+                                    if (success == "true")
+                                    {
+                                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                                        item.ForeColor = Color.Green;
+                                    }
+                                    else
+                                    {
+                                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                                    }
+
+                                    list1.Items.Insert(0, item);
                                 }
-                                else
-                                {
-                                    item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
-                                }
 
-                                list1.Items.Insert(0, item);
-                            }
+                                ResizeListViews();
 
-                            ResizeListViews();
+                            };
+                            Invoke(LabelUpdate);
 
-                        };
-                        Invoke(LabelUpdate);
+                            //try to get a better feel how much time this function consumes - Vorlon
+                            Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
 
-                        //try to get a better feel how much time this function consumes - Vorlon
-                        Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
+                        }
+                        else
+                        {
+                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+                        }
 
                     }
                     else
                     {
-                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
+                        Log("File does not exist yet - cameras/history.csv");
                     }
 
-                }
-                else
-                {
-                    Log("File does not exist yet - cameras/history.csv");
                 }
 
             }

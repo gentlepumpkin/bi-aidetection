@@ -210,15 +210,15 @@ public class RichTextBoxEx
 				});
 			}
 
-			if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)
-			{
 				UIOp(this._RTF, () =>
 				{
-					this._RTF.Clear();
-					this.CurrentTextLength = 0;
-					Msg = $"(Log window cleared for performance reasons @ {this.MaxTextLength} bytes)\r\n{Msg}";
+					if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)	
+					{
+						this._RTF.Clear();
+						this.CurrentTextLength = 0;
+						Msg = $"(Log window cleared for performance reasons @ {this.MaxTextLength} bytes)\r\n{Msg}";
+					}
 				});
-			}
 
 			Stopwatch sw = Stopwatch.StartNew();
 
