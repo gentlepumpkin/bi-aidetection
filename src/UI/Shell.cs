@@ -129,7 +129,7 @@ namespace AITool
             }
             else
             {
-                Log($"Error: BlueIris not detected.");
+                Log($"BlueIris not detected.");
             }
             //---------------------------------------------------------------------------------------------------------
 
@@ -584,10 +584,12 @@ namespace AITool
 
                                         if (response.predictions != null)
                                         {
+                                            DeepStackServerControl.IsActivated = true;
                                             foreach (Object user in response.predictions)
                                             {
                                                 if (user != null && !string.IsNullOrEmpty(user.label))
                                                 {
+                                                    DeepStackServerControl.VisionDetectionRunning = true;
                                                     outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
                                                 }
                                                 else
@@ -1251,115 +1253,125 @@ namespace AITool
         public async void Log(string text, [CallerMemberName] string memberName = null)
         {
 
-            //get current date and time
-
-            string time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss");
-            string rtftime = DateTime.Now.ToString("dHH:mm:ss");  //no need for date in log tab
-            string ModName = "";
-            if (memberName == ".ctor")
-                memberName = "Constructor";
-
-            if (AppSettings.Settings.log_everything == true || AppSettings.Settings.deepstack_debug)
-            {
-                time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
-                rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
-                if (memberName !=null && !string.IsNullOrEmpty(memberName))
-                    ModName = memberName.PadLeft(18) + "> ";
-
-                //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
-
-                int gg = text.IndexOf(">> ");
-                
-                if (gg > 0 && gg <= 24)
-                {
-                    string modfromglobal = Global.GetWordBetween(text, "", ">> ");
-                    if (!string.IsNullOrEmpty(modfromglobal))
-                    {
-                        ModName = modfromglobal.PadLeft(18) + "> ";
-                        text = Global.GetWordBetween(text, ">> ", "");
-                    }
-
-                }
-            }
-
-            //check for messages coming from deepstack processes and kill them if we didnt ask for debugging messages
-            if (!AppSettings.Settings.deepstack_debug)
-            {
-                if (text.ToLower().Contains("redis-server.exe>") || text.ToLower().Contains("python.exe>"))
-                {
-                    return;
-                }
-            }
-
-            //make the error and warning detection case insensitive:
-            bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("fail", StringComparison.InvariantCultureIgnoreCase) > -1);
-            bool HasWarning = (text.IndexOf("warning", StringComparison.InvariantCultureIgnoreCase) > -1);
-            bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
-            string RTFText = "";
-
-            //set the color for RTF text window:
-            if (HasError)
-            {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{red}}{text}";
-            }
-            else if (HasWarning)
-            {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{mediumorchid}}{text}";
-            }
-            else if (IsDeepStackMsg)
-            {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
-            }
-            else
-            {
-                RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
-            }
-
-            //get rid of any common color coding before logging to file or console
-            text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
-
-            //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
-            if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
-            {
-                //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
-                //text += "Enabling \'Log everything\' might give more information.";
-                Console.WriteLine($"[{rtftime}]: {ModName}{text}");
-                
-                return;
-            }
-
-                      
-
-            //add text to log
             try
             {
-                RTFLogger.LogToRTF(RTFText);
-                LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
-                //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt", append: true))
-                //{
-                //    sw.WriteLine($"[{time}]: {text}");
-                //}
+
+                //get current date and time
+
+                string time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss");
+                string rtftime = DateTime.Now.ToString("dHH:mm:ss");  //no need for date in log tab
+                string ModName = "";
+                if (memberName == ".ctor")
+                    memberName = "Constructor";
+
+                if (AppSettings.Settings.log_everything == true || AppSettings.Settings.deepstack_debug)
+                {
+                    time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
+                    rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
+                    if (memberName != null && !string.IsNullOrEmpty(memberName))
+                        ModName = memberName.PadLeft(18) + "> ";
+
+                    //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
+
+                    int gg = text.IndexOf(">> ");
+
+                    if (gg > 0 && gg <= 24)
+                    {
+                        string modfromglobal = Global.GetWordBetween(text, "", ">> ");
+                        if (!string.IsNullOrEmpty(modfromglobal))
+                        {
+                            ModName = modfromglobal.PadLeft(18) + "> ";
+                            text = Global.GetWordBetween(text, ">> ", "");
+                        }
+
+                    }
+                }
+
+                //check for messages coming from deepstack processes and kill them if we didnt ask for debugging messages
+                if (!AppSettings.Settings.deepstack_debug)
+                {
+                    if (text.ToLower().Contains("redis-server.exe>") || text.ToLower().Contains("python.exe>"))
+                    {
+                        return;
+                    }
+                }
+
+                //make the error and warning detection case insensitive:
+                bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("fail", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool HasWarning = (text.IndexOf("warning", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
+                string RTFText = "";
+
+                //set the color for RTF text window:
+                if (HasError)
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{red}}{text}";
+                }
+                else if (HasWarning)
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{mediumorchid}}{text}";
+                }
+                else if (IsDeepStackMsg)
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
+                }
+                else
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
+                }
+
+                //get rid of any common color coding before logging to file or console
+                text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
+
+                //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
+                if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
+                {
+                    //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
+                    //text += "Enabling \'Log everything\' might give more information.";
+                    Console.WriteLine($"[{rtftime}]: {ModName}{text}");
+
+                    return;
+                }
+
+
+
+                //add text to log
+                try
+                {
+                    RTFLogger.LogToRTF(RTFText);
+                    LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
+                    //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt", append: true))
+                    //{
+                    //    sw.WriteLine($"[{time}]: {text}");
+                    //}
+                }
+                catch
+                {
+                    MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't write to log.txt file!"; };
+                    Invoke(LabelUpdate);
+                }
+
+                if (AppSettings.Settings.send_errors == true && HasError || HasWarning)
+                {
+                    await TelegramText($"[{time}]: {text}"); //upload text to Telegram
+                }
+
+
+
+                //add log text to console
+                Console.WriteLine($"[{rtftime}]: {ModName}{text}");
+
+                //increment error counter
+                if (HasError || HasWarning)
+                {
+                    IncrementErrorCounter();
+                }
+
             }
-            catch
+            catch (Exception ex)
             {
-                MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't write to log.txt file!"; };
-                Invoke(LabelUpdate);
-            }
 
-            if (AppSettings.Settings.send_errors == true && HasError || HasWarning)
-            {
-                await TelegramText($"[{time}]: {text}"); //upload text to Telegram
-            }
-
-
-
-            //add log text to console
-            Console.WriteLine($"[{rtftime}]: {ModName}{text}");
-
-            //increment error counter
-            if (HasError || HasWarning)
-            {
-                IncrementErrorCounter();
+                Console.WriteLine("Error: In LOG, got: " + ex.Message);
             }
 
         }
@@ -3169,13 +3181,19 @@ namespace AITool
             {
                 if (DeepStackServerControl.IsStarted)
                 {
-                    Lbl_BlueStackRunning.Text = "*RUNNING*";
-                    Btn_Start.Enabled = false;
-                    Btn_Stop.Enabled = true;
 
-                    if (!DeepStackServerControl.IsActivated)
+
+                    if (DeepStackServerControl.IsActivated)
                     {
-                        Lbl_BlueStackRunning.Text = "*RUNNING BUT NOT ACTIVATED*";
+                        Lbl_BlueStackRunning.Text = "*RUNNING*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
+                    }
+                    else
+                    {
+                        Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
                     }
                 }
                 else
@@ -3197,7 +3215,7 @@ namespace AITool
 
         }
 
-        private void LoadDeepStackTab(bool StartIfNeeded)
+        private async void LoadDeepStackTab(bool StartIfNeeded)
         {
             //first update the port in the deepstack_url if found
             string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
@@ -3251,16 +3269,31 @@ namespace AITool
             {
                 if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                 {
-                    Lbl_BlueStackRunning.Text = "*RUNNING*";
-                    Btn_Start.Enabled = false;
-                    Btn_Stop.Enabled = true;
-                    
+                    if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
+                    {
+                        Lbl_BlueStackRunning.Text = "*RUNNING*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
+                    }
+                    else if (!DeepStackServerControl.IsActivated)
+                    {
+                        Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
+                    }
+                    else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
+                    {
+                        Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
+                    }
+
                 }
                 else if (DeepStackServerControl.HasError)
                 {
                     Lbl_BlueStackRunning.Text = "*ERROR*";
                     Btn_Start.Enabled = false;
-                    Btn_Stop.Enabled = false;
+                    Btn_Stop.Enabled = true;
                 }
                 else
                 {
@@ -3269,7 +3302,7 @@ namespace AITool
                     Btn_Stop.Enabled = false;
                     if (Chk_AutoStart.Checked && StartIfNeeded)
                     {
-                        if (DeepStackServerControl.Start())
+                        if (await DeepStackServerControl.StartAsync())
                         {
                             if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                             {
@@ -3281,7 +3314,7 @@ namespace AITool
                             {
                                 Lbl_BlueStackRunning.Text = "*ERROR*";
                                 Btn_Start.Enabled = false;
-                                Btn_Stop.Enabled = false;
+                                Btn_Stop.Enabled = true;
                             }
 
                         }
@@ -3289,7 +3322,7 @@ namespace AITool
                         {
                             Lbl_BlueStackRunning.Text = "*ERROR*";
                             Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = false;
+                            Btn_Stop.Enabled = true;
                         }
                     }
                 }
@@ -3303,13 +3336,13 @@ namespace AITool
             }
         }
 
-        private void Btn_Start_Click(object sender, EventArgs e)
+        private async void Btn_Start_Click(object sender, EventArgs e)
         {
             Lbl_BlueStackRunning.Text = "STARTING...";
             Btn_Start.Enabled = false;
             Btn_Stop.Enabled = false;
             SaveDeepStackTab();
-            DeepStackServerControl.Start();
+            await DeepStackServerControl.StartAsync();
             LoadDeepStackTab(true);
         }
 

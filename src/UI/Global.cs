@@ -767,10 +767,10 @@ namespace AITool
                 {
                     if (!prc.process.HasExited)
                     {
-                        if (!string.IsNullOrEmpty(prc.CommandLine) || !string.IsNullOrEmpty(prc.process.StartInfo.Arguments))
-                        {
+                        //if (!string.IsNullOrEmpty(prc.CommandLine) || !string.IsNullOrEmpty(prc.process.StartInfo.Arguments))
+                        //{
                             return true;
-                        }
+                        //}
                     }
                 }
                 catch {}
@@ -780,7 +780,7 @@ namespace AITool
 
         public static ClsProcess GetaProcessByPath(string processname)
         {
-            ClsProcess Ret = new ClsProcess();
+            ClsProcess Ret = null;
             try
             {
                 string pname = Path.GetFileNameWithoutExtension(processname);
@@ -796,35 +796,51 @@ namespace AITool
                     {
                         //accessing 64 bit process from 32 bit app may not allow to get process properties, only name
                         //Stopwatch SW = Stopwatch.StartNew();
+                        Ret = new ClsProcess();
 
                         try
                         {
-                            if (IsAdministrator())
-                            {
-                                Process.EnterDebugMode();
-                            } 
+                            //if (IsAdministrator())
+                            //{
+                            //    Process.EnterDebugMode();
+                            //}
                             PD = new ProcessDetail(curproc.Id);
                             Ret.FileName = PD.Win32ProcessImagePath;
-                            Ret.CommandLine = PD.CommandLine;  //.Replace((char)34,"");
+                            //Todo: This is not working for some reason, even with admin rights
+                            //if (IsAdministrator())
+                            //{
+                            //    Ret.CommandLine = PD.CommandLine;  //.Replace((char)34,"");
+                            //}
                         }
-                        catch { }
-
-                        if (string.IsNullOrEmpty(Ret.CommandLine))
+                        catch 
                         {
-                            //Having trouble obtaining the command line?
-                            //Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
+                            Ret = null;
                         }
 
-                        if (!string.IsNullOrEmpty(Ret.FileName) && Ret.FileName.ToLower() == processname.ToLower())
+                        //asdf
+                        //if (string.IsNullOrEmpty(Ret.CommandLine))
+                        //{
+                        //    //Having trouble obtaining the command line?
+                        //    //Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
+                        //}
+
+                        if (Ret != null && !string.IsNullOrEmpty(Ret.FileName) && Ret.FileName.ToLower() == processname.ToLower())
                         {
                             Ret.process = curproc;
                             break;
+                        }
+                        else
+                        {
+                            Ret = null;
                         }
                     }
 
                 }
             }
-            catch {}
+            catch 
+            {
+                Ret = null;
+            }
 
             return Ret;
         }
@@ -1030,6 +1046,10 @@ namespace AITool
             public Process process = null;
             public string FileName = "";
             public string CommandLine = "";
+            public ClsProcess()
+            {
+                this.process = new Process();
+            }
         }
 
         

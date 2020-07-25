@@ -36,6 +36,7 @@ namespace AITool
         public bool HasError = false;
         public bool IsInstalled = false;
         public bool IsActivated = false;
+        public bool VisionDetectionRunning = false;
         public bool NeedsSaving = false;
         public Global.ClsProcess DeepStackProc;
         public Global.ClsProcess ServerProc;
@@ -78,22 +79,9 @@ namespace AITool
             if (!Global.ProcessValid(this.RedisProc))
                 this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
-            if (this.ServerProc.process != null && this.PythonProc.process != null && this.RedisProc.process != null)
+            if (Global.ProcessValid(this.ServerProc) && Global.ProcessValid(this.PythonProc) && Global.ProcessValid(this.RedisProc))
             {
-                //access denied may happen if our own process did not start the deepstack process and we are not running as administrator
-                bool HasExited = false;
-                try
-                {
-                    HasExited = this.ServerProc.process.HasExited;
-                }
-                catch (Exception ex)
-                {
-
-                    Global.Log("Cannot access already running 'server.exe', must be running as administrator: " + ex.Message);
-                }
                 this.IsInstalled = true;
-                if (!HasExited)
-                {
                     this.HasError = false;
                     Global.Log("DeepStack Desktop IS running from " + ServerProc.FileName);
 
@@ -183,21 +171,12 @@ namespace AITool
 
                     //"C:\DeepStack\interpreter\python.exe" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=17744, pipe_handle=328)" "--multiprocessing-fork"
 
-                }
-                else
-                {
-                    Global.Log("DeepStack Desktop NOT running.");
-                    this.IsStarted = false;
-                    this.PythonProc.process = null;
-                    this.RedisProc.process = null;
-                    this.ServerProc.process = null;
-                    this.DeepStackProc.process = null;
-                }
             }
-            else if (this.ServerProc.process != null || this.PythonProc.process != null || this.RedisProc.process != null)
+            else if (Global.ProcessValid(this.ServerProc) || Global.ProcessValid(this.PythonProc) || Global.ProcessValid(this.RedisProc))
             {
                 Global.Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
                 this.HasError = true;
+                this.IsStarted = true;
             }
             else
             {
@@ -292,7 +271,7 @@ namespace AITool
             return Ret;
 
         }
-        public bool Start()
+        public async Task<bool> StartAsync()
         {
             bool Ret = false;
 
@@ -332,7 +311,7 @@ namespace AITool
                 InitProc.BeginErrorReadLine();
 
                 //next start the redis server...
-                this.RedisProc.process = new Process();
+                this.RedisProc = new Global.ClsProcess();
                 this.RedisProc.process.StartInfo.FileName = this.RedisEXE;
                 this.RedisProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.RedisEXE);
                 this.RedisProc.process.StartInfo.UseShellExecute = false;
@@ -352,7 +331,7 @@ namespace AITool
 
                 //next, start the server
 
-                this.ServerProc.process = new Process();
+                this.ServerProc = new Global.ClsProcess();
                 this.ServerProc.process.StartInfo.FileName = this.ServerEXE;
                 this.ServerProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.ServerEXE);
                 this.ServerProc.process.StartInfo.Arguments = $"-VISION-FACE={this.FaceAPIEnabled} -VISION-SCENE={this.SceneAPIEnabled} -VISION-DETECTION={this.DetectionAPIEnabled} -ADMIN-KEY={this.AdminKey} -API-KEY={this.APIKey} -PORT={this.Port}";
@@ -372,7 +351,7 @@ namespace AITool
                 this.ServerProc.process.BeginErrorReadLine();
 
                 //start the python intelligence.py script
-                this.PythonProc.process = new Process();
+                this.PythonProc = new Global.ClsProcess();
                 this.PythonProc.process.StartInfo.FileName = this.PythonEXE;
                 this.PythonProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
                 this.PythonProc.process.StartInfo.Arguments = $"../intelligence.py -MODE={this.Mode} -VFACE={this.FaceAPIEnabled} -VSCENE={this.SceneAPIEnabled} -VDETECTION={this.DetectionAPIEnabled}";
@@ -398,7 +377,8 @@ namespace AITool
 
                 Global.Log("Started in " + SW.ElapsedMilliseconds + "ms");
 
-
+                //Lets wait a bit longer for the process to report back
+                await Task.Delay(1000);
             }
             catch (Exception ex)
             {
@@ -604,6 +584,11 @@ namespace AITool
                     this.IsActivated = true;
                 }
 
+                if (line.Data.ToLower().Contains("vision/detection"))
+                {
+                    this.VisionDetectionRunning = true;
+                }
+
 
                 Global.Log($"DeepStack>> Server.exe> {line.Data}", "");
 
@@ -621,11 +606,12 @@ namespace AITool
 
             Global.Log("Stopping Deepstack...");
             Stopwatch sw = Stopwatch.StartNew();
-
-            //more than one python process we need to take care of...
-            for (int i = 0; i < 5; i++)
+            //Try to get running processes in any case
+            bool success = GetDeepStackRun();
+            //more than one python process we need to take care of...  Sometimes MANY 
+            for (int i = 0; i < 20; i++)
             {
-                if (!(this.PythonProc.process == null))
+                if (Global.ProcessValid(PythonProc))
                 {
                     try
                     {
@@ -649,7 +635,7 @@ namespace AITool
 
             try
             {
-                if (!(this.RedisProc.process == null))
+                if (Global.ProcessValid(this.RedisProc))
                     await Task.Run(() => this.RedisProc.process.Kill());
             }
             catch (Exception ex)
@@ -659,7 +645,7 @@ namespace AITool
             }
             try
             {
-                if (!(this.ServerProc.process == null))
+                if (Global.ProcessValid(this.ServerProc))
                     await Task.Run(() => this.ServerProc.process.Kill());
             }
             catch (Exception ex)
@@ -669,7 +655,7 @@ namespace AITool
             }
             try
             {
-                if (!(this.DeepStackProc.process == null))
+                if (Global.ProcessValid(this.DeepStackProc))
                     await Task.Run(() => this.DeepStackProc.process.Kill());
             }
             catch (Exception ex)
@@ -683,10 +669,10 @@ namespace AITool
 
             if (!err)
             {
-                this.PythonProc.process = null;
-                this.RedisProc.process = null;
-                this.ServerProc.process = null;
-                this.DeepStackProc.process = null;
+                this.PythonProc = null;
+                this.RedisProc = null;
+                this.ServerProc = null;
+                this.DeepStackProc = null;
                 this.IsStarted = false;
                 Global.Log("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
                 Ret = true;
