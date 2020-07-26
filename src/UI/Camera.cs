@@ -16,15 +16,18 @@ namespace AITool
         DownloadURL,
         PostURL,
         Telegram,
+        Sound,
+        Run,
         MQTT
     }
     public class CameraTriggerAction
     {
         public TriggerType Type = TriggerType.Unknown;
         public string ID = "";
-        public string APIKEYorPW = "";
-        public string TriggerData = "";  //the URL for example
-        public string ExtraData = "";
+        public string Key = "";
+        public string URL = "";  //the URL for example
+        public string PostData = "";
+        public string LastResponse = "";
     }
     public class Camera
     {

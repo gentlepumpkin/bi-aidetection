@@ -778,6 +778,73 @@ namespace AITool
             return false;
         }
 
+        public static List<ClsProcess> GetProcessesByPath(string processname)
+        {
+            List<ClsProcess> Ret = new List<ClsProcess>();
+            try
+            {
+                string pname = Path.GetFileNameWithoutExtension(processname);
+
+                Process[] aProc = Process.GetProcessesByName(pname);
+
+                ProcessDetail PD = null;
+
+                if (aProc.Length > 0)
+
+                {
+                    foreach (Process curproc in aProc)
+                    {
+                        //accessing 64 bit process from 32 bit app may not allow to get process properties, only name
+                        //Stopwatch SW = Stopwatch.StartNew();
+                        ClsProcess CurPrc = new ClsProcess();
+
+                        try
+                        {
+                            //if (IsAdministrator())
+                            //{
+                            //    Process.EnterDebugMode();
+                            //}
+                            PD = new ProcessDetail(curproc.Id);
+                            CurPrc.FileName = PD.Win32ProcessImagePath;
+                            //Todo: This is not working for some reason, even with admin rights
+                            //if (IsAdministrator())
+                            //{
+                            //    Ret.CommandLine = PD.CommandLine;  //.Replace((char)34,"");
+                            //}
+                        }
+                        catch
+                        {
+                            CurPrc = null;
+                        }
+
+                        //asdf
+                        //if (string.IsNullOrEmpty(Ret.CommandLine))
+                        //{
+                        //    //Having trouble obtaining the command line?
+                        //    //Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
+                        //}
+
+                        if (Ret != null && !string.IsNullOrEmpty(CurPrc.FileName) && CurPrc.FileName.ToLower() == processname.ToLower())
+                        {
+                            CurPrc.process = curproc;
+                            Ret.Add(CurPrc);
+                        }
+                        else
+                        {
+                            CurPrc = null;
+                        }
+                    }
+
+                }
+            }
+            catch
+            {
+                Ret = new List<ClsProcess>();
+            }
+
+            return Ret;
+        }
+
         public static ClsProcess GetaProcessByPath(string processname)
         {
             ClsProcess Ret = null;

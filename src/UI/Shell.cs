@@ -120,7 +120,14 @@ namespace AITool
             Log("");
             Log("");
             Log($"Starting {Application.ProductName} version {lbl_version.Text} ({AssemVer}) built on {Global.RetrieveLinkerTimestamp()}");
-
+            if (Global.IsAdministrator())
+            {
+                Log("*** Running as administrator ***");
+            }
+            else
+            {
+                Log("Not running as administrator.");
+            }
             //initialize blueiris info class to get camera names, clip paths, etc
             BlueIrisInfo = new BlueIris();
             if (BlueIrisInfo.IsValid)
@@ -3188,6 +3195,7 @@ namespace AITool
             AppSettings.Settings.deepstack_sceneapienabled = Chk_SceneAPI.Checked;
             AppSettings.Settings.deepstack_autostart = Chk_AutoStart.Checked;
             AppSettings.Settings.deepstack_debug = Chk_DSDebug.Checked;
+            AppSettings.Settings.deepstack_highpriority = chk_HighPriority.Checked;
             AppSettings.Settings.deepstack_adminkey = Txt_AdminKey.Text.Trim();
             AppSettings.Settings.deepstack_apikey = Txt_APIKey.Text.Trim();
             AppSettings.Settings.deepstack_installfolder = Txt_DeepStackInstallFolder.Text.Trim();
@@ -3267,6 +3275,7 @@ namespace AITool
 
             Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
             Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
+            chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
             Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
             Txt_APIKey.Text = DeepStackServerControl.APIKey;
             Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;

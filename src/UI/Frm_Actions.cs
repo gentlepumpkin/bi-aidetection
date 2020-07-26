@@ -31,5 +31,31 @@ namespace AITool
                 Global.Log("Error: " + ex.Message);
             }
         }
+
+        private void FOLV_Actions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FOLV_Actions_SelectionChanged(object sender, EventArgs e)
+        {
+            if (FOLV_Actions.SelectedObjects != null && FOLV_Actions.SelectedObjects.Count > 0)
+            {
+                CameraTriggerAction ta = (CameraTriggerAction)FOLV_Actions.SelectedObjects[0];
+                tbID.Text = ta.ID;
+                tbKey.Text = ta.Key;
+                tbPost.Text = ta.PostData ;
+                tbURL.Text = ta.URL;
+                cbType.SelectedItem = ta.Type;
+
+            }
+            else
+            {
+                tbID.Text = "";
+                tbKey.Text = "";
+                tbPost.Text = "";
+                tbURL.Text = "";
+            }
+        }
     }
 }

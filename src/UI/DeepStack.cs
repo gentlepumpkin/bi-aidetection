@@ -273,8 +273,12 @@ namespace AITool
         }
         public async Task<bool> StartAsync()
         {
+            return await Task.Run(() => this.Start());
+        }
+        private async Task<bool> Start()
+        {
             bool Ret = false;
-
+            
             try
             {
 
@@ -307,6 +311,7 @@ namespace AITool
                 InitProc.Exited += (sender, e) => myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
                 Global.Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
                 InitProc.Start();
+                InitProc.PriorityClass = ProcessPriorityClass.High;  //always run this as high priority since it will initialize faster
                 InitProc.BeginOutputReadLine();
                 InitProc.BeginErrorReadLine();
 
@@ -326,6 +331,10 @@ namespace AITool
                 this.RedisProc.CommandLine = this.RedisEXE;
                 Global.Log($"Starting {this.RedisEXE}...");
                 this.RedisProc.process.Start();
+                if (AppSettings.Settings.deepstack_highpriority)
+                {
+                    this.RedisProc.process.PriorityClass = ProcessPriorityClass.High;
+                }
                 this.RedisProc.process.BeginOutputReadLine();
                 this.RedisProc.process.BeginErrorReadLine();
 
@@ -347,6 +356,11 @@ namespace AITool
                 this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
                 Global.Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
                 this.ServerProc.process.Start();
+                if (AppSettings.Settings.deepstack_highpriority)
+                {
+                    this.ServerProc.process.PriorityClass = ProcessPriorityClass.High;
+                }
+
                 this.ServerProc.process.BeginOutputReadLine();
                 this.ServerProc.process.BeginErrorReadLine();
 
@@ -367,6 +381,12 @@ namespace AITool
                 this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
                 Global.Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
                 this.PythonProc.process.Start();
+                if (AppSettings.Settings.deepstack_highpriority)
+                {
+                    this.PythonProc.process.PriorityClass = ProcessPriorityClass.High;
+                }
+
+
                 this.PythonProc.process.BeginOutputReadLine();
                 this.PythonProc.process.BeginErrorReadLine();
 
@@ -375,10 +395,48 @@ namespace AITool
                 this.HasError = false;
                 Ret = true;
 
-                Global.Log("Started in " + SW.ElapsedMilliseconds + "ms");
+                //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
 
-                //Lets wait a bit longer for the process to report back
-                await Task.Delay(1000);
+                int cnt = 0;
+                do
+                {
+
+                    List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
+                    if (montys.Count >= 5)
+                    {
+                        //when deepstack is running normaly there will be 5 python.exe processes
+                        //Set priority for each this way since we didnt start them in the first place...
+                        cnt = montys.Count;
+                        if (AppSettings.Settings.deepstack_highpriority)
+                        {
+                            foreach (Global.ClsProcess prc in montys)
+                            {
+                                prc.process.PriorityClass = ProcessPriorityClass.High;
+                            }
+                        }
+                        break;
+                    }
+                    await Task.Delay(100);
+                    
+                } while (SW.ElapsedMilliseconds < 10000);  //wait 10 seconds max
+
+                if (cnt == 5)
+                {
+                    Global.Log("Started in " + SW.ElapsedMilliseconds + "ms");
+                }
+                else if (cnt > 5)
+                {
+                    this.HasError = true;
+                    this.IsStarted = true;
+                    Global.Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
+                }
+                else if (cnt == 0)
+                {
+                    this.HasError = true;
+                    this.IsStarted = true;
+                    Global.Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
+                }
+
             }
             catch (Exception ex)
             {
