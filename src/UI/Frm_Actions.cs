@@ -24,6 +24,9 @@ namespace AITool
             {
                 Global_GUI.ConfigureFOLV(ref FOLV_Actions, typeof(CameraTriggerAction), null, null);
                 Global_GUI.UpdateFOLV(ref FOLV_Actions, actions, true);
+
+                string[] triggertypes = Enum.GetNames(typeof(TriggerType));
+                cbType.Items.AddRange(triggertypes);
             }
             catch (Exception ex)
             {

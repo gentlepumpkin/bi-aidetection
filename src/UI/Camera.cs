@@ -26,7 +26,7 @@ namespace AITool
         public string ID = "";
         public string Key = "";
         public string URL = "";  //the URL for example
-        public string PostData = "";
+        public string PostData = "";  //not sure how this will be used yet
         public string LastResponse = "";
     }
     public class Camera
