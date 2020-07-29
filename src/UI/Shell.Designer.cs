@@ -169,6 +169,7 @@ namespace AITool
             this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
             this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
             this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
             this.Btn_Save = new System.Windows.Forms.Button();
@@ -197,7 +198,6 @@ namespace AITool
             this.button1 = new System.Windows.Forms.Button();
             this.RTF_Log = new System.Windows.Forms.RichTextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -2106,6 +2106,16 @@ namespace AITool
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
             // 
+            // chk_HighPriority
+            // 
+            this.chk_HighPriority.AutoSize = true;
+            this.chk_HighPriority.Location = new System.Drawing.Point(490, 439);
+            this.chk_HighPriority.Name = "chk_HighPriority";
+            this.chk_HighPriority.Size = new System.Drawing.Size(149, 24);
+            this.chk_HighPriority.TabIndex = 15;
+            this.chk_HighPriority.Text = "Run high priority";
+            this.chk_HighPriority.UseVisualStyleBackColor = true;
+            // 
             // Chk_DSDebug
             // 
             this.Chk_DSDebug.AutoSize = true;
@@ -2393,16 +2403,6 @@ namespace AITool
             this.RTF_Log.Size = new System.Drawing.Size(1438, 607);
             this.RTF_Log.TabIndex = 0;
             this.RTF_Log.Text = "";
-            // 
-            // chk_HighPriority
-            // 
-            this.chk_HighPriority.AutoSize = true;
-            this.chk_HighPriority.Location = new System.Drawing.Point(490, 439);
-            this.chk_HighPriority.Name = "chk_HighPriority";
-            this.chk_HighPriority.Size = new System.Drawing.Size(149, 24);
-            this.chk_HighPriority.TabIndex = 15;
-            this.chk_HighPriority.Text = "Run high priority";
-            this.chk_HighPriority.UseVisualStyleBackColor = true;
             // 
             // Shell
             // 

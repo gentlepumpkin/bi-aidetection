@@ -2027,17 +2027,17 @@ namespace AITool
                     ListViewItem item;
                     if (success == "true")
                     {
-                        item = new ListViewItem(new string[] { Path.GetFileName(filename), date, camera, objects_and_confidence, object_positions, "✓" });
+                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
                         item.ForeColor = Color.Green;
                     }
                     else
                     {
-                        item = new ListViewItem(new string[] { Path.GetFileName(filename), date, camera, objects_and_confidence, object_positions, "X" });
+                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
                     }
 
                     //add the FULL path to the item tag so we dont need to add a column
-                    
-                    item.Tag = filename;
+                    //** no need, saving full filename in list anyway
+                    //item.Tag = filename;
 
                     list1.Items.Insert(0, item);
 
@@ -2070,20 +2070,27 @@ namespace AITool
             using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
             {
                 Stopwatch SW = Stopwatch.StartNew();
-                Int32 csvlines = 0;
 
                 MethodInvoker LabelUpdate = async delegate
                 {
+                    //bool isfullpath = filename.Contains("\\");
+                    //string justfile = filename;
+                    //if (isfullpath)
+                    //{
+                    //    justfile = Path.GetFileName(filename);
+                    //}
+
                     ListViewItem listviewitem = new ListViewItem();
                     for (int i = 0; i < list1.Items.Count; i++)
                     {
                         listviewitem = list1.Items[i];
-                        if (filename == listviewitem.Text)
+                        if (listviewitem.Text.ToLower().Contains(filename.ToLower()))
                         {
                             list1.Items.Remove(listviewitem);
                             break;
                         }
                     }
+
                     ResizeListViews();
 
                     //remove entry from history csv
@@ -2093,9 +2100,11 @@ namespace AITool
                         if (Success)
                         {
                             string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
-                            string[] newLines = oldLines.Where(line => !line.Split('|')[0].Contains(filename)).ToArray();
-                            csvlines = newLines.Count();
-                            System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                            string[] newLines = oldLines.Where(line => !line.Split('|')[0].ToLower().Contains(filename.ToLower())).ToArray();
+                            if (oldLines.Count() != newLines.Count())
+                            {
+                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                            }
                         }
                         else
                         {
@@ -2148,14 +2157,14 @@ namespace AITool
                             if (Success)
                             {
                                 string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
-                            oldcsvlines = oldLines.Count();
+                                oldcsvlines = oldLines.Count();
 
                                 List<string> newLines = new List<string>(); //new history.csv
-                            newLines.Add(oldLines[0]); // add title line from old to new history.csv
+                                newLines.Add(oldLines[0]); // add title line from old to new history.csv
 
-                            foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
-                            {
-                                    if (System.IO.File.Exists(AppSettings.Settings.input_path + "\\" + line.Split('|')[0]) && AppSettings.Settings.input_path != "")
+                                foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
+                                {
+                                    if (System.IO.File.Exists(line.Split('|')[0]))
                                     {
                                         newLines.Add(line);
                                     }
@@ -2163,7 +2172,7 @@ namespace AITool
                                 newcsvlines = newLines.Count;
 
                                 System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
-                        }
+                            }
                             else
                             {
                                 Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
@@ -2225,14 +2234,14 @@ namespace AITool
                             {
                                 list1.Items.Clear();
 
-                            //load all List elements into the ListView for each row
-                            foreach (var val in result)
+                                //load all List elements into the ListView for each row
+                                foreach (var val in result)
                                 {
                                     string camera = val.Split('|')[2];
                                     string success = val.Split('|')[5];
                                     string objects_and_confidence = val.Split('|')[3];
                                     if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
-                                string filename = val.Split('|')[0];
+                                    string filename = val.Split('|')[0];
                                     string date = val.Split('|')[1];
                                     string object_positions = val.Split('|')[4];
 
@@ -2415,36 +2424,56 @@ namespace AITool
         //event: load selected image to picturebox
         private async void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
         {
+            
+            string filename = "";
             try
             {
                 if (list1.SelectedItems.Count > 0)
                 {
-                                        
-                    using (var img = new Bitmap(list1.SelectedItems[0].Tag.ToString()))
+
+                    //this now stores the full filename
+                    filename = list1.SelectedItems[0].Text;
+
+                    if (!String.IsNullOrEmpty(filename) && filename.Contains("\\") && File.Exists(filename))
                     {
-                        pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                        using (var img = new Bitmap(filename))
+                        {
+                            pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                        }
+                        showHideMask();
+                        lbl_objects.Text = list1.SelectedItems[0].SubItems[3].Text;
                     }
-                    showHideMask();
-                    lbl_objects.Text = list1.SelectedItems[0].SubItems[3].Text;
+                    else
+                    {
+                        lbl_objects.Text = "Image not found";
+                        pictureBox1.BackgroundImage = null;
+                        //delete entry that caused the issue
+                        try
+                        {
+                            DeleteListItem(filename);
+                        }
+                        //if deleting fails because the filename could not be retrieved, do a complete clean up
+                        catch
+                        {
+                            CleanCSVList();
+                            await LoadFromCSVAsync();
+                        }
+                    }
+
+                }
+                else
+                {
+                    //lbl_objects.Text = "Nothing selected";
+                    //pictureBox1.BackgroundImage = null;
                 }
             }
             catch (Exception ex)
             {
                 Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {Global.ExMsg(ex)} )");
 
-                //delete entry that caused the issue
-                try
-                {
-                    DeleteListItem(list1.SelectedItems[0].Text);
-                }
-                //if deleting fails because the filename could not be retrieved, do a complete clean up
-                catch
-                {
-                    CleanCSVList();
-                    await LoadFromCSVAsync();
-                }
             }
-            
+
+
 
         }
 
