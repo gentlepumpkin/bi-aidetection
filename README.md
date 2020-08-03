@@ -1,7 +1,11 @@
 # AI Detection for Blue Iris
 Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to Telegram.
 
-### Install
+### Download
+https://github.com/gentlepumpkin/bi-aidetection/releases
+Click "> Assets" to find the .zip file.
+
+### Install guide and discussion
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
 
 ### Key Features
@@ -18,3 +22,9 @@ https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-ir
 1. install Visual Studio
 2. download project as .zip and unpack somewhere
 3. go to ./src/ and open bi-aidetection.sln with Visual Studio.
+
+Using the Github extension for Visual Studio:
+1. install Visual Studio
+1. install Github Extension from here https://visualstudio.github.com/
+2. Click the green button "clone or download" above this text
+3. Select "Open in Visual Studio"

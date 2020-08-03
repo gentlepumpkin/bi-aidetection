@@ -61,7 +61,7 @@ namespace WindowsFormsApp2.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("localhost:81")]
+        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1:81")]
         public string deepstack_url {
             get {
                 return ((string)(this["deepstack_url"]));
@@ -92,6 +92,18 @@ namespace WindowsFormsApp2.Properties {
             }
             set {
                 this["send_errors"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public int close_instantly {
+            get {
+                return ((int)(this["close_instantly"]));
+            }
+            set {
+                this["close_instantly"] = value;
             }
         }
     }
