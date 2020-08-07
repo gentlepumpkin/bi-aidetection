@@ -625,7 +625,7 @@ namespace WindowsFormsApp2
 
         public void CleanUpExpiredMasks(int index)
         {
-            List<long> removeMaskKeys = new List<long>();
+            List<int> removeMaskKeys = new List<int>();
 
             Log("Searching for keys to remove on Camera: " + CameraList[index].name);
             foreach (ObjectPosition maskedObject in CameraList[index].masked_positions)
@@ -662,7 +662,7 @@ namespace WindowsFormsApp2
             Log("\n");
             Log("##### History objects summary for camera " + CameraList[index].name + " #####");
 
-            List<long> removeHistorykeys = new List<long>();
+            List<int> removeHistorykeys = new List<int>();
             foreach (ObjectPosition historyObject in CameraList[index].last_positions_history)
             {
                 TimeSpan ts = DateTime.Now - historyObject.createDate;
