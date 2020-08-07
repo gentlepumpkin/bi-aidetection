@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.IO;
+using System.Collections;
 
 namespace WindowsFormsApp2
 {
@@ -23,11 +24,13 @@ namespace WindowsFormsApp2
         public int threshold_lower;
         public int threshold_upper;
 
-        public List<string> last_detections = new List<string>(); //stores objects that were detected last
-        public List<float> last_confidences = new List<float>(); //stores last objects confidences
-        public List<string> last_positions = new List<string>(); //stores last objects positions
-        public String last_detections_summary; //summary text of last detection
+        public List<string> last_detections = new List<string>();   //stores objects that were detected last
+        public List<float> last_confidences = new List<float>();    //stores last objects confidences
+        public List<string> last_positions = new List<string>();    //stores last objects positions
+        public String last_detections_summary;                      //summary text of last detection
 
+        public List<ObjectPosition> last_positions_history = new List<ObjectPosition>(); //list of last detected object positions during defined time period (history_save_mins)
+        public List<ObjectPosition> masked_positions = new List<ObjectPosition>();       //stores dynamic masked object list
 
         //stats
         public int stats_alerts; //alert image contained relevant object counter
