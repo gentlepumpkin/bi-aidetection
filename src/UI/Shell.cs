@@ -120,6 +120,14 @@ namespace AITool
             Log("");
             Log("");
             Log($"Starting {Application.ProductName} version {lbl_version.Text} ({AssemVer}) built on {Global.RetrieveLinkerTimestamp()}");
+            if (AppSettings.AlreadyRunning)
+            {
+                Log("*** Another instance is already running *** ");
+                Log(" --- Files will not be monitored from within this session ");
+                Log(" --- Log tab will not display output from service instance. You will need to directly open log file for that ");
+                Log(" --- Changes made here to settings will require that you stop/start the service ");
+                Log(" --- You must close/reopen app to see NEW history items/detections");
+            }
             if (Global.IsAdministrator())
             {
                 Log("*** Running as administrator ***");
@@ -293,6 +301,11 @@ namespace AITool
             try
             {
 
+                if (AppSettings.AlreadyRunning)
+                {
+                    Log("*** Another instance is already running, skip watching for changed files ***");
+                    return;
+                }
                 //first add all the names and paths to check...
                 List<string> names = new List<string>();
                 string pths = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
@@ -2136,6 +2149,12 @@ namespace AITool
         public void CleanCSVList()
         {
 
+            if (AppSettings.AlreadyRunning)
+            {
+                Log($"Skipping clean of history.csv, instance already running.");
+                return;
+            }
+
             using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
             {
 
@@ -2266,7 +2285,7 @@ namespace AITool
 
                             //try to get a better feel how much time this function consumes - Vorlon
                             Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
-
+                            
                         }
                         else
                         {

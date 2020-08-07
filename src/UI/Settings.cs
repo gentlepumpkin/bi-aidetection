@@ -17,7 +17,7 @@ namespace AITool
     {
         public static ClsSettings Settings = new ClsSettings();
         private static string LastSettingsJSON = "";
-
+        public static bool AlreadyRunning = false;
         public class ClsSettings
         {
             public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.json");

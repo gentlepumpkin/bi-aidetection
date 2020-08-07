@@ -23,8 +23,9 @@ namespace AITool
             //To prevent more than one copy running in memory, all trying to access same log and settings files
             if (Process.GetProcessesByName(Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location)).Length > 1)
             {
-                MessageBox.Show("Another instance of this program is already running.", "Warning!");
-                return;
+                //MessageBox.Show("Another instance of this program is already running.", "Warning!");
+                //return;
+                AppSettings.AlreadyRunning = true;
             }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
