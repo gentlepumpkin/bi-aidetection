@@ -111,6 +111,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
+    <Compile Include="util.cs" />
+    <Compile Include="ObjectPosition.cs" />
     <Compile Include="Shell.cs">
       <SubType>Form</SubType>
     </Compile>
