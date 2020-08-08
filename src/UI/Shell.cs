@@ -374,10 +374,10 @@ namespace WindowsFormsApp2
                                             CleanUpExpiredMasks(index);
 
                                             //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                            CleanUpExpiredtHistroy(index);
+                                            CleanUpExpiredHistory(index);
 
                                             //log summary information for all masked objects
-                                            Log("##### Masked objects summary for camera " + CameraList[index].name + " #####");
+                                            Log("### Masked objects summary for camera " + CameraList[index].name + " ###");
                                             foreach (ObjectPosition maskedObject in CameraList[index].masked_positions)
                                             {
                                                 Log("\t" + maskedObject.ToString());
@@ -617,13 +617,13 @@ namespace WindowsFormsApp2
             {
                 if (!maskedObject.isVisible)
                 {
-                    Log("Masked object NOT visible - " + maskedObject.ToString() + " Subtracting from Counter: " + maskedObject.counter);
+                    Log("Masked object NOT visible - " + maskedObject.ToString());
 
                     maskedObject.counter--;
 
                     if (maskedObject.counter <= 0)
                     {
-                        Log("-Masked object flagged to delete: " + maskedObject.ToString() + " on camera:" + CameraList[index].name);
+                        Log(" -Masked object flagged to delete: " + maskedObject.ToString());
                         removeMaskKeys.Add(CameraList[index].masked_positions.IndexOf(maskedObject));
                     }
                 }
@@ -637,15 +637,15 @@ namespace WindowsFormsApp2
             //clean up key flagged masked object key for removal 
             foreach (int key in removeMaskKeys)
             {
-                Log("-Removing expired mask_position key: " + key + " for camera " + CameraList[index].name);
+                Log(" -Removing expired mask_position key: " + key + " for camera " + CameraList[index].name);
                 CameraList[index].masked_positions.RemoveAt(key);
             }
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
-        public void CleanUpExpiredtHistroy(int index)
+        public void CleanUpExpiredHistory(int index)
         {
-            Log("##### History objects summary for camera " + CameraList[index].name + " #####");
+            Log("### History objects summary for camera " + CameraList[index].name + " ###");
 
             List<int> removeHistorykeys = new List<int>();
             foreach (ObjectPosition historyObject in CameraList[index].last_positions_history)
@@ -656,7 +656,7 @@ namespace WindowsFormsApp2
                 Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                 if (minutes >= history_save_mins)
                 {
-                    Log("\t-Flagged to delete: " + historyObject.ToString() + " for camera: " + CameraList[index].name);
+                    Log("\t  -Flagged to delete: " + historyObject.ToString());
                     removeHistorykeys.Add(CameraList[index].last_positions_history.IndexOf(historyObject));
                 }
             }
