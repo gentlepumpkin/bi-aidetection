@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using System.IO;
 using System.Collections;
+using System.Runtime.Remoting.Messaging;
 
 namespace WindowsFormsApp2
 {
@@ -29,8 +30,14 @@ namespace WindowsFormsApp2
         public List<string> last_positions = new List<string>();    //stores last objects positions
         public String last_detections_summary;                      //summary text of last detection
 
+        public bool masking_enabled=false;
         public List<ObjectPosition> last_positions_history = new List<ObjectPosition>(); //list of last detected object positions during defined time period (history_save_mins)
-        public List<ObjectPosition> masked_positions = new List<ObjectPosition>();       //stores dynamic masked object list
+        public List<ObjectPosition> masked_positions = new List<ObjectPosition>();       //stores dynamic masked object list                                                                                         //Dynamic maskes adjustable settings
+        public int mask_counter_default = 15;        //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
+        public int history_save_mins = 5;      //How long to store detected objects in history before purging list 
+        public int history_threshold_count = 2; //Number of times object is seen in same position before moving it to the masked_positions list
+
+
 
         //stats
         public int stats_alerts; //alert image contained relevant object counter
@@ -38,7 +45,8 @@ namespace WindowsFormsApp2
         public int stats_irrelevant_alerts; //alert image contained irrelevant object counter
 
         //write config to file
-        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper)
+        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, 
+                                bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, bool _masking_enabled, int _history_mins, int _mask_create_counter, int _mask_remove_counter)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             if(name != _name)
@@ -58,7 +66,10 @@ namespace WindowsFormsApp2
                 cooldown_time = _cooldown_time;
                 threshold_lower = _threshold_lower;
                 threshold_upper = _threshold_upper;
-
+                history_save_mins = _history_mins;
+                history_threshold_count = _mask_create_counter;
+                mask_counter_default = _mask_remove_counter;
+                masking_enabled = _masking_enabled;
 
                 triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
@@ -102,7 +113,17 @@ namespace WindowsFormsApp2
                 sw.WriteLine($"Certainty threshold: \"{threshold_lower},{threshold_upper}\" (format: \"lower % limit, upper % limit\")");
                 sw.WriteLine($"STATS: alerts,irrelevant alerts,false alerts: \"{stats_alerts.ToString()}, {stats_irrelevant_alerts.ToString()}, {stats_false_alerts.ToString()}\" ");
 
-
+                if (masking_enabled == true)
+                {
+                    sw.WriteLine("Object masking enabled?: \"yes\"(options: yes, no)");
+                }
+                else
+                {
+                    sw.WriteLine("Object masking enabled?: \"no\"(options: yes, no)");
+                }
+                sw.WriteLine($"Clear object history in: \"{history_save_mins}\" minutes.  (Time to store found objects that have not hit threshold count to become masks.)");
+                sw.WriteLine($"Create mask: \"{history_threshold_count}\" (Creates a mask when history object found counter exceeds this value.)");
+                sw.WriteLine($"Remove mask: \"{mask_counter_default}\" (Remove the mask when mask history counter falls below this value.)");
             }
         }
 
@@ -125,7 +146,6 @@ namespace WindowsFormsApp2
             //read triggering objects
             triggering_objects_as_string = content[1].Split('"')[1].Replace(" ", ""); //take the second line, split it between every ", take the part after the first ", remove every " " in this part
             triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
-            
 
             //read trigger urls
             trigger_urls_as_string = content[0].Split('"')[1]; //takes the first line, cuts out everything between the first and the second " marker; all trigger urls in one string, ! still contains possible spaces etc.
@@ -179,11 +199,23 @@ namespace WindowsFormsApp2
                 threshold_upper = 100;
             }
             
-
             //read stats
             Int32.TryParse(content[7].Split('"')[1].Split(',')[0], out stats_alerts); //bedeutet: Zeile 7 (6+1), aufgetrennt an ", 2tes (1+1) Resultat, aufgeteilt an ',', davon 1. Resultat  
             Int32.TryParse(content[7].Split('"')[1].Split(',')[1], out stats_irrelevant_alerts);
             Int32.TryParse(content[7].Split('"')[1].Split(',')[2], out stats_false_alerts);
+
+            //read object mask config
+            if (content[8].Split('"')[1].Replace(" ", "") == "yes")
+            {
+                masking_enabled = true;
+            }
+            else
+            {
+                masking_enabled = false;
+            }
+            Int32.TryParse(content[9].Split('"')[1], out history_save_mins); 
+            Int32.TryParse(content[10].Split('"')[1], out history_threshold_count); 
+            Int32.TryParse(content[11].Split('"')[1], out mask_counter_default); 
         }
 
 
@@ -191,21 +223,21 @@ namespace WindowsFormsApp2
         public void IncrementAlerts()
         {
             stats_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, masking_enabled ,history_save_mins, history_threshold_count,mask_counter_default);
         }
 
         //one alarm that contained no objects counter
         public void IncrementFalseAlerts()
         {
             stats_false_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, masking_enabled, history_save_mins, history_threshold_count, mask_counter_default);
         }
 
         //one alarm that contained irrelevant objects counter
         public void IncrementIrrelevantAlerts()
         {
             stats_irrelevant_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, masking_enabled, history_save_mins, history_threshold_count, mask_counter_default);
         }
 
 
