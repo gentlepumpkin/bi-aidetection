@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace WindowsFormsApp2
 {
-    class ObjectPosition : IEquatable<ObjectPosition>
+    public class ObjectPosition : IEquatable<ObjectPosition>
     {
         public DateTime createDate;
         public Boolean isVisible=false;
@@ -14,16 +14,18 @@ namespace WindowsFormsApp2
         public int ymax;
         public long key;
         public string label;
+        public Camera camera;
 
         //object position +- thresholdMaxRange to determine positive match. 
         //Threshold variable due to variations in object position between detections.
         public int thresholdMaxRange = 35;
 
-        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label)
+        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, Camera camera)
         {
             //todo: convert 0's to 1 to prevent 0 key; Currently, Adds 1 to avoid zero key
             createDate = DateTime.Now;
-            
+            this.camera = camera;
+
             this.xmin = xmin;
             this.ymin = ymin;
             this.xmax = xmax;

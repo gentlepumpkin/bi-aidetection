@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿namespace WindowsFormsApp2
+{
     public static class ExtensionsForInt32
     {
         public static bool Between(this int num, int min, int max, bool inclusive = true)
         {
-            if(min < 0)
+            if (min < 0)
             {
                 min = 0;
             }
@@ -16,3 +14,4 @@ using System.Text;
                 : min < num && num < max;
         }
     }
+}

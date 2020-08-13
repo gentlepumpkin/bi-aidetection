@@ -111,6 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
+    <Compile Include="MaskManager.cs" />
     <Compile Include="util.cs" />
     <Compile Include="ObjectPosition.cs" />
     <Compile Include="Shell.cs">
