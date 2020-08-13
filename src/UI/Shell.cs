@@ -571,6 +571,7 @@ namespace WindowsFormsApp2
 
             if (CameraList[index].last_positions_history.Contains(currentObject))
             {
+                //get index to prevent another search for removal if needed
                 int indexLoc = CameraList[index].last_positions_history.IndexOf(currentObject);
                 ObjectPosition foundObject = CameraList[index].last_positions_history[indexLoc];
 
@@ -611,35 +612,33 @@ namespace WindowsFormsApp2
 
         public void CleanUpExpiredMasks(int index)
         {
-            List<int> removeMaskKeys = new List<int>();
+            List<ObjectPosition> maskedList = CameraList[index].masked_positions;
 
-            Log("Searching for keys to remove on Camera: " + CameraList[index].name);
-            foreach (ObjectPosition maskedObject in CameraList[index].masked_positions)
+            if (maskedList != null && maskedList.Count > 0)
             {
-                if (!maskedObject.isVisible)
+                Log("Searching for object masks to remove on Camera: " + CameraList[index].name);
+
+                //scan backward through the list and remove by index. Not as easy to read as find by object but the fastest for removals at O(1)
+                for (int x = maskedList.Count - 1; x >= 0; x--)
                 {
-                    Log("Masked object NOT visible - " + maskedObject.ToString());
-
-                    maskedObject.counter--;
-
-                    if (maskedObject.counter <= 0)
+                    ObjectPosition maskedObject = maskedList[x];
+                    if (!maskedObject.isVisible)
                     {
-                        Log(" -Masked object flagged to delete: " + maskedObject.ToString());
-                        removeMaskKeys.Add(CameraList[index].masked_positions.IndexOf(maskedObject));
+                        Log("Masked object NOT visible - " + maskedObject.ToString());
+                        maskedObject.counter--;
+
+                        if (maskedObject.counter <= 0)
+                        {
+                            Log("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + CameraList[index].name);
+                            maskedList.RemoveAt(x);
+                        }
+                    }
+                    else
+                    {
+                        Log("Masked object VISIBLE - " + maskedObject.ToString());
+                        maskedObject.isVisible = false; //reset flag
                     }
                 }
-                else
-                {
-                    Log("Masked object VISIBLE - " + maskedObject.ToString());
-                    maskedObject.isVisible = false;
-                }
-            }
-
-            //clean up key flagged masked object key for removal 
-            foreach (int key in removeMaskKeys)
-            {
-                Log(" -Removing expired mask_position key: " + key + " for camera " + CameraList[index].name);
-                CameraList[index].masked_positions.RemoveAt(key);
             }
         }
 
@@ -648,25 +647,24 @@ namespace WindowsFormsApp2
         {
             Log("### History objects summary for camera " + CameraList[index].name + " ###");
 
-            List<int> removeHistorykeys = new List<int>();
-            foreach (ObjectPosition historyObject in CameraList[index].last_positions_history)
-            {
-                TimeSpan ts = DateTime.Now - historyObject.createDate;
-                int minutes = ts.Minutes;
+            List<ObjectPosition> historyList = CameraList[index].last_positions_history;
 
-                Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
-                if (minutes >= CameraList[index].history_save_mins)
+            if (historyList != null && historyList.Count > 0)
+            {
+                //scan backward through the list and remove by index. Not as easy to read but the fastest for removals at O(1)
+                for (int x= historyList.Count-1; x >= 0; x--)
                 {
-                    Log("\t  -Flagged to delete: " + historyObject.ToString());
-                    removeHistorykeys.Add(CameraList[index].last_positions_history.IndexOf(historyObject));
-                }
-            }
+                    ObjectPosition historyObject = historyList[x];
+                    TimeSpan ts = DateTime.Now - historyObject.createDate;
+                    int minutes = ts.Minutes;
 
-            //clean up key flagged history key for removal 
-            foreach (int key in removeHistorykeys)
-            {
-                Log("\t-Removing expired history key: " + key + " for camera " + CameraList[index].name);
-                CameraList[index].last_positions_history.RemoveAt(key);
+                    Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                    if (minutes >= CameraList[index].history_save_mins)
+                    {
+                        Log("\t-Removing expired history: " + historyObject.ToString() + " for camera " + CameraList[index].name);
+                        historyList.RemoveAt(x);
+                    }
+                }
             }
         }
 
