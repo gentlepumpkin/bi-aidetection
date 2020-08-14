@@ -65,7 +65,7 @@ namespace AITool
         {
             List<ObjectPosition> historyList = last_positions_history;
 
-            log.Info("### History objects summary for camera " + cameraName + " ###");
+            log.Debug("### History objects summary for camera " + cameraName + " ###");
 
             if (historyList != null && historyList.Count > 0)
             {
@@ -76,10 +76,10 @@ namespace AITool
                     TimeSpan ts = DateTime.Now - historyObject.createDate;
                     int minutes = ts.Minutes;
 
-                    log.Info("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                    log.Debug("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                     if (minutes >= history_save_mins)
                     {
-                        log.Info("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
+                        log.Debug("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
                         historyList.RemoveAt(x);
                     }
                 }

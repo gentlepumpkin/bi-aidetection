@@ -123,6 +123,7 @@ namespace AITool
                 }
                 catch
                 {
+                    log.Error("Can't create cameras/history.csv database!");
                     lbl_errors.Text = "Can't create cameras/history.csv database!";
                 }
 
@@ -162,8 +163,9 @@ namespace AITool
                 }
                 else
                 {
-                    log.Error($"ERROR: Can't access input folder '{input_path}'.");
-                    ProcessErrors($"ERROR: Can't access input folder '{input_path}'."); 
+                    string error = $"ERROR: Can't access input folder '{input_path}'.";
+                    log.Error(error);
+                    ProcessErrors(error); 
                 }
 
             }
@@ -264,8 +266,9 @@ namespace AITool
                                     }
                                     else
                                     {
-                                        log.Warn("WARNING: No default camera found. Aborting.");
-                                        ProcessErrors("WARNING: No default camera found. Aborting.");
+                                        string error_msg = "WARNING: No default camera found. Aborting.";
+                                        log.Warn(error_msg);
+                                        ProcessErrors(error_msg);
                                     }
                                 }
 
@@ -329,7 +332,7 @@ namespace AITool
                                                                 !CameraList[index].maskManager.masked_positions.Contains(currentObject))
                                                             {
                                                                 // -> OBJECT IS OUTSIDE OF MASKED AREAS
-                                                                log.Debug("Object is outside of masked areas " + currentObject.ToString() + " on camera:" + CameraList[index].name);
+                                                                log.Info("Object is outside of masked areas " + currentObject.ToString() + " on camera:" + CameraList[index].name);
                                                                 objects.Add(user.label);
                                                                 objects_confidence.Add(user.confidence);
                                                                 string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
@@ -403,7 +406,7 @@ namespace AITool
                                                     detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
                                                 }
                                                 CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                log.Debug("The summary:" + CameraList[index].last_detections_summary);
+                                                log.Info("The summary:" + CameraList[index].last_detections_summary);
 
 
                                                 //RELEVANT ALERT
@@ -431,7 +434,6 @@ namespace AITool
                                             else if (irrelevant_objects.Count() > 0)
                                             {
                                                 //IRRELEVANT ALERT
-
 
                                                 CameraList[index].IncrementIrrelevantAlerts(); //stats update
                                                 log.Debug($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
@@ -496,8 +498,9 @@ namespace AITool
                             }
                             else if (response.success == false) //if nothing was detected
                             {
-                                log.Error("ERROR: no response from AI Server");
-                                ProcessErrors("ERROR: no response from AI Server");
+                                string error_msg = "ERROR: no response from AI Server";
+                                log.Error(error_msg);
+                                ProcessErrors(error_msg);
                             }
                         }
 
@@ -533,14 +536,16 @@ namespace AITool
                             }
                             else //last attempt failed
                             {
-                                log.Error($"ERROR: Could not access image '{image_path}'.");
-                                ProcessErrors($"ERROR: Could not access image '{image_path}'.");
+                                string error_msg = $"ERROR: Could not access image '{image_path}'.";
+                                log.Error(error_msg);
+                                ProcessErrors(error_msg);
                             }
                         }
                         else //all other exceptions
                         {
-                            log.Error($"ERROR: Processing the following image '{image_path}' failed. {error}");
-                            ProcessErrors($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                            string error_msg = $"ERROR: Processing the following image '{image_path}' failed. {error}";
+                            log.Error(error_msg);
+                            ProcessErrors(error_msg);
 
                             //upload the alert image which could not be analyzed to Telegram
                             if (send_errors == true)
@@ -570,8 +575,9 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable." + ex.Message);
-                    ProcessErrors($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
+                    string error_msg = $"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable." + ex.Message;
+                    log.Error(error_msg);
+                    ProcessErrors(error_msg);
                 }
 
             }
@@ -613,8 +619,9 @@ namespace AITool
                 }
                 catch
                 {
-                    log.Error($"ERROR: Could not upload image {image_path} to Telegram.");
-                    ProcessErrors($"ERROR: Could not upload image {image_path} to Telegram.");
+                    string error_msg = $"ERROR: Could not upload image {image_path} to Telegram.";
+                    log.Error(error_msg);
+                    ProcessErrors(error_msg);
 
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
@@ -653,8 +660,9 @@ namespace AITool
                     if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
                     {
                         send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
-                        log.Error($"ERROR: Could not send text \"{text}\" to Telegram.");
-                        ProcessErrors($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        string error_msg = $"ERROR: Could not send text \"{text}\" to Telegram.";
+                        log.Error(error_msg);
+                        ProcessErrors(error_msg);
                         send_errors = true;
 
                         //inform on main tab that Telegram upload failed
@@ -663,8 +671,9 @@ namespace AITool
                     }
                     else
                     {
-                        log.Error($"ERROR: Could not send text \"{text}\" to Telegram.");
-                        ProcessErrors($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        string error_msg = $"ERROR: Could not send text \"{text}\" to Telegram.";
+                        log.Error(error_msg);
+                        ProcessErrors(error_msg);
                     }
                 }
 
@@ -745,8 +754,9 @@ namespace AITool
                         //if any coordinates of the object are outside of the mask image, th mask image must be too small.
                         if (mask_img.Width != width || mask_img.Height != height)
                         {
-                            log.Error($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
-                            ProcessErrors($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
+                            string error_msg = $"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}";
+                            log.Error(error_msg);
+                            ProcessErrors(error_msg);
                             return true;
                         }
 
@@ -799,8 +809,9 @@ namespace AITool
             }
             catch
             {
-                log.Error($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
-                ProcessErrors($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
+                string error_msg = $"ERROR while loading the mask file ./cameras/{cameraname}.png.";
+                log.Error(error_msg);
+                ProcessErrors(error_msg);
                 return true;
             }
 
@@ -909,7 +920,7 @@ namespace AITool
                 }
                 else
                 {
-                    log.Warn($"ERROR: Can't access input folder '{input_path}'.");
+                    log.Error($"ERROR: Can't access input folder '{input_path}'.");
                 }
 
             }
@@ -977,8 +988,9 @@ namespace AITool
             }
             catch
             {
-                log.Error("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
-                ProcessErrors("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
+                string error = "ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.";
+                log.Error(error);
+                ProcessErrors(error);
             }
 
             if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
@@ -1587,8 +1599,9 @@ namespace AITool
                 }
                 catch
                 {
-                    log.Error("ERROR: Can't write to cameras/history.csv!");
-                    ProcessErrors("ERROR: Can't write to cameras/history.csv!");
+                    string error_msg = "ERROR: Can't write to cameras/history.csv!";
+                    log.Error(error_msg);
+                    ProcessErrors(error_msg);
                 }
 
             };
@@ -1619,8 +1632,9 @@ namespace AITool
                 }
                 catch
                 {
-                    log.Error("ERROR: Can't clean the cameras/history.csv!");
-                    ProcessErrors("ERROR: Can't clean the cameras/history.csv!");
+                    string error_msg = "ERROR: Can't clean the cameras/history.csv!";
+                    log.Error(error_msg);
+                    ProcessErrors(error_msg);
                 }
 
             };
@@ -1711,8 +1725,6 @@ namespace AITool
             return true;
         }
 
-
-
         //EVENTS
 
         //EVENT: new image added to input_path -> START AI DETECTION
@@ -1749,8 +1761,6 @@ namespace AITool
             };
             Invoke(LabelUpdate);
 
-
-
             detection_running = false; //reset variable
 
         }
@@ -1785,8 +1795,9 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                log.Error($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
-                ProcessErrors($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                string error_msg = $"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )";
+                log.Error(error_msg);
+                ProcessErrors(error_msg);
                 //delete entry that caused the issue
                 try
                 {
@@ -1799,8 +1810,6 @@ namespace AITool
                     LoadFromCSV();
                 }
             }
-
-
         }
 
         //event: show mask button clicked
@@ -1908,7 +1917,6 @@ namespace AITool
                     item.Tag = file;
                     list2.Items.Add(item);
                     i++;
-
                 }
             }
             catch
@@ -2118,11 +2126,10 @@ namespace AITool
                     }
                     else
                     {
-                        log.Error("ERROR: Can't find the selected camera, camera wasn't deleted.");
-                        ProcessErrors("ERROR: Can't find the selected camera, camera wasn't deleted.");
+                        string error_msg = "ERROR: Can't find the selected camera, camera wasn't deleted.";
+                        log.Error(error_msg);
+                        ProcessErrors(error_msg);
                     }
-
-
                 }
             }
         }
@@ -2207,7 +2214,6 @@ namespace AITool
                 }
             }
         }
-
 
 
         // SPECIAL METHODS
@@ -2355,12 +2361,9 @@ namespace AITool
             }
         }
 
-
-
         //----------------------------------------------------------------------------------------------------------
         //SETTING TAB
         //----------------------------------------------------------------------------------------------------------
-
 
         //settings save button
         private void BtnSettingsSave_Click_1(object sender, EventArgs e)
@@ -2418,7 +2421,6 @@ namespace AITool
             {
                 MessageBox.Show("Log file missing");
             }
-
         }
 
         //ask before closing AI Tool to prevent accidently closing
@@ -2447,13 +2449,11 @@ namespace AITool
                             }
                         }
                     }
-
                     e.Cancel = (result == DialogResult.Cancel);
                 }
             }
 
         }
-
 
         public void SetLogLevel(String level)
         {
@@ -2470,9 +2470,7 @@ namespace AITool
         }
     }
 
-
     //classes for AI analysis
-
     class Response
     {
 
