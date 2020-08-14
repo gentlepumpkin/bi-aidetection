@@ -34,6 +34,7 @@ using System.Xml.Schema;
 using System.Collections;
 using System.Windows.Forms.DataVisualization.Charting;
 
+
 namespace WindowsFormsApp2
 {
 
@@ -57,6 +58,9 @@ namespace WindowsFormsApp2
 
         FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
 
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
         public Shell()
         {
             InitializeComponent();
@@ -68,7 +72,7 @@ namespace WindowsFormsApp2
             {
                 //create folder
                 DirectoryInfo di = Directory.CreateDirectory("./cameras");
-                Log("./cameras/" + " dir created.");
+                log.Debug("./cameras/" + " dir created.");
             }
 
             //---------------------------------------------------------------------------
@@ -109,7 +113,7 @@ namespace WindowsFormsApp2
             //check if history.csv exists, if not then create it
             if (!System.IO.File.Exists(@"cameras/history.csv"))
             {
-                Log("ATTENTION: Creating database cameras/history.csv .");
+                log.Debug("ATTENTION: Creating database cameras/history.csv .");
                 try
                 {
                     using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "cameras/history.csv"))
@@ -154,11 +158,12 @@ namespace WindowsFormsApp2
             {
                 if (input_path == "")
                 {
-                    Log("ATTENTION: No input folder defined.");
+                    log.Warn("ATTENTION: No input folder defined.");
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{input_path}'.");
+                    log.Error($"ERROR: Can't access input folder '{input_path}'.");
+                    ProcessErrors($"ERROR: Can't access input folder '{input_path}'."); 
                 }
 
             }
@@ -182,7 +187,7 @@ namespace WindowsFormsApp2
 
             this.Opacity = 1;
 
-            Log("APP START complete.");
+            log.Debug("APP START complete.");
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -194,8 +199,8 @@ namespace WindowsFormsApp2
         {
 
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
-            Log("");
-            Log($"Starting analysis of {image_path}");
+            log.Debug("");
+            log.Debug($"Starting analysis of {image_path}");
 
             var fullDeepstackUrl = "";
             //allows both "http://ip:port" and "ip:port"
@@ -225,15 +230,15 @@ namespace WindowsFormsApp2
                         error = "loading image failed";
                         using (var image_data = System.IO.File.OpenRead(image_path))
                         {
-                            Log("(1/6) Uploading image to DeepQuestAI Server");
+                            log.Debug("(1/6) Uploading image to DeepQuestAI Server");
                             error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
                             request.Add(new StreamContent(image_data), "image", Path.GetFileName(image_path));
                             var output = await client.PostAsync(fullDeepstackUrl, request);
-                            Log("(2/6) Waiting for results");
+                            log.Debug("(2/6) Waiting for results");
                             var jsonString = await output.Content.ReadAsStringAsync();
                             Response response = JsonConvert.DeserializeObject<Response>(jsonString);
 
-                            Log("(3/6) Processing results:");
+                            log.Debug("(3/6) Processing results:");
                             error = $"Failure in AI Tool processing the image.";
 
                             //print every detected object with the according confidence-level
@@ -243,23 +248,24 @@ namespace WindowsFormsApp2
                             {
                                 outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
                             }
-                            Log(outputtext);
+                            log.Info(outputtext);
 
                             if (response.success == true)
                             {
                                 //if there is no camera with the same prefix
                                 if (index == -1)
                                 {
-                                    Log("   No camera with the same prefix found: " + fileprefix);
+                                    log.Warn("   No camera with the same prefix found: " + fileprefix);
                                     //check if there is a default camera which accepts any prefix, select it
                                     if (CameraList.Exists(x => x.prefix == ""))
                                     {
                                         index = CameraList.FindIndex(x => x.prefix == "");
-                                        Log("(   Found a default camera.");
+                                        log.Debug("(   Found a default camera.");
                                     }
                                     else
                                     {
-                                        Log("WARNING: No default camera found. Aborting.");
+                                        log.Warn("WARNING: No default camera found. Aborting.");
+                                        ProcessErrors("WARNING: No default camera found. Aborting.");
                                     }
                                 }
 
@@ -290,11 +296,11 @@ namespace WindowsFormsApp2
                                             int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
                                             int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
 
-                                            Log("(4/6) Checking if detected object is relevant and within confidence limits:");
+                                            log.Debug("(4/6) Checking if detected object is relevant and within confidence limits:");
                                             //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
                                             foreach (var user in response.predictions)
                                             {
-                                                Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+                                                log.Debug($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
 
                                                 using (var img = new Bitmap(image_path))
                                                 {
@@ -323,12 +329,12 @@ namespace WindowsFormsApp2
                                                                 !CameraList[index].maskManager.masked_positions.Contains(currentObject))
                                                             {
                                                                 // -> OBJECT IS OUTSIDE OF MASKED AREAS
-                                                                Log("Object is outside of masked areas " + currentObject.ToString() + " on camera:" + CameraList[index].name);
+                                                                log.Debug("Object is outside of masked areas " + currentObject.ToString() + " on camera:" + CameraList[index].name);
                                                                 objects.Add(user.label);
                                                                 objects_confidence.Add(user.confidence);
                                                                 string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                                 objects_position.Add(position);
-                                                                Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                log.Info($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
 
                                                             }
                                                             else //if the object is in a masked area
@@ -355,7 +361,7 @@ namespace WindowsFormsApp2
                                                         irrelevant_objects_confidence.Add(user.confidence);
                                                         string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                         irrelevant_objects_position.Add(position);
-                                                        Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                        log.Debug($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
                                                     }
                                                 }
 
@@ -370,10 +376,10 @@ namespace WindowsFormsApp2
                                                 CameraList[index].maskManager.CleanUpExpiredHistory(CameraList[index].name);
 
                                                 //log summary information for all masked objects
-                                                Log("### Masked objects summary for camera " + CameraList[index].name + " ###");
+                                                log.Info("### Masked objects summary for camera " + CameraList[index].name + " ###");
                                                 foreach (ObjectPosition maskedObject in CameraList[index].maskManager.masked_positions)
                                                 {
-                                                    Log("\t" + maskedObject.ToString());
+                                                    log.Info("\t" + maskedObject.ToString());
                                                 }
                                             }
 
@@ -397,14 +403,14 @@ namespace WindowsFormsApp2
                                                     detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
                                                 }
                                                 CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                Log("The summary:" + CameraList[index].last_detections_summary);
+                                                log.Debug("The summary:" + CameraList[index].last_detections_summary);
 
 
                                                 //RELEVANT ALERT
-                                                Log("(5/6) Performing alert actions:");
+                                                log.Debug("(5/6) Performing alert actions:");
                                                 await Trigger(index, image_path); //make TRIGGER
                                                 CameraList[index].IncrementAlerts(); //stats update
-                                                Log($"(6/6) SUCCESS.");
+                                                log.Debug($"(6/6) SUCCESS.");
 
 
                                                 //create text string objects and confidences
@@ -417,7 +423,7 @@ namespace WindowsFormsApp2
                                                 }
 
                                                 //add to history list
-                                                Log("Adding detection to history list.");
+                                                log.Debug("Adding detection to history list.");
                                                 CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, objects_and_confidences, object_positions_as_string);
 
                                             }
@@ -428,8 +434,8 @@ namespace WindowsFormsApp2
 
 
                                                 CameraList[index].IncrementIrrelevantAlerts(); //stats update
-                                                Log($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
-                                                Log("Adding irrelevant detection to history list.");
+                                                log.Debug($"(6/6) Camera {CameraList[index].name} caused an irrelevant alert.");
+                                                log.Debug("Adding irrelevant detection to history list.");
 
                                                 //retrieve confidences and positions
                                                 string objects_and_confidences = "";
@@ -460,7 +466,7 @@ namespace WindowsFormsApp2
                                                     text = text.Remove(text.Length - 2);
                                                 }
 
-                                                Log($"{text}, so it's an irrelevant alert.");
+                                                log.Debug($"{text}, so it's an irrelevant alert.");
                                                 //add to history list
                                                 CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                             }
@@ -471,10 +477,10 @@ namespace WindowsFormsApp2
                                             // FALSE ALERT
 
                                             CameraList[index].IncrementFalseAlerts(); //stats update
-                                            Log($"(6/6) Camera {CameraList[index].name} caused a false alert, nothing detected.");
+                                            log.Debug($"(6/6) Camera {CameraList[index].name} caused a false alert, nothing detected.");
 
                                             //add to history list
-                                            Log("Adding false to history list.");
+                                            log.Debug("Adding false to history list.");
                                             CreateListItem(Path.GetFileName(image_path), DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), CameraList[index].name, "false alert", "");
                                         }
                                     }
@@ -482,7 +488,7 @@ namespace WindowsFormsApp2
                                     //if camera is disabled.
                                     else if (CameraList[index].enabled == false)
                                     {
-                                        Log("(6/6) Selected camera is disabled.");
+                                        log.Debug("(6/6) Selected camera is disabled.");
                                     }
 
                                 }
@@ -490,7 +496,8 @@ namespace WindowsFormsApp2
                             }
                             else if (response.success == false) //if nothing was detected
                             {
-                                Log("ERROR: no response from AI Server");
+                                log.Error("ERROR: no response from AI Server");
+                                ProcessErrors("ERROR: no response from AI Server");
                             }
                         }
 
@@ -516,22 +523,25 @@ namespace WindowsFormsApp2
                     }
                     catch (Exception ex)
                     {
-                        Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                        log.Error($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
 
                         if (error == "loading image failed") //this was a file exception error - retry file access
                         {
                             if (attempts != 9) //failure at attempt 1-8
                             {
-                                Log($"Could not access file - will retry after {attempts * retry_delay} ms delay");
+                                log.Error($"Could not access file - will retry after {attempts * retry_delay} ms delay");
                             }
                             else //last attempt failed
                             {
-                                Log($"ERROR: Could not access image '{image_path}'.");
+                                log.Error($"ERROR: Could not access image '{image_path}'.");
+                                ProcessErrors($"ERROR: Could not access image '{image_path}'.");
                             }
                         }
                         else //all other exceptions
                         {
-                            Log($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                            log.Error($"ERROR: Processing the following image '{image_path}' failed. {error}");
+                            ProcessErrors($"ERROR: Processing the following image '{image_path}' failed. {error}");
+
                             //upload the alert image which could not be analyzed to Telegram
                             if (send_errors == true)
                             {
@@ -542,153 +552,37 @@ namespace WindowsFormsApp2
 
                     }
                     System.Threading.Thread.Sleep(retry_delay * attempts);
-                    Log($"Retrying image processing - retry  {attempts}");
+                    log.Warn($"Retrying image processing - retry  {attempts}");
                 }
             }
-
-            /*
-            try
-            {
-                System.IO.File.Delete(image_path);
-            }
-            catch
-            {
-                Console.WriteLine($"ERROR: Could not delete {image_path} .");
-            }*/
         }
-
-        /*private void DynamicMaskDetection(ObjectPosition currentObject)
-        {
-            MaskManager maskManager = currentObject.camera.maskManager;
-
-            Log("*** Starting new object mask processing ***");
-            Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
-
-            if (maskManager.last_positions_history.Contains(currentObject))
-            {
-                //get index to prevent another search for removal if needed
-                int indexLoc = maskManager.last_positions_history.IndexOf(currentObject);
-                ObjectPosition foundObject = maskManager.last_positions_history[indexLoc];
-
-                Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.camera.name);
-
-                if (foundObject.counter < maskManager.history_threshold_count)
-                {
-                    foundObject.counter++;
-                }
-                else
-                {
-                    Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
-                    maskManager.last_positions_history.RemoveAt(indexLoc);
-                    foundObject.isVisible = true;
-                    foundObject.counter = maskManager.mask_counter_default;
-                    maskManager.masked_positions.Add(foundObject);
-                }
-            }
-            else if (maskManager.masked_positions.Contains(currentObject))
-            {
-                ObjectPosition maskedObject = (ObjectPosition)maskManager.masked_positions[maskManager.masked_positions.IndexOf(currentObject)];
-                if (maskedObject.counter < maskManager.mask_counter_default)
-                {
-                    maskedObject.counter++;
-                }
-
-                Log("Found in masked_positions " + currentObject.ToString() + " for camera " + currentObject.camera.name);
-
-                maskedObject.isVisible = true;
-            }
-            else 
-            {
-                Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
-                maskManager.last_positions_history.Add(currentObject);
-            }
-        }*/
-
-        /*public void CleanUpExpiredMasks(Camera camera)
-        {
-            List<ObjectPosition> maskedList = camera.masked_positions;
-
-            if (maskedList != null && maskedList.Count > 0)
-            {
-                Log("Searching for object masks to remove on Camera: " + camera.name);
-
-                //scan backward through the list and remove by index. Not as easy to read as find by object but the fastest for removals at O(1)
-                for (int x = maskedList.Count - 1; x >= 0; x--)
-                {
-                    ObjectPosition maskedObject = maskedList[x];
-                    if (!maskedObject.isVisible)
-                    {
-                        Log("Masked object NOT visible - " + maskedObject.ToString());
-                        maskedObject.counter--;
-
-                        if (maskedObject.counter <= 0)
-                        {
-                            Log("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + camera.name);
-                            maskedList.RemoveAt(x);
-                        }
-                    }
-                    else
-                    {
-                        Log("Masked object VISIBLE - " + maskedObject.ToString());
-                        maskedObject.isVisible = false; //reset flag
-                    }
-                }
-            }
-        }*/
-
-        //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
-        /*public void CleanUpExpiredHistory(Camera camera)
-        {
-            Log("### History objects summary for camera " + camera.name + " ###");
-
-            List<ObjectPosition> historyList = camera.last_positions_history;
-
-            if (historyList != null && historyList.Count > 0)
-            {
-                //scan backward through the list and remove by index. Not as easy to read but the fastest for removals at O(1)
-                for (int x= historyList.Count-1; x >= 0; x--)
-                {
-                    ObjectPosition historyObject = historyList[x];
-                    TimeSpan ts = DateTime.Now - historyObject.createDate;
-                    int minutes = ts.Minutes;
-
-                    Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
-                    if (minutes >= camera.history_save_mins)
-                    {
-                        Log("\t-Removing expired history: " + historyObject.ToString() + " for camera " + camera.name);
-                        historyList.RemoveAt(x);
-                    }
-                }
-            }
-        }*/
-
+       
         //call trigger urls
         public void CallTriggerURLs(string[] trigger_urls)
         {
-
             var client = new WebClient();
             foreach (string x in trigger_urls)
             {
                 try
                 {
-                    Log($"   trigger url: {x}");
+                    log.Debug($"   trigger url: {x}");
                     var content = client.DownloadString(x);
                 }
                 catch (Exception ex)
                 {
-                    Log(ex.Message);
-                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
+                    log.Error($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable." + ex.Message);
+                    ProcessErrors($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable.");
                 }
 
             }
 
             if (trigger_urls.Length > 1)
             {
-                Log($"   -> {trigger_urls.Length} trigger URLs called.");
+                log.Debug($"   -> {trigger_urls.Length} trigger URLs called.");
             }
             else
             {
-                Log("   -> Trigger URL called.");
+                log.Debug("   -> Trigger URL called.");
             }
         }
 
@@ -705,27 +599,29 @@ namespace WindowsFormsApp2
                         var bot = new TelegramBotClient(telegram_token);
 
                         //upload image to Telegram servers and send to first chat
-                        Log($"      uploading image to chat \"{telegram_chatids[0]}\"");
+                        log.Debug($"      uploading image to chat \"{telegram_chatids[0]}\"");
                         var message = await bot.SendPhotoAsync(telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"));
                         string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
                         //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
                         foreach (string chatid in telegram_chatids.Skip(1))
                         {
-                            Log($"      uploading image to chat \"{chatid}\"");
+                            log.Debug($"      uploading image to chat \"{chatid}\"");
                             await bot.SendPhotoAsync(chatid, file_id);
                         }
                     }
                 }
                 catch
                 {
-                    Log($"ERROR: Could not upload image {image_path} to Telegram.");
+                    log.Error($"ERROR: Could not upload image {image_path} to Telegram.");
+                    ProcessErrors($"ERROR: Could not upload image {image_path} to Telegram.");
+
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
                     {
                         //create folder
                         DirectoryInfo di = Directory.CreateDirectory("./errors");
-                        Log("./errors/" + " dir created.");
+                        log.Warn("./errors/" + " dir created.");
                     }
                     //save error image
                     using (var image = SixLabors.ImageSharp.Image.Load(image_path))
@@ -757,7 +653,8 @@ namespace WindowsFormsApp2
                     if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
                     {
                         send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        log.Error($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        ProcessErrors($"ERROR: Could not send text \"{text}\" to Telegram.");
                         send_errors = true;
 
                         //inform on main tab that Telegram upload failed
@@ -766,7 +663,8 @@ namespace WindowsFormsApp2
                     }
                     else
                     {
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        log.Error($"ERROR: Could not send text \"{text}\" to Telegram.");
+                        ProcessErrors($"ERROR: Could not send text \"{text}\" to Telegram.");
                     }
                 }
 
@@ -802,7 +700,7 @@ namespace WindowsFormsApp2
                         }
                         catch (Exception ex)
                         {
-                            Log($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                            log.Error($"{ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
                         }
 
                         c++;
@@ -815,15 +713,15 @@ namespace WindowsFormsApp2
                 //upload to telegram
                 if (CameraList[index].telegram_enabled)
                 {
-                    Log("   Uploading image to Telegram...");
+                    log.Debug("   Uploading image to Telegram...");
                     await TelegramUpload(image_path);
-                    Log("   -> Sent image to Telegram.");
+                    log.Debug("   -> Sent image to Telegram.");
                 }
             }
             else
             {
                 //log that nothing was done
-                Log($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                log.Debug($"   Camera {CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
             }
 
             CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
@@ -835,8 +733,8 @@ namespace WindowsFormsApp2
         //check if detected object is outside the mask for the specific camera
         public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
-            Log($"      Checking if object is outside privacy mask of {cameraname}:");
-            Log("         Loading mask file...");
+            log.Debug($"      Checking if object is outside privacy mask of {cameraname}:");
+            log.Debug("         Loading mask file...");
             try
             {
                 if (System.IO.File.Exists("./cameras/" + cameraname + ".png")) //only check if mask image exists
@@ -847,11 +745,12 @@ namespace WindowsFormsApp2
                         //if any coordinates of the object are outside of the mask image, th mask image must be too small.
                         if (mask_img.Width != width || mask_img.Height != height)
                         {
-                            Log($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
+                            log.Error($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
+                            ProcessErrors($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
                             return true;
                         }
 
-                        Log("         Checking if the object is in a masked area...");
+                        log.Error("         Checking if the object is in a masked area...");
 
                         //relative x and y locations of the 9 detection points
                         double[] x_factor = new double[] { 0.25, 0.5, 0.75, 0.25, 0.5, 0.75, 0.25, 0.5, 0.75 };
@@ -876,16 +775,16 @@ namespace WindowsFormsApp2
                             }
                         }
 
-                        Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
+                        log.Debug($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
 
                         if (result > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
                         {
-                            Log("      ->The object is OUTSIDE of masked area(s).");
+                            log.Debug("      ->The object is OUTSIDE of masked area(s).");
                             return true;
                         }
                         else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
                         {
-                            Log("      ->The object is INSIDE a masked area.");
+                            log.Debug("      ->The object is INSIDE a masked area.");
                             return false;
                         }
 
@@ -893,14 +792,15 @@ namespace WindowsFormsApp2
                 }
                 else //if mask image does not exist, object is outside the non-existing masked area
                 {
-                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
+                    log.Debug("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
                     return true;
                 }
 
             }
             catch
             {
-                Log($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
+                log.Error($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
+                ProcessErrors($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
                 return true;
             }
 
@@ -919,30 +819,32 @@ namespace WindowsFormsApp2
         }
 
         //add text to log
-        public async void Log(string text)
+        //Decoupling Logging from error handeling. Only using as error handler. TODO:refactor. This is a placeeholder
+        public async void ProcessErrors(string text)
         {
 
             //if log everything is disabled and the text is neighter an ERROR, nor a WARNING: write only to console and ABORT
-            if (log_everything == false && !text.Contains("ERROR") && !text.Contains("WARNING"))
+            /*if (log_everything == false && !text.Contains("ERROR") && !text.Contains("WARNING"))
             {
                 text += "Enabling \'Log everything\' might give more information.";
                 Console.WriteLine($"{text}");
                 return;
-            }
+            }*/
 
 
             //get current date and time
 
             string time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss");
 
-            if (log_everything == true)
+            /*if (log_everything == true)
             {
+                
                 time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
-            }
+            }*/
 
 
             //if log file does not exist, create it
-            if (!System.IO.File.Exists("./log.txt"))
+            /*if (!System.IO.File.Exists("./log.txt"))
             {
                 Console.WriteLine("ATTENTION: Creating log file.");
                 try
@@ -958,10 +860,10 @@ namespace WindowsFormsApp2
                     Invoke(LabelUpdate);
                 }
 
-            }
+            }*/
 
             //add text to log
-            try
+            /*try
             {
                 using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt", append: true))
                 {
@@ -972,7 +874,7 @@ namespace WindowsFormsApp2
             {
                 MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't write to log.txt file!"; };
                 Invoke(LabelUpdate);
-            }
+            }*/
 
             if (send_errors == true && text.Contains("ERROR") || text.Contains("WARNING"))
             {
@@ -982,7 +884,7 @@ namespace WindowsFormsApp2
 
 
             //add log text to console
-            Console.WriteLine($"[{time}]: {text}");
+            //Console.WriteLine($"[{time}]: {text}");
 
             //increment error counter
             if (text.Contains("ERROR") || text.Contains("WARNING"))
@@ -1003,11 +905,11 @@ namespace WindowsFormsApp2
             {
                 if (input_path == "")
                 {
-                    Log("ATTENTION: No input folder defined.");
+                    log.Warn("ATTENTION: No input folder defined.");
                 }
                 else
                 {
-                    Log($"ERROR: Can't access input folder '{input_path}'.");
+                    log.Warn($"ERROR: Can't access input folder '{input_path}'.");
                 }
 
             }
@@ -1042,9 +944,9 @@ namespace WindowsFormsApp2
         //open Log when clicking or error message
         private void lbl_errors_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists("log.txt"))
+            if (System.IO.File.Exists("aitool.log"))
             {
-                System.Diagnostics.Process.Start("log.txt");
+                System.Diagnostics.Process.Start("aitool.log");
                 lbl_errors.Text = "";
             }
             else
@@ -1075,7 +977,8 @@ namespace WindowsFormsApp2
             }
             catch
             {
-                Log("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
+                log.Error("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
+                ProcessErrors("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
             }
 
             if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
@@ -1207,7 +1110,7 @@ namespace WindowsFormsApp2
         //update timeline
         public void UpdateTimeline()
         {
-            Log("Loading time line from cameras/history.csv ...");
+            log.Debug("Loading time line from cameras/history.csv ...");
 
             //clear previous values
             timeline.Series[0].Points.Clear();
@@ -1350,7 +1253,7 @@ namespace WindowsFormsApp2
         //update confidence_frequency chart
         public void UpdateConfidenceChart()
         {
-            Log("Loading confidence-frequency chart from cameras/history.csv ...");
+            log.Debug("Loading confidence-frequency chart from cameras/history.csv ...");
 
             //clear previous values
             chart_confidence.Series[0].Points.Clear();
@@ -1482,7 +1385,7 @@ namespace WindowsFormsApp2
         {
             if (cb_showMask.Checked == true) //show overlay
             {
-                Log("Show mask toggled.");
+                log.Debug("Show mask toggled.");
                 if (list1.SelectedItems.Count > 0)
                 {
                     if (System.IO.File.Exists("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".png")) //check if privacy mask file exists
@@ -1571,7 +1474,7 @@ namespace WindowsFormsApp2
         {
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
             {
-                Log("Loading object rectangles...");
+                log.Info("Loading object rectangles...");
                 int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
                 Color color = new Color();
@@ -1599,11 +1502,11 @@ namespace WindowsFormsApp2
                     Int32.TryParse(position.Split(',')[2], out int xmax);
                     Int32.TryParse(position.Split(',')[3], out int ymax);
 
-                    Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
+                    log.Info($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
                     showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
-                    Log("Done.");
+                    log.Info("Done.");
                 }
             }
         }
@@ -1660,7 +1563,7 @@ namespace WindowsFormsApp2
         //remove entry from left list
         public void DeleteListItem(string filename)
         {
-            Log($"Removing alert image {filename} from history list and from cameras/history.csv ...");
+            log.Debug($"Removing alert image {filename} from history list and from cameras/history.csv ...");
             MethodInvoker LabelUpdate = delegate
             {
                 ListViewItem listviewitem = new ListViewItem();
@@ -1684,7 +1587,8 @@ namespace WindowsFormsApp2
                 }
                 catch
                 {
-                    Log("ERROR: Can't write to cameras/history.csv!");
+                    log.Error("ERROR: Can't write to cameras/history.csv!");
+                    ProcessErrors("ERROR: Can't write to cameras/history.csv!");
                 }
 
             };
@@ -1695,7 +1599,7 @@ namespace WindowsFormsApp2
         //remove all obsolete entries (associated image does not exist anymore) from the history.csv 
         public void CleanCSVList()
         {
-            Log($"Cleaning cameras/history.csv if neccessary...");
+            log.Debug($"Cleaning cameras/history.csv if neccessary...");
             MethodInvoker LabelUpdate = delegate
             {
                 try
@@ -1715,7 +1619,8 @@ namespace WindowsFormsApp2
                 }
                 catch
                 {
-                    Log("ERROR: Can't clean the cameras/history.csv!");
+                    log.Error("ERROR: Can't clean the cameras/history.csv!");
+                    ProcessErrors("ERROR: Can't clean the cameras/history.csv!");
                 }
 
             };
@@ -1727,7 +1632,7 @@ namespace WindowsFormsApp2
         {
             try
             {
-                Log("Loading history list from cameras/history.csv ...");
+                log.Debug("Loading history list from cameras/history.csv ...");
 
                 //delete obsolete entries from history.csv
                 //CleanCSVList(); //removed to load the history list faster
@@ -1880,8 +1785,8 @@ namespace WindowsFormsApp2
             }
             catch (Exception ex)
             {
-                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
-
+                log.Error($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
+                ProcessErrors($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {ex.GetType().ToString()} | {ex.Message.ToString()} (code: {ex.HResult} )");
                 //delete entry that caused the issue
                 try
                 {
@@ -1990,7 +1895,7 @@ namespace WindowsFormsApp2
                 foreach (string file in files)
                 {
                     string result = LoadCamera(file); //do LoadCamera() and save returned result in string
-                    Log(result);
+                    log.Debug(result);
 
                     //if LoadCamera() returned an error
                     if (result.Contains("ERROR"))
@@ -2008,7 +1913,7 @@ namespace WindowsFormsApp2
             }
             catch
             {
-                Log("ERROR LoadCameras() failed.");
+                log.Error("ERROR LoadCameras() failed.");
                 MessageBox.Show("ERROR LoadCameras() failed.");
             }
 
@@ -2035,9 +1940,9 @@ namespace WindowsFormsApp2
                 }
             }
             Camera cam = new Camera(); //create new camera object
-            Log("read config");
+            log.Debug("read config");
             cam.ReadConfig(config_path); //read camera's config from file
-            Log("add");
+            log.Debug("add");
             CameraList.Add(cam); //add created camera object to CameraList
 
             //add camera to combobox on overview tab and to camera filter combobox in the History tab 
@@ -2120,7 +2025,7 @@ namespace WindowsFormsApp2
             int index = -1;
             index = CameraList.FindIndex(x => x.name == oldname); //index of specified camera in list
 
-            if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
+            if (index == -1) { log.Error("ERROR updating camera, could not find original camera profile."); }
 
             //check if new prefix isn't already taken by another camera
             if (prefix != CameraList[index].prefix && CameraList.Exists(x => x.prefix == prefix))
@@ -2150,7 +2055,7 @@ namespace WindowsFormsApp2
         //remove camera
         private void RemoveCamera(string name)
         {
-            Log($"Removing camera {name}...");
+            log.Debug($"Removing camera {name}...");
             if (list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
                 if (CameraList.Exists(x => x.name == name)) //check if camera with specified name exists in list
@@ -2213,7 +2118,8 @@ namespace WindowsFormsApp2
                     }
                     else
                     {
-                        Log("ERROR: Can't find the selected camera, camera wasn't deleted.");
+                        log.Error("ERROR: Can't find the selected camera, camera wasn't deleted.");
+                        ProcessErrors("ERROR: Can't find the selected camera, camera wasn't deleted.");
                     }
 
 
@@ -2405,7 +2311,7 @@ namespace WindowsFormsApp2
                     var result = form.ShowDialog();
                     if (result == DialogResult.OK)
                     {
-                        Log("about to del cam");
+                        log.Info("about to delete camera");
                         RemoveCamera(list2.SelectedItems[0].Text);
                     }
                 }

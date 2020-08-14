@@ -12,12 +12,13 @@ namespace WindowsFormsApp2
         public int history_save_mins = 5;                                               //How long to store detected objects in history before purging list 
         public int history_threshold_count = 2;                                         //Number of times object is seen in same position before moving it to the masked_positions list
 
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public void CreateDynamicMask(ObjectPosition currentObject)
         {
             //Camera camera = currentObject.camera;
-            //log("*** Starting new object mask processing ***");
-            //log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
+            log.Debug("*** Starting new object mask processing ***");
+            log.Debug("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
 
             if (last_positions_history.Contains(currentObject))
             {
@@ -25,7 +26,7 @@ namespace WindowsFormsApp2
                 int indexLoc = last_positions_history.IndexOf(currentObject);
                 ObjectPosition foundObject = last_positions_history[indexLoc];
 
-                //log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.camera.name);
+                log.Debug("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.camera.name);
 
                 if (foundObject.counter < history_threshold_count)
                 {
@@ -33,7 +34,7 @@ namespace WindowsFormsApp2
                 }
                 else
                 {
-                    //log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
+                    log.Debug("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
                     last_positions_history.RemoveAt(indexLoc);
                     foundObject.isVisible = true;
                     foundObject.counter = mask_counter_default;
@@ -48,13 +49,13 @@ namespace WindowsFormsApp2
                     maskedObject.counter++;
                 }
 
-                //log("Found in masked_positions " + currentObject.ToString() + " for camera " + currentObject.camera.name);
+                log.Debug("Found in masked_positions " + currentObject.ToString() + " for camera " + currentObject.camera.name);
 
                 maskedObject.isVisible = true;
             }
             else
             {
-                //log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
+                log.Debug("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
                 last_positions_history.Add(currentObject);
             }
         }
@@ -64,7 +65,7 @@ namespace WindowsFormsApp2
         {
             List<ObjectPosition> historyList = last_positions_history;
 
-            //log("### History objects summary for camera " + cameraName + " ###");
+            log.Debug("### History objects summary for camera " + cameraName + " ###");
 
             if (historyList != null && historyList.Count > 0)
             {
@@ -75,10 +76,10 @@ namespace WindowsFormsApp2
                     TimeSpan ts = DateTime.Now - historyObject.createDate;
                     int minutes = ts.Minutes;
 
-                    //log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                    log.Debug("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                     if (minutes >= history_save_mins)
                     {
-                        //log("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
+                        log.Debug("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
                         historyList.RemoveAt(x);
                     }
                 }
@@ -91,7 +92,7 @@ namespace WindowsFormsApp2
 
             if (maskedList != null && maskedList.Count > 0)
             {
-                //log("Searching for object masks to remove on Camera: " + cameraName);
+                log.Debug("Searching for object masks to remove on Camera: " + cameraName);
 
                 //scan backward through the list and remove by index. Not as easy to read as find by object but the fastest for removals at O(1)
                 for (int x = maskedList.Count - 1; x >= 0; x--)
@@ -99,18 +100,18 @@ namespace WindowsFormsApp2
                     ObjectPosition maskedObject = maskedList[x];
                     if (!maskedObject.isVisible)
                     {
-                        //log("Masked object NOT visible - " + maskedObject.ToString());
+                        log.Debug("Masked object NOT visible - " + maskedObject.ToString());
                         maskedObject.counter--;
 
                         if (maskedObject.counter <= 0)
                         {
-                            //log("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
+                            log.Debug("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
                             maskedList.RemoveAt(x);
                         }
                     }
                     else
                     {
-                        //log("Masked object VISIBLE - " + maskedObject.ToString());
+                        log.Debug("Masked object VISIBLE - " + maskedObject.ToString());
                         maskedObject.isVisible = false; //reset flag
                     }
                 }
