@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
     public class ObjectPosition : IEquatable<ObjectPosition>
     {

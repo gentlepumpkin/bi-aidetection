@@ -4,7 +4,7 @@ using System.Linq;
 
 using System.IO;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
     public class Camera
     {

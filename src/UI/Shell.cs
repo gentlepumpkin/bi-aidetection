@@ -35,7 +35,7 @@ using System.Collections;
 using System.Windows.Forms.DataVisualization.Charting;
 
 
-namespace WindowsFormsApp2
+namespace AITool
 {
 
     public partial class Shell : Form
@@ -1474,7 +1474,7 @@ namespace WindowsFormsApp2
         {
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
             {
-                log.Info("Loading object rectangles...");
+                log.Debug("Loading object rectangles...");
                 int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
                 Color color = new Color();
@@ -1502,11 +1502,11 @@ namespace WindowsFormsApp2
                     Int32.TryParse(position.Split(',')[2], out int xmax);
                     Int32.TryParse(position.Split(',')[3], out int ymax);
 
-                    log.Info($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
+                    log.Debug($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
                     showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
-                    log.Info("Done.");
+                    log.Debug("Done.");
                 }
             }
         }

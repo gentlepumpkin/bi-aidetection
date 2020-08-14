@@ -1,5 +1,5 @@
 ﻿using System.IO;
-namespace WindowsFormsApp2
+namespace AITool
 {
     partial class Shell
     {
@@ -49,8 +49,8 @@ namespace WindowsFormsApp2
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel14 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel15 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -58,25 +58,25 @@ namespace WindowsFormsApp2
             this.lbl_errors = new System.Windows.Forms.Label();
             this.lbl_info = new System.Windows.Forms.Label();
             this.tabStats = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel16 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel23 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel16 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel23 = new AITool.DBLayoutPanel(this.components);
             this.label8 = new System.Windows.Forms.Label();
             this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.label7 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel17 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel17 = new AITool.DBLayoutPanel(this.components);
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.tabHistory = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel1 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel21 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel1 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel21 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.tableLayoutPanel22 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel22 = new AITool.DBLayoutPanel(this.components);
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tableLayoutPanel19 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel19 = new AITool.DBLayoutPanel(this.components);
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
             this.list1 = new System.Windows.Forms.ListView();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -87,13 +87,13 @@ namespace WindowsFormsApp2
             this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
             this.cb_filter_animal = new System.Windows.Forms.CheckBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel2 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel3 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel3 = new AITool.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
             this.btnCameraAdd = new System.Windows.Forms.Button();
-            this.tableLayoutPanel6 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel7 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel8 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel6 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel7 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel8 = new AITool.DBLayoutPanel(this.components);
             this.cb_person = new System.Windows.Forms.CheckBox();
             this.cb_bicycle = new System.Windows.Forms.CheckBox();
             this.cb_motorcycle = new System.Windows.Forms.CheckBox();
@@ -110,26 +110,26 @@ namespace WindowsFormsApp2
             this.cb_truck = new System.Windows.Forms.CheckBox();
             this.cb_car = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel9 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel10 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel9 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel10 = new AITool.DBLayoutPanel(this.components);
             this.lblTriggerUrl = new System.Windows.Forms.Label();
             this.tbTriggerUrl = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel20 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel20 = new AITool.DBLayoutPanel(this.components);
             this.label5 = new System.Windows.Forms.Label();
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cb_telegram = new System.Windows.Forms.CheckBox();
             this.lblPrefix = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
-            this.tableLayoutPanel12 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel12 = new AITool.DBLayoutPanel(this.components);
             this.tbPrefix = new System.Windows.Forms.TextBox();
             this.lbl_prefix = new System.Windows.Forms.Label();
-            this.tableLayoutPanel13 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel13 = new AITool.DBLayoutPanel(this.components);
             this.tbName = new System.Windows.Forms.TextBox();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.lblRelevantObjects = new System.Windows.Forms.Label();
             this.lbl_threshold = new System.Windows.Forms.Label();
-            this.tableLayoutPanel24 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel24 = new AITool.DBLayoutPanel(this.components);
             this.lbl_threshold_lower = new System.Windows.Forms.Label();
             this.tb_threshold_upper = new System.Windows.Forms.TextBox();
             this.lbl_threshold_upper = new System.Windows.Forms.Label();
@@ -148,15 +148,15 @@ namespace WindowsFormsApp2
             this.label17 = new System.Windows.Forms.Label();
             this.num_mask_remove = new System.Windows.Forms.NumericUpDown();
             this.label18 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel11 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel11 = new AITool.DBLayoutPanel(this.components);
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.btnCameraDel = new System.Windows.Forms.Button();
             this.lbl_camstats = new System.Windows.Forms.Label();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel4 = new WindowsFormsApp2.DBLayoutPanel(this.components);
-            this.tableLayoutPanel5 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel4 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel5 = new AITool.DBLayoutPanel(this.components);
             this.label4 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel25 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel25 = new AITool.DBLayoutPanel(this.components);
             this.btn_open_log = new System.Windows.Forms.Button();
             this.cb_log = new System.Windows.Forms.CheckBox();
             this.label12 = new System.Windows.Forms.Label();
@@ -168,7 +168,7 @@ namespace WindowsFormsApp2
             this.lbl_telegram_chatid = new System.Windows.Forms.Label();
             this.tb_telegram_token = new System.Windows.Forms.TextBox();
             this.tb_telegram_chatid = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel18 = new WindowsFormsApp2.DBLayoutPanel(this.components);
+            this.tableLayoutPanel18 = new AITool.DBLayoutPanel(this.components);
             this.tbInput = new System.Windows.Forms.TextBox();
             this.btn_input_path = new System.Windows.Forms.Button();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
@@ -301,7 +301,7 @@ namespace WindowsFormsApp2
             this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBox2.Image = global::WindowsFormsApp2.Properties.Resources.logo;
+            this.pictureBox2.Image = global::AITool.Properties.Resources.logo;
             this.pictureBox2.Location = new System.Drawing.Point(4, 217);
             this.pictureBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pictureBox2.Name = "pictureBox2";

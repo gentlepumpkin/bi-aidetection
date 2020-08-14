@@ -1,4 +1,4 @@
-﻿namespace WindowsFormsApp2
+﻿namespace AITool
 {
     public static class ExtensionsForInt32
     {
