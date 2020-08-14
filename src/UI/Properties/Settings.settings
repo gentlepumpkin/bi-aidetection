@@ -23,5 +23,8 @@
     <Setting Name="close_instantly" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
+    <Setting Name="log_level" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Debug</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -42,7 +42,7 @@ namespace AITool
     {
         public string input_path = Properties.Settings.Default.input_path; //image input path
         public static string deepstack_url = Properties.Settings.Default.deepstack_url; //deepstack url
-        public static bool log_everything = Properties.Settings.Default.log_everything; //save every action sent to Log() into the log file?
+        public static string log_level = Properties.Settings.Default.log_level;
         public static bool send_errors = Properties.Settings.Default.send_errors; //send error messages to Telegram?
         public static string telegram_chatid = Properties.Settings.Default.telegram_chatid; //telegram chat id
         public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
@@ -176,7 +176,7 @@ namespace AITool
             tbDeepstackUrl.Text = deepstack_url;
             tb_telegram_chatid.Text = telegram_chatid;
             tb_telegram_token.Text = telegram_token;
-            cb_log.Checked = log_everything;
+            cb_log.SelectedIndex = cb_log.FindStringExact(log_level);
             cb_send_errors.Checked = send_errors;
 
             //---------------------------------------------------------------------------
@@ -2370,7 +2370,7 @@ namespace AITool
             Properties.Settings.Default.deepstack_url = tbDeepstackUrl.Text;
             Properties.Settings.Default.telegram_chatid = tb_telegram_chatid.Text;
             Properties.Settings.Default.telegram_token = tb_telegram_token.Text;
-            Properties.Settings.Default.log_everything = cb_log.Checked;
+            Properties.Settings.Default.log_level = (string) cb_log.SelectedItem;
             Properties.Settings.Default.send_errors = cb_send_errors.Checked;
             Properties.Settings.Default.Save();
 
@@ -2380,7 +2380,7 @@ namespace AITool
             telegram_chatid = Properties.Settings.Default.telegram_chatid;
             telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
             telegram_token = Properties.Settings.Default.telegram_token;
-            log_everything = Properties.Settings.Default.log_everything;
+            log_level = Properties.Settings.Default.log_level;
             send_errors = Properties.Settings.Default.send_errors;
 
             //update fswatcher to watch new input folder
@@ -2409,14 +2409,14 @@ namespace AITool
         //open log button
         private void btn_open_log_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists("log.txt"))
+            if (System.IO.File.Exists("aitool.log"))
             {
-                System.Diagnostics.Process.Start("log.txt");
+                System.Diagnostics.Process.Start("aitool.log");
                 lbl_errors.Text = "";
             }
             else
             {
-                MessageBox.Show("log missing");
+                MessageBox.Show("Log file missing");
             }
 
         }
@@ -2452,6 +2452,21 @@ namespace AITool
                 }
             }
 
+        }
+
+
+        public void SetLogLevel(String level)
+        {
+            log4net.Repository.Hierarchy.Hierarchy hierarchy = (log4net.Repository.Hierarchy.Hierarchy)log4net.LogManager.GetRepository();
+            log4net.Repository.Hierarchy.Logger rootLogger = hierarchy.Root;
+            rootLogger.Level = hierarchy.LevelMap[level];
+            hierarchy.RaiseConfigurationChanged(EventArgs.Empty);
+        }
+
+        private void cb_log_SelectedValueChanged(object sender, EventArgs e)
+        {
+            String logLevel = (String)cb_log.SelectedItem;
+            SetLogLevel(logLevel);
         }
     }
 

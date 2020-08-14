@@ -106,5 +106,17 @@ namespace AITool.Properties {
                 this["close_instantly"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
+        public string log_level {
+            get {
+                return ((string)(this["log_level"]));
+            }
+            set {
+                this["log_level"] = value;
+            }
+        }
     }
 }

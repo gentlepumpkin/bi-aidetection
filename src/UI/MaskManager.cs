@@ -18,7 +18,7 @@ namespace AITool
         {
             //Camera camera = currentObject.camera;
             log.Debug("*** Starting new object mask processing ***");
-            log.Debug("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
+            log.Info("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
 
             if (last_positions_history.Contains(currentObject))
             {
@@ -34,7 +34,7 @@ namespace AITool
                 }
                 else
                 {
-                    log.Debug("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
+                    log.Info("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
                     last_positions_history.RemoveAt(indexLoc);
                     foundObject.isVisible = true;
                     foundObject.counter = mask_counter_default;
@@ -55,7 +55,7 @@ namespace AITool
             }
             else
             {
-                log.Debug("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
+                log.Info("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
                 last_positions_history.Add(currentObject);
             }
         }
@@ -65,7 +65,7 @@ namespace AITool
         {
             List<ObjectPosition> historyList = last_positions_history;
 
-            log.Debug("### History objects summary for camera " + cameraName + " ###");
+            log.Info("### History objects summary for camera " + cameraName + " ###");
 
             if (historyList != null && historyList.Count > 0)
             {
@@ -76,10 +76,10 @@ namespace AITool
                     TimeSpan ts = DateTime.Now - historyObject.createDate;
                     int minutes = ts.Minutes;
 
-                    log.Debug("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                    log.Info("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                     if (minutes >= history_save_mins)
                     {
-                        log.Debug("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
+                        log.Info("\t-Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name);
                         historyList.RemoveAt(x);
                     }
                 }
@@ -105,7 +105,7 @@ namespace AITool
 
                         if (maskedObject.counter <= 0)
                         {
-                            log.Debug("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
+                            log.Info("\t-Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
                             maskedList.RemoveAt(x);
                         }
                     }
