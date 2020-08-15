@@ -1903,7 +1903,7 @@ namespace AITool
             this.cb_log.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_log.FormattingEnabled = true;
             this.cb_log.Items.AddRange(new object[] {
-            "All",
+            "Trace",
             "Debug",
             "Info",
             "Warn",

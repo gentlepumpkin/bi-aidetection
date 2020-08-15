@@ -33,7 +33,7 @@ using SizeF = SixLabors.Primitives.SizeF; //for file dialog
 using System.Xml.Schema;
 using System.Collections;
 using System.Windows.Forms.DataVisualization.Charting;
-
+using NLog;
 
 namespace AITool
 {
@@ -57,8 +57,7 @@ namespace AITool
         static HttpClient client = new HttpClient();
 
         FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
-
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
 
 
         public Shell()
@@ -1486,7 +1485,7 @@ namespace AITool
         {
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
             {
-                log.Debug("Loading object rectangles...");
+                log.Trace("Loading object rectangles...");
                 int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
                 Color color = new Color();
@@ -1514,11 +1513,11 @@ namespace AITool
                     Int32.TryParse(position.Split(',')[2], out int xmax);
                     Int32.TryParse(position.Split(',')[3], out int ymax);
 
-                    log.Debug($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
+                    log.Trace($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
                     showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
-                    log.Debug("Done.");
+                    log.Trace("Done.");
                 }
             }
         }
@@ -1675,9 +1674,6 @@ namespace AITool
                         string filename = val.Split('|')[0];
                         string date = val.Split('|')[1];
                         string object_positions = val.Split('|')[4];
-
-
-
 
 
                         ListViewItem item;
@@ -2455,13 +2451,13 @@ namespace AITool
 
         }
 
-        public void SetLogLevel(String level)
+        public void SetLogLevel(string logLevel)
         {
-            log4net.Repository.Hierarchy.Hierarchy hierarchy = (log4net.Repository.Hierarchy.Hierarchy)log4net.LogManager.GetRepository();
-            log4net.Repository.Hierarchy.Logger rootLogger = hierarchy.Root;
-            rootLogger.Level = hierarchy.LevelMap[level];
-            hierarchy.RaiseConfigurationChanged(EventArgs.Empty);
+            LogLevel level = LogLevel.FromString(logLevel);
+            LogManager.LogFactory.GlobalThreshold = level; 
+            LogManager.ReconfigExistingLoggers();
         }
+
 
         private void cb_log_SelectedValueChanged(object sender, EventArgs e)
         {
