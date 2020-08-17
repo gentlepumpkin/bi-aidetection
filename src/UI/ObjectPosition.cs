@@ -1,36 +1,49 @@
-﻿using System;
+﻿using SixLabors.ImageSharp.ColorSpaces;
+using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace AITool
 {
     public class ObjectPosition : IEquatable<ObjectPosition>
     {
-        public DateTime createDate;
-        public Boolean isVisible=false;
-        public int counter;
-        public int xmin;
-        public int ymin;
-        public int xmax;
-        public int ymax;
-        public long key;
-        public string label;
-        public Camera camera;
+        public DateTime createDate { get; }
+        public Boolean isVisible { get; set; } = false;
+        public int counter { get; set; }
+        public int xmin { get; }
+        public int ymin { get; }
+        public int xmax { get; }
+        public int ymax { get; }
+        public int height { get; }
+        public int width { get; }
+        public int xMaxVariance { get; }
+        public int yMaxVariance { get; }
+        public long key { get; }
+        public string label { get; }
+        public Camera camera { get; set; }
 
-        //object position +- thresholdMaxRange to determine positive match. 
-        //Threshold variable due to variations in object position between detections.
-        public int thresholdMaxRange = 35;
+        //object position +- threshold max variances to determine positive match. 
+        //Threshold percentage variable - percentage variation in object position between detections.
+        private double thresholdPercent { get; set; } = .05;
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, Camera camera)
         {
-            //todo: convert 0's to 1 to prevent 0 key; Currently, Adds 1 to avoid zero key
             createDate = DateTime.Now;
             this.camera = camera;
+            this.label = label;
 
             this.xmin = xmin;
             this.ymin = ymin;
             this.xmax = xmax;
             this.ymax = ymax;
-            this.label = label; 
+
+            //calc width and height of box
+            this.width = xmax - xmin;
+            this.height = ymax - ymin;
+
+            //calculate percentage position variances used in equality comparisons
+            xMaxVariance = Convert.ToInt32(this.width * thresholdPercent);
+            yMaxVariance = Convert.ToInt32(this.height * thresholdPercent);
 
             key = ((xmin+1) * (ymin+1) * (xmax+1) * (ymax+1));
         }
@@ -43,10 +56,10 @@ namespace AITool
         public bool Equals(ObjectPosition other)
         {
             return (other != null &&
-                   (xmin.Between(other.xmin - thresholdMaxRange, other.xmin + thresholdMaxRange)) &&
-                   (ymin.Between(other.ymin - thresholdMaxRange, other.ymin + thresholdMaxRange)) &&
-                   (xmax.Between(other.xmax - thresholdMaxRange, other.xmax + thresholdMaxRange)) &&
-                   (ymax.Between(other.ymax - thresholdMaxRange, other.ymax + thresholdMaxRange)));
+                   (xmin.Between(other.xmin - other.xMaxVariance, other.xmin + other.xMaxVariance)) &&
+                   (ymin.Between(other.ymin - other.yMaxVariance, other.ymin + other.yMaxVariance)) &&
+                   (width.Between(other.width - other.xMaxVariance, other.width + other.xMaxVariance)) &&
+                   (height.Between(other.height - other.yMaxVariance, other.height + other.yMaxVariance)));
         }
         
         public override int GetHashCode()
