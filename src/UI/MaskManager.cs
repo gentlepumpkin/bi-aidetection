@@ -5,14 +5,25 @@ namespace AITool
 {
     public class MaskManager
     {
-        public bool masking_enabled = false;
-        public List<ObjectPosition> last_positions_history = new List<ObjectPosition>(); //list of last detected object positions during defined time period (history_save_mins)
-        public List<ObjectPosition> masked_positions = new List<ObjectPosition>();      //stores dynamic masked object list
-        public int mask_counter_default = 15;                                           //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins = 5;                                               //How long to store detected objects in history before purging list 
-        public int history_threshold_count = 2;                                         //Number of times object is seen in same position before moving it to the masked_positions list
+        public bool masking_enabled { get; set; }
+        public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period (history_save_mins)
+        public List<ObjectPosition> masked_positions { get; set;}         //stores dynamic masked object list
+        public int mask_counter_default { get; set; }                     //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
+        public int history_save_mins { get; set; }                        //how long to store detected objects in history before purging list 
+        public int history_threshold_count { get; set; }                  //number of times object is seen in same position before moving it to the masked_positions list
+        
         private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
 
+        public MaskManager()
+        {
+            last_positions_history = new List<ObjectPosition>();
+            masked_positions = new List<ObjectPosition>();
+            //default values
+            masking_enabled = false;
+            mask_counter_default = 15;
+            history_save_mins = 5;
+            history_threshold_count = 2;
+        }
         public void CreateDynamicMask(ObjectPosition currentObject)
         {
             //Camera camera = currentObject.camera;

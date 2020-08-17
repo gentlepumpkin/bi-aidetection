@@ -202,9 +202,12 @@ namespace AITool
             {
                 maskManager.masking_enabled = false;
             }
-            Int32.TryParse(content[9].Split('"')[1], out maskManager.history_save_mins); 
-            Int32.TryParse(content[10].Split('"')[1], out maskManager.history_threshold_count); 
-            Int32.TryParse(content[11].Split('"')[1], out maskManager.mask_counter_default); 
+            Int32.TryParse(content[9].Split('"')[1], out int history_save_mins); 
+            Int32.TryParse(content[10].Split('"')[1], out int history_threshold_count); 
+            Int32.TryParse(content[11].Split('"')[1], out int mask_counter_default);
+            maskManager.history_save_mins = history_save_mins;
+            maskManager.history_threshold_count = history_threshold_count;
+            maskManager.mask_counter_default = mask_counter_default;
         }
 
 

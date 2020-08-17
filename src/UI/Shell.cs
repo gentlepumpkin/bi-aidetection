@@ -2165,7 +2165,7 @@ namespace AITool
                 tb_threshold_upper.Text = CameraList[i].threshold_upper.ToString(); // load upper threshold value
                 num_history_mins.Value = CameraList[i].maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 num_mask_create.Value = CameraList[i].maskManager.history_threshold_count; // load mask create counter
-                num_mask_remove.Value = CameraList[i].maskManager.mask_counter_default; //load make remove counter
+                num_mask_remove.Value = CameraList[i].maskManager.mask_counter_default; //load mask remove counter
 
                 //load is masking enabled 
                 if(CameraList[i].maskManager.masking_enabled)
