@@ -24,7 +24,7 @@ namespace AITool
 
         //object position +- threshold max variances to determine positive match. 
         //Threshold percentage variable - percentage variation in object position between detections.
-        private double thresholdPercent { get; set; } = .05;
+        public static double thresholdPercent { get; set; }
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, Camera camera)
         {

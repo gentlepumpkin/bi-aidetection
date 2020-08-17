@@ -35,7 +35,8 @@ namespace AITool
 
         //write config to file
         public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, 
-                                bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, bool _masking_enabled, int _history_mins, int _mask_create_counter, int _mask_remove_counter)
+                                bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, bool _masking_enabled, int _history_mins, 
+                                int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             if(name != _name)
@@ -59,6 +60,7 @@ namespace AITool
                 maskManager.history_threshold_count = _mask_create_counter;
                 maskManager.mask_counter_default = _mask_remove_counter;
                 maskManager.masking_enabled = _masking_enabled;
+                ObjectPosition.thresholdPercent =  _percent_variance;
 
                 triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
@@ -113,6 +115,7 @@ namespace AITool
                 sw.WriteLine($"Clear object history in: \"{maskManager.history_save_mins}\" minutes.  (Time to store found objects that have not hit threshold count to become masks.)");
                 sw.WriteLine($"Create mask: \"{maskManager.history_threshold_count}\" (Creates a mask when history object found counter exceeds this value.)");
                 sw.WriteLine($"Remove mask: \"{maskManager.mask_counter_default}\" (Remove the mask when mask history counter falls below this value.)");
+                sw.WriteLine($"Object variance percentage: \"{ObjectPosition.thresholdPercent * 100}\" (What percentage can the object position vary between detections.)");
             }
         }
 
@@ -208,6 +211,9 @@ namespace AITool
             maskManager.history_save_mins = history_save_mins;
             maskManager.history_threshold_count = history_threshold_count;
             maskManager.mask_counter_default = mask_counter_default;
+
+            Int32.TryParse(content[12].Split('"')[1], out int percentage_variance);
+            ObjectPosition.thresholdPercent = (double) percentage_variance / 100;
         }
 
 
@@ -215,21 +221,21 @@ namespace AITool
         public void IncrementAlerts()
         {
             stats_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default, ObjectPosition.thresholdPercent);
         }
 
         //one alarm that contained no objects counter
         public void IncrementFalseAlerts()
         {
             stats_false_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default, ObjectPosition.thresholdPercent);
         }
 
         //one alarm that contained irrelevant objects counter
         public void IncrementIrrelevantAlerts()
         {
             stats_irrelevant_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default);
+            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, maskManager.masking_enabled, maskManager.history_save_mins, maskManager.history_threshold_count, maskManager.mask_counter_default, ObjectPosition.thresholdPercent);
         }
 
 

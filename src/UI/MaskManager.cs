@@ -18,11 +18,6 @@ namespace AITool
         {
             last_positions_history = new List<ObjectPosition>();
             masked_positions = new List<ObjectPosition>();
-            //default values
-            masking_enabled = false;
-            mask_counter_default = 15;
-            history_save_mins = 5;
-            history_threshold_count = 2;
         }
         public void CreateDynamicMask(ObjectPosition currentObject)
         {

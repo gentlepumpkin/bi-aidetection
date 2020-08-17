@@ -1915,9 +1915,9 @@ namespace AITool
                     i++;
                 }
             }
-            catch
+            catch(Exception e)
             {
-                log.Error("ERROR LoadCameras() failed.");
+                log.Error(e,"ERROR LoadCameras() failed.");
                 MessageBox.Show("ERROR LoadCameras() failed.");
             }
 
@@ -1958,7 +1958,7 @@ namespace AITool
 
         //add camera
         private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, 
-                                int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter)
+                                int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in CameraList)
@@ -1980,7 +1980,7 @@ namespace AITool
             Camera cam = new Camera(); //create new camera object
             
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, 
-                            threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter); //set parameters
+                            threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
             CameraList.Add(cam); //add created camera object to CameraList
 
             //add camera to list2
@@ -2003,7 +2003,8 @@ namespace AITool
 
         //change settings of camera
         private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, 
-                                    bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter)
+                                    bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, 
+                                    int mask_create_counter, int mask_remove_counter, Double percent_variance)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
@@ -2040,7 +2041,7 @@ namespace AITool
 
             //2. WRITE CONFIG
             CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, 
-                                         threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter); //set parameters
+                                         threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
             //3. UPDATE LIST2
             //update list2 entry
@@ -2166,6 +2167,8 @@ namespace AITool
                 num_history_mins.Value = CameraList[i].maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 num_mask_create.Value = CameraList[i].maskManager.history_threshold_count; // load mask create counter
                 num_mask_remove.Value = CameraList[i].maskManager.mask_counter_default; //load mask remove counter
+                num_percent_var.Value = (decimal) ObjectPosition.thresholdPercent * 100;
+
 
                 //load is masking enabled 
                 if(CameraList[i].maskManager.masking_enabled)
@@ -2256,7 +2259,8 @@ namespace AITool
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
-                    AddCamera(name, name, "", "person", false, true, 0, 0, 100, false, 5, 2, 15);
+                    //add camera with default values
+                    AddCamera(name, name, "", "person", false, true, 0, 0, 100, false, 5, 2, 15, .07);
                 }
             }
         }
@@ -2293,11 +2297,15 @@ namespace AITool
                 Int32.TryParse(num_history_mins.Text, out int history_mins);
                 Int32.TryParse(num_mask_create.Text, out int mask_create_counter);
                 Int32.TryParse(num_mask_remove.Text, out int mask_remove_counter);
+                Int32.TryParse(num_percent_var.Text, out int variance);
+
+                //convert to percent
+                Double percent_variance = (double) variance / 100;
 
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
                 string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, 
-                                            threshold_lower, threshold_upper, cb_masking_enabled.Checked, history_mins, mask_create_counter, mask_remove_counter);
+                                            threshold_lower, threshold_upper, cb_masking_enabled.Checked, history_mins, mask_create_counter, mask_remove_counter,percent_variance);
 
             }
             DisplayCameraSettings();
@@ -2448,7 +2456,6 @@ namespace AITool
                     e.Cancel = (result == DialogResult.Cancel);
                 }
             }
-
         }
 
         public void SetLogLevel(string logLevel)
@@ -2463,6 +2470,38 @@ namespace AITool
         {
             String logLevel = (String)cb_log.SelectedItem;
             SetLogLevel(logLevel);
+        }
+
+        private void num_history_mins_Leave(object sender, EventArgs e)
+        {
+            if(num_history_mins.Text == "" )
+            {
+                num_history_mins.Text =  num_history_mins.Value.ToString();
+            }
+        }
+
+        private void num_mask_create_Leave(object sender, EventArgs e)
+        {
+            if (num_mask_create.Text == "")
+            {
+                num_mask_create.Text = num_mask_create.Value.ToString();
+            }
+        }
+
+        private void num_mask_remove_Leave(object sender, EventArgs e)
+        {
+            if (num_mask_remove.Text == "")
+            {
+                num_mask_remove.Text = num_mask_remove.Value.ToString();
+            }
+        }
+
+        private void num_percent_var_Leave(object sender, EventArgs e)
+        {
+            if (num_percent_var.Text == "")
+            {
+                num_percent_var.Text = num_percent_var.Value.ToString();
+            }
         }
     }
 
