@@ -59,6 +59,9 @@ namespace AITool
         FileSystemWatcher watcher = new FileSystemWatcher(); //fswatcher checking the input folder for new images
         private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
 
+        //controls expanding sections on camera tab
+        private const int expansion_per_tick = 7;
+        private bool mask_settings_expanded = false;
 
         public Shell()
         {
@@ -83,6 +86,7 @@ namespace AITool
             //set left list column width segmentation (because of some bug -4 is necessary to achieve the correct width)
             list2.Columns[0].Width = list2.Width - 4;
             list2.FullRowSelect = true; //make all columns clickable
+            CollapseMaskingSection(true); //init mask section to collapsed
 
             LoadCameras(); //load camera list
 
@@ -2502,6 +2506,52 @@ namespace AITool
             {
                 num_percent_var.Text = num_percent_var.Value.ToString();
             }
+        }
+
+        private void tmrCollapse_Tick(object sender, EventArgs e)
+        {
+            int new_height = panMasking.Height - expansion_per_tick;
+            if (new_height <= panMasking.MinimumSize.Height)
+            {
+                tmrCollapse.Enabled = false;
+                new_height = panMasking.MinimumSize.Height;
+            }
+            panMasking.Height = new_height;
+        }
+
+        private void CollapseMaskingSection(bool collapse)
+        {
+            if(collapse)
+                panMasking.Height = 0;
+        }
+
+        private void tmrExpand_Tick(object sender, EventArgs e)
+        {
+            int new_height = panMasking.Height + expansion_per_tick;
+            if (new_height >= panMasking.MaximumSize.Height)
+            {
+                tmrExpand.Enabled = false;
+                new_height = panMasking.MaximumSize.Height;
+            }
+
+            panMasking.Height = new_height;
+        }
+
+        private void lblAdvSettings_Click(object sender, EventArgs e)
+        {
+            if (mask_settings_expanded)
+            {
+                lblAdvSettings.Text = "+ Show Advanced settings";
+                tmrCollapse.Enabled = true;
+                tmrExpand.Enabled = false;
+            }
+            else
+            {
+                lblAdvSettings.Text = "- Hide Advanced settings";
+                tmrExpand.Enabled = true;
+                tmrCollapse.Enabled = false;
+            }
+            mask_settings_expanded = !mask_settings_expanded;
         }
     }
 
