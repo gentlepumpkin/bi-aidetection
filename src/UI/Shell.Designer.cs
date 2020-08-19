@@ -77,32 +77,7 @@ namespace AITool
             this.tableLayoutPanel6 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel7 = new AITool.DBLayoutPanel(this.components);
             this.label21 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel8 = new AITool.DBLayoutPanel(this.components);
-            this.cb_person = new System.Windows.Forms.CheckBox();
-            this.cb_bicycle = new System.Windows.Forms.CheckBox();
-            this.cb_motorcycle = new System.Windows.Forms.CheckBox();
-            this.cb_bear = new System.Windows.Forms.CheckBox();
-            this.cb_cow = new System.Windows.Forms.CheckBox();
-            this.cb_sheep = new System.Windows.Forms.CheckBox();
-            this.cb_horse = new System.Windows.Forms.CheckBox();
-            this.cb_bird = new System.Windows.Forms.CheckBox();
-            this.cb_dog = new System.Windows.Forms.CheckBox();
-            this.cb_cat = new System.Windows.Forms.CheckBox();
-            this.cb_airplane = new System.Windows.Forms.CheckBox();
-            this.cb_boat = new System.Windows.Forms.CheckBox();
-            this.cb_bus = new System.Windows.Forms.CheckBox();
-            this.cb_truck = new System.Windows.Forms.CheckBox();
-            this.cb_car = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel9 = new AITool.DBLayoutPanel(this.components);
-            this.tableLayoutPanel10 = new AITool.DBLayoutPanel(this.components);
-            this.tbTriggerUrl = new System.Windows.Forms.TextBox();
-            this.lblTriggerUrl = new System.Windows.Forms.Label();
-            this.tableLayoutPanel20 = new AITool.DBLayoutPanel(this.components);
-            this.label5 = new System.Windows.Forms.Label();
-            this.tb_cooldown = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.cb_telegram = new System.Windows.Forms.CheckBox();
             this.lblPrefix = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
             this.tableLayoutPanel12 = new AITool.DBLayoutPanel(this.components);
@@ -137,6 +112,33 @@ namespace AITool
             this.label19 = new System.Windows.Forms.Label();
             this.cb_masking_enabled = new System.Windows.Forms.CheckBox();
             this.lblAdvSettings = new System.Windows.Forms.Label();
+            this.panActions = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel9 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel10 = new AITool.DBLayoutPanel(this.components);
+            this.tbTriggerUrl = new System.Windows.Forms.TextBox();
+            this.lblTriggerUrl = new System.Windows.Forms.Label();
+            this.tableLayoutPanel20 = new AITool.DBLayoutPanel(this.components);
+            this.label5 = new System.Windows.Forms.Label();
+            this.tb_cooldown = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cb_telegram = new System.Windows.Forms.CheckBox();
+            this.panObjects = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel8 = new AITool.DBLayoutPanel(this.components);
+            this.cb_person = new System.Windows.Forms.CheckBox();
+            this.cb_bicycle = new System.Windows.Forms.CheckBox();
+            this.cb_motorcycle = new System.Windows.Forms.CheckBox();
+            this.cb_bear = new System.Windows.Forms.CheckBox();
+            this.cb_cow = new System.Windows.Forms.CheckBox();
+            this.cb_sheep = new System.Windows.Forms.CheckBox();
+            this.cb_horse = new System.Windows.Forms.CheckBox();
+            this.cb_bird = new System.Windows.Forms.CheckBox();
+            this.cb_dog = new System.Windows.Forms.CheckBox();
+            this.cb_cat = new System.Windows.Forms.CheckBox();
+            this.cb_airplane = new System.Windows.Forms.CheckBox();
+            this.cb_boat = new System.Windows.Forms.CheckBox();
+            this.cb_bus = new System.Windows.Forms.CheckBox();
+            this.cb_truck = new System.Windows.Forms.CheckBox();
+            this.cb_car = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel11 = new AITool.DBLayoutPanel(this.components);
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.btnCameraDel = new System.Windows.Forms.Button();
@@ -190,10 +192,6 @@ namespace AITool
             this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel7.SuspendLayout();
-            this.tableLayoutPanel8.SuspendLayout();
-            this.tableLayoutPanel9.SuspendLayout();
-            this.tableLayoutPanel10.SuspendLayout();
-            this.tableLayoutPanel20.SuspendLayout();
             this.tableLayoutPanel12.SuspendLayout();
             this.tableLayoutPanel13.SuspendLayout();
             this.tableLayoutPanel24.SuspendLayout();
@@ -204,6 +202,12 @@ namespace AITool
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_create)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_remove)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_percent_var)).BeginInit();
+            this.panActions.SuspendLayout();
+            this.tableLayoutPanel9.SuspendLayout();
+            this.tableLayoutPanel10.SuspendLayout();
+            this.tableLayoutPanel20.SuspendLayout();
+            this.panObjects.SuspendLayout();
+            this.tableLayoutPanel8.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
             this.tabHistory.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -599,9 +603,7 @@ namespace AITool
             this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.21665F));
             this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.78336F));
             this.tableLayoutPanel7.Controls.Add(this.label21, 0, 5);
-            this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel8, 1, 2);
             this.tableLayoutPanel7.Controls.Add(this.label1, 0, 4);
-            this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel9, 1, 4);
             this.tableLayoutPanel7.Controls.Add(this.lblPrefix, 0, 1);
             this.tableLayoutPanel7.Controls.Add(this.lblName, 0, 0);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel12, 1, 1);
@@ -610,6 +612,8 @@ namespace AITool
             this.tableLayoutPanel7.Controls.Add(this.lbl_threshold, 0, 3);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel24, 1, 3);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutMasking, 1, 5);
+            this.tableLayoutPanel7.Controls.Add(this.panActions, 1, 4);
+            this.tableLayoutPanel7.Controls.Add(this.panObjects, 1, 2);
             this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel7.Location = new System.Drawing.Point(3, 37);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
@@ -635,219 +639,6 @@ namespace AITool
             this.label21.TabIndex = 20;
             this.label21.Text = "Object Masking";
             // 
-            // tableLayoutPanel8
-            // 
-            this.tableLayoutPanel8.ColumnCount = 5;
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel8.Controls.Add(this.cb_person, 0, 0);
-            this.tableLayoutPanel8.Controls.Add(this.cb_bicycle, 0, 1);
-            this.tableLayoutPanel8.Controls.Add(this.cb_motorcycle, 0, 2);
-            this.tableLayoutPanel8.Controls.Add(this.cb_bear, 4, 2);
-            this.tableLayoutPanel8.Controls.Add(this.cb_cow, 4, 1);
-            this.tableLayoutPanel8.Controls.Add(this.cb_sheep, 4, 0);
-            this.tableLayoutPanel8.Controls.Add(this.cb_horse, 3, 2);
-            this.tableLayoutPanel8.Controls.Add(this.cb_bird, 3, 1);
-            this.tableLayoutPanel8.Controls.Add(this.cb_dog, 3, 0);
-            this.tableLayoutPanel8.Controls.Add(this.cb_cat, 2, 2);
-            this.tableLayoutPanel8.Controls.Add(this.cb_airplane, 2, 1);
-            this.tableLayoutPanel8.Controls.Add(this.cb_boat, 2, 0);
-            this.tableLayoutPanel8.Controls.Add(this.cb_bus, 1, 2);
-            this.tableLayoutPanel8.Controls.Add(this.cb_truck, 1, 1);
-            this.tableLayoutPanel8.Controls.Add(this.cb_car, 1, 0);
-            this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(160, 88);
-            this.tableLayoutPanel8.Name = "tableLayoutPanel8";
-            this.tableLayoutPanel8.RowCount = 3;
-            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(654, 89);
-            this.tableLayoutPanel8.TabIndex = 14;
-            // 
-            // cb_person
-            // 
-            this.cb_person.AutoSize = true;
-            this.cb_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_person.Location = new System.Drawing.Point(3, 5);
-            this.cb_person.Margin = new System.Windows.Forms.Padding(3, 5, 3, 3);
-            this.cb_person.Name = "cb_person";
-            this.cb_person.Size = new System.Drawing.Size(67, 21);
-            this.cb_person.TabIndex = 0;
-            this.cb_person.Text = "Person";
-            this.cb_person.UseVisualStyleBackColor = true;
-            // 
-            // cb_bicycle
-            // 
-            this.cb_bicycle.AutoSize = true;
-            this.cb_bicycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bicycle.Location = new System.Drawing.Point(3, 34);
-            this.cb_bicycle.Margin = new System.Windows.Forms.Padding(3, 5, 0, 0);
-            this.cb_bicycle.Name = "cb_bicycle";
-            this.cb_bicycle.Size = new System.Drawing.Size(65, 21);
-            this.cb_bicycle.TabIndex = 8;
-            this.cb_bicycle.Text = "Bicycle";
-            this.cb_bicycle.UseVisualStyleBackColor = true;
-            // 
-            // cb_motorcycle
-            // 
-            this.cb_motorcycle.AutoSize = true;
-            this.cb_motorcycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_motorcycle.Location = new System.Drawing.Point(3, 63);
-            this.cb_motorcycle.Margin = new System.Windows.Forms.Padding(3, 5, 0, 0);
-            this.cb_motorcycle.Name = "cb_motorcycle";
-            this.cb_motorcycle.Size = new System.Drawing.Size(92, 21);
-            this.cb_motorcycle.TabIndex = 10;
-            this.cb_motorcycle.Text = "Motorcycle";
-            this.cb_motorcycle.UseVisualStyleBackColor = true;
-            // 
-            // cb_bear
-            // 
-            this.cb_bear.AutoSize = true;
-            this.cb_bear.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bear.Location = new System.Drawing.Point(540, 63);
-            this.cb_bear.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_bear.Name = "cb_bear";
-            this.cb_bear.Size = new System.Drawing.Size(53, 21);
-            this.cb_bear.TabIndex = 13;
-            this.cb_bear.Text = "Bear";
-            this.cb_bear.UseVisualStyleBackColor = true;
-            // 
-            // cb_cow
-            // 
-            this.cb_cow.AutoSize = true;
-            this.cb_cow.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_cow.Location = new System.Drawing.Point(540, 34);
-            this.cb_cow.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_cow.Name = "cb_cow";
-            this.cb_cow.Size = new System.Drawing.Size(52, 21);
-            this.cb_cow.TabIndex = 11;
-            this.cb_cow.Text = "Cow";
-            this.cb_cow.UseVisualStyleBackColor = true;
-            // 
-            // cb_sheep
-            // 
-            this.cb_sheep.AutoSize = true;
-            this.cb_sheep.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_sheep.Location = new System.Drawing.Point(540, 5);
-            this.cb_sheep.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_sheep.Name = "cb_sheep";
-            this.cb_sheep.Size = new System.Drawing.Size(63, 21);
-            this.cb_sheep.TabIndex = 9;
-            this.cb_sheep.Text = "Sheep";
-            this.cb_sheep.UseVisualStyleBackColor = true;
-            // 
-            // cb_horse
-            // 
-            this.cb_horse.AutoSize = true;
-            this.cb_horse.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_horse.Location = new System.Drawing.Point(410, 63);
-            this.cb_horse.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_horse.Name = "cb_horse";
-            this.cb_horse.Size = new System.Drawing.Size(62, 21);
-            this.cb_horse.TabIndex = 7;
-            this.cb_horse.Text = "Horse";
-            this.cb_horse.UseVisualStyleBackColor = true;
-            // 
-            // cb_bird
-            // 
-            this.cb_bird.AutoSize = true;
-            this.cb_bird.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bird.Location = new System.Drawing.Point(410, 34);
-            this.cb_bird.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_bird.Name = "cb_bird";
-            this.cb_bird.Size = new System.Drawing.Size(50, 21);
-            this.cb_bird.TabIndex = 5;
-            this.cb_bird.Text = "Bird";
-            this.cb_bird.UseVisualStyleBackColor = true;
-            // 
-            // cb_dog
-            // 
-            this.cb_dog.AutoSize = true;
-            this.cb_dog.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_dog.Location = new System.Drawing.Point(410, 5);
-            this.cb_dog.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_dog.Name = "cb_dog";
-            this.cb_dog.Size = new System.Drawing.Size(52, 21);
-            this.cb_dog.TabIndex = 3;
-            this.cb_dog.Text = "Dog";
-            this.cb_dog.UseVisualStyleBackColor = true;
-            // 
-            // cb_cat
-            // 
-            this.cb_cat.AutoSize = true;
-            this.cb_cat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_cat.Location = new System.Drawing.Point(280, 63);
-            this.cb_cat.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_cat.Name = "cb_cat";
-            this.cb_cat.Size = new System.Drawing.Size(46, 21);
-            this.cb_cat.TabIndex = 1;
-            this.cb_cat.Text = "Cat";
-            this.cb_cat.UseVisualStyleBackColor = true;
-            // 
-            // cb_airplane
-            // 
-            this.cb_airplane.AutoSize = true;
-            this.cb_airplane.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_airplane.Location = new System.Drawing.Point(280, 34);
-            this.cb_airplane.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_airplane.Name = "cb_airplane";
-            this.cb_airplane.Size = new System.Drawing.Size(75, 21);
-            this.cb_airplane.TabIndex = 14;
-            this.cb_airplane.Text = "Airplane";
-            this.cb_airplane.UseVisualStyleBackColor = true;
-            // 
-            // cb_boat
-            // 
-            this.cb_boat.AutoSize = true;
-            this.cb_boat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_boat.Location = new System.Drawing.Point(280, 5);
-            this.cb_boat.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_boat.Name = "cb_boat";
-            this.cb_boat.Size = new System.Drawing.Size(53, 21);
-            this.cb_boat.TabIndex = 12;
-            this.cb_boat.Text = "Boat";
-            this.cb_boat.UseVisualStyleBackColor = true;
-            // 
-            // cb_bus
-            // 
-            this.cb_bus.AutoSize = true;
-            this.cb_bus.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bus.Location = new System.Drawing.Point(150, 63);
-            this.cb_bus.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_bus.Name = "cb_bus";
-            this.cb_bus.Size = new System.Drawing.Size(47, 21);
-            this.cb_bus.TabIndex = 4;
-            this.cb_bus.Text = "Bus";
-            this.cb_bus.UseVisualStyleBackColor = true;
-            // 
-            // cb_truck
-            // 
-            this.cb_truck.AutoSize = true;
-            this.cb_truck.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_truck.Location = new System.Drawing.Point(150, 34);
-            this.cb_truck.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_truck.Name = "cb_truck";
-            this.cb_truck.Size = new System.Drawing.Size(57, 21);
-            this.cb_truck.TabIndex = 6;
-            this.cb_truck.Text = "Truck";
-            this.cb_truck.UseVisualStyleBackColor = true;
-            // 
-            // cb_car
-            // 
-            this.cb_car.AutoSize = true;
-            this.cb_car.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_car.Location = new System.Drawing.Point(150, 5);
-            this.cb_car.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
-            this.cb_car.Name = "cb_car";
-            this.cb_car.Size = new System.Drawing.Size(47, 21);
-            this.cb_car.TabIndex = 2;
-            this.cb_car.Text = "Car";
-            this.cb_car.UseVisualStyleBackColor = true;
-            // 
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -860,128 +651,13 @@ namespace AITool
             this.label1.TabIndex = 9;
             this.label1.Text = "Actions";
             // 
-            // tableLayoutPanel9
-            // 
-            this.tableLayoutPanel9.ColumnCount = 1;
-            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel10, 0, 1);
-            this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel20, 0, 0);
-            this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel9.Location = new System.Drawing.Point(160, 225);
-            this.tableLayoutPanel9.Name = "tableLayoutPanel9";
-            this.tableLayoutPanel9.RowCount = 2;
-            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel9.Size = new System.Drawing.Size(654, 77);
-            this.tableLayoutPanel9.TabIndex = 8;
-            // 
-            // tableLayoutPanel10
-            // 
-            this.tableLayoutPanel10.ColumnCount = 2;
-            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.9582F));
-            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.04179F));
-            this.tableLayoutPanel10.Controls.Add(this.tbTriggerUrl, 1, 0);
-            this.tableLayoutPanel10.Controls.Add(this.lblTriggerUrl, 0, 0);
-            this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 41);
-            this.tableLayoutPanel10.Name = "tableLayoutPanel10";
-            this.tableLayoutPanel10.RowCount = 1;
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel10.Size = new System.Drawing.Size(648, 33);
-            this.tableLayoutPanel10.TabIndex = 0;
-            // 
-            // tbTriggerUrl
-            // 
-            this.tbTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbTriggerUrl.Location = new System.Drawing.Point(129, 3);
-            this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
-            this.tbTriggerUrl.Name = "tbTriggerUrl";
-            this.tbTriggerUrl.Size = new System.Drawing.Size(516, 25);
-            this.tbTriggerUrl.TabIndex = 0;
-            this.tbTriggerUrl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbTriggerUrl_KeyDown);
-            this.tbTriggerUrl.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbTriggerUrl_KeyUp);
-            // 
-            // lblTriggerUrl
-            // 
-            this.lblTriggerUrl.AutoSize = true;
-            this.lblTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTriggerUrl.Location = new System.Drawing.Point(0, 6);
-            this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(80, 0);
-            this.lblTriggerUrl.Name = "lblTriggerUrl";
-            this.lblTriggerUrl.Size = new System.Drawing.Size(91, 17);
-            this.lblTriggerUrl.TabIndex = 1;
-            this.lblTriggerUrl.Text = "Trigger URL(s)";
-            // 
-            // tableLayoutPanel20
-            // 
-            this.tableLayoutPanel20.ColumnCount = 4;
-            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.85371F));
-            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.210032F));
-            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20.65217F));
-            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.48447F));
-            this.tableLayoutPanel20.Controls.Add(this.label5, 0, 0);
-            this.tableLayoutPanel20.Controls.Add(this.tb_cooldown, 1, 0);
-            this.tableLayoutPanel20.Controls.Add(this.label6, 2, 0);
-            this.tableLayoutPanel20.Controls.Add(this.cb_telegram, 3, 0);
-            this.tableLayoutPanel20.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel20.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanel20.Name = "tableLayoutPanel20";
-            this.tableLayoutPanel20.RowCount = 1;
-            this.tableLayoutPanel20.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel20.Size = new System.Drawing.Size(648, 32);
-            this.tableLayoutPanel20.TabIndex = 8;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(0, 7);
-            this.label5.Margin = new System.Windows.Forms.Padding(0, 7, 3, 3);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(99, 17);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "Cooldown Time";
-            // 
-            // tb_cooldown
-            // 
-            this.tb_cooldown.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_cooldown.Location = new System.Drawing.Point(128, 3);
-            this.tb_cooldown.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
-            this.tb_cooldown.MaxLength = 3;
-            this.tb_cooldown.Name = "tb_cooldown";
-            this.tb_cooldown.Size = new System.Drawing.Size(41, 25);
-            this.tb_cooldown.TabIndex = 1;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(175, 7);
-            this.label6.Margin = new System.Windows.Forms.Padding(1, 7, 3, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(53, 17);
-            this.label6.TabIndex = 2;
-            this.label6.Text = "minutes";
-            // 
-            // cb_telegram
-            // 
-            this.cb_telegram.AutoSize = true;
-            this.cb_telegram.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.cb_telegram.Location = new System.Drawing.Point(309, 7);
-            this.cb_telegram.Margin = new System.Windows.Forms.Padding(2, 7, 2, 2);
-            this.cb_telegram.Name = "cb_telegram";
-            this.cb_telegram.Size = new System.Drawing.Size(206, 21);
-            this.cb_telegram.TabIndex = 3;
-            this.cb_telegram.Text = "Send alert images to Telegram";
-            this.cb_telegram.UseVisualStyleBackColor = true;
-            // 
             // lblPrefix
             // 
-            this.lblPrefix.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblPrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblPrefix.AutoSize = true;
             this.lblPrefix.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPrefix.Location = new System.Drawing.Point(13, 56);
+            this.lblPrefix.Location = new System.Drawing.Point(13, 50);
+            this.lblPrefix.Margin = new System.Windows.Forms.Padding(3, 6, 3, 0);
             this.lblPrefix.Name = "lblPrefix";
             this.lblPrefix.Size = new System.Drawing.Size(141, 17);
             this.lblPrefix.TabIndex = 2;
@@ -992,7 +668,8 @@ namespace AITool
             this.lblName.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblName.AutoSize = true;
             this.lblName.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblName.Location = new System.Drawing.Point(110, 13);
+            this.lblName.Location = new System.Drawing.Point(110, 19);
+            this.lblName.Margin = new System.Windows.Forms.Padding(3, 12, 3, 0);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(44, 17);
             this.lblName.TabIndex = 10;
@@ -1015,9 +692,8 @@ namespace AITool
             // 
             // tbPrefix
             // 
-            this.tbPrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbPrefix.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbPrefix.Location = new System.Drawing.Point(3, 5);
+            this.tbPrefix.Location = new System.Drawing.Point(3, 0);
             this.tbPrefix.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
             this.tbPrefix.Name = "tbPrefix";
             this.tbPrefix.Size = new System.Drawing.Size(321, 25);
@@ -1050,10 +726,10 @@ namespace AITool
             // 
             // tbName
             // 
-            this.tbName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbName.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tbName.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbName.Location = new System.Drawing.Point(3, 6);
-            this.tbName.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.tbName.Location = new System.Drawing.Point(3, 12);
+            this.tbName.Margin = new System.Windows.Forms.Padding(3, 12, 3, 0);
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(321, 25);
             this.tbName.TabIndex = 12;
@@ -1063,8 +739,8 @@ namespace AITool
             this.cb_enabled.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_enabled.AutoSize = true;
             this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_enabled.Location = new System.Drawing.Point(347, 8);
-            this.cb_enabled.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
+            this.cb_enabled.Location = new System.Drawing.Point(347, 13);
+            this.cb_enabled.Margin = new System.Windows.Forms.Padding(20, 12, 3, 3);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(232, 21);
             this.cb_enabled.TabIndex = 13;
@@ -1098,12 +774,12 @@ namespace AITool
             // tableLayoutPanel24
             // 
             this.tableLayoutPanel24.ColumnCount = 6;
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 6.880734F));
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.798165F));
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.99694F));
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 6.574924F));
-            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45.71865F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.7737F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 5.198777F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 6.116208F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.23242F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 5.198777F));
+            this.tableLayoutPanel24.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60.09174F));
             this.tableLayoutPanel24.Controls.Add(this.lbl_threshold_lower, 0, 0);
             this.tableLayoutPanel24.Controls.Add(this.tb_threshold_upper, 4, 0);
             this.tableLayoutPanel24.Controls.Add(this.lbl_threshold_upper, 3, 0);
@@ -1134,11 +810,11 @@ namespace AITool
             // 
             this.tb_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tb_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_threshold_upper.Location = new System.Drawing.Point(311, 6);
+            this.tb_threshold_upper.Location = new System.Drawing.Point(227, 6);
             this.tb_threshold_upper.Margin = new System.Windows.Forms.Padding(0, 5, 3, 3);
             this.tb_threshold_upper.MaxLength = 3;
             this.tb_threshold_upper.Name = "tb_threshold_upper";
-            this.tb_threshold_upper.Size = new System.Drawing.Size(40, 25);
+            this.tb_threshold_upper.Size = new System.Drawing.Size(30, 25);
             this.tb_threshold_upper.TabIndex = 20;
             this.tb_threshold_upper.Leave += new System.EventHandler(this.tb_threshold_upper_Leave);
             // 
@@ -1147,8 +823,8 @@ namespace AITool
             this.lbl_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_threshold_upper.AutoSize = true;
             this.lbl_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_threshold_upper.Location = new System.Drawing.Point(229, 12);
-            this.lbl_threshold_upper.Margin = new System.Windows.Forms.Padding(3, 5, 3, 0);
+            this.lbl_threshold_upper.Location = new System.Drawing.Point(151, 10);
+            this.lbl_threshold_upper.Margin = new System.Windows.Forms.Padding(3, 5, 3, 3);
             this.lbl_threshold_upper.Name = "lbl_threshold_upper";
             this.lbl_threshold_upper.Size = new System.Drawing.Size(73, 17);
             this.lbl_threshold_upper.TabIndex = 21;
@@ -1158,11 +834,11 @@ namespace AITool
             // 
             this.tb_threshold_lower.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tb_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_threshold_lower.Location = new System.Drawing.Point(130, 6);
+            this.tb_threshold_lower.Location = new System.Drawing.Point(76, 6);
             this.tb_threshold_lower.Margin = new System.Windows.Forms.Padding(0, 5, 3, 3);
             this.tb_threshold_lower.MaxLength = 3;
             this.tb_threshold_lower.Name = "tb_threshold_lower";
-            this.tb_threshold_lower.Size = new System.Drawing.Size(42, 25);
+            this.tb_threshold_lower.Size = new System.Drawing.Size(30, 25);
             this.tb_threshold_lower.TabIndex = 18;
             this.tb_threshold_lower.Leave += new System.EventHandler(this.tb_threshold_lower_Leave);
             // 
@@ -1171,7 +847,7 @@ namespace AITool
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(355, 12);
+            this.label9.Location = new System.Drawing.Point(261, 12);
             this.label9.Margin = new System.Windows.Forms.Padding(1, 5, 3, 0);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(19, 17);
@@ -1183,7 +859,7 @@ namespace AITool
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(176, 12);
+            this.label10.Location = new System.Drawing.Point(110, 12);
             this.label10.Margin = new System.Windows.Forms.Padding(1, 5, 3, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(19, 17);
@@ -1211,12 +887,13 @@ namespace AITool
             // panMasking
             // 
             this.panMasking.BackColor = System.Drawing.Color.Transparent;
+            this.panMasking.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panMasking.Controls.Add(this.tableLayoutAdvancedMasking);
-            this.panMasking.Location = new System.Drawing.Point(0, 44);
-            this.panMasking.Margin = new System.Windows.Forms.Padding(0);
+            this.panMasking.Location = new System.Drawing.Point(5, 44);
+            this.panMasking.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.panMasking.MaximumSize = new System.Drawing.Size(662, 112);
             this.panMasking.Name = "panMasking";
-            this.panMasking.Size = new System.Drawing.Size(655, 112);
+            this.panMasking.Size = new System.Drawing.Size(651, 112);
             this.panMasking.TabIndex = 1;
             // 
             // tableLayoutAdvancedMasking
@@ -1462,6 +1139,355 @@ namespace AITool
             this.lblAdvSettings.TabIndex = 2;
             this.lblAdvSettings.Text = "+ Show Advanced settings";
             this.lblAdvSettings.Click += new System.EventHandler(this.lblAdvSettings_Click);
+            // 
+            // panActions
+            // 
+            this.panActions.BackColor = System.Drawing.Color.Transparent;
+            this.panActions.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panActions.Controls.Add(this.tableLayoutPanel9);
+            this.panActions.Location = new System.Drawing.Point(162, 225);
+            this.panActions.Margin = new System.Windows.Forms.Padding(5, 3, 3, 3);
+            this.panActions.Name = "panActions";
+            this.panActions.Size = new System.Drawing.Size(652, 77);
+            this.panActions.TabIndex = 21;
+            // 
+            // tableLayoutPanel9
+            // 
+            this.tableLayoutPanel9.ColumnCount = 1;
+            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel10, 0, 1);
+            this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel20, 0, 0);
+            this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel9.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel9.Name = "tableLayoutPanel9";
+            this.tableLayoutPanel9.RowCount = 2;
+            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel9.Size = new System.Drawing.Size(648, 73);
+            this.tableLayoutPanel9.TabIndex = 9;
+            // 
+            // tableLayoutPanel10
+            // 
+            this.tableLayoutPanel10.ColumnCount = 2;
+            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.9582F));
+            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.04179F));
+            this.tableLayoutPanel10.Controls.Add(this.tbTriggerUrl, 1, 0);
+            this.tableLayoutPanel10.Controls.Add(this.lblTriggerUrl, 0, 0);
+            this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 39);
+            this.tableLayoutPanel10.Name = "tableLayoutPanel10";
+            this.tableLayoutPanel10.RowCount = 1;
+            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel10.Size = new System.Drawing.Size(642, 31);
+            this.tableLayoutPanel10.TabIndex = 0;
+            // 
+            // tbTriggerUrl
+            // 
+            this.tbTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbTriggerUrl.Location = new System.Drawing.Point(128, 3);
+            this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
+            this.tbTriggerUrl.Name = "tbTriggerUrl";
+            this.tbTriggerUrl.Size = new System.Drawing.Size(511, 25);
+            this.tbTriggerUrl.TabIndex = 0;
+            // 
+            // lblTriggerUrl
+            // 
+            this.lblTriggerUrl.AutoSize = true;
+            this.lblTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTriggerUrl.Location = new System.Drawing.Point(0, 6);
+            this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(80, 0);
+            this.lblTriggerUrl.Name = "lblTriggerUrl";
+            this.lblTriggerUrl.Size = new System.Drawing.Size(91, 17);
+            this.lblTriggerUrl.TabIndex = 1;
+            this.lblTriggerUrl.Text = "Trigger URL(s)";
+            // 
+            // tableLayoutPanel20
+            // 
+            this.tableLayoutPanel20.ColumnCount = 4;
+            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.85371F));
+            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 6.697819F));
+            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20.71651F));
+            this.tableLayoutPanel20.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 52.48447F));
+            this.tableLayoutPanel20.Controls.Add(this.label5, 0, 0);
+            this.tableLayoutPanel20.Controls.Add(this.tb_cooldown, 1, 0);
+            this.tableLayoutPanel20.Controls.Add(this.label6, 2, 0);
+            this.tableLayoutPanel20.Controls.Add(this.cb_telegram, 3, 0);
+            this.tableLayoutPanel20.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel20.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel20.Name = "tableLayoutPanel20";
+            this.tableLayoutPanel20.RowCount = 1;
+            this.tableLayoutPanel20.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel20.Size = new System.Drawing.Size(642, 30);
+            this.tableLayoutPanel20.TabIndex = 8;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(0, 7);
+            this.label5.Margin = new System.Windows.Forms.Padding(0, 7, 3, 3);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(99, 17);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "Cooldown Time";
+            // 
+            // tb_cooldown
+            // 
+            this.tb_cooldown.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_cooldown.Location = new System.Drawing.Point(127, 3);
+            this.tb_cooldown.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
+            this.tb_cooldown.MaxLength = 3;
+            this.tb_cooldown.Name = "tb_cooldown";
+            this.tb_cooldown.Size = new System.Drawing.Size(40, 25);
+            this.tb_cooldown.TabIndex = 1;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(171, 7);
+            this.label6.Margin = new System.Windows.Forms.Padding(1, 7, 3, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(53, 17);
+            this.label6.TabIndex = 2;
+            this.label6.Text = "minutes";
+            // 
+            // cb_telegram
+            // 
+            this.cb_telegram.AutoSize = true;
+            this.cb_telegram.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.cb_telegram.Location = new System.Drawing.Point(305, 7);
+            this.cb_telegram.Margin = new System.Windows.Forms.Padding(2, 7, 2, 2);
+            this.cb_telegram.Name = "cb_telegram";
+            this.cb_telegram.Size = new System.Drawing.Size(206, 21);
+            this.cb_telegram.TabIndex = 3;
+            this.cb_telegram.Text = "Send alert images to Telegram";
+            this.cb_telegram.UseVisualStyleBackColor = true;
+            // 
+            // panObjects
+            // 
+            this.panObjects.BackColor = System.Drawing.Color.Transparent;
+            this.panObjects.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panObjects.Controls.Add(this.tableLayoutPanel8);
+            this.panObjects.Location = new System.Drawing.Point(162, 88);
+            this.panObjects.Margin = new System.Windows.Forms.Padding(5, 3, 3, 3);
+            this.panObjects.Name = "panObjects";
+            this.panObjects.Size = new System.Drawing.Size(652, 89);
+            this.panObjects.TabIndex = 22;
+            // 
+            // tableLayoutPanel8
+            // 
+            this.tableLayoutPanel8.ColumnCount = 5;
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel8.Controls.Add(this.cb_person, 0, 0);
+            this.tableLayoutPanel8.Controls.Add(this.cb_bicycle, 0, 1);
+            this.tableLayoutPanel8.Controls.Add(this.cb_motorcycle, 0, 2);
+            this.tableLayoutPanel8.Controls.Add(this.cb_bear, 4, 2);
+            this.tableLayoutPanel8.Controls.Add(this.cb_cow, 4, 1);
+            this.tableLayoutPanel8.Controls.Add(this.cb_sheep, 4, 0);
+            this.tableLayoutPanel8.Controls.Add(this.cb_horse, 3, 2);
+            this.tableLayoutPanel8.Controls.Add(this.cb_bird, 3, 1);
+            this.tableLayoutPanel8.Controls.Add(this.cb_dog, 3, 0);
+            this.tableLayoutPanel8.Controls.Add(this.cb_cat, 2, 2);
+            this.tableLayoutPanel8.Controls.Add(this.cb_airplane, 2, 1);
+            this.tableLayoutPanel8.Controls.Add(this.cb_boat, 2, 0);
+            this.tableLayoutPanel8.Controls.Add(this.cb_bus, 1, 2);
+            this.tableLayoutPanel8.Controls.Add(this.cb_truck, 1, 1);
+            this.tableLayoutPanel8.Controls.Add(this.cb_car, 1, 0);
+            this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel8.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel8.Name = "tableLayoutPanel8";
+            this.tableLayoutPanel8.RowCount = 3;
+            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(648, 85);
+            this.tableLayoutPanel8.TabIndex = 15;
+            // 
+            // cb_person
+            // 
+            this.cb_person.AutoSize = true;
+            this.cb_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_person.Location = new System.Drawing.Point(3, 5);
+            this.cb_person.Margin = new System.Windows.Forms.Padding(3, 5, 3, 3);
+            this.cb_person.Name = "cb_person";
+            this.cb_person.Size = new System.Drawing.Size(67, 20);
+            this.cb_person.TabIndex = 0;
+            this.cb_person.Text = "Person";
+            this.cb_person.UseVisualStyleBackColor = true;
+            // 
+            // cb_bicycle
+            // 
+            this.cb_bicycle.AutoSize = true;
+            this.cb_bicycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_bicycle.Location = new System.Drawing.Point(3, 33);
+            this.cb_bicycle.Margin = new System.Windows.Forms.Padding(3, 5, 0, 0);
+            this.cb_bicycle.Name = "cb_bicycle";
+            this.cb_bicycle.Size = new System.Drawing.Size(65, 21);
+            this.cb_bicycle.TabIndex = 8;
+            this.cb_bicycle.Text = "Bicycle";
+            this.cb_bicycle.UseVisualStyleBackColor = true;
+            // 
+            // cb_motorcycle
+            // 
+            this.cb_motorcycle.AutoSize = true;
+            this.cb_motorcycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_motorcycle.Location = new System.Drawing.Point(3, 61);
+            this.cb_motorcycle.Margin = new System.Windows.Forms.Padding(3, 5, 0, 0);
+            this.cb_motorcycle.Name = "cb_motorcycle";
+            this.cb_motorcycle.Size = new System.Drawing.Size(92, 21);
+            this.cb_motorcycle.TabIndex = 10;
+            this.cb_motorcycle.Text = "Motorcycle";
+            this.cb_motorcycle.UseVisualStyleBackColor = true;
+            // 
+            // cb_bear
+            // 
+            this.cb_bear.AutoSize = true;
+            this.cb_bear.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_bear.Location = new System.Drawing.Point(536, 61);
+            this.cb_bear.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_bear.Name = "cb_bear";
+            this.cb_bear.Size = new System.Drawing.Size(53, 21);
+            this.cb_bear.TabIndex = 13;
+            this.cb_bear.Text = "Bear";
+            this.cb_bear.UseVisualStyleBackColor = true;
+            // 
+            // cb_cow
+            // 
+            this.cb_cow.AutoSize = true;
+            this.cb_cow.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_cow.Location = new System.Drawing.Point(536, 33);
+            this.cb_cow.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_cow.Name = "cb_cow";
+            this.cb_cow.Size = new System.Drawing.Size(52, 20);
+            this.cb_cow.TabIndex = 11;
+            this.cb_cow.Text = "Cow";
+            this.cb_cow.UseVisualStyleBackColor = true;
+            // 
+            // cb_sheep
+            // 
+            this.cb_sheep.AutoSize = true;
+            this.cb_sheep.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_sheep.Location = new System.Drawing.Point(536, 5);
+            this.cb_sheep.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_sheep.Name = "cb_sheep";
+            this.cb_sheep.Size = new System.Drawing.Size(63, 20);
+            this.cb_sheep.TabIndex = 9;
+            this.cb_sheep.Text = "Sheep";
+            this.cb_sheep.UseVisualStyleBackColor = true;
+            // 
+            // cb_horse
+            // 
+            this.cb_horse.AutoSize = true;
+            this.cb_horse.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_horse.Location = new System.Drawing.Point(407, 61);
+            this.cb_horse.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_horse.Name = "cb_horse";
+            this.cb_horse.Size = new System.Drawing.Size(62, 21);
+            this.cb_horse.TabIndex = 7;
+            this.cb_horse.Text = "Horse";
+            this.cb_horse.UseVisualStyleBackColor = true;
+            // 
+            // cb_bird
+            // 
+            this.cb_bird.AutoSize = true;
+            this.cb_bird.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_bird.Location = new System.Drawing.Point(407, 33);
+            this.cb_bird.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_bird.Name = "cb_bird";
+            this.cb_bird.Size = new System.Drawing.Size(50, 20);
+            this.cb_bird.TabIndex = 5;
+            this.cb_bird.Text = "Bird";
+            this.cb_bird.UseVisualStyleBackColor = true;
+            // 
+            // cb_dog
+            // 
+            this.cb_dog.AutoSize = true;
+            this.cb_dog.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_dog.Location = new System.Drawing.Point(407, 5);
+            this.cb_dog.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_dog.Name = "cb_dog";
+            this.cb_dog.Size = new System.Drawing.Size(52, 20);
+            this.cb_dog.TabIndex = 3;
+            this.cb_dog.Text = "Dog";
+            this.cb_dog.UseVisualStyleBackColor = true;
+            // 
+            // cb_cat
+            // 
+            this.cb_cat.AutoSize = true;
+            this.cb_cat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_cat.Location = new System.Drawing.Point(278, 61);
+            this.cb_cat.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_cat.Name = "cb_cat";
+            this.cb_cat.Size = new System.Drawing.Size(46, 21);
+            this.cb_cat.TabIndex = 1;
+            this.cb_cat.Text = "Cat";
+            this.cb_cat.UseVisualStyleBackColor = true;
+            // 
+            // cb_airplane
+            // 
+            this.cb_airplane.AutoSize = true;
+            this.cb_airplane.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_airplane.Location = new System.Drawing.Point(278, 33);
+            this.cb_airplane.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_airplane.Name = "cb_airplane";
+            this.cb_airplane.Size = new System.Drawing.Size(75, 20);
+            this.cb_airplane.TabIndex = 14;
+            this.cb_airplane.Text = "Airplane";
+            this.cb_airplane.UseVisualStyleBackColor = true;
+            // 
+            // cb_boat
+            // 
+            this.cb_boat.AutoSize = true;
+            this.cb_boat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_boat.Location = new System.Drawing.Point(278, 5);
+            this.cb_boat.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_boat.Name = "cb_boat";
+            this.cb_boat.Size = new System.Drawing.Size(53, 20);
+            this.cb_boat.TabIndex = 12;
+            this.cb_boat.Text = "Boat";
+            this.cb_boat.UseVisualStyleBackColor = true;
+            // 
+            // cb_bus
+            // 
+            this.cb_bus.AutoSize = true;
+            this.cb_bus.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_bus.Location = new System.Drawing.Point(149, 61);
+            this.cb_bus.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_bus.Name = "cb_bus";
+            this.cb_bus.Size = new System.Drawing.Size(47, 21);
+            this.cb_bus.TabIndex = 4;
+            this.cb_bus.Text = "Bus";
+            this.cb_bus.UseVisualStyleBackColor = true;
+            // 
+            // cb_truck
+            // 
+            this.cb_truck.AutoSize = true;
+            this.cb_truck.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_truck.Location = new System.Drawing.Point(149, 33);
+            this.cb_truck.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_truck.Name = "cb_truck";
+            this.cb_truck.Size = new System.Drawing.Size(57, 20);
+            this.cb_truck.TabIndex = 6;
+            this.cb_truck.Text = "Truck";
+            this.cb_truck.UseVisualStyleBackColor = true;
+            // 
+            // cb_car
+            // 
+            this.cb_car.AutoSize = true;
+            this.cb_car.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_car.Location = new System.Drawing.Point(149, 5);
+            this.cb_car.Margin = new System.Windows.Forms.Padding(20, 5, 3, 3);
+            this.cb_car.Name = "cb_car";
+            this.cb_car.Size = new System.Drawing.Size(47, 20);
+            this.cb_car.TabIndex = 2;
+            this.cb_car.Text = "Car";
+            this.cb_car.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel11
             // 
@@ -2193,13 +2219,6 @@ namespace AITool
             this.tableLayoutPanel6.PerformLayout();
             this.tableLayoutPanel7.ResumeLayout(false);
             this.tableLayoutPanel7.PerformLayout();
-            this.tableLayoutPanel8.ResumeLayout(false);
-            this.tableLayoutPanel8.PerformLayout();
-            this.tableLayoutPanel9.ResumeLayout(false);
-            this.tableLayoutPanel10.ResumeLayout(false);
-            this.tableLayoutPanel10.PerformLayout();
-            this.tableLayoutPanel20.ResumeLayout(false);
-            this.tableLayoutPanel20.PerformLayout();
             this.tableLayoutPanel12.ResumeLayout(false);
             this.tableLayoutPanel12.PerformLayout();
             this.tableLayoutPanel13.ResumeLayout(false);
@@ -2215,6 +2234,15 @@ namespace AITool
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_create)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_remove)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_percent_var)).EndInit();
+            this.panActions.ResumeLayout(false);
+            this.tableLayoutPanel9.ResumeLayout(false);
+            this.tableLayoutPanel10.ResumeLayout(false);
+            this.tableLayoutPanel10.PerformLayout();
+            this.tableLayoutPanel20.ResumeLayout(false);
+            this.tableLayoutPanel20.PerformLayout();
+            this.panObjects.ResumeLayout(false);
+            this.tableLayoutPanel8.ResumeLayout(false);
+            this.tableLayoutPanel8.PerformLayout();
             this.tableLayoutPanel11.ResumeLayout(false);
             this.tabHistory.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
@@ -2278,50 +2306,6 @@ namespace AITool
         private System.Windows.Forms.ListView list2;
         private System.Windows.Forms.Button btnCameraAdd;
         private DBLayoutPanel tableLayoutPanel6;
-        private DBLayoutPanel tableLayoutPanel7;
-        private DBLayoutPanel tableLayoutPanel8;
-        private System.Windows.Forms.CheckBox cb_person;
-        private System.Windows.Forms.CheckBox cb_bicycle;
-        private System.Windows.Forms.CheckBox cb_motorcycle;
-        private System.Windows.Forms.CheckBox cb_bear;
-        private System.Windows.Forms.CheckBox cb_cow;
-        private System.Windows.Forms.CheckBox cb_sheep;
-        private System.Windows.Forms.CheckBox cb_horse;
-        private System.Windows.Forms.CheckBox cb_bird;
-        private System.Windows.Forms.CheckBox cb_dog;
-        private System.Windows.Forms.CheckBox cb_cat;
-        private System.Windows.Forms.CheckBox cb_airplane;
-        private System.Windows.Forms.CheckBox cb_boat;
-        private System.Windows.Forms.CheckBox cb_bus;
-        private System.Windows.Forms.CheckBox cb_truck;
-        private System.Windows.Forms.CheckBox cb_car;
-        private System.Windows.Forms.Label label1;
-        private DBLayoutPanel tableLayoutPanel9;
-        private DBLayoutPanel tableLayoutPanel10;
-        private System.Windows.Forms.Label lblTriggerUrl;
-        private System.Windows.Forms.TextBox tbTriggerUrl;
-        private DBLayoutPanel tableLayoutPanel20;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox tb_cooldown;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.CheckBox cb_telegram;
-        private System.Windows.Forms.Label lblPrefix;
-        private System.Windows.Forms.Label lblName;
-        private DBLayoutPanel tableLayoutPanel12;
-        private System.Windows.Forms.TextBox tbPrefix;
-        private System.Windows.Forms.Label lbl_prefix;
-        private DBLayoutPanel tableLayoutPanel13;
-        private System.Windows.Forms.TextBox tbName;
-        private System.Windows.Forms.CheckBox cb_enabled;
-        private System.Windows.Forms.Label lblRelevantObjects;
-        private System.Windows.Forms.Label lbl_threshold;
-        private DBLayoutPanel tableLayoutPanel24;
-        private System.Windows.Forms.Label lbl_threshold_lower;
-        private System.Windows.Forms.TextBox tb_threshold_upper;
-        private System.Windows.Forms.Label lbl_threshold_upper;
-        private System.Windows.Forms.TextBox tb_threshold_lower;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label10;
         private DBLayoutPanel tableLayoutPanel11;
         private System.Windows.Forms.Button btnCameraSave;
         private System.Windows.Forms.Button btnCameraDel;
@@ -2365,7 +2349,26 @@ namespace AITool
         private System.Windows.Forms.Label lbl_errors;
         private System.Windows.Forms.Label lbl_info;
         private System.Windows.Forms.TabControl tabControl1;
+        private DBLayoutPanel tableLayoutPanel7;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblPrefix;
+        private System.Windows.Forms.Label lblName;
+        private DBLayoutPanel tableLayoutPanel12;
+        private System.Windows.Forms.TextBox tbPrefix;
+        private System.Windows.Forms.Label lbl_prefix;
+        private DBLayoutPanel tableLayoutPanel13;
+        private System.Windows.Forms.TextBox tbName;
+        private System.Windows.Forms.CheckBox cb_enabled;
+        private System.Windows.Forms.Label lblRelevantObjects;
+        private System.Windows.Forms.Label lbl_threshold;
+        private DBLayoutPanel tableLayoutPanel24;
+        private System.Windows.Forms.Label lbl_threshold_lower;
+        private System.Windows.Forms.TextBox tb_threshold_upper;
+        private System.Windows.Forms.Label lbl_threshold_upper;
+        private System.Windows.Forms.TextBox tb_threshold_lower;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TableLayoutPanel tableLayoutMasking;
         private System.Windows.Forms.Panel panMasking;
         private System.Windows.Forms.TableLayoutPanel tableLayoutAdvancedMasking;
@@ -2383,6 +2386,33 @@ namespace AITool
         private System.Windows.Forms.Label label19;
         protected internal System.Windows.Forms.CheckBox cb_masking_enabled;
         private System.Windows.Forms.Label lblAdvSettings;
+        private System.Windows.Forms.Panel panActions;
+        private DBLayoutPanel tableLayoutPanel9;
+        private DBLayoutPanel tableLayoutPanel10;
+        private System.Windows.Forms.TextBox tbTriggerUrl;
+        private System.Windows.Forms.Label lblTriggerUrl;
+        private DBLayoutPanel tableLayoutPanel20;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tb_cooldown;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.CheckBox cb_telegram;
+        private System.Windows.Forms.Panel panObjects;
+        private DBLayoutPanel tableLayoutPanel8;
+        private System.Windows.Forms.CheckBox cb_person;
+        private System.Windows.Forms.CheckBox cb_bicycle;
+        private System.Windows.Forms.CheckBox cb_motorcycle;
+        private System.Windows.Forms.CheckBox cb_bear;
+        private System.Windows.Forms.CheckBox cb_cow;
+        private System.Windows.Forms.CheckBox cb_sheep;
+        private System.Windows.Forms.CheckBox cb_horse;
+        private System.Windows.Forms.CheckBox cb_bird;
+        private System.Windows.Forms.CheckBox cb_dog;
+        private System.Windows.Forms.CheckBox cb_cat;
+        private System.Windows.Forms.CheckBox cb_airplane;
+        private System.Windows.Forms.CheckBox cb_boat;
+        private System.Windows.Forms.CheckBox cb_bus;
+        private System.Windows.Forms.CheckBox cb_truck;
+        private System.Windows.Forms.CheckBox cb_car;
     }
 }
 
