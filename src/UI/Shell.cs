@@ -1930,6 +1930,11 @@ namespace AITool
             {
                 list2.Items[0].Selected = true;
             }
+            else
+            {
+                //if no cameras found disable input settings until camera added
+                tableLayoutPanel6.Enabled = false;
+            }
         }
 
         //load existing camera (settings file exists) into CameraList, into Stats dropdown and into History filter dropdown 
@@ -2140,7 +2145,7 @@ namespace AITool
         {
             if (list2.SelectedItems.Count > 0)
             {
-
+                tableLayoutPanel6.Enabled = true;
                 tbName.Text = list2.SelectedItems[0].Text; //load name textbox from name in list2
 
                 //load remaining settings from Camera.cs object
@@ -2215,6 +2220,11 @@ namespace AITool
                         cbarray[j].Checked = true;
                     }
                 }
+            }
+            else
+            {
+                //disable camera settings if there are no cameras setup yet
+                tableLayoutPanel6.Enabled = false;
             }
         }
 
