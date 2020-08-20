@@ -313,7 +313,7 @@ namespace AITool
                                                     bool irrelevant_object = false;
 
                                                     //if object detected is one of the objects that is relevant
-                                                    if (CameraList[index].triggering_objects_as_string.Contains(user.label))
+                                                    if (CameraList[index].triggering_objects.Contains(user.label))
                                                     {
                                                         // -> OBJECT IS RELEVANT
 
@@ -1897,7 +1897,7 @@ namespace AITool
 
             try
             {
-                string[] files = Directory.GetFiles("./cameras", $"*.txt"); //load all settings files in a string array
+                string[] files = Directory.GetFiles("./cameras", $"*.json"); //load all settings files in a string array
 
                 //create a camera object for every camera settings file
                 int i = 0;
@@ -1966,40 +1966,36 @@ namespace AITool
         }
 
         //add camera
-        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, 
-                                int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
+        private string AddCamera(Camera newCamera)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in CameraList)
             {
-                if (c.name == name)
+                if (c.name == newCamera.name)
                 {
-                    MessageBox.Show($"ERROR: Camera name must be unique,{name} already exists.");
-                    return ($"ERROR: Camera name must be unique,{name} already exists.");
+                    MessageBox.Show($"ERROR: Camera name must be unique,{newCamera.name} already exists.");
+                    return ($"ERROR: Camera name must be unique,{newCamera.name} already exists.");
                 }
             }
 
             //check if name is empty
-            if (name == "")
+            if (newCamera.name == "")
             {
                 MessageBox.Show($"ERROR: Camera name may not be empty.");
                 return ($"ERROR: Camera name may not be empty.");
             }
 
-            Camera cam = new Camera(); //create new camera object
-            
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, 
-                            threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
-            CameraList.Add(cam); //add created camera object to CameraList
+            newCamera.WriteConfig(); 
+            CameraList.Add(newCamera); //add created camera object to CameraList
 
             //add camera to list2
-            ListViewItem item = new ListViewItem(new string[] { name });
-            item.Tag = name;
+            ListViewItem item = new ListViewItem(new string[] { newCamera.name });
+            item.Tag = newCamera.name;
             list2.Items.Add(item);
 
             //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items.Add($"   {cam.name}");
-            comboBox_filter_camera.Items.Add($"   {cam.name}");
+            comboBox1.Items.Add($"   {newCamera.name}");
+            comboBox_filter_camera.Items.Add($"   {newCamera.name}");
 
             //select first camera
             if (list2.Items.Count == 1)
@@ -2007,17 +2003,15 @@ namespace AITool
                 list2.Items[0].Selected = true;
             }
 
-            return ($"SUCCESS: {name} created.");
+            return ($"SUCCESS: {newCamera.name} created.");
         }
 
         //change settings of camera
-        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, 
-                                    bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, bool masking_enabled, int history_mins, 
-                                    int mask_create_counter, int mask_remove_counter, Double percent_variance)
+        private string UpdateCamera(string oldname, Camera UpdateCamera)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
-            if (name == "")
+            if (UpdateCamera.name == "")
             {
                 DisplayCameraSettings(); //reset displayed settings
                 return ($"WARNING: Camera name may not be empty.");
@@ -2030,10 +2024,10 @@ namespace AITool
             }
 
             // check if the new name isn't taken by another camera already (in case the name was changed)
-            if (name != oldname && CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
+            if (UpdateCamera.name != oldname && CameraList.Exists(x => String.Equals(UpdateCamera.name, x.name, StringComparison.OrdinalIgnoreCase)))
             {
                 DisplayCameraSettings(); //reset displayed settings
-                return ($"WARNING: Camera name must be unique, but new camera name {name} already exists.");
+                return ($"WARNING: Camera name must be unique, but new camera name {UpdateCamera.name} already exists.");
             }
 
             int index = -1;
@@ -2042,28 +2036,25 @@ namespace AITool
             if (index == -1) { log.Error("ERROR updating camera, could not find original camera profile."); }
 
             //check if new prefix isn't already taken by another camera
-            if (prefix != CameraList[index].prefix && CameraList.Exists(x => x.prefix == prefix))
+            if (UpdateCamera.prefix != CameraList[index].prefix && CameraList.Exists(x => x.prefix == UpdateCamera.prefix))
             {
                 DisplayCameraSettings(); //reset displayed settings
-                return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {name} already exists.");
+                return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {UpdateCamera.name} already exists.");
             }
 
             //2. WRITE CONFIG
-            CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, 
-                                         threshold_lower, threshold_upper, masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+            CameraList[index].UpdateCamera(UpdateCamera); //set parameters
 
             //3. UPDATE LIST2
             //update list2 entry
             var item = list2.FindItemWithText(oldname);
-            list2.Items[list2.Items.IndexOf(item)].Text = name;
-
+            list2.Items[list2.Items.IndexOf(item)].Text = UpdateCamera.name;
 
             //update camera  combobox on overview tab and to camera filter combobox in the History tab 
-            comboBox1.Items[comboBox1.Items.IndexOf($"   {oldname}")] = $"   {name}";
-            comboBox_filter_camera.Items[comboBox_filter_camera.Items.IndexOf($"   {oldname}")] = $"   {name}";
+            comboBox1.Items[comboBox1.Items.IndexOf($"   {oldname}")] = $"   {UpdateCamera.name}";
+            comboBox_filter_camera.Items[comboBox_filter_camera.Items.IndexOf($"   {oldname}")] = $"   {UpdateCamera.name}";
 
-
-            return ($"SUCCESS: Camera {oldname} was updated to {name}.");
+            return ($"SUCCESS: Camera {oldname} was updated to {UpdateCamera.name}.");
         }
 
         //remove camera
@@ -2084,7 +2075,6 @@ namespace AITool
                         if (CameraList[i].name.Equals(name))
                         {
                             index = i;
-
                         }
                     }
 
@@ -2128,7 +2118,7 @@ namespace AITool
                             }
                             tbTriggerUrl.Text = "";
                             cb_telegram.Checked = false;
-                            //disable camera settings if there are no cameras setup yet
+                            //disable camera setting input until new camera is created
                             tableLayoutPanel6.Enabled = false;
                         }
                     }
@@ -2171,14 +2161,14 @@ namespace AITool
                 }
                 tbPrefix.Text = CameraList[i].prefix; //load 'input file begins with'
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
-                tbTriggerUrl.Text = CameraList[i].trigger_urls_as_string; //load trigger url
+                tbTriggerUrl.Text = String.Join(", ", CameraList[i].trigger_urls); //load trigger url
                 tb_cooldown.Text = CameraList[i].cooldown_time.ToString(); //load cooldown time
                 tb_threshold_lower.Text = CameraList[i].threshold_lower.ToString(); //load lower threshold value
                 tb_threshold_upper.Text = CameraList[i].threshold_upper.ToString(); // load upper threshold value
                 num_history_mins.Value = CameraList[i].maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 num_mask_create.Value = CameraList[i].maskManager.history_threshold_count; // load mask create counter
                 num_mask_remove.Value = CameraList[i].maskManager.mask_counter_default; //load mask remove counter
-                num_percent_var.Value = (decimal) ObjectPosition.thresholdPercent * 100;
+                num_percent_var.Value = (decimal)CameraList[i].maskManager.thresholdPercent * 100;
 
 
                 //load is masking enabled 
@@ -2217,7 +2207,7 @@ namespace AITool
                 //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
                 for (int j = 0; j < cbarray.Length; j++)
                 {
-                    if (CameraList[i].triggering_objects_as_string.Contains(cbstringarray[j]))
+                    if (CameraList[i].triggering_objects.Contains(cbstringarray[j]))
                     {
                         cbarray[j].Checked = true;
                     }
@@ -2270,8 +2260,28 @@ namespace AITool
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
+
                     //add camera with default values
-                    AddCamera(name, name, "", "person", false, true, 0, 0, 100, false, 5, 2, 15, .07);
+                    string[] defaultObjects = new string[] { "person"};
+                    string[] urlDefault = new string[] { "" };
+                    
+                    Camera camera = new Camera();
+                    camera.name = name;
+                    camera.prefix = name;
+                    camera.triggering_objects = defaultObjects;
+                    camera.trigger_urls = urlDefault;
+                    camera.telegram_enabled = false;
+                    camera.enabled = true;
+                    camera.cooldown_time = 0;
+                    camera.threshold_lower = 0;
+                    camera.threshold_upper = 100;
+                    camera.maskManager.masking_enabled = false;
+                    camera.maskManager.history_save_mins = 5;
+                    camera.maskManager.history_threshold_count = 2;
+                    camera.maskManager.mask_counter_default = 15;
+                    camera.maskManager.thresholdPercent = .08;
+
+                    AddCamera(camera);
                 }
             }
         }
@@ -2288,12 +2298,13 @@ namespace AITool
                 string[] cbstringarray = new string[] { "airplane", "bear", "bicycle", "bird", "boat", "bus", "car", "cat", "cow", "dog", "horse", "motorcycle", "person", "sheep", "truck" };
 
                 //go through all checkboxes and write all triggering_objects in one string
-                string triggering_objects_as_string = "";
+                List<string> objectsTypes = new List<string>();
+
                 for (int i = 0; i < cbarray.Length; i++)
                 {
                     if (cbarray[i].Checked == true)
                     {
-                        triggering_objects_as_string += $"{cbstringarray[i]}, ";
+                        objectsTypes.Add($"{cbstringarray[i]}");
                     }
                 }
 
@@ -2313,10 +2324,30 @@ namespace AITool
                 //convert to percent
                 Double percent_variance = (double) variance / 100;
 
+                string[] triggering_objects = objectsTypes.ToArray();
+
+                string[] trigger_urls = tbTriggerUrl.Text.Replace(" ", "").Split(','); //all trigger urls in an array
+                trigger_urls = trigger_urls.Except(new string[] { "" }).ToArray();     //remove empty entries
+
+                Camera camera = new Camera();
+                camera.name = tbName.Text;
+                camera.prefix = tbPrefix.Text;
+                camera.triggering_objects = triggering_objects;
+                camera.trigger_urls = trigger_urls;
+                camera.telegram_enabled = cb_telegram.Checked;
+                camera.enabled = cb_enabled.Checked;
+                camera.cooldown_time = cooldown_time;
+                camera.threshold_lower = threshold_lower;
+                camera.threshold_upper = threshold_upper;
+                camera.maskManager.masking_enabled = cb_masking_enabled.Checked;
+                camera.maskManager.history_save_mins = history_mins;
+                camera.maskManager.history_threshold_count = mask_create_counter;
+                camera.maskManager.mask_counter_default = mask_remove_counter;
+                camera.maskManager.thresholdPercent = percent_variance;
+
                 //2. UPDATE SETTINGS
                 // save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, 
-                                            threshold_lower, threshold_upper, cb_masking_enabled.Checked, history_mins, mask_create_counter, mask_remove_counter,percent_variance);
+                string result = UpdateCamera(list2.SelectedItems[0].Text, camera);
 
             }
             DisplayCameraSettings();
@@ -2565,22 +2596,18 @@ namespace AITool
     //classes for AI analysis
     class Response
     {
-
         public bool success { get; set; }
         public Object[] predictions { get; set; }
-
     }
 
     class Object
     {
-
         public string label { get; set; }
         public float confidence { get; set; }
         public int y_min { get; set; }
         public int x_min { get; set; }
         public int y_max { get; set; }
         public int x_max { get; set; }
-
     }
 
 

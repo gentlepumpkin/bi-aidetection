@@ -16,15 +16,13 @@ namespace AITool
         public int ymax { get; }
         public int height { get; }
         public int width { get; }
-        public int xMaxVariance { get; }
-        public int yMaxVariance { get; }
         public long key { get; }
         public string label { get; }
         public Camera camera { get; set; }
 
         //object position +- threshold max variances to determine positive match. 
-        //Threshold percentage variable - percentage variation in object position between detections.
-        public static double thresholdPercent { get; set; }
+        //Threshold percentage variable -- percentage variation in object position between detections.
+        public double thresholdPercent { get; set; }
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, Camera camera)
         {
@@ -41,10 +39,6 @@ namespace AITool
             this.width = xmax - xmin;
             this.height = ymax - ymin;
 
-            //calculate percentage position variances used in equality comparisons
-            xMaxVariance = Convert.ToInt32(this.width * thresholdPercent);
-            yMaxVariance = Convert.ToInt32(this.height * thresholdPercent);
-
             key = ((xmin+1) * (ymin+1) * (xmax+1) * (ymax+1));
         }
 
@@ -55,11 +49,15 @@ namespace AITool
 
         public bool Equals(ObjectPosition other)
         {
+            //calculate percentage position variances used in equality comparisons
+            int xMaxVariance = Convert.ToInt32(other.width * thresholdPercent);
+            int yMaxVariance = Convert.ToInt32(other.height * thresholdPercent);
+
             return (other != null &&
-                   (xmin.Between(other.xmin - other.xMaxVariance, other.xmin + other.xMaxVariance)) &&
-                   (ymin.Between(other.ymin - other.yMaxVariance, other.ymin + other.yMaxVariance)) &&
-                   (width.Between(other.width - other.xMaxVariance, other.width + other.xMaxVariance)) &&
-                   (height.Between(other.height - other.yMaxVariance, other.height + other.yMaxVariance)));
+                   (xmin.Between(other.xmin - xMaxVariance, other.xmin + xMaxVariance)) &&
+                   (ymin.Between(other.ymin - yMaxVariance, other.ymin + yMaxVariance)) &&
+                   (width.Between(other.width - xMaxVariance, other.width + xMaxVariance)) &&
+                   (height.Between(other.height - yMaxVariance, other.height + yMaxVariance)));
         }
         
         public override int GetHashCode()
