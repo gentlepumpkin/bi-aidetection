@@ -130,6 +130,8 @@
     </Compile>
     <Compile Include="Global-GUI.cs" />
     <Compile Include="LogFileWriter.cs" />
+    <Compile Include="MaskManager.cs" />
+    <Compile Include="ObjectPosition.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="RichTextBoxEx.cs" />
     <Compile Include="Global.cs" />
@@ -147,6 +149,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="util.cs" />
     <EmbeddedResource Include="Frm_Actions.resx">
       <DependentUpon>Frm_Actions.cs</DependentUpon>
     </EmbeddedResource>

@@ -194,7 +194,7 @@ namespace AITool
             list1.FullRowSelect = true; //make all columns clickable
 
             //check if history.csv exists, if not then create it
-            if (!System.IO.File.Exists(@"cameras\history.csv"))
+            if (!System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
             {
                 Log("ATTENTION: Creating database cameras/history.csv .");
                 try
@@ -308,6 +308,8 @@ namespace AITool
                 }
                 //first add all the names and paths to check...
                 List<string> names = new List<string>();
+                Dictionary<string, string> paths = new Dictionary<string, string>();
+
                 string pths = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
                 names.Add($"INPUT_PATH|{pths}|{AppSettings.Settings.input_path_includesubfolders}");
                 foreach (Camera cam in AppSettings.Settings.CameraList)
@@ -327,24 +329,34 @@ namespace AITool
                     string name = splt[0];
                     string path = splt[1];
                     bool include = Convert.ToBoolean(splt[2]);
-                    if (!watchers.ContainsKey(name.ToLower()))
+                    if (!paths.ContainsKey(path.ToLower()))
                     {
-                        //this will return null if the path is invalid...
-                        FileSystemWatcher curwatch = MyWatcherFatory(path, include);
-                        MyFileSystemWatcher mywtc = new MyFileSystemWatcher(name, path, curwatch, include);
-                        //add even if null to keep track of things
-                        watchers.Add(name.ToLower(), mywtc);
+                        paths.Add(path.ToLower(), path);
+
+                        if (!watchers.ContainsKey(name.ToLower()))
+                        {
+                            //this will return null if the path is invalid...
+                            FileSystemWatcher curwatch = MyWatcherFatory(path, include);
+                            MyFileSystemWatcher mywtc = new MyFileSystemWatcher(name, path, curwatch, include);
+                            //add even if null to keep track of things
+                            watchers.Add(name.ToLower(), mywtc);
+                        }
+                        else
+                        {
+                            //update path if needed, even to empty
+                            watchers[name.ToLower()].Path = path;
+                            if (watchers[name.ToLower()].watcher == null)
+                            {
+                                //could be null if path is bad
+                                watchers[name.ToLower()].watcher = MyWatcherFatory(path, include);
+                            }
+                        }
                     }
                     else
                     {
-                        //update path if needed, even to empty
-                        watchers[name.ToLower()].Path = path;
-                        if (watchers[name.ToLower()].watcher == null)
-                        {
-                            //could be null if path is bad
-                            watchers[name.ToLower()].watcher = MyWatcherFatory(path, include);
-                        }
+                        Log($"Skipping duplicate path for '{name}': {path}");
                     }
+
 
                 }
 
@@ -364,7 +376,6 @@ namespace AITool
                     }
                     if (!fnd)
                     {
-
                         watcher1.Path = "";
                     }
 
@@ -1614,7 +1625,7 @@ namespace AITool
         }
 
         //update timeline
-        public void UpdateTimeline()
+        public async void UpdateTimeline()
         {
             Log("Loading time line from cameras/history.csv ...");
 
@@ -1626,26 +1637,39 @@ namespace AITool
 
             List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-            if (comboBox1.Text == "All Cameras") //all cameras selected
-            {
-                //load all lines except the first line
-                foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
-                {
-                    result.Add(line);
-                }
-            }
-            else //camera selection
-            {
-                string cameraname = comboBox1.Text.Substring(3);
+            Stopwatch SW = Stopwatch.StartNew();
 
-                //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
-                foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
+            bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+            
+            if (Success)
+            {
+                if (comboBox1.Text == "All Cameras") //all cameras selected
                 {
-                    if (line.Split('|')[2] == cameraname)
+                    //load all lines except the first line
+                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
                     {
                         result.Add(line);
                     }
                 }
+                else //camera selection
+                {
+                    string cameraname = comboBox1.Text.Substring(3);
+
+                    //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
+                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
+                    {
+                        if (line.Split('|')[2] == cameraname)
+                        {
+                            result.Add(line);
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
             }
 
             //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
@@ -1757,7 +1781,7 @@ namespace AITool
         }
 
         //update confidence_frequency chart
-        public void UpdateConfidenceChart()
+        public async void UpdateConfidenceChart()
         {
             Log("Loading confidence-frequency chart from cameras/history.csv ...");
 
@@ -1767,27 +1791,39 @@ namespace AITool
 
             List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-            if (comboBox1.Text == "All Cameras") //all cameras selected
-            {
-                //load all lines except the first line
-                foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
-                {
-                    result.Add(line);
-                }
-            }
-            else //camera selection
-            {
-                string cameraname = comboBox1.Text.Substring(3);
+            Stopwatch SW = Stopwatch.StartNew();
 
-                //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
-                foreach (string line in System.IO.File.ReadAllLines(@"cameras/history.csv").Skip(1))
+            bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+
+            if (Success)
+            {
+                if (comboBox1.Text == "All Cameras") //all cameras selected
                 {
-                    if (line.Split('|')[2] == cameraname)
+                    //load all lines except the first line
+                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
                     {
                         result.Add(line);
-
                     }
                 }
+                else //camera selection
+                {
+                    string cameraname = comboBox1.Text.Substring(3);
+
+                    //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
+                    foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
+                    {
+                        if (line.Split('|')[2] == cameraname)
+                        {
+                            result.Add(line);
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
             }
 
             //this array stores the Absolute frequencies of all possible confidence values (0%-100%)
@@ -1918,64 +1954,73 @@ namespace AITool
         //show rectangle overlay
         private void showObject(PaintEventArgs e, Color color, int _xmin, int _ymin, int _xmax, int _ymax, string text)
         {
-            if (list1.SelectedItems.Count > 0)
+            try
             {
-                //1. get the padding between the image and the picturebox border
-
-                //get dimensions of the image and the picturebox
-                float imgWidth = pictureBox1.BackgroundImage.Width;
-                float imgHeight = pictureBox1.BackgroundImage.Height;
-                float boxWidth = pictureBox1.Width;
-                float boxHeight = pictureBox1.Height;
-
-                //these variables store the padding between image border and picturebox border
-                int absX = 0;
-                int absY = 0;
-
-                //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                float scale = 1;
-
-
-                //Comparing the aspect ratio of both the control and the image itself.
-                if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+                if ((list1.SelectedItems.Count > 0) && (pictureBox1 != null) && (pictureBox1.BackgroundImage != null))
                 {
-                    scale = boxWidth / imgWidth; //get scale factor
-                    absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                    //1. get the padding between the image and the picturebox border
+
+                    //get dimensions of the image and the picturebox
+                    float imgWidth = pictureBox1.BackgroundImage.Width;
+                    float imgHeight = pictureBox1.BackgroundImage.Height;
+                    float boxWidth = pictureBox1.Width;
+                    float boxHeight = pictureBox1.Height;
+
+                    //these variables store the padding between image border and picturebox border
+                    int absX = 0;
+                    int absY = 0;
+
+                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
+                    float scale = 1;
+
+
+                    //Comparing the aspect ratio of both the control and the image itself.
+                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+                    {
+                        scale = boxWidth / imgWidth; //get scale factor
+                        absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                    }
+                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+                    {
+                        scale = boxHeight / imgHeight; //get scale factor
+                        absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                    }
+
+                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
+                    int xmin = (int)(scale * _xmin) + absX;
+                    int xmax = (int)(scale * _xmax) + absX;
+                    int ymin = (int)(scale * _ymin) + absY;
+                    int ymax = (int)(scale * _ymax) + absY;
+
+                    //set alpha/transparency so you can see under the label
+                    Color newColor = Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
+
+                    //3. paint rectangle
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+                    using (Pen pen = new Pen(newColor, 2))
+                    {
+                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+                    }
+
+                    //object name text below rectangle
+                    rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
+
+
+                    Brush brush = new SolidBrush(newColor); //sets background rectangle color
+
+                    System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
+                    e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
+                    e.Graphics.DrawString(text, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
+
+
+
                 }
-                else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
-                {
-                    scale = boxHeight / imgHeight; //get scale factor
-                    absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
-                }
 
-                //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                int xmin = (int)(scale * _xmin) + absX;
-                int xmax = (int)(scale * _xmax) + absX;
-                int ymin = (int)(scale * _ymin) + absY;
-                int ymax = (int)(scale * _ymax) + absY;
+            }
+            catch (Exception ex)
+            {
 
-                //set alpha/transparency so you can see under the label
-                Color newColor = Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
-
-                //3. paint rectangle
-                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                using (Pen pen = new Pen(newColor, 2))
-                {
-                    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
-                }
-
-                //object name text below rectangle
-                rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
-                
-
-                Brush brush = new SolidBrush(newColor); //sets background rectangle color
-                
-                System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
-                e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
-                e.Graphics.DrawString(text, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
-
-                
-
+                Log("Error: " + Global.ExMsg(ex));
             }
         }
 
@@ -2190,7 +2235,7 @@ namespace AITool
                                 }
                                 newcsvlines = newLines.Count;
 
-                                System.IO.File.WriteAllLines(@"cameras/history.csv", newLines); //write new history.csv
+                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines); //write new history.csv
                             }
                             else
                             {
@@ -2390,13 +2435,13 @@ namespace AITool
 
                     LabelUpdate = delegate
                     {
-                        Console.WriteLine(tabControl1.SelectedIndex);
+                        //Console.WriteLine(tabControl1.SelectedIndex);
 
                         if (tabControl1.SelectedIndex == 1)
                         {
 
                             UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
-                            Console.WriteLine("updated");
+                            //Console.WriteLine("updated");
                         }
                     };
                    Invoke(LabelUpdate);
@@ -2687,7 +2732,9 @@ namespace AITool
         //}
 
         //add camera
-        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, string _input_path, bool _input_path_includesubfolders)
+        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, 
+                                 string _input_path, bool _input_path_includesubfolders,
+                                 bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
@@ -2723,7 +2770,9 @@ namespace AITool
                 }
             }
 
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, _input_path, _input_path_includesubfolders); //set parameters
+            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, 
+                           _input_path, _input_path_includesubfolders,
+                           masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
             
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
@@ -2742,7 +2791,9 @@ namespace AITool
         }
 
         //change settings of camera
-        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, string _input_path, bool _input_path_includesubfolders)
+        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, 
+                                    string _input_path, bool _input_path_includesubfolders,
+                                    bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
@@ -2778,7 +2829,9 @@ namespace AITool
             }
 
             //2. WRITE CONFIG
-            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, _input_path, _input_path_includesubfolders); //set parameters
+            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, 
+                                                               _input_path, _input_path_includesubfolders,
+                                                               masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
             LoadCameras();
 
@@ -2987,7 +3040,9 @@ namespace AITool
                 if (result == DialogResult.OK)
                 {
                     string name = form.text;
-                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,"",false);
+                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,
+                                                 "",false, 
+                                                 false, 5, 2, 15, .07);
                     MessageBox.Show(camresult);
                 }
             }
@@ -3023,7 +3078,7 @@ namespace AITool
                 {
                     if (cbarray[i].Checked == true)
                     {
-                        triggering_objects_as_string += $"{cbstringarray[i]}, ";
+                        triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
                     }
                 }
 
@@ -3034,19 +3089,28 @@ namespace AITool
                 Int32.TryParse(tb_threshold_lower.Text, out int threshold_lower);
                 Int32.TryParse(tb_threshold_upper.Text, out int threshold_upper);
 
-                
+                ////get masking values from textboxes
+                //Int32.TryParse(num_history_mins.Text, out int history_mins);
+                //Int32.TryParse(num_mask_create.Text, out int mask_create_counter);
+                //Int32.TryParse(num_mask_remove.Text, out int mask_remove_counter);
+                //Int32.TryParse(num_percent_var.Text, out int variance);
 
-                //2. UPDATE SETTINGS
-                // save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,cmbcaminput.Text,cb_monitorCamInputfolder.Checked);
+                ////convert to percent
+                //Double percent_variance = (double)variance / 100;
+
+                ////2. UPDATE SETTINGS
+                //// save new camera settings, display result in MessageBox
+                //string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
+                //                             cmbcaminput.Text,cb_monitorCamInputfolder.Checked,
+                //                             cb_masking_enabled.Checked, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
                 
                 AppSettings.Save();
 
                 UpdateWatchers();
 
-                Log(result);
+                //Log(result);
                 
-                MessageBox.Show(result,"", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //MessageBox.Show(result,"", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
             DisplayCameraSettings();

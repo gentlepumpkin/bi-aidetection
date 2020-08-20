@@ -25,7 +25,7 @@ public class LogFileWriter:IDisposable
 	private long LogWriteCount = 0;
 	private bool RotateLogs = true;
 	//private bool m_ProcessAsCSV = false;
-	public int MaxLogFileAgeDays { get; set; } = 60;
+	public int MaxLogFileAgeDays { get; set; } = 30;
 	public int MaxLogQueueAgeSecs { get; set; } = 10;
 	public long MaxLogQueueSize { get; set; } = 64;
 

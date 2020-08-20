@@ -48,6 +48,8 @@ namespace AITool
         public string input_path = "";
         public bool input_path_includesubfolders = false;
 
+        public MaskManager maskManager = new MaskManager();
+
         //stats
         public int stats_alerts; //alert image contained relevant object counter
         public int stats_false_alerts; //alert image contained no object counter
@@ -67,7 +69,10 @@ namespace AITool
 
 
         //write config to file
-        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, string _input_path, bool _input_path_includesubfolders)
+        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, 
+                                 bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, 
+                                 string _input_path, bool _input_path_includesubfolders,
+                                 bool _masking_enabled, int _history_mins, int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             //if(name != _name)
@@ -87,8 +92,17 @@ namespace AITool
             cooldown_time = _cooldown_time;
             threshold_lower = _threshold_lower;
             threshold_upper = _threshold_upper;
+            
+            //Added by VorlonCD
             input_path = _input_path;
             input_path_includesubfolders = _input_path_includesubfolders;
+
+            //Merged from ClassObject's fork
+            maskManager.history_save_mins = _history_mins;
+            maskManager.history_threshold_count = _mask_create_counter;
+            maskManager.mask_counter_default = _mask_remove_counter;
+            maskManager.masking_enabled = _masking_enabled;
+            ObjectPosition.thresholdPercent = _percent_variance;
 
             triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
@@ -107,6 +121,10 @@ namespace AITool
                 }
                 i++;
             }
+
+            //-----------------------------------------------------------------------------------------------------------------------------------------------
+            //No need to actually write a camera file, the cameras are saved to a single json settings file
+            //-----------------------------------------------------------------------------------------------------------------------------------------------
 
             //sw.WriteLine($"Trigger URL(s): \"{trigger_urls_as_string.Replace(", ,", "")}\" (input one or multiple urls, leave empty to disable; format: \"url, url, url\", example: \"http://192.168.1.133:80/admin?trigger&camera=frontyard&user=admin&pw=secretpassword, http://google.com\")");
             //sw.WriteLine($"Relevant objects: \"{triggering_objects_as_string}\" (format: \"object, object, ...\", options: see below, example: \"person, bicycle, car\")");
