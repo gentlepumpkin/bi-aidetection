@@ -2128,6 +2128,8 @@ namespace AITool
                             }
                             tbTriggerUrl.Text = "";
                             cb_telegram.Checked = false;
+                            //disable camera settings if there are no cameras setup yet
+                            tableLayoutPanel6.Enabled = false;
                         }
                     }
                     else
@@ -2220,11 +2222,6 @@ namespace AITool
                         cbarray[j].Checked = true;
                     }
                 }
-            }
-            else
-            {
-                //disable camera settings if there are no cameras setup yet
-                tableLayoutPanel6.Enabled = false;
             }
         }
 
