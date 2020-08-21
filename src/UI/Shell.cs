@@ -2067,7 +2067,7 @@ namespace AITool
                     Int32.TryParse(position.Split(',')[2], out int xmax);
                     Int32.TryParse(position.Split(',')[3], out int ymax);
 
-                    Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
+                    //Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
 
                     showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
 
@@ -2380,7 +2380,7 @@ namespace AITool
                   objects_and_confidence.Contains("bear")) && cb_filter_animal.Checked) { return false; }
             if (success != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
             if (success == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
-            if (comboBox_filter_camera.Text != "All Cameras" && cameraname != comboBox_filter_camera.Text.Substring(3)) { return false; }
+            if (comboBox_filter_camera.Text != "All Cameras" && cameraname.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) { return false; }
             return true;
         }
 
@@ -2644,6 +2644,7 @@ namespace AITool
                 list2.Items.Clear();
                 comboBox1.Items.Clear();
                 comboBox_filter_camera.Items.Clear();
+                comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
                 int i = 0;
                 int oldidx = 0;
                 foreach (Camera cam in AppSettings.Settings.CameraList)
@@ -3195,7 +3196,7 @@ namespace AITool
             AppSettings.Settings.input_path = cmbInput.Text;
             AppSettings.Settings.input_path_includesubfolders = cb_inputpathsubfolders.Checked;
             AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
-            AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text,",",true,true);
+            AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text, ",", true, true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
             AppSettings.Settings.log_everything = cb_log.Checked;
             AppSettings.Settings.send_errors = cb_send_errors.Checked;

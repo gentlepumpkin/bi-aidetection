@@ -251,7 +251,12 @@ namespace AITool
             List<string> Ret = new List<string>();
             if (!string.IsNullOrWhiteSpace(InList))
             {
-                string[] splt = InList.Split(new string(Separators.ToCharArray())[0], (RemoveEmpty ? ((int)StringSplitOptions.RemoveEmptyEntries).ToString()[0] : ((int)StringSplitOptions.None).ToString()[0]));
+                StringSplitOptions SSO = StringSplitOptions.None;
+
+                if (RemoveEmpty)
+                    SSO = StringSplitOptions.RemoveEmptyEntries;
+
+                string[] splt = InList.Split(Separators.ToCharArray(), SSO);
                 foreach (string str in splt)
                 {
                     if (RemoveEmpty && !string.IsNullOrWhiteSpace(str))
