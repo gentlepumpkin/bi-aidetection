@@ -1598,10 +1598,20 @@ namespace AITool
             }
             else
             {
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == comboBox1.Text.Substring(3));
-                alerts = AppSettings.Settings.CameraList[i].stats_alerts;
-                irrelevantalerts = AppSettings.Settings.CameraList[i].stats_irrelevant_alerts;
-                falsealerts = AppSettings.Settings.CameraList[i].stats_false_alerts;
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
+                if (i > -1)
+                {
+                    alerts = AppSettings.Settings.CameraList[i].stats_alerts;
+                    irrelevantalerts = AppSettings.Settings.CameraList[i].stats_irrelevant_alerts;
+                    falsealerts = AppSettings.Settings.CameraList[i].stats_false_alerts;
+                }
+                else
+                {
+                    alerts = 0;
+                    irrelevantalerts = 0;
+                    falsealerts = 0;
+                    Log($"Error: Could not match combobox dropdown '{comboBox1.Text}' to a known camera name?");
+                }
             }
 
             chart1.Series[0].Points.Clear();
@@ -2649,7 +2659,7 @@ namespace AITool
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
                     comboBox1.Items.Add($"   {cam.name}");
                     comboBox_filter_camera.Items.Add($"   {cam.name}");
-                    if (oldname.ToLower() == cam.name.ToLower())
+                    if (oldname.Trim().ToLower() == cam.name.Trim().ToLower())
                     {
                         oldidx = i;
                     }

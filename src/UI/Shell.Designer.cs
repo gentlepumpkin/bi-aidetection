@@ -31,21 +31,21 @@ namespace AITool
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Shell));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series13 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series14 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint4 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint5 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint6 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint1 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint2 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint3 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
@@ -272,7 +272,7 @@ namespace AITool
             this.tabControl1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1467, 770);
+            this.tabControl1.Size = new System.Drawing.Size(1467, 832);
             this.tabControl1.TabIndex = 4;
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             this.tabControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseDown);
@@ -417,7 +417,7 @@ namespace AITool
             this.tabStats.Location = new System.Drawing.Point(4, 29);
             this.tabStats.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabStats.Name = "tabStats";
-            this.tabStats.Size = new System.Drawing.Size(1428, 650);
+            this.tabStats.Size = new System.Drawing.Size(1459, 799);
             this.tabStats.TabIndex = 5;
             this.tabStats.Text = "Stats";
             this.tabStats.UseVisualStyleBackColor = true;
@@ -435,7 +435,7 @@ namespace AITool
             this.tableLayoutPanel16.Name = "tableLayoutPanel16";
             this.tableLayoutPanel16.RowCount = 1;
             this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel16.Size = new System.Drawing.Size(1428, 650);
+            this.tableLayoutPanel16.Size = new System.Drawing.Size(1459, 799);
             this.tableLayoutPanel16.TabIndex = 0;
             // 
             // tableLayoutPanel23
@@ -447,7 +447,7 @@ namespace AITool
             this.tableLayoutPanel23.Controls.Add(this.timeline, 0, 1);
             this.tableLayoutPanel23.Controls.Add(this.label7, 0, 0);
             this.tableLayoutPanel23.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel23.Location = new System.Drawing.Point(432, 5);
+            this.tableLayoutPanel23.Location = new System.Drawing.Point(441, 5);
             this.tableLayoutPanel23.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel23.Name = "tableLayoutPanel23";
             this.tableLayoutPanel23.RowCount = 3;
@@ -456,7 +456,7 @@ namespace AITool
             this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 51F));
             this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
-            this.tableLayoutPanel23.Size = new System.Drawing.Size(992, 640);
+            this.tableLayoutPanel23.Size = new System.Drawing.Size(1014, 789);
             this.tableLayoutPanel23.TabIndex = 7;
             // 
             // label8
@@ -464,10 +464,10 @@ namespace AITool
             this.label8.AutoSize = true;
             this.label8.Dock = System.Windows.Forms.DockStyle.Top;
             this.label8.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(4, 325);
+            this.label8.Location = new System.Drawing.Point(4, 399);
             this.label8.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(984, 41);
+            this.label8.Size = new System.Drawing.Size(1006, 41);
             this.label8.TabIndex = 9;
             this.label8.Text = "Frequencies of alert result confidences";
             this.label8.TextAlign = System.Drawing.ContentAlignment.TopCenter;
@@ -476,93 +476,93 @@ namespace AITool
             // 
             this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
             this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea4.AxisX.Interval = 10D;
-            chartArea4.AxisX.MajorGrid.Interval = 6D;
-            chartArea4.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea4.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea4.AxisX.MajorTickMark.Interval = 1D;
-            chartArea4.AxisX.Maximum = 100D;
-            chartArea4.AxisX.Minimum = 0D;
-            chartArea4.AxisX.Title = "Alert confidence";
-            chartArea4.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea4.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea4.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea4.AxisY.Title = "Frequency";
-            chartArea4.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea4.BackColor = System.Drawing.Color.Transparent;
-            chartArea4.Name = "ChartArea1";
-            this.chart_confidence.ChartAreas.Add(chartArea4);
+            chartArea1.AxisX.Interval = 10D;
+            chartArea1.AxisX.MajorGrid.Interval = 6D;
+            chartArea1.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea1.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea1.AxisX.MajorTickMark.Interval = 1D;
+            chartArea1.AxisX.Maximum = 100D;
+            chartArea1.AxisX.Minimum = 0D;
+            chartArea1.AxisX.Title = "Alert confidence";
+            chartArea1.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea1.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea1.AxisY.Title = "Frequency";
+            chartArea1.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea1.BackColor = System.Drawing.Color.Transparent;
+            chartArea1.Name = "ChartArea1";
+            this.chart_confidence.ChartAreas.Add(chartArea1);
             this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chart_confidence.Location = new System.Drawing.Point(4, 376);
+            this.chart_confidence.Location = new System.Drawing.Point(4, 450);
             this.chart_confidence.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chart_confidence.Name = "chart_confidence";
-            series8.BorderWidth = 4;
-            series8.ChartArea = "ChartArea1";
-            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series8.Color = System.Drawing.Color.Orange;
-            series8.Name = "no alert";
-            series9.BorderWidth = 3;
-            series9.ChartArea = "ChartArea1";
-            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series9.Color = System.Drawing.Color.Green;
-            series9.Legend = "Legend1";
-            series9.Name = "alert";
-            this.chart_confidence.Series.Add(series8);
-            this.chart_confidence.Series.Add(series9);
-            this.chart_confidence.Size = new System.Drawing.Size(984, 259);
+            series1.BorderWidth = 4;
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series1.Color = System.Drawing.Color.Orange;
+            series1.Name = "no alert";
+            series2.BorderWidth = 3;
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series2.Color = System.Drawing.Color.Green;
+            series2.Legend = "Legend1";
+            series2.Name = "alert";
+            this.chart_confidence.Series.Add(series1);
+            this.chart_confidence.Series.Add(series2);
+            this.chart_confidence.Size = new System.Drawing.Size(1006, 334);
             this.chart_confidence.TabIndex = 8;
             // 
             // timeline
             // 
             this.timeline.BackColor = System.Drawing.Color.Transparent;
             this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea5.AxisX.Interval = 3D;
-            chartArea5.AxisX.MajorGrid.Interval = 6D;
-            chartArea5.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea5.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea5.AxisX.MajorTickMark.Interval = 1D;
-            chartArea5.AxisX.Maximum = 24D;
-            chartArea5.AxisX.Minimum = 0D;
-            chartArea5.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea5.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea5.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea5.AxisY.Title = "Number";
-            chartArea5.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea5.BackColor = System.Drawing.Color.Transparent;
-            chartArea5.Name = "ChartArea1";
-            this.timeline.ChartAreas.Add(chartArea5);
+            chartArea2.AxisX.Interval = 3D;
+            chartArea2.AxisX.MajorGrid.Interval = 6D;
+            chartArea2.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea2.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea2.AxisX.MajorTickMark.Interval = 1D;
+            chartArea2.AxisX.Maximum = 24D;
+            chartArea2.AxisX.Minimum = 0D;
+            chartArea2.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea2.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea2.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea2.AxisY.Title = "Number";
+            chartArea2.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea2.BackColor = System.Drawing.Color.Transparent;
+            chartArea2.Name = "ChartArea1";
+            this.timeline.ChartAreas.Add(chartArea2);
             this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
             this.timeline.Location = new System.Drawing.Point(4, 56);
             this.timeline.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.timeline.Name = "timeline";
-            series10.ChartArea = "ChartArea1";
-            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
-            series10.Color = System.Drawing.Color.Silver;
-            series10.Legend = "Legend1";
-            series10.Name = "all";
-            series11.BorderWidth = 3;
-            series11.ChartArea = "ChartArea1";
-            series11.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series11.Color = System.Drawing.Color.OrangeRed;
-            series11.Legend = "Legend1";
-            series11.Name = "falses";
-            series12.BorderWidth = 3;
-            series12.ChartArea = "ChartArea1";
-            series12.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series12.Color = System.Drawing.Color.Orange;
-            series12.Legend = "Legend1";
-            series12.Name = "irrelevant";
-            series13.BorderWidth = 4;
-            series13.ChartArea = "ChartArea1";
-            series13.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series13.Color = System.Drawing.Color.Green;
-            series13.Legend = "Legend1";
-            series13.Name = "relevant";
-            this.timeline.Series.Add(series10);
-            this.timeline.Series.Add(series11);
-            this.timeline.Series.Add(series12);
-            this.timeline.Series.Add(series13);
-            this.timeline.Size = new System.Drawing.Size(984, 259);
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
+            series3.Color = System.Drawing.Color.Silver;
+            series3.Legend = "Legend1";
+            series3.Name = "all";
+            series4.BorderWidth = 3;
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series4.Color = System.Drawing.Color.OrangeRed;
+            series4.Legend = "Legend1";
+            series4.Name = "falses";
+            series5.BorderWidth = 3;
+            series5.ChartArea = "ChartArea1";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series5.Color = System.Drawing.Color.Orange;
+            series5.Legend = "Legend1";
+            series5.Name = "irrelevant";
+            series6.BorderWidth = 4;
+            series6.ChartArea = "ChartArea1";
+            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series6.Color = System.Drawing.Color.Green;
+            series6.Legend = "Legend1";
+            series6.Name = "relevant";
+            this.timeline.Series.Add(series3);
+            this.timeline.Series.Add(series4);
+            this.timeline.Series.Add(series5);
+            this.timeline.Series.Add(series6);
+            this.timeline.Size = new System.Drawing.Size(1006, 333);
             this.timeline.TabIndex = 6;
             // 
             // label7
@@ -573,7 +573,7 @@ namespace AITool
             this.label7.Location = new System.Drawing.Point(4, 5);
             this.label7.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(984, 41);
+            this.label7.Size = new System.Drawing.Size(1006, 41);
             this.label7.TabIndex = 0;
             this.label7.Text = "Timeline";
             this.label7.TextAlign = System.Drawing.ContentAlignment.TopCenter;
@@ -592,49 +592,49 @@ namespace AITool
             this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 51F));
             this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
-            this.tableLayoutPanel17.Size = new System.Drawing.Size(420, 640);
+            this.tableLayoutPanel17.Size = new System.Drawing.Size(429, 789);
             this.tableLayoutPanel17.TabIndex = 3;
             // 
             // chart1
             // 
             this.chart1.BackColor = System.Drawing.Color.Transparent;
             this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea6.Area3DStyle.Enable3D = true;
-            chartArea6.Area3DStyle.Inclination = 35;
-            chartArea6.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
-            chartArea6.BackColor = System.Drawing.Color.Transparent;
-            chartArea6.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea6);
+            chartArea3.Area3DStyle.Enable3D = true;
+            chartArea3.Area3DStyle.Inclination = 35;
+            chartArea3.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
+            chartArea3.BackColor = System.Drawing.Color.Transparent;
+            chartArea3.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea3);
             this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend2.Alignment = System.Drawing.StringAlignment.Center;
-            legend2.BackColor = System.Drawing.Color.Transparent;
-            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            legend2.IsTextAutoFit = false;
-            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
-            legend2.Name = "Legend1";
-            this.chart1.Legends.Add(legend2);
+            legend1.Alignment = System.Drawing.StringAlignment.Center;
+            legend1.BackColor = System.Drawing.Color.Transparent;
+            legend1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            legend1.IsTextAutoFit = false;
+            legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
+            legend1.Name = "Legend1";
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(4, 56);
             this.chart1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chart1.Name = "chart1";
-            series14.ChartArea = "ChartArea1";
-            series14.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
-            series14.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            series14.IsValueShownAsLabel = true;
-            series14.Legend = "Legend1";
-            series14.Name = "s1";
-            dataPoint4.IsVisibleInLegend = true;
-            series14.Points.Add(dataPoint4);
-            series14.Points.Add(dataPoint5);
-            series14.Points.Add(dataPoint6);
-            this.chart1.Series.Add(series14);
-            this.chart1.Size = new System.Drawing.Size(412, 579);
+            series7.ChartArea = "ChartArea1";
+            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
+            series7.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            series7.IsValueShownAsLabel = true;
+            series7.Legend = "Legend1";
+            series7.Name = "s1";
+            dataPoint1.IsVisibleInLegend = true;
+            series7.Points.Add(dataPoint1);
+            series7.Points.Add(dataPoint2);
+            series7.Points.Add(dataPoint3);
+            this.chart1.Series.Add(series7);
+            this.chart1.Size = new System.Drawing.Size(421, 728);
             this.chart1.TabIndex = 2;
             this.chart1.Text = "chart1";
-            title2.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            title2.Name = "Title1";
-            title2.Text = "Input Rates";
-            this.chart1.Titles.Add(title2);
+            title1.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            title1.Name = "Title1";
+            title1.Text = "Input Rates";
+            this.chart1.Titles.Add(title1);
             // 
             // comboBox1
             // 
@@ -647,7 +647,7 @@ namespace AITool
             this.comboBox1.Location = new System.Drawing.Point(4, 5);
             this.comboBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(412, 39);
+            this.comboBox1.Size = new System.Drawing.Size(421, 39);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
             // 
@@ -951,7 +951,7 @@ namespace AITool
             this.tabCameras.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabCameras.Name = "tabCameras";
             this.tabCameras.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabCameras.Size = new System.Drawing.Size(1459, 737);
+            this.tabCameras.Size = new System.Drawing.Size(1459, 799);
             this.tabCameras.TabIndex = 2;
             this.tabCameras.Text = "Cameras";
             this.tabCameras.UseVisualStyleBackColor = true;
@@ -969,7 +969,7 @@ namespace AITool
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(1451, 727);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(1451, 789);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // tableLayoutPanel3
@@ -984,7 +984,7 @@ namespace AITool
             this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 630F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(268, 717);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(268, 779);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
             // list2
@@ -996,7 +996,7 @@ namespace AITool
             this.list2.Location = new System.Drawing.Point(4, 5);
             this.list2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.list2.Name = "list2";
-            this.list2.Size = new System.Drawing.Size(260, 707);
+            this.list2.Size = new System.Drawing.Size(260, 769);
             this.list2.TabIndex = 1;
             this.list2.UseCompatibleStateImageBehavior = false;
             this.list2.View = System.Windows.Forms.View.Details;
@@ -1018,7 +1018,7 @@ namespace AITool
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(1167, 717);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(1167, 779);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
             // tableLayoutPanel7
@@ -1040,7 +1040,7 @@ namespace AITool
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel24, 1, 4);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel26, 1, 2);
             this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel7.Location = new System.Drawing.Point(4, 76);
+            this.tableLayoutPanel7.Location = new System.Drawing.Point(4, 82);
             this.tableLayoutPanel7.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
             this.tableLayoutPanel7.RowCount = 6;
@@ -1050,7 +1050,7 @@ namespace AITool
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 28.82883F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.90991F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 31.53153F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(1159, 563);
+            this.tableLayoutPanel7.Size = new System.Drawing.Size(1159, 613);
             this.tableLayoutPanel7.TabIndex = 2;
             this.tableLayoutPanel7.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel7_Paint);
             // 
@@ -1059,7 +1059,7 @@ namespace AITool
             this.label14.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(5, 125);
+            this.label14.Location = new System.Drawing.Point(5, 137);
             this.label14.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(138, 31);
@@ -1090,7 +1090,7 @@ namespace AITool
             this.tableLayoutPanel8.Controls.Add(this.cb_truck, 1, 1);
             this.tableLayoutPanel8.Controls.Add(this.cb_car, 1, 0);
             this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(214, 174);
+            this.tableLayoutPanel8.Location = new System.Drawing.Point(214, 189);
             this.tableLayoutPanel8.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
             this.tableLayoutPanel8.RowCount = 3;
@@ -1098,7 +1098,7 @@ namespace AITool
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(940, 150);
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(940, 164);
             this.tableLayoutPanel8.TabIndex = 14;
             // 
             // cb_person
@@ -1106,7 +1106,7 @@ namespace AITool
             this.cb_person.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_person.AutoSize = true;
             this.cb_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_person.Location = new System.Drawing.Point(30, 7);
+            this.cb_person.Location = new System.Drawing.Point(30, 9);
             this.cb_person.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_person.Name = "cb_person";
             this.cb_person.Size = new System.Drawing.Size(108, 35);
@@ -1119,7 +1119,7 @@ namespace AITool
             this.cb_bicycle.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bicycle.AutoSize = true;
             this.cb_bicycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bicycle.Location = new System.Drawing.Point(30, 57);
+            this.cb_bicycle.Location = new System.Drawing.Point(30, 63);
             this.cb_bicycle.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_bicycle.Name = "cb_bicycle";
             this.cb_bicycle.Size = new System.Drawing.Size(110, 35);
@@ -1132,7 +1132,7 @@ namespace AITool
             this.cb_motorcycle.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_motorcycle.AutoSize = true;
             this.cb_motorcycle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_motorcycle.Location = new System.Drawing.Point(30, 107);
+            this.cb_motorcycle.Location = new System.Drawing.Point(30, 118);
             this.cb_motorcycle.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_motorcycle.Name = "cb_motorcycle";
             this.cb_motorcycle.Size = new System.Drawing.Size(154, 35);
@@ -1145,7 +1145,7 @@ namespace AITool
             this.cb_bear.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bear.AutoSize = true;
             this.cb_bear.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bear.Location = new System.Drawing.Point(782, 107);
+            this.cb_bear.Location = new System.Drawing.Point(782, 118);
             this.cb_bear.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_bear.Name = "cb_bear";
             this.cb_bear.Size = new System.Drawing.Size(85, 35);
@@ -1158,7 +1158,7 @@ namespace AITool
             this.cb_cow.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cow.AutoSize = true;
             this.cb_cow.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_cow.Location = new System.Drawing.Point(782, 57);
+            this.cb_cow.Location = new System.Drawing.Point(782, 63);
             this.cb_cow.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_cow.Name = "cb_cow";
             this.cb_cow.Size = new System.Drawing.Size(84, 35);
@@ -1171,7 +1171,7 @@ namespace AITool
             this.cb_sheep.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_sheep.AutoSize = true;
             this.cb_sheep.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_sheep.Location = new System.Drawing.Point(782, 7);
+            this.cb_sheep.Location = new System.Drawing.Point(782, 9);
             this.cb_sheep.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_sheep.Name = "cb_sheep";
             this.cb_sheep.Size = new System.Drawing.Size(103, 35);
@@ -1184,7 +1184,7 @@ namespace AITool
             this.cb_horse.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_horse.AutoSize = true;
             this.cb_horse.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_horse.Location = new System.Drawing.Point(594, 107);
+            this.cb_horse.Location = new System.Drawing.Point(594, 118);
             this.cb_horse.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_horse.Name = "cb_horse";
             this.cb_horse.Size = new System.Drawing.Size(99, 35);
@@ -1197,7 +1197,7 @@ namespace AITool
             this.cb_bird.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bird.AutoSize = true;
             this.cb_bird.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bird.Location = new System.Drawing.Point(594, 57);
+            this.cb_bird.Location = new System.Drawing.Point(594, 63);
             this.cb_bird.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_bird.Name = "cb_bird";
             this.cb_bird.Size = new System.Drawing.Size(81, 35);
@@ -1210,7 +1210,7 @@ namespace AITool
             this.cb_dog.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_dog.AutoSize = true;
             this.cb_dog.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_dog.Location = new System.Drawing.Point(594, 7);
+            this.cb_dog.Location = new System.Drawing.Point(594, 9);
             this.cb_dog.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_dog.Name = "cb_dog";
             this.cb_dog.Size = new System.Drawing.Size(83, 35);
@@ -1223,7 +1223,7 @@ namespace AITool
             this.cb_cat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cat.AutoSize = true;
             this.cb_cat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_cat.Location = new System.Drawing.Point(406, 107);
+            this.cb_cat.Location = new System.Drawing.Point(406, 118);
             this.cb_cat.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_cat.Name = "cb_cat";
             this.cb_cat.Size = new System.Drawing.Size(74, 35);
@@ -1236,7 +1236,7 @@ namespace AITool
             this.cb_airplane.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_airplane.AutoSize = true;
             this.cb_airplane.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_airplane.Location = new System.Drawing.Point(406, 57);
+            this.cb_airplane.Location = new System.Drawing.Point(406, 63);
             this.cb_airplane.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_airplane.Name = "cb_airplane";
             this.cb_airplane.Size = new System.Drawing.Size(126, 35);
@@ -1249,7 +1249,7 @@ namespace AITool
             this.cb_boat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_boat.AutoSize = true;
             this.cb_boat.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_boat.Location = new System.Drawing.Point(406, 7);
+            this.cb_boat.Location = new System.Drawing.Point(406, 9);
             this.cb_boat.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_boat.Name = "cb_boat";
             this.cb_boat.Size = new System.Drawing.Size(86, 35);
@@ -1262,7 +1262,7 @@ namespace AITool
             this.cb_bus.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bus.AutoSize = true;
             this.cb_bus.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_bus.Location = new System.Drawing.Point(218, 107);
+            this.cb_bus.Location = new System.Drawing.Point(218, 118);
             this.cb_bus.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_bus.Name = "cb_bus";
             this.cb_bus.Size = new System.Drawing.Size(76, 35);
@@ -1275,7 +1275,7 @@ namespace AITool
             this.cb_truck.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_truck.AutoSize = true;
             this.cb_truck.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_truck.Location = new System.Drawing.Point(218, 57);
+            this.cb_truck.Location = new System.Drawing.Point(218, 63);
             this.cb_truck.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_truck.Name = "cb_truck";
             this.cb_truck.Size = new System.Drawing.Size(93, 35);
@@ -1288,7 +1288,7 @@ namespace AITool
             this.cb_car.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_car.AutoSize = true;
             this.cb_car.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_car.Location = new System.Drawing.Point(218, 7);
+            this.cb_car.Location = new System.Drawing.Point(218, 9);
             this.cb_car.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_car.Name = "cb_car";
             this.cb_car.Size = new System.Drawing.Size(74, 35);
@@ -1301,7 +1301,7 @@ namespace AITool
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(5, 458);
+            this.label1.Location = new System.Drawing.Point(5, 500);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(90, 31);
@@ -1316,14 +1316,14 @@ namespace AITool
             this.tableLayoutPanel9.Controls.Add(this.cb_telegram, 0, 2);
             this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel20, 0, 0);
             this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel9.Location = new System.Drawing.Point(214, 391);
+            this.tableLayoutPanel9.Location = new System.Drawing.Point(214, 425);
             this.tableLayoutPanel9.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel9.Name = "tableLayoutPanel9";
             this.tableLayoutPanel9.RowCount = 3;
             this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel9.Size = new System.Drawing.Size(940, 166);
+            this.tableLayoutPanel9.Size = new System.Drawing.Size(940, 182);
             this.tableLayoutPanel9.TabIndex = 8;
             // 
             // tableLayoutPanel10
@@ -1334,12 +1334,12 @@ namespace AITool
             this.tableLayoutPanel10.Controls.Add(this.lblTriggerUrl, 0, 0);
             this.tableLayoutPanel10.Controls.Add(this.tbTriggerUrl, 1, 0);
             this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel10.Location = new System.Drawing.Point(4, 60);
+            this.tableLayoutPanel10.Location = new System.Drawing.Point(4, 65);
             this.tableLayoutPanel10.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel10.Name = "tableLayoutPanel10";
             this.tableLayoutPanel10.RowCount = 1;
             this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel10.Size = new System.Drawing.Size(932, 45);
+            this.tableLayoutPanel10.Size = new System.Drawing.Size(932, 50);
             this.tableLayoutPanel10.TabIndex = 0;
             // 
             // lblTriggerUrl
@@ -1351,7 +1351,7 @@ namespace AITool
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(30, 0, 4, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(120, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
-            this.lblTriggerUrl.Size = new System.Drawing.Size(120, 45);
+            this.lblTriggerUrl.Size = new System.Drawing.Size(120, 50);
             this.lblTriggerUrl.TabIndex = 1;
             this.lblTriggerUrl.Text = "Trigger URL(s)";
             // 
@@ -1359,7 +1359,7 @@ namespace AITool
             // 
             this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tbTriggerUrl.Location = new System.Drawing.Point(186, 5);
+            this.tbTriggerUrl.Location = new System.Drawing.Point(186, 7);
             this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(0, 5, 30, 5);
             this.tbTriggerUrl.Name = "tbTriggerUrl";
             this.tbTriggerUrl.Size = new System.Drawing.Size(716, 35);
@@ -1372,10 +1372,10 @@ namespace AITool
             this.cb_telegram.AutoSize = true;
             this.cb_telegram.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cb_telegram.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_telegram.Location = new System.Drawing.Point(30, 115);
+            this.cb_telegram.Location = new System.Drawing.Point(30, 125);
             this.cb_telegram.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_telegram.Name = "cb_telegram";
-            this.cb_telegram.Size = new System.Drawing.Size(906, 46);
+            this.cb_telegram.Size = new System.Drawing.Size(906, 52);
             this.cb_telegram.TabIndex = 23;
             this.cb_telegram.Text = "Send alert images to Telegram";
             this.cb_telegram.UseVisualStyleBackColor = false;
@@ -1395,14 +1395,14 @@ namespace AITool
             this.tableLayoutPanel20.Name = "tableLayoutPanel20";
             this.tableLayoutPanel20.RowCount = 1;
             this.tableLayoutPanel20.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel20.Size = new System.Drawing.Size(932, 45);
+            this.tableLayoutPanel20.Size = new System.Drawing.Size(932, 50);
             this.tableLayoutPanel20.TabIndex = 8;
             // 
             // tb_cooldown
             // 
             this.tb_cooldown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_cooldown.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_cooldown.Location = new System.Drawing.Point(186, 5);
+            this.tb_cooldown.Location = new System.Drawing.Point(186, 7);
             this.tb_cooldown.Margin = new System.Windows.Forms.Padding(0, 5, 4, 5);
             this.tb_cooldown.Name = "tb_cooldown";
             this.tb_cooldown.Size = new System.Drawing.Size(135, 35);
@@ -1413,7 +1413,7 @@ namespace AITool
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(329, 7);
+            this.label6.Location = new System.Drawing.Point(329, 9);
             this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(97, 31);
@@ -1428,7 +1428,7 @@ namespace AITool
             this.label5.Location = new System.Drawing.Point(30, 0);
             this.label5.Margin = new System.Windows.Forms.Padding(30, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(123, 45);
+            this.label5.Size = new System.Drawing.Size(123, 50);
             this.label5.TabIndex = 0;
             this.label5.Text = "Cooldown Time";
             // 
@@ -1437,19 +1437,20 @@ namespace AITool
             this.lblPrefix.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblPrefix.AutoSize = true;
             this.lblPrefix.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPrefix.Location = new System.Drawing.Point(5, 57);
+            this.lblPrefix.Location = new System.Drawing.Point(5, 62);
             this.lblPrefix.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblPrefix.Name = "lblPrefix";
-            this.lblPrefix.Size = new System.Drawing.Size(186, 55);
+            this.lblPrefix.Size = new System.Drawing.Size(186, 60);
             this.lblPrefix.TabIndex = 2;
             this.lblPrefix.Text = "Input file begins with";
+            this.lblPrefix.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblName
             // 
             this.lblName.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblName.AutoSize = true;
             this.lblName.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblName.Location = new System.Drawing.Point(5, 13);
+            this.lblName.Location = new System.Drawing.Point(5, 15);
             this.lblName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(75, 31);
@@ -1464,19 +1465,19 @@ namespace AITool
             this.tableLayoutPanel12.Controls.Add(this.lbl_prefix, 1, 0);
             this.tableLayoutPanel12.Controls.Add(this.tbPrefix, 0, 0);
             this.tableLayoutPanel12.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel12.Location = new System.Drawing.Point(214, 62);
+            this.tableLayoutPanel12.Location = new System.Drawing.Point(214, 67);
             this.tableLayoutPanel12.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel12.Name = "tableLayoutPanel12";
             this.tableLayoutPanel12.RowCount = 1;
             this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel12.Size = new System.Drawing.Size(940, 45);
+            this.tableLayoutPanel12.Size = new System.Drawing.Size(940, 50);
             this.tableLayoutPanel12.TabIndex = 12;
             // 
             // lbl_prefix
             // 
             this.lbl_prefix.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lbl_prefix.AutoSize = true;
-            this.lbl_prefix.Location = new System.Drawing.Point(705, 12);
+            this.lbl_prefix.Location = new System.Drawing.Point(705, 15);
             this.lbl_prefix.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_prefix.Name = "lbl_prefix";
             this.lbl_prefix.Size = new System.Drawing.Size(0, 20);
@@ -1486,7 +1487,7 @@ namespace AITool
             // 
             this.tbPrefix.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tbPrefix.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tbPrefix.Location = new System.Drawing.Point(30, 5);
+            this.tbPrefix.Location = new System.Drawing.Point(30, 7);
             this.tbPrefix.Margin = new System.Windows.Forms.Padding(30, 5, 30, 5);
             this.tbPrefix.Name = "tbPrefix";
             this.tbPrefix.Size = new System.Drawing.Size(400, 35);
@@ -1506,14 +1507,14 @@ namespace AITool
             this.tableLayoutPanel13.Name = "tableLayoutPanel13";
             this.tableLayoutPanel13.RowCount = 1;
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel13.Size = new System.Drawing.Size(940, 45);
+            this.tableLayoutPanel13.Size = new System.Drawing.Size(940, 50);
             this.tableLayoutPanel13.TabIndex = 13;
             // 
             // tbName
             // 
             this.tbName.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.tbName.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tbName.Location = new System.Drawing.Point(35, 5);
+            this.tbName.Location = new System.Drawing.Point(35, 7);
             this.tbName.Margin = new System.Windows.Forms.Padding(30, 5, 30, 5);
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(400, 35);
@@ -1524,7 +1525,7 @@ namespace AITool
             this.cb_enabled.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_enabled.AutoSize = true;
             this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_enabled.Location = new System.Drawing.Point(500, 5);
+            this.cb_enabled.Location = new System.Drawing.Point(500, 8);
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(30, 5, 4, 5);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(368, 34);
@@ -1537,7 +1538,7 @@ namespace AITool
             this.lblRelevantObjects.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblRelevantObjects.AutoSize = true;
             this.lblRelevantObjects.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRelevantObjects.Location = new System.Drawing.Point(5, 233);
+            this.lblRelevantObjects.Location = new System.Drawing.Point(5, 255);
             this.lblRelevantObjects.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblRelevantObjects.Name = "lblRelevantObjects";
             this.lblRelevantObjects.Size = new System.Drawing.Size(185, 31);
@@ -1549,7 +1550,7 @@ namespace AITool
             this.lbl_threshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_threshold.AutoSize = true;
             this.lbl_threshold.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_threshold.Location = new System.Drawing.Point(5, 342);
+            this.lbl_threshold.Location = new System.Drawing.Point(5, 373);
             this.lbl_threshold.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_threshold.Name = "lbl_threshold";
             this.lbl_threshold.Size = new System.Drawing.Size(191, 31);
@@ -1572,12 +1573,12 @@ namespace AITool
             this.tableLayoutPanel24.Controls.Add(this.label9, 5, 0);
             this.tableLayoutPanel24.Controls.Add(this.label10, 2, 0);
             this.tableLayoutPanel24.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel24.Location = new System.Drawing.Point(214, 335);
+            this.tableLayoutPanel24.Location = new System.Drawing.Point(214, 364);
             this.tableLayoutPanel24.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel24.Name = "tableLayoutPanel24";
             this.tableLayoutPanel24.RowCount = 1;
             this.tableLayoutPanel24.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel24.Size = new System.Drawing.Size(940, 45);
+            this.tableLayoutPanel24.Size = new System.Drawing.Size(940, 50);
             this.tableLayoutPanel24.TabIndex = 16;
             // 
             // lbl_threshold_lower
@@ -1585,7 +1586,7 @@ namespace AITool
             this.lbl_threshold_lower.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_threshold_lower.AutoSize = true;
             this.lbl_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_threshold_lower.Location = new System.Drawing.Point(4, 7);
+            this.lbl_threshold_lower.Location = new System.Drawing.Point(4, 9);
             this.lbl_threshold_lower.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_threshold_lower.Name = "lbl_threshold_lower";
             this.lbl_threshold_lower.Size = new System.Drawing.Size(127, 31);
@@ -1596,7 +1597,7 @@ namespace AITool
             // 
             this.tb_threshold_upper.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_threshold_upper.Location = new System.Drawing.Point(658, 5);
+            this.tb_threshold_upper.Location = new System.Drawing.Point(658, 7);
             this.tb_threshold_upper.Margin = new System.Windows.Forms.Padding(0, 5, 4, 5);
             this.tb_threshold_upper.MaxLength = 3;
             this.tb_threshold_upper.Name = "tb_threshold_upper";
@@ -1609,7 +1610,7 @@ namespace AITool
             this.lbl_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_threshold_upper.AutoSize = true;
             this.lbl_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_threshold_upper.Location = new System.Drawing.Point(474, 7);
+            this.lbl_threshold_upper.Location = new System.Drawing.Point(474, 10);
             this.lbl_threshold_upper.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_threshold_upper.Name = "lbl_threshold_upper";
             this.lbl_threshold_upper.Size = new System.Drawing.Size(115, 30);
@@ -1620,7 +1621,7 @@ namespace AITool
             // 
             this.tb_threshold_lower.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_threshold_lower.Location = new System.Drawing.Point(188, 5);
+            this.tb_threshold_lower.Location = new System.Drawing.Point(188, 7);
             this.tb_threshold_lower.Margin = new System.Windows.Forms.Padding(0, 5, 4, 5);
             this.tb_threshold_lower.MaxLength = 3;
             this.tb_threshold_lower.Name = "tb_threshold_lower";
@@ -1633,7 +1634,7 @@ namespace AITool
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(756, 7);
+            this.label9.Location = new System.Drawing.Point(756, 9);
             this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(33, 31);
@@ -1645,7 +1646,7 @@ namespace AITool
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(286, 7);
+            this.label10.Location = new System.Drawing.Point(286, 9);
             this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(33, 31);
@@ -1662,7 +1663,7 @@ namespace AITool
             this.tableLayoutPanel26.Controls.Add(this.cmbcaminput, 0, 0);
             this.tableLayoutPanel26.Controls.Add(this.cb_monitorCamInputfolder, 1, 0);
             this.tableLayoutPanel26.Controls.Add(this.button2, 2, 0);
-            this.tableLayoutPanel26.Location = new System.Drawing.Point(223, 119);
+            this.tableLayoutPanel26.Location = new System.Drawing.Point(223, 132);
             this.tableLayoutPanel26.Name = "tableLayoutPanel26";
             this.tableLayoutPanel26.RowCount = 1;
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -1716,12 +1717,12 @@ namespace AITool
             this.tableLayoutPanel11.Controls.Add(this.btnCameraDel, 2, 0);
             this.tableLayoutPanel11.Controls.Add(this.btnCameraSave, 3, 0);
             this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel11.Location = new System.Drawing.Point(4, 649);
+            this.tableLayoutPanel11.Location = new System.Drawing.Point(4, 705);
             this.tableLayoutPanel11.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel11.Name = "tableLayoutPanel11";
             this.tableLayoutPanel11.RowCount = 1;
             this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel11.Size = new System.Drawing.Size(1159, 63);
+            this.tableLayoutPanel11.Size = new System.Drawing.Size(1159, 69);
             this.tableLayoutPanel11.TabIndex = 3;
             // 
             // btnCameraAdd
@@ -1731,7 +1732,7 @@ namespace AITool
             this.btnCameraAdd.Location = new System.Drawing.Point(496, 5);
             this.btnCameraAdd.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCameraAdd.Name = "btnCameraAdd";
-            this.btnCameraAdd.Size = new System.Drawing.Size(165, 53);
+            this.btnCameraAdd.Size = new System.Drawing.Size(165, 59);
             this.btnCameraAdd.TabIndex = 24;
             this.btnCameraAdd.Text = "Add Camera";
             this.btnCameraAdd.UseVisualStyleBackColor = true;
@@ -1744,7 +1745,7 @@ namespace AITool
             this.btnCameraDel.Location = new System.Drawing.Point(727, 5);
             this.btnCameraDel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCameraDel.Name = "btnCameraDel";
-            this.btnCameraDel.Size = new System.Drawing.Size(165, 53);
+            this.btnCameraDel.Size = new System.Drawing.Size(165, 59);
             this.btnCameraDel.TabIndex = 25;
             this.btnCameraDel.Text = " Delete Camera ";
             this.btnCameraDel.UseVisualStyleBackColor = true;
@@ -1758,7 +1759,7 @@ namespace AITool
             this.btnCameraSave.Location = new System.Drawing.Point(959, 5);
             this.btnCameraSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCameraSave.Name = "btnCameraSave";
-            this.btnCameraSave.Size = new System.Drawing.Size(165, 53);
+            this.btnCameraSave.Size = new System.Drawing.Size(165, 59);
             this.btnCameraSave.TabIndex = 26;
             this.btnCameraSave.Text = "Save";
             this.btnCameraSave.UseVisualStyleBackColor = false;
@@ -1769,7 +1770,7 @@ namespace AITool
             this.lbl_camstats.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_camstats.AutoSize = true;
             this.lbl_camstats.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_camstats.Location = new System.Drawing.Point(4, 20);
+            this.lbl_camstats.Location = new System.Drawing.Point(4, 23);
             this.lbl_camstats.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_camstats.Name = "lbl_camstats";
             this.lbl_camstats.Size = new System.Drawing.Size(63, 31);
@@ -1782,7 +1783,7 @@ namespace AITool
             this.tabSettings.Location = new System.Drawing.Point(4, 29);
             this.tabSettings.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Size = new System.Drawing.Size(1428, 650);
+            this.tabSettings.Size = new System.Drawing.Size(1459, 799);
             this.tabSettings.TabIndex = 3;
             this.tabSettings.Text = "Settings";
             this.tabSettings.UseVisualStyleBackColor = true;
@@ -1800,7 +1801,7 @@ namespace AITool
             this.tableLayoutPanel4.RowCount = 2;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 85.65022F));
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.34978F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(1428, 650);
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(1459, 799);
             this.tableLayoutPanel4.TabIndex = 5;
             // 
             // tableLayoutPanel5
@@ -1836,7 +1837,7 @@ namespace AITool
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.34571F));
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.34571F));
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.3469F));
-            this.tableLayoutPanel5.Size = new System.Drawing.Size(1420, 546);
+            this.tableLayoutPanel5.Size = new System.Drawing.Size(1451, 674);
             this.tableLayoutPanel5.TabIndex = 3;
             // 
             // label4
@@ -1844,7 +1845,7 @@ namespace AITool
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(5, 333);
+            this.label4.Location = new System.Drawing.Point(5, 414);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(52, 31);
@@ -1859,19 +1860,19 @@ namespace AITool
             this.tableLayoutPanel25.Controls.Add(this.btn_open_log, 1, 0);
             this.tableLayoutPanel25.Controls.Add(this.cb_log, 0, 0);
             this.tableLayoutPanel25.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel25.Location = new System.Drawing.Point(218, 315);
+            this.tableLayoutPanel25.Location = new System.Drawing.Point(223, 387);
             this.tableLayoutPanel25.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel25.Name = "tableLayoutPanel25";
             this.tableLayoutPanel25.RowCount = 1;
             this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
-            this.tableLayoutPanel25.Size = new System.Drawing.Size(1197, 67);
+            this.tableLayoutPanel25.Size = new System.Drawing.Size(1223, 85);
             this.tableLayoutPanel25.TabIndex = 14;
             // 
             // btn_open_log
             // 
             this.btn_open_log.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_open_log.Location = new System.Drawing.Point(1093, 16);
+            this.btn_open_log.Location = new System.Drawing.Point(1117, 25);
             this.btn_open_log.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btn_open_log.Name = "btn_open_log";
             this.btn_open_log.Size = new System.Drawing.Size(88, 35);
@@ -1888,7 +1889,7 @@ namespace AITool
             this.cb_log.Location = new System.Drawing.Point(4, 5);
             this.cb_log.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cb_log.Name = "cb_log";
-            this.cb_log.Size = new System.Drawing.Size(1069, 57);
+            this.cb_log.Size = new System.Drawing.Size(1092, 75);
             this.cb_log.TabIndex = 11;
             this.cb_log.Text = "Log everything";
             this.cb_log.UseVisualStyleBackColor = true;
@@ -1898,7 +1899,7 @@ namespace AITool
             this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(5, 411);
+            this.label12.Location = new System.Drawing.Point(5, 510);
             this.label12.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(130, 31);
@@ -1910,10 +1911,10 @@ namespace AITool
             this.cb_send_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cb_send_errors.Location = new System.Drawing.Point(218, 393);
+            this.cb_send_errors.Location = new System.Drawing.Point(223, 483);
             this.cb_send_errors.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cb_send_errors.Name = "cb_send_errors";
-            this.cb_send_errors.Size = new System.Drawing.Size(1197, 67);
+            this.cb_send_errors.Size = new System.Drawing.Size(1223, 85);
             this.cb_send_errors.TabIndex = 12;
             this.cb_send_errors.Text = "Send Errors and Warnings to Telegram";
             this.cb_send_errors.UseVisualStyleBackColor = true;
@@ -1923,7 +1924,7 @@ namespace AITool
             this.lbl_deepstackurl.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_deepstackurl.AutoSize = true;
             this.lbl_deepstackurl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_deepstackurl.Location = new System.Drawing.Point(5, 100);
+            this.lbl_deepstackurl.Location = new System.Drawing.Point(5, 127);
             this.lbl_deepstackurl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_deepstackurl.Name = "lbl_deepstackurl";
             this.lbl_deepstackurl.Size = new System.Drawing.Size(167, 31);
@@ -1935,7 +1936,7 @@ namespace AITool
             this.lbl_input.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_input.AutoSize = true;
             this.lbl_input.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_input.Location = new System.Drawing.Point(5, 23);
+            this.lbl_input.Location = new System.Drawing.Point(5, 32);
             this.lbl_input.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_input.Name = "lbl_input";
             this.lbl_input.Size = new System.Drawing.Size(199, 31);
@@ -1946,10 +1947,10 @@ namespace AITool
             // 
             this.tbDeepstackUrl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbDeepstackUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbDeepstackUrl.Location = new System.Drawing.Point(218, 96);
+            this.tbDeepstackUrl.Location = new System.Drawing.Point(223, 123);
             this.tbDeepstackUrl.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tbDeepstackUrl.Name = "tbDeepstackUrl";
-            this.tbDeepstackUrl.Size = new System.Drawing.Size(1197, 38);
+            this.tbDeepstackUrl.Size = new System.Drawing.Size(1223, 38);
             this.tbDeepstackUrl.TabIndex = 5;
             // 
             // lbl_telegram_token
@@ -1957,7 +1958,7 @@ namespace AITool
             this.lbl_telegram_token.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_telegram_token.AutoSize = true;
             this.lbl_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_telegram_token.Location = new System.Drawing.Point(5, 177);
+            this.lbl_telegram_token.Location = new System.Drawing.Point(5, 222);
             this.lbl_telegram_token.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_telegram_token.Name = "lbl_telegram_token";
             this.lbl_telegram_token.Size = new System.Drawing.Size(173, 31);
@@ -1969,7 +1970,7 @@ namespace AITool
             this.lbl_telegram_chatid.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_telegram_chatid.AutoSize = true;
             this.lbl_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_telegram_chatid.Location = new System.Drawing.Point(5, 255);
+            this.lbl_telegram_chatid.Location = new System.Drawing.Point(5, 318);
             this.lbl_telegram_chatid.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_telegram_chatid.Name = "lbl_telegram_chatid";
             this.lbl_telegram_chatid.Size = new System.Drawing.Size(189, 31);
@@ -1980,20 +1981,20 @@ namespace AITool
             // 
             this.tb_telegram_token.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_telegram_token.Location = new System.Drawing.Point(218, 173);
+            this.tb_telegram_token.Location = new System.Drawing.Point(223, 218);
             this.tb_telegram_token.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_telegram_token.Name = "tb_telegram_token";
-            this.tb_telegram_token.Size = new System.Drawing.Size(1197, 38);
+            this.tb_telegram_token.Size = new System.Drawing.Size(1223, 38);
             this.tb_telegram_token.TabIndex = 8;
             // 
             // tb_telegram_chatid
             // 
             this.tb_telegram_chatid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_telegram_chatid.Location = new System.Drawing.Point(218, 251);
+            this.tb_telegram_chatid.Location = new System.Drawing.Point(223, 314);
             this.tb_telegram_chatid.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_telegram_chatid.Name = "tb_telegram_chatid";
-            this.tb_telegram_chatid.Size = new System.Drawing.Size(1197, 38);
+            this.tb_telegram_chatid.Size = new System.Drawing.Size(1223, 38);
             this.tb_telegram_chatid.TabIndex = 9;
             // 
             // tableLayoutPanel18
@@ -2006,18 +2007,18 @@ namespace AITool
             this.tableLayoutPanel18.Controls.Add(this.cmbInput, 0, 0);
             this.tableLayoutPanel18.Controls.Add(this.cb_inputpathsubfolders, 1, 0);
             this.tableLayoutPanel18.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel18.Location = new System.Drawing.Point(218, 6);
+            this.tableLayoutPanel18.Location = new System.Drawing.Point(223, 6);
             this.tableLayoutPanel18.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel18.Name = "tableLayoutPanel18";
             this.tableLayoutPanel18.RowCount = 1;
             this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel18.Size = new System.Drawing.Size(1197, 66);
+            this.tableLayoutPanel18.Size = new System.Drawing.Size(1223, 84);
             this.tableLayoutPanel18.TabIndex = 12;
             // 
             // btn_input_path
             // 
             this.btn_input_path.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_input_path.Location = new System.Drawing.Point(1104, 15);
+            this.btn_input_path.Location = new System.Drawing.Point(1129, 24);
             this.btn_input_path.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btn_input_path.Name = "btn_input_path";
             this.btn_input_path.Size = new System.Drawing.Size(88, 35);
@@ -2032,7 +2033,7 @@ namespace AITool
             this.cmbInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.cmbInput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.cmbInput.FormattingEnabled = true;
-            this.cmbInput.Location = new System.Drawing.Point(3, 19);
+            this.cmbInput.Location = new System.Drawing.Point(12, 28);
             this.cmbInput.Name = "cmbInput";
             this.cmbInput.Size = new System.Drawing.Size(867, 28);
             this.cmbInput.TabIndex = 3;
@@ -2041,7 +2042,7 @@ namespace AITool
             // 
             this.cb_inputpathsubfolders.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cb_inputpathsubfolders.AutoSize = true;
-            this.cb_inputpathsubfolders.Location = new System.Drawing.Point(898, 21);
+            this.cb_inputpathsubfolders.Location = new System.Drawing.Point(919, 30);
             this.cb_inputpathsubfolders.Name = "cb_inputpathsubfolders";
             this.cb_inputpathsubfolders.Size = new System.Drawing.Size(176, 24);
             this.cb_inputpathsubfolders.TabIndex = 4;
@@ -2053,7 +2054,7 @@ namespace AITool
             this.label13.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.label13.Location = new System.Drawing.Point(4, 490);
+            this.label13.Location = new System.Drawing.Point(4, 608);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(61, 31);
             this.label13.TabIndex = 16;
@@ -2063,7 +2064,7 @@ namespace AITool
             // 
             this.cbStartWithWindows.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbStartWithWindows.AutoSize = true;
-            this.cbStartWithWindows.Location = new System.Drawing.Point(217, 493);
+            this.cbStartWithWindows.Location = new System.Drawing.Point(222, 611);
             this.cbStartWithWindows.Name = "cbStartWithWindows";
             this.cbStartWithWindows.Size = new System.Drawing.Size(288, 24);
             this.cbStartWithWindows.TabIndex = 17;
@@ -2074,10 +2075,10 @@ namespace AITool
             // 
             this.BtnSettingsSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.BtnSettingsSave.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BtnSettingsSave.Location = new System.Drawing.Point(612, 561);
+            this.BtnSettingsSave.Location = new System.Drawing.Point(627, 689);
             this.BtnSettingsSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.BtnSettingsSave.Name = "BtnSettingsSave";
-            this.BtnSettingsSave.Size = new System.Drawing.Size(204, 84);
+            this.BtnSettingsSave.Size = new System.Drawing.Size(204, 105);
             this.BtnSettingsSave.TabIndex = 2;
             this.BtnSettingsSave.Text = "Save";
             this.BtnSettingsSave.UseVisualStyleBackColor = true;
@@ -2409,7 +2410,7 @@ namespace AITool
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(1467, 770);
+            this.ClientSize = new System.Drawing.Size(1467, 832);
             this.Controls.Add(this.tabControl1);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MinimumSize = new System.Drawing.Size(1444, 739);
