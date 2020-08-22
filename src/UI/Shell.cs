@@ -322,7 +322,8 @@ namespace AITool
                                                         {
                                                             // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                                            ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label, CameraList[index]);
+                                                            ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
+                                                                                                              img.Width, img.Height, CameraList[index]);
 
                                                             if (CameraList[index].maskManager.masking_enabled)
                                                             {
