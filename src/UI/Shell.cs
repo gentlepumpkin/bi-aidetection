@@ -1899,6 +1899,12 @@ namespace AITool
             try
             {
                 string[] files = Directory.GetFiles("./cameras", $"*.json"); //load all settings files in a string array
+                if(files != null && files.Length==0)
+                {
+                    //run configuration migration to create JSON config
+                    files = Directory.GetFiles("./cameras", $"*.txt");
+                }
+
 
                 //create a camera object for every camera settings file
                 int i = 0;
@@ -1955,7 +1961,16 @@ namespace AITool
             }
             Camera cam = new Camera(); //create new camera object
             log.Debug("read config");
-            cam.ReadConfig(config_path); //read camera's config from file
+
+            //migration from old .txt to .json. First time use only
+            if (config_path.Contains(".json"))
+            {
+                cam.ReadConfig(config_path); //read camera's config from file
+            } else
+            {
+                cam.MigrateConfig(config_path);
+            }
+            
             log.Debug("add");
             CameraList.Add(cam); //add created camera object to CameraList
 
