@@ -52,19 +52,19 @@ namespace AITool
 
         public bool Equals(ObjectPosition other)
         {
-            //calculate the percentage variance for width and height of selection
-            int xMaxVariance = Convert.ToInt32(other.width * thresholdPercent);
-            int yMaxVariance = Convert.ToInt32(other.height * thresholdPercent);
+            //calculate the percentage variance for width and height of selected object
+            double widthVariance = (double) Math.Abs(this.width - other.width) / this.width;
+            double heightVariance = (double) Math.Abs(this.height - other.height) / this.height;
 
             //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-            double xPercentVariance = ((double)(Math.Abs(this.xmin - other.xmin)) / imageWidth);
-            double yPercentVariance = ((double)(Math.Abs(this.ymin - other.ymin)) / imageHeight);
+            double xPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth;
+            double yPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight;
 
             return (other != null &&
                    (xPercentVariance <= thresholdPercent) &&
                    (yPercentVariance <= thresholdPercent) &&
-                   (width.Between(other.width - xMaxVariance, other.width + xMaxVariance)) &&
-                   (height.Between(other.height - yMaxVariance, other.height + yMaxVariance)));
+                   (widthVariance <= thresholdPercent) &&
+                   (heightVariance <= thresholdPercent));
         }
         
         public override int GetHashCode()
