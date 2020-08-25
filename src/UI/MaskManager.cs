@@ -27,9 +27,10 @@ namespace AITool
             masked_positions = new List<ObjectPosition>();
         }
 
-        public void CreateDynamicMask(ObjectPosition currentObject)
+        public bool CreateDynamicMask(ObjectPosition currentObject)
         {
-            //Camera camera = currentObject.camera;
+            bool maskExists = false;
+
             log.Debug("*** Starting new object mask processing ***");
             log.Info("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
             
@@ -64,15 +65,18 @@ namespace AITool
                     maskedObject.counter++;
                 }
 
-                log.Debug("Found in masked_positions " + currentObject.ToString() + " for camera " + currentObject.camera.name);
+                log.Debug("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.camera.name);
 
                 maskedObject.isVisible = true;
+                maskExists = true;
             }
             else
             {
                 log.Info("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
                 last_positions_history.Add(currentObject);
             }
+
+            return maskExists;
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count

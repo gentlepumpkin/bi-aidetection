@@ -325,15 +325,16 @@ namespace AITool
                                                             ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
                                                                                                               img.Width, img.Height, CameraList[index]);
 
+                                                            bool maskExists = false;
                                                             if (CameraList[index].maskManager.masking_enabled)
                                                             {
                                                                 //creates history and masked lists for objects returned
-                                                                CameraList[index].maskManager.CreateDynamicMask(currentObject);
+                                                                maskExists = CameraList[index].maskManager.CreateDynamicMask(currentObject);
                                                             }
 
                                                             //only if the object is outside of the masked area and object is also not found in the dynamic mask list
                                                             if (Outsidemask(CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height) &&
-                                                                !CameraList[index].maskManager.masked_positions.Contains(currentObject))
+                                                                !maskExists)
                                                             {
                                                                 // -> OBJECT IS OUTSIDE OF MASKED AREAS
                                                                 log.Info("Object is outside of masked areas " + currentObject.ToString() + " on camera:" + CameraList[index].name);
