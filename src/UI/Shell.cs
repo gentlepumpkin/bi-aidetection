@@ -3362,7 +3362,7 @@ namespace AITool
                 {
                     while (this.ImageProcessQueue.TryDequeue(out CurFile))
                     {
-                        await DetectObjects(CurFile);
+                        //await DetectObjects(CurFile);
                     }
                     await Task.Delay(100); 
                 }
