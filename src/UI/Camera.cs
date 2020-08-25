@@ -58,6 +58,8 @@ namespace AITool
         [JsonIgnore]
         public DateTime last_trigger_time;
         [JsonIgnore]
+        public string last_image_file = "";
+        [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
         public List<float> last_confidences = new List<float>(); //stores last objects confidences
@@ -71,8 +73,7 @@ namespace AITool
         //write config to file
         public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, 
                                  bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, 
-                                 string _input_path, bool _input_path_includesubfolders,
-                                 bool _masking_enabled, int _history_mins, int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
+                                 string _input_path, bool _input_path_includesubfolders, bool _masking_enabled) //, int _history_mins, int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             //if(name != _name)
@@ -98,11 +99,13 @@ namespace AITool
             input_path_includesubfolders = _input_path_includesubfolders;
 
             //Merged from ClassObject's fork
-            maskManager.history_save_mins = _history_mins;
-            maskManager.history_threshold_count = _mask_create_counter;
-            maskManager.mask_counter_default = _mask_remove_counter;
+            //Changes to this are now done via OK response frm Frm_DynamicMasking...
+
+            //maskManager.history_save_mins = _history_mins;
+            //maskManager.history_threshold_count = _mask_create_counter;
+            //maskManager.mask_counter_default = _mask_remove_counter;
+            //maskManager.thresholdPercent = _percent_variance;
             maskManager.masking_enabled = _masking_enabled;
-            ObjectPosition.thresholdPercent = _percent_variance;
 
             triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 

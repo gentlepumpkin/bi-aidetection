@@ -47,6 +47,7 @@ namespace AITool
             public int file_access_delay = 50;
             public int retry_delay = 10;
             public bool SettingsValid = false;
+            public int MaxLogFileAgeDays = 14;
         }
 
         public static bool Save()

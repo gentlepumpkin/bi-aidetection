@@ -66,6 +66,8 @@ namespace AITool
 
         public int errors = 0; //error counter
 
+        private ConcurrentQueue<String> ImageProcessQueue = new ConcurrentQueue<string>();
+
         //this is not thread safe, and I believe events run in diff threads - this is why we are still getting access deined errors for jpgs:
         //  See https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
         //public bool detection_running = false; //is detection running right now or not
@@ -84,6 +86,7 @@ namespace AITool
         //handle multiple folders
         Dictionary<string, MyFileSystemWatcher> watchers = new Dictionary<string, MyFileSystemWatcher>();
 
+        
 
         public Shell()
         {
@@ -115,6 +118,9 @@ namespace AITool
 
             //load settings
             AppSettings.Load();
+
+            LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+            HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Log("");
@@ -549,6 +555,8 @@ namespace AITool
                 string fileprefix = Path.GetFileNameWithoutExtension(image_path).Split('.')[0]; //get prefix of inputted file
                 int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
+                AppSettings.Settings.CameraList[index].last_image_file = image_path;
+
                 if (index == -1)
                 {
                     Log($"Warning: Could not find camera prefix '{fileprefix}' for file '{image_path}'.");
@@ -704,8 +712,18 @@ namespace AITool
                                                                         {
                                                                             // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
+                                                                            ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
+                                                                                                                              img.Width, img.Height, AppSettings.Settings.CameraList[index]);
+
+                                                                            if (AppSettings.Settings.CameraList[index].maskManager.masking_enabled)
+                                                                            {
+                                                                                //creates history and masked lists for objects returned
+                                                                                AppSettings.Settings.CameraList[index].maskManager.CreateDynamicMask(currentObject);
+                                                                            }
+
                                                                             //only if the object is outside of the masked area
-                                                                            if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height))
+                                                                            if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
+                                                                                && !AppSettings.Settings.CameraList[index].maskManager.masked_positions.Contains(currentObject))
                                                                             {
                                                                                 // -> OBJECT IS OUTSIDE OF MASKED AREAS
 
@@ -743,6 +761,22 @@ namespace AITool
                                                                     }
                                                                 }
 
+                                                            }  //end loop over current object list
+
+                                                            if (AppSettings.Settings.CameraList[index].maskManager.masking_enabled)
+                                                            {
+                                                                //scan over all masked objects and decrement counter if not flagged as visible.
+                                                                AppSettings.Settings.CameraList[index].maskManager.CleanUpExpiredMasks(AppSettings.Settings.CameraList[index].name);
+
+                                                                //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
+                                                                AppSettings.Settings.CameraList[index].maskManager.CleanUpExpiredHistory(AppSettings.Settings.CameraList[index].name);
+
+                                                                //log summary information for all masked objects
+                                                                Log("### Masked objects summary for camera " + AppSettings.Settings.CameraList[index].name + " ###");
+                                                                foreach (ObjectPosition maskedObject in AppSettings.Settings.CameraList[index].maskManager.masked_positions)
+                                                                {
+                                                                    Log("\t" + maskedObject.ToString());
+                                                                }
                                                             }
 
                                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
@@ -776,7 +810,7 @@ namespace AITool
 
 
 
-
+                                                                
 
                                                                 //create text string objects and confidences
                                                                 string objects_and_confidences = "";
@@ -905,6 +939,10 @@ namespace AITool
 
                                 //load cameras stats
                                 string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
+                                if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
+                                {
+                                    stats += $" | Mask History Count: {AppSettings.Settings.CameraList[i].maskManager.last_positions_history.Count()} | Current Dynamic Masks: {AppSettings.Settings.CameraList[i].maskManager.masked_positions.Count()}";
+                                }
                                 lbl_camstats.Text = stats;
                             }
 
@@ -1305,7 +1343,7 @@ namespace AITool
                     time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
                     rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
                     if (memberName != null && !string.IsNullOrEmpty(memberName))
-                        ModName = memberName.PadLeft(18) + "> ";
+                        ModName = memberName.PadLeft(20) + "> ";
 
                     //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
 
@@ -2194,7 +2232,7 @@ namespace AITool
                 detection_dictionary.TryRemove(filename.ToLower(), out val);
 
                 //try to get a better feel how much time this function consumes - Vorlon
-                Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
+                //Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
 
             }
 
@@ -2745,7 +2783,7 @@ namespace AITool
         //add camera
         private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, 
                                  string _input_path, bool _input_path_includesubfolders,
-                                 bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
+                                 bool masking_enabled) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
@@ -2781,9 +2819,8 @@ namespace AITool
                 }
             }
 
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, 
-                           _input_path, _input_path_includesubfolders,
-                           masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
+                           _input_path, _input_path_includesubfolders, masking_enabled); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
             
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
@@ -2803,8 +2840,7 @@ namespace AITool
 
         //change settings of camera
         private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper, 
-                                    string _input_path, bool _input_path_includesubfolders,
-                                    bool masking_enabled, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
+                                    string _input_path, bool _input_path_includesubfolders, bool masking_enabled) //, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
@@ -2828,7 +2864,7 @@ namespace AITool
             }
 
             int index = -1;
-            index = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower() == oldname.ToLower()); //index of specified camera in list
+            index = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == oldname.Trim().ToLower()); //index of specified camera in list
 
             if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
 
@@ -2840,9 +2876,8 @@ namespace AITool
             }
 
             //2. WRITE CONFIG
-            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper, 
-                                                               _input_path, _input_path_includesubfolders,
-                                                               masking_enabled, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
+                                                               _input_path, _input_path_includesubfolders, masking_enabled); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
             LoadCameras();
 
@@ -2912,6 +2947,8 @@ namespace AITool
                             }
                             tbTriggerUrl.Text = "";
                             cb_telegram.Checked = false;
+                            //disable camera settings if there are no cameras setup yet
+                            tableLayoutPanel6.Enabled = false;
                         }
                     }
                     else
@@ -2930,16 +2967,23 @@ namespace AITool
             if (list2.SelectedItems.Count > 0)
             {
 
+                tableLayoutPanel6.Enabled = true;
+
                 tbName.Text = list2.SelectedItems[0].Text; //load name textbox from name in list2
 
                 //load remaining settings from Camera.cs object
 
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
 
                 //load cameras stats
 
                 string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
+
+                if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
+                {
+                    stats += $" | Mask History Count: {AppSettings.Settings.CameraList[i].maskManager.last_positions_history.Count()} | Current Dynamic Masks: {AppSettings.Settings.CameraList[i].maskManager.masked_positions.Count()}";
+                }
                 lbl_camstats.Text = stats;
 
                 //load if ai detection is active for the camera
@@ -2970,6 +3014,16 @@ namespace AITool
                 tb_cooldown.Text = AppSettings.Settings.CameraList[i].cooldown_time.ToString(); //load cooldown time
                 tb_threshold_lower.Text = AppSettings.Settings.CameraList[i].threshold_lower.ToString(); //load lower threshold value
                 tb_threshold_upper.Text = AppSettings.Settings.CameraList[i].threshold_upper.ToString(); // load upper threshold value
+
+                //load is masking enabled 
+                if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
+                {
+                    cb_masking_enabled.Checked = true;
+                }
+                else
+                {
+                    cb_masking_enabled.Checked = false;
+                }
 
                 //load telegram image sending on/off option
                 if (AppSettings.Settings.CameraList[i].telegram_enabled)
@@ -3053,7 +3107,7 @@ namespace AITool
                     string name = form.text;
                     string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,
                                                  "",false, 
-                                                 false, 5, 2, 15, .07);
+                                                 false);
                     MessageBox.Show(camresult);
                 }
             }
@@ -3100,28 +3154,21 @@ namespace AITool
                 Int32.TryParse(tb_threshold_lower.Text, out int threshold_lower);
                 Int32.TryParse(tb_threshold_upper.Text, out int threshold_upper);
 
-                ////get masking values from textboxes
-                //Int32.TryParse(num_history_mins.Text, out int history_mins);
-                //Int32.TryParse(num_mask_create.Text, out int mask_create_counter);
-                //Int32.TryParse(num_mask_remove.Text, out int mask_remove_counter);
-                //Int32.TryParse(num_percent_var.Text, out int variance);
 
-                ////convert to percent
-                //Double percent_variance = (double)variance / 100;
 
                 ////2. UPDATE SETTINGS
                 //// save new camera settings, display result in MessageBox
-                //string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
-                //                             cmbcaminput.Text,cb_monitorCamInputfolder.Checked,
-                //                             cb_masking_enabled.Checked, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
-                
+                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
+                                             cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
+                                             cb_masking_enabled.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
+
                 AppSettings.Save();
 
                 UpdateWatchers();
 
-                //Log(result);
-                
-                //MessageBox.Show(result,"", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log(result);
+
+                MessageBox.Show(result, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
             DisplayCameraSettings();
@@ -3300,6 +3347,30 @@ namespace AITool
         private void Shell_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private async Task ImageQueueLoop()
+        {
+            //This runs in another thread, waiting for items to appear in the queue and process them one at a time
+            try
+            {
+                Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
+                
+                String CurFile = "";
+
+                while (true)
+                {
+                    while (this.ImageProcessQueue.TryDequeue(out CurFile))
+                    {
+                        await DetectObjects(CurFile);
+                    }
+                    await Task.Delay(100); 
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Error: " + ex.Message);
+            }
         }
         private void SaveDeepStackTab()
         {
@@ -3575,6 +3646,76 @@ namespace AITool
                     cmbcaminput.Text = dialog.FileName;
                 }
             }
+        }
+
+        
+
+
+
+        private void BtnDynamicMaskingSettings_Click(object sender, EventArgs e)
+        {
+            using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
+            {
+
+                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+
+                Camera cam = AppSettings.Settings.CameraList[i];
+
+                //Merge ClassObject's code
+                frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
+                frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
+                frm.num_mask_remove.Value = cam.maskManager.mask_counter_default; //load mask remove counter
+                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
+
+
+                
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    ////get masking values from textboxes
+
+                    
+                    Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
+                    Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
+                    Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_counter);
+                    Int32.TryParse(frm.num_percent_var.Text, out int variance);
+
+                    ////convert to percent
+                    Double percent_variance = (double)variance / 100;
+
+                    cam.maskManager.history_save_mins = history_mins;
+                    cam.maskManager.history_threshold_count = mask_create_counter;
+                    cam.maskManager.mask_counter_default = mask_remove_counter;
+                    cam.maskManager.thresholdPercent = percent_variance;
+
+                    cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
+
+                    AppSettings.Save();
+
+                }
+            }
+        }
+
+        private void btnDetails_Click(object sender, EventArgs e)
+        {
+
+            using (Frm_DynamicMaskDetails frm = new Frm_DynamicMaskDetails())
+            {
+
+                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+                
+                frm.cam = AppSettings.Settings.CameraList[i];
+
+                frm.ShowDialog();
+            }
+
+
+         }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

@@ -1,32 +1,30 @@
-﻿using SixLabors.ImageSharp.ColorSpaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace AITool
 {
     public class ObjectPosition : IEquatable<ObjectPosition>
     {
+        public string label { get; }
         public DateTime createDate { get; }
         public Boolean isVisible { get; set; } = false;
         public int counter { get; set; }
+        //object position +- threshold max variances to determine positive match. 
+        //Threshold percentage variable -- percentage variation in object position between detections.
+        public double thresholdPercent { get; set; }
         public int xmin { get; }
         public int ymin { get; }
         public int xmax { get; }
         public int ymax { get; }
         public int height { get; }
         public int width { get; }
-        public int xMaxVariance { get; }
-        public int yMaxVariance { get; }
+        public int imageWidth { get; set; }
+        public int imageHeight { get; set; }
         public long key { get; }
-        public string label { get; }
         public Camera camera { get; set; }
 
-        //object position +- threshold max variances to determine positive match. 
-        //Threshold percentage variable - percentage variation in object position between detections.
-        public static double thresholdPercent { get; set; }
 
-        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, Camera camera)
+        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, Camera camera)
         {
             createDate = DateTime.Now;
             this.camera = camera;
@@ -36,16 +34,15 @@ namespace AITool
             this.ymin = ymin;
             this.xmax = xmax;
             this.ymax = ymax;
+            this.imageHeight = imageHeight;
+            this.imageWidth = imageWidth;
 
             //calc width and height of box
             this.width = xmax - xmin;
             this.height = ymax - ymin;
 
-            //calculate percentage position variances used in equality comparisons
-            xMaxVariance = Convert.ToInt32(this.width * thresholdPercent);
-            yMaxVariance = Convert.ToInt32(this.height * thresholdPercent);
-
-            key = ((xmin+1) * (ymin+1) * (xmax+1) * (ymax+1));
+            //starting x * y point + width * height of rectangle - used for debugging only
+            key = ((xmin+1) * (ymin+1) + (width * height));
         }
 
         public override bool Equals(object obj)
@@ -55,11 +52,19 @@ namespace AITool
 
         public bool Equals(ObjectPosition other)
         {
+            //calculate the percentage variance for width and height of selection
+            int xMaxVariance = Convert.ToInt32(other.width * thresholdPercent);
+            int yMaxVariance = Convert.ToInt32(other.height * thresholdPercent);
+
+            //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
+            double xPercentVariance = ((double)(Math.Abs(this.xmin - other.xmin)) / imageWidth);
+            double yPercentVariance = ((double)(Math.Abs(this.ymin - other.ymin)) / imageHeight);
+
             return (other != null &&
-                   (xmin.Between(other.xmin - other.xMaxVariance, other.xmin + other.xMaxVariance)) &&
-                   (ymin.Between(other.ymin - other.yMaxVariance, other.ymin + other.yMaxVariance)) &&
-                   (width.Between(other.width - other.xMaxVariance, other.width + other.xMaxVariance)) &&
-                   (height.Between(other.height - other.yMaxVariance, other.height + other.yMaxVariance)));
+                   (xPercentVariance <= thresholdPercent) &&
+                   (yPercentVariance <= thresholdPercent) &&
+                   (width.Between(other.width - xMaxVariance, other.width + xMaxVariance)) &&
+                   (height.Between(other.height - yMaxVariance, other.height + yMaxVariance)));
         }
         
         public override int GetHashCode()

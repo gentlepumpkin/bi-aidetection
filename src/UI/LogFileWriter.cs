@@ -146,11 +146,11 @@ public class LogFileWriter:IDisposable
 				else if (FileNameDate.Equals(DateTime.MinValue) && (CurFile.ToLower() == this.LogFile.ToLower())) //this is the main log filename if it doesnt have a date in it.
 				{
 
-					if ((MaxLogSize > 0 && fi.Length >= MaxLogSize) || (DateTime.Now.DayOfYear != fi.LastWriteTime.DayOfYear))
+					if ((MaxLogSize > 0 && fi.Length >= MaxLogSize) || (DateTime.UtcNow.DayOfYear != fi.LastWriteTimeUtc.DayOfYear))
 					{
 						Console.WriteLine("LogWriter.New: Renaming log file because size or age:  Size: " + fi.Length + ", Max: " + MaxLogSize + "...");
 						string NewFileName = Path.GetFileNameWithoutExtension(CurFile);
-						NewFileName = NewFileName + "_" + fi.LastWriteTime.ToString("s").Replace(":", "_").Replace("T", "_"); //& "_{UTC}"
+						NewFileName = NewFileName + "_" + fi.LastWriteTimeUtc.ToString("s").Replace(":", "_").Replace("T", "_"); //& "_{UTC}"
 						NewFileName = Folder + "\\" + NewFileName + Ext;
 						try
 						{

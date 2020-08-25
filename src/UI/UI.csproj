@@ -128,6 +128,18 @@
     <Compile Include="Frm_Actions.Designer.cs">
       <DependentUpon>Frm_Actions.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_DynamicMaskDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_DynamicMaskDetails.Designer.cs">
+      <DependentUpon>Frm_DynamicMaskDetails.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm_DynamicMasking.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_DynamicMasking.Designer.cs">
+      <DependentUpon>Frm_DynamicMasking.cs</DependentUpon>
+    </Compile>
     <Compile Include="Global-GUI.cs" />
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="MaskManager.cs" />
@@ -152,6 +164,12 @@
     <Compile Include="util.cs" />
     <EmbeddedResource Include="Frm_Actions.resx">
       <DependentUpon>Frm_Actions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_DynamicMaskDetails.resx">
+      <DependentUpon>Frm_DynamicMaskDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_DynamicMasking.resx">
+      <DependentUpon>Frm_DynamicMasking.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Shell.resx">
       <DependentUpon>Shell.cs</DependentUpon>

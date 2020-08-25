@@ -11,8 +11,8 @@ using BrightIdeasSoftware;
 
 namespace AITool
 {
-    public static class Global_GUI
-    {
+	public static class Global_GUI
+	{
 
 
 		public static void UpdateFOLV(ref FastObjectListView olv, IEnumerable Collection, bool ResizeCols = false)
@@ -22,12 +22,8 @@ namespace AITool
 
 			try
 			{
-
-				//AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf CurrentDomain_AssemblyResolve
-
+				
 				olv.ClearObjects();
-				//FOLV_Installs.Clear()
-				//FOLV_DetailsList.Refresh()
 				olv.SetObjects(Collection, true);
 				//update column size only if did not restore folv state file or forced
 				if (olv.Tag == null || ResizeCols)
@@ -36,7 +32,7 @@ namespace AITool
 				}
 				if (olv.Items.Count == 0)
 				{
-					olv.EmptyListMsg = "Nothing found.";
+					olv.EmptyListMsg = "Empty";
 				}
 
 			}
@@ -46,7 +42,6 @@ namespace AITool
 			}
 			finally
 			{
-				//RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf CurrentDomain_AssemblyResolve
 				olv.Unfreeze();
 
 			}
@@ -79,7 +74,7 @@ namespace AITool
 				FOLV.TintSortColumn = true;
 				FOLV.UseFiltering = true;
 				FOLV.UseHyperlinks = false; //may cause column save/restore error?
-				FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.None;
+				FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
 				FOLV.UseCellFormatEvents = true;
 				FOLV.UseNotifyPropertyChanged = true;
 
