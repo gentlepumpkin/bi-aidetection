@@ -3729,7 +3729,7 @@ namespace AITool
 
         private void UpdateQueueLabel()
         {
-            MethodInvoker LabelUpdate = delegate { lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms)"; };
+            MethodInvoker LabelUpdate = delegate { lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)"; };
             Invoke(LabelUpdate);
             
 
