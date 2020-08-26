@@ -48,6 +48,7 @@ namespace AITool
             public int retry_delay = 10;
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
+            public int MaxImageQueueSize = 100;
         }
 
         public static bool Save()

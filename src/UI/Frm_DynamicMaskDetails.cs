@@ -108,7 +108,7 @@ namespace AITool
                     {
                         if (op != null)
                         {
-                            Global.Log("Painting object");
+                            //Global.Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
                             int xmin = (int)(scale * op.xmin) + absX;
                             int xmax = (int)(scale * op.xmax) + absX;
@@ -148,7 +148,7 @@ namespace AITool
                         }
                         else
                         {
-                            Global.Log("op is empty");
+                            //Global.Log("op is empty");
                         }
                     }
 
@@ -158,11 +158,11 @@ namespace AITool
                     //debug a bit
                     if (CurObjPosLst.Count == 0)
                     {
-                        Global.Log("Empty object list");
+                        //Global.Log("Empty object list");
                     }
                     else if (e == null)
                     {
-                        Global.Log("Not painting");
+                        //Global.Log("Not painting");
                     }
                 }
 

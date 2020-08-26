@@ -556,7 +556,8 @@ namespace AITool
             string fileprefix = Path.GetFileNameWithoutExtension(CurImg.image_path).Split('.')[0]; //get prefix of inputted file
             int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
-            AppSettings.Settings.CameraList[index].last_image_file = CurImg.image_path;
+            Camera cam = AppSettings.Settings.CameraList[index];
+            cam.last_image_file = CurImg.image_path;
 
             if (index == -1)
             {
@@ -565,8 +566,8 @@ namespace AITool
             }
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
-            double mins = (DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes;
-            double halfcool = AppSettings.Settings.CameraList[index].cooldown_time / 2;
+            double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
+            double halfcool = cam.cooldown_time / 2;
             if (index == -1 || (mins >= halfcool)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
             {
                 //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
@@ -672,7 +673,7 @@ namespace AITool
                                             {
 
                                                 //if camera is enabled
-                                                if (AppSettings.Settings.CameraList[index].enabled == true)
+                                                if (cam.enabled == true)
                                                 {
 
                                                     //if something was detected
@@ -702,27 +703,27 @@ namespace AITool
                                                                 bool irrelevant_object = false;
 
                                                                 //if object detected is one of the objects that is relevant
-                                                                if (AppSettings.Settings.CameraList[index].triggering_objects_as_string.Contains(user.label))
+                                                                if (cam.triggering_objects_as_string.Contains(user.label))
                                                                 {
                                                                     // -> OBJECT IS RELEVANT
 
                                                                     //if confidence limits are satisfied
-                                                                    if (user.confidence * 100 >= AppSettings.Settings.CameraList[index].threshold_lower && user.confidence * 100 <= AppSettings.Settings.CameraList[index].threshold_upper)
+                                                                    if (user.confidence * 100 >= cam.threshold_lower && user.confidence * 100 <= cam.threshold_upper)
                                                                     {
                                                                         // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                                                         ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
-                                                                                                                          img.Width, img.Height, AppSettings.Settings.CameraList[index]);
+                                                                                                                          img.Width, img.Height, cam);
 
                                                                         bool maskExists = false;
-                                                                        if (AppSettings.Settings.CameraList[index].maskManager.masking_enabled)
+                                                                        if (cam.maskManager.masking_enabled)
                                                                         {
                                                                             //creates history and masked lists for objects returned
-                                                                            maskExists = AppSettings.Settings.CameraList[index].maskManager.CreateDynamicMask(currentObject);
+                                                                            maskExists = cam.maskManager.CreateDynamicMask(currentObject);
                                                                         }
 
                                                                         //only if the object is outside of the masked area
-                                                                        if (Outsidemask(AppSettings.Settings.CameraList[index].name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
+                                                                        if (Outsidemask(cam.name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
                                                                             && !maskExists)
                                                                         {
                                                                             // -> OBJECT IS OUTSIDE OF MASKED AREAS
@@ -763,17 +764,17 @@ namespace AITool
 
                                                         }  //end loop over current object list
 
-                                                        if (AppSettings.Settings.CameraList[index].maskManager.masking_enabled)
+                                                        if (cam.maskManager.masking_enabled)
                                                         {
                                                             //scan over all masked objects and decrement counter if not flagged as visible.
-                                                            AppSettings.Settings.CameraList[index].maskManager.CleanUpExpiredMasks(AppSettings.Settings.CameraList[index].name);
+                                                            cam.maskManager.CleanUpExpiredMasks(cam.name);
 
                                                             //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                                            AppSettings.Settings.CameraList[index].maskManager.CleanUpExpiredHistory(AppSettings.Settings.CameraList[index].name);
+                                                            cam.maskManager.CleanUpExpiredHistory(cam.name);
 
                                                             //log summary information for all masked objects
-                                                            Log("### Masked objects summary for camera " + AppSettings.Settings.CameraList[index].name + " ###");
-                                                            foreach (ObjectPosition maskedObject in AppSettings.Settings.CameraList[index].maskManager.masked_positions)
+                                                            Log("### Masked objects summary for camera " + cam.name + " ###");
+                                                            foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
                                                             {
                                                                 Log("\t" + maskedObject.ToString());
                                                             }
@@ -783,9 +784,9 @@ namespace AITool
                                                         if (objects.Count() > 0)
                                                         {
                                                             //store these last detections for the specific camera
-                                                            AppSettings.Settings.CameraList[index].last_detections = objects;
-                                                            AppSettings.Settings.CameraList[index].last_confidences = objects_confidence;
-                                                            AppSettings.Settings.CameraList[index].last_positions = objects_position;
+                                                            cam.last_detections = objects;
+                                                            cam.last_confidences = objects_confidence;
+                                                            cam.last_positions = objects_position;
 
 
                                                             //create summary string for this detection
@@ -798,14 +799,18 @@ namespace AITool
                                                             {
                                                                 detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
                                                             }
-                                                            AppSettings.Settings.CameraList[index].last_detections_summary = detectionsTextSb.ToString();
-                                                            Log("The summary:" + AppSettings.Settings.CameraList[index].last_detections_summary);
+                                                            cam.last_detections_summary = detectionsTextSb.ToString();
+                                                            Log("The summary:" + cam.last_detections_summary);
 
+                                                            //TODO - enable cancel url checkbox
+                                                            ////RELEVANT ALERT
+                                                            //if ()
+                                                            //{
 
-                                                            //RELEVANT ALERT
+                                                            //}
                                                             Log("(5/6) Performing alert actions:");
-                                                            await Trigger(index, CurImg.image_path); //make TRIGGER
-                                                            AppSettings.Settings.CameraList[index].IncrementAlerts(); //stats update
+                                                            await Trigger(cam, CurImg); //make TRIGGER
+                                                            cam.IncrementAlerts(); //stats update
                                                             Log($"(6/6) SUCCESS.");
 
 
@@ -823,7 +828,7 @@ namespace AITool
 
                                                             //add to history list
                                                             Log("Adding detection to history list.");
-                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, objects_and_confidences, object_positions_as_string);
+                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string);
 
                                                         }
                                                         //if no object fulfills all 3 requirements but there are other objects: 
@@ -832,8 +837,8 @@ namespace AITool
                                                             //IRRELEVANT ALERT
 
 
-                                                            AppSettings.Settings.CameraList[index].IncrementIrrelevantAlerts(); //stats update
-                                                            Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused an irrelevant alert.");
+                                                            cam.IncrementIrrelevantAlerts(); //stats update
+                                                            Log($"(6/6) Camera {cam.name} caused an irrelevant alert.");
                                                             //Log("Adding irrelevant detection to history list.");
 
                                                             //retrieve confidences and positions
@@ -867,7 +872,7 @@ namespace AITool
 
                                                             Log($"{text}, so it's an irrelevant alert.");
                                                             //add to history list
-                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, $"{text} : {objects_and_confidences}", object_positions_as_string);
+                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                         }
                                                     }
                                                     //if no object was detected
@@ -875,17 +880,17 @@ namespace AITool
                                                     {
                                                         // FALSE ALERT
 
-                                                        AppSettings.Settings.CameraList[index].IncrementFalseAlerts(); //stats update
-                                                        Log($"(6/6) Camera {AppSettings.Settings.CameraList[index].name} caused a false alert, nothing detected.");
+                                                        cam.IncrementFalseAlerts(); //stats update
+                                                        Log($"(6/6) Camera {cam.name} caused a false alert, nothing detected.");
 
                                                         //add to history list
                                                         Log("Adding false to history list.");
-                                                        CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), AppSettings.Settings.CameraList[index].name, "false alert", "");
+                                                        CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", "");
                                                     }
                                                 }
 
                                                 //if camera is disabled.
-                                                else if (AppSettings.Settings.CameraList[index].enabled == false)
+                                                else if (cam.enabled == false)
                                                 {
                                                     Log("(6/6) Selected camera is disabled.");
                                                 }
@@ -969,7 +974,7 @@ namespace AITool
                     //upload the alert image which could not be analyzed to Telegram
                     if (AppSettings.Settings.send_errors == true)
                     {
-                        await TelegramUpload(CurImg.image_path);
+                        await TelegramUpload(CurImg);
                     }
 
                 }
@@ -1045,7 +1050,7 @@ namespace AITool
         }
 
         //send image to Telegram
-        public async Task TelegramUpload(string image_path)
+        public async Task TelegramUpload(ClsImageQueueItem CurImg)
         {
             if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
             {
@@ -1053,7 +1058,7 @@ namespace AITool
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
-                    using (var image_telegram = System.IO.File.OpenRead(image_path))
+                    using (var image_telegram = System.IO.File.OpenRead(CurImg.image_path))
                     {
                         var bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
 
@@ -1072,7 +1077,7 @@ namespace AITool
                 }
                 catch
                 {
-                    Log($"ERROR: Could not upload image {image_path} to Telegram.");
+                    Log($"ERROR: Could not upload image {CurImg.image_path} to Telegram.");
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
                     {
@@ -1081,9 +1086,9 @@ namespace AITool
                         Log("./errors/" + " dir created.");
                     }
                     //save error image
-                    using (var image = SixLabors.ImageSharp.Image.Load(image_path))
+                    using (var image = SixLabors.ImageSharp.Image.Load(CurImg.image_path))
                     {
-                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(image_path) + ".jpg");
+                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
                     }
                 }
 
@@ -1130,31 +1135,31 @@ namespace AITool
         }
 
         //trigger actions
-        public async Task Trigger(int index, string image_path)
+        public async Task Trigger(Camera cam, ClsImageQueueItem CurImg)
         {
             //only trigger if cameras cooldown time since last detection has passed
-            if ((DateTime.Now - AppSettings.Settings.CameraList[index].last_trigger_time).TotalMinutes >= AppSettings.Settings.CameraList[index].cooldown_time)
+            if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= cam.cooldown_time)
             {
                 //call trigger urls
-                if (AppSettings.Settings.CameraList[index].trigger_urls.Length > 0)
+                if (cam.trigger_urls.Length > 0)
                 {
                     //replace url paramters with according values
-                    string[] urls = new string[AppSettings.Settings.CameraList[index].trigger_urls.Count()];
+                    string[] urls = new string[cam.trigger_urls.Count()];
                     int c = 0;
                     //call urls
-                    foreach (string url in AppSettings.Settings.CameraList[index].trigger_urls)
+                    foreach (string url in cam.trigger_urls)
                     {
                         try
                         {
-                            urls[c] = url.Replace("[camera]", AppSettings.Settings.CameraList[index].name)
-                                     .Replace("[detection]", AppSettings.Settings.CameraList[index].last_detections.ElementAt(0)) //only gives first detection (maybe not most relevant one)
-                                     .Replace("[position]", AppSettings.Settings.CameraList[index].last_positions.ElementAt(0))
-                                     .Replace("[confidence]", AppSettings.Settings.CameraList[index].last_confidences.ElementAt(0).ToString())
-                                     .Replace("[detections]", string.Join(",", AppSettings.Settings.CameraList[index].last_detections))
-                                     .Replace("[confidences]", string.Join(",", AppSettings.Settings.CameraList[index].last_confidences.ToString()))
-                                     .Replace("[imagepath]", image_path) //gives the full path of the image that caused the trigger
-                                     .Replace("[imagefilename]", Path.GetFileName(image_path)) //gives the image name of the image that caused the trigger
-                                     .Replace("[summary]", Uri.EscapeUriString(AppSettings.Settings.CameraList[index].last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                            urls[c] = url.Replace("[camera]", cam.name)
+                                     .Replace("[detection]", cam.last_detections.ElementAt(0)) //only gives first detection (maybe not most relevant one)
+                                     .Replace("[position]", cam.last_positions.ElementAt(0))
+                                     .Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString())
+                                     .Replace("[detections]", string.Join(",", cam.last_detections))
+                                     .Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()))
+                                     .Replace("[imagepath]", CurImg.image_path) //gives the full path of the image that caused the trigger
+                                     .Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)) //gives the image name of the image that caused the trigger
+                                     .Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
                         }
                         catch (Exception ex)
                         {
@@ -1169,22 +1174,22 @@ namespace AITool
 
 
                 //upload to telegram
-                if (AppSettings.Settings.CameraList[index].telegram_enabled)
+                if (cam.telegram_enabled)
                 {
                     Log("   Uploading image to Telegram...");
-                    await TelegramUpload(image_path);
+                    await TelegramUpload(CurImg);
                     Log("   -> Sent image to Telegram.");
                 }
             }
             else
             {
                 //log that nothing was done
-                Log($"   Camera {AppSettings.Settings.CameraList[index].name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                Log($"   Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
             }
 
-            AppSettings.Settings.CameraList[index].last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+            cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
-            Task ignoredAwaitableResult = this.LastTriggerInfo(index, AppSettings.Settings.CameraList[index].cooldown_time); //write info to label
+            Task ignoredAwaitableResult = this.LastTriggerInfo(cam); //write info to label
 
         }
 
@@ -1520,16 +1525,16 @@ namespace AITool
         }
 
         //add last trigger time to label on Overview page
-        private async Task LastTriggerInfo(int index, double minutes)
+        private async Task LastTriggerInfo(Camera cam)
         {
-            string text1 = $"{AppSettings.Settings.CameraList[index].name} last triggered at {AppSettings.Settings.CameraList[index].last_trigger_time}. Sleeping for {minutes / 2} minutes."; //write last trigger time to label on Overview page
+            string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
             lbl_info.Text = text1;
 
-            int time = 30 * Convert.ToInt32(1000 * minutes);
+            int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
             await Task.Delay(time); // wait while the analysis is sleeping for this camera
             if (lbl_info.Text == text1)
             {
-                lbl_info.Text = $"{AppSettings.Settings.CameraList[index].name} last triggered at {AppSettings.Settings.CameraList[index].last_trigger_time}."; //Remove "sleeping for ..."
+                lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
             }
         }
 
@@ -1657,7 +1662,7 @@ namespace AITool
 
             if (Success)
             {
-                if (comboBox1.Text == "All Cameras") //all cameras selected
+                if (comboBox1.Text.Trim() == "All Cameras") //all cameras selected
                 {
                     //load all lines except the first line
                     foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
@@ -1667,7 +1672,7 @@ namespace AITool
                 }
                 else //camera selection
                 {
-                    string cameraname = comboBox1.Text.Substring(3);
+                    string cameraname = comboBox1.Text.Trim();
 
                     //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
                     foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
@@ -1821,7 +1826,7 @@ namespace AITool
                 }
                 else //camera selection
                 {
-                    string cameraname = comboBox1.Text.Substring(3);
+                    string cameraname = comboBox1.Text.Trim();
 
                     //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
                     foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
@@ -2404,14 +2409,22 @@ namespace AITool
             }
             else
             {
-                Log("");
-                Log("Adding new image to queue: " + e.FullPath);
-                detection_dictionary.TryAdd(e.FullPath.ToLower(), e.FullPath);
+                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
                 int qsize = ImageProcessQueue.Count + 1;
-                ImageProcessQueue.Enqueue(new ClsImageQueueItem(e.FullPath, qsize));
-                qsizecalc.AddToCalc(qsize);
+                if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                {
+                    Log("");
+                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                }
+                else
+                {
+                    Log("");
+                    Log("Adding new image to queue: " + e.FullPath);
+                    detection_dictionary.TryAdd(e.FullPath.ToLower(), e.FullPath);
+                    ImageProcessQueue.Enqueue(new ClsImageQueueItem(e.FullPath, qsize));
+                    qsizecalc.AddToCalc(qsize);
+                }
                 UpdateQueueLabel();
-                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large numbers of items but I dont think we have to worry here in most cases
             }
 
 
@@ -2810,7 +2823,8 @@ namespace AITool
         //add camera
         private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
                                  string _input_path, bool _input_path_includesubfolders,
-                                 bool masking_enabled) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
+                                 bool masking_enabled,
+                                 bool trigger_cancels) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
@@ -2847,7 +2861,9 @@ namespace AITool
             }
 
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                           _input_path, _input_path_includesubfolders, masking_enabled); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+                           _input_path, _input_path_includesubfolders, 
+                           masking_enabled,
+                           trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
@@ -2867,7 +2883,9 @@ namespace AITool
 
         //change settings of camera
         private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
-                                    string _input_path, bool _input_path_includesubfolders, bool masking_enabled) //, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
+                                    string _input_path, bool _input_path_includesubfolders, 
+                                    bool masking_enabled,
+                                    bool trigger_cancels) //, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
         {
             //1. CHECK NEW VALUES 
             //check if name is empty
@@ -2904,7 +2922,9 @@ namespace AITool
 
             //2. WRITE CONFIG
             AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                                                               _input_path, _input_path_includesubfolders, masking_enabled); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+                                                               _input_path, _input_path_includesubfolders, 
+                                                               masking_enabled,
+                                                               trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
             LoadCameras();
 
@@ -3043,25 +3063,13 @@ namespace AITool
                 tb_threshold_upper.Text = AppSettings.Settings.CameraList[i].threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
-                if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
-                {
-                    cb_masking_enabled.Checked = true;
-                }
-                else
-                {
-                    cb_masking_enabled.Checked = false;
-                }
+                cb_masking_enabled.Checked = AppSettings.Settings.CameraList[i].maskManager.masking_enabled;
 
                 //load telegram image sending on/off option
-                if (AppSettings.Settings.CameraList[i].telegram_enabled)
-                {
-                    cb_telegram.Checked = true;
-                }
-                else
-                {
-                    cb_telegram.Checked = false;
-                }
+                cb_telegram.Checked = AppSettings.Settings.CameraList[i].telegram_enabled;
 
+
+                cb_TriggerCancels.Checked = AppSettings.Settings.CameraList[i].trigger_url_cancels;
 
                 //load triggering objects
                 //first create arrays with all checkboxes stored in
@@ -3134,6 +3142,7 @@ namespace AITool
                     string name = form.text;
                     string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,
                                                  "", false,
+                                                 false,
                                                  false);
                     MessageBox.Show(camresult);
                 }
@@ -3187,7 +3196,8 @@ namespace AITool
                 //// save new camera settings, display result in MessageBox
                 string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
                                              cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
-                                             cb_masking_enabled.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
+                                             cb_masking_enabled.Checked,
+                                             cb_TriggerCancels.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
 
                 AppSettings.Save();
 

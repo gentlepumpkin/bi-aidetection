@@ -38,6 +38,7 @@ namespace AITool
         public string trigger_urls_as_string = "";
         public string[] trigger_urls;
         public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
+        public bool trigger_url_cancels = false;
         public bool telegram_enabled;
         public bool enabled;
         public double cooldown_time;
@@ -73,7 +74,9 @@ namespace AITool
         //write config to file
         public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, 
                                  bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper, 
-                                 string _input_path, bool _input_path_includesubfolders, bool _masking_enabled) //, int _history_mins, int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
+                                 string _input_path, bool _input_path_includesubfolders, 
+                                 bool _masking_enabled,
+                                 bool trigger_cancels) //, int _history_mins, int _mask_create_counter, int _mask_remove_counter, double _percent_variance)
         {
             //if camera name (= settings file name) changed, the old settings file must be deleted
             //if(name != _name)
@@ -97,6 +100,7 @@ namespace AITool
             //Added by VorlonCD
             input_path = _input_path;
             input_path_includesubfolders = _input_path_includesubfolders;
+            trigger_url_cancels = trigger_cancels;
 
             //Merged from ClassObject's fork
             //Changes to this are now done via OK response frm Frm_DynamicMasking...
