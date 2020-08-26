@@ -1934,6 +1934,7 @@ namespace AITool
         public Decimal Min { get; private set; }
         public Decimal Max { get; private set; }
         public Decimal Count { get; private set; }
+        public Decimal Current { get; private set; }
 
 
         public MovingCalcs(int windowSize)
@@ -1955,6 +1956,8 @@ namespace AITool
         }
         public void AddToCalc(Decimal newSample)
         {
+
+            this.Current = newSample;
 
             if (newSample > 0)
             {
