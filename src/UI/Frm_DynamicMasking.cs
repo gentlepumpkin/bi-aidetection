@@ -19,7 +19,7 @@ namespace AITool
 
         private void Frm_DynamicMasking_Load(object sender, EventArgs e)
         {
-
+            CenterToParent();
         }
 
 
