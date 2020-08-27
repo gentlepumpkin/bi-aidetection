@@ -24,6 +24,12 @@ namespace AITool
     public static class Global
     {
         public static IProgress<string> progress = null;
+
+        public static String WildCardToRegular(String value)
+        {
+            return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
+        }
+
         public static void Log(string Message, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
