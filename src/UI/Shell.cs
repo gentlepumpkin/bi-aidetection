@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -126,7 +127,9 @@ namespace AITool
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Log("");
             Log("");
-            Log($"Starting {Application.ProductName} version {lbl_version.Text} ({AssemVer}) built on {Global.RetrieveLinkerTimestamp()}");
+            lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
+
+            Log($"Starting {Application.ProductName} {lbl_version.Text}");
             if (AppSettings.AlreadyRunning)
             {
                 Log("*** Another instance is already running *** ");
@@ -283,7 +286,7 @@ namespace AITool
 
             //Start the thread that watches for the file queue
             Task.Run(ImageQueueLoop);
-            
+
 
             this.Opacity = 1;
 
@@ -525,6 +528,121 @@ namespace AITool
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
+        public Camera GetCamera(String ImageOrNameOrPrefix)
+        {
+            Camera cam = null;
+            try
+            {
+                //search by path or filename prefix if we are passed a full path to image file
+                if (ImageOrNameOrPrefix.Contains("\\"))
+                {
+                    string pth = Path.GetDirectoryName(ImageOrNameOrPrefix);
+                    string fname = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix);
+                    int index = -1;
+                    //&CAM.%Y%m%d_%H%M%S
+                    //AIFOSCAMDRIVEWAY.20200827_131840312.jpg
+                    if (fname.Contains("."))
+                    {
+                        string fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0]; //get prefix of inputted file
+                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim().ToLower() == fileprefix.Trim().ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+
+                        if (index > -1)
+                        {
+                            //found
+                            cam = AppSettings.Settings.CameraList[index];
+                        }
+                    }
+
+                    //if it is not found, search by the input path
+                    if (index == -1)
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            //If the watched path is c:\bi\cameraname but the full path of found file is 
+                            //                       c:\bi\cameraname\date\time\randomefilename.jpg 
+                            //we just check the beginning of the path
+                            if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().ToLower().StartsWith(pth.ToLower()))
+                            {
+                                //found
+                                cam = ccam;
+                                break;
+
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        //found
+                        cam = AppSettings.Settings.CameraList[index];
+                    }
+
+                }
+                else
+                {
+                    //find by name or prefix
+                    //allow to use wildcards
+                    if (ImageOrNameOrPrefix.Contains("*") || ImageOrNameOrPrefix.Contains("?"))
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            if (Regex.IsMatch(ccam.name, Global.WildCardToRegular(ImageOrNameOrPrefix)) || Regex.IsMatch(ccam.prefix, Global.WildCardToRegular(ImageOrNameOrPrefix)))
+                            {
+                                cam = ccam;
+                                break;
+                            }
+                        }
+
+                    }
+                    else  //find by exact name or prefix
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            if (ccam.name.ToLower() == ImageOrNameOrPrefix.ToLower() || ccam.prefix.ToLower() == ImageOrNameOrPrefix.ToLower())
+                            {
+                                cam = ccam;
+                                break;
+                            }
+                        }
+
+                    }
+
+                }
+
+                //if we didnt find a camera see if there is a default camera name we can use without a prefix
+                if (cam == null)
+                {
+                    Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
+                    //check if there is a default camera which accepts any prefix, select it
+                    if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
+                    {
+                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
+                        cam = AppSettings.Settings.CameraList[i];
+                        Log($"(   Found a default camera: '{cam.name}')");
+                    }
+                    else
+                    {
+                        Log("WARNING: No default camera found. Aborting.");
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log(Global.ExMsg(ex));
+            }
+
+            if (cam == null)
+            {
+                Log($"Error: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
+            }
+
+            return cam;
+
+        }
+
         //analyze image with AI
         public async Task DetectObjects(ClsImageQueueItem CurImg)
         {
@@ -553,31 +671,24 @@ namespace AITool
 
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
 
-            string fileprefix = Path.GetFileNameWithoutExtension(CurImg.image_path).Split('.')[0]; //get prefix of inputted file
-            int index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
-            Camera cam = AppSettings.Settings.CameraList[index];
+            Camera cam = GetCamera(CurImg.image_path);
             cam.last_image_file = CurImg.image_path;
 
-            if (index == -1)
+            if (cam == null)
             {
-                Log($"Warning: Could not find camera prefix '{fileprefix}' for file '{CurImg.image_path}'.");
+                Log($"Warning: Could not find camera for file '{CurImg.image_path}'.");
                 return;
             }
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
             double halfcool = cam.cooldown_time / 2;
-            if (index == -1 || (mins >= halfcool)) //it's important that the condition index == 1 comes first, because if index is -1 and the second condition is checked, it will try to acces the CameraList at position -1 => the program cr
+            
+            if (mins >= halfcool) 
             {
-                //No need for loop, the OnCreatedAsync routine should not run DetectObjects until the file is no longer
-                //being accessed -Vorlon
-                //for (int attempts = 1; attempts < 10; attempts++)  //retry if file is in use by another process.
-                //{
                 try
                 {
-                    //error = "loading image failed";
-
                     using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
                     {
                         Log($"(1/6) Uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
@@ -649,252 +760,238 @@ namespace AITool
 
                                         if (response.success == true)
                                         {
-                                            //if there is no camera with the same prefix
-                                            if (index == -1)
-                                            {
-                                                Log("   No camera with the same prefix found: " + fileprefix);
-                                                //check if there is a default camera which accepts any prefix, select it
-                                                if (AppSettings.Settings.CameraList.Exists(x => x.prefix == ""))
-                                                {
-                                                    index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix == "");
-                                                    Log("(   Found a default camera.");
-                                                }
-                                                else
-                                                {
-                                                    Log("WARNING: No default camera found. Aborting.");
-                                                }
-                                            }
-
-                                            //index == -1 now means that no camera has the same prefix and no default camera exists. The alert therefore won't be used. 
 
 
-                                            //if a camera finally is associated with the inputted alert image
-                                            if (index != -1)
+                                            //if camera is enabled
+                                            if (cam.enabled == true)
                                             {
 
-                                                //if camera is enabled
-                                                if (cam.enabled == true)
+                                                //if something was detected
+                                                if (response.predictions.Length > 0)
                                                 {
+                                                    List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
+                                                    List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                                                    List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
 
-                                                    //if something was detected
-                                                    if (response.predictions.Length > 0)
+                                                    List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
+                                                    List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                                                    List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
+
+
+                                                    int masked_counter = 0; //this value is incremented if an object is in a masked area
+                                                    int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
+                                                    int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
+
+                                                    Log("(4/6) Checking if detected object is relevant and within confidence limits:");
+                                                    //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
+                                                    foreach (Object user in response.predictions)
                                                     {
-                                                        List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                                                        List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
-                                                        List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
+                                                        // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
 
-                                                        List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                                                        List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
-                                                        List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
-
-
-                                                        int masked_counter = 0; //this value is incremented if an object is in a masked area
-                                                        int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
-                                                        int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
-
-                                                        Log("(4/6) Checking if detected object is relevant and within confidence limits:");
-                                                        //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
-                                                        foreach (Object user in response.predictions)
+                                                        using (var img = new Bitmap(CurImg.image_path))
                                                         {
-                                                            // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+                                                            bool irrelevant_object = false;
 
-                                                            using (var img = new Bitmap(CurImg.image_path))
+                                                            //if object detected is one of the objects that is relevant
+                                                            if (cam.triggering_objects_as_string.Contains(user.label))
                                                             {
-                                                                bool irrelevant_object = false;
+                                                                // -> OBJECT IS RELEVANT
 
-                                                                //if object detected is one of the objects that is relevant
-                                                                if (cam.triggering_objects_as_string.Contains(user.label))
+                                                                //if confidence limits are satisfied
+                                                                if (user.confidence * 100 >= cam.threshold_lower && user.confidence * 100 <= cam.threshold_upper)
                                                                 {
-                                                                    // -> OBJECT IS RELEVANT
+                                                                    // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                                                    //if confidence limits are satisfied
-                                                                    if (user.confidence * 100 >= cam.threshold_lower && user.confidence * 100 <= cam.threshold_upper)
+                                                                    ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
+                                                                                                                      img.Width, img.Height, cam);
+
+                                                                    bool maskExists = false;
+                                                                    if (cam.maskManager.masking_enabled)
                                                                     {
-                                                                        // -> OBJECT IS WITHIN CONFIDENCE LIMITS
-
-                                                                        ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
-                                                                                                                          img.Width, img.Height, cam);
-
-                                                                        bool maskExists = false;
-                                                                        if (cam.maskManager.masking_enabled)
-                                                                        {
-                                                                            //creates history and masked lists for objects returned
-                                                                            maskExists = cam.maskManager.CreateDynamicMask(currentObject);
-                                                                        }
-
-                                                                        //only if the object is outside of the masked area
-                                                                        if (Outsidemask(cam.name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
-                                                                            && !maskExists)
-                                                                        {
-                                                                            // -> OBJECT IS OUTSIDE OF MASKED AREAS
-
-                                                                            objects.Add(user.label);
-                                                                            objects_confidence.Add(user.confidence);
-                                                                            string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                            objects_position.Add(position);
-                                                                            Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
-                                                                        }
-                                                                        else //if the object is in a masked area
-                                                                        {
-                                                                            masked_counter++;
-                                                                            irrelevant_object = true;
-                                                                        }
+                                                                        //creates history and masked lists for objects returned
+                                                                        maskExists = cam.maskManager.CreateDynamicMask(currentObject);
                                                                     }
-                                                                    else //if confidence limits are not satisfied
+
+                                                                    //only if the object is outside of the masked area
+                                                                    if (Outsidemask(cam.name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
+                                                                        && !maskExists)
                                                                     {
-                                                                        threshold_counter++;
+                                                                        // -> OBJECT IS OUTSIDE OF MASKED AREAS
+
+                                                                        objects.Add(user.label);
+                                                                        objects_confidence.Add(user.confidence);
+                                                                        string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                        objects_position.Add(position);
+                                                                        Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                    }
+                                                                    else //if the object is in a masked area
+                                                                    {
+                                                                        masked_counter++;
                                                                         irrelevant_object = true;
                                                                     }
                                                                 }
-                                                                else //if object is not relevant
+                                                                else //if confidence limits are not satisfied
                                                                 {
-                                                                    irrelevant_counter++;
+                                                                    threshold_counter++;
                                                                     irrelevant_object = true;
                                                                 }
-
-                                                                if (irrelevant_object == true)
-                                                                {
-                                                                    irrelevant_objects.Add(user.label);
-                                                                    irrelevant_objects_confidence.Add(user.confidence);
-                                                                    string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                    irrelevant_objects_position.Add(position);
-                                                                    Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
-                                                                }
+                                                            }
+                                                            else //if object is not relevant
+                                                            {
+                                                                irrelevant_counter++;
+                                                                irrelevant_object = true;
                                                             }
 
-                                                        }  //end loop over current object list
-
-                                                        if (cam.maskManager.masking_enabled)
-                                                        {
-                                                            //scan over all masked objects and decrement counter if not flagged as visible.
-                                                            cam.maskManager.CleanUpExpiredMasks(cam.name);
-
-                                                            //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                                            cam.maskManager.CleanUpExpiredHistory(cam.name);
-
-                                                            //log summary information for all masked objects
-                                                            Log("### Masked objects summary for camera " + cam.name + " ###");
-                                                            foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
+                                                            if (irrelevant_object == true)
                                                             {
-                                                                Log("\t" + maskedObject.ToString());
+                                                                irrelevant_objects.Add(user.label);
+                                                                irrelevant_objects_confidence.Add(user.confidence);
+                                                                string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
+                                                                irrelevant_objects_position.Add(position);
+                                                                Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
                                                             }
                                                         }
 
-                                                        //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                                        if (objects.Count() > 0)
+                                                    }  //end loop over current object list
+
+                                                    if (cam.maskManager.masking_enabled)
+                                                    {
+                                                        //scan over all masked objects and decrement counter if not flagged as visible.
+                                                        cam.maskManager.CleanUpExpiredMasks(cam.name);
+
+                                                        //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
+                                                        cam.maskManager.CleanUpExpiredHistory(cam.name);
+
+                                                        //log summary information for all masked objects
+                                                        Log("### Masked objects summary for camera " + cam.name + " ###");
+                                                        foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
                                                         {
-                                                            //store these last detections for the specific camera
-                                                            cam.last_detections = objects;
-                                                            cam.last_confidences = objects_confidence;
-                                                            cam.last_positions = objects_position;
+                                                            Log("\t" + maskedObject.ToString());
+                                                        }
+                                                    }
+
+                                                    //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
+                                                    if (objects.Count() > 0 )
+                                                    {
+                                                        //store these last detections for the specific camera
+                                                        cam.last_detections = objects;
+                                                        cam.last_confidences = objects_confidence;
+                                                        cam.last_positions = objects_position;
 
 
-                                                            //create summary string for this detection
-                                                            StringBuilder detectionsTextSb = new StringBuilder();
-                                                            for (int i = 0; i < objects.Count(); i++)
-                                                            {
-                                                                detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
-                                                            }
-                                                            if (detectionsTextSb.Length >= 3)
-                                                            {
-                                                                detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
-                                                            }
-                                                            cam.last_detections_summary = detectionsTextSb.ToString();
-                                                            Log("The summary:" + cam.last_detections_summary);
+                                                        //create summary string for this detection
+                                                        StringBuilder detectionsTextSb = new StringBuilder();
+                                                        for (int i = 0; i < objects.Count(); i++)
+                                                        {
+                                                            detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                        }
+                                                        if (detectionsTextSb.Length >= 3)
+                                                        {
+                                                            detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
+                                                        }
+                                                        cam.last_detections_summary = detectionsTextSb.ToString();
+                                                        Log("The summary:" + cam.last_detections_summary);
 
-                                                            //TODO - enable cancel url checkbox
-                                                            ////RELEVANT ALERT
-                                                            //if ()
-                                                            //{
-
-                                                            //}
+                                                        if (!cam.trigger_url_cancels)
+                                                        {
                                                             Log("(5/6) Performing alert actions:");
                                                             await Trigger(cam, CurImg); //make TRIGGER
-                                                            cam.IncrementAlerts(); //stats update
-                                                            Log($"(6/6) SUCCESS.");
-
-
-
-
-
-                                                            //create text string objects and confidences
-                                                            string objects_and_confidences = "";
-                                                            string object_positions_as_string = "";
-                                                            for (int i = 0; i < objects.Count; i++)
-                                                            {
-                                                                objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
-                                                                object_positions_as_string += $"{objects_position[i]};";
-                                                            }
-
-                                                            //add to history list
-                                                            Log("Adding detection to history list.");
-                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string);
-
                                                         }
-                                                        //if no object fulfills all 3 requirements but there are other objects: 
-                                                        else if (irrelevant_objects.Count() > 0)
+                                                        else
                                                         {
-                                                            //IRRELEVANT ALERT
+                                                            //Skip the trigger since the trigger url is for canceling a non valid alert
+                                                            Log("(5/6) Skipping alert actions because URL CANCELS.");
+                                                            cam.IncrementAlerts(); //stats update
 
-
-                                                            cam.IncrementIrrelevantAlerts(); //stats update
-                                                            Log($"(6/6) Camera {cam.name} caused an irrelevant alert.");
-                                                            //Log("Adding irrelevant detection to history list.");
-
-                                                            //retrieve confidences and positions
-                                                            string objects_and_confidences = "";
-                                                            string object_positions_as_string = "";
-                                                            for (int i = 0; i < irrelevant_objects.Count; i++)
-                                                            {
-                                                                objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                                object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                                            }
-
-                                                            //string text contains what is written in the log and in the history list
-                                                            string text = "";
-                                                            if (masked_counter > 0)//if masked objects, add them
-                                                            {
-                                                                text += $"{masked_counter}x masked; ";
-                                                            }
-                                                            if (threshold_counter > 0)//if objects out of confidence range, add them
-                                                            {
-                                                                text += $"{threshold_counter}x not in confidence range; ";
-                                                            }
-                                                            if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                                            {
-                                                                text += $"{irrelevant_counter}x irrelevant; ";
-                                                            }
-
-                                                            if (text != "") //remove last ";"
-                                                            {
-                                                                text = text.Remove(text.Length - 2);
-                                                            }
-
-                                                            Log($"{text}, so it's an irrelevant alert.");
-                                                            //add to history list
-                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                         }
-                                                    }
-                                                    //if no object was detected
-                                                    else if (response.predictions.Length == 0)
-                                                    {
-                                                        // FALSE ALERT
+                                                        Log($"(6/6) SUCCESS.");
 
-                                                        cam.IncrementFalseAlerts(); //stats update
-                                                        Log($"(6/6) Camera {cam.name} caused a false alert, nothing detected.");
+                                                        //create text string objects and confidences
+                                                        string objects_and_confidences = "";
+                                                        string object_positions_as_string = "";
+                                                        for (int i = 0; i < objects.Count; i++)
+                                                        {
+                                                            objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
+                                                            object_positions_as_string += $"{objects_position[i]};";
+                                                        }
 
                                                         //add to history list
-                                                        Log("Adding false to history list.");
-                                                        CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", "");
+                                                        Log("Adding detection to history list.");
+                                                        CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string);
+
+                                                    }
+                                                    //if no object fulfills all 3 requirements but there are other objects: 
+                                                    else if (irrelevant_objects.Count() > 0)
+                                                    {
+                                                        //IRRELEVANT ALERT
+
+                                                        if (cam.trigger_url_cancels)
+                                                        {
+                                                            Log("(5/6) Performing alert CANCEL actions:");
+                                                            await Trigger(cam, CurImg); //make TRIGGER
+                                                        }
+                                                        cam.IncrementIrrelevantAlerts(); //stats update
+                                                        Log($"(6/6) Camera {cam.name} caused an irrelevant alert.");
+                                                        //Log("Adding irrelevant detection to history list.");
+
+                                                        //retrieve confidences and positions
+                                                        string objects_and_confidences = "";
+                                                        string object_positions_as_string = "";
+                                                        for (int i = 0; i < irrelevant_objects.Count; i++)
+                                                        {
+                                                            objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                                            object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                        }
+
+                                                        //string text contains what is written in the log and in the history list
+                                                        string text = "";
+                                                        if (masked_counter > 0)//if masked objects, add them
+                                                        {
+                                                            text += $"{masked_counter}x masked; ";
+                                                        }
+                                                        if (threshold_counter > 0)//if objects out of confidence range, add them
+                                                        {
+                                                            text += $"{threshold_counter}x not in confidence range; ";
+                                                        }
+                                                        if (irrelevant_counter > 0) //if other irrelevant objects, add them
+                                                        {
+                                                            text += $"{irrelevant_counter}x irrelevant; ";
+                                                        }
+
+                                                        if (text != "") //remove last ";"
+                                                        {
+                                                            text = text.Remove(text.Length - 2);
+                                                        }
+
+                                                        Log($"{text}, so it's an irrelevant alert.");
+                                                        //add to history list
+                                                        CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                     }
                                                 }
-
-                                                //if camera is disabled.
-                                                else if (cam.enabled == false)
+                                                //if no object was detected
+                                                else if (response.predictions.Length == 0)
                                                 {
-                                                    Log("(6/6) Selected camera is disabled.");
-                                                }
+                                                    // FALSE ALERT
 
+                                                    if (cam.trigger_url_cancels)
+                                                    {
+                                                        Log("(5/6) Performing alert CANCEL actions:");
+                                                        await Trigger(cam, CurImg); //make TRIGGER
+                                                    }
+                                                    Log($"(6/6) SUCCESS.");
+                                                    cam.IncrementFalseAlerts(); //stats update
+                                                    Log($"(6/6) Camera {cam.name} caused a false alert, nothing detected.");
+
+                                                    //add to history list
+                                                    Log("Adding false to history list.");
+                                                    CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", "");
+                                                }
+                                            }
+
+                                            //if camera is disabled.
+                                            else if (cam.enabled == false)
+                                            {
+                                                Log("(6/6) Selected camera is disabled.");
                                             }
 
                                         }
@@ -937,13 +1034,13 @@ namespace AITool
                     {
                         if (list2.SelectedItems.Count > 0)
                         {
-                                //load only stats from Camera.cs object
+                            //load only stats from Camera.cs object
 
-                                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
+                            //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                            int i = AppSettings.Settings.CameraList.FindIndex(x => x.name == list2.SelectedItems[0].Text);
 
-                                //load cameras stats
-                                string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
+                            //load cameras stats
+                            string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
                             if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
                             {
                                 stats += $" | Mask History Count: {AppSettings.Settings.CameraList[i].maskManager.last_positions_history.Count()} | Current Dynamic Masks: {AppSettings.Settings.CameraList[i].maskManager.masked_positions.Count()}";
@@ -989,12 +1086,12 @@ namespace AITool
                 dcalc.AddToCalc(CurImg.DeepStackTimeMS);
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
-                
+
 
                 Log($"...Object detection finished: ");
                 Log($"       Total Time:   {{yellow}}{CurImg.TotalTimeMS}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
                 Log($"   DeepStack Time:   {{yellow}}{CurImg.DeepStackTimeMS}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
-                
+
                 //I want to highlight when we have to wait for the last detection (or for the file to become readable) too long
                 if (CurImg.QueueWaitMS + CurImg.FileLockMS >= 500)
                 {
@@ -1014,7 +1111,7 @@ namespace AITool
             }
             else
             {
-                Log($"Skipping detection. Found='{index}', Mins since last submission='{mins}', halfcool={halfcool}");
+                Log($"Skipping detection for file {filename}. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
             }
 
 
@@ -2861,7 +2958,7 @@ namespace AITool
             }
 
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                           _input_path, _input_path_includesubfolders, 
+                           _input_path, _input_path_includesubfolders,
                            masking_enabled,
                            trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
@@ -2883,7 +2980,7 @@ namespace AITool
 
         //change settings of camera
         private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
-                                    string _input_path, bool _input_path_includesubfolders, 
+                                    string _input_path, bool _input_path_includesubfolders,
                                     bool masking_enabled,
                                     bool trigger_cancels) //, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
         {
@@ -2922,7 +3019,7 @@ namespace AITool
 
             //2. WRITE CONFIG
             AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                                                               _input_path, _input_path_includesubfolders, 
+                                                               _input_path, _input_path_includesubfolders,
                                                                masking_enabled,
                                                                trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
 
@@ -3741,7 +3838,7 @@ namespace AITool
         {
             MethodInvoker LabelUpdate = delegate { lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)"; };
             Invoke(LabelUpdate);
-            
+
 
         }
     }
