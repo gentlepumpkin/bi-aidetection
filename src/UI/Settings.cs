@@ -326,6 +326,9 @@ namespace AITool
 
                     }
 
+                    //sort the camera list:
+                    AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
+
                     Ret = true;
                 }
                 else
