@@ -56,10 +56,10 @@ namespace AITool
         public int stats_false_alerts; //alert image contained no object counter
         public int stats_irrelevant_alerts; //alert image contained irrelevant object counter
 
+        public string last_image_file = "";
+
         [JsonIgnore]
         public DateTime last_trigger_time;
-        [JsonIgnore]
-        public string last_image_file = "";
         [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         [JsonIgnore]

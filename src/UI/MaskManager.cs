@@ -11,11 +11,7 @@ namespace AITool
         public int history_save_mins { get; set; } = 5;                        //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;                 //number of times object is seen in same position before moving it to the masked_positions list
         public double thresholdPercent { get; set; } = .08;
-
-        [JsonIgnore]
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period (history_save_mins)
-
-        [JsonIgnore]
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list
 
         //[JsonIgnore]

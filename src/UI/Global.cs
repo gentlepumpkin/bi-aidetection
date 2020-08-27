@@ -456,6 +456,8 @@ namespace AITool
             {
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+
                 Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,jset);
                 if (jset.Error == null)
                 {
@@ -500,8 +502,11 @@ namespace AITool
             {
                 reader = new StreamReader(filePath);
                 var fileContents = reader.ReadToEnd();
+
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+
                 Ret = JsonConvert.DeserializeObject<T>(fileContents,jset);
             }
             catch (Exception ex)
@@ -526,6 +531,8 @@ namespace AITool
 
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+
                 string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
                 if (jset.Error == null)
                 {
