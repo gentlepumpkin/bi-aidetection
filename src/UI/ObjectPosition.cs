@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrightIdeasSoftware;
+using System;
 using System.Collections.Generic;
 
 namespace AITool
@@ -7,20 +8,19 @@ namespace AITool
     {
         public string label { get; }
         public DateTime createDate { get; }
-        public Boolean isVisible { get; set; } = false;
         public int counter { get; set; }
-        //object position +- threshold max variances to determine positive match. 
-        //Threshold percentage variable -- percentage variation in object position between detections.
-        public double thresholdPercent { get; set; }
         public int xmin { get; }
         public int ymin { get; }
         public int xmax { get; }
         public int ymax { get; }
         public int height { get; }
         public int width { get; }
+        public double thresholdPercent { get; set; }
+        public long key { get; }
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }
-        public long key { get; }
+        public Boolean isVisible { get; set; } = false;
+        
         public Camera camera { get; set; }
 
 
