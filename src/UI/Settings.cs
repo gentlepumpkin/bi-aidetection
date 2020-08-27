@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using System.Xml.XPath;
-using System.Configuration;
 
 namespace AITool
 {
@@ -280,7 +279,6 @@ namespace AITool
 
                 if (Settings != null)
                 {
-                    
                     //load cameras the old way if needed
                     if (Settings.CameraList.Count == 0)
                     {
@@ -327,9 +325,6 @@ namespace AITool
                         Resave = (cnt > 1);
 
                     }
-
-                    //sort cameras by name
-                    AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
 
                     Ret = true;
                 }
