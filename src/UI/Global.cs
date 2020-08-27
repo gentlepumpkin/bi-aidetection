@@ -25,6 +25,122 @@ namespace AITool
     {
         public static IProgress<string> progress = null;
 
+        public static Camera GetCamera(String ImageOrNameOrPrefix)
+        {
+            Camera cam = null;
+            try
+            {
+                //search by path or filename prefix if we are passed a full path to image file
+                if (ImageOrNameOrPrefix.Contains("\\"))
+                {
+                    string pth = Path.GetDirectoryName(ImageOrNameOrPrefix);
+                    string fname = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix);
+                    int index = -1;
+                    //&CAM.%Y%m%d_%H%M%S
+                    //AIFOSCAMDRIVEWAY.20200827_131840312.jpg
+                    if (fname.Contains("."))
+                    {
+                        string fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0]; //get prefix of inputted file
+                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim().ToLower() == fileprefix.Trim().ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+
+                        if (index > -1)
+                        {
+                            //found
+                            cam = AppSettings.Settings.CameraList[index];
+                        }
+                    }
+
+                    //if it is not found, search by the input path
+                    if (index == -1)
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            //If the watched path is c:\bi\cameraname but the full path of found file is 
+                            //                       c:\bi\cameraname\date\time\randomefilename.jpg 
+                            //we just check the beginning of the path
+                            if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().ToLower().StartsWith(pth.ToLower()))
+                            {
+                                //found
+                                cam = ccam;
+                                break;
+
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        //found
+                        cam = AppSettings.Settings.CameraList[index];
+                    }
+
+                }
+                else
+                {
+                    //find by name or prefix
+                    //allow to use wildcards
+                    if (ImageOrNameOrPrefix.Contains("*") || ImageOrNameOrPrefix.Contains("?"))
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            if (Regex.IsMatch(ccam.name, Global.WildCardToRegular(ImageOrNameOrPrefix)) || Regex.IsMatch(ccam.prefix, Global.WildCardToRegular(ImageOrNameOrPrefix)))
+                            {
+                                cam = ccam;
+                                break;
+                            }
+                        }
+
+                    }
+                    else  //find by exact name or prefix
+                    {
+                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        {
+                            if (ccam.name.ToLower() == ImageOrNameOrPrefix.ToLower() || ccam.prefix.ToLower() == ImageOrNameOrPrefix.ToLower())
+                            {
+                                cam = ccam;
+                                break;
+                            }
+                        }
+
+                    }
+
+                }
+
+                //if we didnt find a camera see if there is a default camera name we can use without a prefix
+                if (cam == null)
+                {
+                    Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
+                    //check if there is a default camera which accepts any prefix, select it
+                    if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
+                    {
+                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
+                        cam = AppSettings.Settings.CameraList[i];
+                        Log($"(   Found a default camera: '{cam.name}')");
+                    }
+                    else
+                    {
+                        Log("WARNING: No default camera found. Aborting.");
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log(Global.ExMsg(ex));
+            }
+
+            if (cam == null)
+            {
+                Log($"Error: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
+            }
+
+            return cam;
+
+        }
+
+
         public static String WildCardToRegular(String value)
         {
             return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";

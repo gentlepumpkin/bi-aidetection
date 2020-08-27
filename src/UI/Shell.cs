@@ -527,120 +527,6 @@ namespace AITool
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
-        public Camera GetCamera(String ImageOrNameOrPrefix)
-        {
-            Camera cam = null;
-            try
-            {
-                //search by path or filename prefix if we are passed a full path to image file
-                if (ImageOrNameOrPrefix.Contains("\\"))
-                {
-                    string pth = Path.GetDirectoryName(ImageOrNameOrPrefix);
-                    string fname = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix);
-                    int index = -1;
-                    //&CAM.%Y%m%d_%H%M%S
-                    //AIFOSCAMDRIVEWAY.20200827_131840312.jpg
-                    if (fname.Contains("."))
-                    {
-                        string fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0]; //get prefix of inputted file
-                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim().ToLower() == fileprefix.Trim().ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
-
-                        if (index > -1)
-                        {
-                            //found
-                            cam = AppSettings.Settings.CameraList[index];
-                        }
-                    }
-
-                    //if it is not found, search by the input path
-                    if (index == -1)
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            //If the watched path is c:\bi\cameraname but the full path of found file is 
-                            //                       c:\bi\cameraname\date\time\randomefilename.jpg 
-                            //we just check the beginning of the path
-                            if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().ToLower().StartsWith(pth.ToLower()))
-                            {
-                                //found
-                                cam = ccam;
-                                break;
-
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        //found
-                        cam = AppSettings.Settings.CameraList[index];
-                    }
-
-                }
-                else
-                {
-                    //find by name or prefix
-                    //allow to use wildcards
-                    if (ImageOrNameOrPrefix.Contains("*") || ImageOrNameOrPrefix.Contains("?"))
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            if (Regex.IsMatch(ccam.name, Global.WildCardToRegular(ImageOrNameOrPrefix)) || Regex.IsMatch(ccam.prefix, Global.WildCardToRegular(ImageOrNameOrPrefix)))
-                            {
-                                cam = ccam;
-                                break;
-                            }
-                        }
-
-                    }
-                    else  //find by exact name or prefix
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            if (ccam.name.ToLower() == ImageOrNameOrPrefix.ToLower() || ccam.prefix.ToLower() == ImageOrNameOrPrefix.ToLower())
-                            {
-                                cam = ccam;
-                                break;
-                            }
-                        }
-
-                    }
-
-                }
-
-                //if we didnt find a camera see if there is a default camera name we can use without a prefix
-                if (cam == null)
-                {
-                    Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
-                    //check if there is a default camera which accepts any prefix, select it
-                    if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
-                    {
-                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
-                        cam = AppSettings.Settings.CameraList[i];
-                        Log($"(   Found a default camera: '{cam.name}')");
-                    }
-                    else
-                    {
-                        Log("WARNING: No default camera found. Aborting.");
-                    }
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log(Global.ExMsg(ex));
-            }
-
-            if (cam == null)
-            {
-                Log($"Error: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
-            }
-
-            return cam;
-
-        }
 
         //analyze image with AI
         public async Task DetectObjects(ClsImageQueueItem CurImg)
@@ -671,7 +557,7 @@ namespace AITool
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
 
 
-            Camera cam = GetCamera(CurImg.image_path);
+            Camera cam = Global.GetCamera(CurImg.image_path);
             cam.last_image_file = CurImg.image_path;
 
             //only analyze if 50% of the cameras cooldown time since last detection has passed
@@ -3109,20 +2995,20 @@ namespace AITool
                 //load remaining settings from Camera.cs object
 
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+                Camera cam = Global.GetCamera(tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
 
                 //load cameras stats
 
-                string stats = $"Alerts: {AppSettings.Settings.CameraList[i].stats_alerts.ToString()} | Irrelevant Alerts: {AppSettings.Settings.CameraList[i].stats_irrelevant_alerts.ToString()} | False Alerts: {AppSettings.Settings.CameraList[i].stats_false_alerts.ToString()}";
+                string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
 
-                if (AppSettings.Settings.CameraList[i].maskManager.masking_enabled)
+                if (cam.maskManager.masking_enabled)
                 {
-                    stats += $" | Mask History Count: {AppSettings.Settings.CameraList[i].maskManager.last_positions_history.Count()} | Current Dynamic Masks: {AppSettings.Settings.CameraList[i].maskManager.masked_positions.Count()}";
+                    stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
                 }
                 lbl_camstats.Text = stats;
 
                 //load if ai detection is active for the camera
-                if (AppSettings.Settings.CameraList[i].enabled == true)
+                if (cam.enabled == true)
                 {
                     cb_enabled.Checked = true;
                 }
@@ -3130,11 +3016,11 @@ namespace AITool
                 {
                     cb_enabled.Checked = false;
                 }
-                tbPrefix.Text = AppSettings.Settings.CameraList[i].prefix; //load 'input file begins with'
+                tbPrefix.Text = cam.prefix; //load 'input file begins with'
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
-                tbTriggerUrl.Text = AppSettings.Settings.CameraList[i].trigger_urls_as_string; //load trigger url
+                tbTriggerUrl.Text = cam.trigger_urls_as_string; //load trigger url
 
-                cmbcaminput.Text = AppSettings.Settings.CameraList[i].input_path;
+                cmbcaminput.Text = cam.input_path;
                 cmbcaminput.Items.Clear();
                 foreach (string pth in BlueIrisInfo.ClipPaths)
                 {
@@ -3145,19 +3031,19 @@ namespace AITool
                         cmbcaminput.Text = pth;
                     }
                 }
-                cb_monitorCamInputfolder.Checked = AppSettings.Settings.CameraList[i].input_path_includesubfolders;
-                tb_cooldown.Text = AppSettings.Settings.CameraList[i].cooldown_time.ToString(); //load cooldown time
-                tb_threshold_lower.Text = AppSettings.Settings.CameraList[i].threshold_lower.ToString(); //load lower threshold value
-                tb_threshold_upper.Text = AppSettings.Settings.CameraList[i].threshold_upper.ToString(); // load upper threshold value
+                cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
+                tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
+                tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
+                tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
-                cb_masking_enabled.Checked = AppSettings.Settings.CameraList[i].maskManager.masking_enabled;
+                cb_masking_enabled.Checked = cam.maskManager.masking_enabled;
 
                 //load telegram image sending on/off option
-                cb_telegram.Checked = AppSettings.Settings.CameraList[i].telegram_enabled;
+                cb_telegram.Checked = cam.telegram_enabled;
 
 
-                cb_TriggerCancels.Checked = AppSettings.Settings.CameraList[i].trigger_url_cancels;
+                cb_TriggerCancels.Checked = cam.trigger_url_cancels;
 
                 //load triggering objects
                 //first create arrays with all checkboxes stored in
@@ -3174,7 +3060,7 @@ namespace AITool
                 //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
                 for (int j = 0; j < cbarray.Length; j++)
                 {
-                    if (AppSettings.Settings.CameraList[i].triggering_objects_as_string.Contains(cbstringarray[j]))
+                    if (cam.triggering_objects_as_string.Contains(cbstringarray[j]))
                     {
                         cbarray[j].Checked = true;
                     }
