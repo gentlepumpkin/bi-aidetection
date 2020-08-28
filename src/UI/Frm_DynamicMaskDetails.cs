@@ -227,5 +227,19 @@ namespace AITool
         {
             ShowImageMask(e);
         }
+
+        private void lblClearMasks_Click(object sender, EventArgs e)
+        {
+            cam.maskManager.masked_positions.Clear();
+            Refresh();
+            AppSettings.Save();
+        }
+
+        private void lblClearHistory_Click(object sender, EventArgs e)
+        {
+            cam.maskManager.last_positions_history.Clear();
+            Refresh();
+            AppSettings.Save();
+        }
     }
 }
