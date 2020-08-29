@@ -529,37 +529,25 @@ namespace AITool
 
 
         //analyze image with AI
-        public async Task DetectObjects(ClsImageQueueItem CurImg)
+        public async Task DetectObjects(ClsImageQueueItem CurImg, string DeepStackURL)
         {
-
+            
             //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
 
             string filename = Path.GetFileName(CurImg.image_path);
 
-            Log($"Starting analysis of {CurImg.image_path}...");
 
             Stopwatch sw = Stopwatch.StartNew();
             Stopwatch swposttime = Stopwatch.StartNew();
 
-            var fullDeepstackUrl = "";
-            //allows both "http://ip:port" and "ip:port"
-            if (!AppSettings.Settings.deepstack_url.Contains("http://")) //"ip:port"
-            {
-                fullDeepstackUrl = "http://" + AppSettings.Settings.deepstack_url + "/v1/vision/detection";
-            }
-            else //"http://ip:port"
-            {
-                fullDeepstackUrl = AppSettings.Settings.deepstack_url + "/v1/vision/detection";
-            }
-
-
-            // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
-
+            Uri url = new Uri(DeepStackURL);
+            String CurSrv = url.Host + ":" + url.Port;
 
             Camera cam = Global.GetCamera(CurImg.image_path);
             cam.last_image_file = CurImg.image_path;
 
+            // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
             double halfcool = cam.cooldown_time / 2;
@@ -567,11 +555,11 @@ namespace AITool
             {
                 try
                 {
-                    //error = "loading image failed";
+                    Log($"{CurSrv} - Starting analysis of {CurImg.image_path}...");
 
                     using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
                     {
-                        Log($"(1/6) Uploading image to DeepQuestAI Server at {fullDeepstackUrl}");
+                        Log($"{CurSrv} - (1/6) Uploading image to DeepQuestAI Server at {DeepStackURL}");
 
                         //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
 
@@ -580,7 +568,7 @@ namespace AITool
 
                         swposttime = Stopwatch.StartNew();
 
-                        using (HttpResponseMessage output = await client.PostAsync(fullDeepstackUrl, request))
+                        using (HttpResponseMessage output = await client.PostAsync(url, request))
                         {
                             swposttime.Stop();
 
@@ -592,8 +580,8 @@ namespace AITool
 
                                 if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
                                 {
-                                    Log($"(2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
-                                    Log($"(3/6) Processing results...");
+                                    Log($"{CurSrv} - (2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
+                                    Log($"{CurSrv} - (3/6) Processing results...");
 
                                     Response response = null;
                                     try
@@ -603,7 +591,7 @@ namespace AITool
                                     }
                                     catch (Exception ex)
                                     {
-                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                        error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
                                         Log(error);
                                     }
 
@@ -613,7 +601,7 @@ namespace AITool
                                         //error = $"Failure in DeepStack processing the image.";
 
                                         //print every detected object with the according confidence-level
-                                        string outputtext = "   Detected objects:";
+                                        string outputtext = $"{CurSrv} -    Detected objects:";
 
                                         if (response.predictions != null)
                                         {
@@ -633,7 +621,7 @@ namespace AITool
                                         }
                                         else
                                         {
-                                            outputtext = $"(Error: No predictions?  JSON: '{cleanjsonString}')";
+                                            outputtext = $"{CurSrv} - (Error: No predictions?  JSON: '{cleanjsonString}')";
                                         }
 
                                         Log(outputtext);
@@ -661,7 +649,7 @@ namespace AITool
                                                     int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
                                                     int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
 
-                                                    Log("(4/6) Checking if detected object is relevant and within confidence limits:");
+                                                    Log($"{CurSrv} - (4/6) Checking if detected object is relevant and within confidence limits:");
                                                     //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
                                                     foreach (Object user in response.predictions)
                                                     {
@@ -701,7 +689,7 @@ namespace AITool
                                                                         objects_confidence.Add(user.confidence);
                                                                         string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                                         objects_position.Add(position);
-                                                                        Log($"   {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                        Log($"{CurSrv} -    {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
                                                                     }
                                                                     else //if the object is in a masked area
                                                                     {
@@ -727,7 +715,7 @@ namespace AITool
                                                                 irrelevant_objects_confidence.Add(user.confidence);
                                                                 string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                                 irrelevant_objects_position.Add(position);
-                                                                Log($"   { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                                Log($"{CurSrv} -    { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
                                                             }
                                                         }
 
@@ -742,10 +730,10 @@ namespace AITool
                                                         cam.maskManager.CleanUpExpiredHistory(cam.name);
 
                                                         //log summary information for all masked objects
-                                                        Log("### Masked objects summary for camera " + cam.name + " ###");
+                                                        Log($"{CurSrv} - ### Masked objects summary for camera " + cam.name + " ###");
                                                         foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
                                                         {
-                                                            Log("\t" + maskedObject.ToString());
+                                                            Log($"{CurSrv} - \t" + maskedObject.ToString());
                                                         }
                                                     }
 
@@ -769,16 +757,16 @@ namespace AITool
                                                             detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
                                                         }
                                                         cam.last_detections_summary = detectionsTextSb.ToString();
-                                                        Log("The summary:" + cam.last_detections_summary);
+                                                        Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
 
 
                                                         if (!cam.trigger_url_cancels)
                                                         {
-                                                            Log("(5/6) Performing alert actions:");
+                                                            Log($"{CurSrv} - (5/6) Performing alert actions:");
                                                             await Trigger(cam, CurImg); //make TRIGGER
                                                         }
                                                         cam.IncrementAlerts(); //stats update
-                                                        Log($"(6/6) SUCCESS.");
+                                                        Log($"{CurSrv} - (6/6) SUCCESS.");
 
 
                                                         //create text string objects and confidences
@@ -791,7 +779,7 @@ namespace AITool
                                                         }
 
                                                         //add to history list
-                                                        Log("Adding detection to history list.");
+                                                        Log($"{CurSrv} - Adding detection to history list.");
                                                         CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string);
 
                                                     }
@@ -802,12 +790,12 @@ namespace AITool
 
                                                         if (cam.trigger_url_cancels)
                                                         {
-                                                            Log("(5/6) Performing alert CANCEL actions:");
+                                                            Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
                                                             await Trigger(cam, CurImg); //make TRIGGER
                                                         }
 
                                                         cam.IncrementIrrelevantAlerts(); //stats update
-                                                        Log($"(6/6) Camera {cam.name} caused an irrelevant alert.");
+                                                        Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
                                                         //Log("Adding irrelevant detection to history list.");
 
                                                         //retrieve confidences and positions
@@ -839,7 +827,7 @@ namespace AITool
                                                             text = text.Remove(text.Length - 2);
                                                         }
 
-                                                        Log($"{text}, so it's an irrelevant alert.");
+                                                        Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
                                                         //add to history list
                                                         CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string);
                                                     }
@@ -851,15 +839,15 @@ namespace AITool
 
                                                     if (cam.trigger_url_cancels)
                                                     {
-                                                        Log("(5/6) Performing alert CANCEL actions:");
+                                                        Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
                                                         await Trigger(cam, CurImg); //make TRIGGER
                                                     }
 
                                                     cam.IncrementFalseAlerts(); //stats update
-                                                    Log($"(6/6) Camera {cam.name} caused a false alert, nothing detected.");
+                                                    Log($"{CurSrv} - (6/6) Camera {cam.name} caused a false alert, nothing detected.");
 
                                                     //add to history list
-                                                    Log("Adding false to history list.");
+                                                    Log($"{CurSrv} - Adding false to history list.");
                                                     CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", "");
                                                 }
                                             }
@@ -867,14 +855,14 @@ namespace AITool
                                             //if camera is disabled.
                                             else if (cam.enabled == false)
                                             {
-                                                Log("(6/6) Selected camera is disabled.");
+                                                Log($"{CurSrv} - (6/6) Selected camera is disabled.");
                                             }
 
 
                                         }
                                         else if (response.success == false) //if nothing was detected
                                         {
-                                            error = $"ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
+                                            error = $"{CurSrv} - ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
                                             Log(error);
                                         }
 
@@ -883,7 +871,7 @@ namespace AITool
                                     {
                                         //deserialization did not cause exception, it just gave a null response in the object?
                                         //probably wont happen but just making sure
-                                        error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                        error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
                                         Log(error);
                                     }
 
@@ -891,14 +879,14 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    error = "ERROR: Empty string returned from HTTP post.";
+                                    error = $"{CurSrv} - ERROR: Empty string returned from HTTP post.";
                                     Log(error);
                                 }
 
                             }
                             else
                             {
-                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
+                                error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
                                 Log(error);
                             }
 
@@ -936,7 +924,7 @@ namespace AITool
                     //We should almost never get here due to all the null checks and function to wait for file to become available...
                     //When the connection to deepstack fails we will get here
                     //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
-                    error = $"ERROR: {Global.ExMsg(ex)}";
+                    error = $"{CurSrv} - ERROR: {Global.ExMsg(ex)}";
                     Log(error);
 
 
@@ -965,30 +953,29 @@ namespace AITool
                 fcalc.AddToCalc(CurImg.FileLockMS);
 
 
-                Log($"...Object detection finished: ");
-                Log($"       Total Time:   {{yellow}}{CurImg.TotalTimeMS}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
-                Log($"   DeepStack Time:   {{yellow}}{CurImg.DeepStackTimeMS}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
+                Log($"{CurSrv} - ...Object detection finished: ");
+                Log($"{CurSrv} -        Total Time:   {{yellow}}{CurImg.TotalTimeMS}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
+                Log($"{CurSrv} -    DeepStack Time:   {{yellow}}{CurImg.DeepStackTimeMS}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
+                Log($"{CurSrv} -    File lock Time:   {{yellow}}{CurImg.FileLockMS}ms{{red}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
 
                 //I want to highlight when we have to wait for the last detection (or for the file to become readable) too long
                 if (CurImg.QueueWaitMS + CurImg.FileLockMS >= 500)
                 {
-                    Log($"{{red}}   File lock Time:   {{yellow}}{CurImg.FileLockMS}ms{{red}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
-                    Log($"{{red}}Thread Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{red}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
+                    Log($"{CurSrv} -  {{red}}Image Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{red}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                 }
                 else
                 {
-                    Log($"{{white}}   File lock Time:   {{yellow}}{CurImg.FileLockMS}ms{{white}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
-                    Log($"{{white}}Thread Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
+                    Log($"{CurSrv} -  {{white}}Image Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
                 }
 
-                Log($"      Queue Depth:   {{yellow}}{CurImg.CurQueueSize}{{white}} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})");
+                Log($"{CurSrv} - Image Queue Depth:   {{yellow}}{CurImg.CurQueueSize}{{white}} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})");
 
                 //}
 
             }
             else
             {
-                Log($"Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
+                Log($"{CurSrv} - Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
             }
 
 
@@ -1288,7 +1275,7 @@ namespace AITool
                     time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
                     rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
                     if (memberName != null && !string.IsNullOrEmpty(memberName))
-                        ModName = memberName.PadLeft(20) + "> ";
+                        ModName = memberName.PadLeft(24) + "> ";
 
                     //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
 
@@ -1299,7 +1286,7 @@ namespace AITool
                         string modfromglobal = Global.GetWordBetween(text, "", ">> ");
                         if (!string.IsNullOrEmpty(modfromglobal))
                         {
-                            ModName = modfromglobal.PadLeft(18) + "> ";
+                            ModName = modfromglobal.PadLeft(24) + "> ";
                             text = Global.GetWordBetween(text, ">> ", "");
                         }
 
@@ -2426,7 +2413,7 @@ namespace AITool
 
         }
 
-        private async Task ProcessImage(ClsImageQueueItem CurImg)
+        private async Task ProcessImage(ClsImageQueueItem CurImg, string DeepStackURL)
         {
 
             string filename = Path.GetFileName(CurImg.image_path);
@@ -2460,7 +2447,7 @@ namespace AITool
 
                         //------------------------------------------------------------------------------------------------
                         //------------------------------------------------------------------------------------------------
-                        await DetectObjects(CurImg); //ai process image
+                        await DetectObjects(CurImg, DeepStackURL); //ai process image
                         //------------------------------------------------------------------------------------------------
                         //------------------------------------------------------------------------------------------------
 
@@ -2513,13 +2500,78 @@ namespace AITool
                 Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
 
                 ClsImageQueueItem CurImg;
+                List<String> DeepStackURLList = new List<string>();
 
+                string LastURLS = AppSettings.Settings.deepstack_url;
+
+                //Start infinite loop waiting for images to come into queue
                 while (true)
                 {
-                    while (this.ImageProcessQueue.TryDequeue(out CurImg))
+                    while (!this.ImageProcessQueue.IsEmpty)
                     {
-                        await ProcessImage(CurImg);
+                        
+                        //Check to see if we need to get updated URL list
+                        if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url)
+                        {
+                            DeepStackURLList = Global.Split(AppSettings.Settings.deepstack_url, "|;");
+                            
+                            //check to see if any need updating with http or path
+                            for (int i = 0; i < DeepStackURLList.Count; i++)
+                            {
+                                if (!DeepStackURLList[i].Contains("://"))
+                                    DeepStackURLList[i] = "http://" + DeepStackURLList[i];
+                                if (!DeepStackURLList[i].ToLower().Contains("/v1/vision/detection"))
+                                    DeepStackURLList[i] = DeepStackURLList[i] + "/v1/vision/detection";
+                            }
+
+                            LastURLS = AppSettings.Settings.deepstack_url;
+
+                        }
+
+                        var allRunningTasks = new List<Task>();
+
+                        //build the url thread safe queue since we will be modifying the queue in another thread
+                        ConcurrentQueue<string> DSURLQueue = new ConcurrentQueue<string>();
+                        foreach (string url in DeepStackURLList)
+                        {
+                            DSURLQueue.Enqueue(url);
+                        }
+
+                        while (!this.ImageProcessQueue.IsEmpty)
+                        {
+                            while (!DSURLQueue.IsEmpty && !this.ImageProcessQueue.IsEmpty)
+                            {
+                                //get the next url
+                                string url;
+                                DSURLQueue.TryDequeue(out url);
+                                //get the next image
+                                this.ImageProcessQueue.TryDequeue(out CurImg);
+                                //add A task to process the image
+                                Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+                                allRunningTasks.Add(Task.Run(async () =>
+                                                            {
+                                                                await ProcessImage(CurImg, url);
+                                                                //put url back in queue when done
+                                                                DSURLQueue.Enqueue(url);
+                                                            })
+                                                    );
+                            }
+                            //wait for ANY task in the list to complete if there are any
+                            if (allRunningTasks.Count > 0)
+                            {
+                                Log($"Waiting for any of {allRunningTasks.Count} tasks to get done...");
+                                int taskidx = Task.WaitAny(allRunningTasks.ToArray());
+                                Log($"...Task at index {taskidx} done.");
+                                //remove task from list
+                                allRunningTasks.RemoveAt(taskidx);
+                            }
+                        }
+
+                        Log("Done processing current image queue.");
+                        
                     }
+
+                    //Only loop 10 times a second conserve cpu
                     await Task.Delay(100);
                 }
             }
@@ -3426,123 +3478,133 @@ namespace AITool
 
         private async void LoadDeepStackTab(bool StartIfNeeded)
         {
-            //first update the port in the deepstack_url if found
-            string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
-            if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
+
+            try
             {
-                DeepStackServerControl.Port = prt;
-            }
+                //first update the port in the deepstack_url if found
+                //string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
+                //if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
+                //{
+                //    DeepStackServerControl.Port = prt;
+                //}
 
-            //This will OVERRIDE the port if the deepstack processes found running already have a different port, mode, etc:
-            DeepStackServerControl.GetDeepStackRun();
+                //This will OVERRIDE the port if the deepstack processes found running already have a different port, mode, etc:
+                DeepStackServerControl.GetDeepStackRun();
 
-            if (DeepStackServerControl.Mode.ToLower() == "medium")
-                RB_Medium.Checked = true;
-            if (DeepStackServerControl.Mode.ToLower() == "low")
-                RB_Low.Checked = true;
-            if (DeepStackServerControl.Mode.ToLower() == "high")
-                RB_High.Checked = true;
+                if (DeepStackServerControl.Mode.ToLower() == "medium")
+                    RB_Medium.Checked = true;
+                if (DeepStackServerControl.Mode.ToLower() == "low")
+                    RB_Low.Checked = true;
+                if (DeepStackServerControl.Mode.ToLower() == "high")
+                    RB_High.Checked = true;
 
-            Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
-            Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
-            Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
+                Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
+                Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
+                Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
 
-            //have seen a few cases nothing is checked but it is required
-            if (!Chk_DetectionAPI.Checked && !Chk_FaceAPI.Checked && !Chk_SceneAPI.Checked)
-            {
-                Chk_DetectionAPI.Checked = true;
-                DeepStackServerControl.DetectionAPIEnabled = true;
-            }
-
-            Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
-            Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
-            chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
-            Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
-            Txt_APIKey.Text = DeepStackServerControl.APIKey;
-            Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
-            Txt_Port.Text = DeepStackServerControl.Port;
-
-            if (prt != Txt_Port.Text)
-            {
-                //server:port/maybe/more/path
-                string serv = Global.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
-                if (!string.IsNullOrEmpty(serv))
+                //have seen a few cases nothing is checked but it is required
+                if (!Chk_DetectionAPI.Checked && !Chk_FaceAPI.Checked && !Chk_SceneAPI.Checked)
                 {
-                    tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
-                    //AppSettings.Settings.deepstack_url = serv + ":" + Txt_Port.Text;
-                    //AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
-                    //AppSettings.Save();
+                    Chk_DetectionAPI.Checked = true;
+                    DeepStackServerControl.DetectionAPIEnabled = true;
                 }
-            }
 
-            if (DeepStackServerControl.IsInstalled)
-            {
-                if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
-                {
-                    if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
-                    {
-                        Lbl_BlueStackRunning.Text = "*RUNNING*";
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
-                    }
-                    else if (!DeepStackServerControl.IsActivated)
-                    {
-                        Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
-                    }
-                    else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
-                    {
-                        Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*";
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
-                    }
+                Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
+                Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
+                chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
+                Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
+                Txt_APIKey.Text = DeepStackServerControl.APIKey;
+                Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
+                Txt_Port.Text = DeepStackServerControl.Port;
 
-                }
-                else if (DeepStackServerControl.HasError)
+                //if (prt != Txt_Port.Text)
+                //{
+                //    //server:port/maybe/more/path
+                //    string serv = Global.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
+                //    if (!string.IsNullOrEmpty(serv))
+                //    {
+                //        tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
+                //        //AppSettings.Settings.deepstack_url = serv + ":" + Txt_Port.Text;
+                //        //AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
+                //        //AppSettings.Save();
+                //    }
+                //}
+
+                if (DeepStackServerControl.IsInstalled)
                 {
-                    Lbl_BlueStackRunning.Text = "*ERROR*";
-                    Btn_Start.Enabled = false;
-                    Btn_Stop.Enabled = true;
-                }
-                else
-                {
-                    Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
-                    Btn_Start.Enabled = true;
-                    Btn_Stop.Enabled = false;
-                    if (Chk_AutoStart.Checked && StartIfNeeded)
+                    if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                     {
-                        if (await DeepStackServerControl.StartAsync())
+                        if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
                         {
-                            if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                            Lbl_BlueStackRunning.Text = "*RUNNING*";
+                            Btn_Start.Enabled = false;
+                            Btn_Stop.Enabled = true;
+                        }
+                        else if (!DeepStackServerControl.IsActivated)
+                        {
+                            Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+                            Btn_Start.Enabled = false;
+                            Btn_Stop.Enabled = true;
+                        }
+                        else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
+                        {
+                            Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*";
+                            Btn_Start.Enabled = false;
+                            Btn_Stop.Enabled = true;
+                        }
+
+                    }
+                    else if (DeepStackServerControl.HasError)
+                    {
+                        Lbl_BlueStackRunning.Text = "*ERROR*";
+                        Btn_Start.Enabled = false;
+                        Btn_Stop.Enabled = true;
+                    }
+                    else
+                    {
+                        Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                        Btn_Start.Enabled = true;
+                        Btn_Stop.Enabled = false;
+                        if (Chk_AutoStart.Checked && StartIfNeeded)
+                        {
+                            if (await DeepStackServerControl.StartAsync())
                             {
-                                Lbl_BlueStackRunning.Text = "*RUNNING*";
-                                Btn_Start.Enabled = false;
-                                Btn_Stop.Enabled = true;
+                                if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                                {
+                                    Lbl_BlueStackRunning.Text = "*RUNNING*";
+                                    Btn_Start.Enabled = false;
+                                    Btn_Stop.Enabled = true;
+                                }
+                                else if (DeepStackServerControl.HasError)
+                                {
+                                    Lbl_BlueStackRunning.Text = "*ERROR*";
+                                    Btn_Start.Enabled = false;
+                                    Btn_Stop.Enabled = true;
+                                }
+
                             }
-                            else if (DeepStackServerControl.HasError)
+                            else
                             {
                                 Lbl_BlueStackRunning.Text = "*ERROR*";
                                 Btn_Start.Enabled = false;
                                 Btn_Stop.Enabled = true;
                             }
-
-                        }
-                        else
-                        {
-                            Lbl_BlueStackRunning.Text = "*ERROR*";
-                            Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = true;
                         }
                     }
                 }
-            }
-            else
-            {
-                Btn_Start.Enabled = false;
-                Btn_Stop.Enabled = false;
-                Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
+                else
+                {
+                    Btn_Start.Enabled = false;
+                    Btn_Stop.Enabled = false;
+                    Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
 
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log(Global.ExMsg(ex));
             }
         }
 
