@@ -264,5 +264,24 @@ namespace AITool
                 AppSettings.Save();
             }
         }
+
+        private void FOLV_Masks_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
+        {
+            if (e.Model != null)
+            {
+                contextMenuPosObj = (ObjectPosition)e.Model;
+            }
+        }
+
+        private void removeMaskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (contextMenuPosObj != null)
+            {
+                cam.maskManager.masked_positions.Remove(contextMenuPosObj);
+                contextMenuPosObj = null;
+                Refresh();
+                AppSettings.Save();
+            }
+        }
     }
 }
