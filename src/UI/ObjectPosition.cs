@@ -16,6 +16,7 @@ namespace AITool
         public int height { get; }
         public int width { get; }
         public double thresholdPercent { get; set; }
+        public Boolean isStatic { get; set; } = false;
         public long key { get; }
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }

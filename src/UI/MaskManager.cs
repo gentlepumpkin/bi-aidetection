@@ -7,10 +7,10 @@ namespace AITool
     public class MaskManager
     {
         public bool masking_enabled { get; set; } = false;
-        public int mask_counter_default { get; set; } = 15;                    //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins { get; set; } = 5;                        //how long to store detected objects in history before purging list 
-        public int history_threshold_count { get; set; } = 2;                 //number of times object is seen in same position before moving it to the masked_positions list
-        public double thresholdPercent { get; set; } = .08;
+        public int mask_counter_default { get; set; } = 15;               //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
+        public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
+        public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
+        public double thresholdPercent { get; set; } = .08;               //what percent can the selection rectangle vary to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period (history_save_mins)
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list
 
@@ -113,7 +113,7 @@ namespace AITool
                 for (int x = maskedList.Count - 1; x >= 0; x--)
                 {
                     ObjectPosition maskedObject = maskedList[x];
-                    if (!maskedObject.isVisible)
+                    if (!maskedObject.isVisible && !maskedObject.isStatic)
                     {
                         Global.Log("Masked object NOT visible - " + maskedObject.ToString());
                         maskedObject.counter--;
