@@ -20,9 +20,13 @@ namespace AITool
         public static bool AlreadyRunning = false;
         public class ClsSettings
         {
+            [JsonIgnore]
             public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.json");
+            [JsonIgnore]
             public string LogFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".log");
+            [JsonIgnore]
             public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
+         
             public string telegram_token = "";
             public string input_path = "";
             public bool input_path_includesubfolders = false;
