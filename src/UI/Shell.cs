@@ -529,9 +529,12 @@ namespace AITool
 
 
         //analyze image with AI
-        public async Task DetectObjects(ClsImageQueueItem CurImg, string DeepStackURL)
+        public async Task<bool> DetectObjects(ClsImageQueueItem CurImg, string DeepStackURL)
         {
-            
+
+
+            bool ret = false;
+
             //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
 
@@ -858,7 +861,7 @@ namespace AITool
                                                 Log($"{CurSrv} - (6/6) Selected camera is disabled.");
                                             }
 
-
+                                            ret = true;  //even though camera may disabled
                                         }
                                         else if (response.success == false) //if nothing was detected
                                         {
@@ -927,8 +930,6 @@ namespace AITool
                     error = $"{CurSrv} - ERROR: {Global.ExMsg(ex)}";
                     Log(error);
 
-
-
                 }
 
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
@@ -976,7 +977,11 @@ namespace AITool
             else
             {
                 Log($"{CurSrv} - Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
+                //result = good anyway so we dont retry the image
+                ret = true;
             }
+
+            return ret;
 
 
         }
@@ -2402,7 +2407,7 @@ namespace AITool
             public long DeepStackTimeMS { get; set; }
             public long FileLockMS { get; set; }
             public long CurQueueSize { get; set; }
-            public bool Result { get; set; }
+            public int ErrCount { get; set; }
             public string ResultMessage { get; set; }
             public ClsImageQueueItem(String FileName, long CurQueueSize)
             {
@@ -2413,9 +2418,10 @@ namespace AITool
 
         }
 
-        private async Task ProcessImage(ClsImageQueueItem CurImg, string DeepStackURL)
+        private async Task<bool> ProcessImage(ClsImageQueueItem CurImg, string DeepStackURL)
         {
 
+            bool ret = false;
             string filename = Path.GetFileName(CurImg.image_path);
 
             MethodInvoker LabelUpdate = delegate { label2.Text = $"Accessing {filename}..."; };
@@ -2447,7 +2453,7 @@ namespace AITool
 
                         //------------------------------------------------------------------------------------------------
                         //------------------------------------------------------------------------------------------------
-                        await DetectObjects(CurImg, DeepStackURL); //ai process image
+                        ret = await DetectObjects(CurImg, DeepStackURL); //ai process image
                         //------------------------------------------------------------------------------------------------
                         //------------------------------------------------------------------------------------------------
 
@@ -2489,6 +2495,8 @@ namespace AITool
             {
                 UpdateQueueLabel();
             }
+
+            return ret;
 
         }
 
@@ -2550,9 +2558,24 @@ namespace AITool
                                 Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
                                 allRunningTasks.Add(Task.Run(async () =>
                                                             {
-                                                                await ProcessImage(CurImg, url);
+                                                                bool success = await ProcessImage(CurImg, url);
                                                                 //put url back in queue when done
+                                                                //asdfasdf
                                                                 DSURLQueue.Enqueue(url);
+                                                                if (!success)
+                                                                {
+                                                                    //put back in queue to be processed by another deepstack server
+                                                                    CurImg.ErrCount++;
+                                                                    if (CurImg.ErrCount <= 4)
+                                                                    {
+                                                                        Log($"...Putting image back in queue due to URL '{url}' failure: '{CurImg.image_path}'");
+                                                                        this.ImageProcessQueue.Enqueue(CurImg);
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        Log($"...Error: Removing image from queue. Tried 4 times on URL '{url}', Image: '{CurImg.image_path}'");
+                                                                    }
+                                                                }
                                                             })
                                                     );
                             }
