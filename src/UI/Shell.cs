@@ -3805,6 +3805,21 @@ namespace AITool
 
 
         }
+
+        private void btnCustomMask_Click(object sender, EventArgs e)
+        {
+            using (Frm_CustomMasking frm = new Frm_CustomMasking())
+            {
+
+                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+
+                frm.cam = AppSettings.Settings.CameraList[i];
+
+                frm.ShowDialog();
+            }
+
+        }
     }
 
 
