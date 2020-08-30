@@ -3402,6 +3402,8 @@ namespace AITool
                 }
             }
 
+            Global_GUI.SaveWindowState(this);
+
             AppSettings.Save();  //save settings in any case
 
 
@@ -3409,7 +3411,7 @@ namespace AITool
 
         private void Shell_Load(object sender, EventArgs e)
         {
-
+            Global_GUI.RestoreWindowState(this);
         }
         private void SaveDeepStackTab()
         {

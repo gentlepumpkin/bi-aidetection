@@ -285,33 +285,33 @@ namespace AITool
 								TabControl tc = (TabControl)ctl;
 								tc.SelectedIndex = System.Convert.ToInt32(GetSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex));
 							}
-							else if (ctl is ComboBox)
-							{
-								ComboBox cc = (ComboBox)ctl;
-								if (cc.Items.Count == 0 && string.IsNullOrEmpty(System.Convert.ToString(cc.Text)))
-								{
-									List<string> lst = new List<string>();
-									lst = (List<string>)(GetSetting($"{Frm.Name}.ComboBox.{cc.Name}.Items", lst));
-									foreach (string st in lst)
-										cc.Items.Add(st);
-									cc.Text = System.Convert.ToString(GetSetting($"{Frm.Name}.ComboBox.{cc.Name}.Text", cc.Text));
-								}
-							}
-							else if (ctl is TextBox)
-							{
-								TextBox tc = (TextBox)ctl;
-								if (string.IsNullOrEmpty(System.Convert.ToString(tc.Text)))
-									tc.Text = System.Convert.ToString(GetSetting($"{Frm.Name}.TextBox.{tc.Name}.Text", tc.Text));
-							}
-							else if (ctl is CheckBox)
-							{
-								CheckBox tc = (CheckBox)ctl;
-								if (tc.CheckState == CheckState.Indeterminate)
-								{
-									tc.Checked = System.Convert.ToBoolean(GetSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked));
-									tc.CheckState = (CheckState)(tc.Checked ? CheckState.Checked : CheckState.Unchecked);
-								}
-							}
+							//else if (ctl is ComboBox)
+							//{
+							//	ComboBox cc = (ComboBox)ctl;
+							//	if (cc.Items.Count == 0 && string.IsNullOrEmpty(System.Convert.ToString(cc.Text)))
+							//	{
+							//		List<string> lst = new List<string>();
+							//		lst = (List<string>)(GetSetting($"{Frm.Name}.ComboBox.{cc.Name}.Items", lst));
+							//		foreach (string st in lst)
+							//			cc.Items.Add(st);
+							//		cc.Text = System.Convert.ToString(GetSetting($"{Frm.Name}.ComboBox.{cc.Name}.Text", cc.Text));
+							//	}
+							//}
+							//else if (ctl is TextBox)
+							//{
+							//	TextBox tc = (TextBox)ctl;
+							//	if (string.IsNullOrEmpty(System.Convert.ToString(tc.Text)))
+							//		tc.Text = System.Convert.ToString(GetSetting($"{Frm.Name}.TextBox.{tc.Name}.Text", tc.Text));
+							//}
+							//else if (ctl is CheckBox)
+							//{
+							//	CheckBox tc = (CheckBox)ctl;
+							//	if (tc.CheckState == CheckState.Indeterminate)
+							//	{
+							//		tc.Checked = System.Convert.ToBoolean(GetSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked));
+							//		tc.CheckState = (CheckState)(tc.Checked ? CheckState.Checked : CheckState.Unchecked);
+							//	}
+							//}
 						}
 
 				}
@@ -384,25 +384,25 @@ endOfTry:
 								TabControl tc = (TabControl)ctl;
 								SaveSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex);
 							}
-							else if (ctl is ComboBox)
-							{
-								ComboBox cc = (ComboBox)ctl;
-								List<string> lst = new List<string>();
-								foreach (object cbi in cc.Items)
-									lst.Add(cbi.ToString());
-								SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Items", lst);
-								SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Text", cc.Text);
-							}
-							else if (ctl is TextBox)
-							{
-								TextBox tc = (TextBox)ctl;
-								SaveSetting($"{Frm.Name}.TextBox.{tc.Name}.Text", tc.Text);
-							}
-							else if (ctl is CheckBox)
-							{
-								CheckBox tc = (CheckBox)ctl;
-								SaveSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked);
-							}
+							//else if (ctl is ComboBox)
+							//{
+							//	ComboBox cc = (ComboBox)ctl;
+							//	List<string> lst = new List<string>();
+							//	foreach (object cbi in cc.Items)
+							//		lst.Add(cbi.ToString());
+							//	SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Items", lst);
+							//	SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Text", cc.Text);
+							//}
+							//else if (ctl is TextBox)
+							//{
+							//	TextBox tc = (TextBox)ctl;
+							//	SaveSetting($"{Frm.Name}.TextBox.{tc.Name}.Text", tc.Text);
+							//}
+							//else if (ctl is CheckBox)
+							//{
+							//	CheckBox tc = (CheckBox)ctl;
+							//	SaveSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked);
+							//}
 						}
 
 				}

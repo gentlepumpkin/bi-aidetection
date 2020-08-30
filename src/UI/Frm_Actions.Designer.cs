@@ -43,7 +43,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FOLV_Actions.HideSelection = false;
             this.FOLV_Actions.Location = new System.Drawing.Point(15, 14);
-            this.FOLV_Actions.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.FOLV_Actions.Margin = new System.Windows.Forms.Padding(4);
             this.FOLV_Actions.Name = "FOLV_Actions";
             this.FOLV_Actions.ShowGroups = false;
             this.FOLV_Actions.Size = new System.Drawing.Size(801, 222);
@@ -58,7 +58,7 @@
             // 
             this.btAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btAdd.Location = new System.Drawing.Point(823, 16);
-            this.btAdd.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btAdd.Margin = new System.Windows.Forms.Padding(4);
             this.btAdd.Name = "btAdd";
             this.btAdd.Size = new System.Drawing.Size(98, 50);
             this.btAdd.TabIndex = 1;
@@ -69,7 +69,7 @@
             // 
             this.btDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btDelete.Location = new System.Drawing.Point(823, 74);
-            this.btDelete.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btDelete.Margin = new System.Windows.Forms.Padding(4);
             this.btDelete.Name = "btDelete";
             this.btDelete.Size = new System.Drawing.Size(98, 50);
             this.btDelete.TabIndex = 2;
@@ -104,9 +104,11 @@
             this.Controls.Add(this.btDelete);
             this.Controls.Add(this.btAdd);
             this.Controls.Add(this.FOLV_Actions);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Frm_Actions";
+            this.Tag = "SAVE";
             this.Text = "Camera Trigger Actions";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Frm_Actions_FormClosing);
             this.Load += new System.EventHandler(this.Frm_Actions_Load);
             ((System.ComponentModel.ISupportInitialize)(this.FOLV_Actions)).EndInit();
             this.ResumeLayout(false);

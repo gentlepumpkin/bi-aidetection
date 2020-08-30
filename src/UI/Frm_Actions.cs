@@ -25,6 +25,8 @@ namespace AITool
                 Global_GUI.ConfigureFOLV(ref FOLV_Actions, typeof(CameraTriggerAction), null, null);
                 Global_GUI.UpdateFOLV(ref FOLV_Actions, actions, true);
 
+                Global_GUI.RestoreWindowState(this);
+
                 string[] triggertypes = Enum.GetNames(typeof(TriggerType));
                 //cbType.Items.AddRange(triggertypes);
             }
@@ -64,6 +66,11 @@ namespace AITool
         private void btUpdate_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void Frm_Actions_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Global_GUI.SaveWindowState(this);
         }
     }
 }

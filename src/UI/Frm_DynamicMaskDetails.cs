@@ -28,6 +28,8 @@ namespace AITool
             Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null);
             Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null);
 
+            Global_GUI.RestoreWindowState(this);
+
             Refresh();
 
         }
@@ -282,6 +284,11 @@ namespace AITool
                 Refresh();
                 AppSettings.Save();
             }
+        }
+
+        private void Frm_DynamicMaskDetails_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Global_GUI.SaveWindowState(this);
         }
     }
 }
