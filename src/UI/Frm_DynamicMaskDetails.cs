@@ -16,6 +16,7 @@ namespace AITool
 
         public Camera cam;
         public List<ObjectPosition> CurObjPosLst = new List<ObjectPosition>();
+        public ObjectPosition contextMenuPosObj;
 
         public Frm_DynamicMaskDetails()
         {
@@ -240,6 +241,47 @@ namespace AITool
             cam.maskManager.last_positions_history.Clear();
             Refresh();
             AppSettings.Save();
+        }
+
+        private void FOLV_MaskHistory_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
+        {
+            if (e.Model != null)
+            {
+                contextMenuPosObj = (ObjectPosition)e.Model;
+            }
+        }
+
+        private void createStaticMaskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (contextMenuPosObj != null)
+            {
+                contextMenuPosObj.isStatic = true;
+                contextMenuPosObj.counter = 0;
+                cam.maskManager.masked_positions.Add(contextMenuPosObj);
+                cam.maskManager.last_positions_history.Remove(contextMenuPosObj);
+                contextMenuPosObj = null;
+                Refresh();
+                AppSettings.Save();
+            }
+        }
+
+        private void FOLV_Masks_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
+        {
+            if (e.Model != null)
+            {
+                contextMenuPosObj = (ObjectPosition)e.Model;
+            }
+        }
+
+        private void removeMaskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (contextMenuPosObj != null)
+            {
+                cam.maskManager.masked_positions.Remove(contextMenuPosObj);
+                contextMenuPosObj = null;
+                Refresh();
+                AppSettings.Save();
+            }
         }
     }
 }
