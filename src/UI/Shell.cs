@@ -2994,14 +2994,14 @@ namespace AITool
                 trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
             }
 
-            foreach (string pth in BlueIrisInfo.ClipPaths)
-            {
-                //try to automatically pick the path that starts with AI if not already set
-                if ((pth.ToLower().Contains(name.ToLower()) || pth.ToLower().Contains(prefix.ToLower())) && string.IsNullOrWhiteSpace(_input_path))
-                {
-                    _input_path = pth;
-                }
-            }
+            //foreach (string pth in BlueIrisInfo.ClipPaths)
+            //{
+            //    //try to automatically pick the path that starts with AI if not already set
+            //    //if ((pth.ToLower().Contains(name.ToLower()) || pth.ToLower().Contains(prefix.ToLower())) && string.IsNullOrWhiteSpace(_input_path))
+            //    //{
+            //    //    _input_path = pth;
+            //    //}
+            //}
 
             cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
                            _input_path, _input_path_includesubfolders,
@@ -3195,10 +3195,10 @@ namespace AITool
                 {
                     cmbcaminput.Items.Add(pth);
                     //try to automatically pick the path that starts with AI if not already set
-                    if ((pth.ToLower().Contains(tbName.Text.ToLower()) || pth.ToLower().Contains(tbPrefix.Text.ToLower())) && string.IsNullOrWhiteSpace(cmbcaminput.Text))
-                    {
-                        cmbcaminput.Text = pth;
-                    }
+                    //if ((pth.ToLower().Contains(tbName.Text.ToLower()) || pth.ToLower().Contains(tbPrefix.Text.ToLower())) && string.IsNullOrWhiteSpace(cmbcaminput.Text))
+                    //{
+                    //    cmbcaminput.Text = pth;
+                    //}
                 }
                 cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
                 tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time

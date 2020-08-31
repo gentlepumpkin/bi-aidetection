@@ -86,7 +86,7 @@ namespace AITool
             //{
             name = _name;
             prefix = _prefix;
-            triggering_objects_as_string = _triggering_objects_as_string;
+            triggering_objects_as_string = _triggering_objects_as_string.Trim();
             trigger_urls_as_string = _trigger_urls_as_string.Trim();
             telegram_enabled = _telegram_enabled;
             enabled = _enabled;
@@ -108,7 +108,7 @@ namespace AITool
             //maskManager.thresholdPercent = _percent_variance;
             maskManager.masking_enabled = _masking_enabled;
 
-            triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+            triggering_objects = Global.Split(triggering_objects_as_string,",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
             trigger_urls = Global.Split(trigger_urls_as_string, "|;,").ToArray();  //all trigger urls in an array
 
