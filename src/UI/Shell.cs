@@ -1138,6 +1138,7 @@ namespace AITool
                                 tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
 
                             }
+                            urls.Add(tmp);
                         }
                         catch (Exception ex)
                         {
@@ -1158,6 +1159,11 @@ namespace AITool
                         Log("   Uploading image to Telegram...");
                         await TelegramUpload(CurImg);
                         Log("   -> Sent image to Telegram.");
+                    }
+                    else
+                    {
+                        //log that nothing was done
+                        Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
                     }
                 }
             }
