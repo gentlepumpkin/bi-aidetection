@@ -30,6 +30,8 @@ namespace AITool
             Camera cam = null;
             try
             {
+                ImageOrNameOrPrefix = ImageOrNameOrPrefix.Trim();
+
                 //search by path or filename prefix if we are passed a full path to image file
                 if (ImageOrNameOrPrefix.Contains("\\"))
                 {
