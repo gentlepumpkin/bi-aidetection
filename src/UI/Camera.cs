@@ -33,7 +33,7 @@ namespace AITool
         public string triggering_objects_as_string = "";
         public string[] triggering_objects;
         public string trigger_urls_as_string = "";
-        public string[] trigger_urls;
+        public string[] trigger_urls = new string[0];
         public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
         public bool trigger_url_cancels = false;
         public bool telegram_enabled;
@@ -87,7 +87,7 @@ namespace AITool
             name = _name;
             prefix = _prefix;
             triggering_objects_as_string = _triggering_objects_as_string;
-            trigger_urls_as_string = _trigger_urls_as_string;
+            trigger_urls_as_string = _trigger_urls_as_string.Trim();
             telegram_enabled = _telegram_enabled;
             enabled = _enabled;
             cooldown_time = _cooldown_time;
@@ -110,8 +110,7 @@ namespace AITool
 
             triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
-            trigger_urls = trigger_urls_as_string.Replace(" ", "").Split(','); //all trigger urls in an array
-            trigger_urls = trigger_urls.Except(new string[] { "" }).ToArray(); //remove empty entries
+            trigger_urls = Global.Split(trigger_urls_as_string, "|;,").ToArray();  //all trigger urls in an array
 
             //rewrite trigger_urls_as_string without possible empty entires
             int i = 0;

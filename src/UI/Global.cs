@@ -310,38 +310,41 @@ namespace AITool
 
                     while ((errs < 2000) && (SW.ElapsedMilliseconds < WaitMS))
                     {
-
-                        using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
+                        if (new FileInfo(filename).Length > 0)
                         {
-
-                            if (fileHandle.IsInvalid)
+                            using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
                             {
-                                int LastErr = Marshal.GetLastWin32Error();
-                                errs += 1;
 
-                                if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
+                                if (fileHandle.IsInvalid)
                                 {
-                                    //unexpected error, break out
-                                    Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
+                                    int LastErr = Marshal.GetLastWin32Error();
+                                    errs += 1;
+
+                                    if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
+                                    {
+                                        //unexpected error, break out
+                                        Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    Success = true;
                                     break;
                                 }
 
-                            }
-                            else
-                            {
-                                Success = true;
-                                break;
-                            }
+                                if (!fileHandle.IsClosed)
+                                {
+                                    //the using statement should make sure the handle is closed but I just feel better about doing this...
+                                    fileHandle.Close();
+                                }
 
-                            if (!fileHandle.IsClosed)
-                            {
-                                //the using statement should make sure the handle is closed but I just feel better about doing this...
-                                fileHandle.Close();
                             }
-
-                            await Task.Delay(RetryDelayMS);
 
                         }
+
+                        await Task.Delay(RetryDelayMS);
                     }
                     SW.Stop();
 

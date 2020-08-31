@@ -41,7 +41,7 @@ namespace AITool
                                     string path = Convert.ToString(curkey.GetValue("path"));
                                     if (!string.IsNullOrWhiteSpace(path))
                                     {
-                                        this.ClipPaths.Add(path);
+                                        this.ClipPaths.Add(path.Trim());
                                     }
                                 }
 

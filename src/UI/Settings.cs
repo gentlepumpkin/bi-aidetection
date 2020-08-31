@@ -28,6 +28,7 @@ namespace AITool
             public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
          
             public string telegram_token = "";
+            public double telegram_cooldown_minutes = 0;  //minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
             public string input_path = "";
             public bool input_path_includesubfolders = false;
             public List<string> telegram_chatids = new List<string>();
@@ -53,6 +54,7 @@ namespace AITool
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
             public int MaxImageQueueSize = 100;
+            public int MaxURLRetries = 30;  //will be disabled if fails this many times - Also applies to individual image failures
         }
 
         public static bool Save()
