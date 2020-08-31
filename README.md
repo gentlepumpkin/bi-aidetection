@@ -7,7 +7,6 @@ Changes are listed on releases page:
 
 ### Download
 https://github.com/VorlonCD/bi-aidetection/releases
-Click "> Assets" to find the .zip file.
 
 ### Install guide and discussion
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
