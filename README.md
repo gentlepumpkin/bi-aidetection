@@ -1,8 +1,12 @@
 # AI Detection for Blue Iris
 Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to Telegram.
 
+This is the VorlonCD fork of gentlepumpkins awesome AITool project.   
+
+Changes are listed on releases page:
+
 ### Download
-https://github.com/gentlepumpkin/bi-aidetection/releases
+https://github.com/VorlonCD/bi-aidetection/releases
 Click "> Assets" to find the .zip file.
 
 ### Install guide and discussion
