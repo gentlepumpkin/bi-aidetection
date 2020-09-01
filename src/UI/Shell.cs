@@ -21,7 +21,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 //for image cutting
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.MetaData.Profiles.Exif;
+//using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 //for telegram
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
@@ -1009,7 +1009,7 @@ namespace AITool
                 try
                 {
                     string content = client.DownloadString(x);
-                    Log($"   -> trigger URL called: {x}, response: '{content}'");
+                    Log($"   -> trigger URL called: {x}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
                 }
                 catch (Exception ex)
                 {
@@ -1216,7 +1216,7 @@ namespace AITool
                             int y = (int)(ymin + (ymax - ymin) * y_factor[i]);
 
                             // Get the color of the pixel
-                            Color pixelColor = mask_img.GetPixel(x, y);
+                            System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
 
                             //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
                             if (pixelColor.A < 10)
@@ -1623,15 +1623,15 @@ namespace AITool
 
             //show Alerts label
             index = chart1.Series[0].Points.AddXY("Alerts", alerts);
-            chart1.Series[0].Points[index].Color = Color.Green;
+            chart1.Series[0].Points[index].Color = System.Drawing.Color.Green;
 
             //show irrelevant Alerts label
             index = chart1.Series[0].Points.AddXY("irrelevant Alerts", irrelevantalerts);
-            chart1.Series[0].Points[index].Color = Color.Orange;
+            chart1.Series[0].Points[index].Color = System.Drawing.Color.Orange;
 
             //show false Alerts label
             index = chart1.Series[0].Points.AddXY("false Alerts", falsealerts);
-            chart1.Series[0].Points[index].Color = Color.OrangeRed;
+            chart1.Series[0].Points[index].Color = System.Drawing.Color.OrangeRed;
         }
 
         //update timeline
@@ -1986,7 +1986,7 @@ namespace AITool
         }
 
         //show rectangle overlay
-        private void showObject(PaintEventArgs e, Color color, int _xmin, int _ymin, int _xmax, int _ymax, string text)
+        private void showObject(PaintEventArgs e, System.Drawing.Color color, int _xmin, int _ymin, int _xmax, int _ymax, string text)
         {
             try
             {
@@ -2027,7 +2027,7 @@ namespace AITool
                     int ymax = (int)(scale * _ymax) + absY;
 
                     //set alpha/transparency so you can see under the label
-                    Color newColor = Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
+                    System.Drawing.Color newColor = System.Drawing.Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
 
                     //3. paint rectangle
                     System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
@@ -2066,16 +2066,16 @@ namespace AITool
                 //Log("Loading object rectangles...");
                 int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
-                Color color = new Color();
+                System.Drawing.Color color = new System.Drawing.Color();
                 string detections = list1.SelectedItems[0].SubItems[3].Text;
                 if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
                 {
-                    color = Color.Silver;
+                    color = System.Drawing.Color.Silver;
                     detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
                 }
                 else
                 {
-                    color = Color.Red;
+                    color = System.Drawing.Color.Red;
                 }
 
                 //display a rectangle around each relevant object
@@ -2120,7 +2120,7 @@ namespace AITool
                     if (success == "true")
                     {
                         item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
-                        item.ForeColor = Color.Green;
+                        item.ForeColor = System.Drawing.Color.Green;
                     }
                     else
                     {
@@ -2347,7 +2347,7 @@ namespace AITool
                                     if (success == "true")
                                     {
                                         item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
-                                        item.ForeColor = Color.Green;
+                                        item.ForeColor = System.Drawing.Color.Green;
                                     }
                                     else
                                     {
@@ -2880,7 +2880,7 @@ namespace AITool
                     ListViewItem item = new ListViewItem(new string[] { cam.name });
                     if (!cam.enabled)
                     {
-                        item.ForeColor = Color.Gray;
+                        item.ForeColor = System.Drawing.Color.Gray;
                     }
                     //item.Tag = file; //tag is not used anywhere I can see
                     list2.Items.Add(item);
