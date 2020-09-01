@@ -299,7 +299,7 @@ namespace AITool
             return await Task.Run(() => WaitForFileAccess(filename,rights,share,WaitMS,RetryDelayMS));
         }
 
-        private static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             bool Success = false;
             try
@@ -588,6 +588,7 @@ namespace AITool
                 Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,jset);
                 if (jset.Error == null)
                 {
+
                     writer = new StreamWriter(filePath, append);
                     writer.Write(Ret);
                 }
