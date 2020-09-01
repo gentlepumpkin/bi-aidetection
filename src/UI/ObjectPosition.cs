@@ -7,7 +7,7 @@ namespace AITool
     public class ObjectPosition : IEquatable<ObjectPosition>
     {
         public string label { get; }
-        public DateTime createDate { get; }
+        public DateTime createDate { get; set; } 
         public int counter { get; set; }
         public int xmin { get; }
         public int ymin { get; }
