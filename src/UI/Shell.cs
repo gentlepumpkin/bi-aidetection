@@ -716,12 +716,6 @@ namespace AITool
                                                                         }
                                                                         else //if the object is in a masked area
                                                                         {
-                                                                            //show object positions even for masked areas to see object/mask boundaries
-                                                                            objects.Add(user.label + "(mask)"); //careful here! - labels are parsed for "keywords" inside pictureBox1_Paint
-                                                                            objects_confidence.Add(user.confidence);
-                                                                            string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                            objects_position.Add(position);
-
                                                                             masked_counter++;
                                                                             irrelevant_object = true;
                                                                         }
