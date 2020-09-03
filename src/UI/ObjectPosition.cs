@@ -1,13 +1,13 @@
-﻿using BrightIdeasSoftware;
+using BrightIdeasSoftware;
 using System;
 using System.Collections.Generic;
 
 namespace AITool
 {
-    public class ObjectPosition : IEquatable<ObjectPosition>
+    public class ObjectPosition:IEquatable<ObjectPosition>
     {
         public string label { get; }
-        public DateTime createDate { get; set; } 
+        public DateTime createDate { get; set; }
         public int counter { get; set; }
         public int xmin { get; }
         public int ymin { get; }
@@ -21,7 +21,7 @@ namespace AITool
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }
         public Boolean isVisible { get; set; } = false;
-        
+
         public Camera camera { get; set; }
 
 
@@ -43,7 +43,7 @@ namespace AITool
             this.height = ymax - ymin;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            key = ((xmin+1) * (ymin+1) + (width * height));
+            key = ((xmin + 1) * (ymin + 1) + (width * height));
         }
 
         public override bool Equals(object obj)
@@ -67,7 +67,7 @@ namespace AITool
                    (widthVariance <= thresholdPercent) &&
                    (heightVariance <= thresholdPercent));
         }
-        
+
         public override int GetHashCode()
         {
             int hashCode = -853659638;

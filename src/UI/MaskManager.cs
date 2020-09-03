@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -11,8 +11,8 @@ namespace AITool
         public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public double thresholdPercent { get; set; } = .08;               //what percent can the selection rectangle vary to be considered a match
-        public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period (history_save_mins)
-        public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list
+        public List<ObjectPosition> last_positions_history { get; set; } = new List<ObjectPosition>();  //list of last detected object positions during defined time period (history_save_mins)
+        public List<ObjectPosition> masked_positions { get; set; } = new List<ObjectPosition>();       //stores dynamic masked object list
 
         //[JsonIgnore]
         //private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
@@ -78,58 +78,86 @@ namespace AITool
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
         public void CleanUpExpiredHistory(String cameraName)
         {
-            List<ObjectPosition> historyList = last_positions_history;
-
-            //Global.Log("### History objects summary for camera " + cameraName + " ###");
-
-            if (historyList != null && historyList.Count > 0)
+            try
             {
-                //scan backward through the list and remove by index. Not as easy to read but the faster for removals
-                for (int x = historyList.Count - 1; x >= 0; x--)
-                {
-                    ObjectPosition historyObject = historyList[x];
-                    TimeSpan ts = DateTime.Now - historyObject.createDate;
-                    int minutes = ts.Minutes;
+                List<ObjectPosition> historyList = last_positions_history;
 
-                    //Global.Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
-                    if (minutes >= history_save_mins)
+                //Global.Log("### History objects summary for camera " + cameraName + " ###");
+
+                if (historyList != null && historyList.Count > 0)
+                {
+                    //scan backward through the list and remove by index. Not as easy to read but the faster for removals
+                    for (int x = historyList.Count - 1; x >= 0; x--)
                     {
-                        Global.Log("Removing expired history: " + historyObject.ToString() + " for camera " + historyObject.camera.name + " which existed for " + ts.Minutes + " minutes.");
-                        historyList.RemoveAt(x);
+                        ObjectPosition historyObject = historyList[x];
+                        TimeSpan ts = DateTime.Now - historyObject.createDate;
+                        int minutes = ts.Minutes;
+
+                        //Global.Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                        if (minutes >= history_save_mins)
+                        {
+                            Global.Log("Removing expired history: " + historyObject.ToString() + " for camera " + cameraName + " which existed for " + ts.Minutes + " minutes.");
+                            historyList.RemoveAt(x);
+                        }
                     }
                 }
+                else if (historyList == null)
+                {
+                    Global.Log("Error: historyList is null?");
+                }
+
             }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+
+
         }
 
         public void CleanUpExpiredMasks(String cameraName)
         {
-            List<ObjectPosition> maskedList = masked_positions;
-
-            if (maskedList != null && maskedList.Count > 0)
+            try
             {
-                //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
+                List<ObjectPosition> maskedList = masked_positions;
 
-                //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
-                for (int x = maskedList.Count - 1; x >= 0; x--)
+                if (maskedList != null && maskedList.Count > 0)
                 {
-                    ObjectPosition maskedObject = maskedList[x];
-                    if (!maskedObject.isVisible && !maskedObject.isStatic)
-                    {
-                        Global.Log("Masked object NOT visible - " + maskedObject.ToString());
-                        maskedObject.counter--;
+                    //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
 
-                        if (maskedObject.counter <= 0)
+                    //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
+                    for (int x = maskedList.Count - 1; x >= 0; x--)
+                    {
+                        ObjectPosition maskedObject = maskedList[x];
+                        if (!maskedObject.isVisible && !maskedObject.isStatic)
                         {
-                            Global.Log("Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
-                            maskedList.RemoveAt(x);
+                            Global.Log("Masked object NOT visible - " + maskedObject.ToString());
+                            maskedObject.counter--;
+
+                            if (maskedObject.counter <= 0)
+                            {
+                                Global.Log("Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
+                                maskedList.RemoveAt(x);
+                            }
+                        }
+                        else
+                        {
+                            Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
+                            maskedObject.isVisible = false; //reset flag
                         }
                     }
-                    else
-                    {
-                        Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
-                        maskedObject.isVisible = false; //reset flag
-                    }
                 }
+                else if (maskedList == null)
+                {
+                    Global.Log("Error: Maskedlist is null?");
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
             }
         }
 

@@ -58,7 +58,10 @@ namespace AITool
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
             public int MaxImageQueueSize = 100;
-            public int MaxURLRetries = 30;  //will be disabled if fails this many times - Also applies to individual image failures
+            public int MaxURLRetries = 10;  //will be disabled if fails this many times - Also applies to individual image failures
+            public int URLResetAfterDisabledMinutes = 30;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
+
+            public string image_copy_folder = "";
         }
 
         public static bool Save()
@@ -309,6 +312,16 @@ namespace AITool
 
                     if (Settings != null)
                     {
+                        //Ive had a case where MaskManager was null/corrupt to double check:
+                        foreach (Camera cam in Settings.CameraList)
+                        {
+                            if (cam.maskManager == null)
+                            {
+                                cam.maskManager = new MaskManager();
+                                Global.Log("Warning: Had to reset MaskManager for camera " + cam.name);
+                            }
+                        } 
+                        
                         //load cameras the old way if needed
                         if (Settings.CameraList.Count == 0)
                         {

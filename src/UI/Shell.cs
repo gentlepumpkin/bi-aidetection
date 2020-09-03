@@ -77,7 +77,7 @@ namespace AITool
         //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
         public static SemaphoreSlim semaphore_detection_running = new SemaphoreSlim(1, 1);
         //thread safe dictionary to prevent more than one file being processed at one time
-        public static ConcurrentDictionary<string, string> detection_dictionary = new ConcurrentDictionary<string, string>();
+        public static ConcurrentDictionary<string, ClsImageQueueItem> detection_dictionary = new ConcurrentDictionary<string, ClsImageQueueItem>();
         //public int file_access_delay = 50; //delay before accessing new file in ms - increased to 50, 10 was still giving frequent access denied errors -Vorlon
         //public int retry_delay = 10; //delay for first file acess retry - will increase on each retry
         //List<Camera> CameraList = new List<Camera>(); //list containing all cameras
@@ -1126,16 +1126,15 @@ namespace AITool
                             string tmp = url.Replace("[camera]", cam.name);
                             tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
                             tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
-                            tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
 
                             if (cam.last_detections != null && cam.last_detections.Count > 0)
                             {
+                                tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
                                 tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
                                 tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
                                 tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
                                 tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
                                 tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
-                                tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
 
                             }
                             urls.Add(tmp);
@@ -1166,6 +1165,14 @@ namespace AITool
                         Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
                     }
                 }
+
+                if (cam.image_copy_enabled && !cam.trigger_url_cancels)
+                {
+                    Log("   Copying image to network folder...");
+                    Global.CopyImage(cam, CurImg);
+                    Log("   -> Image copied to network folder.");
+                }
+
             }
             else
             {
@@ -1456,7 +1463,7 @@ namespace AITool
             //suspend layout of most complex tablelayout elements (gives a few milliseconds)
             tableLayoutPanel7.SuspendLayout();
             tableLayoutPanel8.SuspendLayout();
-            tableLayoutPanel9.SuspendLayout();
+            //tableLayoutPanel9.SuspendLayout();
 
             //variable storing list1 effective width
             int width = list1.Width;
@@ -1507,21 +1514,26 @@ namespace AITool
             //resume layout again
             tableLayoutPanel7.ResumeLayout();
             tableLayoutPanel8.ResumeLayout();
-            tableLayoutPanel9.ResumeLayout();
+            //tableLayoutPanel9.ResumeLayout();
         }
 
         //add last trigger time to label on Overview page
         private async Task LastTriggerInfo(Camera cam)
         {
-            string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
-            lbl_info.Text = text1;
-
-            int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
-            await Task.Delay(time); // wait while the analysis is sleeping for this camera
-            if (lbl_info.Text == text1)
+            Global.InvokeIFRequired(this.lbl_info, async () =>
             {
-                lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
-            }
+                string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
+                lbl_info.Text = text1;
+
+                int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
+                await Task.Delay(time); // wait while the analysis is sleeping for this camera
+                if (lbl_info.Text == text1)
+                {
+                    lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
+                }
+
+            });
+
         }
 
 
@@ -2195,7 +2207,16 @@ namespace AITool
                             string[] newLines = oldLines.Where(line => !line.Split('|')[0].ToLower().Contains(filename.ToLower())).ToArray();
                             if (oldLines.Count() != newLines.Count())
                             {
-                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                                Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                                if (Success)
+                                {
+                                    System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                                }
+                                else
+                                {
+                                    Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+                                }
                             }
                         }
                         else
@@ -2214,8 +2235,7 @@ namespace AITool
 
                 Invoke(LabelUpdate);
 
-                string val = "";
-                detection_dictionary.TryRemove(filename.ToLower(), out val);
+                
 
                 //try to get a better feel how much time this function consumes - Vorlon
                 //Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
@@ -2435,8 +2455,8 @@ namespace AITool
                 {
                     Log("");
                     Log("Adding new image to queue: " + e.FullPath);
-                    detection_dictionary.TryAdd(e.FullPath.ToLower(), e.FullPath);
-                    ImageProcessQueue.Enqueue(new ClsImageQueueItem(e.FullPath, qsize));
+                    ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                    ImageProcessQueue.Enqueue(CurImg);
                     qsizecalc.AddToCalc(qsize);
                 }
                 UpdateQueueLabel();
@@ -2446,61 +2466,7 @@ namespace AITool
 
         }
 
-
-        public class ClsImageQueueItem
-        {
-            public string image_path { get; set; }
-            public DateTime TimeAdded { get; set; }
-            public long QueueWaitMS { get; set; }
-            public long TotalTimeMS { get; set; }
-            public long DeepStackTimeMS { get; set; }
-            public long FileLockMS { get; set; }
-            public long CurQueueSize { get; set; }
-            public int ErrCount { get; set; }
-            public string ResultMessage { get; set; }
-            public ClsImageQueueItem(String FileName, long CurQueueSize)
-            {
-                this.image_path = FileName;
-                this.TimeAdded = DateTime.Now;
-                this.CurQueueSize = CurQueueSize;
-            }
-
-        }
-
-        public enum URLTypeEnum
-        {
-            DeepStack,
-            Other
-        }
-        public class ClsURLItem
-        {
-            public string url { get; set; } = "";
-            public bool Enabled { get; set; } = false;
-            public int ErrCount { get; set; } = 0;
-            public string ResultMessage { get; set; } = "";
-            public URLTypeEnum Type { get; set; } = URLTypeEnum.Other;
-            public override string ToString()
-            {
-                return this.url;
-            }
-            public ClsURLItem(String url, URLTypeEnum type = URLTypeEnum.DeepStack)
-            {
-                if (!string.IsNullOrWhiteSpace(url))
-                {
-                    this.Enabled = true;
-                    this.url = url.Trim();
-                    this.Type = type;
-                    if (this.Type == URLTypeEnum.DeepStack)
-                    {
-                        if (!this.url.Contains("://"))
-                            this.url = "http://" + this.url;
-                        if (!this.url.ToLower().Contains("/v1/vision/detection"))
-                            this.url = this.url + "/v1/vision/detection";
-                    }
-                }
-            }
-
-        }
+       
 
         private async Task<bool> ProcessImage(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
         {
@@ -2599,6 +2565,10 @@ namespace AITool
                 List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
                 
                 string LastURLS = AppSettings.Settings.deepstack_url;
+                
+                DateTime LastURLCheckTime = DateTime.MinValue;
+                DateTime LastCleanDupesTime = DateTime.MinValue;
+                bool HasDisabledURLs = false;
 
                 //Start infinite loop waiting for images to come into queue
                 while (true)
@@ -2607,8 +2577,9 @@ namespace AITool
                     {
                         
                         //Check to see if we need to get updated URL list
-                        if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url)
+                        if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url || (HasDisabledURLs && (DateTime.Now - LastURLCheckTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes))
                         {
+                            Log("Updating AI URL list...");
                             List<string> tmp = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
                             DeepStackURLList.Clear();
 
@@ -2617,9 +2588,11 @@ namespace AITool
                             {
                                 DeepStackURLList.Add(new ClsURLItem(url));
                             }
+                            Log($"...Found {DeepStackURLList.Count} URL's.");
 
                             LastURLS = AppSettings.Settings.deepstack_url;
-
+                            LastURLCheckTime = DateTime.Now;
+                            HasDisabledURLs = false;
                         }
 
                         var allRunningTasks = new List<Task>();
@@ -2632,64 +2605,118 @@ namespace AITool
                                 DSURLQueue.Enqueue(url);
                         }
 
+                        int proccnt = 0;
+                        int errcnt = 0;
+
                         while (!this.ImageProcessQueue.IsEmpty)
                         {
                             while (!DSURLQueue.IsEmpty && !this.ImageProcessQueue.IsEmpty)
                             {
-                                //get the next url
-                                ClsURLItem url;
-                                DSURLQueue.TryDequeue(out url);
                                 //get the next image
                                 this.ImageProcessQueue.TryDequeue(out CurImg);
-                                //add A task to process the image
-                                Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
-                                allRunningTasks.Add(Task.Run(async () =>
-                                                            {
-                                                                bool success = await ProcessImage(CurImg, url);
-                                                                if (!success)
-                                                                {
-                                                                    if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                                                    {
-                                                                        //put url back in queue when done
-                                                                        DSURLQueue.Enqueue(url);
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        url.Enabled = false;
-                                                                        Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
-                                                                    }
-                                                                    if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                                                    {
-                                                                        //put back in queue to be processed by another deepstack server
-                                                                        Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}'");
-                                                                        this.ImageProcessQueue.Enqueue(CurImg);
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}'");
-                                                                    }
-                                                                }
-                                                                else
-                                                                {
-                                                                    //put url back in queue when done
-                                                                    DSURLQueue.Enqueue(url);
-                                                                }
-                                                            })
-                                                    );
+                                //make sure we are not processing a duplicate file...
+                                if (detection_dictionary.ContainsKey(CurImg.image_path.ToLower()))
+                                {
+                                    Log("Skipping duplicate file: " + CurImg.image_path);
+                                }
+                                else
+                                {
+                                    //add A task to process the image
+                                    //get the next url
+                                    ClsURLItem url;
+                                    DSURLQueue.TryDequeue(out url);
+                                    Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+                                    allRunningTasks.Add(Task.Run(async () =>
+                                    {
+                                        bool success = await ProcessImage(CurImg, url);
+                                        if (!success)
+                                        {
+
+                                            errcnt++;
+
+                                            if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                            {
+                                                //put url back in queue when done
+                                                DSURLQueue.Enqueue(url);
+                                            }
+                                            else
+                                            {
+                                                HasDisabledURLs = true;
+                                                url.Enabled = false;
+                                                Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
+                                            }
+                                            if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                            {
+                                                //put back in queue to be processed by another deepstack server
+                                                Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}'");
+                                                this.ImageProcessQueue.Enqueue(CurImg);
+                                            }
+                                            else
+                                            {
+                                                Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}'");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            detection_dictionary.TryAdd(CurImg.image_path.ToLower(), CurImg);
+
+                                            //put url back in queue when done
+                                            DSURLQueue.Enqueue(url);
+                                            proccnt++;
+                                        }
+                                    })
+                                    );
+
+                                }
                             }
+
                             //wait for ANY task in the list to complete if there are any
                             if (allRunningTasks.Count > 0)
                             {
                                 Log($"Waiting for any of {allRunningTasks.Count} tasks to get done...");
                                 int taskidx = Task.WaitAny(allRunningTasks.ToArray());
-                                Log($"...Task at index {taskidx} done.");
+                                Log($"...Task at index {taskidx} done.  Status='{allRunningTasks[taskidx].Status}'");
                                 //remove task from list
                                 allRunningTasks.RemoveAt(taskidx);
                             }
                         }
 
-                        Log("Done processing current image queue.");
-                        
+                        //clean up tasks, although we shouldn't have to I just want to make sure
+                        foreach (Task tsk in allRunningTasks)
+                        {
+                            if (tsk != null && !tsk.IsCompleted && !tsk.IsFaulted && !tsk.IsCanceled)
+                            {
+                                //-------------------------------
+                                //should not get here!?
+                                //-------------------------------
+                                Log($"Warning: Unexpected - Waiting for a task to finish...");
+                                tsk.Wait();
+                                Log("...Task finished.");
+                            }
+                        }
+                        allRunningTasks.Clear();
+
+                        Log($"Done processing current image queue with {proccnt} image(s), ErrCnt={errcnt}");
+
+                        //Clean up old images in the dupe check dic
+                        if ((DateTime.Now - LastCleanDupesTime).TotalMinutes >= 30)
+                        {
+                            int cnt = 0;
+                            foreach (KeyValuePair<string, ClsImageQueueItem> kvPair in detection_dictionary)
+                            {
+                                if ((DateTime.Now - kvPair.Value.TimeAdded).TotalMinutes >= 30)
+                                {   // Remove expired item.
+                                    cnt++;
+                                    ClsImageQueueItem removedItem;
+                                    detection_dictionary.TryRemove(kvPair.Key, out removedItem);
+                                }
+                            }
+                            if (cnt > 0)
+                            {
+                                Log($"Cleaned {cnt} image queue items from duplicate check dictionary.");
+                            }
+                        }
+
                     }
 
                     //Only loop 10 times a second conserve cpu
@@ -2698,7 +2725,8 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + ex.Message);
+                //if we get here its the end of the world as we know it
+                Log("Error: * 'Human sacrifice, dogs and cats living together – mass hysteria!' * - " + Global.ExMsg(ex));
             }
         }
 
@@ -2901,37 +2929,7 @@ namespace AITool
                     list2.Items[oldidx].Selected = true;
                 }
 
-                ////3. UPDATE LIST2
-                ////update list2 entry
-                //var item = list2.FindItemWithText(oldname);
-                //list2.Items[list2.Items.IndexOf(item)].Text = name;
-
-
-                //update camera  combobox on overview tab and to camera filter combobox in the History tab 
-                //comboBox1.Items[comboBox1.Items.IndexOf($"   {oldname}")] = $"   {name}";
-                //comboBox_filter_camera.Items[comboBox_filter_camera.Items.IndexOf($"   {oldname}")] = $"   {name}";
-                //string[] files = Directory.GetFiles("./cameras", $"*.txt"); //load all settings files in a string array
-
-                ////create a camera object for every camera settings file
-                //int i = 0;
-                //foreach (string file in files)
-                //{
-                //    string result = LoadCamera(file); //do LoadCamera() and save returned result in string
-                //    Log(result);
-
-                //    //if LoadCamera() returned an error
-                //    if (result.Contains("ERROR"))
-                //    {
-                //        MessageBox.Show($"Could not load config file {file}: {result}");
-                //    }
-
-                //    //Add loaded camera to list2
-                //    ListViewItem item = new ListViewItem(new string[] { AppSettings.Settings.CameraList[i].name });
-                //    item.Tag = file;
-                //    list2.Items.Add(item);
-                //    i++;
-
-                //}
+               
             }
             catch
             {
@@ -2970,116 +2968,49 @@ namespace AITool
         //}
 
         //add camera
-        private string AddCamera(string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
-                                 string _input_path, bool _input_path_includesubfolders,
-                                 bool masking_enabled,
-                                 bool trigger_cancels) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
+        private string AddCamera(Camera cam) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
             {
-                if (c.name == name)
+                if (c.name.Trim().ToLower() == cam.name.Trim().ToLower())
                 {
-                    MessageBox.Show($"ERROR: Camera name must be unique,{name} already exists.");
-                    return ($"ERROR: Camera name must be unique,{name} already exists.");
+                    MessageBox.Show($"ERROR: Camera name must be unique,{cam.name} already exists.");
+                    return ($"ERROR: Camera name must be unique,{cam.name} already exists.");
                 }
             }
 
             //check if name is empty
-            if (name == "")
+            if (cam.name == "")
             {
                 MessageBox.Show($"ERROR: Camera name may not be empty.");
                 return ($"ERROR: Camera name may not be empty.");
             }
 
-            Camera cam = new Camera(); //create new camera object
 
             if (BlueIrisInfo.IsValid && !String.IsNullOrWhiteSpace(BlueIrisInfo.URL))
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
+                cam.trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
             }
 
-            //foreach (string pth in BlueIrisInfo.ClipPaths)
-            //{
-            //    //try to automatically pick the path that starts with AI if not already set
-            //    //if ((pth.ToLower().Contains(name.ToLower()) || pth.ToLower().Contains(prefix.ToLower())) && string.IsNullOrWhiteSpace(_input_path))
-            //    //{
-            //    //    _input_path = pth;
-            //    //}
-            //}
 
-            cam.WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                           _input_path, _input_path_includesubfolders,
-                           masking_enabled,
-                           trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
+            cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+
+            //Split by cr/lf or other common delimiters
+            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
+
+           
+
 
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
-            ////add camera to list2
-            //ListViewItem item = new ListViewItem(new string[] { name });
-            //item.Tag = name;
-            //list2.Items.Add(item);
-
-            ////add camera to combobox on overview tab and to camera filter combobox in the History tab 
-            //comboBox1.Items.Add($"   {cam.name}");
-            //comboBox_filter_camera.Items.Add($"   {cam.name}");
-
             LoadCameras();
 
-            return ($"SUCCESS: {name} created.");
+            return ($"SUCCESS: {cam.name} created.");
         }
 
-        //change settings of camera
-        private string UpdateCamera(string oldname, string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
-                                    string _input_path, bool _input_path_includesubfolders,
-                                    bool masking_enabled,
-                                    bool trigger_cancels) //, int history_mins, int mask_create_counter, int mask_remove_counter, Double percent_variance)
-        {
-            //1. CHECK NEW VALUES 
-            //check if name is empty
-            if (name == "")
-            {
-                DisplayCameraSettings(); //reset displayed settings
-                return ($"WARNING: Camera name may not be empty.");
-            }
-
-            //check if camera with specified name exists. If no, then abort.
-            if (!AppSettings.Settings.CameraList.Exists(x => x.name.ToLower() == oldname.ToLower()))
-            {
-                return ($"WARNING: Camera can't be modified because old name {oldname} wasn't found.");
-            }
-
-            // check if the new name isn't taken by another camera already (in case the name was changed)
-            if (name.ToLower() != oldname.ToLower() && AppSettings.Settings.CameraList.Exists(x => String.Equals(name, x.name, StringComparison.OrdinalIgnoreCase)))
-            {
-                DisplayCameraSettings(); //reset displayed settings
-                return ($"WARNING: Camera name must be unique, but new camera name {name} already exists.");
-            }
-
-            int index = -1;
-            index = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == oldname.Trim().ToLower()); //index of specified camera in list
-
-            if (index == -1) { Log("ERROR updating camera, could not find original camera profile."); }
-
-            //check if new prefix isn't already taken by another camera
-            if (prefix.ToLower() != AppSettings.Settings.CameraList[index].prefix.ToLower() && AppSettings.Settings.CameraList.Exists(x => x.prefix.ToLower() == prefix.ToLower()))
-            {
-                DisplayCameraSettings(); //reset displayed settings
-                return ($"WARNING: Every camera must have a unique prefix ('Input file begins with'), but the prefix of {name} already exists.");
-            }
-
-            //2. WRITE CONFIG
-            AppSettings.Settings.CameraList[index].WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                                                               _input_path, _input_path_includesubfolders,
-                                                               masking_enabled,
-                                                               trigger_cancels); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance); //set parameters
-
-            LoadCameras();
-
-
-            return ($"SUCCESS: Camera {oldname} was updated to {name}.");
-        }
+       
 
         //remove camera
         private void RemoveCamera(string name)
@@ -3141,8 +3072,8 @@ namespace AITool
                             {
                                 c.Checked = false;
                             }
-                            tbTriggerUrl.Text = "";
-                            cb_telegram.Checked = false;
+                            //tbTriggerUrl.Text = "";
+                            //cb_telegram.Checked = false;
                             //disable camera settings if there are no cameras setup yet
                             tableLayoutPanel6.Enabled = false;
                         }
@@ -3193,7 +3124,6 @@ namespace AITool
                 }
                 tbPrefix.Text = cam.prefix; //load 'input file begins with'
                 lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
-                tbTriggerUrl.Text = cam.trigger_urls_as_string.Trim(); //load trigger url
 
                 cmbcaminput.Text = cam.input_path;
                 cmbcaminput.Items.Clear();
@@ -3207,18 +3137,14 @@ namespace AITool
                     //}
                 }
                 cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
-                tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
+
                 tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
                 tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
                 cb_masking_enabled.Checked = cam.maskManager.masking_enabled;
 
-                //load telegram image sending on/off option
-                cb_telegram.Checked = cam.telegram_enabled;
-
-
-                cb_TriggerCancels.Checked = cam.trigger_url_cancels;
+                
 
                 //load triggering objects
                 //first create arrays with all checkboxes stored in
@@ -3253,25 +3179,7 @@ namespace AITool
             lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg";
         }
 
-        //event: if SPACE is pressed in trigger url field, automatically add a comma
-        private void tbTriggerUrl_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Space)
-            {
-                tbTriggerUrl.Text += ","; //add comma
-                tbTriggerUrl.Select(tbTriggerUrl.Text.Length, 0); //move cursor to end
-            }
-        }
-
-        //event: if COMMA is pressed in trigger url field, automatically add a space behind it
-        private void tbTriggerUrl_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Oemcomma)
-            {
-                tbTriggerUrl.Text += " "; //add space
-                tbTriggerUrl.Select(tbTriggerUrl.Text.Length, 0); //move cursor to end
-            }
-        }
+       
 
         //event: camera list another item selected
         private void list2_SelectedIndexChanged(object sender, EventArgs e)
@@ -3288,11 +3196,16 @@ namespace AITool
                 var result = form.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    string name = form.text;
-                    string camresult = AddCamera(name, name, "", "person", false, true, 0, 0, 100,
-                                                 "", false,
-                                                 false,
-                                                 false);
+                    Camera cam = new Camera(form.text);
+
+                    string camresult = AddCamera(cam);
+
+                    // Old way...
+                    //string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
+                    //                                 string _input_path, bool _input_path_includesubfolders,
+                    //                                 bool masking_enabled,
+                    //                                 bool trigger_cancels
+
                     MessageBox.Show(camresult);
                 }
             }
@@ -3303,6 +3216,42 @@ namespace AITool
         {
             if (list2.Items.Count > 0)
             {
+                //check if name is empty
+                if (String.IsNullOrWhiteSpace(tbName.Text))
+                {
+                    DisplayCameraSettings(); //reset displayed settings
+                    MessageBox.Show($"WARNING: Camera name may not be empty.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (list2.SelectedItems[0].Text.Trim().ToLower() != tbName.Text.Trim().ToLower())
+                {
+                    //camera renamed, make sure name doesnt exist
+                    Camera CamCheck = Global.GetCamera(tbName.Text,false);
+                    if (CamCheck != null)
+                    {
+                        //Its a dupe
+                        MessageBox.Show($"WARNING: Camera name must be unique, but new camera name '{tbName.Text}' already exists.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        DisplayCameraSettings(); //reset displayed settings
+                        return;
+                    }
+                    else
+                    {
+                        Log($"SUCCESS: Camera {list2.SelectedItems[0].Text} was updated to {tbName.Text}.");
+                    }
+                }
+
+                
+                Camera CurCam = Global.GetCamera(list2.SelectedItems[0].Text,false);
+
+                if (CurCam == null)
+                {
+                    //should not happen, but...
+                    MessageBox.Show($"WARNING: Camera not found???  '{list2.SelectedItems[0].Text}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    DisplayCameraSettings(); //reset displayed settings
+                    return;
+                }
+
                 //1. GET SETTINGS INPUTTED
                 //all checkboxes in one array
 
@@ -3323,38 +3272,57 @@ namespace AITool
                 string[] cbstringarray = new string[] { "airplane", "bear", "bicycle", "bird", "boat", "bus", "car", "cat", "cow", "dog", "horse", "motorcycle", "person", "sheep", "truck" };
 
                 //go through all checkboxes and write all triggering_objects in one string
-                string triggering_objects_as_string = "";
+                CurCam.triggering_objects_as_string = "";
                 for (int i = 0; i < cbarray.Length; i++)
                 {
                     if (cbarray[i].Checked == true)
                     {
-                        triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
+                        CurCam.triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
                     }
                 }
 
-                //get cooldown time from textbox
-                Double.TryParse(tb_cooldown.Text, out double cooldown_time);
-
                 //get lower and upper threshold values from textboxes
-                Int32.TryParse(tb_threshold_lower.Text, out int threshold_lower);
-                Int32.TryParse(tb_threshold_upper.Text, out int threshold_upper);
+                CurCam.threshold_lower = Convert.ToInt32(tb_threshold_lower.Text.Trim());
+                CurCam.threshold_upper = Convert.ToInt32(tb_threshold_upper.Text.Trim());
 
+                CurCam.triggering_objects = Global.Split(CurCam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                CurCam.trigger_urls = Global.Split(CurCam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
 
+                CurCam.name = tbName.Text.Trim();  //just in case we needed to rename it
+                CurCam.prefix = tbPrefix.Text.Trim();
+                CurCam.enabled = cb_enabled.Checked;
+                CurCam.maskManager.masking_enabled = cb_masking_enabled.Checked;
+                CurCam.input_path = cmbcaminput.Text.Trim();
+                CurCam.input_path_includesubfolders = cb_monitorCamInputfolder.Checked;
 
-                ////2. UPDATE SETTINGS
-                //// save new camera settings, display result in MessageBox
-                string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
-                                             cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
-                                             cb_masking_enabled.Checked,
-                                             cb_TriggerCancels.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
+                LoadCameras();
 
                 AppSettings.Save();
 
                 UpdateWatchers();
 
-                Log(result);
+                Log("Camera saved.");
 
-                MessageBox.Show(result, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Camera saved", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
+                ////2. UPDATE SETTINGS
+                //// save new camera settings, display result in MessageBox
+                //string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
+                //                             cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
+                //                             cb_masking_enabled.Checked,
+                //                             cb_TriggerCancels.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
+
+
+
+                //1     2       3                             4                       5                 6        7              8                9
+                //name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
+                //                                                               10           11  
+                //                                                               _input_path, _input_path_includesubfolders,
+                //                                                          12   masking_enabled,
+                //                                                          13   trigger_cancel
+
+
 
             }
             DisplayCameraSettings();
@@ -3539,6 +3507,9 @@ namespace AITool
         private void SaveDeepStackTab()
         {
 
+            if (DeepStackServerControl == null)
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+
             DeepStackServerControl.GetDeepStackRun();
 
             if (RB_Medium.Checked)
@@ -3571,20 +3542,26 @@ namespace AITool
 
                     if (DeepStackServerControl.IsActivated)
                     {
-                        Lbl_BlueStackRunning.Text = "*RUNNING*";
+                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                        Invoke(LabelUpdate);
+
                         Btn_Start.Enabled = false;
                         Btn_Stop.Enabled = true;
                     }
                     else
                     {
-                        Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
+                        Invoke(LabelUpdate);
+
                         Btn_Start.Enabled = false;
                         Btn_Stop.Enabled = true;
                     }
                 }
                 else
                 {
-                    Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                    MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
+                    Invoke(LabelUpdate);
+
                     Btn_Start.Enabled = true;
                     Btn_Stop.Enabled = false;
                 }
@@ -3593,7 +3570,9 @@ namespace AITool
             {
                 Btn_Start.Enabled = false;
                 Btn_Stop.Enabled = false;
-                Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
+                MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
+                Invoke(LabelUpdate);
+                
 
             }
 
@@ -3606,6 +3585,10 @@ namespace AITool
 
             try
             {
+                if (DeepStackServerControl == null)
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+
+
                 //first update the port in the deepstack_url if found
                 //string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
                 //if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
@@ -3661,19 +3644,26 @@ namespace AITool
                     {
                         if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
                         {
-                            Lbl_BlueStackRunning.Text = "*RUNNING*";
+
+                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                            Invoke(LabelUpdate);
+
                             Btn_Start.Enabled = false;
                             Btn_Stop.Enabled = true;
                         }
                         else if (!DeepStackServerControl.IsActivated)
                         {
-                            Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
+                            Invoke(LabelUpdate);
+                                                        
                             Btn_Start.Enabled = false;
                             Btn_Stop.Enabled = true;
                         }
                         else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
                         {
-                            Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*";
+                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*"; };
+                            Invoke(LabelUpdate);
+                            
                             Btn_Start.Enabled = false;
                             Btn_Stop.Enabled = true;
                         }
@@ -3681,13 +3671,17 @@ namespace AITool
                     }
                     else if (DeepStackServerControl.HasError)
                     {
-                        Lbl_BlueStackRunning.Text = "*ERROR*";
+                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                        Invoke(LabelUpdate);
+                        
                         Btn_Start.Enabled = false;
                         Btn_Stop.Enabled = true;
                     }
                     else
                     {
-                        Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
+                        Invoke(LabelUpdate);
+                        
                         Btn_Start.Enabled = true;
                         Btn_Stop.Enabled = false;
                         if (Chk_AutoStart.Checked && StartIfNeeded)
@@ -3696,13 +3690,16 @@ namespace AITool
                             {
                                 if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                                 {
-                                    Lbl_BlueStackRunning.Text = "*RUNNING*";
+                                    LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                                    Invoke(LabelUpdate);
                                     Btn_Start.Enabled = false;
                                     Btn_Stop.Enabled = true;
                                 }
                                 else if (DeepStackServerControl.HasError)
                                 {
-                                    Lbl_BlueStackRunning.Text = "*ERROR*";
+                                    LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                                    Invoke(LabelUpdate);
+                                    
                                     Btn_Start.Enabled = false;
                                     Btn_Stop.Enabled = true;
                                 }
@@ -3710,7 +3707,9 @@ namespace AITool
                             }
                             else
                             {
-                                Lbl_BlueStackRunning.Text = "*ERROR*";
+                                LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                                Invoke(LabelUpdate);
+                                
                                 Btn_Start.Enabled = false;
                                 Btn_Stop.Enabled = true;
                             }
@@ -3721,7 +3720,9 @@ namespace AITool
                 {
                     Btn_Start.Enabled = false;
                     Btn_Stop.Enabled = false;
-                    Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
+                    MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
+                    Invoke(LabelUpdate);
+                    
 
                 }
 
@@ -3831,10 +3832,7 @@ namespace AITool
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
 
-                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
-
-                Camera cam = AppSettings.Settings.CameraList[i];
+                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
 
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
@@ -3921,9 +3919,39 @@ namespace AITool
 
         }
 
-        private void tabLog_Click(object sender, EventArgs e)
-        {
 
+        private void btnActions_Click(object sender, EventArgs e)
+        {
+            using (Frm_LegacyActions frm = new Frm_LegacyActions())
+            {
+
+
+                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
+                frm.tbTriggerUrl.Text = tfixed;
+                frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
+                //load telegram image sending on/off option
+                frm.cb_telegram.Checked = cam.telegram_enabled;
+
+                frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
+                frm.cb_copyAlertImages.Checked = cam.image_copy_enabled;
+                frm.cb_UseOriginalFilename.Checked = cam.image_copy_original_name;
+                frm.tb_network_folder.Text = cam.network_folder;
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
+                    cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
+                    cam.telegram_enabled = frm.cb_telegram.Checked;
+                    cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
+                    cam.image_copy_enabled = frm.cb_copyAlertImages.Checked;
+                    cam.network_folder = frm.tb_network_folder.Text.Trim();
+                    cam.image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+
+                    AppSettings.Save();
+
+                }
+            }
         }
     }
 

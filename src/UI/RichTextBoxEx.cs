@@ -144,9 +144,10 @@ public class RichTextBoxEx
 
 	public int CurrentTextLength = 0;
 	public int MaxTextLength = 524288; //65536;
-	public long MaxRTFWriteTime = 75;
+	public long MaxRTFWriteTime = 200;
 	public long LastRTFWriteTime = 0;
 	public bool AutoScroll = true;
+	private Object LockObject = new object();
 	private RichTextBox _RTF;
 	private Dictionary<string, Color> KnownColors { get; set; } = new Dictionary<string, Color>();
 	public RichTextBoxEx(RichTextBox RTF, bool AutoScroll)
@@ -643,47 +644,51 @@ public class RichTextBoxEx
 	{
 		try
 		{
-			if (this._RTF.IsDisposed)
+			lock (LockObject)  // to hopfully solve multithreading issues
 			{
-				return;
-		
-			}
+				if (this._RTF.IsDisposed)
+				{
+					return;
 
-			//if (this.CurrentTextLength + text.Length >= 65536)
-			//{
-			//	//Debug.WriteLine($"Error: Too much in the RTF box!  Clearing {this.CurrentTextLength}.");
-			//	this._RTF.Clear();
-			//	this.CurrentTextLength = 0;
-			//}
+				}
 
-			//If Me.Rtf.Length + text.Length >= Me.MaxLength OrElse Me.TextLength + text.Length >= Me.MaxLength Then
-			//    Debug.WriteLine("Error: Too much in the RTF box!  Clearing.")
-			//    Me.Clear()
-			//End If
+				//if (this.CurrentTextLength + text.Length >= 65536)
+				//{
+				//	//Debug.WriteLine($"Error: Too much in the RTF box!  Clearing {this.CurrentTextLength}.");
+				//	this._RTF.Clear();
+				//	this.CurrentTextLength = 0;
+				//}
 
-			this._RTF.SelectionStart = this._RTF.TextLength;
-			this._RTF.SelectionLength = 0;
+				//If Me.Rtf.Length + text.Length >= Me.MaxLength OrElse Me.TextLength + text.Length >= Me.MaxLength Then
+				//    Debug.WriteLine("Error: Too much in the RTF box!  Clearing.")
+				//    Me.Clear()
+				//End If
 
-			bool ChangedFont = false;
-			Font cf = this._RTF.SelectionFont;
+				this._RTF.SelectionStart = this._RTF.TextLength;
+				this._RTF.SelectionLength = 0;
 
-			if (this._RTF.SelectionFont.Style != FS)
-			{
-				ChangedFont = true;
-				this._RTF.SelectionFont = new Font(cf, cf.Style | FS);
-			}
+				bool ChangedFont = false;
+				Font cf = this._RTF.SelectionFont;
 
-			this._RTF.SelectionColor = color;
+				if (this._RTF.SelectionFont.Style != FS)
+				{
+					ChangedFont = true;
+					this._RTF.SelectionFont = new Font(cf, cf.Style | FS);
+				}
 
-			CurrentTextLength = CurrentTextLength + text.Length;
+				this._RTF.SelectionColor = color;
 
-			this._RTF.AppendText(text);
+				CurrentTextLength = CurrentTextLength + text.Length;
 
-			this._RTF.SelectionColor = this._RTF.ForeColor;
+				this._RTF.AppendText(text);
 
-			if (ChangedFont)
-			{
-				this._RTF.SelectionFont = new Font(cf, FontStyle.Regular);
+				this._RTF.SelectionColor = this._RTF.ForeColor;
+
+				if (ChangedFont)
+				{
+					this._RTF.SelectionFont = new Font(cf, FontStyle.Regular);
+				}
+
 			}
 
 		}

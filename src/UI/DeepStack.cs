@@ -411,7 +411,15 @@ namespace AITool
                         {
                             foreach (Global.ClsProcess prc in montys)
                             {
-                                prc.process.PriorityClass = ProcessPriorityClass.High;
+                                if (Global.ProcessValid(prc))
+                                {
+                                    try
+                                    {
+                                        prc.process.PriorityClass = ProcessPriorityClass.High;
+                                    }
+                                    catch { }
+
+                                }
                             }
                         }
                         break;

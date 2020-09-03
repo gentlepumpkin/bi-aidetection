@@ -25,7 +25,37 @@ namespace AITool
     {
         public static IProgress<string> progress = null;
 
-        public static Camera GetCamera(String ImageOrNameOrPrefix)
+
+        public static void CopyImage(Camera cam, ClsImageQueueItem CurImg)
+       {
+            string extension = "";
+            string dest_path = "";
+            try
+            {
+                if (!Directory.Exists(cam.network_folder))
+                {
+                    Directory.CreateDirectory(cam.network_folder);
+                }
+                if (cam.image_copy_original_name)
+                {
+                    dest_path = System.IO.Path.Combine(cam.network_folder, Path.GetFileName(CurImg.image_path));
+                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
+
+                }
+                else
+                {
+                    extension = System.IO.Path.GetExtension(CurImg.image_path);
+                    dest_path = System.IO.Path.Combine(cam.network_folder, cam.name + extension);
+                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Could not copy image {CurImg.image_path} to network path {dest_path}: {ExMsg(ex)}");
+            }
+        }
+
+        public static Camera GetCamera(String ImageOrNameOrPrefix, bool ReturnDefault = true)
         {
             Camera cam = null;
             try
@@ -113,15 +143,18 @@ namespace AITool
                 {
                     Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
                     //check if there is a default camera which accepts any prefix, select it
-                    if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
+                    if (ReturnDefault)
                     {
-                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
-                        cam = AppSettings.Settings.CameraList[i];
-                        Log($"(   Found a default camera: '{cam.name}')");
-                    }
-                    else
-                    {
-                        Log("WARNING: No default camera found. Aborting.");
+                        if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
+                        {
+                            int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
+                            cam = AppSettings.Settings.CameraList[i];
+                            Log($"(   Found a default camera: '{cam.name}')");
+                        }
+                        else
+                        {
+                            Log("WARNING: No default camera found. Aborting.");
+                        }
                     }
 
                 }
@@ -372,6 +405,7 @@ namespace AITool
 
         }
 
+        
 
         public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true)
         {
