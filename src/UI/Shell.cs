@@ -1189,21 +1189,35 @@ namespace AITool
 
 
         //check if detected object is outside the mask for the specific camera
+        //TODO: refacotor png, bmp mask logic later. This is just a starting point. 
         public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
             //Log($"      Checking if object is outside privacy mask of {cameraname}:");
             //Log("         Loading mask file...");
+            string fileType;
             try
             {
-                if (System.IO.File.Exists("./cameras/" + cameraname + ".png")) //only check if mask image exists
+                if (System.IO.File.Exists("./cameras/" + cameraname + ".bmp")) //only check if mask image exists (.png or .bmp)
                 {
-                    //load mask file (in the image all places that have color (transparency > 9 [0-255 scale]) are masked)
-                    using (var mask_img = new Bitmap($"./cameras/{cameraname}.png"))
+                    fileType = ".bmp";
+                }
+                else if(System.IO.File.Exists("./cameras/" + cameraname + ".png"))
+                {
+                    fileType = ".png";
+                }
+                else //if mask image does not exist, object is outside the non-existing masked area
+                {
+                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
+                    return true;
+                }
+
+                //load mask file (in the image all places that have color (transparency > 9 [0-255 scale]) are masked)
+                using (var mask_img = new Bitmap($"./cameras/{cameraname}" + fileType))
                     {
                         //if any coordinates of the object are outside of the mask image, th mask image must be too small.
                         if (mask_img.Width != width || mask_img.Height != height)
                         {
-                            Log($"ERROR: The resolution of the mask './camera/{cameraname}.png' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
+                            Log($"ERROR: The resolution of the mask './camera/{cameraname}" + fileType + "' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
                             return true;
                         }
 
@@ -1225,11 +1239,22 @@ namespace AITool
                             // Get the color of the pixel
                             System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
 
-                            //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
-                            if (pixelColor.A < 10)
+                            if (fileType == ".png")
                             {
-                                result++;
+                                //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
+                                if (pixelColor.A < 10)
+                                {
+                                    result++;
+                                }
                             }
+                            else
+                            {
+                                if(pixelColor.A == 0)  // object is in a transparent section of the image (not masked)
+                                {
+                                    result++;
+                                }
+                            }
+
                         }
 
                         Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
@@ -1246,12 +1271,8 @@ namespace AITool
                         }
 
                     }
-                }
-                else //if mask image does not exist, object is outside the non-existing masked area
-                {
-                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
-                    return true;
-                }
+                
+
 
             }
             catch
@@ -1969,6 +1990,7 @@ namespace AITool
         }*/
 
         //show or hide the privacy mask overlay
+        //TODO:refactor
         private void showHideMask()
         {
             if (cb_showMask.Checked == true) //show overlay
@@ -1979,6 +2001,13 @@ namespace AITool
                     if (System.IO.File.Exists("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".png")) //check if privacy mask file exists
                     {
                         using (var img = new Bitmap("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".png"))
+                        {
+                            pictureBox1.Image = new Bitmap(img); //load mask as overlay
+                        }
+                    }
+                    else if (System.IO.File.Exists("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".bmp")) //check if privacy mask file exists
+                    {
+                        using (var img = new Bitmap("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".bmp"))
                         {
                             pictureBox1.Image = new Bitmap(img); //load mask as overlay
                         }
@@ -2071,6 +2100,7 @@ namespace AITool
         }
 
         //load object rectangle overlays
+        //TODO: refactor detections
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
@@ -3822,9 +3852,6 @@ namespace AITool
                 }
             }
         }
-
-
-
 
 
         private void BtnDynamicMaskingSettings_Click(object sender, EventArgs e)
