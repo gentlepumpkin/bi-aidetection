@@ -2556,22 +2556,27 @@ namespace AITool
             }
             else
             {
-                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                int qsize = ImageProcessQueue.Count + 1;
-                if (qsize > AppSettings.Settings.MaxImageQueueSize)
-                {
-                    Log("");
-                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
-                }
-                else
-                {
-                    Log("");
-                    Log("Adding new image to queue: " + e.FullPath);
-                    ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                    ImageProcessQueue.Enqueue(CurImg);
-                    qsizecalc.AddToCalc(qsize);
-                }
-                UpdateQueueLabel();
+
+                
+                 //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                 int qsize = ImageProcessQueue.Count + 1;
+                 if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                 {
+                     Log("");
+                     Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                 }
+                 else
+                 {
+                     Log("");
+                     Log("Adding new image to queue: " + e.FullPath);
+                     ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                    detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
+                     ImageProcessQueue.Enqueue(CurImg);
+                     qsizecalc.AddToCalc(qsize);
+                 }
+                 UpdateQueueLabel();
+
+                
             }
 
 
@@ -2726,18 +2731,14 @@ namespace AITool
                             {
                                 //get the next image
                                 this.ImageProcessQueue.TryDequeue(out CurImg);
-                                //make sure we are not processing a duplicate file...
-                                if (detection_dictionary.ContainsKey(CurImg.image_path.ToLower()))
-                                {
-                                    Log("Skipping duplicate file: " + CurImg.image_path);
-                                }
-                                else
-                                {
+                                
                                     //add A task to process the image
                                     //get the next url
                                     ClsURLItem url;
                                     DSURLQueue.TryDequeue(out url);
                                     Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+                                  
+
                                     allRunningTasks.Add(Task.Run(async () =>
                                     {
                                         bool success = await ProcessImage(CurImg, url);
@@ -2770,7 +2771,7 @@ namespace AITool
                                         }
                                         else
                                         {
-                                            detection_dictionary.TryAdd(CurImg.image_path.ToLower(), CurImg);
+                                            
 
                                             //put url back in queue when done
                                             DSURLQueue.Enqueue(url);
@@ -2779,7 +2780,7 @@ namespace AITool
                                     })
                                     );
 
-                                }
+                                
                             }
 
                             //wait for ANY task in the list to complete if there are any
