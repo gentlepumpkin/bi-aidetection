@@ -9,17 +9,19 @@ namespace AITool
 {
     public partial class Frm_CustomMasking : Form
     {
-        public Camera cam;
-        private Point lastPoint = Point.Empty;  
+        public Camera cam {get; set;}
+        private Point scaledLastPoint = Point.Empty;
+        private Point lastPoint = Point.Empty;
         private bool isMouseDown = new Boolean();
         private Bitmap transparentLayer, cameraLayer;
-        private static string baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\");
+        private const string baseDirectory = "./cameras/";
         private const string FILE_TYPE = ".bmp";
+        private int brushSize;
 
         public Frm_CustomMasking()
         {
             InitializeComponent();
-            //this.Paint += new System.Windows.Forms.PaintEventHandler();
+            DoubleBuffered = true;
         }
 
         private void ShowImage()
@@ -114,63 +116,65 @@ namespace AITool
 
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
+            Int32.TryParse(numBrushSize.Text, out brushSize);
             ShowImage();
             isMouseDown = false;
         }
 
         private void pbMaskImage_Paint(object sender, PaintEventArgs e)
         {
-            Int32.TryParse(numBrushSize.Text, out int brushSize);
+            
 
-            if (lastPoint != Point.Empty && pbMaskImage.Image != null)
+            e.Graphics.DrawRectangle(Pens.Yellow, lastPoint.X, lastPoint.Y, brushSize, brushSize);
+
+            if (isMouseDown == true)
             {
-                //first draw the image for the picturebox. Used as a readonly background layer
-                using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                if (scaledLastPoint != Point.Empty && pbMaskImage.Image != null)
                 {
-                    Color color = Color.FromArgb(255, Color.Black);
-                    SolidBrush semiTransBrush = new SolidBrush(color);
+                    //first draw the image for the picturebox. Used as a readonly background layer
+                    using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                    {
+                        Color color = Color.FromArgb(255, Color.Black);
+                        SolidBrush semiTransBrush = new SolidBrush(color);
 
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    //e.Graphics.DrawEllipse(Pens.Black, lastPoint.X - xDiff, lastPoint.Y - yDiff, xDiff * 2, yDiff * 2);
-                    g.FillRectangle(semiTransBrush, lastPoint.X, lastPoint.Y, brushSize, brushSize);
-                }
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.FillRectangle(semiTransBrush, scaledLastPoint.X, scaledLastPoint.Y, brushSize, brushSize);
+                    }
 
-                //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.  
-                using(Graphics g = Graphics.FromImage(transparentLayer))
-                {
-                    Color color = Color.FromArgb(255, 0, 0, 0);
-                    SolidBrush semiTransBrush = new SolidBrush(color);
+                    //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.  
+                    using (Graphics g = Graphics.FromImage(transparentLayer))
+                    {
+                        Color color = Color.FromArgb(255, 0, 0, 0);
+                        SolidBrush semiTransBrush = new SolidBrush(color);
 
-                    //g.CompositingQuality = CompositingQuality.GammaCorrected;
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.FillRectangle(semiTransBrush, lastPoint.X, lastPoint.Y, brushSize, brushSize);
+                        //g.CompositingQuality = CompositingQuality.GammaCorrected;
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.FillRectangle(semiTransBrush, scaledLastPoint.X, scaledLastPoint.Y, brushSize, brushSize);
+                    }
                 }
             }
         }
 
         private void pbMaskImage_MouseDown(object sender, MouseEventArgs e)
         {
-            lastPoint = AdjustZoomMousePosition(e.Location); //assign the lastPoint to the current mouse position
+            scaledLastPoint = AdjustZoomMousePosition(e.Location); //assign the scaledLastPoint to the current mouse position
             isMouseDown = true;     //set to true because our mouse button is pressed down
         }
 
         private void pbMaskImage_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isMouseDown == true)
+            if (scaledLastPoint != null && pbMaskImage.Image != null)//if our last point is not null, which in this case we have assigned above
             {
-
-                if (lastPoint != null && pbMaskImage.Image != null)//if our last point is not null, which in this case we have assigned above
-                {
-                    pbMaskImage.Invalidate();  //refreshes the picturebox
-                    lastPoint = AdjustZoomMousePosition(e.Location);    //set the lastPoint to the current mouse position    
-                }
+                pbMaskImage.Invalidate();  //refreshes the picturebox
+                scaledLastPoint = AdjustZoomMousePosition(e.Location);    //set the scaledLastPoint to the current mouse position    
+                lastPoint = e.Location;
             }
         }
 
         private void pbMaskImage_MouseUp(object sender, MouseEventArgs e)
         {
             isMouseDown = false;
-            lastPoint = Point.Empty;
+            scaledLastPoint = Point.Empty;
         }
 
         private void numBrushSize_Leave(object sender, EventArgs e)
@@ -190,6 +194,16 @@ namespace AITool
             }
             
             ShowImage();
+        }
+
+        private void numBrushSize_ValueChanged(object sender, EventArgs e)
+        {
+            brushSize = (int) numBrushSize.Value;
+        }
+
+        private void numBrushSize_KeyUp(object sender, KeyEventArgs e)
+        {
+            brushSize = (int)numBrushSize.Value;
         }
 
         private void btnSave_Click(object sender, EventArgs e)

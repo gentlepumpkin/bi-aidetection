@@ -85,6 +85,8 @@
             0,
             0,
             0});
+            this.numBrushSize.ValueChanged += new System.EventHandler(this.numBrushSize_ValueChanged);
+            this.numBrushSize.KeyUp += new System.Windows.Forms.KeyEventHandler(this.numBrushSize_KeyUp);
             this.numBrushSize.Leave += new System.EventHandler(this.numBrushSize_Leave);
             // 
             // btnClear
