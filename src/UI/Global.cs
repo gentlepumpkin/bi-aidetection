@@ -32,20 +32,20 @@ namespace AITool
             string dest_path = "";
             try
             {
-                if (!Directory.Exists(cam.network_folder))
+                if (!Directory.Exists(cam.Action_network_folder))
                 {
-                    Directory.CreateDirectory(cam.network_folder);
+                    Directory.CreateDirectory(cam.Action_network_folder);
                 }
-                if (cam.image_copy_original_name)
+                if (cam.Action_image_copy_original_name)
                 {
-                    dest_path = System.IO.Path.Combine(cam.network_folder, Path.GetFileName(CurImg.image_path));
+                    dest_path = System.IO.Path.Combine(cam.Action_network_folder, Path.GetFileName(CurImg.image_path));
                     System.IO.File.Copy(CurImg.image_path, dest_path, true);
 
                 }
                 else
                 {
                     extension = System.IO.Path.GetExtension(CurImg.image_path);
-                    dest_path = System.IO.Path.Combine(cam.network_folder, cam.name + extension);
+                    dest_path = System.IO.Path.Combine(cam.Action_network_folder, cam.name + extension);
                     System.IO.File.Copy(CurImg.image_path, dest_path, true);
                 }
             }

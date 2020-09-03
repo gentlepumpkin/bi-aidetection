@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -119,7 +120,7 @@ namespace AITool
                             int ymax = (int)(scale * op.ymax) + absY;
 
                             Color color;
-                            if (op.isVisible)
+                            if (op.isStatic)
                             {
                                 color = Color.Red;
                             }
@@ -129,7 +130,7 @@ namespace AITool
                             }
 
                             //set alpha/transparency so you can see under the label
-                            Color newColor = Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
+                            Color newColor = Color.FromArgb(150, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
 
                             //3. paint rectangle
                             System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
@@ -178,15 +179,7 @@ namespace AITool
             }
         }
 
-        private void FOLV_MaskHistory_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void FOLV_Masks_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
+       
 
         private void FOLV_MaskHistory_SelectionChanged(object sender, EventArgs e)
         {
@@ -289,6 +282,52 @@ namespace AITool
         private void Frm_DynamicMaskDetails_FormClosing(object sender, FormClosingEventArgs e)
         {
             Global_GUI.SaveWindowState(this);
+        }
+
+        private void FOLV_MaskHistory_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            FormatRow(sender, e);
+        }
+
+        private async void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            try
+            {
+                ObjectPosition OP = (ObjectPosition)e.Model;
+
+                // If SPI IsNot Nothing Then
+                if (OP.isStatic && e.Item.ForeColor != Color.Blue)
+                    e.Item.ForeColor = Color.Blue;
+                else if (!OP.isStatic && e.Item.ForeColor != Color.Black)
+                    e.Item.ForeColor = Color.Black;
+            }
+
+            
+
+            catch (Exception ex)
+            {
+            }
+            // Log("Error: " & ExMsg(ex))
+            finally
+            {
+            }
+        }
+
+        private void FOLV_Masks_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            FormatRow(sender, e);
+        }
+
+        private void createStaticMaskToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (contextMenuPosObj != null)
+            {
+                contextMenuPosObj.isStatic = true;
+                contextMenuPosObj.counter = 0;
+                contextMenuPosObj = null;
+                Refresh();
+                AppSettings.Save();
+            }
         }
     }
 }

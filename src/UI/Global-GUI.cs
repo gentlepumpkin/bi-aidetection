@@ -160,7 +160,7 @@ namespace AITool
 					}
 					else
 					{
-						cl.MinimumWidth = 100;
+						cl.MinimumWidth = 50;
 						//cl.MaximumWidth = 20000
 						//cl.Width = -2
 					}

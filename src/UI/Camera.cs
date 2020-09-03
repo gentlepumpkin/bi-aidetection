@@ -34,7 +34,7 @@ namespace AITool
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "person";
         public string[] trigger_urls = new string[0];
-        public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
+        //public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
         public bool trigger_url_cancels = false;
         public bool telegram_enabled = false;
         public bool enabled = true;
@@ -46,9 +46,14 @@ namespace AITool
         public string input_path = "";
         public bool input_path_includesubfolders = false;
 
-        public bool image_copy_enabled = false;
-        public string network_folder = "";
-        public bool image_copy_original_name = false;
+        public bool Action_image_copy_enabled = false;
+        public string Action_network_folder = "";
+        public bool Action_image_copy_original_name = false;
+        public bool Action_RunProgram = false;
+        public string Action_RunProgramString = "";
+        public string Action_RunProgramArgsString = "";
+        public bool Action_PlaySounds = false;
+        public string Action_Sounds = "";
 
         public MaskManager maskManager = new MaskManager();
 

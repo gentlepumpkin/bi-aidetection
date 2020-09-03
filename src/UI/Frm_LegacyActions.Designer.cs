@@ -44,6 +44,11 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tb_network_folder = new System.Windows.Forms.TextBox();
             this.cb_UseOriginalFilename = new System.Windows.Forms.CheckBox();
+            this.cb_RunProgram = new System.Windows.Forms.CheckBox();
+            this.tb_RunExternalProgram = new System.Windows.Forms.TextBox();
+            this.tb_RunExternalProgramArgs = new System.Windows.Forms.TextBox();
+            this.cb_PlaySound = new System.Windows.Forms.CheckBox();
+            this.tb_Sounds = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,7 +57,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(1140, 394);
+            this.btnCancel.Location = new System.Drawing.Point(1110, 488);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(109, 52);
@@ -65,7 +70,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(998, 394);
+            this.btnSave.Location = new System.Drawing.Point(968, 488);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(109, 52);
@@ -79,6 +84,11 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.tb_Sounds);
+            this.groupBox1.Controls.Add(this.cb_PlaySound);
+            this.groupBox1.Controls.Add(this.tb_RunExternalProgramArgs);
+            this.groupBox1.Controls.Add(this.tb_RunExternalProgram);
+            this.groupBox1.Controls.Add(this.cb_RunProgram);
             this.groupBox1.Controls.Add(this.cb_UseOriginalFilename);
             this.groupBox1.Controls.Add(this.tb_network_folder);
             this.groupBox1.Controls.Add(this.cb_copyAlertImages);
@@ -93,7 +103,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.groupBox1.Size = new System.Drawing.Size(1234, 370);
+            this.groupBox1.Size = new System.Drawing.Size(1204, 464);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             // 
@@ -103,11 +113,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbTriggerUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbTriggerUrl.Location = new System.Drawing.Point(30, 249);
+            this.tbTriggerUrl.Location = new System.Drawing.Point(30, 334);
             this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbTriggerUrl.Multiline = true;
             this.tbTriggerUrl.Name = "tbTriggerUrl";
-            this.tbTriggerUrl.Size = new System.Drawing.Size(1186, 102);
+            this.tbTriggerUrl.Size = new System.Drawing.Size(1156, 111);
             this.tbTriggerUrl.TabIndex = 22;
             this.toolTip1.SetToolTip(this.tbTriggerUrl, "A list of URLs each on their own line OR seperated with commas that will be trigg" +
         "ered on an alert");
@@ -116,7 +126,7 @@
             // 
             this.lblTriggerUrl.AutoSize = true;
             this.lblTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblTriggerUrl.Location = new System.Drawing.Point(25, 213);
+            this.lblTriggerUrl.Location = new System.Drawing.Point(25, 298);
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(158, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
@@ -151,7 +161,7 @@
             // 
             this.cb_TriggerCancels.AutoSize = true;
             this.cb_TriggerCancels.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_TriggerCancels.Location = new System.Drawing.Point(30, 173);
+            this.cb_TriggerCancels.Location = new System.Drawing.Point(30, 258);
             this.cb_TriggerCancels.Margin = new System.Windows.Forms.Padding(10, 6, 5, 6);
             this.cb_TriggerCancels.Name = "cb_TriggerCancels";
             this.cb_TriggerCancels.Size = new System.Drawing.Size(179, 34);
@@ -202,14 +212,14 @@
             this.tb_network_folder.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.tb_network_folder.Location = new System.Drawing.Point(335, 125);
             this.tb_network_folder.Name = "tb_network_folder";
-            this.tb_network_folder.Size = new System.Drawing.Size(624, 35);
+            this.tb_network_folder.Size = new System.Drawing.Size(594, 35);
             this.tb_network_folder.TabIndex = 28;
             // 
             // cb_UseOriginalFilename
             // 
             this.cb_UseOriginalFilename.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cb_UseOriginalFilename.AutoSize = true;
-            this.cb_UseOriginalFilename.Location = new System.Drawing.Point(975, 125);
+            this.cb_UseOriginalFilename.Location = new System.Drawing.Point(945, 125);
             this.cb_UseOriginalFilename.Name = "cb_UseOriginalFilename";
             this.cb_UseOriginalFilename.Size = new System.Drawing.Size(241, 34);
             this.cb_UseOriginalFilename.TabIndex = 29;
@@ -217,12 +227,63 @@
             this.toolTip1.SetToolTip(this.cb_UseOriginalFilename, "When this is unchecked the image will be copied as CAMNAME.JPG");
             this.cb_UseOriginalFilename.UseVisualStyleBackColor = true;
             // 
+            // cb_RunProgram
+            // 
+            this.cb_RunProgram.AutoSize = true;
+            this.cb_RunProgram.Location = new System.Drawing.Point(30, 170);
+            this.cb_RunProgram.Name = "cb_RunProgram";
+            this.cb_RunProgram.Size = new System.Drawing.Size(246, 34);
+            this.cb_RunProgram.TabIndex = 30;
+            this.cb_RunProgram.Text = "Run external program:";
+            this.cb_RunProgram.UseVisualStyleBackColor = true;
+            // 
+            // tb_RunExternalProgram
+            // 
+            this.tb_RunExternalProgram.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_RunExternalProgram.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.tb_RunExternalProgram.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
+            this.tb_RunExternalProgram.Location = new System.Drawing.Point(335, 170);
+            this.tb_RunExternalProgram.Name = "tb_RunExternalProgram";
+            this.tb_RunExternalProgram.Size = new System.Drawing.Size(594, 35);
+            this.tb_RunExternalProgram.TabIndex = 31;
+            this.toolTip1.SetToolTip(this.tb_RunExternalProgram, "Path to EXE, BAT, etc");
+            // 
+            // tb_RunExternalProgramArgs
+            // 
+            this.tb_RunExternalProgramArgs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_RunExternalProgramArgs.Location = new System.Drawing.Point(945, 170);
+            this.tb_RunExternalProgramArgs.Name = "tb_RunExternalProgramArgs";
+            this.tb_RunExternalProgramArgs.Size = new System.Drawing.Size(241, 35);
+            this.tb_RunExternalProgramArgs.TabIndex = 32;
+            this.toolTip1.SetToolTip(this.tb_RunExternalProgramArgs, "Command line arguments to run the external app or script");
+            // 
+            // cb_PlaySound
+            // 
+            this.cb_PlaySound.AutoSize = true;
+            this.cb_PlaySound.Location = new System.Drawing.Point(30, 215);
+            this.cb_PlaySound.Name = "cb_PlaySound";
+            this.cb_PlaySound.Size = new System.Drawing.Size(147, 34);
+            this.cb_PlaySound.TabIndex = 33;
+            this.cb_PlaySound.Text = "Play Sound:";
+            this.cb_PlaySound.UseVisualStyleBackColor = true;
+            // 
+            // tb_Sounds
+            // 
+            this.tb_Sounds.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_Sounds.Location = new System.Drawing.Point(335, 213);
+            this.tb_Sounds.Name = "tb_Sounds";
+            this.tb_Sounds.Size = new System.Drawing.Size(851, 35);
+            this.tb_Sounds.TabIndex = 34;
+            this.toolTip1.SetToolTip(this.tb_Sounds, resources.GetString("tb_Sounds.ToolTip"));
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(1262, 460);
+            this.ClientSize = new System.Drawing.Size(1232, 554);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnSave);
@@ -255,5 +316,10 @@
         public System.Windows.Forms.CheckBox cb_copyAlertImages;
         public System.Windows.Forms.TextBox tb_network_folder;
         public System.Windows.Forms.CheckBox cb_UseOriginalFilename;
+        public System.Windows.Forms.CheckBox cb_RunProgram;
+        public System.Windows.Forms.TextBox tb_RunExternalProgram;
+        public System.Windows.Forms.TextBox tb_RunExternalProgramArgs;
+        public System.Windows.Forms.TextBox tb_Sounds;
+        public System.Windows.Forms.CheckBox cb_PlaySound;
     }
 }

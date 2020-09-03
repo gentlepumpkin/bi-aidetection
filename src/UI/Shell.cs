@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -960,7 +961,7 @@ namespace AITool
 
                 //I notice deepstack takes a lot longer the very first run?
 
-                CurImg.TotalTimeMS = sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
+                CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
                 CurImg.DeepStackTimeMS = swposttime.ElapsedMilliseconds;
 
                 tcalc.AddToCalc(CurImg.TotalTimeMS);
@@ -1149,9 +1150,8 @@ namespace AITool
                     CallTriggerURLs(urls);
                 }
 
-
                 //upload to telegram
-                if (cam.telegram_enabled)
+                if (cam.telegram_enabled && !cam.trigger_url_cancels)
                 {
                     if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
                     {
@@ -1166,7 +1166,89 @@ namespace AITool
                     }
                 }
 
-                if (cam.image_copy_enabled && !cam.trigger_url_cancels)
+                //run external program
+                if (cam.Action_RunProgram && !cam.trigger_url_cancels)
+                {
+                    try
+                    {
+
+                        string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
+                        tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
+                        tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
+
+                        if (cam.last_detections != null && cam.last_detections.Count > 0)
+                        {
+                            tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                            tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                            tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
+                            tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
+                            tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
+                            tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
+
+                        }
+                        Log($"   Starting external app {cam.Action_RunProgramString} {tmp}");
+                        Process.Start(cam.Action_RunProgramString, tmp);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
+                    }
+                }
+
+                //Play sounds
+                if (cam.Action_PlaySounds && !cam.trigger_url_cancels)
+                {
+                    try
+                    {
+
+                        //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
+
+                        List<string> items = Global.Split(cam.Action_Sounds,"|");
+
+                        foreach (string itm in items)
+                        {
+                            //object1, object2 ; soundfile.wav
+                            int played = 0;
+                            List<string> prms = Global.Split(itm, "|");
+                            foreach (string prm in prms)
+                            {
+                                //prm0 - object1, object2
+                                //prm1 - soundfile.wav
+                                List<string> splt = Global.Split(prm, ";");
+                                string soundfile = splt[1];
+                                List<string> objects = Global.Split(splt[0], ",");
+                                foreach (string objname in objects)
+                                {
+                                    foreach (string detection in cam.last_detections)
+                                    {
+                                        if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
+                                        {
+                                            Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
+                                            SoundPlayer sp = new SoundPlayer(soundfile);
+                                            sp.Play();
+                                            played++;
+                                        }
+                                    }
+                                }
+                            }
+                            if (played == 0)
+                            {
+                                Log("No object matched sound to play.");
+                            }
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
+                    }
+                }
+
+
+
+                if (cam.Action_image_copy_enabled && !cam.trigger_url_cancels)
                 {
                     Log("   Copying image to network folder...");
                     Global.CopyImage(cam, CurImg);
@@ -2068,7 +2150,7 @@ namespace AITool
                     int ymax = (int)(scale * _ymax) + absY;
 
                     //set alpha/transparency so you can see under the label
-                    System.Drawing.Color newColor = System.Drawing.Color.FromArgb(100, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
+                    System.Drawing.Color newColor = System.Drawing.Color.FromArgb(150, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
 
                     //3. paint rectangle
                     System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
@@ -2716,12 +2798,9 @@ namespace AITool
                         {
                             if (tsk != null && !tsk.IsCompleted && !tsk.IsFaulted && !tsk.IsCanceled)
                             {
-                                //-------------------------------
-                                //should not get here!?
-                                //-------------------------------
-                                Log($"Warning: Unexpected - Waiting for a task to finish...");
+                                Log($"Waiting for a task to finish...");
                                 tsk.Wait();
-                                Log("...Task finished.");
+                                Log($"...Task finished.  Status='{tsk.Status}'");
                             }
                         }
                         allRunningTasks.Clear();
@@ -3961,9 +4040,10 @@ namespace AITool
                 frm.cb_telegram.Checked = cam.telegram_enabled;
 
                 frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
-                frm.cb_copyAlertImages.Checked = cam.image_copy_enabled;
-                frm.cb_UseOriginalFilename.Checked = cam.image_copy_original_name;
-                frm.tb_network_folder.Text = cam.network_folder;
+                frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
+                frm.cb_UseOriginalFilename.Checked = cam.Action_image_copy_original_name;
+                frm.tb_network_folder.Text = cam.Action_network_folder;
+                frm.cb_RunProgram.Checked = cam.Action_RunProgram;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -3971,9 +4051,61 @@ namespace AITool
                     cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
-                    cam.image_copy_enabled = frm.cb_copyAlertImages.Checked;
-                    cam.network_folder = frm.tb_network_folder.Text.Trim();
-                    cam.image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+                    cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
+                    cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
+                    cam.Action_image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+                    cam.Action_RunProgram = frm.cb_RunProgram.Checked;
+                    cam.Action_RunProgramString = frm.tb_RunExternalProgram.Text;
+
+                    AppSettings.Save();
+
+                }
+            }
+        }
+
+        private void btnActions_Click_1(object sender, EventArgs e)
+        {
+            using (Frm_LegacyActions frm = new Frm_LegacyActions())
+            {
+
+
+                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
+                frm.tbTriggerUrl.Text = tfixed;
+                frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
+                //load telegram image sending on/off option
+                frm.cb_telegram.Checked = cam.telegram_enabled;
+
+                frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
+                
+                frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
+                frm.cb_UseOriginalFilename.Checked = cam.Action_image_copy_original_name;
+                frm.tb_network_folder.Text = cam.Action_network_folder;
+
+                frm.cb_RunProgram.Checked = cam.Action_RunProgram;
+                frm.tb_RunExternalProgram.Text = cam.Action_RunProgramString;
+                frm.tb_RunExternalProgramArgs.Text = cam.Action_RunProgramArgsString;
+                
+                frm.cb_PlaySound.Checked = cam.Action_PlaySounds;
+                frm.tb_Sounds.Text = cam.Action_Sounds;
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
+                    cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
+                    cam.telegram_enabled = frm.cb_telegram.Checked;
+                    cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
+
+                    cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
+                    cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
+                    cam.Action_image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+
+                    cam.Action_RunProgram = frm.cb_RunProgram.Checked;
+                    cam.Action_RunProgramString = frm.tb_RunExternalProgram.Text.Trim();
+                    cam.Action_RunProgramArgsString = frm.tb_RunExternalProgramArgs.Text.Trim();
+
+                    cam.Action_PlaySounds = frm.cb_PlaySound.Checked;
+                    cam.Action_Sounds = frm.tb_Sounds.Text.Trim();
 
                     AppSettings.Save();
 
