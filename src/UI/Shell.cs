@@ -575,7 +575,7 @@ namespace AITool
                     sw.Stop();
 
                     CurImg.FileLockMS = sw.ElapsedMilliseconds;
-                    
+
                     if (success)
                     {
                         using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
@@ -933,7 +933,7 @@ namespace AITool
                         Log(error);
                     }
 
-                    
+
                     //break; //end retries if code was successful
                 }
                 catch (Exception ex)
@@ -995,7 +995,7 @@ namespace AITool
                 Log($"{CurSrv} - Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
             }
 
-            return (error=="");
+            return (error == "");
 
 
         }
@@ -1019,7 +1019,7 @@ namespace AITool
 
             }
 
-           
+
         }
 
         //send image to Telegram
@@ -1114,10 +1114,10 @@ namespace AITool
             if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= cam.cooldown_time)
             {
                 //call trigger urls
-                if (cam.trigger_urls.Count() > 0)   
+                if (cam.trigger_urls.Count() > 0)
                 {
                     //replace url paramters with according values
-                    List<string> urls = new List<string>() ;
+                    List<string> urls = new List<string>();
                     //call urls
                     foreach (string url in cam.trigger_urls)
                     {
@@ -1150,109 +1150,117 @@ namespace AITool
                     CallTriggerURLs(urls);
                 }
 
-                //upload to telegram
-                if (cam.telegram_enabled && !cam.trigger_url_cancels)
+                if (!cam.trigger_url_cancels)
                 {
-                    if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
+                    //upload to telegram
+                    if (cam.telegram_enabled )
                     {
-                        Log("   Uploading image to Telegram...");
-                        await TelegramUpload(CurImg);
-                        Log("   -> Sent image to Telegram.");
-                    }
-                    else
-                    {
-                        //log that nothing was done
-                        Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
-                    }
-                }
-
-                //run external program
-                if (cam.Action_RunProgram && !cam.trigger_url_cancels)
-                {
-                    try
-                    {
-
-                        string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
-                        tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
-                        tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
-
-                        if (cam.last_detections != null && cam.last_detections.Count > 0)
+                        if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
                         {
-                            tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                            tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
-                            tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
-                            tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
-                            tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
-                            tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
-
+                            Log("   Uploading image to Telegram...");
+                            await TelegramUpload(CurImg);
+                            Log("   -> Sent image to Telegram.");
                         }
-                        Log($"   Starting external app {cam.Action_RunProgramString} {tmp}");
-                        Process.Start(cam.Action_RunProgramString, tmp);
-                    }
-                    catch (Exception ex)
-                    {
-
-                        Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
-                    }
-                }
-
-                //Play sounds
-                if (cam.Action_PlaySounds && !cam.trigger_url_cancels)
-                {
-                    try
-                    {
-
-                        //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
-
-                        List<string> items = Global.Split(cam.Action_Sounds,"|");
-
-                        foreach (string itm in items)
+                        else
                         {
-                            //object1, object2 ; soundfile.wav
-                            int played = 0;
-                            List<string> prms = Global.Split(itm, "|");
-                            foreach (string prm in prms)
+                            //log that nothing was done
+                            Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
+                        }
+                    }
+
+                    //run external program
+                    if (cam.Action_RunProgram )
+                    {
+                        try
+                        {
+
+                            string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
+                            tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
+                            tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
+
+                            if (cam.last_detections != null && cam.last_detections.Count > 0)
                             {
-                                //prm0 - object1, object2
-                                //prm1 - soundfile.wav
-                                List<string> splt = Global.Split(prm, ";");
-                                string soundfile = splt[1];
-                                List<string> objects = Global.Split(splt[0], ",");
-                                foreach (string objname in objects)
+                                tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                                tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                                tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
+                                tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
+                                tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
+                                tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
+
+                            }
+                            Log($"   Starting external app {cam.Action_RunProgramString} {tmp}");
+                            Process.Start(cam.Action_RunProgramString, tmp);
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
+                        }
+                    }
+
+                    //Play sounds
+                    if (cam.Action_PlaySounds )
+                    {
+                        try
+                        {
+
+                            //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
+
+                            List<string> items = Global.Split(cam.Action_Sounds, "|");
+
+                            foreach (string itm in items)
+                            {
+                                //object1, object2 ; soundfile.wav
+                                int played = 0;
+                                List<string> prms = Global.Split(itm, "|");
+                                foreach (string prm in prms)
                                 {
-                                    foreach (string detection in cam.last_detections)
+                                    //prm0 - object1, object2
+                                    //prm1 - soundfile.wav
+                                    List<string> splt = Global.Split(prm, ";");
+                                    string soundfile = splt[1];
+                                    List<string> objects = Global.Split(splt[0], ",");
+                                    foreach (string objname in objects)
                                     {
-                                        if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
+                                        foreach (string detection in cam.last_detections)
                                         {
-                                            Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
-                                            SoundPlayer sp = new SoundPlayer(soundfile);
-                                            sp.Play();
-                                            played++;
+                                            if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
+                                            {
+                                                Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
+                                                SoundPlayer sp = new SoundPlayer(soundfile);
+                                                sp.Play();
+                                                played++;
+                                            }
                                         }
                                     }
                                 }
+                                if (played == 0)
+                                {
+                                    Log("No object matched sound to play.");
+                                }
                             }
-                            if (played == 0)
-                            {
-                                Log("No object matched sound to play.");
-                            }
+
                         }
+                        catch (Exception ex)
+                        {
 
+                            Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
+                        }
                     }
-                    catch (Exception ex)
+
+
+
+                    if (cam.Action_image_copy_enabled )
                     {
-
-                        Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
+                        Log("   Copying image to network folder...");
+                        Global.CopyImage(cam, CurImg);
+                        Log("   -> Image copied to network folder.");
                     }
+
                 }
-
-
-
-                if (cam.Action_image_copy_enabled && !cam.trigger_url_cancels)
+                else
                 {
-                    Log("   Copying image to network folder...");
-                    Global.CopyImage(cam, CurImg);
-                    Log("   -> Image copied to network folder.");
+                    Log($"   (Skipping all other actions due to 'Trigger cancels' camera action setting)");
                 }
 
             }
@@ -1283,7 +1291,7 @@ namespace AITool
                 {
                     fileType = ".bmp";
                 }
-                else if(System.IO.File.Exists("./cameras/" + cameraname + ".png"))
+                else if (System.IO.File.Exists("./cameras/" + cameraname + ".png"))
                 {
                     fileType = ".png";
                 }
@@ -1295,65 +1303,65 @@ namespace AITool
 
                 //load mask file (in the image all places that have color (transparency > 9 [0-255 scale]) are masked)
                 using (var mask_img = new Bitmap($"./cameras/{cameraname}" + fileType))
+                {
+                    //if any coordinates of the object are outside of the mask image, th mask image must be too small.
+                    if (mask_img.Width != width || mask_img.Height != height)
                     {
-                        //if any coordinates of the object are outside of the mask image, th mask image must be too small.
-                        if (mask_img.Width != width || mask_img.Height != height)
+                        Log($"ERROR: The resolution of the mask './camera/{cameraname}" + fileType + "' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
+                        return true;
+                    }
+
+                    Log("         Checking if the object is in a masked area...");
+
+                    //relative x and y locations of the 9 detection points
+                    double[] x_factor = new double[] { 0.25, 0.5, 0.75, 0.25, 0.5, 0.75, 0.25, 0.5, 0.75 };
+                    double[] y_factor = new double[] { 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75 };
+
+                    int result = 0; //counts how many of the 9 points are outside of masked area(s)
+
+                    //check the transparency of the mask image in all 9 detection points
+                    for (int i = 0; i < 9; i++)
+                    {
+                        //get image point coordinates (and converting double to int)
+                        int x = (int)(xmin + (xmax - xmin) * x_factor[i]);
+                        int y = (int)(ymin + (ymax - ymin) * y_factor[i]);
+
+                        // Get the color of the pixel
+                        System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
+
+                        if (fileType == ".png")
                         {
-                            Log($"ERROR: The resolution of the mask './camera/{cameraname}" + fileType + "' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
-                            return true;
-                        }
-
-                        Log("         Checking if the object is in a masked area...");
-
-                        //relative x and y locations of the 9 detection points
-                        double[] x_factor = new double[] { 0.25, 0.5, 0.75, 0.25, 0.5, 0.75, 0.25, 0.5, 0.75 };
-                        double[] y_factor = new double[] { 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75 };
-
-                        int result = 0; //counts how many of the 9 points are outside of masked area(s)
-
-                        //check the transparency of the mask image in all 9 detection points
-                        for (int i = 0; i < 9; i++)
-                        {
-                            //get image point coordinates (and converting double to int)
-                            int x = (int)(xmin + (xmax - xmin) * x_factor[i]);
-                            int y = (int)(ymin + (ymax - ymin) * y_factor[i]);
-
-                            // Get the color of the pixel
-                            System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
-
-                            if (fileType == ".png")
+                            //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
+                            if (pixelColor.A < 10)
                             {
-                                //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
-                                if (pixelColor.A < 10)
-                                {
-                                    result++;
-                                }
+                                result++;
                             }
-                            else
+                        }
+                        else
+                        {
+                            if (pixelColor.A == 0)  // object is in a transparent section of the image (not masked)
                             {
-                                if(pixelColor.A == 0)  // object is in a transparent section of the image (not masked)
-                                {
-                                    result++;
-                                }
+                                result++;
                             }
-
-                        }
-
-                        Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
-
-                        if (result > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
-                        {
-                            Log("      ->The object is OUTSIDE of masked area(s).");
-                            return true;
-                        }
-                        else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
-                        {
-                            Log("      ->The object is INSIDE a masked area.");
-                            return false;
                         }
 
                     }
-                
+
+                    Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
+
+                    if (result > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
+                    {
+                        Log("      ->The object is OUTSIDE of masked area(s).");
+                        return true;
+                    }
+                    else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
+                    {
+                        Log("      ->The object is INSIDE a masked area.");
+                        return false;
+                    }
+
+                }
+
 
 
             }
@@ -1481,10 +1489,7 @@ namespace AITool
                 {
                     RTFLogger.LogToRTF(RTFText);
                     LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
-                    //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "log.txt", append: true))
-                    //{
-                    //    sw.WriteLine($"[{time}]: {text}");
-                    //}
+
                 }
                 catch
                 {
@@ -1492,7 +1497,7 @@ namespace AITool
                     Invoke(LabelUpdate);
                 }
 
-                if (AppSettings.Settings.send_errors == true && HasError || HasWarning)
+                if (AppSettings.Settings.send_errors == true && (HasError || HasWarning))
                 {
                     await TelegramText($"[{time}]: {text}"); //upload text to Telegram
                 }
@@ -1666,7 +1671,7 @@ namespace AITool
             else if (tabControl1.SelectedTab == tabControl1.TabPages["tabLog"])
             {
                 //scroll to bottom, only when tab is active for better performance 
-                
+
                 Global.InvokeIFRequired(this.RTF_Log, () =>
                 {
                     if (Chk_AutoScroll.Checked)
@@ -1712,7 +1717,7 @@ namespace AITool
             }
             else
             {
-             
+
                 Camera cam = Global.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
                 if (cam != null)
                 {
@@ -2347,7 +2352,7 @@ namespace AITool
 
                 Invoke(LabelUpdate);
 
-                
+
 
                 //try to get a better feel how much time this function consumes - Vorlon
                 //Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
@@ -2557,33 +2562,33 @@ namespace AITool
             else
             {
 
-                
-                 //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                 int qsize = ImageProcessQueue.Count + 1;
-                 if (qsize > AppSettings.Settings.MaxImageQueueSize)
-                 {
-                     Log("");
-                     Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
-                 }
-                 else
-                 {
-                     Log("");
-                     Log("Adding new image to queue: " + e.FullPath);
-                     ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                    detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
-                     ImageProcessQueue.Enqueue(CurImg);
-                     qsizecalc.AddToCalc(qsize);
-                 }
-                 UpdateQueueLabel();
 
-                
+                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                int qsize = ImageProcessQueue.Count + 1;
+                if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                {
+                    Log("");
+                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                }
+                else
+                {
+                    Log("");
+                    Log("Adding new image to queue: " + e.FullPath);
+                    ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                    detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
+                    ImageProcessQueue.Enqueue(CurImg);
+                    qsizecalc.AddToCalc(qsize);
+                }
+                UpdateQueueLabel();
+
+
             }
 
 
 
         }
 
-       
+
 
         private async Task<bool> ProcessImage(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
         {
@@ -2600,40 +2605,40 @@ namespace AITool
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
                 {
 
-                    
 
-                        //output "Processing Image" to Overview Tab
-                        LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
-                        Invoke(LabelUpdate);
 
-                        //------------------------------------------------------------------------------------------------
-                        //------------------------------------------------------------------------------------------------
-                        ret = await DetectObjects(CurImg, DeepStackURL); //ai process image
-                        //------------------------------------------------------------------------------------------------
-                        //------------------------------------------------------------------------------------------------
+                    //output "Processing Image" to Overview Tab
+                    LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
+                    Invoke(LabelUpdate);
 
-                        //output Running on Overview Tab
-                        LabelUpdate = delegate { label2.Text = "Running"; };
-                        Invoke(LabelUpdate);
+                    //------------------------------------------------------------------------------------------------
+                    //------------------------------------------------------------------------------------------------
+                    ret = await DetectObjects(CurImg, DeepStackURL); //ai process image
+                                                                     //------------------------------------------------------------------------------------------------
+                                                                     //------------------------------------------------------------------------------------------------
 
-                        //only update charts if stats tab is open
+                    //output Running on Overview Tab
+                    LabelUpdate = delegate { label2.Text = "Running"; };
+                    Invoke(LabelUpdate);
 
-                        LabelUpdate = delegate
+                    //only update charts if stats tab is open
+
+                    LabelUpdate = delegate
+                    {
+
+                        if (tabControl1.SelectedIndex == 1)
                         {
 
-                            if (tabControl1.SelectedIndex == 1)
-                            {
+                            UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+                        }
+                    };
+                    Invoke(LabelUpdate);
 
-                                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
-                            }
-                        };
-                        Invoke(LabelUpdate);
-
-                        //load updated camera stats info in camera tab if a camera is selected
-                        LabelUpdate = delegate
+                    //load updated camera stats info in camera tab if a camera is selected
+                    LabelUpdate = delegate
+                    {
+                        if (list2.SelectedItems.Count > 0)
                         {
-                            if (list2.SelectedItems.Count > 0)
-                            {
                                 //load only stats from Camera.cs object
 
                                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
@@ -2641,18 +2646,18 @@ namespace AITool
 
                                 //load cameras stats
                                 string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
-                                if (cam.maskManager.masking_enabled)
-                                {
-                                    stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
-                                }
-                                lbl_camstats.Text = stats;
+                            if (cam.maskManager.masking_enabled)
+                            {
+                                stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
                             }
+                            lbl_camstats.Text = stats;
+                        }
 
 
-                        };
-                        Invoke(LabelUpdate);
+                    };
+                    Invoke(LabelUpdate);
 
-                    
+
 
                 }
 
@@ -2680,9 +2685,9 @@ namespace AITool
 
                 ClsImageQueueItem CurImg;
                 List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
-                
+
                 string LastURLS = AppSettings.Settings.deepstack_url;
-                
+
                 DateTime LastURLCheckTime = DateTime.MinValue;
                 DateTime LastCleanDupesTime = DateTime.MinValue;
                 bool HasDisabledURLs = false;
@@ -2692,7 +2697,7 @@ namespace AITool
                 {
                     while (!this.ImageProcessQueue.IsEmpty)
                     {
-                        
+
                         //Check to see if we need to get updated URL list
                         if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url || (HasDisabledURLs && (DateTime.Now - LastURLCheckTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes))
                         {
@@ -2718,7 +2723,7 @@ namespace AITool
                         ConcurrentQueue<ClsURLItem> DSURLQueue = new ConcurrentQueue<ClsURLItem>();
                         foreach (ClsURLItem url in DeepStackURLList)
                         {
-                            if (url.Enabled) 
+                            if (url.Enabled)
                                 DSURLQueue.Enqueue(url);
                         }
 
@@ -2731,56 +2736,54 @@ namespace AITool
                             {
                                 //get the next image
                                 this.ImageProcessQueue.TryDequeue(out CurImg);
-                                
-                                    //add A task to process the image
-                                    //get the next url
-                                    ClsURLItem url;
-                                    DSURLQueue.TryDequeue(out url);
-                                    Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
-                                  
 
-                                    allRunningTasks.Add(Task.Run(async () =>
+                                //add A task to process the image
+                                //get the next url
+                                ClsURLItem url;
+                                DSURLQueue.TryDequeue(out url);
+                                Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+
+
+                                allRunningTasks.Add(Task.Run(async () =>
+                                {
+                                    bool success = await ProcessImage(CurImg, url);
+                                    if (!success)
                                     {
-                                        bool success = await ProcessImage(CurImg, url);
-                                        if (!success)
+
+                                        errcnt++;
+
+                                        if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
                                         {
-
-                                            errcnt++;
-
-                                            if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                            {
                                                 //put url back in queue when done
                                                 DSURLQueue.Enqueue(url);
-                                            }
-                                            else
-                                            {
-                                                HasDisabledURLs = true;
-                                                url.Enabled = false;
-                                                Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
-                                            }
-                                            if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                            {
-                                                //put back in queue to be processed by another deepstack server
-                                                Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}'");
-                                                this.ImageProcessQueue.Enqueue(CurImg);
-                                            }
-                                            else
-                                            {
-                                                Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}'");
-                                            }
                                         }
                                         else
                                         {
-                                            
-
-                                            //put url back in queue when done
-                                            DSURLQueue.Enqueue(url);
-                                            proccnt++;
+                                            HasDisabledURLs = true;
+                                            url.Enabled = false;
+                                            Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
                                         }
-                                    })
-                                    );
+                                        if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                        {
+                                                //put back in queue to be processed by another deepstack server
+                                                Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}'");
+                                            this.ImageProcessQueue.Enqueue(CurImg);
+                                        }
+                                        else
+                                        {
+                                            Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}'");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //put url back in queue when done
+                                        DSURLQueue.Enqueue(url);
+                                        proccnt++;
+                                    }
+                                })
+                                );
 
-                                
+
                             }
 
                             //wait for ANY task in the list to complete if there are any
@@ -3006,9 +3009,9 @@ namespace AITool
 
                 list2.Items.Clear();
                 comboBox1.Items.Clear();
-                comboBox1.Items.Add("All Cameras"); 
+                comboBox1.Items.Add("All Cameras");
                 comboBox_filter_camera.Items.Clear();
-                comboBox_filter_camera.Items.Add("All Cameras"); 
+                comboBox_filter_camera.Items.Add("All Cameras");
 
                 int i = 0;
                 int oldidx = 0;
@@ -3039,7 +3042,7 @@ namespace AITool
                     list2.Items[oldidx].Selected = true;
                 }
 
-               
+
             }
             catch
             {
@@ -3110,7 +3113,7 @@ namespace AITool
             //Split by cr/lf or other common delimiters
             cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
 
-           
+
 
 
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
@@ -3120,7 +3123,7 @@ namespace AITool
             return ($"SUCCESS: {cam.name} created.");
         }
 
-       
+
 
         //remove camera
         private void RemoveCamera(string name)
@@ -3254,7 +3257,7 @@ namespace AITool
                 //load is masking enabled 
                 cb_masking_enabled.Checked = cam.maskManager.masking_enabled;
 
-                
+
 
                 //load triggering objects
                 //first create arrays with all checkboxes stored in
@@ -3289,7 +3292,7 @@ namespace AITool
             lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg";
         }
 
-       
+
 
         //event: camera list another item selected
         private void list2_SelectedIndexChanged(object sender, EventArgs e)
@@ -3337,7 +3340,7 @@ namespace AITool
                 if (list2.SelectedItems[0].Text.Trim().ToLower() != tbName.Text.Trim().ToLower())
                 {
                     //camera renamed, make sure name doesnt exist
-                    Camera CamCheck = Global.GetCamera(tbName.Text,false);
+                    Camera CamCheck = Global.GetCamera(tbName.Text, false);
                     if (CamCheck != null)
                     {
                         //Its a dupe
@@ -3351,8 +3354,8 @@ namespace AITool
                     }
                 }
 
-                
-                Camera CurCam = Global.GetCamera(list2.SelectedItems[0].Text,false);
+
+                Camera CurCam = Global.GetCamera(list2.SelectedItems[0].Text, false);
 
                 if (CurCam == null)
                 {
@@ -3682,7 +3685,7 @@ namespace AITool
                 Btn_Stop.Enabled = false;
                 MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
                 Invoke(LabelUpdate);
-                
+
 
             }
 
@@ -3765,7 +3768,7 @@ namespace AITool
                         {
                             MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
                             Invoke(LabelUpdate);
-                                                        
+
                             Btn_Start.Enabled = false;
                             Btn_Stop.Enabled = true;
                         }
@@ -3773,7 +3776,7 @@ namespace AITool
                         {
                             MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*"; };
                             Invoke(LabelUpdate);
-                            
+
                             Btn_Start.Enabled = false;
                             Btn_Stop.Enabled = true;
                         }
@@ -3783,7 +3786,7 @@ namespace AITool
                     {
                         MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
                         Invoke(LabelUpdate);
-                        
+
                         Btn_Start.Enabled = false;
                         Btn_Stop.Enabled = true;
                     }
@@ -3791,7 +3794,7 @@ namespace AITool
                     {
                         MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
                         Invoke(LabelUpdate);
-                        
+
                         Btn_Start.Enabled = true;
                         Btn_Stop.Enabled = false;
                         if (Chk_AutoStart.Checked && StartIfNeeded)
@@ -3809,7 +3812,7 @@ namespace AITool
                                 {
                                     LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
                                     Invoke(LabelUpdate);
-                                    
+
                                     Btn_Start.Enabled = false;
                                     Btn_Stop.Enabled = true;
                                 }
@@ -3819,7 +3822,7 @@ namespace AITool
                             {
                                 LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
                                 Invoke(LabelUpdate);
-                                
+
                                 Btn_Start.Enabled = false;
                                 Btn_Stop.Enabled = true;
                             }
@@ -3832,7 +3835,7 @@ namespace AITool
                     Btn_Stop.Enabled = false;
                     MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
                     Invoke(LabelUpdate);
-                    
+
 
                 }
 
@@ -4078,7 +4081,7 @@ namespace AITool
                 frm.cb_telegram.Checked = cam.telegram_enabled;
 
                 frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
-                
+
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
                 frm.cb_UseOriginalFilename.Checked = cam.Action_image_copy_original_name;
                 frm.tb_network_folder.Text = cam.Action_network_folder;
@@ -4086,7 +4089,7 @@ namespace AITool
                 frm.cb_RunProgram.Checked = cam.Action_RunProgram;
                 frm.tb_RunExternalProgram.Text = cam.Action_RunProgramString;
                 frm.tb_RunExternalProgramArgs.Text = cam.Action_RunProgramArgsString;
-                
+
                 frm.cb_PlaySound.Checked = cam.Action_PlaySounds;
                 frm.tb_Sounds.Text = cam.Action_Sounds;
 

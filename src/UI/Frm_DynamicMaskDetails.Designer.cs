@@ -41,9 +41,10 @@
             this.FOLV_Masks = new BrightIdeasSoftware.FastObjectListView();
             this.removeMaskMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removeMaskToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.createStaticMaskToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.createStaticMaskToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.lbl_lastfile = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -129,6 +130,7 @@
             this.FOLV_MaskHistory.CellRightClick += new System.EventHandler<BrightIdeasSoftware.CellRightClickEventArgs>(this.FOLV_MaskHistory_CellRightClick);
             this.FOLV_MaskHistory.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.FOLV_MaskHistory_FormatRow);
             this.FOLV_MaskHistory.SelectionChanged += new System.EventHandler(this.FOLV_MaskHistory_SelectionChanged);
+            this.FOLV_MaskHistory.SelectedIndexChanged += new System.EventHandler(this.FOLV_MaskHistory_SelectedIndexChanged);
             // 
             // staticMaskMenu
             // 
@@ -219,14 +221,21 @@
             this.createStaticMaskToolStripMenuItem1});
             this.removeMaskMenu.Name = "removeMaskMenu";
             this.removeMaskMenu.ShowImageMargin = false;
-            this.removeMaskMenu.Size = new System.Drawing.Size(246, 114);
+            this.removeMaskMenu.Size = new System.Drawing.Size(233, 76);
             // 
             // removeMaskToolStripMenuItem
             // 
             this.removeMaskToolStripMenuItem.Name = "removeMaskToolStripMenuItem";
-            this.removeMaskToolStripMenuItem.Size = new System.Drawing.Size(245, 36);
+            this.removeMaskToolStripMenuItem.Size = new System.Drawing.Size(232, 36);
             this.removeMaskToolStripMenuItem.Text = "Remove Mask";
             this.removeMaskToolStripMenuItem.Click += new System.EventHandler(this.removeMaskToolStripMenuItem_Click);
+            // 
+            // createStaticMaskToolStripMenuItem1
+            // 
+            this.createStaticMaskToolStripMenuItem1.Name = "createStaticMaskToolStripMenuItem1";
+            this.createStaticMaskToolStripMenuItem1.Size = new System.Drawing.Size(232, 36);
+            this.createStaticMaskToolStripMenuItem1.Text = "Create Static Mask";
+            this.createStaticMaskToolStripMenuItem1.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem1_Click);
             // 
             // splitContainer2
             // 
@@ -241,6 +250,7 @@
             // 
             // splitContainer2.Panel2
             // 
+            this.splitContainer2.Panel2.Controls.Add(this.lbl_lastfile);
             this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
             this.splitContainer2.Size = new System.Drawing.Size(1452, 793);
             this.splitContainer2.SplitterDistance = 745;
@@ -248,24 +258,27 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pictureBox1.Location = new System.Drawing.Point(0, 0);
+            this.pictureBox1.Location = new System.Drawing.Point(0, 31);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(703, 793);
+            this.pictureBox1.Size = new System.Drawing.Size(703, 762);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
             // 
-            // createStaticMaskToolStripMenuItem1
+            // lbl_lastfile
             // 
-            this.createStaticMaskToolStripMenuItem1.Name = "createStaticMaskToolStripMenuItem1";
-            this.createStaticMaskToolStripMenuItem1.Size = new System.Drawing.Size(245, 36);
-            this.createStaticMaskToolStripMenuItem1.Text = "Create Static Mask";
-            this.createStaticMaskToolStripMenuItem1.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem1_Click);
+            this.lbl_lastfile.AutoSize = true;
+            this.lbl_lastfile.Location = new System.Drawing.Point(-2, 2);
+            this.lbl_lastfile.Name = "lbl_lastfile";
+            this.lbl_lastfile.Size = new System.Drawing.Size(0, 25);
+            this.lbl_lastfile.TabIndex = 1;
             // 
             // Frm_DynamicMaskDetails
             // 
@@ -293,6 +306,7 @@
             this.removeMaskMenu.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
+            this.splitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -317,5 +331,6 @@
         private System.Windows.Forms.ContextMenuStrip removeMaskMenu;
         private System.Windows.Forms.ToolStripMenuItem removeMaskToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem createStaticMaskToolStripMenuItem1;
+        private System.Windows.Forms.Label lbl_lastfile;
     }
 }

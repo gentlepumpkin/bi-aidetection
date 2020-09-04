@@ -51,14 +51,28 @@ namespace AITool
 
                 if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != this.cam.last_image_file.ToLower())
                 {
-                    if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)) && (File.Exists(this.cam.last_image_file)))
+                    if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)))
                     {
-                        using (var img = new Bitmap(this.cam.last_image_file))
+                        if (File.Exists(this.cam.last_image_file))
                         {
-                            pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
-                        }
+                            using (var img = new Bitmap(this.cam.last_image_file))
+                            {
+                                pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                            }
 
-                        pictureBox1.Tag = this.cam.last_image_file;
+                            lbl_lastfile.Text = "Last image: " + this.cam.last_image_file;
+                            pictureBox1.Tag = this.cam.last_image_file;
+                        }
+                        else
+                        {
+                            lbl_lastfile.Text = "Last image doesn't exist: " + this.cam.last_image_file;
+                            pictureBox1.BackgroundImage = null;
+                        }
+                    }
+                    else
+                    {
+                        lbl_lastfile.Text = "No image to show for this camera yet (Must have processed an image within the current session)";
+                        pictureBox1.BackgroundImage = null;
                     }
                 }
 
@@ -77,7 +91,7 @@ namespace AITool
             {
 
 
-                if (CurObjPosLst.Count > 0 && e != null)
+                if (CurObjPosLst.Count > 0 && e != null && pictureBox1 != null && pictureBox1.BackgroundImage != null)
                 {
                     //1. get the padding between the image and the picturebox border
 
@@ -328,6 +342,11 @@ namespace AITool
                 Refresh();
                 AppSettings.Save();
             }
+        }
+
+        private void FOLV_MaskHistory_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
