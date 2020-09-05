@@ -1124,20 +1124,7 @@ namespace AITool
                         try
                         {
 
-                            string tmp = url.Replace("[camera]", cam.name);
-                            tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
-                            tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
-
-                            if (cam.last_detections != null && cam.last_detections.Count > 0)
-                            {
-                                tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                                tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
-                                tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
-                                tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
-                                tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
-                                tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
-
-                            }
+                            string tmp = ReplaceParams(cam, CurImg, url);
                             urls.Add(tmp);
                         }
                         catch (Exception ex)
@@ -1174,20 +1161,8 @@ namespace AITool
                         try
                         {
 
-                            string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
-                            tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
-                            tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
 
-                            if (cam.last_detections != null && cam.last_detections.Count > 0)
-                            {
-                                tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                                tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
-                                tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
-                                tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
-                                tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
-                                tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
-
-                            }
+                            string tmp = ReplaceParams(cam,CurImg,cam.Action_RunProgramArgsString);
                             Log($"   Starting external app {cam.Action_RunProgramString} {tmp}");
                             Process.Start(cam.Action_RunProgramString, tmp);
                         }
@@ -1257,6 +1232,16 @@ namespace AITool
                         Log("   -> Image copied to network folder.");
                     }
 
+                    
+                    if (cam.Action_mqtt_enabled)
+                    {
+                        string topic = ReplaceParams(cam, CurImg, cam.Action_mqtt_topic);
+                        string payload = ReplaceParams(cam, CurImg, cam.Action_mqtt_payload);
+
+                        MQTTClient mq = new MQTTClient();
+                        await mq.PublishAsync(topic, payload);
+                    }
+
                 }
                 else
                 {
@@ -1276,7 +1261,39 @@ namespace AITool
 
         }
 
+        public string ReplaceParams(Camera cam, ClsImageQueueItem CurImg, string instr)
+        {
+            string ret = instr;
 
+            try
+            {
+                string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
+                tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
+                tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
+                ret = tmp;
+
+                if (cam.last_detections != null && cam.last_detections.Count > 0)
+                {
+                    tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                    tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                    tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
+                    tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
+                    tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
+                    tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
+                    ret = tmp;
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+            
+        }
 
         //check if detected object is outside the mask for the specific camera
         //TODO: refacotor png, bmp mask logic later. This is just a starting point. 
@@ -2550,38 +2567,50 @@ namespace AITool
         //EVENT: new image added to input_path -> START AI DETECTION
         async void OnCreatedAsync(object source, FileSystemEventArgs e)
         {
-            //string filename = Path.Combine(AppSettings.Settings.input_path, e.FullPath);
+            //only allow one thread at a time here to try to prevent duplicates
+            await semaphore_detection_running.WaitAsync();
 
-            //make sure we are not processing a duplicate file...
-            if (detection_dictionary.ContainsKey(e.FullPath.ToLower()))
+            try
             {
-                Log("Skipping duplicate Created File Event: " + e.FullPath);
-            }
-            else
-            {
-
-
-                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                int qsize = ImageProcessQueue.Count + 1;
-                if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                //make sure we are not processing a duplicate file...
+                if (detection_dictionary.ContainsKey(e.FullPath.ToLower()))
                 {
-                    Log("");
-                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                    Log("Skipping duplicate Created File Event: " + e.FullPath);
                 }
                 else
                 {
-                    Log("");
-                    Log("Adding new image to queue: " + e.FullPath);
-                    ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                    detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
-                    ImageProcessQueue.Enqueue(CurImg);
-                    qsizecalc.AddToCalc(qsize);
-                }
-                UpdateQueueLabel();
 
+
+                    //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                    int qsize = ImageProcessQueue.Count + 1;
+                    if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                    {
+                        Log("");
+                        Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                    }
+                    else
+                    {
+                        Log("");
+                        Log($"Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
+                        ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                        detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
+                        ImageProcessQueue.Enqueue(CurImg);
+                        qsizecalc.AddToCalc(qsize);
+                    }
+
+
+                }
 
             }
-
+            catch (Exception ex)
+            {
+                Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                UpdateQueueLabel();
+                semaphore_detection_running.Release();
+            }
 
 
         }
@@ -2739,47 +2768,57 @@ namespace AITool
                                 //get the next url
                                 ClsURLItem url;
                                 DSURLQueue.TryDequeue(out url);
-                                Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
-                                
 
-                                allRunningTasks.Add(Task.Run(async () =>
+                                if (url.Enabled)
                                 {
-                                    bool success = await ProcessImage(CurImg, url);
-                                    if (!success)
+                                    Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+
+
+                                    allRunningTasks.Add(Task.Run(async () =>
                                     {
-
-                                        errcnt++;
-
-                                        if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                        bool success = await ProcessImage(CurImg, url);
+                                        if (!success)
                                         {
+                                            errcnt++;
+
+                                            if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                            {
                                                 //put url back in queue when done
+                                                Log($"...Putting URL back in queue due to URL '{url}' problem (ErrCount={url.ErrCount}), URLQueue.Count={DSURLQueue.Count + 1}");
                                                 DSURLQueue.Enqueue(url);
-                                        }
-                                        else
-                                        {
-                                            HasDisabledURLs = true;
-                                            url.Enabled = false;
-                                            Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
-                                        }
-                                        if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                        {
+                                            }
+                                            else
+                                            {
+                                                HasDisabledURLs = true;
+                                                url.Enabled = false;
+                                                Log($"...Error: URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}', URLQueue.Count={DSURLQueue.Count - 1}");
+                                            }
+
+                                            if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                            {
                                                 //put back in queue to be processed by another deepstack server
-                                                Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}'");
-                                            this.ImageProcessQueue.Enqueue(CurImg);
+                                                Log($"...Putting image back in queue due to URL '{url}' failure (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
+                                                this.ImageProcessQueue.Enqueue(CurImg);
+                                            }
+                                            else
+                                            {
+                                                Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
+                                            }
                                         }
                                         else
                                         {
-                                            Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}'");
+                                            //put url back in queue when done
+                                            DSURLQueue.Enqueue(url);
+                                            proccnt++;
                                         }
-                                    }
-                                    else
-                                    {
-                                        //put url back in queue when done
-                                        DSURLQueue.Enqueue(url);
-                                        proccnt++;
-                                    }
-                                })
-                                );
+                                    })
+                                    );
+
+                                }
+                                else
+                                {
+                                    Log($"Skipping disabled URL: {url}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
+                                }
 
 
                             }
@@ -2787,27 +2826,32 @@ namespace AITool
                             //wait for ANY task in the list to complete if there are any
                             if (allRunningTasks.Count > 0)
                             {
+                                for (int i = 0; i < allRunningTasks.Count; i++)
+                                {
+                                    Log($"Started task id {allRunningTasks[i].Id} at index {i}. URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
+                                }
                                 Log($"Waiting for any of {allRunningTasks.Count} tasks to get done...");
                                 int taskidx = Task.WaitAny(allRunningTasks.ToArray());
-                                Log($"...Task at index {taskidx} done.  Status='{allRunningTasks[taskidx].Status}'");
+                                Log($"...Task id {allRunningTasks[taskidx].Id} at index {taskidx} done.  Status='{allRunningTasks[taskidx].Status}', URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
                                 //remove task from list
                                 allRunningTasks.RemoveAt(taskidx);
                             }
                         }
 
                         //clean up tasks, although we shouldn't have to I just want to make sure
-                        foreach (Task tsk in allRunningTasks)
+                        for (int i = 0; i < allRunningTasks.Count; i++)
                         {
+                            Task tsk = allRunningTasks[i];
                             if (tsk != null && !tsk.IsCompleted && !tsk.IsFaulted && !tsk.IsCanceled)
                             {
-                                Log($"Waiting for a task to finish...");
+                                Log($"Waiting for task id {tsk.Id} at index {i} to finish... URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
                                 tsk.Wait();
-                                Log($"...Task finished.  Status='{tsk.Status}'");
+                                Log($"...Task id {tsk.Id} at index {i} finished.  Status='{tsk.Status}'.  URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
                             }
                         }
                         allRunningTasks.Clear();
 
-                        Log($"Done processing current image queue with {proccnt} image(s), ErrCnt={errcnt}");
+                        Log($"Done processing current image queue with {proccnt} image(s), ErrCnt={errcnt}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
 
                         //Clean up old images in the dupe check dic
                         if ((DateTime.Now - LastCleanDupesTime).TotalMinutes >= 30)
@@ -4091,6 +4135,11 @@ namespace AITool
                 frm.cb_PlaySound.Checked = cam.Action_PlaySounds;
                 frm.tb_Sounds.Text = cam.Action_Sounds;
 
+                frm.cb_MQTT_enabled.Checked = cam.Action_mqtt_enabled;
+                frm.tb_MQTT_Payload.Text = cam.Action_mqtt_payload;
+                frm.tb_MQTT_Topic.Text = cam.Action_mqtt_topic;
+
+
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
@@ -4108,6 +4157,10 @@ namespace AITool
 
                     cam.Action_PlaySounds = frm.cb_PlaySound.Checked;
                     cam.Action_Sounds = frm.tb_Sounds.Text.Trim();
+
+                    cam.Action_mqtt_enabled = frm.cb_MQTT_enabled.Checked;
+                    cam.Action_mqtt_payload = frm.tb_MQTT_Payload.Text.Trim();
+                    cam.Action_mqtt_topic = frm.tb_MQTT_Topic.Text.Trim();
 
                     AppSettings.Save();
 

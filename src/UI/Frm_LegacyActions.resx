@@ -136,7 +136,10 @@ dog, cat, bird ; C:\WOOF.WAV
   <data name="cb_TriggerCancels.ToolTip" xml:space="preserve">
     <value>Experimental feature: Rather than triggering for a valid alert, it will trigger when 
 nothing was detected.  
+
 This *may* be useful for when you have BI recording 24/7 and you just want to
-cancel an alert.  Must have &amp;flagalert=0 in the URL.</value>
+cancel an alert.  Must have &amp;flagalert=0 in the URL.
+
+NO OTHER ACTIONS WILL BE DONE IF THIS IS CHECKED</value>
   </data>
 </root>

@@ -55,6 +55,11 @@ namespace AITool
         public bool Action_PlaySounds = false;
         public string Action_Sounds = "";
 
+        public bool Action_mqtt_enabled = false;
+        public string Action_mqtt_topic = "aitool/[camera]/motion"; 
+        public string Action_mqtt_payload = "[parameters]";
+        public bool Action_mqtt_retain_message = false;
+
         public MaskManager maskManager = new MaskManager();
 
         //stats

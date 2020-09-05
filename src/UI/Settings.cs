@@ -65,8 +65,16 @@ namespace AITool
             public int RectIrrelevantColorAlpha = 150;
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
             public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
-
             public string image_copy_folder = "";
+
+            public string mqtt_serverandport = "mqtt:1883";
+            public string mqtt_username = "user";
+            public bool mqtt_UseTLS = false;
+            public string mqtt_password = "password";
+            public string mqtt_clientid = "AITool";
+            
+
+
         }
 
         public static bool Save()
