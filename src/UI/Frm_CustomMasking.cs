@@ -1,22 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
-using System.Windows.Forms.DataVisualization.Charting;
 
 namespace AITool
 {
     public partial class Frm_CustomMasking : Form
     {
         public Camera cam {get; set;}
-        private Point scaledLastPoint = Point.Empty;
-        private Point lastPoint = Point.Empty;
-        private bool isMouseDown = new Boolean();
-        private Bitmap transparentLayer, cameraLayer;
+        private Bitmap transparentLayer, cameraLayer, inProgessLayer;
         private const string baseDirectory = "./cameras/";
         private const string FILE_TYPE = ".bmp";
+        private const float DEFAULT_OPACITY = .5f;
         private int brushSize;
+
+        private PointHistory currentPoints = new PointHistory(); //Contains all points since the mouse down event fired. Draw all points at once in Paint method. Prevents tearing and performance issues
+        private List<PointHistory> allPointLists = new List<PointHistory>();  //History of all points. Reserved for future undo feature
+
 
         public Frm_CustomMasking()
         {
@@ -40,18 +43,15 @@ namespace AITool
                         {
                             using (Bitmap maskLayer = new Bitmap(baseDirectory + cam.name + FILE_TYPE)) 
                             {
-                                cameraLayer = MergeBitmaps(cameraLayer, maskLayer);
-                                pbMaskImage.Image = cameraLayer;
-                                transparentLayer = new Bitmap(maskLayer); // create new bitmap here to prevent file locks
+                                pbMaskImage.Image = MergeBitmaps(cameraLayer, maskLayer);
+                                transparentLayer = new Bitmap(AdjustImageOpacity(maskLayer,2f)); // create new bitmap here to prevent file locks and increase to 100% opacity
                             }
                         }
                         else //if there are no masks
                         {
-                            pbMaskImage.Image = cameraLayer;
-                            transparentLayer = new Bitmap(pbMaskImage.Image.Width, pbMaskImage.Image.Height);
-                            transparentLayer.MakeTransparent(Color.Transparent);
+                            pbMaskImage.Image = new Bitmap(cameraLayer);
+                            transparentLayer = new Bitmap(pbMaskImage.Image.Width, pbMaskImage.Image.Height, PixelFormat.Format32bppPArgb);
                         }
-                        
                     }
                 }
 
@@ -66,7 +66,7 @@ namespace AITool
 
         private Bitmap MergeBitmaps(Bitmap cameraImage, Bitmap layer)
         {
-            Bitmap newImage = new Bitmap(cameraImage.Width, cameraImage.Height);
+            Bitmap newImage = new Bitmap(cameraImage.Width, cameraImage.Height, PixelFormat.Format32bppPArgb);
 
             using (Graphics g = Graphics.FromImage(newImage))
             {
@@ -87,7 +87,6 @@ namespace AITool
             float boxHeight = pbMaskImage.Image.Height;
             float imgWidth = pbMaskImage.Width;
             float imgHeight = pbMaskImage.Height;
-
 
             //these variables store the padding between image border and picturebox border
             int absX = 0;
@@ -114,42 +113,83 @@ namespace AITool
             return new Point(xScaled, yScaled);
         }
 
+        private Bitmap AdjustImageOpacity(Image image, float alphaLevel)
+        {
+            // Initialize the color matrix.
+            // Note the value {level} in row 4, column 4. this is for  the alpha channel
+            float[][] matrixItems ={
+               new float[] {1, 0, 0, 0, 0},
+               new float[] {0, 1, 0, 0, 0},
+               new float[] {0, 0, 1, 0, 0},
+               new float[] {0, 0, 0, alphaLevel, 0},
+               new float[] {0, 0, 0, 0, 1}};
+            ColorMatrix colorMatrix = new ColorMatrix(matrixItems);
+
+            // Create an ImageAttributes object and set its color matrix.
+            ImageAttributes imageAtt = new ImageAttributes();
+            imageAtt.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+            // Now draw the semitransparent bitmap image.
+            int iWidth = image.Width;
+            int iHeight = image.Height;
+
+            Bitmap newBmp = new Bitmap(image.Width, image.Height);
+
+            using (Graphics g = Graphics.FromImage(newBmp))
+            {
+                g.DrawImage(
+                    image,
+                    new Rectangle(0, 0, iWidth, iHeight),  // destination rectangle
+                    0.0f,                          // source rectangle x
+                    0.0f,                          // source rectangle y
+                    iWidth,                        // source rectangle width
+                    iHeight,                       // source rectangle height
+                    GraphicsUnit.Pixel,
+                    imageAtt);
+            }
+            return newBmp;
+        }
+
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
             Int32.TryParse(numBrushSize.Text, out brushSize);
             ShowImage();
-            isMouseDown = false;
         }
 
         private void pbMaskImage_Paint(object sender, PaintEventArgs e)
         {
-            
-
-            e.Graphics.DrawRectangle(Pens.Yellow, lastPoint.X, lastPoint.Y, brushSize, brushSize);
-
-            if (isMouseDown == true)
+            if (pbMaskImage.Image != null)
             {
-                if (scaledLastPoint != Point.Empty && pbMaskImage.Image != null)
+                Color color = Color.FromArgb(255,255,255,70);
+
+                if (inProgessLayer == null)
                 {
-                    //first draw the image for the picturebox. Used as a readonly background layer
-                    using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                    inProgessLayer = new Bitmap(transparentLayer.Width, transparentLayer.Height, PixelFormat.Format32bppPArgb);
+                }
+
+                //first draw the image for the picturebox. Used as a readonly background layer
+                using (Pen pen = new Pen(color, brushSize))
+                {
+                    pen.MiterLimit = pen.Width / 2;
+                    pen.LineJoin = LineJoin.MiterClipped;
+                    pen.StartCap = LineCap.Square;
+                    pen.EndCap = LineCap.Square;
+
+                    if (currentPoints.GetRectangles().Count > 1)
                     {
-                        Color color = Color.FromArgb(255, Color.Black);
-                        SolidBrush semiTransBrush = new SolidBrush(color);
+                        using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                        {
+                            //first draw the mask on the picturebox. Used as a readonly background layer
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+                            g.DrawRectangles(pen, currentPoints.GetRectangles().ToArray());
+                        }
 
-                        g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.FillRectangle(semiTransBrush, scaledLastPoint.X, scaledLastPoint.Y, brushSize, brushSize);
-                    }
-
-                    //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.  
-                    using (Graphics g = Graphics.FromImage(transparentLayer))
-                    {
-                        Color color = Color.FromArgb(255, 0, 0, 0);
-                        SolidBrush semiTransBrush = new SolidBrush(color);
-
-                        //g.CompositingQuality = CompositingQuality.GammaCorrected;
-                        g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.FillRectangle(semiTransBrush, scaledLastPoint.X, scaledLastPoint.Y, brushSize, brushSize);
+                        using (Graphics g = Graphics.FromImage(inProgessLayer))
+                        {
+                            //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+                            g.DrawRectangles(pen, currentPoints.GetRectangles().ToArray());
+                        }
                     }
                 }
             }
@@ -157,24 +197,32 @@ namespace AITool
 
         private void pbMaskImage_MouseDown(object sender, MouseEventArgs e)
         {
-            scaledLastPoint = AdjustZoomMousePosition(e.Location); //assign the scaledLastPoint to the current mouse position
-            isMouseDown = true;     //set to true because our mouse button is pressed down
+            currentPoints = new PointHistory(AdjustZoomMousePosition(e.Location), brushSize);
         }
 
         private void pbMaskImage_MouseMove(object sender, MouseEventArgs e)
         {
-            if (scaledLastPoint != null && pbMaskImage.Image != null)//if our last point is not null, which in this case we have assigned above
+            if (e.Button == MouseButtons.Left)
             {
-                pbMaskImage.Invalidate();  //refreshes the picturebox
-                scaledLastPoint = AdjustZoomMousePosition(e.Location);    //set the scaledLastPoint to the current mouse position    
-                lastPoint = e.Location;
+                currentPoints.AddPoint(AdjustZoomMousePosition(e.Location));
+                pbMaskImage.Invalidate();
             }
         }
 
         private void pbMaskImage_MouseUp(object sender, MouseEventArgs e)
         {
-            isMouseDown = false;
-            scaledLastPoint = Point.Empty;
+            if (inProgessLayer != null)
+            {
+                transparentLayer = MergeBitmaps(transparentLayer, inProgessLayer);
+                pbMaskImage.Image = MergeBitmaps(cameraLayer, AdjustImageOpacity(transparentLayer,DEFAULT_OPACITY));
+                inProgessLayer = null;
+            }
+
+            if (currentPoints.GetRectangles().Count > 1)
+            {
+                allPointLists.Add(currentPoints);
+                currentPoints = new PointHistory();
+            }
         }
 
         private void numBrushSize_Leave(object sender, EventArgs e)
@@ -187,6 +235,7 @@ namespace AITool
 
         private void btnClear_Click(object sender, EventArgs e)
         {
+            allPointLists.Clear();
             //if mask exists, delete it
             if (File.Exists(baseDirectory + cam.name + FILE_TYPE))
             {
@@ -211,7 +260,42 @@ namespace AITool
             if (transparentLayer != null)
             {
                 string path = baseDirectory + cam.name + FILE_TYPE;
-                transparentLayer.Save(path);
+                //save masks at 50% opacity 
+                AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY).Save(path);
+            }
+        }
+
+
+        public class PointHistory
+        {
+            private List<Rectangle> rectangles = new List<Rectangle>();
+            public int brushSize { get; set; }
+         
+            public PointHistory()
+            {
+                rectangles = new List<Rectangle>();
+                brushSize = 20; 
+            }
+
+            public PointHistory(Point point, int brushSize)
+            {
+                this.rectangles.Add(new Rectangle(point.X, point.Y, brushSize,brushSize));
+                this.brushSize = brushSize;
+            }
+
+            public void AddPoint(Point point)
+            {
+                this.rectangles.Add(new Rectangle(point.X, point.Y, brushSize, brushSize));
+            }
+
+            public List<Rectangle> GetRectangles()
+            {
+                return rectangles;
+            }
+
+            public void ClearPoints()
+            {
+                rectangles.Clear();
             }
         }
     }

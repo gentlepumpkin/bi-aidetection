@@ -81,7 +81,7 @@
             this.numBrushSize.Size = new System.Drawing.Size(51, 20);
             this.numBrushSize.TabIndex = 4;
             this.numBrushSize.Value = new decimal(new int[] {
-            30,
+            20,
             0,
             0,
             0});
