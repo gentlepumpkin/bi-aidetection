@@ -2154,12 +2154,10 @@ namespace AITool
                     int ymin = (int)(scale * _ymin) + absY;
                     int ymax = (int)(scale * _ymax) + absY;
 
-                    //set alpha/transparency so you can see under the label
-                    System.Drawing.Color newColor = System.Drawing.Color.FromArgb(150, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
 
                     //3. paint rectangle
                     System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                    using (Pen pen = new Pen(newColor, 2))
+                    using (Pen pen = new Pen(color, 2))
                     {
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                     }
@@ -2168,7 +2166,7 @@ namespace AITool
                     rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
 
 
-                    Brush brush = new SolidBrush(newColor); //sets background rectangle color
+                    Brush brush = new SolidBrush(color); //sets background rectangle color
 
                     System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
                     e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
@@ -2199,12 +2197,12 @@ namespace AITool
                 string detections = list1.SelectedItems[0].SubItems[3].Text;
                 if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
                 {
-                    color = System.Drawing.Color.Silver;
+                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor); 
                     detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
                 }
                 else
                 {
-                    color = System.Drawing.Color.Red;
+                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor); 
                 }
 
                 //display a rectangle around each relevant object
@@ -2742,7 +2740,7 @@ namespace AITool
                                 ClsURLItem url;
                                 DSURLQueue.TryDequeue(out url);
                                 Log($"Adding task #{allRunningTasks.Count + 1} for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
-
+                                
 
                                 allRunningTasks.Add(Task.Run(async () =>
                                 {

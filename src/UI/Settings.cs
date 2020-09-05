@@ -12,6 +12,7 @@ using System.Xml.XPath;
 using System.Security.AccessControl;
 using System.Diagnostics;
 using System.Threading;
+using SixLabors.ImageSharp;
 
 namespace AITool
 {
@@ -60,6 +61,10 @@ namespace AITool
             public int MaxImageQueueSize = 100;
             public int MaxURLRetries = 10;  //will be disabled if fails this many times - Also applies to individual image failures
             public int URLResetAfterDisabledMinutes = 30;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
+            public int RectRelevantColorAlpha = 150;  //255=solid, 127 half transparent
+            public int RectIrrelevantColorAlpha = 150;
+            public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
+            public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
 
             public string image_copy_folder = "";
         }

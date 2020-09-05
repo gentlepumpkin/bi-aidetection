@@ -136,19 +136,16 @@ namespace AITool
                             Color color;
                             if (op.isStatic)
                             {
-                                color = Color.Red;
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
                             }
                             else
                             {
-                                color = Color.Gray;
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
                             }
-
-                            //set alpha/transparency so you can see under the label
-                            Color newColor = Color.FromArgb(150, color);  //The alpha component specifies how the shape and background colors are mixed; alpha values near 0 place more weight on the background colors, and alpha values near 255 place more weight on the shape color.
 
                             //3. paint rectangle
                             System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                            using (Pen pen = new Pen(newColor, 2))
+                            using (Pen pen = new Pen(color, 2))
                             {
                                 e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                             }
@@ -157,7 +154,7 @@ namespace AITool
                             rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
 
 
-                            Brush brush = new SolidBrush(newColor); //sets background rectangle color
+                            Brush brush = new SolidBrush(color); //sets background rectangle color
 
                             System.Drawing.SizeF size = e.Graphics.MeasureString(op.label, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
