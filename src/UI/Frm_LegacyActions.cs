@@ -38,6 +38,34 @@ namespace AITool
             this.Close();
         }
 
-        
+        private void linkLabelMqttSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (Frm_MQTTSettings frm = new Frm_MQTTSettings())
+            {
+
+                frm.tb_ServerPort.Text = AppSettings.Settings.mqtt_serverandport;
+                frm.cb_UseTLS.Checked = AppSettings.Settings.mqtt_UseTLS;
+                frm.tb_Password.Text = AppSettings.Settings.mqtt_password;
+                frm.tb_Username.Text = AppSettings.Settings.mqtt_username;
+
+                frm.tb_Topic.Text = tb_MQTT_Topic.Text.Trim();
+                frm.tb_Payload.Text = tb_MQTT_Payload.Text.Trim();
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+
+                    AppSettings.Settings.mqtt_UseTLS = frm.cb_UseTLS.Checked;
+                    AppSettings.Settings.mqtt_username = frm.tb_Username.Text.Trim();
+                    AppSettings.Settings.mqtt_serverandport = frm.tb_ServerPort.Text.Trim();
+                    AppSettings.Settings.mqtt_password = frm.tb_Password.Text.Trim();
+
+                    this.tb_MQTT_Payload.Text = frm.tb_Payload.Text.Trim();
+                    this.tb_MQTT_Topic.Text = frm.tb_Topic.Text.Trim();
+
+                    AppSettings.Save();
+
+                }
+            }
+        }
     }
 }

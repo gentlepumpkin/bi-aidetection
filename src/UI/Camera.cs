@@ -57,7 +57,7 @@ namespace AITool
 
         public bool Action_mqtt_enabled = false;
         public string Action_mqtt_topic = "aitool/[camera]/motion"; 
-        public string Action_mqtt_payload = "[parameters]";
+        public string Action_mqtt_payload = "[detections]";
         public bool Action_mqtt_retain_message = false;
 
         public MaskManager maskManager = new MaskManager();

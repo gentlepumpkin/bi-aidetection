@@ -212,6 +212,12 @@
     <Compile Include="Frm_LegacyActions.Designer.cs">
       <DependentUpon>Frm_LegacyActions.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_MQTTSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_MQTTSettings.Designer.cs">
+      <DependentUpon>Frm_MQTTSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="Global-GUI.cs" />
     <Compile Include="HistorySQLite.cs" />
     <Compile Include="LogFileWriter.cs" />
@@ -250,6 +256,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_LegacyActions.resx">
       <DependentUpon>Frm_LegacyActions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_MQTTSettings.resx">
+      <DependentUpon>Frm_MQTTSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Shell.resx">
       <DependentUpon>Shell.cs</DependentUpon>
