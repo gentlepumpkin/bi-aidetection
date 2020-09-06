@@ -4060,13 +4060,13 @@ namespace AITool
         {
             using (Frm_CustomMasking frm = new Frm_CustomMasking())
             {
+                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                frm.cam = cam;
 
-                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
-
-                frm.cam = AppSettings.Settings.CameraList[i];
-
-                frm.ShowDialog();
+                if(frm.ShowDialog() == DialogResult.OK)
+                {
+                    cam.mask_brush_size = frm.brushSize;
+                }
             }
 
         }
