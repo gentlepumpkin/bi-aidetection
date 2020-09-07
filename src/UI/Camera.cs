@@ -61,6 +61,7 @@ namespace AITool
         public bool Action_mqtt_retain_message = false;
 
         public MaskManager maskManager = new MaskManager();
+        public int mask_brush_size = 35;
 
         //stats
         public int stats_alerts = 0; //alert image contained relevant object counter
