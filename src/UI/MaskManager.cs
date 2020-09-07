@@ -28,7 +28,7 @@ namespace AITool
             bool maskExists = false;
 
             Global.Log("*** Starting new object mask processing ***");
-            Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.camera.name);
+            Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
 
             currentObject.thresholdPercent = thresholdPercent;
 
@@ -38,7 +38,7 @@ namespace AITool
                 int indexLoc = last_positions_history.IndexOf(currentObject);
                 ObjectPosition foundObject = last_positions_history[indexLoc];
 
-                Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.camera.name);
+                Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.cameraName);
 
                 if (foundObject.counter < history_threshold_count)
                 {
@@ -46,7 +46,7 @@ namespace AITool
                 }
                 else
                 {
-                    Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.camera.name);
+                    Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.cameraName);
                     last_positions_history.RemoveAt(indexLoc);
                     foundObject.isVisible = true;
                     foundObject.counter = mask_counter_default;
@@ -56,19 +56,20 @@ namespace AITool
             else if (masked_positions.Contains(currentObject))
             {
                 ObjectPosition maskedObject = (ObjectPosition)masked_positions[masked_positions.IndexOf(currentObject)];
+
                 if (maskedObject.counter < mask_counter_default)
                 {
                     maskedObject.counter++;
                 }
 
-                Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.camera.name);
+                Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
 
                 maskedObject.isVisible = true;
                 maskExists = true;
             }
             else
             {
-                Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.camera.name);
+                Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
                 last_positions_history.Add(currentObject);
             }
 
@@ -105,15 +106,11 @@ namespace AITool
                 {
                     Global.Log("Error: historyList is null?");
                 }
-
             }
             catch (Exception ex)
             {
-
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
-
-
         }
 
         public void CleanUpExpiredMasks(String cameraName)
@@ -156,7 +153,6 @@ namespace AITool
             }
             catch (Exception ex)
             {
-
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
         }

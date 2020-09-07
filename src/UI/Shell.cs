@@ -694,7 +694,7 @@ namespace AITool
                                                                             // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                                                             ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
-                                                                                                                              img.Width, img.Height, cam);
+                                                                                                                              img.Width, img.Height, cam.name);
 
                                                                             bool maskExists = false;
                                                                             if (cam.maskManager.masking_enabled)
