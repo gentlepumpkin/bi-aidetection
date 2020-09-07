@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AITool
@@ -13,9 +14,18 @@ namespace AITool
     }
     public class ClsURLItem
     {
+        private int _ErrCount = 0;
+
         public string url { get; set; } = "";
         public bool Enabled { get; set; } = false;
-        public int ErrCount { get; set; } = 0;
+        public DateTime LastUsedTime = DateTime.MinValue;
+        public int ErrCount { get => _ErrCount; set => _ErrCount = value; }
+        public void IncrementErrCount()
+        {
+            //if we try to increment class.ErrCount directly you get 'A property or indexer may not be passed as an out or ref parameter' - Workaround:
+            Interlocked.Increment(ref this._ErrCount);
+        }
+
         public string ResultMessage { get; set; } = "";
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Other;
         public override string ToString()
