@@ -88,36 +88,43 @@ namespace AITool
             {
                 return point;
             }
+            //default to current values
+            int xScaled = point.X;
+            int yScaled = point.Y;
 
-            float boxWidth = pbMaskImage.Image.Width;
-            float boxHeight = pbMaskImage.Image.Height;
-            float imgWidth = pbMaskImage.Width;
-            float imgHeight = pbMaskImage.Height;
+            //get dimensions of picturebox and scaled image
+            float imgWidth = pbMaskImage.Image.Width;
+            float imgHeight = pbMaskImage.Image.Height;
+            float picboxWidth = pbMaskImage.Width;
+            float picboxHeight = pbMaskImage.Height;
 
+            float picAspect = picboxWidth / (float)picboxHeight;
+            float imgAspect = imgWidth / (float)imgHeight;
 
-            //these variables store the padding between image border and picturebox border
-            int absX = 0;
-            int absY = 0;
-
-            //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-            float scale = 1;
-
-            //Comparing the aspect ratio of both the control and the image itself.
-            if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+            if (picAspect > imgAspect)
             {
-                scale = boxWidth / imgWidth; //get scale factor
-                absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                // pictureBox is wider/shorter than the image.
+                yScaled = (int)(imgHeight * point.Y / (float)picboxHeight);
+
+                // image fills the height of the PictureBox.
+                // Get width.
+                float scaledWidth = imgWidth * picboxHeight / imgHeight;
+                float dx = (picboxWidth - scaledWidth) / 2;
+                xScaled = (int)((point.X - dx) * imgHeight / (float)picboxHeight);
             }
-            else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+            else
             {
-                scale = boxHeight / imgHeight; //get scale factor
-                absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                // pictureBox is taller/thinner than the image.
+                xScaled = (int)(imgWidth * point.X / (float)picboxWidth);
+
+                // image fills the height of the PictureBox.
+                // Get height.
+                float scaledHeight = imgHeight * picboxWidth / imgWidth;
+                float dy = (picboxHeight - scaledHeight) / 2;
+                yScaled = (int)((point.Y - dy) * imgWidth / picboxWidth);
             }
 
-            int xScaled = (int)(scale * point.X) + absX;
-            int yScaled = (int)(scale * point.Y) + absY;
-
-            return new Point(xScaled, yScaled);
+                return new Point(xScaled, yScaled);
         }
 
         private Bitmap AdjustImageOpacity(Image image, float alphaLevel)
