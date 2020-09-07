@@ -296,9 +296,13 @@ namespace AITool
             else if (rbRectangle.Checked && e.Button == MouseButtons.Left)
             {
                 drawing = false;
-                transparentLayer = MergeBitmaps(transparentLayer, inProgessLayer);
-                pbMaskImage.Image = MergeBitmaps(cameraLayer, AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY));
-                inProgessLayer = null;
+
+                if (inProgessLayer != null)
+                {
+                    transparentLayer = MergeBitmaps(transparentLayer, inProgessLayer);
+                    pbMaskImage.Image = MergeBitmaps(cameraLayer, AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY));
+                    inProgessLayer = null;
+                }
             }
         }
 
