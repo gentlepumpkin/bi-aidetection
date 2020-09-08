@@ -1225,15 +1225,12 @@ namespace AITool
                         }
                     }
 
-
-
                     if (cam.Action_image_copy_enabled )
                     {
                         Log("   Copying image to network folder...");
                         Global.CopyImage(cam, CurImg);
                         Log("   -> Image copied to network folder.");
                     }
-
                     
                     if (cam.Action_mqtt_enabled)
                     {
@@ -1269,23 +1266,25 @@ namespace AITool
 
             try
             {
-                string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
-                tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
-                tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
-                ret = tmp;
-
-                if (cam.last_detections != null && cam.last_detections.Count > 0)
+                if (cam.Action_RunProgramArgsString != string.Empty)
                 {
-                    tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                    tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
-                    tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
-                    tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
-                    tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
-                    tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
+                    string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
+
+                    tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
+                    tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
                     ret = tmp;
 
+                    if (cam.last_detections != null && cam.last_detections.Count > 0)
+                    {
+                        tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                        tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
+                        tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
+                        tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
+                        tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
+                        ret = tmp;
+                    }
                 }
-
             }
             catch (Exception ex)
             {
