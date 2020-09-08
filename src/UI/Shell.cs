@@ -754,11 +754,11 @@ namespace AITool
                                                                 cam.maskManager.CleanUpExpiredHistory(cam.name);
 
                                                                 //log summary information for all masked objects
-                                                                Log($"{CurSrv} - ### Masked objects summary for camera " + cam.name + " ###");
-                                                                foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
-                                                                {
-                                                                    Log($"{CurSrv} - \t" + maskedObject.ToString());
-                                                                }
+                                                                //Log($"{CurSrv} - ### Masked objects summary for camera " + cam.name + " ###");
+                                                                //foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
+                                                                //{
+                                                                //    Log($"{CurSrv} - \t" + maskedObject.ToString());
+                                                                //}
                                                             }
 
                                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas

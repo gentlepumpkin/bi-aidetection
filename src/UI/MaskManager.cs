@@ -129,7 +129,7 @@ namespace AITool
                         ObjectPosition maskedObject = maskedList[x];
                         if (!maskedObject.isVisible && !maskedObject.isStatic)
                         {
-                            Global.Log("Masked object NOT visible - " + maskedObject.ToString());
+                            //Global.Log("Masked object NOT visible - " + maskedObject.ToString());
                             maskedObject.counter--;
 
                             if (maskedObject.counter <= 0)
@@ -140,7 +140,7 @@ namespace AITool
                         }
                         else
                         {
-                            Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
+                            //Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
                             maskedObject.isVisible = false; //reset flag
                         }
                     }
