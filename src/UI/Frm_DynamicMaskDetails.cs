@@ -32,7 +32,6 @@ namespace AITool
             Global_GUI.RestoreWindowState(this);
 
             Refresh();
-
         }
 
         private void Refresh()
@@ -41,14 +40,63 @@ namespace AITool
             Global_GUI.UpdateFOLV(ref FOLV_Masks, cam.maskManager.masked_positions, true);
             this.CurObjPosLst.Clear();
             ShowImageMask(null);
-
         }
 
-        private void ShowImage()
+        private void ShowImage(string ImagePath)
         {
             try
             {
+                if ((!string.IsNullOrWhiteSpace(ImagePath)))
+                {
+                    if (File.Exists(ImagePath))
+                    {
+                        ShowMaskImage(ImagePath);
+                    }
+                    else
+                    {
+                        ShowLastImage();
+                        Global.Log("WARNING: Mask image file not found at location: " + ImagePath + ". Defaulting to last processed image");
+                    }
+                }
+                else
+                {
+                    ShowLastImage();
+                    Global.Log("WARNING: Mask image file path was blank or NULL. Defaulting to last processed image");
+                }
+            }
+            catch (Exception ex)
+            {
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+        }
 
+        private void ShowMaskImage(string imagePath)
+        {
+            try
+            {
+                if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != imagePath.ToLower())
+                {
+                    using (var img = new Bitmap(imagePath))
+                    {
+                        pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                    }
+
+                    lbl_lastfile.Text = "Mask image: " + imagePath;
+                    pictureBox1.Tag = imagePath;
+                }
+                pictureBox1.Refresh();
+
+            }
+            catch (Exception ex)
+            {
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+        }
+
+        private void ShowLastImage()
+        {
+            try
+            {
                 if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != this.cam.last_image_file.ToLower())
                 {
                     if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)))
@@ -81,16 +129,14 @@ namespace AITool
             }
             catch (Exception ex)
             {
-
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
         }
+
         private void ShowImageMask(PaintEventArgs e = null)
         {
             try
             {
-
-
                 if (CurObjPosLst.Count > 0 && e != null && pictureBox1 != null && pictureBox1.BackgroundImage != null)
                 {
                     //1. get the padding between the image and the picturebox border
@@ -108,7 +154,6 @@ namespace AITool
                     //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
                     float scale = 1;
 
-
                     //Comparing the aspect ratio of both the control and the image itself.
                     if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                     {
@@ -120,7 +165,6 @@ namespace AITool
                         scale = boxHeight / imgHeight; //get scale factor
                         absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
-
 
                     foreach (ObjectPosition op in CurObjPosLst)
                     {
@@ -153,20 +197,17 @@ namespace AITool
                             //object name text below rectangle
                             rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
 
-
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
                             System.Drawing.SizeF size = e.Graphics.MeasureString(op.label, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
                             e.Graphics.DrawString(op.label, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
-
                         }
                         else
                         {
                             //Global.Log("op is empty");
                         }
                     }
-
                 }
                 else
                 {
@@ -180,24 +221,22 @@ namespace AITool
                         //Global.Log("Not painting");
                     }
                 }
-
-
             }
             catch (Exception ex)
             {
-
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
         }
-
        
-
         private void FOLV_MaskHistory_SelectionChanged(object sender, EventArgs e)
         {
             this.CurObjPosLst.Clear();
-            ShowImage();
+
             if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
+                string imagePath = ((ObjectPosition)FOLV_MaskHistory.SelectedObject).imagePath;
+                ShowImage(imagePath);
+
                 foreach (object obj in FOLV_MaskHistory.SelectedObjects)
                 {
                     CurObjPosLst.Add((ObjectPosition)obj);
@@ -209,9 +248,12 @@ namespace AITool
         private void FOLV_Masks_SelectionChanged(object sender, EventArgs e)
         {
             this.CurObjPosLst.Clear();
-            ShowImage();
+            
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
+                string imagePath = ((ObjectPosition)FOLV_Masks.SelectedObject).imagePath;
+                ShowImage(imagePath);
+
                 foreach (object obj in FOLV_Masks.SelectedObjects)
                 {
                     CurObjPosLst.Add((ObjectPosition)obj);

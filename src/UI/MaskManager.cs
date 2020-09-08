@@ -11,8 +11,8 @@ namespace AITool
         public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public double thresholdPercent { get; set; } = .08;               //what percent can the selection rectangle vary to be considered a match
-        public List<ObjectPosition> last_positions_history { get; set; } = new List<ObjectPosition>();  //list of last detected object positions during defined time period (history_save_mins)
-        public List<ObjectPosition> masked_positions { get; set; } = new List<ObjectPosition>();       //stores dynamic masked object list
+        public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
+        public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
 
         //[JsonIgnore]
         //private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();

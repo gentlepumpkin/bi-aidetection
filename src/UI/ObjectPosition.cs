@@ -23,12 +23,13 @@ namespace AITool
         public Boolean isVisible { get; set; } = false;
 
         public string cameraName { get; set; }
+        public string imagePath { get; set; }
 
-
-        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName)
+        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
             createDate = DateTime.Now;
             this.cameraName = cameraName;
+            this.imagePath = imagePath;
             this.label = label;
 
             this.xmin = xmin;
