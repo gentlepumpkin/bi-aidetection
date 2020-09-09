@@ -23,8 +23,9 @@ namespace AITool
         private List<PointHistory> allPointLists = new List<PointHistory>();  //History of all points. Reserved for future undo feature
 
         //rectangle drawing
-        Point startRectanglePoint = Point.Empty;      // mouse-down position
-        Point currentRectanglePoint = Point.Empty;    // current mouse position
+        Point startRectanglePoint = Point.Empty;      // mouse-down position 
+        Point currentRectanglePoint = Point.Empty;    // current mouse position 
+
 
         public Frm_CustomMasking()
         {
@@ -178,7 +179,24 @@ namespace AITool
             else return new Rectangle();
         }
 
-        private void drawRectangle()
+        private Rectangle getScaledRectangle()
+        {
+            if (startRectanglePoint != Point.Empty && currentRectanglePoint != Point.Empty)
+            {
+                Point scaledStart = AdjustZoomMousePosition(startRectanglePoint);
+                Point scaleCurrent = AdjustZoomMousePosition(currentRectanglePoint);
+
+                return new Rectangle(
+                    Math.Min(scaledStart.X, scaleCurrent.X),
+                    Math.Min(scaledStart.Y, scaleCurrent.Y),
+                    Math.Abs(scaledStart.X - scaleCurrent.X),
+                    Math.Abs(scaledStart.Y - scaleCurrent.Y));
+            }
+
+            else return new Rectangle();
+        }
+
+        private void drawRectangle(Graphics e)
         {
             Color color = Color.FromArgb(255, 255, 255, 70);
             SolidBrush fillBrush = new SolidBrush(color);
@@ -187,12 +205,14 @@ namespace AITool
             {
                 using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
                 {
-                    g.FillRectangle(fillBrush, getRectangle());
+                    e.DrawRectangle(Pens.Yellow, getRectangle());
                 }
-
+            }
+            else if(startRectanglePoint.IsEmpty == false)
+            {
                 using (Graphics g = Graphics.FromImage(inProgessLayer))
                 {
-                    g.FillRectangle(fillBrush, getRectangle());
+                    g.FillRectangle(fillBrush, getScaledRectangle());
                 }
             }
         }
@@ -220,7 +240,7 @@ namespace AITool
 
                 if (rbRectangle.Checked)
                 {
-                    drawRectangle();
+                    drawRectangle(e.Graphics);
                 }
                 else if(rbBrush.Checked)
                 {
@@ -261,7 +281,7 @@ namespace AITool
             }
             else if (rbRectangle.Checked)
             {
-                currentRectanglePoint = startRectanglePoint = AdjustZoomMousePosition(e.Location);
+                currentRectanglePoint = startRectanglePoint = e.Location;
                 drawing = true;
             }
         }
@@ -271,7 +291,7 @@ namespace AITool
             if (e.Button == MouseButtons.Left)
             {
                 currentPoints.AddPoint(AdjustZoomMousePosition(e.Location));
-                currentRectanglePoint = AdjustZoomMousePosition(e.Location);
+                currentRectanglePoint = e.Location;
                 pbMaskImage.Invalidate();
             }
         }
@@ -296,9 +316,18 @@ namespace AITool
             else if (rbRectangle.Checked && e.Button == MouseButtons.Left)
             {
                 drawing = false;
-                transparentLayer = MergeBitmaps(transparentLayer, inProgessLayer);
-                pbMaskImage.Image = MergeBitmaps(cameraLayer, AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY));
-                inProgessLayer = null;
+
+                if (inProgessLayer != null)
+                {
+                    pbMaskImage.Refresh(); // call paint to draw inprogress rectangle to image
+                    transparentLayer = MergeBitmaps(transparentLayer, inProgessLayer);
+                    pbMaskImage.Image = MergeBitmaps(cameraLayer, AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY));
+
+                    //reset rectangle positions and in progress layer
+                    startRectanglePoint = Point.Empty;      
+                    currentRectanglePoint = Point.Empty;    
+                    inProgessLayer = null;
+                }
             }
         }
 
