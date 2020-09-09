@@ -75,9 +75,17 @@ namespace AITool
                 {
                     //I expect this may take a few seconds if folder is huge
                     DirectoryInfo dirinfo = new DirectoryInfo(lastfolder);
-                    FileInfo myFile = dirinfo.GetFiles().OrderByDescending(f => f.LastWriteTime).First();
-                    Global.Log($" (Found most recent image in camera folder (no detections): {myFile.FullName})");
-                    return myFile.FullName;
+                    FileInfo myFile;
+                    if (cam != null && !string.IsNullOrEmpty(cam.prefix))
+                    {
+                        myFile = dirinfo.GetFiles($"{cam.prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
+                        if (myFile !=null)
+                        {
+                            Global.Log($" (Found most recent image in camera folder (no detections): {myFile.FullName})");
+                            return myFile.FullName;
+                        }
+
+                    }
                 }
 
             }
