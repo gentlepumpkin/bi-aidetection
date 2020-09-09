@@ -19,6 +19,80 @@ namespace AITool
         public List<ObjectPosition> CurObjPosLst = new List<ObjectPosition>();
         public ObjectPosition contextMenuPosObj;
 
+        public string GetBestImage()
+        {
+            //try to prioritize the images from actual detections first
+            //goal is to always try to have an image to display
+            // IS THIS OVERKILL OR CONFUSING TO USER???
+
+            try
+            {
+                string lastfolder = "";
+
+                if (contextMenuPosObj != null && !string.IsNullOrEmpty(contextMenuPosObj.imagePath))
+                {
+                    lastfolder = Path.GetDirectoryName(contextMenuPosObj.imagePath);
+                    if (File.Exists(contextMenuPosObj.imagePath))
+                    {
+                        Global.Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.imagePath})");
+                        return contextMenuPosObj.imagePath;
+                    }
+                    else
+                    {
+                        Global.Log("WARNING: Mask image file not found at location: " + contextMenuPosObj.imagePath + ". Defaulting to last processed image");
+                    }
+                }
+                else
+                {
+                    Global.Log("WARNING: Mask image file path was blank or NULL. Defaulting to last processed image");
+
+                }
+
+                //See if we have an image stored that had ANY detections and use it
+                if (cam != null && !string.IsNullOrEmpty(cam.last_image_file_with_detections))
+                {
+                    lastfolder = Path.GetDirectoryName(cam.last_image_file_with_detections);
+                    if (File.Exists(cam.last_image_file_with_detections))
+                    {
+                        Global.Log($" (Found image from -last- detected object: {cam.last_image_file_with_detections})");
+                        return cam.last_image_file_with_detections;
+                    }
+                }
+
+                //Just take the last image processed by the camera even if no detections
+                if (cam != null && !string.IsNullOrEmpty(cam.last_image_file) )
+                {
+                    lastfolder = Path.GetDirectoryName(cam.last_image_file);
+                    if (File.Exists(cam.last_image_file))
+                    {
+                        Global.Log($" (Found image from last processed image (no detections): {cam.last_image_file})");
+                        return cam.last_image_file;
+                    }
+                }
+
+                //FAIL, scan the camera folder for the most recent image file
+                if (!string.IsNullOrEmpty(lastfolder) && Directory.Exists(lastfolder))
+                {
+                    //I expect this may take a few seconds if folder is huge
+                    DirectoryInfo dirinfo = new DirectoryInfo(lastfolder);
+                    FileInfo myFile = dirinfo.GetFiles().OrderByDescending(f => f.LastWriteTime).First();
+                    Global.Log($" (Found most recent image in camera folder (no detections): {myFile.FullName})");
+                    return myFile.FullName;
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+            
+            return "";
+
+        }
+
+       
+
         public Frm_DynamicMaskDetails()
         {
             InitializeComponent();
@@ -39,41 +113,17 @@ namespace AITool
             Global_GUI.UpdateFOLV(ref FOLV_MaskHistory, cam.maskManager.last_positions_history, true);
             Global_GUI.UpdateFOLV(ref FOLV_Masks, cam.maskManager.masked_positions, true);
             this.CurObjPosLst.Clear();
+            ShowMaskImage();
             ShowImageMask(null);
         }
 
-        private void ShowImage(string ImagePath)
-        {
-            try
-            {
-                if ((!string.IsNullOrWhiteSpace(ImagePath)))
-                {
-                    if (File.Exists(ImagePath))
-                    {
-                        ShowMaskImage(ImagePath);
-                    }
-                    else
-                    {
-                        ShowLastImage();
-                        Global.Log("WARNING: Mask image file not found at location: " + ImagePath + ". Defaulting to last processed image");
-                    }
-                }
-                else
-                {
-                    ShowLastImage();
-                    Global.Log("WARNING: Mask image file path was blank or NULL. Defaulting to last processed image");
-                }
-            }
-            catch (Exception ex)
-            {
-                Global.Log("Error: " + Global.ExMsg(ex));
-            }
-        }
 
-        private void ShowMaskImage(string imagePath)
+        private void ShowMaskImage()
         {
             try
             {
+                string imagePath = GetBestImage();
+
                 if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != imagePath.ToLower())
                 {
                     using (var img = new Bitmap(imagePath))
@@ -234,12 +284,13 @@ namespace AITool
 
             if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
-                string imagePath = ((ObjectPosition)FOLV_MaskHistory.SelectedObject).imagePath;
-                ShowImage(imagePath);
+                contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObject;
+                ShowMaskImage();
 
                 foreach (object obj in FOLV_MaskHistory.SelectedObjects)
                 {
                     CurObjPosLst.Add((ObjectPosition)obj);
+                    contextMenuPosObj = (ObjectPosition)obj;
                 }
             }
             pictureBox1.Refresh();
@@ -251,8 +302,8 @@ namespace AITool
             
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
-                string imagePath = ((ObjectPosition)FOLV_Masks.SelectedObject).imagePath;
-                ShowImage(imagePath);
+                contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObject;
+                ShowMaskImage();
 
                 foreach (object obj in FOLV_Masks.SelectedObjects)
                 {
