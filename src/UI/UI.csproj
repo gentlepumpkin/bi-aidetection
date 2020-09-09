@@ -177,9 +177,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="ClsHistoryItem.cs" />
     <Compile Include="ClsImageQueueItem.cs" />
+    <Compile Include="ClsMessage.cs" />
     <Compile Include="ClsURLItem.cs" />
     <Compile Include="DeepStack.cs" />
     <Compile Include="Frm_CustomMasking.cs">
@@ -223,6 +226,7 @@
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="MaskManager.cs" />
     <Compile Include="MQTTClient.cs" />
+    <Compile Include="ClsFileSystemWatcher.cs" />
     <Compile Include="ObjectPosition.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="RichTextBoxEx.cs" />

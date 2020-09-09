@@ -56,7 +56,7 @@ namespace AITool
         public string Action_Sounds = "";
 
         public bool Action_mqtt_enabled = false;
-        public string Action_mqtt_topic = "aitool/[camera]/motion"; 
+        public string Action_mqtt_topic = "ai/[camera]/motion"; 
         public string Action_mqtt_payload = "[detections]";
         public bool Action_mqtt_retain_message = false;
 
@@ -69,7 +69,7 @@ namespace AITool
         public int stats_irrelevant_alerts = 0; //alert image contained irrelevant object counter
 
         public string last_image_file = "";
-
+        public string last_image_file_with_detections = "";
         [JsonIgnore]
         public DateTime last_trigger_time;
         [JsonIgnore]

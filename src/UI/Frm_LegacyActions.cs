@@ -12,6 +12,8 @@ namespace AITool
 {
     public partial class Frm_LegacyActions:Form
     {
+        public Camera cam;
+
         public Frm_LegacyActions()
         {
             InitializeComponent();
@@ -43,6 +45,8 @@ namespace AITool
             using (Frm_MQTTSettings frm = new Frm_MQTTSettings())
             {
 
+                frm.cam = this.cam;
+
                 frm.tb_ServerPort.Text = AppSettings.Settings.mqtt_serverandport;
                 frm.cb_UseTLS.Checked = AppSettings.Settings.mqtt_UseTLS;
                 frm.tb_Password.Text = AppSettings.Settings.mqtt_password;
@@ -62,10 +66,47 @@ namespace AITool
                     this.tb_MQTT_Payload.Text = frm.tb_Payload.Text.Trim();
                     this.tb_MQTT_Topic.Text = frm.tb_Topic.Text.Trim();
 
+
                     AppSettings.Save();
 
                 }
             }
+        }
+
+        private async void btTest_Click(object sender, EventArgs e)
+        {
+            btnCancel.Enabled = false;
+            btnSave.Enabled = false;
+            btTest.Enabled = false;
+            try
+            {
+                using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
+                {
+                    Global.Log("------ TESTING TRIGGERS --------");
+
+                    bool result = await AITOOL.Trigger(cam, null);
+
+                    Global.Log("------ DONE TESTING TRIGGERS --------");
+
+                    if (result)
+                    {
+                        MessageBox.Show($"Succeeded! See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Failed. See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch { }
+            finally
+            {
+                btnCancel.Enabled = true;
+                btnSave.Enabled = true;
+                btTest.Enabled = true;
+
+            }
+
         }
     }
 }

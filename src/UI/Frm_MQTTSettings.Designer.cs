@@ -235,6 +235,7 @@
             this.Name = "Frm_MQTTSettings";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "MQTT Settings";
+            this.Load += new System.EventHandler(this.Frm_MQTTSettings_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);

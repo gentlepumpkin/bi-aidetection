@@ -69,9 +69,15 @@ namespace AITool
 
                                         IMqttClientOptions options;
 
+
                                         //=====================================================================
                                         //Seems like there should be a better way here with this Options builder...
+                                        //I dont see an obvious way to directly modify options without the builder
+                                        //and I cant seem to put IF statements around each part of the option builder
+                                        //parameters.
                                         //=====================================================================
+
+
 
                                         if (UseTLS)
                                         {
@@ -222,6 +228,7 @@ namespace AITool
 
 
                                         Global.Log($"MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
+
 
                                         MqttClientAuthenticateResult cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
 

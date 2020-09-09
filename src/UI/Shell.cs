@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,62 +27,13 @@ using SixLabors.ImageSharp;
 //for telegram
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
+using static AITool.AITOOL;
 
 namespace AITool
 {
 
     public partial class Shell:Form
     {
-
-        //Use AppSettings.Settings.originalsetting from now on...
-        //public string input_path = AppSettings.Settings.input_path; //image input path
-        //public static string deepstack_url = AppSettings.Settings.deepstack_url; //deepstack url
-        //public static bool log_everything = AppSettings.Settings.log_everything; //save every action sent to Log() into the log file?
-        //public static bool send_errors = AppSettings.Settings.send_errors; //send error messages to Telegram?
-        //public static string telegram_chatid = AppSettings.Settings.telegram_chatid; //telegram chat id
-        //public static string[] telegram_chatids = telegram_chatid.Replace(" ", "").Split(','); //for multiple Telegram chats that receive alert images
-        //public static string telegram_token = AppSettings.Settings.telegram_token; //telegram bot token
-
-        ////deepstack, logging and blueiris settings added by Vorlon
-        //public static string deepstack_adminkey = AppSettings.Settings.deepstack_adminkey;
-        //public static string deepstack_apikey = AppSettings.Settings.deepstack_apikey;
-        //public static string deepstack_mode = AppSettings.Settings.deepstack_mode;
-        //public static string deepstack_port = AppSettings.Settings.deepstack_port;
-        //public static string deepstack_installfolder = AppSettings.Settings.deepstack_installfolder;
-        //public static bool deepstack_detectionapienabled = AppSettings.Settings.deepstack_detectionapienabled;
-        //public static bool deepstack_faceapienabled = AppSettings.Settings.deepstack_faceapienabled;
-        //public static bool deepstack_sceneapienabled = AppSettings.Settings.deepstack_sceneapienabled;
-        //public static bool deepstack_autostart = AppSettings.Settings.deepstack_autostart;
-        //public static IProgress<string> ProgressLogger = null;
-        public static DeepStack DeepStackServerControl = null;
-        public static RichTextBoxEx RTFLogger = null;
-        public static LogFileWriter LogWriter = null;
-        public static LogFileWriter HistoryWriter = null;
-        public static BlueIris BlueIrisInfo = null;
-
-        //keep track of timing
-        //moving average will be faster for long running process with 1000's of samples
-        public static MovingCalcs tcalc = new MovingCalcs(250);
-        public static MovingCalcs dcalc = new MovingCalcs(250);
-        public static MovingCalcs fcalc = new MovingCalcs(250);
-        public static MovingCalcs qcalc = new MovingCalcs(250);
-        public static MovingCalcs qsizecalc = new MovingCalcs(250);
-
-        public int errors = 0; //error counter
-
-        private ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
-
-        //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
-        public static SemaphoreSlim semaphore_detection_running = new SemaphoreSlim(1, 1);
-
-        public static object FileWatcherLockObject = new object();
-
-        //thread safe dictionary to prevent more than one file being processed at one time
-        public static ConcurrentDictionary<string, ClsImageQueueItem> detection_dictionary = new ConcurrentDictionary<string, ClsImageQueueItem>();
-
-        static HttpClient client = new HttpClient();
-
-        Dictionary<string, MyFileSystemWatcher> watchers = new Dictionary<string, MyFileSystemWatcher>();
 
 
 
@@ -94,7 +46,7 @@ namespace AITool
             //---------------------------------------------------------------------------------------------------------
 
             //this is to log messages from other classes to the RTF in Shell form, and to log file...
-            Global.progress = new Progress<string>(EventMessage);
+            Global.progress = new Progress<ClsMessage>(EventMessage);
 
             //Initialize the rich text log window writer.   You can use any 'color' name in your log text
             //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
@@ -287,1110 +239,92 @@ namespace AITool
             Log("APP START complete.");
         }
 
-        public class MyFileSystemWatcher
+
+
+
+
+        void EventMessage(ClsMessage msg)
         {
-            public string Name = "";
-            public string Path = "";
-            public bool IncludeSubdirectories = false;
-            public FileSystemWatcher watcher = null;
-            public MyFileSystemWatcher(string Name, string Path, FileSystemWatcher Watcher, bool IncludeSubFolders)
+            //output messages from the deepstack, blueiris, etc class to the text log window and log file
+            if (msg.MessageType == MessageType.LogEntry)
             {
-                this.Name = Name;
-                this.Path = Path;
-                this.watcher = Watcher;
-                this.IncludeSubdirectories = IncludeSubFolders;
+                Log(msg.Description, "");
             }
-        }
-
-
-        public void UpdateWatchers()
-        {
-
-            try
+            else if (msg.MessageType == MessageType.CreateHistoryItem)
             {
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                ClsHistoryItem hist = JsonConvert.DeserializeObject<ClsHistoryItem>(msg.JSONPayload, jset);
+                CreateListItem(hist);
+            }
+            else if (msg.MessageType == MessageType.DeleteHistoryItem)
+            {
+                DeleteListItem(msg.Description);
+            }
+            else if (msg.MessageType == MessageType.ImageAddedToQueue)
+            {
+                UpdateQueueLabel();
+            }
+            else if (msg.MessageType == MessageType.BeginProcessImage)
+            {
+                BeginProcessImage(msg.Description);
+            }
+            else if (msg.MessageType == MessageType.EndProcessImage)
+            {
+                EndProcessImage(msg.Description);
+            }
+            else if (msg.MessageType == MessageType.UpdateLabel)
+            {
+                string lblcontrolname = (string)Global.SetJSONString<object>(msg.JSONPayload);
 
-                if (AppSettings.AlreadyRunning)
+                if (!string.IsNullOrWhiteSpace(lblcontrolname))
                 {
-                    Log("*** Another instance is already running, skip watching for changed files ***");
-                    return;
-                }
-                //first add all the names and paths to check...
-                List<string> names = new List<string>();
-                Dictionary<string, string> paths = new Dictionary<string, string>();
-
-                string pths = AppSettings.Settings.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                names.Add($"INPUT_PATH|{pths}|{AppSettings.Settings.input_path_includesubfolders}");
-                foreach (Camera cam in AppSettings.Settings.CameraList)
-                {
-                    if (cam.enabled && !String.IsNullOrWhiteSpace(cam.input_path))
+                    Label lbl = null;
+                    try
                     {
-                        pths = cam.input_path.Trim().TrimEnd(@"\".ToCharArray());
-                        names.Add($"{cam.name}|{pths}|{cam.input_path_includesubfolders}");
+                        lbl = this.Controls.Find(lblcontrolname, true).FirstOrDefault() as Label;
                     }
-                }
-
-
-                //check each one to see if needs to be added
-                foreach (string item in names)
-                {
-                    List<string> splt = Global.Split(item, "|", false);
-                    string name = splt[0];
-                    string path = splt[1];
-                    if (!string.IsNullOrWhiteSpace(path))
+                    catch (Exception ex)
                     {
-                        bool include = Convert.ToBoolean(splt[2]);
-                        if (!paths.ContainsKey(path.ToLower()))
-                        {
-                            paths.Add(path.ToLower(), path);
 
-                            if (!watchers.ContainsKey(name.ToLower()))
+                        Log($"Error: Could not find label '{lblcontrolname}': {Global.ExMsg(ex)}");
+                    }
+
+                    if (lbl != null)
+                    {
+                        if (this.Visible)
+                        {
+                            MethodInvoker LabelUpdate = delegate
                             {
-                                //this will return null if the path is invalid...
-                                FileSystemWatcher curwatch = MyWatcherFatory(path, include);
-                                MyFileSystemWatcher mywtc = new MyFileSystemWatcher(name, path, curwatch, include);
-                                //add even if null to keep track of things
-                                watchers.Add(name.ToLower(), mywtc);
-                            }
-                            else
-                            {
-                                //update path if needed, even to empty
-                                watchers[name.ToLower()].Path = path;
-                                if (watchers[name.ToLower()].watcher == null)
-                                {
-                                    //could be null if path is bad
-                                    watchers[name.ToLower()].watcher = MyWatcherFatory(path, include);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Log($"Skipping duplicate path for '{name}': '{path}'");
-                        }
+                                lbl.Show();
+                                lbl.Text = msg.Description;
+                            };
+                            //getting error here when called too early - had to check if Visible or not -Vorlon
+                            Invoke(LabelUpdate);
 
-                    }
-
-
-                }
-
-                //check to see if any need disabling - a camera was deleted
-                foreach (MyFileSystemWatcher watcher1 in watchers.Values)
-                {
-                    bool fnd = false;
-                    foreach (string item in names)
-                    {
-                        List<string> splt = Global.Split(item);
-                        string name = splt[0];
-                        if (name.ToLower() == watcher1.Name.ToLower())
-                        {
-                            fnd = true;
-                            break;
                         }
                     }
-                    if (!fnd)
-                    {
-                        watcher1.Path = "";
-                    }
 
-                }
-
-
-                //enable or disable watchers
-                int enabledcnt = 0;
-                int disabledcnt = 0;
-
-                Dictionary<string, string> dupes = new Dictionary<string, string>();
-
-                foreach (MyFileSystemWatcher watcher in watchers.Values)
-                {
-                    if (watcher.watcher != null)
-                    {
-                        if (!String.IsNullOrWhiteSpace(watcher.Path))
-                        {
-                            if (!dupes.ContainsKey(watcher.Path.ToLower()))
-                            {
-                                if (watcher.Path != watcher.watcher.Path)
-                                {
-                                    watcher.watcher.Path = watcher.Path;
-                                    Log($"Watcher '{watcher.Name}' changed from '{watcher.watcher.Path}' to '{watcher.Path}'.");
-                                }
-
-                                if (watcher.IncludeSubdirectories != watcher.watcher.IncludeSubdirectories)
-                                {
-                                    watcher.watcher.IncludeSubdirectories = watcher.IncludeSubdirectories;
-                                    Log($"Watcher '{watcher.Name}' IncludeSubdirectories changed from '{watcher.watcher.IncludeSubdirectories}' to '{watcher.IncludeSubdirectories}'.");
-                                }
-
-                                if (watcher.watcher.EnableRaisingEvents != true)
-                                {
-                                    enabledcnt++;
-                                    watcher.watcher.EnableRaisingEvents = true;
-                                    dupes.Add(watcher.Path.ToLower(), watcher.Path);
-                                    Log($"Watcher '{watcher.Name}' is now watching '{watcher.Path}'");
-                                }
-
-                            }
-                            else
-                            {
-                                Log($"Watcher '{watcher.Name}' has a duplicate path, skipping '{watcher.Path}'");
-                            }
-                        }
-                        else
-                        {
-                            //make sure it is disabled
-                            disabledcnt++;
-
-                            watcher.watcher.EnableRaisingEvents = false;
-                            watcher.watcher.Dispose();
-                            watcher.watcher = null;
-                            Log($"Watcher '{watcher.Name}' has an empty path, just disabled.");
-                        }
-
-                    }
-                    else if (!string.IsNullOrEmpty(watcher.Path))
-                    {
-                        Log($"Error: Watcher '{watcher.Name}' disabled. INVALID PATH='{watcher.Path}'");
-                    }
-                    else
-                    {
-                        //Log($"Watcher '{watcher.Name}' already disabled.");
-                    }
-
-
-                }
-
-                if (watchers.Count() == 0)
-                {
-                    Log("No FileSystemWatcher input folders defined yet.");
                 }
                 else
                 {
-                    if (enabledcnt == 0)
-                    {
-                        Log("No NEW FileSystemWatcher input folders found.");
-                    }
-                    else
-                    {
-                        Log($"Enabled {enabledcnt} FileSystemWatchers.");
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log($"Error: {Global.ExMsg(ex)}");
-            }
-
-        }
-
-        public FileSystemWatcher MyWatcherFatory(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
-        {
-            FileSystemWatcher watcher = null;
-
-            try
-            {
-                // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
-
-                if (!String.IsNullOrWhiteSpace(path) && Directory.Exists(path))
-                {
-                    watcher = new FileSystemWatcher(path);
-                    watcher.Path = path;
-                    watcher.Filter = filter;
-                    watcher.IncludeSubdirectories = IncludeSubdirectories;
-
-                    //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
-                    watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-
-                    //fswatcher events
-                    watcher.Created += new FileSystemEventHandler(OnCreatedAsync);
-                    watcher.Renamed += new RenamedEventHandler(OnRenamed);
-                    watcher.Deleted += new FileSystemEventHandler(OnDeleted);
-                    watcher.Error += new ErrorEventHandler(OnError);
+                    Log($"Error: No label name passed - '{msg.Description}'");
 
                 }
+
+
             }
-            catch (Exception ex)
+            else
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: Unhandled message type '{msg.MessageType}'");
             }
-
-            return watcher;
-        }
-
-        void EventMessage(string message)
-        {
-            //output messages from the deepstack, blueiris, etc class to the text log window and log file
-            Log(message, "");
         }
         //----------------------------------------------------------------------------------------------------------
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
 
-        //analyze image with AI
-        public async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
-        {
-
-
-            bool ret = false;
-
-            //Only set error when there IS an error...
-            string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
-
-            string filename = Path.GetFileName(CurImg.image_path);
-
-            CurImg.QueueWaitMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds;
-
-            Stopwatch sw = Stopwatch.StartNew();
-            Stopwatch swposttime = Stopwatch.StartNew();
-
-            Uri url = new Uri(DeepStackURL.url);
-            String CurSrv = url.Host + ":" + url.Port;
-
-            Camera cam = Global.GetCamera(CurImg.image_path);
-            cam.last_image_file = CurImg.image_path;
-
-            // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
-            //only analyze if 50% of the cameras cooldown time since last detection has passed
-            double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
-            double halfcool = cam.cooldown_time / 2;
-            if (mins >= halfcool)
-            {
-                try
-                {
-                    Log($"{CurSrv} - Starting analysis of {CurImg.image_path}...");
-
-                    // Wait up to 30 seconds to gain access to the file that was just created.This should
-                    //prevent the need to retry in the detection routine
-                    sw.Restart();
-
-                    bool success = await Global.WaitForFileAccessAsync(CurImg.image_path, FileSystemRights.Read, FileShare.Read, 30000, 20);
-
-                    sw.Stop();
-
-                    CurImg.FileLockMS = sw.ElapsedMilliseconds;
-
-                    if (success)
-                    {
-                        using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
-                        {
-                            Log($"{CurSrv} - (1/6) Uploading image to DeepQuestAI Server at {DeepStackURL}");
-
-                            //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
-
-                            var request = new MultipartFormDataContent();
-                            request.Add(new StreamContent(image_data), "image", Path.GetFileName(CurImg.image_path));
-
-                            swposttime = Stopwatch.StartNew();
-
-                            //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
-                            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
-                            {
-                                using (HttpResponseMessage output = await client.PostAsync(url, request, cts.Token))
-                                {
-                                    swposttime.Stop();
-
-                                    if (output.IsSuccessStatusCode)
-                                    {
-                                        string jsonString = await output.Content.ReadAsStringAsync();
-
-                                        string cleanjsonString = Global.CleanString(jsonString);
-
-                                        if (jsonString != null && !string.IsNullOrWhiteSpace(jsonString))
-                                        {
-                                            Log($"{CurSrv} - (2/6) Posted in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{white}}, Received a {jsonString.Length} byte response.");
-                                            Log($"{CurSrv} - (3/6) Processing results...");
-
-                                            Response response = null;
-
-                                            try
-                                            {
-                                                //This can throw an exception
-                                                response = JsonConvert.DeserializeObject<Response>(jsonString);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                                                DeepStackURL.IncrementErrCount();
-                                                DeepStackURL.ResultMessage = error;
-                                                Log(error);
-                                            }
-
-                                            if (response != null)
-                                            {
-
-                                                //error = $"Failure in DeepStack processing the image.";
-
-                                                //print every detected object with the according confidence-level
-                                                string outputtext = $"{CurSrv} -    Detected objects:";
-
-                                                if (response.predictions != null)
-                                                {
-                                                    //if we are not using the local deepstack windows version, this means nothing:
-                                                    DeepStackServerControl.IsActivated = true;
-
-                                                    foreach (Object user in response.predictions)
-                                                    {
-                                                        if (user != null && !string.IsNullOrEmpty(user.label))
-                                                        {
-                                                            DeepStackServerControl.VisionDetectionRunning = true;
-                                                            outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
-                                                        }
-                                                        else
-                                                        {
-                                                            outputtext += "(Error: null prediction? DeepStack may not be started with correct switches.), ";
-                                                        }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    outputtext = $"{CurSrv} - (Error: No predictions?  JSON: '{cleanjsonString}')";
-                                                }
-
-                                                Log(outputtext);
-
-                                                if (response.success == true)
-                                                {
-
-                                                    //if camera is enabled
-                                                    if (cam.enabled == true)
-                                                    {
-
-                                                        List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                                                        List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
-                                                        List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
-
-                                                        List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                                                        List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
-                                                        List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
-
-
-                                                        int masked_counter = 0; //this value is incremented if an object is in a masked area
-                                                        int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
-                                                        int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
-
-                                                        //if something was detected
-                                                        if (response.predictions.Length > 0)
-                                                        {
-
-                                                            Log($"{CurSrv} - (4/6) Checking if detected object is relevant and within confidence limits:");
-                                                            //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
-                                                            foreach (Object user in response.predictions)
-                                                            {
-                                                                // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
-
-                                                                using (var img = new Bitmap(CurImg.image_path))
-                                                                {
-                                                                    bool irrelevant_object = false;
-
-                                                                    //if object detected is one of the objects that is relevant
-                                                                    if (cam.triggering_objects_as_string.Contains(user.label))
-                                                                    {
-                                                                        // -> OBJECT IS RELEVANT
-
-                                                                        //if confidence limits are satisfied
-                                                                        if (user.confidence * 100 >= cam.threshold_lower && user.confidence * 100 <= cam.threshold_upper)
-                                                                        {
-                                                                            // -> OBJECT IS WITHIN CONFIDENCE LIMITS
-
-                                                                            ObjectPosition currentObject = new ObjectPosition(user.x_min, user.y_min, user.x_max, user.y_max, user.label,
-                                                                                                                              img.Width, img.Height, cam);
-
-                                                                            bool maskExists = false;
-                                                                            if (cam.maskManager.masking_enabled)
-                                                                            {
-                                                                                //creates history and masked lists for objects returned
-                                                                                maskExists = cam.maskManager.CreateDynamicMask(currentObject);
-                                                                            }
-
-                                                                            //only if the object is outside of the masked area
-                                                                            if (Outsidemask(cam.name, user.x_min, user.x_max, user.y_min, user.y_max, img.Width, img.Height)
-                                                                                && !maskExists)
-                                                                            {
-                                                                                // -> OBJECT IS OUTSIDE OF MASKED AREAS
-
-                                                                                objects.Add(user.label);
-                                                                                objects_confidence.Add(user.confidence);
-                                                                                string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                                objects_position.Add(position);
-                                                                                Log($"{CurSrv} -    {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
-                                                                            }
-                                                                            else //if the object is in a masked area
-                                                                            {
-                                                                                masked_counter++;
-                                                                                irrelevant_object = true;
-                                                                            }
-                                                                        }
-                                                                        else //if confidence limits are not satisfied
-                                                                        {
-                                                                            threshold_counter++;
-                                                                            irrelevant_object = true;
-                                                                        }
-                                                                    }
-                                                                    else //if object is not relevant
-                                                                    {
-                                                                        irrelevant_counter++;
-                                                                        irrelevant_object = true;
-                                                                    }
-
-                                                                    if (irrelevant_object == true)
-                                                                    {
-                                                                        irrelevant_objects.Add(user.label);
-                                                                        irrelevant_objects_confidence.Add(user.confidence);
-                                                                        string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
-                                                                        irrelevant_objects_position.Add(position);
-                                                                        Log($"{CurSrv} -    { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
-                                                                    }
-                                                                }
-
-                                                            }  //end loop over current object list
-
-                                                            if (cam.maskManager.masking_enabled)
-                                                            {
-                                                                //scan over all masked objects and decrement counter if not flagged as visible.
-                                                                cam.maskManager.CleanUpExpiredMasks(cam.name);
-
-                                                                //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                                                cam.maskManager.CleanUpExpiredHistory(cam.name);
-
-                                                                //log summary information for all masked objects
-                                                                Log($"{CurSrv} - ### Masked objects summary for camera " + cam.name + " ###");
-                                                                foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
-                                                                {
-                                                                    Log($"{CurSrv} - \t" + maskedObject.ToString());
-                                                                }
-                                                            }
-
-                                                            //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                                            if (objects.Count() > 0)
-                                                            {
-                                                                //store these last detections for the specific camera
-                                                                cam.last_detections = objects;
-                                                                cam.last_confidences = objects_confidence;
-                                                                cam.last_positions = objects_position;
-
-
-                                                                //create summary string for this detection
-                                                                StringBuilder detectionsTextSb = new StringBuilder();
-                                                                for (int i = 0; i < objects.Count(); i++)
-                                                                {
-                                                                    detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
-                                                                }
-                                                                if (detectionsTextSb.Length >= 3)
-                                                                {
-                                                                    detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
-                                                                }
-                                                                cam.last_detections_summary = detectionsTextSb.ToString();
-                                                                Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
-
-
-                                                                if (!cam.trigger_url_cancels)
-                                                                {
-                                                                    Log($"{CurSrv} - (5/6) Performing alert actions:");
-                                                                    await Trigger(cam, CurImg); //make TRIGGER
-                                                                }
-                                                                cam.IncrementAlerts(); //stats update
-                                                                Log($"{CurSrv} - (6/6) SUCCESS.");
-
-
-                                                                //create text string objects and confidences
-                                                                string objects_and_confidences = "";
-                                                                string object_positions_as_string = "";
-                                                                for (int i = 0; i < objects.Count; i++)
-                                                                {
-                                                                    objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
-                                                                    object_positions_as_string += $"{objects_position[i]};";
-                                                                }
-
-                                                                //add to history list
-                                                                Log($"{CurSrv} - Adding detection to history list.");
-                                                                CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string);
-
-                                                            }
-                                                            //if no object fulfills all 3 requirements but there are other objects: 
-                                                            else if (irrelevant_objects.Count() > 0)
-                                                            {
-                                                                //IRRELEVANT ALERT
-
-                                                                if (cam.trigger_url_cancels)
-                                                                {
-                                                                    Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
-                                                                    await Trigger(cam, CurImg); //make TRIGGER
-                                                                }
-
-                                                                cam.IncrementIrrelevantAlerts(); //stats update
-                                                                Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
-                                                                //Log("Adding irrelevant detection to history list.");
-
-                                                                //retrieve confidences and positions
-                                                                string objects_and_confidences = "";
-                                                                string object_positions_as_string = "";
-                                                                for (int i = 0; i < irrelevant_objects.Count; i++)
-                                                                {
-                                                                    objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                                    object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                                                }
-
-                                                                //string text contains what is written in the log and in the history list
-                                                                string text = "";
-                                                                if (masked_counter > 0)//if masked objects, add them
-                                                                {
-                                                                    text += $"{masked_counter}x masked; ";
-                                                                }
-                                                                if (threshold_counter > 0)//if objects out of confidence range, add them
-                                                                {
-                                                                    text += $"{threshold_counter}x not in confidence range; ";
-                                                                }
-                                                                if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                                                {
-                                                                    text += $"{irrelevant_counter}x irrelevant; ";
-                                                                }
-
-                                                                if (text != "") //remove last ";"
-                                                                {
-                                                                    text = text.Remove(text.Length - 2);
-                                                                }
-
-                                                                Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
-                                                                //add to history list
-                                                                CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string);
-                                                            }
-                                                        }
-                                                        //if no object was detected
-                                                        else if (response.predictions.Length == 0)
-                                                        {
-                                                            // FALSE ALERT
-
-                                                            if (cam.trigger_url_cancels)
-                                                            {
-                                                                Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
-                                                                await Trigger(cam, CurImg); //make TRIGGER
-                                                            }
-
-                                                            cam.IncrementFalseAlerts(); //stats update
-                                                            Log($"{CurSrv} - (6/6) Camera {cam.name} caused a false alert, nothing detected.");
-
-                                                            //add to history list
-                                                            Log($"{CurSrv} - Adding false to history list.");
-                                                            CreateListItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", "");
-                                                        }
-                                                    }
-
-                                                    //if camera is disabled.
-                                                    else if (cam.enabled == false)
-                                                    {
-                                                        Log($"{CurSrv} - (6/6) Selected camera is disabled.");
-                                                    }
-
-                                                }
-                                                else if (response.success == false) //if nothing was detected
-                                                {
-                                                    error = $"{CurSrv} - ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
-                                                    Log(error);
-                                                }
-
-                                            }
-                                            else if (string.IsNullOrEmpty(error))
-                                            {
-                                                //deserialization did not cause exception, it just gave a null response in the object?
-                                                //probably wont happen but just making sure
-                                                error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
-                                                DeepStackURL.IncrementErrCount();
-                                                DeepStackURL.ResultMessage = error;
-                                                Log(error);
-                                            }
-
-
-                                        }
-                                        else
-                                        {
-                                            error = $"{CurSrv} - ERROR: Empty string returned from HTTP post.";
-                                            DeepStackURL.IncrementErrCount();
-                                            DeepStackURL.ResultMessage = error;
-                                            Log(error);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
-                                        DeepStackURL.IncrementErrCount();
-                                        DeepStackURL.ResultMessage = error;
-                                        Log(error);
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-                    else
-                    {
-                        //could not access the file for 30 seconds??   Or unexpected error
-                        error = $"Error: Could not gain access to {CurImg.image_path} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.";
-                        CurImg.IncrementErrCount();
-                        CurImg.ResultMessage = error;
-                        Log(error);
-                    }
-
-
-                    //break; //end retries if code was successful
-                }
-                catch (Exception ex)
-                {
-
-                    //We should almost never get here due to all the null checks and function to wait for file to become available...
-                    //When the connection to deepstack fails we will get here
-                    //exception.tostring should give the line number and ALL detail - but maybe only if PDB is in same folder as exe?
-                    error = $"{CurSrv} - ERROR: {Global.ExMsg(ex)}";
-                    DeepStackURL.IncrementErrCount();
-                    DeepStackURL.ResultMessage = error;
-                    Log(error);
-                }
-
-                if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
-                {
-                    //upload the alert image which could not be analyzed to Telegram
-                    if (AppSettings.Settings.send_errors == true)
-                    {
-                        await TelegramUpload(CurImg);
-                    }
-
-                }
-
-
-                //I notice deepstack takes a lot longer the very first run?
-
-                CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
-                CurImg.DeepStackTimeMS = swposttime.ElapsedMilliseconds;
-
-                tcalc.AddToCalc(CurImg.TotalTimeMS);
-                dcalc.AddToCalc(CurImg.DeepStackTimeMS);
-                qcalc.AddToCalc(CurImg.QueueWaitMS);
-                fcalc.AddToCalc(CurImg.FileLockMS);
-
-
-                Log($"{CurSrv} - ...Object detection finished: ");
-                Log($"{CurSrv} -        Total Time:   {{yellow}}{CurImg.TotalTimeMS}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
-                Log($"{CurSrv} -    DeepStack Time:   {{yellow}}{CurImg.DeepStackTimeMS}ms{{white}} (Count={dcalc.Count}, Min={dcalc.Min}ms, Max={dcalc.Max}ms, Avg={dcalc.Average.ToString("#####")}ms)");
-                Log($"{CurSrv} -    File lock Time:   {{yellow}}{CurImg.FileLockMS}ms{{white}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");
-
-                //I want to highlight when we have to wait for the last detection (or for the file to become readable) too long
-                if (CurImg.QueueWaitMS + CurImg.FileLockMS >= 500)
-                {
-                    Log($"{CurSrv} -  {{red}}Image Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{red}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
-                }
-                else
-                {
-                    Log($"{CurSrv} -  {{white}}Image Queue Time:   {{yellow}}{CurImg.QueueWaitMS}ms{{white}} (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)");
-                }
-
-                Log($"{CurSrv} - Image Queue Depth:   {{yellow}}{CurImg.CurQueueSize}{{white}} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})");
-
-                //}
-
-            }
-            else
-            {
-                Log($"{CurSrv} - Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
-            }
-
-            return (error == "");
-
-
-        }
-
-        //call trigger urls
-        public void CallTriggerURLs(List<string> trigger_urls)
-        {
-
-            var client = new WebClient();
-            foreach (string x in trigger_urls)
-            {
-                try
-                {
-                    string content = client.DownloadString(x);
-                    Log($"   -> trigger URL called: {x}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
-                }
-                catch (Exception ex)
-                {
-                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable: {Global.ExMsg(ex)}");
-                }
-
-            }
-
-
-        }
-
-        //send image to Telegram
-        public async Task TelegramUpload(ClsImageQueueItem CurImg)
-        {
-            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
-            {
-                //telegram upload sometimes fails
-                Stopwatch sw = Stopwatch.StartNew();
-                try
-                {
-                    using (var image_telegram = System.IO.File.OpenRead(CurImg.image_path))
-                    {
-                        var bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
-
-                        //upload image to Telegram servers and send to first chat
-                        Log($"      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
-                        var message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"));
-                        string file_id = message.Photo[0].FileId; //get file_id of uploaded image
-
-                        //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                        foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
-                        {
-                            Log($"      uploading image to chat \"{chatid}\"");
-                            await bot.SendPhotoAsync(chatid, file_id);
-                        }
-                    }
-                }
-                catch
-                {
-                    Log($"ERROR: Could not upload image {CurImg.image_path} to Telegram.");
-                    //store image that caused an error in ./errors/
-                    if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
-                    {
-                        //create folder
-                        DirectoryInfo di = Directory.CreateDirectory("./errors");
-                        Log("./errors/" + " dir created.");
-                    }
-                    //save error image
-                    using (var image = SixLabors.ImageSharp.Image.Load(CurImg.image_path))
-                    {
-                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
-                    }
-                }
-
-
-                Log($"...Finished in {{yellow}}{sw.ElapsedMilliseconds}ms{{white}}");
-
-            }
-        }
-
-        //send text to Telegram
-        public async Task TelegramText(string text)
-        {
-            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
-            {
-                //telegram upload sometimes fails
-                try
-                {
-                    var bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
-                    foreach (string chatid in AppSettings.Settings.telegram_chatids)
-                    {
-                        await bot.SendTextMessageAsync(chatid, text);
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    if (AppSettings.Settings.send_errors == true && text.ToUpper().Contains("ERROR") || text.ToUpper().Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
-                    {
-                        AppSettings.Settings.send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram: {Global.ExMsg(ex)}");
-                        AppSettings.Settings.send_errors = true;
-
-                        //inform on main tab that Telegram upload failed
-                        MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't upload error message to Telegram!"; };
-                        Invoke(LabelUpdate);
-                    }
-                    else
-                    {
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram: {Global.ExMsg(ex)}");
-                    }
-                }
-
-            }
-        }
-
-        //trigger actions
-        public async Task Trigger(Camera cam, ClsImageQueueItem CurImg)
-        {
-            //only trigger if cameras cooldown time since last detection has passed
-            if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= cam.cooldown_time)
-            {
-                //call trigger urls
-                if (cam.trigger_urls.Count() > 0)
-                {
-                    //replace url paramters with according values
-                    List<string> urls = new List<string>();
-                    //call urls
-                    foreach (string url in cam.trigger_urls)
-                    {
-                        try
-                        {
-
-                            string tmp = ReplaceParams(cam, CurImg, url);
-                            urls.Add(tmp);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log($"{Global.ExMsg(ex)}");
-                        }
-
-                    }
-
-                    CallTriggerURLs(urls);
-                }
-
-                if (!cam.trigger_url_cancels)
-                {
-                    //upload to telegram
-                    if (cam.telegram_enabled )
-                    {
-                        if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
-                        {
-                            Log("   Uploading image to Telegram...");
-                            await TelegramUpload(CurImg);
-                            Log("   -> Sent image to Telegram.");
-                        }
-                        else
-                        {
-                            //log that nothing was done
-                            Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
-                        }
-                    }
-
-                    //run external program
-                    if (cam.Action_RunProgram )
-                    {
-                        try
-                        {
-
-
-                            string tmp = ReplaceParams(cam,CurImg,cam.Action_RunProgramArgsString);
-                            Log($"   Starting external app {cam.Action_RunProgramString} {tmp}");
-                            Process.Start(cam.Action_RunProgramString, tmp);
-                        }
-                        catch (Exception ex)
-                        {
-
-                            Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
-                        }
-                    }
-
-                    //Play sounds
-                    if (cam.Action_PlaySounds )
-                    {
-                        try
-                        {
-
-                            //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
-
-                            List<string> items = Global.Split(cam.Action_Sounds, "|");
-
-                            foreach (string itm in items)
-                            {
-                                //object1, object2 ; soundfile.wav
-                                int played = 0;
-                                List<string> prms = Global.Split(itm, "|");
-                                foreach (string prm in prms)
-                                {
-                                    //prm0 - object1, object2
-                                    //prm1 - soundfile.wav
-                                    List<string> splt = Global.Split(prm, ";");
-                                    string soundfile = splt[1];
-                                    List<string> objects = Global.Split(splt[0], ",");
-                                    foreach (string objname in objects)
-                                    {
-                                        foreach (string detection in cam.last_detections)
-                                        {
-                                            if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
-                                            {
-                                                Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
-                                                SoundPlayer sp = new SoundPlayer(soundfile);
-                                                sp.Play();
-                                                played++;
-                                            }
-                                        }
-                                    }
-                                }
-                                if (played == 0)
-                                {
-                                    Log("No object matched sound to play.");
-                                }
-                            }
-
-                        }
-                        catch (Exception ex)
-                        {
-
-                            Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
-                        }
-                    }
-
-
-
-                    if (cam.Action_image_copy_enabled )
-                    {
-                        Log("   Copying image to network folder...");
-                        Global.CopyImage(cam, CurImg);
-                        Log("   -> Image copied to network folder.");
-                    }
-
-                    
-                    if (cam.Action_mqtt_enabled)
-                    {
-                        string topic = ReplaceParams(cam, CurImg, cam.Action_mqtt_topic);
-                        string payload = ReplaceParams(cam, CurImg, cam.Action_mqtt_payload);
-
-                        MQTTClient mq = new MQTTClient();
-                        await mq.PublishAsync(topic, payload);
-                    }
-
-                }
-                else
-                {
-                    Log($"   (Skipping all other actions due to 'Trigger cancels' camera action setting)");
-                }
-
-            }
-            else
-            {
-                //log that nothing was done
-                Log($"   Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
-            }
-
-            cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-
-            Task ignoredAwaitableResult = this.LastTriggerInfo(cam); //write info to label
-
-        }
-
-        public string ReplaceParams(Camera cam, ClsImageQueueItem CurImg, string instr)
-        {
-            string ret = instr;
-
-            try
-            {
-                string tmp = cam.Action_RunProgramArgsString.Replace("[camera]", cam.name);
-                tmp = tmp.Replace("[imagepath]", CurImg.image_path); //gives the full path of the image that caused the trigger
-                tmp = tmp.Replace("[imagefilename]", Path.GetFileName(CurImg.image_path)); //gives the image name of the image that caused the trigger
-                ret = tmp;
-
-                if (cam.last_detections != null && cam.last_detections.Count > 0)
-                {
-                    tmp = tmp.Replace("[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                    tmp = tmp.Replace("[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
-                    tmp = tmp.Replace("[position]", cam.last_positions.ElementAt(0));
-                    tmp = tmp.Replace("[confidence]", cam.last_confidences.ElementAt(0).ToString());
-                    tmp = tmp.Replace("[detections]", string.Join(",", cam.last_detections));
-                    tmp = tmp.Replace("[confidences]", string.Join(",", cam.last_confidences.ToString()));
-                    ret = tmp;
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log($"Error: {Global.ExMsg(ex)}");
-            }
-
-            return ret;
-            
-        }
-
-        //check if detected object is outside the mask for the specific camera
-        //TODO: refacotor png, bmp mask logic later. This is just a starting point. 
-        public bool Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
-        {
-            //Log($"      Checking if object is outside privacy mask of {cameraname}:");
-            //Log("         Loading mask file...");
-            string fileType;
-            try
-            {
-                if (System.IO.File.Exists("./cameras/" + cameraname + ".bmp")) //only check if mask image exists (.png or .bmp)
-                {
-                    fileType = ".bmp";
-                }
-                else if (System.IO.File.Exists("./cameras/" + cameraname + ".png"))
-                {
-                    fileType = ".png";
-                }
-                else //if mask image does not exist, object is outside the non-existing masked area
-                {
-                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
-                    return true;
-                }
-
-                //load mask file (in the image all places that have color (transparency > 9 [0-255 scale]) are masked)
-                using (var mask_img = new Bitmap($"./cameras/{cameraname}" + fileType))
-                {
-                    //if any coordinates of the object are outside of the mask image, th mask image must be too small.
-                    if (mask_img.Width != width || mask_img.Height != height)
-                    {
-                        Log($"ERROR: The resolution of the mask './camera/{cameraname}" + fileType + "' does not equal the resolution of the processed image. Skipping privacy mask feature. Image: {width}x{height}, Mask: {mask_img.Width}x{mask_img.Height}");
-                        return true;
-                    }
-
-                    Log("         Checking if the object is in a masked area...");
-
-                    //relative x and y locations of the 9 detection points
-                    double[] x_factor = new double[] { 0.25, 0.5, 0.75, 0.25, 0.5, 0.75, 0.25, 0.5, 0.75 };
-                    double[] y_factor = new double[] { 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75 };
-
-                    int result = 0; //counts how many of the 9 points are outside of masked area(s)
-
-                    //check the transparency of the mask image in all 9 detection points
-                    for (int i = 0; i < 9; i++)
-                    {
-                        //get image point coordinates (and converting double to int)
-                        int x = (int)(xmin + (xmax - xmin) * x_factor[i]);
-                        int y = (int)(ymin + (ymax - ymin) * y_factor[i]);
-
-                        // Get the color of the pixel
-                        System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
-
-                        if (fileType == ".png")
-                        {
-                            //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
-                            if (pixelColor.A < 10)
-                            {
-                                result++;
-                            }
-                        }
-                        else
-                        {
-                            if (pixelColor.A == 0)  // object is in a transparent section of the image (not masked)
-                            {
-                                result++;
-                            }
-                        }
-
-                    }
-
-                    Log($"         { result.ToString() } of 9 detection points are outside of masked areas."); //print how many of the 9 detection points are outside of masked areas.
-
-                    if (result > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
-                    {
-                        Log("      ->The object is OUTSIDE of masked area(s).");
-                        return true;
-                    }
-                    else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
-                    {
-                        Log("      ->The object is INSIDE a masked area.");
-                        return false;
-                    }
-
-                }
-
-
-
-            }
-            catch
-            {
-                Log($"ERROR while loading the mask file ./cameras/{cameraname}.png.");
-                return true;
-            }
-
-        }
 
         //save how many times an error happened
         public void IncrementErrorCounter()
@@ -1645,23 +579,23 @@ namespace AITool
         }
 
         //add last trigger time to label on Overview page
-        private async Task LastTriggerInfo(Camera cam)
-        {
-            Global.InvokeIFRequired(this.lbl_info, async () =>
-            {
-                string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
-                lbl_info.Text = text1;
+        //private async Task LastTriggerInfo(Camera cam)
+        //{
+        //    Global_GUI.InvokeIFRequired(this.lbl_info, async () =>
+        //    {
+        //        string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
+        //        lbl_info.Text = text1;
 
-                int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
-                await Task.Delay(time); // wait while the analysis is sleeping for this camera
-                if (lbl_info.Text == text1)
-                {
-                    lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
-                }
+        //        int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
+        //        await Task.Delay(time); // wait while the analysis is sleeping for this camera
+        //        if (lbl_info.Text == text1)
+        //        {
+        //            lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
+        //        }
 
-            });
+        //    });
 
-        }
+        //}
 
 
         //EVENTS:
@@ -1691,7 +625,7 @@ namespace AITool
             {
                 //scroll to bottom, only when tab is active for better performance 
 
-                Global.InvokeIFRequired(this.RTF_Log, () =>
+                Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
                 {
                     if (Chk_AutoScroll.Checked)
                     {
@@ -1737,7 +671,7 @@ namespace AITool
             else
             {
 
-                Camera cam = Global.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
+                Camera cam = AITOOL.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
                 if (cam != null)
                 {
                     alerts = cam.stats_alerts;
@@ -2216,12 +1150,12 @@ namespace AITool
                 string detections = list1.SelectedItems[0].SubItems[3].Text;
                 if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
                 {
-                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor); 
+                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
                     detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
                 }
                 else
                 {
-                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor); 
+                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
                 }
 
                 //display a rectangle around each relevant object
@@ -2247,30 +1181,25 @@ namespace AITool
         }
 
         // add new entry in left list
-        public void CreateListItem(string filename, string date, string camera, string objects_and_confidence, string object_positions)
+        public void CreateListItem(ClsHistoryItem hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
-            string success;
-            if (objects_and_confidence.Contains("%") && !objects_and_confidence.Contains(':'))
-            {
+            string success = "false";
+            if (hist.Detections.Contains("%") && !hist.Detections.Contains(':'))
                 success = "true";
-            }
-            else
-            {
-                success = "false";
-            }
+
             MethodInvoker LabelUpdate = delegate
             {
-                if (checkListFilters(camera, success, objects_and_confidence)) //only show the entry in the history list if no filter applies
+                if (checkListFilters(hist.Camera, success, hist.Detections)) //only show the entry in the history list if no filter applies
                 {
                     ListViewItem item;
                     if (success == "true")
                     {
-                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date, hist.Camera, hist.Detections, hist.Positions, "✓" });
                         item.ForeColor = System.Drawing.Color.Green;
                     }
                     else
                     {
-                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date, hist.Camera, hist.Detections, hist.Positions, "X" });
                     }
 
                     //add the FULL path to the item tag so we dont need to add a column
@@ -2282,19 +1211,10 @@ namespace AITool
                     ResizeListViews();
                 }
 
-
-
                 //update history CSV
-                string line = $"{filename}|{date}|{camera}|{objects_and_confidence}|{object_positions}|{success}";
-                try
-                {
-                    HistoryWriter.WriteToLog(line);
-                    //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "cameras/history.csv", append: true))
-                    //{
-                    //    sw.WriteLine(line);
-                    //}
-                }
-                catch { }
+                string line = $"{hist.Filename}|{hist.Date}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{success}";
+                HistoryWriter.WriteToLog(line);
+
             };
             Invoke(LabelUpdate);
 
@@ -2566,361 +1486,74 @@ namespace AITool
 
         //EVENTS
 
-        //EVENT: new image added to input_path -> START AI DETECTION
-        async void OnCreatedAsync(object source, FileSystemEventArgs e)
-        {
-            
-            lock (FileWatcherLockObject)
-            {
-                //overkill - only allow one thread at a time here to try to prevent duplicates
-                //await semaphore_detection_running.WaitAsync();
-
-                try
-                {
-                    //make sure we are not processing a duplicate file...
-                    if (detection_dictionary.ContainsKey(e.FullPath.ToLower()))
-                    {
-                        Log("Skipping duplicate Created File Event: " + e.FullPath);
-                    }
-                    else
-                    {
-
-
-                        //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                        int qsize = ImageProcessQueue.Count + 1;
-                        if (qsize > AppSettings.Settings.MaxImageQueueSize)
-                        {
-                            Log("");
-                            Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
-                        }
-                        else
-                        {
-                            Log("");
-                            Log($"====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
-                            ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                            detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
-                            ImageProcessQueue.Enqueue(CurImg);
-                            qsizecalc.AddToCalc(qsize);
-                        }
-
-
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    Log("Error: " + Global.ExMsg(ex));
-                }
-                finally
-                {
-                    UpdateQueueLabel();
-                    //semaphore_detection_running.Release();
-                }
-
-            }
-
-        }
-
-
-
-        private async Task<bool> ProcessImage(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
+        private void BeginProcessImage(string image_path)
         {
 
-            bool ret = false;
-            string filename = Path.GetFileName(CurImg.image_path);
+            string filename = Path.GetFileName(image_path);
 
             MethodInvoker LabelUpdate = delegate { label2.Text = $"Accessing {filename}..."; };
             Invoke(LabelUpdate);
 
+            //output "Processing Image" to Overview Tab
+            LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
+            Invoke(LabelUpdate);
 
-            try
-            {
-                using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
-                {
-
-
-
-                    //output "Processing Image" to Overview Tab
-                    LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
-                    Invoke(LabelUpdate);
-
-                    //------------------------------------------------------------------------------------------------
-                    //------------------------------------------------------------------------------------------------
-                    ret = await DetectObjects(CurImg, DeepStackURL); //ai process image
-                                                                     //------------------------------------------------------------------------------------------------
-                                                                     //------------------------------------------------------------------------------------------------
-
-                    //output Running on Overview Tab
-                    LabelUpdate = delegate { label2.Text = "Running"; };
-                    Invoke(LabelUpdate);
-
-                    //only update charts if stats tab is open
-
-                    LabelUpdate = delegate
-                    {
-
-                        if (tabControl1.SelectedIndex == 1)
-                        {
-
-                            UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
-                        }
-                    };
-                    Invoke(LabelUpdate);
-
-                    //load updated camera stats info in camera tab if a camera is selected
-                    LabelUpdate = delegate
-                    {
-                        if (list2.SelectedItems.Count > 0)
-                        {
-                                //load only stats from Camera.cs object
-
-                                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
-
-                                //load cameras stats
-                                string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
-                            if (cam.maskManager.masking_enabled)
-                            {
-                                stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
-                            }
-                            lbl_camstats.Text = stats;
-                        }
-
-
-                    };
-                    Invoke(LabelUpdate);
-
-
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log("Error: " + Global.ExMsg(ex));
-            }
-            finally
-            {
-                UpdateQueueLabel();
-            }
-
-            return ret;
+            UpdateQueueLabel();
 
         }
 
-        public async Task ImageQueueLoop()
+        private void EndProcessImage(string image_path)
         {
-            //This runs in another thread, waiting for items to appear in the queue and process them one at a time
-            try
+
+            string filename = Path.GetFileName(image_path);
+
+
+            //output Running on Overview Tab
+            MethodInvoker LabelUpdate = delegate { label2.Text = "Running"; };
+            Invoke(LabelUpdate);
+
+            //only update charts if stats tab is open
+
+            LabelUpdate = delegate
             {
-                //Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
 
-                ClsImageQueueItem CurImg;
-                List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
-
-                string LastURLS = AppSettings.Settings.deepstack_url;
-
-                DateTime LastURLCheckTime = DateTime.MinValue;
-                DateTime LastCleanDupesTime = DateTime.MinValue;
-                bool HasDisabledURLs = false;
-
-                //Start infinite loop waiting for images to come into queue
-                ConcurrentQueue<ClsURLItem> DSURLQueue = new ConcurrentQueue<ClsURLItem>();
-
-                while (true)
+                if (tabControl1.SelectedIndex == 1)
                 {
-                    while (!this.ImageProcessQueue.IsEmpty)
+
+                    UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+                }
+            };
+            Invoke(LabelUpdate);
+
+            //load updated camera stats info in camera tab if a camera is selected
+            LabelUpdate = delegate
+            {
+                if (list2.SelectedItems.Count > 0)
+                {
+                        //load only stats from Camera.cs object
+
+                        //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                        Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+
+                        //load cameras stats
+                        string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
+                    if (cam.maskManager.masking_enabled)
                     {
-
-                        //Check to see if we need to get updated URL list
-                        if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url || (HasDisabledURLs && (DateTime.Now - LastURLCheckTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes))
-                        {
-                            Log("Updating AI URL list...");
-                            List<string> tmp = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
-                            DeepStackURLList.Clear();
-
-                            //check to see if any need updating with http or path
-                            foreach (string url in tmp)
-                            {
-                                DeepStackURLList.Add(new ClsURLItem(url));
-                            }
-                            Log($"...Found {DeepStackURLList.Count} AI URL's.");
-
-                            LastURLS = AppSettings.Settings.deepstack_url;
-                            LastURLCheckTime = DateTime.Now;
-                            HasDisabledURLs = false;
-
-                            DSURLQueue = new ConcurrentQueue<ClsURLItem>();
-
-                            foreach (ClsURLItem url in DeepStackURLList)
-                            {
-                                if (url.Enabled)
-                                    DSURLQueue.Enqueue(url);
-                            }
-
-                        }
-
-                        int ProcImgCnt = 0;
-                        int ErrCnt = 0;
-                        int TskCnt = 0;
-
-                        while (!this.ImageProcessQueue.IsEmpty)
-                        {
-                            //tiny delay to conserve cpu and allow more images to come in the queue if needed
-                            await Task.Delay(100);
-
-                            //get the next image
-                            if (this.ImageProcessQueue.TryDequeue(out CurImg))
-                            {
-                                
-                                //get the next url
-                                ClsURLItem url = null;
-                                if (DSURLQueue.TryDequeue(out url))
-                                {
-                                    if (url != null && url.Enabled)
-                                    {
-                                        double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds,0);
-
-                                        if (url.ErrCount == 0 || (url.ErrCount > 0 && (lastsecs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
-                                        {
-                                            Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
-
-                                            Interlocked.Increment(ref TskCnt);
-
-                                            url.LastUsedTime = DateTime.Now;
-
-                                            Task.Run(async () =>
-                                            {
-
-                                                bool success = await ProcessImage(CurImg, url);
-
-                                                if (!success)
-                                                {
-                                                    Interlocked.Increment(ref ErrCnt);
-
-                                                    if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                                    {
-                                                        //put url back in queue when done
-                                                        Log($"...Putting AI URL back in queue due to problem: '{url}' (ErrCount={url.ErrCount}), URLQueue.Count={DSURLQueue.Count + 1}");
-                                                        DSURLQueue.Enqueue(url);
-                                                    }
-                                                    else
-                                                    {
-                                                        HasDisabledURLs = true;
-                                                        url.Enabled = false;
-                                                        Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}', URLQueue.Count={DSURLQueue.Count - 1}");
-                                                    }
-
-                                                    if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
-                                                    {
-                                                        //put back in queue to be processed by another deepstack server
-                                                        Log($"...Putting image back in queue due to URL '{url}' problem (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
-                                                        this.ImageProcessQueue.Enqueue(CurImg);
-                                                    }
-                                                    else
-                                                    {
-                                                        Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    //put url back in queue when done
-                                                    DSURLQueue.Enqueue(url);
-                                                    Interlocked.Increment(ref ProcImgCnt);
-
-                                                }
-
-                                                Interlocked.Decrement(ref TskCnt);
-
-                                            });
-
-                                        }
-                                        else
-                                        {
-                                            Log($"Skipping AI URL because of previous problem; minimum seconds between attempts has not been reached ({lastsecs} of {AppSettings.Settings.MinSecondsBetweenFailedURLRetry} secs, ErrCnt={url.ErrCount}): {url}");
-                                            DSURLQueue.Enqueue(url);
-                                            this.ImageProcessQueue.Enqueue(CurImg);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        Log($"Skipping disabled AI URL: {url}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
-                                        this.ImageProcessQueue.Enqueue(CurImg);
-                                    }
-                                }
-                                else
-                                {
-                                    Log($"(No AI URLs left in the queue, waiting... ImageProcessQueue.Count={this.ImageProcessQueue.Count})");
-                                    this.ImageProcessQueue.Enqueue(CurImg);
-                                    break;
-                                }
-
-                            }
-                            else
-                            {
-                                //Log("No Images left in the queue!");
-                                break;
-                            }
-
-                        }
-
-                        if (TskCnt > 0)
-                        {
-                            Log($"Done adding {TskCnt} total threads, ErrCnt={ErrCnt}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={this.ImageProcessQueue.Count}");
-                        }
-
-                        //Clean up old images in the dupe check dic
-                        if ((DateTime.Now - LastCleanDupesTime).TotalMinutes >= 30)
-                        {
-                            int cnt = 0;
-                            foreach (KeyValuePair<string, ClsImageQueueItem> kvPair in detection_dictionary)
-                            {
-                                if ((DateTime.Now - kvPair.Value.TimeAdded).TotalMinutes >= 30)
-                                {   // Remove expired item.
-                                    cnt++;
-                                    ClsImageQueueItem removedItem;
-                                    detection_dictionary.TryRemove(kvPair.Key, out removedItem);
-                                }
-                            }
-                            //if (cnt > 0)
-                            //{
-                            //    Log($"Cleaned {cnt} image queue items from duplicate check dictionary.");
-                            //}
-                        }
-
+                        stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
                     }
-
-                    //Only loop 10 times a second conserve cpu
-                    await Task.Delay(100);
+                    lbl_camstats.Text = stats;
                 }
-            }
-            catch (Exception ex)
-            {
-                //if we get here its the end of the world as we know it
-                Log("Error: * '...Human sacrifice, dogs and cats living together – mass hysteria!' * - " + Global.ExMsg(ex));
-            }
+
+
+            };
+            Invoke(LabelUpdate);
+
+
+            UpdateQueueLabel();
+
         }
 
 
-        //event: image in input_path renamed
-        void OnRenamed(object source, RenamedEventArgs e)
-        {
-            DeleteListItem(e.OldName);
-            //CreateListItem(e.Name);
-        }
-
-        //event: image in input path deleted
-        void OnDeleted(object source, FileSystemEventArgs e)
-        {
-            DeleteListItem(e.Name);
-        }
-
-        void OnError(object sender, ErrorEventArgs e)
-        {
-            Log("Error: File watcher error: " + e.GetException().Message);
-        }
         //event: load selected image to picturebox
         private async void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
         {
@@ -3274,7 +1907,7 @@ namespace AITool
                 //load remaining settings from Camera.cs object
 
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                Camera cam = Global.GetCamera(tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+                Camera cam = AITOOL.GetCamera(tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
 
                 //load cameras stats
 
@@ -3400,7 +2033,7 @@ namespace AITool
                 if (list2.SelectedItems[0].Text.Trim().ToLower() != tbName.Text.Trim().ToLower())
                 {
                     //camera renamed, make sure name doesnt exist
-                    Camera CamCheck = Global.GetCamera(tbName.Text, false);
+                    Camera CamCheck = AITOOL.GetCamera(tbName.Text, false);
                     if (CamCheck != null)
                     {
                         //Its a dupe
@@ -3415,7 +2048,7 @@ namespace AITool
                 }
 
 
-                Camera CurCam = Global.GetCamera(list2.SelectedItems[0].Text, false);
+                Camera CurCam = AITOOL.GetCamera(list2.SelectedItems[0].Text, false);
 
                 if (CurCam == null)
                 {
@@ -4002,7 +2635,7 @@ namespace AITool
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
 
-                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
@@ -4055,11 +2688,6 @@ namespace AITool
 
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void QueueLblTmr_Tick(object sender, EventArgs e)
         {
 
@@ -4078,10 +2706,10 @@ namespace AITool
         {
             using (Frm_CustomMasking frm = new Frm_CustomMasking())
             {
-                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
                 frm.cam = cam;
 
-                if(frm.ShowDialog() == DialogResult.OK)
+                if (frm.ShowDialog() == DialogResult.OK)
                 {
                     cam.mask_brush_size = frm.brushSize;
                 }
@@ -4096,7 +2724,9 @@ namespace AITool
             {
 
 
-                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                frm.cam = cam;
+
                 string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
                 frm.tbTriggerUrl.Text = tfixed;
                 frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
@@ -4133,7 +2763,10 @@ namespace AITool
             {
 
 
-                Camera cam = Global.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                
+                frm.cam = cam;
+
                 string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
                 frm.tbTriggerUrl.Text = tfixed;
                 frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time

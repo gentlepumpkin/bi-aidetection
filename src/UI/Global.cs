@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net.Configuration;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -21,158 +23,171 @@ using Newtonsoft.Json;
 
 namespace AITool
 {
+    // =============================================================
+    // ALL FUNCTIONS HERE ARE GENERIC/SHARED AND NOT UNIQUE TO AITOOL
+    // NO direct UI interaction
+    // =============================================================
+
     public static class Global
     {
-        public static IProgress<string> progress = null;
+        public static IProgress<ClsMessage> progress = null;
 
 
-        public static void CopyImage(Camera cam, ClsImageQueueItem CurImg)
-       {
-            string extension = "";
-            string dest_path = "";
+        public static dynamic GetSetting(string Name, object DefaultValue = null, string SubKey = "")
+        {
+
+            //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
+            Version AN = Assembly.GetExecutingAssembly().GetName().Version;
+            string Cname = System.Windows.Forms.Application.CompanyName;
+            string Pname = System.Windows.Forms.Application.ProductName;
+            string version = AN.Major + "." + AN.Minor;
+            object RetVal = DefaultValue;
+            string SKey = "";
+            if (!string.IsNullOrWhiteSpace(SubKey))
+                SKey = "\\" + SubKey.Trim();
             try
             {
-                if (!Directory.Exists(cam.Action_network_folder))
-                {
-                    Directory.CreateDirectory(cam.Action_network_folder);
-                }
-                if (cam.Action_image_copy_original_name)
-                {
-                    dest_path = System.IO.Path.Combine(cam.Action_network_folder, Path.GetFileName(CurImg.image_path));
-                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
+                string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
 
-                }
-                else
-                {
-                    extension = System.IO.Path.GetExtension(CurImg.image_path);
-                    dest_path = System.IO.Path.Combine(cam.Action_network_folder, cam.name + extension);
-                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
-                }
+                using (RegistryKey reg = Registry.CurrentUser.OpenSubKey(RKey, false))
+
+                    if (reg != null)
+                    {
+                        bool Found = false;
+                        string[] Values = reg.GetValueNames();
+                        foreach (string valu in Values)
+                            if (valu.ToLower() == Name.ToLower())
+                            {
+                                Found = true;
+                                RetVal = reg.GetValue(Name, DefaultValue);
+                                break;
+                            }
+                        if (Found)
+                        {
+                            if (reg.GetValueKind(Name) == RegistryValueKind.MultiString)
+                            {
+                                if (DefaultValue is List<string>)
+                                    RetVal = ((string[])RetVal).ToList();
+                                else if (DefaultValue is object[])
+                                    RetVal = (string[])RetVal;
+                                else if (DefaultValue is string[])
+                                    RetVal = (string[])RetVal;
+                            }
+                            else if (RetVal is string && DefaultValue is Point)
+                            {
+                                //{X=965,Y=399}
+                                int X = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "X=", ","));
+                                int Y = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Y=", "}"));
+                                RetVal = new Point(X, Y);
+
+                            }
+                            else if (RetVal is string && DefaultValue is Size)
+                            {
+                                //{Width=931, Height=592}
+                                int Wid = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Width=", ","));
+                                int Hei = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Height=", "}"));
+                                RetVal = new Size(Wid, Hei);
+                            }
+                            else if (DefaultValue != null)
+                                RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
+                            //Else
+                            //    RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType)
+
+
+                        }
+                    }
+
+
             }
             catch (Exception ex)
             {
-                Log($"ERROR: Could not copy image {CurImg.image_path} to network path {dest_path}: {ExMsg(ex)}");
+                Global.Log($"Error: {Global.ExMsg(ex)}");
             }
+
+            return RetVal;
+
         }
 
-        public static Camera GetCamera(String ImageOrNameOrPrefix, bool ReturnDefault = true)
+        public static int GetNumberInt(object Obj)
         {
-            Camera cam = null;
+            //gets a number from anywhere within a string
+            int Ret = 0;
+            if (Obj != null)
+            {
+                if (Obj is string)
+                {
+                    string o = System.Convert.ToString(Obj);
+                    //If o.Trim.Length > 0 AndAlso o.Trim.Length < 10 Then
+                    int outint = 0;
+                    string OnlyNums = System.Convert.ToString(Regex.Match(o, "\\d+").Value);
+                    if (int.TryParse(OnlyNums, out outint))
+                        Ret = outint;
+                    //End If
+                }
+                else if (Obj is int)
+                    Ret = (int)Obj;
+            }
+            return Ret;
+
+        }
+        public static bool SaveSetting(string name, object value, string SubKey = "")
+        {
+            bool ret = false;
+            //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
+            Version AN = Assembly.GetExecutingAssembly().GetName().Version;
+            string Cname = System.Windows.Forms.Application.CompanyName;
+            string Pname = System.Windows.Forms.Application.ProductName;
+            string version = AN.Major + "." + AN.Minor;
+            string SKey = "";
+            if (!string.IsNullOrWhiteSpace(SubKey))
+                SKey = "\\" + SubKey.Trim();
             try
             {
-                ImageOrNameOrPrefix = ImageOrNameOrPrefix.Trim();
-
-                //search by path or filename prefix if we are passed a full path to image file
-                if (ImageOrNameOrPrefix.Contains("\\"))
-                {
-                    string pth = Path.GetDirectoryName(ImageOrNameOrPrefix);
-                    string fname = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix);
-                    int index = -1;
-                    //&CAM.%Y%m%d_%H%M%S
-                    //AIFOSCAMDRIVEWAY.20200827_131840312.jpg
-                    if (fname.Contains("."))
+                string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
+                using (RegistryKey reg = Registry.CurrentUser.CreateSubKey(RKey, RegistryKeyPermissionCheck.ReadWriteSubTree))
+                    if (reg != null)
                     {
-                        string fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0]; //get prefix of inputted file
-                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim().ToLower() == fileprefix.Trim().ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
-
-                        if (index > -1)
+                        if (value is List<string>)
                         {
-                            //found
-                            cam = AppSettings.Settings.CameraList[index];
+                            List<string> strlist = (List<string>)value;
+                            reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
                         }
-                    }
-
-                    //if it is not found, search by the input path
-                    if (index == -1)
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        else if (value is object[])
                         {
-                            //If the watched path is c:\bi\cameraname but the full path of found file is 
-                            //                       c:\bi\cameraname\date\time\randomefilename.jpg 
-                            //we just check the beginning of the path
-                            if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().ToLower().StartsWith(pth.ToLower()))
-                            {
-                                //found
-                                cam = ccam;
-                                break;
-
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        //found
-                        cam = AppSettings.Settings.CameraList[index];
-                    }
-
-                }
-                else
-                {
-                    //find by name or prefix
-                    //allow to use wildcards
-                    if (ImageOrNameOrPrefix.Contains("*") || ImageOrNameOrPrefix.Contains("?"))
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            if (Regex.IsMatch(ccam.name, Global.WildCardToRegular(ImageOrNameOrPrefix)) || Regex.IsMatch(ccam.prefix, Global.WildCardToRegular(ImageOrNameOrPrefix)))
-                            {
-                                cam = ccam;
-                                break;
-                            }
-                        }
-
-                    }
-                    else  //find by exact name or prefix
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            if (ccam.name.ToLower() == ImageOrNameOrPrefix.ToLower() || ccam.prefix.ToLower() == ImageOrNameOrPrefix.ToLower())
-                            {
-                                cam = ccam;
-                                break;
-                            }
-                        }
-
-                    }
-
-                }
-
-                //if we didnt find a camera see if there is a default camera name we can use without a prefix
-                if (cam == null)
-                {
-                    Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
-                    //check if there is a default camera which accepts any prefix, select it
-                    if (ReturnDefault)
-                    {
-                        if (AppSettings.Settings.CameraList.Exists(x => x.prefix.Trim() == ""))
-                        {
-                            int i = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim() == "");
-                            cam = AppSettings.Settings.CameraList[i];
-                            Log($"(   Found a default camera: '{cam.name}')");
+                            List<string> strlist = new List<string>();
+                            object[] objects = (object[])value;
+                            foreach (object obj in objects)
+                                strlist.Add(obj.ToString());
+                            reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
                         }
                         else
-                        {
-                            Log("WARNING: No default camera found. Aborting.");
-                        }
+                            reg.SetValue(name, value);
+                        ret = true;
                     }
 
-                }
 
             }
             catch (Exception ex)
             {
-
-                Log(Global.ExMsg(ex));
+                Global.Log($"Error: {Global.ExMsg(ex)}");
             }
-
-            if (cam == null)
+            finally
             {
-                Log($"Error: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
+
             }
 
-            return cam;
+            return ret;
+        }
 
+        public static string ReplaceCaseInsensitive(string input, string search, string replacement)
+        {
+            string result = Regex.Replace(
+                input,
+                Regex.Escape(search),
+                replacement.Replace("$", "$$"),
+                RegexOptions.IgnoreCase
+            );
+            return result;
         }
 
 
@@ -181,10 +196,56 @@ namespace AITool
             return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
         }
 
+        public static void SendMessage(MessageType MT, string Descript = "", object Payload = null, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
+
+            ClsMessage msg = new ClsMessage(MT, Descript, Payload, memberName);
+
+            progress.Report(msg);
+
+        }
+
+        public static void DeleteHistoryItem(string filename, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
+
+            ClsMessage msg = new ClsMessage(MessageType.DeleteHistoryItem, filename, null, memberName);
+
+            progress.Report(msg);
+
+        }
+
+        public static void CreateHistoryItem(ClsHistoryItem hist, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
+
+            ClsMessage msg = new ClsMessage(MessageType.CreateHistoryItem, "", hist, memberName);
+
+            progress.Report(msg);
+
+        }
+
+        public static void UpdateLabel(string Message, string LabelControlName, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
+
+            ClsMessage msg = new ClsMessage(MessageType.UpdateLabel, Message, LabelControlName, memberName);
+
+            progress.Report(msg);
+
+        }
+
         public static void Log(string Message, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
                 return;
+
+            ClsMessage msg = new ClsMessage(MessageType.LogEntry, "", null, memberName);
 
             //this is for logging in non-gui classes.  Reports back to real logger
             //progress needs to be subscribed to in main gui
@@ -193,7 +254,10 @@ namespace AITool
             {
                 mn = $"{memberName}>> ";
             }
-            progress.Report($"{mn}{Message}");
+            msg.Description = $"{mn}{Message}";
+            
+            progress.Report(msg);
+
         }
         public static Regex RegEx_ValidDate = new Regex("(19|20)[0-9]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])_[0-9][0-9]_[0-9][0-9]_[0-9][0-9]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -713,6 +777,68 @@ namespace AITool
             catch (Exception ex)
             {
                 Log($"Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+            }
+
+            return Ret;
+
+        }
+
+        public static string GetJSONString(object cls2)
+        {
+
+            string Ret = "";
+            try
+            {
+
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+
+                string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
+                if (jset.Error == null)
+                {
+
+                    Ret = contents2;
+                }
+                else
+                {
+                    Log($"Error: " + jset.Error.ToString());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+            }
+
+            return Ret;
+
+        }
+
+        public static T SetJSONString<T>(string JSONString) where T : new()
+        {
+
+
+            T Ret = default(T);
+
+            try
+            {
+
+                JsonSerializerSettings jset = new JsonSerializerSettings { };
+                jset.TypeNameHandling = TypeNameHandling.All;
+                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+
+                Ret = JsonConvert.DeserializeObject<T>(JSONString, jset);
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: While converting json string '{JSONString}', got: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -1293,27 +1419,9 @@ namespace AITool
             }
         }
 
-        
+            
+
        
-
-        public static void InvokeIFRequired(Control control, MethodInvoker action)
-        {
-            // This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
-            // See TextBoxLogger.Log for example
-
-            if (control != null && !control.IsDisposed && !control.Disposing )
-            {
-                if (control.InvokeRequired)
-                {
-                    control.Invoke(action);
-                }
-                else
-                {
-                    action();
-                }
-
-            }
-        }
 
         public static string GetXValue(XElement XE, string Name, string AttributeName = "")
         {

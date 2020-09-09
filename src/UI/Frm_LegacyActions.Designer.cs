@@ -33,6 +33,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.linkLabelMqttSettings = new System.Windows.Forms.LinkLabel();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tb_MQTT_Payload = new System.Windows.Forms.TextBox();
@@ -56,7 +57,7 @@
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
-            this.linkLabelMqttSettings = new System.Windows.Forms.LinkLabel();
+            this.btTest = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,7 +66,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(1119, 627);
+            this.btnCancel.Location = new System.Drawing.Point(1122, 645);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(109, 52);
@@ -78,7 +79,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(977, 627);
+            this.btnSave.Location = new System.Drawing.Point(981, 645);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(109, 52);
@@ -92,6 +93,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
             this.groupBox1.Controls.Add(this.linkLabelMqttSettings);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label2);
@@ -118,9 +120,21 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.groupBox1.Size = new System.Drawing.Size(1213, 525);
+            this.groupBox1.Size = new System.Drawing.Size(1216, 543);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
+            // 
+            // linkLabelMqttSettings
+            // 
+            this.linkLabelMqttSettings.AutoSize = true;
+            this.linkLabelMqttSettings.Location = new System.Drawing.Point(129, 260);
+            this.linkLabelMqttSettings.Name = "linkLabelMqttSettings";
+            this.linkLabelMqttSettings.Size = new System.Drawing.Size(87, 30);
+            this.linkLabelMqttSettings.TabIndex = 41;
+            this.linkLabelMqttSettings.TabStop = true;
+            this.linkLabelMqttSettings.Text = "Settings";
+            this.toolTip1.SetToolTip(this.linkLabelMqttSettings, "Global MQTT Settings");
+            this.linkLabelMqttSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelMqttSettings_LinkClicked);
             // 
             // label4
             // 
@@ -146,7 +160,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_MQTT_Payload.Location = new System.Drawing.Point(776, 258);
             this.tb_MQTT_Payload.Name = "tb_MQTT_Payload";
-            this.tb_MQTT_Payload.Size = new System.Drawing.Size(419, 35);
+            this.tb_MQTT_Payload.Size = new System.Drawing.Size(422, 35);
             this.tb_MQTT_Payload.TabIndex = 38;
             // 
             // tb_MQTT_Topic
@@ -182,7 +196,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_Sounds.Location = new System.Drawing.Point(318, 214);
             this.tb_Sounds.Name = "tb_Sounds";
-            this.tb_Sounds.Size = new System.Drawing.Size(877, 35);
+            this.tb_Sounds.Size = new System.Drawing.Size(880, 35);
             this.tb_Sounds.TabIndex = 34;
             this.toolTip1.SetToolTip(this.tb_Sounds, resources.GetString("tb_Sounds.ToolTip"));
             // 
@@ -202,7 +216,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_RunExternalProgramArgs.Location = new System.Drawing.Point(774, 171);
             this.tb_RunExternalProgramArgs.Name = "tb_RunExternalProgramArgs";
-            this.tb_RunExternalProgramArgs.Size = new System.Drawing.Size(421, 35);
+            this.tb_RunExternalProgramArgs.Size = new System.Drawing.Size(424, 35);
             this.tb_RunExternalProgramArgs.TabIndex = 32;
             this.toolTip1.SetToolTip(this.tb_RunExternalProgramArgs, "Command line arguments to run the external app or script");
             // 
@@ -230,7 +244,7 @@
             // 
             this.cb_UseOriginalFilename.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cb_UseOriginalFilename.AutoSize = true;
-            this.cb_UseOriginalFilename.Location = new System.Drawing.Point(994, 126);
+            this.cb_UseOriginalFilename.Location = new System.Drawing.Point(997, 126);
             this.cb_UseOriginalFilename.Name = "cb_UseOriginalFilename";
             this.cb_UseOriginalFilename.Size = new System.Drawing.Size(201, 34);
             this.cb_UseOriginalFilename.TabIndex = 29;
@@ -246,7 +260,7 @@
             this.tb_network_folder.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.tb_network_folder.Location = new System.Drawing.Point(318, 126);
             this.tb_network_folder.Name = "tb_network_folder";
-            this.tb_network_folder.Size = new System.Drawing.Size(659, 35);
+            this.tb_network_folder.Size = new System.Drawing.Size(662, 35);
             this.tb_network_folder.TabIndex = 28;
             // 
             // cb_copyAlertImages
@@ -272,7 +286,7 @@
             this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbTriggerUrl.Multiline = true;
             this.tbTriggerUrl.Name = "tbTriggerUrl";
-            this.tbTriggerUrl.Size = new System.Drawing.Size(1182, 141);
+            this.tbTriggerUrl.Size = new System.Drawing.Size(1185, 159);
             this.tbTriggerUrl.TabIndex = 22;
             this.toolTip1.SetToolTip(this.tbTriggerUrl, "A list of URLs each on their own line OR seperated with commas that will be trigg" +
         "ered on an alert");
@@ -350,32 +364,33 @@
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.Font = new System.Drawing.Font("Consolas", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Green;
             this.label3.Location = new System.Drawing.Point(12, 15);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(1205, 74);
+            this.label3.Size = new System.Drawing.Size(1208, 85);
             this.label3.TabIndex = 5;
-            this.label3.Text = "You may use the following variables: [camera], [imagepath], [imagefilename], [sum" +
-    "mary], [detection], [position], [confidence], [detections], [confidences]";
+            this.label3.Text = resources.GetString("label3.Text");
             // 
-            // linkLabelMqttSettings
+            // btTest
             // 
-            this.linkLabelMqttSettings.AutoSize = true;
-            this.linkLabelMqttSettings.Location = new System.Drawing.Point(129, 260);
-            this.linkLabelMqttSettings.Name = "linkLabelMqttSettings";
-            this.linkLabelMqttSettings.Size = new System.Drawing.Size(87, 30);
-            this.linkLabelMqttSettings.TabIndex = 41;
-            this.linkLabelMqttSettings.TabStop = true;
-            this.linkLabelMqttSettings.Text = "Settings";
-            this.toolTip1.SetToolTip(this.linkLabelMqttSettings, "Global MQTT Settings");
-            this.linkLabelMqttSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelMqttSettings_LinkClicked);
+            this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btTest.Location = new System.Drawing.Point(840, 645);
+            this.btTest.Name = "btTest";
+            this.btTest.Size = new System.Drawing.Size(109, 52);
+            this.btTest.TabIndex = 6;
+            this.btTest.Text = "Test";
+            this.btTest.UseVisualStyleBackColor = true;
+            this.btTest.Click += new System.EventHandler(this.btTest_Click);
             // 
             // Frm_LegacyActions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(1241, 693);
+            this.ClientSize = new System.Drawing.Size(1244, 711);
+            this.Controls.Add(this.btTest);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
@@ -422,5 +437,6 @@
         public System.Windows.Forms.CheckBox cb_MQTT_enabled;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.LinkLabel linkLabelMqttSettings;
+        private System.Windows.Forms.Button btTest;
     }
 }

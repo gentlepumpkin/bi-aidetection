@@ -16,6 +16,10 @@ namespace AITool
 	public static class Global_GUI
 	{
 
+		// ====================================================================
+		// ALL FUNCTIONS HERE ARE GUI HELPER FUNCTIONS AND NOT UNIQUE TO AITOOL
+		// NO direct UI interaction
+		// ====================================================================
 
 		public static void UpdateFOLV(ref FastObjectListView olv, IEnumerable Collection, bool ResizeCols = false)
 		{
@@ -233,14 +237,14 @@ namespace AITool
 				//    Properties.Settings.Default.Save();
 				//}
 
-				Point SavLocation = (Point)(GetSetting(Frm.Name + "_Location", new Point())); //Frm.RestoreBounds.Location
+				Point SavLocation = (Point)(Global.GetSetting(Frm.Name + "_Location", new Point())); //Frm.RestoreBounds.Location
 
 				if (SavLocation.IsEmpty)
 					goto endOfTry; //we did not previously save settings
 
-				bool SavMaximized = System.Convert.ToBoolean(GetSetting(Frm.Name + "_Maximized", false));
-				bool SavMinimized = System.Convert.ToBoolean(GetSetting(Frm.Name + "_Minimized", false));
-				object ObjSize = GetSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+				bool SavMaximized = System.Convert.ToBoolean(Global.GetSetting(Frm.Name + "_Maximized", false));
+				bool SavMinimized = System.Convert.ToBoolean(Global.GetSetting(Frm.Name + "_Minimized", false));
+				object ObjSize = Global.GetSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
 				Size SavSize = (Size)ObjSize; //CType(ObjSize, System.Drawing.Size)
 
 				//Debug.Print("Size before: " & Me.Size.ToString)
@@ -278,12 +282,12 @@ namespace AITool
 							if (ctl is SplitContainer)
 							{
 								SplitContainer sc = (SplitContainer)ctl;
-								sc.SplitterDistance = System.Convert.ToInt32(GetSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
+								sc.SplitterDistance = System.Convert.ToInt32(Global.GetSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
 							}
 							else if (ctl is TabControl)
 							{
 								TabControl tc = (TabControl)ctl;
-								tc.SelectedIndex = System.Convert.ToInt32(GetSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex));
+								tc.SelectedIndex = System.Convert.ToInt32(Global.GetSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex));
 							}
 							//else if (ctl is ComboBox)
 							//{
@@ -348,24 +352,24 @@ endOfTry:
 
 				if (Frm.WindowState == FormWindowState.Maximized)
 				{
-					SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
-					SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
-					SaveSetting(Frm.Name + "_Maximized", true);
-					SaveSetting(Frm.Name + "_Minimized", false);
+					Global.SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
+					Global.SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+					Global.SaveSetting(Frm.Name + "_Maximized", true);
+					Global.SaveSetting(Frm.Name + "_Minimized", false);
 				}
 				else if (Frm.WindowState == FormWindowState.Normal)
 				{
-					SaveSetting(Frm.Name + "_Location", Frm.Location);
-					SaveSetting(Frm.Name + "_Size", Frm.Size);
-					SaveSetting(Frm.Name + "_Maximized", false);
-					SaveSetting(Frm.Name + "_Minimized", false);
+					Global.SaveSetting(Frm.Name + "_Location", Frm.Location);
+					Global.SaveSetting(Frm.Name + "_Size", Frm.Size);
+					Global.SaveSetting(Frm.Name + "_Maximized", false);
+					Global.SaveSetting(Frm.Name + "_Minimized", false);
 				}
 				else
 				{
-					SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
-					SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
-					SaveSetting(Frm.Name + "_Maximized", false);
-					SaveSetting(Frm.Name + "_Minimized", true);
+					Global.SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
+					Global.SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+					Global.SaveSetting(Frm.Name + "_Maximized", false);
+					Global.SaveSetting(Frm.Name + "_Minimized", true);
 				}
 
 				if (Frm.Tag != null && Frm.Tag.ToString().ToUpper() == "SAVE")
@@ -377,12 +381,12 @@ endOfTry:
 							if (ctl is SplitContainer)
 							{
 								SplitContainer sc = (SplitContainer)ctl;
-								SaveSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
+								Global.SaveSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
 							}
 							else if (ctl is TabControl)
 							{
 								TabControl tc = (TabControl)ctl;
-								SaveSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex);
+								Global.SaveSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex);
 							}
 							//else if (ctl is ComboBox)
 							//{
@@ -436,150 +440,23 @@ endOfTry:
 			return Ret;
 		}
 
-		public static dynamic GetSetting(string Name, object DefaultValue = null, string SubKey = "")
+		public static void InvokeIFRequired(Control control, MethodInvoker action)
 		{
+			// This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
+			// See TextBoxLogger.Log for example
 
-			//regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
-			Version AN = Assembly.GetExecutingAssembly().GetName().Version;
-			string Cname = System.Windows.Forms.Application.CompanyName;
-			string Pname = System.Windows.Forms.Application.ProductName;
-			string version = AN.Major + "." + AN.Minor;
-			object RetVal = DefaultValue;
-			string SKey = "";
-			if (!string.IsNullOrWhiteSpace(SubKey))
-				SKey = "\\" + SubKey.Trim();
-			try
+			if (control != null && !control.IsDisposed && !control.Disposing)
 			{
-				string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}"; 
-
-				using (RegistryKey reg = Registry.CurrentUser.OpenSubKey(RKey, false))
-
-					if (reg != null)
-					{
-						bool Found = false;
-						string[] Values = reg.GetValueNames();
-						foreach (string valu in Values)
-							if (valu.ToLower() == Name.ToLower())
-							{
-								Found = true;
-								RetVal = reg.GetValue(Name, DefaultValue);
-								break;
-							}
-						if (Found)
-						{
-							if (reg.GetValueKind(Name) == RegistryValueKind.MultiString)
-							{
-								if (DefaultValue is List<string>)
-									RetVal = ((string[])RetVal).ToList();
-								else if (DefaultValue is object[])
-									RetVal = (string[])RetVal;
-								else if (DefaultValue is string[])
-									RetVal = (string[])RetVal;
-							}
-							else if (RetVal is string && DefaultValue is Point)
-							{
-								//{X=965,Y=399}
-								int X = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "X=", ","));
-								int Y = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Y=", "}"));
-								RetVal = new Point(X, Y);
-
-							}
-							else if (RetVal is string && DefaultValue is Size)
-							{
-								//{Width=931, Height=592}
-								int Wid = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Width=", ","));
-								int Hei = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Height=", "}"));
-								RetVal = new Size(Wid, Hei);
-							}
-							else if (DefaultValue != null)
-								RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
-							//Else
-							//    RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType)
-
-
-						}
-					}
-
-
-			}
-			catch (Exception ex)
-			{
-				Global.Log($"Error: {Global.ExMsg(ex)}");
-			}
-
-			return RetVal;
-
-		}
-
-		public static int GetNumberInt(object Obj)
-		{
-			//gets a number from anywhere within a string
-			int Ret = 0;
-			if (Obj != null)
-			{
-				if (Obj is string)
+				if (control.InvokeRequired)
 				{
-					string o = System.Convert.ToString(Obj);
-					//If o.Trim.Length > 0 AndAlso o.Trim.Length < 10 Then
-					int outint = 0;
-					string OnlyNums = System.Convert.ToString(Regex.Match(o, "\\d+").Value);
-					if (int.TryParse(OnlyNums, out outint))
-						Ret = outint;
-					//End If
+					control.Invoke(action);
 				}
-				else if (Obj is int)
-					Ret = (int)Obj;
-			}
-			return Ret;
-
-		}
-		public static bool SaveSetting(string name, object value, string SubKey = "")
-		{
-			bool ret = false;
-			//regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
-			Version AN = Assembly.GetExecutingAssembly().GetName().Version;
-			string Cname = System.Windows.Forms.Application.CompanyName;
-			string Pname = System.Windows.Forms.Application.ProductName;
-			string version = AN.Major + "." + AN.Minor;
-			string SKey = "";
-			if (!string.IsNullOrWhiteSpace(SubKey))
-				SKey = "\\" + SubKey.Trim();
-			try
-			{
-				string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
-				using (RegistryKey reg = Registry.CurrentUser.CreateSubKey(RKey, RegistryKeyPermissionCheck.ReadWriteSubTree))
-					if (reg != null)
-					{
-						if (value is List<string>)
-						{
-							List<string> strlist = (List<string>)value;
-							reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
-						}
-						else if (value is object[])
-						{
-							List<string> strlist = new List<string>();
-							object[] objects = (object[])value;
-							foreach (object obj in objects)
-								strlist.Add(obj.ToString());
-							reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
-						}
-						else
-							reg.SetValue(name, value);
-						ret = true;
-					}
-
+				else
+				{
+					action();
+				}
 
 			}
-			catch (Exception ex)
-			{
-				Global.Log($"Error: {Global.ExMsg(ex)}");
-			}
-			finally
-			{
-
-			}
-
-			return ret;
 		}
 
 		//		public string GetImageForProdList(object row)

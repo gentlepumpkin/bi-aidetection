@@ -13,6 +13,9 @@ namespace AITool
 {
     public partial class Frm_MQTTSettings:Form
     {
+
+        public Camera cam;
+
         public Frm_MQTTSettings()
         {
             InitializeComponent();
@@ -31,28 +34,62 @@ namespace AITool
 
         private async void btTest_ClickAsync(object sender, EventArgs e)
         {
-            AppSettings.Settings.mqtt_serverandport = tb_ServerPort.Text.Trim();
-            AppSettings.Settings.mqtt_password = tb_Password.Text.Trim();
-            AppSettings.Settings.mqtt_username = tb_Username.Text.Trim();
-            AppSettings.Settings.mqtt_UseTLS = cb_UseTLS.Checked;
+            btTest.Enabled = false;
+            btnSave.Enabled = false;
+            btnCancel.Enabled = false;
 
-            MQTTClient mq = new MQTTClient();
-
-            MqttClientPublishResult pr = await mq.PublishAsync(tb_Topic.Text.Trim(),tb_Payload.Text.Trim());
-
-            if (pr != null && (pr.ReasonCode == MqttClientPublishReasonCode.Success))
+            try
             {
-                MessageBox.Show("Success.");
+                AppSettings.Settings.mqtt_serverandport = tb_ServerPort.Text.Trim();
+                AppSettings.Settings.mqtt_password = tb_Password.Text.Trim();
+                AppSettings.Settings.mqtt_username = tb_Username.Text.Trim();
+                AppSettings.Settings.mqtt_UseTLS = cb_UseTLS.Checked;
+
+                using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
+                {
+                    Global.Log("------ TESTING MQTT --------");
+
+                    MQTTClient mq = new MQTTClient();
+
+                    string topic = AITOOL.ReplaceParams(this.cam, null, tb_Topic.Text.Trim());
+                    string payload = AITOOL.ReplaceParams(this.cam, null, tb_Payload.Text.Trim());
+
+                    MqttClientPublishResult pr = await mq.PublishAsync(topic, payload);
+
+                    Global.Log("------ DONE TESTING MQTT --------");
+
+                    if (pr != null && (pr.ReasonCode == MqttClientPublishReasonCode.Success))
+                    {
+                        MessageBox.Show("Success! See Log for details.");
+                    }
+                    else if (pr != null)
+                    {
+                        MessageBox.Show($"Failed. See log for details. Reason={pr.ReasonCode}", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Failed. See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+
+                }
+
+
             }
-            else if (pr != null)
+            catch
             {
-                MessageBox.Show($"Failed. See log. Reason={pr.ReasonCode}", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
             }
-            else
+            finally
             {
-                MessageBox.Show($"Failed. See log.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btTest.Enabled = true;
+                btnSave.Enabled = true;
+                btnCancel.Enabled = true;
             }
 
+        }
+
+        private void Frm_MQTTSettings_Load(object sender, EventArgs e)
+        {
 
         }
     }
