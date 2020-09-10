@@ -6,7 +6,7 @@ namespace AITool
 {
     public class ObjectPosition:IEquatable<ObjectPosition>
     {
-        public string label { get; }
+        public string label { get; } = "";
         public DateTime createDate { get; set; }
         public int counter { get; set; }
         public int xmin { get; }
@@ -22,8 +22,8 @@ namespace AITool
         public int imageHeight { get; set; }
         public Boolean isVisible { get; set; } = false;
 
-        public string cameraName { get; set; }
-        public string imagePath { get; set; }
+        public string cameraName { get; set; } = "";
+        public string imagePath { get; set; } = "";
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
