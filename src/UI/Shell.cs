@@ -2190,10 +2190,7 @@ namespace AITool
         //event: leaving empty upper confidence limit textbox
         private void tb_threshold_upper_Leave(object sender, EventArgs e)
         {
-            if (tb_threshold_upper.Text == "")
-            {
-                tb_threshold_upper.Text = "100";
-            }
+
         }
 
 
