@@ -849,18 +849,8 @@ namespace AITool
 
                                             if (cam.maskManager.masking_enabled)
                                             {
-                                                //scan over all masked objects and decrement counter if not flagged as visible.
-                                                cam.maskManager.CleanUpExpiredMasks(cam.name);
-
                                                 //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                                cam.maskManager.CleanUpExpiredHistory(cam.name);
-
-                                                //log summary information for all masked objects
-                                                Log($"{CurSrv} - ### Masked objects summary for camera " + cam.name + " ###");
-                                                foreach (ObjectPosition maskedObject in cam.maskManager.masked_positions)
-                                                {
-                                                    Log($"{CurSrv} - \t" + maskedObject.ToString());
-                                                }
+                                                cam.maskManager.CleanUpExpiredMasks();
                                             }
 
                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
