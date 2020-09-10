@@ -337,24 +337,34 @@ namespace AITool
                     }
                     else 
                     {
-                        if (GetCamera(e.FullPath) != null)  //only put in queue if we can match to camera (even default)
+                        Camera cam = GetCamera(e.FullPath);
+                        if (cam != null)  //only put in queue if we can match to camera (even default)
                         {
-                            //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                            int qsize = ImageProcessQueue.Count + 1;
-                            if (qsize > AppSettings.Settings.MaxImageQueueSize)
+
+                            if (cam.enabled)
                             {
-                                Log("");
-                                Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                                int qsize = ImageProcessQueue.Count + 1;
+                                if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                                {
+                                    Log("");
+                                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                                }
+                                else
+                                {
+                                    Log("");
+                                    Log($"====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
+                                    ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                                    detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
+                                    ImageProcessQueue.Enqueue(CurImg);
+                                    qsizecalc.AddToCalc(qsize);
+                                    Global.SendMessage(MessageType.ImageAddedToQueue);
+                                }
+
                             }
                             else
                             {
-                                Log("");
-                                Log($"====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
-                                ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                                detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
-                                ImageProcessQueue.Enqueue(CurImg);
-                                qsizecalc.AddToCalc(qsize);
-                                Global.SendMessage(MessageType.ImageAddedToQueue);
+                                Log($"Error: Skipping image because camera '{cam.name}' is DISABLED " + e.FullPath);
                             }
                         }
                         else
@@ -727,26 +737,33 @@ namespace AITool
                             {
 
                                 //error = $"Failure in DeepStack processing the image.";
-
                                 //print every detected object with the according confidence-level
                                 string outputtext = $"{CurSrv} -    Detected objects:";
+
 
                                 if (response.predictions != null)
                                 {
                                     //if we are not using the local deepstack windows version, this means nothing:
                                     DeepStackServerControl.IsActivated = true;
 
-                                    foreach (Object user in response.predictions)
+                                    if (response.predictions.Count() > 0)
                                     {
-                                        if (user != null && !string.IsNullOrEmpty(user.label))
+                                        foreach (Object user in response.predictions)
                                         {
-                                            DeepStackServerControl.VisionDetectionRunning = true;
-                                            outputtext += $"{user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
+                                            if (user != null && !string.IsNullOrEmpty(user.label))
+                                            {
+                                                DeepStackServerControl.VisionDetectionRunning = true;
+                                                outputtext += $" {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
+                                            }
+                                            else
+                                            {
+                                                outputtext += " (Error: null prediction? DeepStack may not be started with correct switches.), ";
+                                            }
                                         }
-                                        else
-                                        {
-                                            outputtext += "(Error: null prediction? DeepStack may not be started with correct switches.), ";
-                                        }
+                                    }
+                                    else
+                                    {
+                                        outputtext += " ((NONE))";
                                     }
                                 }
                                 else
@@ -968,7 +985,7 @@ namespace AITool
                                             Log($"{CurSrv} - (6/6) Camera {cam.name} caused a false alert, nothing detected.");
 
                                             //add to history list
-                                            Log($"{CurSrv} - Adding false to history list.");
+                                            //Log($"{CurSrv} - Adding false to history list.");
                                             Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", ""));
                                         }
                                     }
@@ -1712,7 +1729,7 @@ namespace AITool
                 //if we didnt find a camera see if there is a default camera name we can use without a prefix
                 if (cam == null)
                 {
-                    Global.Log($"WARNING: No camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
+                    Global.Log($"WARNING: No enabled camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
                     //check if there is a default camera which accepts any prefix, select it
                     if (ReturnDefault)
                     {

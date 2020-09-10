@@ -114,7 +114,7 @@ namespace AITool
                             Settings.SettingsValid = true;
                             Ret = true;
                             AppSettings.LastSettingsJSON = CurSettingsJSON;
-                            Global.Log($"Settings saved to {AppSettings.Settings.SettingsFileName}");
+                            //Global.Log($"Settings saved to {AppSettings.Settings.SettingsFileName}");
                         }
                         else
                         {
@@ -127,7 +127,7 @@ namespace AITool
                     else
                     {
                         //does not need saving
-                        Global.Log("Settings have not changed, skipping save.");
+                        //Global.Log("Settings have not changed, skipping save.");
                         Ret = true;
                         Settings.SettingsValid = true;
                     }
