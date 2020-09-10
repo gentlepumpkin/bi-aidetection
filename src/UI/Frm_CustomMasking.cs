@@ -203,10 +203,7 @@ namespace AITool
 
             if (drawing)
             {
-                using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
-                {
-                    e.DrawRectangle(Pens.Yellow, getRectangle());
-                }
+                e.DrawRectangle(Pens.Yellow, getRectangle());
             }
             else if(startRectanglePoint.IsEmpty == false)
             {
@@ -217,8 +214,37 @@ namespace AITool
             }
         }
 
-        /********************* Start EVENT section*************************************/
+        private void drawBrush(Graphics e)
+        {
+            Color color = Color.FromArgb(255, 255, 255, 70);
+            //first draw the image for the picturebox. Used as a readonly background layer
+            using (Pen pen = new Pen(color, brushSize))
+            {
+                pen.MiterLimit = pen.Width / 2;
+                pen.LineJoin = LineJoin.Round;
+                pen.StartCap = LineCap.Round;
+                pen.EndCap = LineCap.Round;
 
+                if (currentPoints.GetPoints().Count > 1)
+                {
+                    using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                    {
+                        //first draw the mask on the picturebox. Used as a readonly background layer
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.DrawLines(pen, currentPoints.GetPoints().ToArray());
+                    }
+
+                    using (Graphics g = Graphics.FromImage(inProgessLayer))
+                    {
+                        //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.DrawLines(pen, currentPoints.GetPoints().ToArray());
+                    }
+                }
+            }
+        }
+
+        /********************* Start EVENT section*************************************/
 
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
@@ -231,8 +257,6 @@ namespace AITool
         {
             if (pbMaskImage.Image != null)
             {
-                Color color = Color.FromArgb(255,255,255,70);
-
                 if (inProgessLayer == null)
                 {
                     inProgessLayer = new Bitmap(transparentLayer.Width, transparentLayer.Height, PixelFormat.Format32bppPArgb);
@@ -244,31 +268,7 @@ namespace AITool
                 }
                 else if(rbBrush.Checked)
                 {
-                    //first draw the image for the picturebox. Used as a readonly background layer
-                    using (Pen pen = new Pen(color, brushSize))
-                    {
-                        pen.MiterLimit = pen.Width / 4;
-                        pen.LineJoin = LineJoin.Round;
-                        pen.StartCap = LineCap.Round;
-                        pen.EndCap = LineCap.Round;
-
-                        if (currentPoints.GetPoints().Count > 1)
-                        {
-                            using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
-                            {
-                                //first draw the mask on the picturebox. Used as a readonly background layer
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
-                                g.DrawLines(pen, currentPoints.GetPoints().ToArray());
-                            }
-
-                            using (Graphics g = Graphics.FromImage(inProgessLayer))
-                            {
-                                //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
-                                g.DrawLines(pen, currentPoints.GetPoints().ToArray());
-                            }
-                        }
-                    }
+                    drawBrush(e.Graphics);
                 }
             }
         }
