@@ -132,7 +132,7 @@ namespace AITool
             {
                 string imagePath = GetBestImage();
 
-                if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != imagePath.ToLower())
+                if (!string.IsNullOrEmpty(imagePath) && (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != imagePath.ToLower()))
                 {
                     using (var img = new Bitmap(imagePath))
                     {

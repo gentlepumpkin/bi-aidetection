@@ -187,33 +187,39 @@ namespace AITool
                                                 bool success = await DetectObjects(CurImg, url); //ai process image
 
                                                 Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
-
+                                                
 
                                                 if (!success)
                                                 {
                                                     Interlocked.Increment(ref ErrCnt);
 
-                                                    if (url.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                                    if (url.ErrCount > 0)
                                                     {
-                                                        //put url back in queue when done
-                                                        Log($"...Putting AI URL back in queue due to problem: '{url}' (ErrCount={url.ErrCount}), URLQueue.Count={DSURLQueue.Count}");
-                                                    }
-                                                    else
-                                                    {
-                                                        HasDisabledURLs = true;
-                                                        url.Enabled = false;
-                                                        Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}', URLQueue.Count={DSURLQueue.Count}");
+                                                        if (url.ErrCount < AppSettings.Settings.MaxQueueItemRetries)
+                                                        {
+                                                            //put url back in queue when done
+                                                            Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries}), URLQueue.Count={DSURLQueue.Count}");
+                                                        }
+                                                        else
+                                                        {
+                                                            HasDisabledURLs = true;
+                                                            url.Enabled = false;
+                                                            Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}', URLQueue.Count={DSURLQueue.Count}");
+                                                        }
+
                                                     }
 
-                                                    if (CurImg.ErrCount <= AppSettings.Settings.MaxURLRetries)
+                                                    CurImg.IncrementRetryCount();  //even if there was not an error directly accessing the image
+
+                                                    if (CurImg.ErrCount <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount <= AppSettings.Settings.MaxQueueItemRetries)
                                                     {
                                                         //put back in queue to be processed by another deepstack server
-                                                        Log($"...Putting image back in queue due to URL '{url}' problem (ErrCount={CurImg.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                                        Log($"...Putting image back in queue due to URL '{url}' problem (Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
                                                         ImageProcessQueue.Enqueue(CurImg);
                                                     }
                                                     else
                                                     {
-                                                        Log($"...Error: Removing image from queue. Tried '{url.ErrCount}' times on URL '{url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                                        Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
                                                     }
                                                 }
                                                 else
@@ -322,35 +328,38 @@ namespace AITool
 
             lock (FileWatcherLockObject)
             {
-                //overkill - only allow one thread at a time here to try to prevent duplicates
-                //await semaphore_detection_running.WaitAsync();
-
                 try
                 {
                     //make sure we are not processing a duplicate file...
                     if (detection_dictionary.ContainsKey(e.FullPath.ToLower()))
                     {
-                        Log("Skipping duplicate Created File Event: " + e.FullPath);
+                        Log("Skipping image because of duplicate Created File Event: " + e.FullPath);
                     }
-                    else
+                    else 
                     {
-
-
-                        //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                        int qsize = ImageProcessQueue.Count + 1;
-                        if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                        if (GetCamera(e.FullPath) != null)  //only put in queue if we can match to camera (even default)
                         {
-                            Log("");
-                            Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                            //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                            int qsize = ImageProcessQueue.Count + 1;
+                            if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                            {
+                                Log("");
+                                Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                            }
+                            else
+                            {
+                                Log("");
+                                Log($"====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
+                                ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
+                                detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
+                                ImageProcessQueue.Enqueue(CurImg);
+                                qsizecalc.AddToCalc(qsize);
+                                Global.SendMessage(MessageType.ImageAddedToQueue);
+                            }
                         }
                         else
                         {
-                            Log("");
-                            Log($"====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
-                            ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
-                            detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
-                            ImageProcessQueue.Enqueue(CurImg);
-                            qsizecalc.AddToCalc(qsize);
+                            Log("Error: Skipping image because no camera found for new image " + e.FullPath);
                         }
 
 
@@ -360,10 +369,6 @@ namespace AITool
                 catch (Exception ex)
                 {
                     Log("Error: " + Global.ExMsg(ex));
-                }
-                finally
-                {
-                    Global.SendMessage(MessageType.ImageAddedToQueue);
                 }
 
             }
@@ -1613,11 +1618,22 @@ namespace AITool
                     int index = -1;
                     //&CAM.%Y%m%d_%H%M%S
                     //AIFOSCAMDRIVEWAY.20200827_131840312.jpg
-                    if (fname.Contains("."))
+                    //sgrtgrdg - Kopie (2).jpg
+                    if (fname.Contains(".") || fname.Contains("-"))
                     {
-                        string fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0]; //get prefix of inputted file
 
-                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.Trim().ToLower() == fileprefix.Trim().ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
+                        string fileprefix = "";
+
+                        if (fname.Contains("."))
+                        {
+                            fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('.')[0].Trim(); //get prefix of inputted file
+                        }
+                        else if (fname.Contains("-"))
+                        {
+                            fileprefix = Path.GetFileNameWithoutExtension(ImageOrNameOrPrefix).Split('-')[0].Trim(); //get prefix of inputted file
+                        }
+
+                        index = AppSettings.Settings.CameraList.FindIndex(x => x.prefix.ToLower() == fileprefix.ToLower()); //get index of camera with same prefix, is =-1 if no camera has the same prefix 
 
                         if (index > -1)
                         {
