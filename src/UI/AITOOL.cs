@@ -918,7 +918,7 @@ namespace AITool
 
                                                 //add to history list
                                                 Log($"{CurSrv} - Adding detection to history list.");
-                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, objects_and_confidences, object_positions_as_string));
+                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string));
 
                                             }
                                             //if no object fulfills all 3 requirements but there are other objects: 
@@ -967,7 +967,7 @@ namespace AITool
 
                                                 Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
                                                 //add to history list
-                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string));
+                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string));
                                             }
                                         }
                                         //if no object was detected
@@ -986,7 +986,7 @@ namespace AITool
 
                                             //add to history list
                                             //Log($"{CurSrv} - Adding false to history list.");
-                                            Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now.ToString("dd.MM.yy, HH:mm:ss"), cam.name, "false alert", ""));
+                                            Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, "false alert", ""));
                                         }
                                     }
 
@@ -1075,7 +1075,7 @@ namespace AITool
                 fcalc.AddToCalc(CurImg.FileLockMS);
 
 
-                Log($"{CurSrv} - ...Object detection finished: ");
+                //Log($"{CurSrv} - ...Object detection finished: ");
                 Log($"{CurSrv} -          Total Time:   {{yellow}}{CurImg.TotalTimeMS}ms{{white}} (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)");
                 Log($"{CurSrv} -DeepStack (URL) Time:   {{yellow}}{CurImg.DeepStackTimeMS}ms{{white}} (Count={DeepStackURL.dscalc.Count}, Min={DeepStackURL.dscalc.Min}ms, Max={DeepStackURL.dscalc.Max}ms, Avg={DeepStackURL.dscalc.Average.ToString("#####")}ms)");
                 Log($"{CurSrv} -      File lock Time:   {{yellow}}{CurImg.FileLockMS}ms{{white}} (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)");

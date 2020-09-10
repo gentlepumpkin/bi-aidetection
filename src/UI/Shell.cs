@@ -1199,15 +1199,17 @@ namespace AITool
             {
                 if (checkListFilters(hist.Camera, success, hist.Detections)) //only show the entry in the history list if no filter applies
                 {
+                    
+
                     ListViewItem item;
                     if (success == "true")
                     {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date, hist.Camera, hist.Detections, hist.Positions, "✓" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString("dd.MM.yy, HH:mm:ss"), hist.Camera, hist.Detections, hist.Positions, "✓" });
                         item.ForeColor = System.Drawing.Color.Green;
                     }
                     else
                     {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date, hist.Camera, hist.Detections, hist.Positions, "X" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString("dd.MM.yy, HH:mm:ss"), hist.Camera, hist.Detections, hist.Positions, "X" });
                     }
 
                     //add the FULL path to the item tag so we dont need to add a column
@@ -1220,7 +1222,7 @@ namespace AITool
                 }
 
                 //update history CSV
-                string line = $"{hist.Filename}|{hist.Date}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{success}";
+                string line = $"{hist.Filename}|{hist.Date.ToString("dd.MM.yy, HH:mm:ss")}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{success}";
                 HistoryWriter.WriteToLog(line);
 
             };

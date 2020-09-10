@@ -18,13 +18,13 @@ namespace AITool
         //      false
 
         public string Filename { get; set; } = "";
-        public string Date { get; set; } = "";
+        public DateTime Date { get; set; } = DateTime.MinValue;
         public string Camera { get; set; } = "";
         public string Detections { get; set; } = "";   //TODO: should this be a list in the db?
         public string Positions { get; set; } = "";
         public bool Success { get; set; } = false;
 
-        public ClsHistoryItem(string filename, string date, string camera, string objects_and_confidence, string object_positions)
+        public ClsHistoryItem(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions)
         {
             this.Filename = filename;
             this.Date = date;
