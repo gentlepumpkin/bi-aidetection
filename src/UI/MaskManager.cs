@@ -1,18 +1,34 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Timers;
 
 namespace AITool
 {
     public class MaskManager
     {
-        public bool masking_enabled { get; set; } = false;
+        [JsonIgnore]
+        private bool _masking_enabled = false;
+        public bool masking_enabled
+        {
+            get => _masking_enabled;
+            set
+            {
+                _masking_enabled = value;
+                if(_masking_enabled) cleanHistoryTimer.Start();
+                else cleanHistoryTimer.Stop();
+            }
+        }
+
         public int mask_counter_default { get; set; } = 15;               //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
         public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
-        public double thresholdPercent { get; set; } = .08;               //what percent can the selection rectangle vary to be considered a match
+        public double thresholdPercent { get; set; } = .14;               //what percent can the selection rectangle vary to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
+
+        [JsonIgnore]
+        private Timer cleanHistoryTimer = new Timer();
 
         //[JsonIgnore]
         //private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
@@ -21,6 +37,10 @@ namespace AITool
         {
             last_positions_history = new List<ObjectPosition>();
             masked_positions = new List<ObjectPosition>();
+
+            //register event handler to run clean history every minute
+            cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
+            cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
         }
 
         public bool CreateDynamicMask(ObjectPosition currentObject)
@@ -77,7 +97,7 @@ namespace AITool
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
-        public void CleanUpExpiredHistory(String cameraName)
+        private void CleanUpExpiredHistory()
         {
             try
             {
@@ -97,7 +117,7 @@ namespace AITool
                         //Global.Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                         if (minutes >= history_save_mins)
                         {
-                            Global.Log("Removing expired history: " + historyObject.ToString() + " for camera " + cameraName + " which existed for " + ts.Minutes + " minutes.");
+                            Global.Log("Removing expired history: " + historyObject.ToString() + " which existed for " + ts.Minutes + " minutes.");
                             historyList.RemoveAt(x);
                         }
                     }
@@ -113,7 +133,7 @@ namespace AITool
             }
         }
 
-        public void CleanUpExpiredMasks(String cameraName)
+        public void CleanUpExpiredMasks()
         {
             try
             {
@@ -134,7 +154,7 @@ namespace AITool
 
                             if (maskedObject.counter <= 0)
                             {
-                                Global.Log("Removing expired masked object: " + maskedObject.ToString() + " for camera " + cameraName);
+                                Global.Log("Removing expired masked object: " + maskedObject.ToString());
                                 maskedList.RemoveAt(x);
                             }
                         }
@@ -155,6 +175,11 @@ namespace AITool
             {
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
+        }
+
+        private void cleanHistoryEvent(object sender, EventArgs e)
+        {
+            CleanUpExpiredHistory();
         }
 
     }
