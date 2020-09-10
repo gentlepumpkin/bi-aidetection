@@ -43,8 +43,10 @@
             this.removeMaskToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.createStaticMaskToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lbl_lastfile = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
+            this.BtnDynamicMaskingSettings = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -77,8 +79,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer1.Size = new System.Drawing.Size(745, 793);
-            this.splitContainer1.SplitterDistance = 395;
+            this.splitContainer1.Size = new System.Drawing.Size(745, 739);
+            this.splitContainer1.SplitterDistance = 368;
             this.splitContainer1.TabIndex = 0;
             // 
             // groupBox1
@@ -91,7 +93,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(745, 395);
+            this.groupBox1.Size = new System.Drawing.Size(745, 368);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "History";
@@ -122,7 +124,7 @@
             this.FOLV_MaskHistory.Margin = new System.Windows.Forms.Padding(4);
             this.FOLV_MaskHistory.Name = "FOLV_MaskHistory";
             this.FOLV_MaskHistory.ShowGroups = false;
-            this.FOLV_MaskHistory.Size = new System.Drawing.Size(737, 365);
+            this.FOLV_MaskHistory.Size = new System.Drawing.Size(737, 338);
             this.FOLV_MaskHistory.TabIndex = 0;
             this.FOLV_MaskHistory.UseCompatibleStateImageBehavior = false;
             this.FOLV_MaskHistory.View = System.Windows.Forms.View.Details;
@@ -174,7 +176,7 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(745, 394);
+            this.groupBox2.Size = new System.Drawing.Size(745, 367);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Active Masks";
@@ -204,7 +206,7 @@
             this.FOLV_Masks.Margin = new System.Windows.Forms.Padding(4);
             this.FOLV_Masks.Name = "FOLV_Masks";
             this.FOLV_Masks.ShowGroups = false;
-            this.FOLV_Masks.Size = new System.Drawing.Size(737, 364);
+            this.FOLV_Masks.Size = new System.Drawing.Size(737, 337);
             this.FOLV_Masks.TabIndex = 0;
             this.FOLV_Masks.UseCompatibleStateImageBehavior = false;
             this.FOLV_Masks.View = System.Windows.Forms.View.Details;
@@ -239,8 +241,10 @@
             // 
             // splitContainer2
             // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer2.Location = new System.Drawing.Point(0, 54);
             this.splitContainer2.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer2.Name = "splitContainer2";
             // 
@@ -252,9 +256,17 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lbl_lastfile);
             this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
-            this.splitContainer2.Size = new System.Drawing.Size(1452, 793);
+            this.splitContainer2.Size = new System.Drawing.Size(1452, 739);
             this.splitContainer2.SplitterDistance = 745;
             this.splitContainer2.TabIndex = 1;
+            // 
+            // lbl_lastfile
+            // 
+            this.lbl_lastfile.AutoSize = true;
+            this.lbl_lastfile.Location = new System.Drawing.Point(-2, 2);
+            this.lbl_lastfile.Name = "lbl_lastfile";
+            this.lbl_lastfile.Size = new System.Drawing.Size(0, 25);
+            this.lbl_lastfile.TabIndex = 1;
             // 
             // pictureBox1
             // 
@@ -265,26 +277,45 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 31);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(703, 762);
+            this.pictureBox1.Size = new System.Drawing.Size(703, 708);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
             // 
-            // lbl_lastfile
+            // comboBox_filter_camera
             // 
-            this.lbl_lastfile.AutoSize = true;
-            this.lbl_lastfile.Location = new System.Drawing.Point(-2, 2);
-            this.lbl_lastfile.Name = "lbl_lastfile";
-            this.lbl_lastfile.Size = new System.Drawing.Size(0, 25);
-            this.lbl_lastfile.TabIndex = 1;
+            this.comboBox_filter_camera.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox_filter_camera.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBox_filter_camera.FormattingEnabled = true;
+            this.comboBox_filter_camera.Location = new System.Drawing.Point(4, 6);
+            this.comboBox_filter_camera.Margin = new System.Windows.Forms.Padding(5);
+            this.comboBox_filter_camera.Name = "comboBox_filter_camera";
+            this.comboBox_filter_camera.Size = new System.Drawing.Size(337, 39);
+            this.comboBox_filter_camera.TabIndex = 3;
+            this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
+            this.comboBox_filter_camera.SelectionChangeCommitted += new System.EventHandler(this.comboBox_filter_camera_SelectionChangeCommitted);
+            // 
+            // BtnDynamicMaskingSettings
+            // 
+            this.BtnDynamicMaskingSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(355, 3);
+            this.BtnDynamicMaskingSettings.Margin = new System.Windows.Forms.Padding(9, 2, 9, 2);
+            this.BtnDynamicMaskingSettings.Name = "BtnDynamicMaskingSettings";
+            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(108, 44);
+            this.BtnDynamicMaskingSettings.TabIndex = 23;
+            this.BtnDynamicMaskingSettings.Text = "Settings";
+            this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
+            this.BtnDynamicMaskingSettings.Click += new System.EventHandler(this.BtnDynamicMaskingSettings_Click);
             // 
             // Frm_DynamicMaskDetails
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(1452, 793);
+            this.Controls.Add(this.BtnDynamicMaskingSettings);
+            this.Controls.Add(this.comboBox_filter_camera);
             this.Controls.Add(this.splitContainer2);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Frm_DynamicMaskDetails";
@@ -332,5 +363,7 @@
         private System.Windows.Forms.ToolStripMenuItem removeMaskToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem createStaticMaskToolStripMenuItem1;
         private System.Windows.Forms.Label lbl_lastfile;
+        private System.Windows.Forms.ComboBox comboBox_filter_camera;
+        private System.Windows.Forms.Button BtnDynamicMaskingSettings;
     }
 }

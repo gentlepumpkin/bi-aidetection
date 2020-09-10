@@ -2647,13 +2647,16 @@ namespace AITool
 
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
+                frm.Text = "Dynamic Masking Settings - " + cam.name;
+
+
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
                 frm.num_mask_remove.Value = cam.maskManager.mask_counter_default; //load mask remove counter
                 frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
 
-
+                frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -2673,6 +2676,8 @@ namespace AITool
                     cam.maskManager.mask_counter_default = mask_remove_counter;
                     cam.maskManager.thresholdPercent = percent_variance;
 
+                    this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
+
                     cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
 
                     AppSettings.Save();
@@ -2687,12 +2692,13 @@ namespace AITool
             using (Frm_DynamicMaskDetails frm = new Frm_DynamicMaskDetails())
             {
 
-                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
-
-                frm.cam = AppSettings.Settings.CameraList[i];
+                Camera CurCam = GetCamera(list2.SelectedItems[0].Text);
+                frm.cam = CurCam;
 
                 frm.ShowDialog();
+
+                cb_masking_enabled.Checked = CurCam.maskManager.masking_enabled;
+
             }
 
 
