@@ -19,6 +19,8 @@ namespace AITool
         public string url { get; set; } = "";
         public bool Enabled { get; set; } = false;
         public DateTime LastUsedTime = DateTime.MinValue;
+        public MovingCalcs dscalc = new MovingCalcs(250);   //store deepstack time calc in the url
+        public long DeepStackTimeMS = 0;
         public int ErrCount { get => _ErrCount; set => _ErrCount = value; }
         public void IncrementErrCount()
         {

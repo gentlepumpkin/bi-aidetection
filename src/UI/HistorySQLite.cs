@@ -4,12 +4,13 @@ using Microsoft.Data.Sqlite;
 
 namespace AITool
 {
-    
+
     public class HistorySQLite
     {
         public string Filename { get; set; } = "";
-
-        public HistorySQLite(string Filename)
+        public SqliteConnection sqlite_conn { get; set; } = null;
+        public bool ReadOnly { get; } = false;
+        public HistorySQLite(string Filename, bool ReadOnly)
         {
             if (string.IsNullOrEmpty(Filename))
                 throw new System.ArgumentException("Parameter cannot be empty", "Filename");
@@ -26,22 +27,25 @@ namespace AITool
         private SqliteConnection CreateConnection()
         {
 
-            SqliteConnection sqlite_conn;
-
             try
             {
                 // Create a new database connection:
+                // Connection pooling:  Pooling=True;Max Pool Size=100;
+                // read-only Read Only=True;
                 sqlite_conn = new SqliteConnection($"Data Source={this.Filename}; Version=3; New=True; Compress=True; ");
 
                 // Open the connection:
-                
+
                 sqlite_conn.Open();
 
                 // Enable write-ahead logging
                 //https://www.sqlite.org/wal.html
-                SqliteCommand walCommand = sqlite_conn.CreateCommand();
-                walCommand.CommandText = @"PRAGMA journal_mode = 'wal'";
-                walCommand.ExecuteNonQuery();
+                SqliteCommand cmd = sqlite_conn.CreateCommand();
+                cmd.CommandText = @"PRAGMA journal_mode = 'WAL'";
+                cmd.ExecuteNonQuery();
+                //https://www.sqlite.org/pragma.html#pragma_busy_timeout
+                cmd.CommandText = @"PRAGMA busy_timeout = 30000";   //set high to 30 seconds to be sure no failures when sharing database
+                cmd.ExecuteNonQuery();
 
             }
             catch (Exception ex)

@@ -217,16 +217,24 @@ namespace AITool
             //allows for stopping and starting of its service
             DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
 
-
-            if (DeepStackServerControl.NeedsSaving)
+            if (!DeepStackServerControl.IsInstalled)
             {
-                //this may happen if the already running instance has a different port, etc, so we update the config
-                SaveDeepStackTab();
+                //remove deepstack tab if not installed
+                Log("Removing DeepStack tab since it not installed as a Windows app (No docker support yet)");
+                tabControl1.TabPages.Remove(tabControl1.TabPages["tabDeepStack"]);
             }
-            LoadDeepStackTab(true);
-
+            else
+            {
+                if (DeepStackServerControl.NeedsSaving)
+                {
+                    //this may happen if the already running instance has a different port, etc, so we update the config
+                    SaveDeepStackTab();
+                }
+                LoadDeepStackTab(true);
+            }
+            
             //set httpclient timeout:
-            client.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+            //client.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
 
             UpdateWatchers();
 
