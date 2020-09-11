@@ -43,6 +43,72 @@ namespace AITool
             cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
         }
 
+        public void Update(Camera cam)
+        {
+            //This will run on save/load settings
+
+            //lets store thresholdpercent as the same value the user sees in UI for easier troubleshooting in mask dialog
+            if (this.thresholdPercent < 1)
+            {
+                this.thresholdPercent = this.thresholdPercent * 100;
+            }
+
+            foreach (ObjectPosition op in this.last_positions_history)
+            {
+                //Update threshold since it could have been changed since mask created
+                op.thresholdPercent = this.thresholdPercent;
+                //update the camera name since it could have been renamed since the mask was created
+                op.cameraName = cam.name;
+                //update last seen date if hasnt been set
+                if (op.LastSeenDate == DateTime.MinValue)
+                {
+                    op.LastSeenDate = op.createDate;
+                }
+                //if null image from older build, force to have the last image from the camera:
+                if (op.imagePath == null || string.IsNullOrEmpty(op.imagePath))
+                {
+                    //first, set to empty string rather than null to fix bug I saw
+                    op.imagePath = "";
+                    //next, fill with most recent image with detections
+                    if (!string.IsNullOrEmpty(cam.last_image_file_with_detections))
+                    {
+                        op.imagePath = cam.last_image_file_with_detections;
+                    }
+                    else if (!string.IsNullOrEmpty(cam.last_image_file))
+                    {
+                        op.imagePath = cam.last_image_file;
+                    }
+                }
+            }
+            foreach (ObjectPosition op in this.masked_positions)
+            {
+                //Update threshold since it could have been changed since mask created
+                op.thresholdPercent = this.thresholdPercent;
+                //update the camera name since it could have been renamed since the mask was created
+                op.cameraName = cam.name;
+                //update last seen date if hasnt been set
+                if (op.LastSeenDate == DateTime.MinValue)
+                {
+                    op.LastSeenDate = op.createDate;
+                }
+                //if null image from older build, force to have the last image from the camera:
+                if (op.imagePath == null || string.IsNullOrEmpty(op.imagePath))
+                {
+                    //first, set to empty string rather than null to fix bug I saw
+                    op.imagePath = "";
+                    //next, fill with most recent image with detections
+                    if (!string.IsNullOrEmpty(cam.last_image_file_with_detections))
+                    {
+                        op.imagePath = cam.last_image_file_with_detections;
+                    }
+                    else if (!string.IsNullOrEmpty(cam.last_image_file))
+                    {
+                        op.imagePath = cam.last_image_file;
+                    }
+                }
+            }
+        }
+
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
             bool maskExists = false;
@@ -57,6 +123,12 @@ namespace AITool
                 //get index to prevent another search for removal if needed
                 int indexLoc = last_positions_history.IndexOf(currentObject);
                 ObjectPosition foundObject = last_positions_history[indexLoc];
+
+                foundObject.LastSeenDate = DateTime.Now;
+
+                //Update last image that has same detection, and camera name found for existing mask
+                foundObject.imagePath = currentObject.imagePath;
+                foundObject.cameraName = currentObject.cameraName;
 
                 Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.cameraName);
 
@@ -76,6 +148,12 @@ namespace AITool
             else if (masked_positions.Contains(currentObject))
             {
                 ObjectPosition maskedObject = (ObjectPosition)masked_positions[masked_positions.IndexOf(currentObject)];
+
+                maskedObject.LastSeenDate = DateTime.Now;
+
+                //Update last image that has same detection, and camera name found for existing mask
+                maskedObject.imagePath = currentObject.imagePath;
+                maskedObject.cameraName = currentObject.cameraName;
 
                 if (maskedObject.counter < mask_counter_default)
                 {

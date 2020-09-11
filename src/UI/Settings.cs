@@ -13,6 +13,7 @@ using System.Security.AccessControl;
 using System.Diagnostics;
 using System.Threading;
 using SixLabors.ImageSharp;
+using System.Collections.ObjectModel;
 
 namespace AITool
 {
@@ -104,6 +105,12 @@ namespace AITool
                             //file corrupt or doesnt exist
                             if (File.Exists(AppSettings.Settings.SettingsFileName))
                                 File.Delete(AppSettings.Settings.SettingsFileName);
+                        }
+
+                        //update threshold in all masks if changed during session
+                        foreach (Camera cam in AppSettings.Settings.CameraList)
+                        {
+                            cam.maskManager.Update(cam);
                         }
 
                         Settings.SettingsValid = true;
@@ -337,8 +344,12 @@ namespace AITool
                                 cam.maskManager = new MaskManager();
                                 Global.Log("Warning: Had to reset MaskManager for camera " + cam.name);
                             }
-                        } 
-                        
+
+                            //update threshold in all masks if changed during session
+                            cam.maskManager.Update(cam);
+
+                        }
+
                         //load cameras the old way if needed
                         if (Settings.CameraList.Count == 0)
                         {

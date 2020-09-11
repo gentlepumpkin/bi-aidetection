@@ -983,10 +983,9 @@ namespace AITool
                 {
                     CreateFormatList();
                 }
-                int CurCnt = 0;
-                foreach (ClsDateFormat df in DateFormatList)
+                for (int i = 0; i < DateFormatList.Count; i++)
                 {
-                    CurCnt = CurCnt + 1;
+                    ClsDateFormat df = DateFormatList[i];
                     Ret = DateTime.TryParseExact(InpDate, df.Fmt, null, System.Globalization.DateTimeStyles.None, out OutDate); //New CultureInfo("en-US")
                     if (Ret)
                     {
@@ -1006,6 +1005,7 @@ namespace AITool
                             Ret = false;
                         }
                     }
+
                 }
 
                 if (!Ret)

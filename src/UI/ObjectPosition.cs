@@ -8,15 +8,17 @@ namespace AITool
     {
         public string label { get; } = "";
         public DateTime createDate { get; set; }
+        public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
+
         public int counter { get; set; }
+        public double thresholdPercent { get; set; }
+        public Boolean isStatic { get; set; } = false;
         public int xmin { get; }
         public int ymin { get; }
         public int xmax { get; }
         public int ymax { get; }
         public int height { get; }
         public int width { get; }
-        public double thresholdPercent { get; set; }
-        public Boolean isStatic { get; set; } = false;
         public long key { get; }
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }
@@ -62,11 +64,14 @@ namespace AITool
             double xPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth;
             double yPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight;
 
+            //convert whole number to percent
+            double percent = thresholdPercent / 100;
+
             return (other != null &&
-                   (xPercentVariance <= thresholdPercent) &&
-                   (yPercentVariance <= thresholdPercent) &&
-                   (widthVariance <= thresholdPercent) &&
-                   (heightVariance <= thresholdPercent));
+                   (xPercentVariance <= percent) &&
+                   (yPercentVariance <= percent) &&
+                   (widthVariance <= percent) &&
+                   (heightVariance <= percent));
         }
 
         public override int GetHashCode()

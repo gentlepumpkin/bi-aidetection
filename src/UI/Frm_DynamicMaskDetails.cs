@@ -170,8 +170,8 @@ namespace AITool
         {
             loading = true;
 
-            Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null);
-            Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null);
+            Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
 
             Global_GUI.RestoreWindowState(this);
 
@@ -419,6 +419,8 @@ namespace AITool
             if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
                 contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObject;
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
+
                 ShowMaskImage();
 
                 foreach (object obj in FOLV_MaskHistory.SelectedObjects)
@@ -437,6 +439,8 @@ namespace AITool
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
                 contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObject;
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
+
                 ShowMaskImage();
 
                 foreach (object obj in FOLV_Masks.SelectedObjects)
@@ -481,6 +485,7 @@ namespace AITool
             if (e.Model != null)
             {
                 contextMenuPosObj = (ObjectPosition)e.Model;
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
             }
         }
 
@@ -608,7 +613,8 @@ namespace AITool
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
                 frm.num_mask_remove.Value = cam.maskManager.mask_counter_default; //load mask remove counter
-                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
+                //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
+                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
 
                 frm.cb_enabled.Checked = cam.maskManager.masking_enabled;
 
@@ -623,12 +629,12 @@ namespace AITool
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
 
                     ////convert to percent
-                    Double percent_variance = (double)variance / 100;
+                    //Double percent_variance = (double)variance / 100;
 
                     cam.maskManager.history_save_mins = history_mins;
                     cam.maskManager.history_threshold_count = mask_create_counter;
                     cam.maskManager.mask_counter_default = mask_remove_counter;
-                    cam.maskManager.thresholdPercent = percent_variance;
+                    cam.maskManager.thresholdPercent = variance;
 
                     cam.maskManager.masking_enabled = frm.cb_enabled.Checked;
 

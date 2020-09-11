@@ -2607,14 +2607,7 @@ namespace AITool
 
         private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
         {
-            if (Chk_AutoScroll.Checked)
-            {
-                RTFLogger.AutoScroll = true;
-            }
-            else
-            {
-                RTFLogger.AutoScroll = false;
-            }
+            RTFLogger.AutoScroll = Chk_AutoScroll.Checked;
         }
 
         private void tableLayoutPanel7_Paint(object sender, PaintEventArgs e)
@@ -2654,7 +2647,8 @@ namespace AITool
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
                 frm.num_mask_remove.Value = cam.maskManager.mask_counter_default; //load mask remove counter
-                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
+                //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
+                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
 
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
@@ -2669,12 +2663,12 @@ namespace AITool
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
 
                     ////convert to percent
-                    Double percent_variance = (double)variance / 100;
+                    //Double percent_variance = (double)variance / 100;
 
                     cam.maskManager.history_save_mins = history_mins;
                     cam.maskManager.history_threshold_count = mask_create_counter;
                     cam.maskManager.mask_counter_default = mask_remove_counter;
-                    cam.maskManager.thresholdPercent = percent_variance;
+                    cam.maskManager.thresholdPercent = variance;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
 
