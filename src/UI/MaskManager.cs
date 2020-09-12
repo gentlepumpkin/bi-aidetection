@@ -226,56 +226,50 @@ namespace AITool
                 {
                     Global.Log("Error: " + Global.ExMsg(ex));
                 }
-
             }
         }
 
         public void CleanUpExpiredMasks()
         {
-            
-            lock (MaskLockObject)
+            try
             {
-                try
+                List<ObjectPosition> maskedList = masked_positions;
+
+                if (maskedList != null && maskedList.Count > 0)
                 {
-                    List<ObjectPosition> maskedList = masked_positions;
+                    //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
 
-                    if (maskedList != null && maskedList.Count > 0)
+                    //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
+                    for (int x = maskedList.Count - 1; x >= 0; x--)
                     {
-                        //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
-
-                        //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
-                        for (int x = maskedList.Count - 1; x >= 0; x--)
+                        ObjectPosition maskedObject = maskedList[x];
+                        if (!maskedObject.isVisible && !maskedObject.isStatic)
                         {
-                            ObjectPosition maskedObject = maskedList[x];
-                            if (!maskedObject.isVisible && !maskedObject.isStatic)
-                            {
-                                //Global.Log("Masked object NOT visible - " + maskedObject.ToString());
-                                maskedObject.counter--;
+                            //Global.Log("Masked object NOT visible - " + maskedObject.ToString());
+                            maskedObject.counter--;
 
-                                if (maskedObject.counter <= 0)
-                                {
-                                    Global.Log("Removing expired masked object: " + maskedObject.ToString());
-                                    maskedList.RemoveAt(x);
-                                }
-                            }
-                            else
+                            if (maskedObject.counter <= 0)
                             {
-                                //Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
-                                maskedObject.isVisible = false; //reset flag
+                                Global.Log("Removing expired masked object: " + maskedObject.ToString());
+                                maskedList.RemoveAt(x);
                             }
                         }
+                        else
+                        {
+                            //Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
+                            maskedObject.isVisible = false; //reset flag
+                        }
                     }
-                    else if (maskedList == null)
-                    {
-                        Global.Log("Error: Maskedlist is null?");
-                    }
-
                 }
-                catch (Exception ex)
+                else if (maskedList == null)
                 {
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    Global.Log("Error: Maskedlist is null?");
                 }
 
+            }
+            catch (Exception ex)
+            {
+                Global.Log("Error: " + Global.ExMsg(ex));
             }
         }
 
