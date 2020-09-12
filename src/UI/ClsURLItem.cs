@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arch.CMessaging.Client.Core.Utils;
 
 namespace AITool
 {
@@ -14,19 +15,18 @@ namespace AITool
     }
     public class ClsURLItem
     {
-        private int _ErrCount = 0;
 
         public string url { get; set; } = "";
-        public bool Enabled { get; set; } = false;
-        public DateTime LastUsedTime = DateTime.MinValue;
-        public MovingCalcs dscalc = new MovingCalcs(250);   //store deepstack time calc in the url
-        public long DeepStackTimeMS = 0;
-        public int ErrCount { get => _ErrCount; set => _ErrCount = value; }
-        public void IncrementErrCount()
-        {
-            //if we try to increment class.ErrCount directly you get 'A property or indexer may not be passed as an out or ref parameter' - Workaround:
-            Interlocked.Increment(ref this._ErrCount);
-        }
+        public int Order { get; set; } = 0;
+        public int CurOrder { get; set; } = 0;
+        public int Count { get; set; } = 0;
+        //public int Order { get; set; } = 0;
+        public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(false);
+        public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
+        public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
+        public MovingCalcs dscalc { get; set; } = new MovingCalcs(250);   //store deepstack time calc in the url
+        public long DeepStackTimeMS { get; set; } = 0;
+        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0); 
 
         public string ResultMessage { get; set; } = "";
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Other;
@@ -34,13 +34,16 @@ namespace AITool
         {
             return this.url;
         }
-        public ClsURLItem(String url, URLTypeEnum type = URLTypeEnum.DeepStack)
+        public ClsURLItem(String url, int Order, int Count, URLTypeEnum type = URLTypeEnum.DeepStack)
         {
             if (!string.IsNullOrWhiteSpace(url))
             {
-                this.Enabled = true;
+                this.Enabled.WriteFullFence(true);
                 this.url = url.Trim();
                 this.Type = type;
+                this.Order = Order;
+                this.Count = Count;
+
                 if (this.Type == URLTypeEnum.DeepStack)
                 {
                     if (!this.url.Contains("://"))

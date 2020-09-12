@@ -32,6 +32,7 @@ using SizeF = SixLabors.Primitives.SizeF; //for file dialog
 using static AITool.Global;
 using System.Security.AccessControl;
 using System.Drawing;
+using AITool.Properties;
 
 namespace AITool
 {
@@ -47,7 +48,7 @@ namespace AITool
         public static LogFileWriter LogWriter = null;
         public static LogFileWriter HistoryWriter = null;
         public static BlueIris BlueIrisInfo = null;
-        public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
+        //public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
 
         //keep track of timing
         //moving average will be faster for long running process with 1000's of samples
@@ -67,10 +68,137 @@ namespace AITool
         //thread safe dictionary to prevent more than one file being processed at one time
         public static ConcurrentDictionary<string, ClsImageQueueItem> detection_dictionary = new ConcurrentDictionary<string, ClsImageQueueItem>();
 
-        
+        public static ConcurrentDictionary<int, ClsURLItem> DeepStackURLDic = new ConcurrentDictionary<int, ClsURLItem>();
 
         public static Dictionary<string, ClsFileSystemWatcher> watchers = new Dictionary<string, ClsFileSystemWatcher>();
+        public static string LastURLS = "";
 
+        public static async Task<ClsURLItem> WaitForNextURL()
+        {
+            //lets wait in here forever until a URL is available...
+
+            ClsURLItem ret = null;
+            
+            DateTime LastWaitingLog = DateTime.MinValue;
+
+            while (ret == null)
+            {
+                try
+                {
+
+                    //Check to see if we need to get updated URL list
+                    if (DeepStackURLDic.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url)
+                    {
+                        Log("Updating/Resetting AI URL list...");
+                        List<string> tmp = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
+                        DeepStackURLDic.Clear();
+
+                        //check to see if any need updating with http or path
+                        for (int i = 0; i < tmp.Count; i++)
+                        {
+                            DeepStackURLDic.TryAdd(i, new ClsURLItem(tmp[i],i + 1,tmp.Count));
+                        }
+                        Log($"...Found {DeepStackURLDic.Count} AI URL's in settings.");
+
+                        LastURLS = AppSettings.Settings.deepstack_url;
+
+                    }
+
+
+                    if (AppSettings.Settings.deepstack_urls_are_queued)
+                    {
+                        //sort by oldest last used
+                        List<ClsURLItem> sorted = DeepStackURLDic.Values.OrderBy((d) => d.LastUsedTime).ToList();
+                        for (int i = 0; i < sorted.Count; i++)
+                        {
+                            if (sorted[i].Enabled.ReadFullFence())
+                            {
+                                if (!sorted[i].InUse.ReadFullFence())
+                                {
+                                    if (sorted[i].ErrCount.ReadFullFence() == 0 || 
+                                       (sorted[i].ErrCount.ReadFullFence() > 0 && 
+                                       (Math.Round((DateTime.Now - sorted[i].LastUsedTime).TotalSeconds, 0) >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
+                                    {
+                                        ret = sorted[i];
+                                        ret.CurOrder = i + 1;
+                                        break;
+                                    }
+
+                                }
+                            }
+                            //disabled, but check to see if we need to reenable
+                            else if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                            {
+                                //check to see if can be re-enabled yet
+                                sorted[i].Enabled.WriteFullFence(true);
+                                sorted[i].ErrCount.WriteFullFence(0);
+                                sorted[i].InUse.WriteFullFence(false);
+                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} minutes have passed: " + sorted[i]);
+                                ret = sorted[i];
+                                break;
+                            }
+                        }
+                        
+                    }
+                    else
+                    {
+                        //first come first serve:
+
+                        for (int i = 0; i < DeepStackURLDic.Count; i++)
+                        {
+                            if (DeepStackURLDic[i].Enabled.ReadFullFence())
+                            {
+                                if (!DeepStackURLDic[i].InUse.ReadFullFence())
+                                {
+                                    if (DeepStackURLDic[i].ErrCount.ReadFullFence() == 0 || 
+                                       (DeepStackURLDic[i].ErrCount.ReadFullFence() > 0 && 
+                                       (Math.Round((DateTime.Now - DeepStackURLDic[i].LastUsedTime).TotalSeconds, 0) >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
+                                    {
+                                        ret = DeepStackURLDic[i];
+                                        ret.CurOrder = i + 1;
+                                        break;
+                                    }
+                                }
+                            }
+                            //disabled, but check to see if we need to reenable
+                            else if ((DateTime.Now - DeepStackURLDic[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                            {
+                                //check to see if can be re-enabled yet
+                                DeepStackURLDic[i].Enabled.WriteFullFence(true);
+                                DeepStackURLDic[i].ErrCount.WriteFullFence(0);
+                                DeepStackURLDic[i].InUse.WriteFullFence(false);
+                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} minutes have passed: " + DeepStackURLDic[i]);
+                                ret = DeepStackURLDic[i];
+                                break;
+                            }
+                        }
+
+                    }
+                }
+                catch { }
+
+                if (ret !=null)
+                {
+                    ret.InUse.WriteFullFence(true);
+                    ret.LastUsedTime = DateTime.Now;
+                    break;
+                }
+
+                if ((DateTime.Now - LastWaitingLog).Minutes >= 10)
+                {
+                    Log("All URL's are in use or disabled, waiting...");
+                    LastWaitingLog = DateTime.Now;
+                }
+
+                //wait half a second for other url's to become available
+                await Task.Delay(500);
+
+            }
+
+            return ret;
+
+
+        }
         public static async Task ImageQueueLoop()
         {
             //This runs in another thread, waiting for items to appear in the queue and process them one at a time
@@ -80,75 +208,14 @@ namespace AITool
 
                 ClsImageQueueItem CurImg;
 
-                string LastURLS = AppSettings.Settings.deepstack_url;
-
-                DateTime LastURLCheckTime = DateTime.MinValue;
                 DateTime LastCleanDupesTime = DateTime.MinValue;
-                bool HasDisabledURLs = false;
-                int DisabledLogCount = 0;
 
                 //Start infinite loop waiting for images to come into queue
-                ConcurrentQueue<ClsURLItem> DSURLQueue = new ConcurrentQueue<ClsURLItem>();
 
                 while (true)
                 {
                     while (!ImageProcessQueue.IsEmpty)
                     {
-
-                        //lock this section so more than one thread will keep the variables in sync
-                        lock (ImageLoopLockObject)
-                        {
-                            //Check to see if we need to get updated URL list
-                            if (DeepStackURLList.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url)
-                            {
-                                Log("Updating/Resetting AI URL list...");
-                                List<string> tmp = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
-                                DeepStackURLList.Clear();
-
-                                //check to see if any need updating with http or path
-                                foreach (string url in tmp)
-                                {
-                                    DeepStackURLList.Add(new ClsURLItem(url));
-                                }
-                                Log($"...Found {DeepStackURLList.Count} AI URL's in settings.");
-
-                                LastURLS = AppSettings.Settings.deepstack_url;
-                                LastURLCheckTime = DateTime.Now;
-                                HasDisabledURLs = false;
-                                DisabledLogCount = 0;
-
-                                DSURLQueue = new ConcurrentQueue<ClsURLItem>();
-
-                                foreach (ClsURLItem url in DeepStackURLList)
-                                {
-                                    if (url.Enabled)
-                                        DSURLQueue.Enqueue(url);
-                                }
-                            }
-
-                            //check to see if we need to reenable all the URLs after they have been disabled for a while
-                            if (HasDisabledURLs && (DateTime.Now - LastURLCheckTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
-                            {
-                                LastURLCheckTime = DateTime.Now;
-                                HasDisabledURLs = false;
-                                DisabledLogCount = 0;
-
-                                DSURLQueue = new ConcurrentQueue<ClsURLItem>();
-
-                                foreach (ClsURLItem url in DeepStackURLList)
-                                {
-                                    if (!url.Enabled)
-                                    {
-                                        url.Enabled = true;
-                                        url.ErrCount = 0;
-                                        Log("---- Re-enabling disabled URL: " + url);
-                                    }
-
-                                    DSURLQueue.Enqueue(url);
-                                }
-                            }
-
-                        }
 
                         int ProcImgCnt = 0;
                         int ErrCnt = 0;
@@ -157,9 +224,10 @@ namespace AITool
                         while (!ImageProcessQueue.IsEmpty)
                         {
                             //tiny delay to conserve cpu and allow more images to come in the queue if needed
-                            await Task.Delay(100);
+                            await Task.Delay(250);
 
                             //get the next image
+                            
                             if (ImageProcessQueue.TryDequeue(out CurImg))
                             {
                                 //skip the image if its been in the queue too long
@@ -168,120 +236,75 @@ namespace AITool
                                     Log($"...Taking image OUT OF QUEUE because it has been in there over 'MaxImageQueueTimeMinutes'. (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, ImageProcessQueue.Count={ImageProcessQueue.Count}: '{CurImg.image_path}'");
                                     continue;
                                 }
-                                //get the next url
-                                ClsURLItem url = null;
-                                if (DSURLQueue.TryDequeue(out url))
+                                
+                                
+                                //wait for the next url to become available...
+                                ClsURLItem url = await WaitForNextURL();
+                                
+
+                                double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
+
+                                if (url.ErrCount.ReadFullFence() == 0 || (url.ErrCount.ReadFullFence() > 0 && (lastsecs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
                                 {
-                                    if (url != null && url.Enabled)
+                                    Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' (QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'");
+
+                                    Interlocked.Increment(ref TskCnt);
+
+                                    Task.Run(async () =>
                                     {
-                                        double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                        if (url.ErrCount == 0 || (url.ErrCount > 0 && (lastsecs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
-                                        {
-                                            Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' (QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins) on URL '{url}'");
 
-                                            Interlocked.Increment(ref TskCnt);
+                                        Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
 
-                                            url.LastUsedTime = DateTime.Now;
+                                        bool success = await DetectObjects(CurImg, url); //ai process image
 
-                                            Task.Run(async () =>
-                                            {
-
-                                                Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
-
-                                                bool success = await DetectObjects(CurImg, url); //ai process image
-
-                                                Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
+                                        Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
                                                 
 
-                                                if (!success)
+                                        if (!success)
+                                        {
+                                            Interlocked.Increment(ref ErrCnt);
+
+                                            if (url.ErrCount.ReadFullFence() > 0)
+                                            {
+                                                if (url.ErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
                                                 {
-                                                    Interlocked.Increment(ref ErrCnt);
-
-                                                    if (url.ErrCount > 0)
-                                                    {
-                                                        if (url.ErrCount < AppSettings.Settings.MaxQueueItemRetries)
-                                                        {
-                                                            //put url back in queue when done
-                                                            Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries}), URLQueue.Count={DSURLQueue.Count}");
-                                                        }
-                                                        else
-                                                        {
-                                                            HasDisabledURLs = true;
-                                                            url.Enabled = false;
-                                                            Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}', URLQueue.Count={DSURLQueue.Count}");
-                                                        }
-
-                                                    }
-
-                                                    CurImg.IncrementRetryCount();  //even if there was not an error directly accessing the image
-
-                                                    if (CurImg.ErrCount <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount <= AppSettings.Settings.MaxQueueItemRetries)
-                                                    {
-                                                        //put back in queue to be processed by another deepstack server
-                                                        Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
-                                                        ImageProcessQueue.Enqueue(CurImg);
-                                                    }
-                                                    else
-                                                    {
-                                                        Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
-                                                    }
+                                                    //put url back in queue when done
+                                                    Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})");
                                                 }
                                                 else
                                                 {
-                                                    Interlocked.Increment(ref ProcImgCnt);
-
+                                                    url.Enabled.WriteFullFence(false);
+                                                    Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
                                                 }
 
+                                            }
 
-                                                Interlocked.Decrement(ref TskCnt);
+                                            CurImg.RetryCount.AtomicIncrementAndGet();  //even if there was not an error directly accessing the image
 
-                                            });
-
+                                            if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
+                                            {
+                                                //put back in queue to be processed by another deepstack server
+                                                Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                                ImageProcessQueue.Enqueue(CurImg);
+                                            }
+                                            else
+                                            {
+                                                Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                            }
                                         }
                                         else
                                         {
-                                            //lets not fill up the log if there are no more enabled URL's...
-                                            if (DisabledLogCount < 5)
-                                            {
-                                                DisabledLogCount++;
-                                                Log($"Skipping AI URL because of previous problem; minimum seconds between attempts has not been reached ({lastsecs} of {AppSettings.Settings.MinSecondsBetweenFailedURLRetry} secs, ErrCnt={url.ErrCount}, LogShowCount={DisabledLogCount}): {url}");
-                                            }
-                                            else if (DisabledLogCount == 5)
-                                            {
-                                                Log($"***** Not showing further problems about skipping disabled URL (LogShowCount={DisabledLogCount}): " + url);
-                                            }
+                                            Interlocked.Increment(ref ProcImgCnt);
 
-
-                                            ImageProcessQueue.Enqueue(CurImg);
                                         }
 
-                                    }
-                                    else
-                                    {
-                                        Log($"Skipping disabled AI URL: {url}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={ImageProcessQueue.Count}");
-                                        ImageProcessQueue.Enqueue(CurImg);
-                                    }
+                                        url.InUse.WriteFullFence(false);
 
-                                    //lets always put the URL back in the queue even if failed.  Rely on disable property
-                                    DSURLQueue.Enqueue(url);
+                                        Interlocked.Decrement(ref TskCnt);
 
-                                }
-                                else
-                                {
-                                    //lets not fill up the log if there are no more enabled URL's...
-                                    if (DisabledLogCount < 10)
-                                    {
-                                        DisabledLogCount++;
-                                        Log($"(No AI URLs left in the queue, waiting... ImageProcessQueue.Count={ImageProcessQueue.Count})");
-                                    }
-                                    else if (DisabledLogCount == 10)
-                                    {
-                                        Log("***** Not showing further warnings about skipping disabled URL: " + url);
-                                    }
+                                    });
 
-                                    ImageProcessQueue.Enqueue(CurImg);
-                                    break;
                                 }
 
                             }
@@ -295,11 +318,11 @@ namespace AITool
 
                         if (TskCnt > 0)
                         {
-                            Log($"Done adding {TskCnt} total threads, ErrCnt={ErrCnt}, URLQueue.Count={DSURLQueue.Count}, ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                            Log($"Done adding {TskCnt} total threads, ErrCnt={ErrCnt}, ImageProcessQueue.Count={ImageProcessQueue.Count}");
                         }
 
                         //Clean up old images in the dupe check dic
-                        if ((DateTime.Now - LastCleanDupesTime).TotalMinutes >= 30)
+                        if ((DateTime.Now - LastCleanDupesTime).TotalMinutes >= 60)
                         {
                             int cnt = 0;
                             foreach (KeyValuePair<string, ClsImageQueueItem> kvPair in detection_dictionary)
@@ -625,6 +648,7 @@ namespace AITool
         public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
         {
 
+            //IHttpClientFactory test;
 
             bool ret = false;
 
@@ -706,7 +730,7 @@ namespace AITool
                                         else
                                         {
                                             error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
-                                            DeepStackURL.IncrementErrCount();
+                                            DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                             DeepStackURL.ResultMessage = error;
                                             Log(error);
                                         }
@@ -733,7 +757,7 @@ namespace AITool
                             catch (Exception ex)
                             {
                                 error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                                DeepStackURL.IncrementErrCount();
+                                DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                 DeepStackURL.ResultMessage = error;
                                 Log(error);
                             }
@@ -1015,7 +1039,7 @@ namespace AITool
                                 //deserialization did not cause exception, it just gave a null response in the object?
                                 //probably wont happen but just making sure
                                 error = $"{CurSrv} - ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
-                                DeepStackURL.IncrementErrCount();
+                                DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                 DeepStackURL.ResultMessage = error;
                                 Log(error);
                             }
@@ -1025,7 +1049,7 @@ namespace AITool
                         else
                         {
                             error = $"{CurSrv} - ERROR: Empty string returned from HTTP post.";
-                            DeepStackURL.IncrementErrCount();
+                            DeepStackURL.ErrCount.AtomicIncrementAndGet();
                             DeepStackURL.ResultMessage = error;
                             Log(error);
                         }
@@ -1037,7 +1061,7 @@ namespace AITool
                     {
                         //could not access the file for 30 seconds??   Or unexpected error
                         error = $"Error: Could not gain access to {CurImg.image_path} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.";
-                        CurImg.IncrementErrCount();
+                        CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = error;
                         Log(error);
                     }
@@ -1054,7 +1078,7 @@ namespace AITool
                     swposttime.Stop();
 
                     error = $"{CurSrv} - ERROR: {Global.ExMsg(ex)}";
-                    DeepStackURL.IncrementErrCount();
+                    DeepStackURL.ErrCount.AtomicIncrementAndGet();
                     DeepStackURL.ResultMessage = error;
                     Log(error);
                 }

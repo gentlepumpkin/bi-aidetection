@@ -428,7 +428,7 @@ namespace AITool
 
             if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
-                contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObject;
+                contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObjects[0];
                 this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
 
                 ShowMaskImage();
@@ -448,7 +448,7 @@ namespace AITool
             
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
-                contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObject;
+                contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObjects[0];
                 this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
 
                 ShowMaskImage();

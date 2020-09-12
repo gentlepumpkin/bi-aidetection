@@ -49,6 +49,7 @@ namespace AITool
             public string deepstack_installfolder = "C:\\DeepStack";
             public string deepstack_port = "81";
             public string deepstack_mode = "Medium";
+            public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
             public bool deepstack_debug = false;
             public bool deepstack_highpriority = true;
