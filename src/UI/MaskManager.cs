@@ -118,20 +118,21 @@ namespace AITool
 
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
+            bool maskExists = false;
+
+            Global.Log("*** Starting new object mask processing ***");
+            Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
+
             lock (MaskLockObject)
             {
-                bool maskExists = false;
-
-                Global.Log("*** Starting new object mask processing ***");
-                Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
-
                 currentObject.thresholdPercent = thresholdPercent;
 
-                if (last_positions_history.Contains(currentObject))
+                int historyIndex = last_positions_history.IndexOf(currentObject);
+
+                if (historyIndex > -1)  
                 {
                     //get index to prevent another search for removal if needed
-                    int indexLoc = last_positions_history.IndexOf(currentObject);
-                    ObjectPosition foundObject = last_positions_history[indexLoc];
+                    ObjectPosition foundObject = last_positions_history[historyIndex];
 
                     foundObject.LastSeenDate = DateTime.Now;
 
@@ -148,41 +149,44 @@ namespace AITool
                     else
                     {
                         Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.cameraName);
-                        last_positions_history.RemoveAt(indexLoc);
+                        last_positions_history.RemoveAt(historyIndex);
                         foundObject.isVisible = true;
                         foundObject.counter = mask_counter_default;
                         masked_positions.Add(foundObject);
                     }
+                    return maskExists;
                 }
-                else if (masked_positions.Contains(currentObject))
-                {
-                    ObjectPosition maskedObject = (ObjectPosition)masked_positions[masked_positions.IndexOf(currentObject)];
-
-                    maskedObject.LastSeenDate = DateTime.Now;
-
-                    //Update last image that has same detection, and camera name found for existing mask
-                    maskedObject.imagePath = currentObject.imagePath;
-                    maskedObject.cameraName = currentObject.cameraName;
-
-                    if (maskedObject.counter < mask_counter_default)
-                    {
-                        maskedObject.counter++;
-                    }
-
-                    Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
-
-                    maskedObject.isVisible = true;
-                    maskExists = true;
-                }
-                else
-                {
-                    Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
-                    last_positions_history.Add(currentObject);
-                }
-
-                return maskExists;
-
             }
+
+            int maskIndex = masked_positions.IndexOf(currentObject);
+
+            if (maskIndex > -1)
+            {
+                ObjectPosition maskedObject = (ObjectPosition)masked_positions[maskIndex];
+
+                maskedObject.LastSeenDate = DateTime.Now;
+
+                //Update last image that has same detection, and camera name found for existing mask
+                maskedObject.imagePath = currentObject.imagePath;
+                maskedObject.cameraName = currentObject.cameraName;
+
+                if (maskedObject.counter < mask_counter_default)
+                {
+                    maskedObject.counter++;
+                }
+
+                Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
+
+                maskedObject.isVisible = true;
+                maskExists = true;
+            }
+            else
+            {
+                Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
+                last_positions_history.Add(currentObject);
+            }
+
+            return maskExists;
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
