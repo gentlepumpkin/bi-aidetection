@@ -15,8 +15,8 @@ namespace AITool
             set
             {
                 _masking_enabled = value;
-                if(_masking_enabled) cleanHistoryTimer.Start();
-                else cleanHistoryTimer.Stop();
+                //if(_masking_enabled) cleanHistoryTimer.Start();
+                //else cleanHistoryTimer.Stop();
             }
         }
 
@@ -27,8 +27,8 @@ namespace AITool
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
 
-        [JsonIgnore]
-        private Timer cleanHistoryTimer = new Timer();
+        //[JsonIgnore]
+        //private Timer cleanHistoryTimer = new Timer();
 
         //[JsonIgnore]
         //private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
@@ -39,8 +39,8 @@ namespace AITool
             masked_positions = new List<ObjectPosition>();
 
             //register event handler to run clean history every minute
-            cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
-            cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
+            //cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
+            //cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
         }
 
         public void Update(Camera cam)
@@ -175,7 +175,7 @@ namespace AITool
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
-        private void CleanUpExpiredHistory()
+        public void CleanUpExpiredHistory()
         {
             try
             {
@@ -257,7 +257,7 @@ namespace AITool
 
         private void cleanHistoryEvent(object sender, EventArgs e)
         {
-            CleanUpExpiredHistory();
+            //CleanUpExpiredHistory();
         }
 
     }

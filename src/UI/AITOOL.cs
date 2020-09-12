@@ -872,6 +872,7 @@ namespace AITool
                                             if (cam.maskManager.masking_enabled)
                                             {
                                                 //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
+                                                cam.maskManager.CleanUpExpiredHistory();
                                                 cam.maskManager.CleanUpExpiredMasks();
                                             }
 
