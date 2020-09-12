@@ -162,7 +162,12 @@ namespace AITool
                             //get the next image
                             if (ImageProcessQueue.TryDequeue(out CurImg))
                             {
-
+                                //skip the image if its been in the queue too long
+                                if ((DateTime.Now - CurImg.TimeAdded).TotalMinutes >= AppSettings.Settings.MaxImageQueueTimeMinutes)
+                                {
+                                    Log($"...Taking image OUT OF QUEUE because it has been in there over 'MaxImageQueueTimeMinutes'. (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, ImageProcessQueue.Count={ImageProcessQueue.Count}: '{CurImg.image_path}'");
+                                    continue;
+                                }
                                 //get the next url
                                 ClsURLItem url = null;
                                 if (DSURLQueue.TryDequeue(out url))
@@ -173,7 +178,7 @@ namespace AITool
 
                                         if (url.ErrCount == 0 || (url.ErrCount > 0 && (lastsecs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
                                         {
-                                            Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' on URL '{url}'");
+                                            Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' (QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins) on URL '{url}'");
 
                                             Interlocked.Increment(ref TskCnt);
 
@@ -214,7 +219,7 @@ namespace AITool
                                                     if (CurImg.ErrCount <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount <= AppSettings.Settings.MaxQueueItemRetries)
                                                     {
                                                         //put back in queue to be processed by another deepstack server
-                                                        Log($"...Putting image back in queue due to URL '{url}' problem (Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                                        Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
                                                         ImageProcessQueue.Enqueue(CurImg);
                                                     }
                                                     else
@@ -237,14 +242,14 @@ namespace AITool
                                         else
                                         {
                                             //lets not fill up the log if there are no more enabled URL's...
-                                            if (DisabledLogCount < 10)
+                                            if (DisabledLogCount < 5)
                                             {
                                                 DisabledLogCount++;
-                                                Log($"Skipping AI URL because of previous problem; minimum seconds between attempts has not been reached ({lastsecs} of {AppSettings.Settings.MinSecondsBetweenFailedURLRetry} secs, ErrCnt={url.ErrCount}): {url}");
+                                                Log($"Skipping AI URL because of previous problem; minimum seconds between attempts has not been reached ({lastsecs} of {AppSettings.Settings.MinSecondsBetweenFailedURLRetry} secs, ErrCnt={url.ErrCount}, LogShowCount={DisabledLogCount}): {url}");
                                             }
-                                            else if (DisabledLogCount == 10)
+                                            else if (DisabledLogCount == 5)
                                             {
-                                                Log("***** Not showing further problems about skipping disabled URL: " + url);
+                                                Log($"***** Not showing further problems about skipping disabled URL (LogShowCount={DisabledLogCount}): " + url);
                                             }
 
 
