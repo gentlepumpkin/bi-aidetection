@@ -1278,8 +1278,9 @@ namespace AITool
                             if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
                             {
                                 Log("   Uploading image to Telegram...");
-                                
-                                if (!await TelegramUpload(CurImg, cam.name + " - " + cam.last_detections_summary))
+
+                                string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
+                                if (!await TelegramUpload(CurImg, tmp))
                                 {
                                     ret = false;
                                     Log("   -> ERROR sending image to Telegram.");

@@ -37,6 +37,7 @@ namespace AITool
         //public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
         public bool trigger_url_cancels = false;
         public bool telegram_enabled = false;
+        public string telegram_caption = "[camera] - [summary]";  //cam.name + " - " + cam.last_detections_summary
         public bool enabled = true;
         public double cooldown_time = 0;
         public int threshold_lower = 0;

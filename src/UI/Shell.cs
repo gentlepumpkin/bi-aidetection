@@ -2782,6 +2782,7 @@ namespace AITool
                 frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
+                frm.tb_telegram_caption.Text = cam.telegram_caption;
 
                 frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
 
@@ -2806,6 +2807,7 @@ namespace AITool
                     cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
                     cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
+                    cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
                     cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
 
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
@@ -2822,6 +2824,7 @@ namespace AITool
                     cam.Action_mqtt_enabled = frm.cb_MQTT_enabled.Checked;
                     cam.Action_mqtt_payload = frm.tb_MQTT_Payload.Text.Trim();
                     cam.Action_mqtt_topic = frm.tb_MQTT_Topic.Text.Trim();
+
 
                     AppSettings.Save();
 

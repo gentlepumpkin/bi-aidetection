@@ -58,6 +58,8 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
+            this.tb_telegram_caption = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,6 +96,8 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox1.Controls.Add(this.label7);
+            this.groupBox1.Controls.Add(this.tb_telegram_caption);
             this.groupBox1.Controls.Add(this.linkLabelMqttSettings);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label2);
@@ -165,15 +169,15 @@
             // 
             // tb_MQTT_Topic
             // 
-            this.tb_MQTT_Topic.Location = new System.Drawing.Point(318, 258);
+            this.tb_MQTT_Topic.Location = new System.Drawing.Point(345, 258);
             this.tb_MQTT_Topic.Name = "tb_MQTT_Topic";
-            this.tb_MQTT_Topic.Size = new System.Drawing.Size(358, 35);
+            this.tb_MQTT_Topic.Size = new System.Drawing.Size(331, 35);
             this.tb_MQTT_Topic.TabIndex = 37;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(242, 260);
+            this.label1.Location = new System.Drawing.Point(261, 260);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(66, 30);
             this.label1.TabIndex = 36;
@@ -194,9 +198,9 @@
             // 
             this.tb_Sounds.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_Sounds.Location = new System.Drawing.Point(318, 214);
+            this.tb_Sounds.Location = new System.Drawing.Point(345, 214);
             this.tb_Sounds.Name = "tb_Sounds";
-            this.tb_Sounds.Size = new System.Drawing.Size(880, 35);
+            this.tb_Sounds.Size = new System.Drawing.Size(853, 35);
             this.tb_Sounds.TabIndex = 34;
             this.toolTip1.SetToolTip(this.tb_Sounds, resources.GetString("tb_Sounds.ToolTip"));
             // 
@@ -224,9 +228,9 @@
             // 
             this.tb_RunExternalProgram.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_RunExternalProgram.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.tb_RunExternalProgram.Location = new System.Drawing.Point(318, 171);
+            this.tb_RunExternalProgram.Location = new System.Drawing.Point(345, 171);
             this.tb_RunExternalProgram.Name = "tb_RunExternalProgram";
-            this.tb_RunExternalProgram.Size = new System.Drawing.Size(357, 35);
+            this.tb_RunExternalProgram.Size = new System.Drawing.Size(330, 35);
             this.tb_RunExternalProgram.TabIndex = 31;
             this.toolTip1.SetToolTip(this.tb_RunExternalProgram, "Path to EXE, BAT, etc");
             // 
@@ -258,9 +262,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_network_folder.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_network_folder.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.tb_network_folder.Location = new System.Drawing.Point(318, 126);
+            this.tb_network_folder.Location = new System.Drawing.Point(345, 126);
             this.tb_network_folder.Name = "tb_network_folder";
-            this.tb_network_folder.Size = new System.Drawing.Size(662, 35);
+            this.tb_network_folder.Size = new System.Drawing.Size(635, 35);
             this.tb_network_folder.TabIndex = 28;
             // 
             // cb_copyAlertImages
@@ -383,6 +387,22 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
             // 
+            // tb_telegram_caption
+            // 
+            this.tb_telegram_caption.Location = new System.Drawing.Point(436, 79);
+            this.tb_telegram_caption.Name = "tb_telegram_caption";
+            this.tb_telegram_caption.Size = new System.Drawing.Size(762, 35);
+            this.tb_telegram_caption.TabIndex = 42;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(340, 82);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(90, 30);
+            this.label7.TabIndex = 43;
+            this.label7.Text = "Caption:";
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
@@ -438,5 +458,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.LinkLabel linkLabelMqttSettings;
         private System.Windows.Forms.Button btTest;
+        private System.Windows.Forms.Label label7;
+        public System.Windows.Forms.TextBox tb_telegram_caption;
     }
 }
