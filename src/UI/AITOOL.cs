@@ -244,7 +244,7 @@ namespace AITool
                                             }
                                             else if (DisabledLogCount == 10)
                                             {
-                                                Log("***** Not showing further warnings about skipping disabled URL: " + url);
+                                                Log("***** Not showing further problems about skipping disabled URL: " + url);
                                             }
 
 
