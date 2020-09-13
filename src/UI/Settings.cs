@@ -62,8 +62,8 @@ namespace AITool
             public int MaxLogFileAgeDays = 14;
             public int MaxImageQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
-            public int MaxQueueItemRetries = 10;  //will be disabled if fails this many times - Also applies to individual image failures
-            public int URLResetAfterDisabledMinutes = 30;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
+            public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
+            public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
             public int HTTPClientTimeoutSeconds = 30;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
@@ -79,8 +79,8 @@ namespace AITool
             public bool mqtt_UseTLS = false;
             public string mqtt_password = "password";
             public string mqtt_clientid = "AITool";
-            
 
+            public bool Autoscroll_log = false;
 
         }
 

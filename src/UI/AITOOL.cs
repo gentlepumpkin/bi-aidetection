@@ -33,6 +33,8 @@ using static AITool.Global;
 using System.Security.AccessControl;
 using System.Drawing;
 using AITool.Properties;
+using System.Runtime.Remoting.Channels;
+using Arch.CMessaging.Client.Core.Utils;
 
 namespace AITool
 {
@@ -68,18 +70,22 @@ namespace AITool
         //thread safe dictionary to prevent more than one file being processed at one time
         public static ConcurrentDictionary<string, ClsImageQueueItem> detection_dictionary = new ConcurrentDictionary<string, ClsImageQueueItem>();
 
-        public static ConcurrentDictionary<int, ClsURLItem> DeepStackURLDic = new ConcurrentDictionary<int, ClsURLItem>();
+        public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
 
         public static Dictionary<string, ClsFileSystemWatcher> watchers = new Dictionary<string, ClsFileSystemWatcher>();
-        public static string LastURLS = "";
+        public static ThreadSafe.Boolean AIURLSettingsChanged = new ThreadSafe.Boolean(true);
+
+        //private static readonly IHttpClientFactory _httpClientFactory;
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
             //lets wait in here forever until a URL is available...
 
             ClsURLItem ret = null;
-            
+
             DateTime LastWaitingLog = DateTime.MinValue;
+            bool displayedbad = false;
+            bool displayedretry = false;
 
             while (ret == null)
             {
@@ -87,97 +93,127 @@ namespace AITool
                 {
 
                     //Check to see if we need to get updated URL list
-                    if (DeepStackURLDic.Count == 0 || LastURLS != AppSettings.Settings.deepstack_url)
+                    if (DeepStackURLList.Count == 0 || AIURLSettingsChanged.ReadFullFence())
                     {
                         Log("Updating/Resetting AI URL list...");
-                        List<string> tmp = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
-                        DeepStackURLDic.Clear();
+                        List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
 
-                        //check to see if any need updating with http or path
-                        for (int i = 0; i < tmp.Count; i++)
+                        //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
+                        Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
+                        foreach (ClsURLItem url in DeepStackURLList)
                         {
-                            DeepStackURLDic.TryAdd(i, new ClsURLItem(tmp[i],i + 1,tmp.Count));
+                            string ur = url.ToString().ToLower();
+                            if (!tmpdic.ContainsKey(ur))
+                            {
+                                tmpdic.Add(ur, url);
+                            }
+                            else
+                            {
+                                Log($"---- (duplicate url configured - {ur})");
+                            }
                         }
-                        Log($"...Found {DeepStackURLDic.Count} AI URL's in settings.");
 
-                        LastURLS = AppSettings.Settings.deepstack_url;
+                        DeepStackURLList.Clear();
+
+                        for (int i = 0; i < SpltURLs.Count; i++)
+                        {
+                            ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, SpltURLs.Count);
+
+                            //if it already exists, use it, otherwise add a new one
+                            if (tmpdic.ContainsKey(url.ToString().ToLower()))
+                            {
+                                url = tmpdic[url.ToString().ToLower()];
+                                DeepStackURLList.Add(url);
+                                url.Order = i + 1;
+                                //url.InUse.WriteFullFence(false);
+                                url.ErrCount.WriteFullFence(0);
+                                url.Enabled.WriteFullFence(true);
+                                Log($"----   #{url.Order}: Re-added known URL: {url}");
+                            }
+                            else
+                            {
+                                DeepStackURLList.Add(url);
+                                Log($"----   #{url.Order}: Added new URL: {url}");
+                            }
+                        }
+                        Log($"...Found {DeepStackURLList.Count} AI URL's in settings.");
+
+                        AIURLSettingsChanged.WriteFullFence(false);
 
                     }
 
+
+                    List<ClsURLItem> sorted = new List<ClsURLItem>();
 
                     if (AppSettings.Settings.deepstack_urls_are_queued)
                     {
-                        //sort by oldest last used
-                        List<ClsURLItem> sorted = DeepStackURLDic.Values.OrderBy((d) => d.LastUsedTime).ToList();
-                        for (int i = 0; i < sorted.Count; i++)
-                        {
-                            if (sorted[i].Enabled.ReadFullFence())
-                            {
-                                if (!sorted[i].InUse.ReadFullFence())
-                                {
-                                    if (sorted[i].ErrCount.ReadFullFence() == 0 || 
-                                       (sorted[i].ErrCount.ReadFullFence() > 0 && 
-                                       (Math.Round((DateTime.Now - sorted[i].LastUsedTime).TotalSeconds, 0) >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
-                                    {
-                                        ret = sorted[i];
-                                        ret.CurOrder = i + 1;
-                                        break;
-                                    }
-
-                                }
-                            }
-                            //disabled, but check to see if we need to reenable
-                            else if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
-                            {
-                                //check to see if can be re-enabled yet
-                                sorted[i].Enabled.WriteFullFence(true);
-                                sorted[i].ErrCount.WriteFullFence(0);
-                                sorted[i].InUse.WriteFullFence(false);
-                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} minutes have passed: " + sorted[i]);
-                                ret = sorted[i];
-                                break;
-                            }
-                        }
-                        
+                        //always use oldest first
+                        sorted = DeepStackURLList.OrderBy((d) => d.LastUsedTime).ToList();
                     }
                     else
                     {
-                        //first come first serve:
+                        //use original order
+                        sorted.AddRange(DeepStackURLList);
+                    }
+                    //sort by oldest last used
 
-                        for (int i = 0; i < DeepStackURLDic.Count; i++)
+                    for (int i = 0; i < sorted.Count; i++)
+                    {
+                        if (sorted[i].Enabled.ReadFullFence())
                         {
-                            if (DeepStackURLDic[i].Enabled.ReadFullFence())
+                            if (!sorted[i].InUse.ReadFullFence())
                             {
-                                if (!DeepStackURLDic[i].InUse.ReadFullFence())
+                                if (sorted[i].ErrCount.ReadFullFence() == 0)
                                 {
-                                    if (DeepStackURLDic[i].ErrCount.ReadFullFence() == 0 || 
-                                       (DeepStackURLDic[i].ErrCount.ReadFullFence() > 0 && 
-                                       (Math.Round((DateTime.Now - DeepStackURLDic[i].LastUsedTime).TotalSeconds, 0) >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
+                                    ret = sorted[i];
+                                    ret.CurOrder = i + 1;
+                                    break;
+                                }
+                                else
+                                {
+                                    double secs = Math.Round((DateTime.Now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                    if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
                                     {
-                                        ret = DeepStackURLDic[i];
+                                        ret = sorted[i];
                                         ret.CurOrder = i + 1;
+                                        if (!displayedretry)  //if we get in a long loop waiting for URL
+                                        {
+                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].ErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                            displayedretry = true;
+                                        }
                                         break;
                                     }
+                                    else
+                                    {
+                                        if (!displayedbad)  //if we get in a long loop waiting for URL
+                                        {
+                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].ErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                            displayedbad = true;
+                                        }
+                                    }
+
                                 }
-                            }
-                            //disabled, but check to see if we need to reenable
-                            else if ((DateTime.Now - DeepStackURLDic[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
-                            {
-                                //check to see if can be re-enabled yet
-                                DeepStackURLDic[i].Enabled.WriteFullFence(true);
-                                DeepStackURLDic[i].ErrCount.WriteFullFence(0);
-                                DeepStackURLDic[i].InUse.WriteFullFence(false);
-                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} minutes have passed: " + DeepStackURLDic[i]);
-                                ret = DeepStackURLDic[i];
-                                break;
+
                             }
                         }
-
+                        //disabled, but check to see if we need to reenable
+                        else if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                        {
+                            //check to see if can be re-enabled yet
+                            sorted[i].Enabled.WriteFullFence(true);
+                            sorted[i].ErrCount.WriteFullFence(0);
+                            sorted[i].InUse.WriteFullFence(false);
+                            Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
+                            ret = sorted[i];
+                            ret.CurOrder = i + 1;
+                            break;
+                        }
                     }
+
                 }
                 catch { }
 
-                if (ret !=null)
+                if (ret != null)
                 {
                     ret.InUse.WriteFullFence(true);
                     ret.LastUsedTime = DateTime.Now;
@@ -186,7 +222,7 @@ namespace AITool
 
                 if ((DateTime.Now - LastWaitingLog).Minutes >= 10)
                 {
-                    Log("All URL's are in use or disabled, waiting...");
+                    Log("---- All URL's are in use or disabled, waiting...");
                     LastWaitingLog = DateTime.Now;
                 }
 
@@ -227,7 +263,7 @@ namespace AITool
                             await Task.Delay(250);
 
                             //get the next image
-                            
+
                             if (ImageProcessQueue.TryDequeue(out CurImg))
                             {
                                 //skip the image if its been in the queue too long
@@ -236,76 +272,77 @@ namespace AITool
                                     Log($"...Taking image OUT OF QUEUE because it has been in there over 'MaxImageQueueTimeMinutes'. (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, ImageProcessQueue.Count={ImageProcessQueue.Count}: '{CurImg.image_path}'");
                                     continue;
                                 }
-                                
-                                
+
+
+                                Stopwatch sw = Stopwatch.StartNew();
+
                                 //wait for the next url to become available...
                                 ClsURLItem url = await WaitForNextURL();
-                                
+
+                                sw.Stop();
 
                                 double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                if (url.ErrCount.ReadFullFence() == 0 || (url.ErrCount.ReadFullFence() > 0 && (lastsecs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)))
+                                Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'");
+
+                                Interlocked.Increment(ref TskCnt);
+
+                                Task.Run(async () =>
                                 {
-                                    Log($"Adding task for file '{Path.GetFileName(CurImg.image_path)}' (QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'");
-
-                                    Interlocked.Increment(ref TskCnt);
-
-                                    Task.Run(async () =>
-                                    {
 
 
-                                        Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
+                                    Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
 
-                                        bool success = await DetectObjects(CurImg, url); //ai process image
+                                    bool success = await DetectObjects(CurImg, url); //ai process image
 
                                         Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
-                                                
 
-                                        if (!success)
+
+                                    if (!success)
+                                    {
+                                        Interlocked.Increment(ref ErrCnt);
+
+                                        if (url.ErrCount.ReadFullFence() > 0)
                                         {
-                                            Interlocked.Increment(ref ErrCnt);
-
-                                            if (url.ErrCount.ReadFullFence() > 0)
+                                            if (url.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
                                             {
-                                                if (url.ErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
-                                                {
                                                     //put url back in queue when done
                                                     Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})");
-                                                }
-                                                else
-                                                {
-                                                    url.Enabled.WriteFullFence(false);
-                                                    Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
-                                                }
-
-                                            }
-
-                                            CurImg.RetryCount.AtomicIncrementAndGet();  //even if there was not an error directly accessing the image
-
-                                            if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
-                                            {
-                                                //put back in queue to be processed by another deepstack server
-                                                Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
-                                                ImageProcessQueue.Enqueue(CurImg);
                                             }
                                             else
                                             {
-                                                Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                                url.Enabled.WriteFullFence(false);
+                                                Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'");
                                             }
+
+                                        }
+
+                                        CurImg.RetryCount.AtomicIncrementAndGet();  //even if there was not an error directly accessing the image
+
+                                            if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
+                                        {
+                                                //put back in queue to be processed by another deepstack server
+                                                Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                            ImageProcessQueue.Enqueue(CurImg);
                                         }
                                         else
                                         {
-                                            Interlocked.Increment(ref ProcImgCnt);
-
+                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
                                         }
+                                    }
+                                    else
+                                    {
+                                        Interlocked.Increment(ref ProcImgCnt);
+                                        //reset error count
+                                        url.ErrCount.WriteFullFence(0);
+                                    }
 
-                                        url.InUse.WriteFullFence(false);
+                                    url.InUse.WriteFullFence(false);
 
-                                        Interlocked.Decrement(ref TskCnt);
+                                    Interlocked.Decrement(ref TskCnt);
 
-                                    });
+                                });
 
-                                }
 
                             }
                             else
@@ -334,7 +371,7 @@ namespace AITool
                                     detection_dictionary.TryRemove(kvPair.Key, out removedItem);
                                 }
                             }
-                            
+
                         }
 
                     }
@@ -363,7 +400,7 @@ namespace AITool
                     {
                         Log("Skipping image because of duplicate Created File Event: " + e.FullPath);
                     }
-                    else 
+                    else
                     {
                         Camera cam = GetCamera(e.FullPath);
                         if (cam != null)  //only put in queue if we can match to camera (even default)
@@ -707,33 +744,28 @@ namespace AITool
                             //going to try to initialize once per thread, but maybe not needed and adds a
                             //bit of overhead.....  -Vorlon
 
-                            using (HttpClient client = new HttpClient())
+
+                            //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
+                            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
                             {
-                                //set httpclient timeout:
-                                client.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                                Log($"{CurSrv} - (1/6) Uploading image to DeepQuestAI Server at {DeepStackURL}");
 
-                                //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
-                                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
+                                swposttime = Stopwatch.StartNew();
+
+                                using (HttpResponseMessage output = await DeepStackURL.HttpClient.PostAsync(url, request, cts.Token))
                                 {
-                                    Log($"{CurSrv} - (1/6) Uploading image to DeepQuestAI Server at {DeepStackURL}");
+                                    swposttime.Stop();
 
-                                    swposttime = Stopwatch.StartNew();
-
-                                    using (HttpResponseMessage output = await client.PostAsync(url, request, cts.Token))
+                                    if (output.IsSuccessStatusCode)
                                     {
-                                        swposttime.Stop();
-
-                                        if (output.IsSuccessStatusCode)
-                                        {
-                                            jsonString = await output.Content.ReadAsStringAsync();
-                                        }
-                                        else
-                                        {
-                                            error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
-                                            DeepStackURL.ErrCount.AtomicIncrementAndGet();
-                                            DeepStackURL.ResultMessage = error;
-                                            Log(error);
-                                        }
+                                        jsonString = await output.Content.ReadAsStringAsync();
+                                    }
+                                    else
+                                    {
+                                        error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
+                                        DeepStackURL.ErrCount.AtomicIncrementAndGet();
+                                        DeepStackURL.ResultMessage = error;
+                                        Log(error);
                                     }
                                 }
                             }
@@ -1174,14 +1206,14 @@ namespace AITool
 
                         //upload image to Telegram servers and send to first chat
                         Log($"      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
-                        var message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"),img_caption);
+                        var message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), img_caption);
                         string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
                         //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
                         foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
                         {
                             Log($"      uploading image to chat \"{chatid}\"");
-                            await bot.SendPhotoAsync(chatid, file_id,img_caption);
+                            await bot.SendPhotoAsync(chatid, file_id, img_caption);
                         }
                         ret = true;
                     }
@@ -1402,7 +1434,7 @@ namespace AITool
                         if (cam.Action_image_copy_enabled)
                         {
                             Log("   Copying image to network folder...");
-                            
+
                             if (!AITOOL.CopyImage(cam, CurImg))
                                 ret = false;
 
@@ -1578,7 +1610,7 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagepath]", imgpath); //gives the full path of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
 
-                if (cam !=null)
+                if (cam != null)
                 {
                     if (cam.last_detections != null && cam.last_detections.Count > 0)
                     {

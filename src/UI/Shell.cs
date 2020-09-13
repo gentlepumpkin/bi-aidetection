@@ -70,6 +70,7 @@ namespace AITool
 
             LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
             HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+            RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Log("");
@@ -195,8 +196,11 @@ namespace AITool
                 cmbInput.Items.Add(pth);
 
             }
-
+            
             tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
+            cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
+            Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
+
             tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
             cb_log.Checked = AppSettings.Settings.log_everything;
@@ -407,7 +411,7 @@ namespace AITool
                 }
 
                 //make the error and warning detection case insensitive:
-                bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("fail", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1);
                 bool HasWarning = (text.IndexOf("warning", StringComparison.InvariantCultureIgnoreCase) > -1);
                 bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
                 string RTFText = "";
@@ -633,14 +637,14 @@ namespace AITool
             {
                 //scroll to bottom, only when tab is active for better performance 
 
-                Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
-                {
-                    if (Chk_AutoScroll.Checked)
-                    {
-                        this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
-                        this.RTF_Log.ScrollToCaret();
-                    }
-                });
+                //Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
+                //{
+                //    if (Chk_AutoScroll.Checked)
+                //    {
+                //        this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
+                //        this.RTF_Log.ScrollToCaret();
+                //    }
+                //});
             }
 
         }
@@ -2213,6 +2217,7 @@ namespace AITool
             AppSettings.Settings.input_path = cmbInput.Text;
             AppSettings.Settings.input_path_includesubfolders = cb_inputpathsubfolders.Checked;
             AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
+            AppSettings.Settings.deepstack_urls_are_queued = cb_DeepStackURLsQueued.Checked;
             AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text, "|;,", true, true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
             AppSettings.Settings.log_everything = cb_log.Checked;
@@ -2220,6 +2225,9 @@ namespace AITool
             AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
 
             Global.Startup(AppSettings.Settings.startwithwindows);
+
+            //let the image loop (running in another thread) know to recheck ai server url settings.
+            AIURLSettingsChanged.WriteFullFence(true);
 
             if (AppSettings.Save())
             {
@@ -2576,7 +2584,7 @@ namespace AITool
 
         private void btnStopscroll_Click(object sender, EventArgs e)
         {
-            RTFLogger.AutoScroll = false;
+            RTFLogger.AutoScroll.WriteFullFence(false);
         }
 
         private void btnViewLog_Click(object sender, EventArgs e)
@@ -2607,7 +2615,8 @@ namespace AITool
 
         private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
         {
-            RTFLogger.AutoScroll = Chk_AutoScroll.Checked;
+            RTFLogger.AutoScroll.WriteFullFence(Chk_AutoScroll.Checked);
+            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
         }
 
         private void tableLayoutPanel7_Paint(object sender, PaintEventArgs e)
@@ -2830,6 +2839,16 @@ namespace AITool
 
                 }
             }
+        }
+
+        private void tbDeepstackUrl_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabLog_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace AITool
         public int Order { get; set; } = 0;
         public int CurOrder { get; set; } = 0;
         public int Count { get; set; } = 0;
-        //public int Order { get; set; } = 0;
+        public HttpClient HttpClient { get; set; }
         public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
@@ -51,6 +52,10 @@ namespace AITool
                     if (!this.url.ToLower().Contains("/v1/vision/detection"))
                         this.url = this.url + "/v1/vision/detection";
                 }
+
+                this.HttpClient = new HttpClient();
+                //set httpclient timeout:
+                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
             }
         }
 

@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Collections;
+using Arch.CMessaging.Client.Core.Utils;
 
 public class RichTextBoxEx
 {
@@ -146,13 +147,13 @@ public class RichTextBoxEx
 	public int MaxTextLength = 524288; //65536;
 	public long MaxRTFWriteTime = 200;
 	public long LastRTFWriteTime = 0;
-	public bool AutoScroll = true;
+	public ThreadSafe.Boolean AutoScroll = new ThreadSafe.Boolean(true);
 	private Object LockObject = new object();
 	private RichTextBox _RTF;
 	private Dictionary<string, Color> KnownColors { get; set; } = new Dictionary<string, Color>();
 	public RichTextBoxEx(RichTextBox RTF, bool AutoScroll)
 	{
-		this.AutoScroll = AutoScroll;
+		this.AutoScroll.WriteFullFence(AutoScroll);
 		this._RTF = RTF;
 		this._RTF.DetectUrls = false;
 		this._RTF.ForeColor = Color.White;
@@ -189,31 +190,33 @@ public class RichTextBoxEx
 
 
 		//Static Count As Long = 0
+		//lock (LockObject)  // to hopfully solve multithreading issues
+		//{
 
-		try
-		{
+			try
+			{
 
-			if (this._RTF == null || this._RTF.IsDisposed)
-			{
-				return;
-			}
-			//the more text in the RTF window, the slower it is to update and scroll
-			if (this.LastRTFWriteTime >= this.MaxRTFWriteTime)
-			{
-				UIOp(this._RTF, () =>
+				if (this._RTF == null || this._RTF.IsDisposed)
 				{
-					if (this._RTF.Visible)
+					return;
+				}
+				//the more text in the RTF window, the slower it is to update and scroll
+				if (this.LastRTFWriteTime >= this.MaxRTFWriteTime)
+				{
+					UIOp(this._RTF, () =>
 					{
-						this._RTF.Clear();
-						this.CurrentTextLength = 0;
-						Msg = $"(Log window cleared for performance reasons @ {this.LastRTFWriteTime}ms text log time)\r\n{Msg}";
-					}
-				});
-			}
+						if (this._RTF.Visible)
+						{
+							this._RTF.Clear();
+							this.CurrentTextLength = 0;
+							Msg = $"(Log window cleared for performance reasons @ {this.LastRTFWriteTime}ms text log time)\r\n{Msg}";
+						}
+					});
+				}
 
 				UIOp(this._RTF, () =>
 				{
-					if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)	
+					if (this._RTF.TextLength + Msg.Length >= this.MaxTextLength)
 					{
 						this._RTF.Clear();
 						this.CurrentTextLength = 0;
@@ -221,108 +224,117 @@ public class RichTextBoxEx
 					}
 				});
 
-			Stopwatch sw = Stopwatch.StartNew();
+				Stopwatch sw = Stopwatch.StartNew();
 
-			string[] parts = Msg.Split('{');
+				string[] parts = Msg.Split('{');
 
-			//parts(0) = "this is a "
-			//parts(1) = "red}red"
-			//parts(2) = "white} word"
-			Color clr = Color.White;
-			Color LastClr = clr;
-			foreach (string part in parts)
-			{
-				int eb = part.IndexOf("}");
-				if (eb > -1)
+				//parts(0) = "this is a "
+				//parts(1) = "red}red"
+				//parts(2) = "white} word"
+				Color clr = Color.White;
+				Color LastClr = clr;
+				foreach (string part in parts)
 				{
-					string clrname = part.Substring(0, eb).Replace("Color.", "");
-					string txt = part.Substring(eb + 1);
-					FontStyle fs = FontStyle.Regular;
-					clr = LastClr;
-					string[] clrs = clrname.Split('|');
-					bool Updated = false;
-					foreach (string nm in clrs)
+					int eb = part.IndexOf("}");
+					if (eb > -1)
 					{
-						if (nm.ToLower() == "bold")
+						string clrname = part.Substring(0, eb).Replace("Color.", "");
+						string txt = part.Substring(eb + 1);
+						FontStyle fs = FontStyle.Regular;
+						clr = LastClr;
+						string[] clrs = clrname.Split('|');
+						bool Updated = false;
+						foreach (string nm in clrs)
 						{
-							fs = FontStyle.Bold;
-							Updated = true;
-						}
-						else if (nm.ToLower() == "italic")
-						{
-							fs = FontStyle.Italic;
-							Updated = true;
-						}
-						else if (nm.ToLower() == "regular")
-						{
-							fs = FontStyle.Regular;
-							Updated = true;
-						}
-						else if (nm.ToLower() == "underline")
-						{
-							fs = FontStyle.Underline;
-							Updated = true;
-						}
-						else if (nm.ToLower() == "cr" || nm.ToLower() == "lf" || nm.ToLower() == "crlf")
-						{
-							//ignore
-						}
-						else
-						{
-							//assume a color
-							//clr = Color.FromName(clrname)
-							//Dim cc = New ColorConverter
-							Color c = new Color();
-							if (KnownColors.TryGetValue(nm.ToLower(), out c))
+							if (nm.ToLower() == "bold")
 							{
+								fs = FontStyle.Bold;
 								Updated = true;
-								clr = c;
-								if (clr.R == 0 && clr.B == 0 && clr.A == 0 && clr.G == 0)
-								{
-									clr = Color.White;
-								}
-								LastClr = clr;
 							}
+							else if (nm.ToLower() == "italic")
+							{
+								fs = FontStyle.Italic;
+								Updated = true;
+							}
+							else if (nm.ToLower() == "regular")
+							{
+								fs = FontStyle.Regular;
+								Updated = true;
+							}
+							else if (nm.ToLower() == "underline")
+							{
+								fs = FontStyle.Underline;
+								Updated = true;
+							}
+							else if (nm.ToLower() == "cr" || nm.ToLower() == "lf" || nm.ToLower() == "crlf")
+							{
+								//ignore
+							}
+							else
+							{
+								//assume a color
+								//clr = Color.FromName(clrname)
+								//Dim cc = New ColorConverter
+								Color c = new Color();
+								if (KnownColors.TryGetValue(nm.ToLower(), out c))
+								{
+									Updated = true;
+									clr = c;
+									if (clr.R == 0 && clr.B == 0 && clr.A == 0 && clr.G == 0)
+									{
+										clr = Color.White;
+									}
+									LastClr = clr;
+								}
 
+							}
+						}
+						if (Updated)
+						{
+							UIOp(this._RTF, () => this.AppendText(txt, clr, fs));
+						}
+						else //put it back the way it was
+						{
+							UIOp(this._RTF, () => this.AppendText("{" + part, Color.White, FontStyle.Regular));
 						}
 					}
-					if (Updated)
+					else
 					{
-						UIOp(this._RTF, () => this.AppendText(txt, clr, fs));
-					}
-					else //put it back the way it was
-					{
-						UIOp(this._RTF, () => this.AppendText("{" + part, Color.White, FontStyle.Regular));
+						UIOp(this._RTF, () => this.AppendText(part, Color.White, FontStyle.Regular));
 					}
 				}
-				else
-				{
-					UIOp(this._RTF, () => this.AppendText(part, Color.White, FontStyle.Regular));
-				}
-			}
 
-			UIOp(this._RTF, () =>
-			{
-				this._RTF.AppendText("\r\n");
-				if (this._RTF.Visible && this.AutoScroll)
+				UIOp(this._RTF, () =>
 				{
-					this._RTF.SelectionStart = this._RTF.Text.Length;
-					this._RTF.ScrollToCaret();
-				}
-			});
+					this._RTF.AppendText("\r\n");
+					if (this._RTF.Visible)
+					{
+						this._RTF.SelectionStart = this._RTF.Text.Length;
+
+						if (this.AutoScroll.ReadFullFence())
+						{
+
+							this._RTF.ScrollToCaret();
+						}
+					}
+				});
+
+
 
 			this.LastRTFWriteTime = sw.ElapsedMilliseconds;
 
 
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine("Error: " + ex.Message, false);
-		}
-		finally
-		{
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error: " + ex.Message, false);
+			}
+			finally
+			{
 
-		}
+			}
+
+		//}
 	}
 
 	private void UIOp(Control c, Action action)
@@ -644,8 +656,6 @@ public class RichTextBoxEx
 	{
 		try
 		{
-			lock (LockObject)  // to hopfully solve multithreading issues
-			{
 				if (this._RTF.IsDisposed)
 				{
 					return;
@@ -689,7 +699,7 @@ public class RichTextBoxEx
 					this._RTF.SelectionFont = new Font(cf, FontStyle.Regular);
 				}
 
-			}
+			
 
 		}
 		catch (Exception ex)
