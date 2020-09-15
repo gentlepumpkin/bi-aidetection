@@ -21,9 +21,9 @@ namespace AITool
         }
 
         public int mask_counter_default { get; set; } = 15;               //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
+        public int history_save_mins { get; set; } = 10;                   //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
-        public double thresholdPercent { get; set; } = .14;               //what percent can the selection rectangle vary to be considered a match
+        public double thresholdPercent { get; set; } = 15;                //what percent can the selection rectangle vary to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
 
@@ -32,10 +32,10 @@ namespace AITool
         private object MaskLockObject = new object();
         [JsonIgnore]
         private Timer cleanHistoryTimer = new Timer();
+        
 
-        //[JsonIgnore]
-        //private static readonly NLog.Logger log = NLog.LogManager.GetCurrentClassLogger();
-
+        //I think JsonConstructor may not be needed, but adding anyway -Vorlon
+        [JsonConstructor]
         public MaskManager()
         {
             last_positions_history = new List<ObjectPosition>();
@@ -44,6 +44,12 @@ namespace AITool
             //register event handler to run clean history every minute
             cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
             cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
+
+            //Adding this here too since have seen several mysterious cases (including my machine) where history not cleaned up
+            if (_masking_enabled) cleanHistoryTimer.Start();
+            else cleanHistoryTimer.Stop();
+
+            //Global.Log(" ** Initialize MaskManager **");
         }
 
         public void Update(Camera cam)
@@ -112,6 +118,8 @@ namespace AITool
                         }
                     }
                 }
+
+                this.CleanUpExpiredHistory();
 
             }
         }
@@ -196,16 +204,17 @@ namespace AITool
             {
                 try
                 {
-                    List<ObjectPosition> historyList = last_positions_history;
+                    //No need for this, I believe HistoryList 'becomes' last_positions_history
+                    //List<ObjectPosition> historyList = last_positions_history;
 
                     //Global.Log("### History objects summary for camera " + cameraName + " ###");
 
-                    if (historyList != null && historyList.Count > 0)
+                    if (last_positions_history != null && last_positions_history.Count > 0)
                     {
                         //scan backward through the list and remove by index. Not as easy to read but the faster for removals
-                        for (int x = historyList.Count - 1; x >= 0; x--)
+                        for (int x = last_positions_history.Count - 1; x >= 0; x--)
                         {
-                            ObjectPosition historyObject = historyList[x];
+                            ObjectPosition historyObject = last_positions_history[x];
                             TimeSpan ts = DateTime.Now - historyObject.createDate;
                             int minutes = ts.Minutes;
 
@@ -213,11 +222,11 @@ namespace AITool
                             if (minutes >= history_save_mins)
                             {
                                 Global.Log("Removing expired history: " + historyObject.ToString() + " which existed for " + ts.Minutes + " minutes.");
-                                historyList.RemoveAt(x);
+                                last_positions_history.RemoveAt(x);
                             }
                         }
                     }
-                    else if (historyList == null)
+                    else if (last_positions_history == null)
                     {
                         Global.Log("Error: historyList is null?");
                     }
@@ -233,16 +242,17 @@ namespace AITool
         {
             try
             {
-                List<ObjectPosition> maskedList = masked_positions;
+                //No need for this, I believe maskedlist 'becomes' masked_positions
+                //List<ObjectPosition> maskedList = masked_positions;
 
-                if (maskedList != null && maskedList.Count > 0)
+                if (masked_positions != null && masked_positions.Count > 0)
                 {
                     //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
 
                     //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
-                    for (int x = maskedList.Count - 1; x >= 0; x--)
+                    for (int x = masked_positions.Count - 1; x >= 0; x--)
                     {
-                        ObjectPosition maskedObject = maskedList[x];
+                        ObjectPosition maskedObject = masked_positions[x];
                         if (!maskedObject.isVisible && !maskedObject.isStatic)
                         {
                             //Global.Log("Masked object NOT visible - " + maskedObject.ToString());
@@ -251,7 +261,7 @@ namespace AITool
                             if (maskedObject.counter <= 0)
                             {
                                 Global.Log("Removing expired masked object: " + maskedObject.ToString());
-                                maskedList.RemoveAt(x);
+                                masked_positions.RemoveAt(x);
                             }
                         }
                         else
@@ -261,7 +271,7 @@ namespace AITool
                         }
                     }
                 }
-                else if (maskedList == null)
+                else if (masked_positions == null)
                 {
                     Global.Log("Error: Maskedlist is null?");
                 }

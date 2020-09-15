@@ -218,7 +218,7 @@ namespace AITool
 
         }
 
-        public static void CreateHistoryItem(ClsHistoryItem hist, [CallerMemberName] string memberName = null)
+        public static void CreateHistoryItem(History hist, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
                 return;

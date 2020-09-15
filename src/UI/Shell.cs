@@ -267,7 +267,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
-                ClsHistoryItem hist = JsonConvert.DeserializeObject<ClsHistoryItem>(msg.JSONPayload, jset);
+                History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
                 CreateListItem(hist);
             }
             else if (msg.MessageType == MessageType.DeleteHistoryItem)
@@ -1193,7 +1193,7 @@ namespace AITool
         }
 
         // add new entry in left list
-        public void CreateListItem(ClsHistoryItem hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
+        public void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
             string success = "false";
             if (hist.Detections.Contains("%") && !hist.Detections.Contains(':'))
@@ -2754,7 +2754,7 @@ namespace AITool
 
                 frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
-                frm.cb_UseOriginalFilename.Checked = cam.Action_image_copy_original_name;
+                frm.tb_network_folder_filename.Text = cam.Action_network_folder_filename;
                 frm.tb_network_folder.Text = cam.Action_network_folder;
                 frm.cb_RunProgram.Checked = cam.Action_RunProgram;
 
@@ -2766,7 +2766,7 @@ namespace AITool
                     cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
                     cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
-                    cam.Action_image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+                    cam.Action_network_folder_filename = frm.tb_network_folder_filename.Text;
                     cam.Action_RunProgram = frm.cb_RunProgram.Checked;
                     cam.Action_RunProgramString = frm.tb_RunExternalProgram.Text;
 
@@ -2796,7 +2796,7 @@ namespace AITool
                 frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
 
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
-                frm.cb_UseOriginalFilename.Checked = cam.Action_image_copy_original_name;
+                frm.tb_network_folder_filename.Text = cam.Action_network_folder_filename;
                 frm.tb_network_folder.Text = cam.Action_network_folder;
 
                 frm.cb_RunProgram.Checked = cam.Action_RunProgram;
@@ -2821,7 +2821,7 @@ namespace AITool
 
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
                     cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
-                    cam.Action_image_copy_original_name = frm.cb_UseOriginalFilename.Checked;
+                    cam.Action_network_folder_filename = frm.tb_network_folder_filename.Text;
 
                     cam.Action_RunProgram = frm.cb_RunProgram.Checked;
                     cam.Action_RunProgramString = frm.tb_RunExternalProgram.Text.Trim();

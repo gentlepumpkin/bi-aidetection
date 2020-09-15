@@ -146,6 +146,6 @@ cancel an alert.  Must have &amp;flagalert=0 in the URL.
 NO OTHER ACTIONS WILL BE DONE IF THIS IS CHECKED</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>You may use the following variables: [camera], [imagepath], [imagefilename], [summary], [detection], [detections], [position], [confidence], [confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.</value>
+    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
   </data>
 </root>

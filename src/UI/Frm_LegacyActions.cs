@@ -108,5 +108,10 @@ namespace AITool
             }
 
         }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, label3.Text));
+        }
     }
 }

@@ -304,7 +304,7 @@ namespace AITool
 
                                         if (url.ErrCount.ReadFullFence() > 0)
                                         {
-                                            if (url.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
+                                            if (url.ErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
                                             {
                                                     //put url back in queue when done
                                                     Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})");
@@ -980,7 +980,7 @@ namespace AITool
 
                                                 //add to history list
                                                 Log($"{CurSrv} - Adding detection to history list.");
-                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string));
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string));
 
                                             }
                                             //if no object fulfills all 3 requirements but there are other objects: 
@@ -1029,7 +1029,7 @@ namespace AITool
 
                                                 Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
                                                 //add to history list
-                                                Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string));
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string));
                                             }
                                         }
                                         //if no object was detected
@@ -1048,7 +1048,7 @@ namespace AITool
 
                                             //add to history list
                                             //Log($"{CurSrv} - Adding false to history list.");
-                                            Global.CreateHistoryItem(new ClsHistoryItem(CurImg.image_path, DateTime.Now, cam.name, "false alert", ""));
+                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", ""));
                                         }
                                     }
 
@@ -1588,10 +1588,14 @@ namespace AITool
             try
             {
                 string camname = "TESTCAMERANAME";
+                string prefix = "TESTCAMERANAMEPREFIX";
                 string imgpath = "C:\\TESTFILE.jpg";
-
+                
                 if (cam != null)
+                {
                     camname = cam.name;
+                    prefix = cam.prefix;
+                }
 
                 if (CurImg == null && cam != null)
                 {
@@ -1607,13 +1611,16 @@ namespace AITool
 
                 //handle custom variables
                 ret = Global.ReplaceCaseInsensitive(ret, "[camera]", camname);
+                ret = Global.ReplaceCaseInsensitive(ret, "[prefix]", prefix);
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagepath]", imgpath); //gives the full path of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
+                ret = Global.ReplaceCaseInsensitive(ret, "[imagefilenamenoext]", Path.GetFileNameWithoutExtension(imgpath)); //gives the image name of the image that caused the trigger
 
                 if (cam != null)
                 {
                     if (cam.last_detections != null && cam.last_detections.Count > 0)
                     {
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", cam.last_detections_summary); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", cam.last_positions.ElementAt(0));
@@ -1647,32 +1654,28 @@ namespace AITool
         {
             bool ret = false;
 
-            string extension = "";
             string dest_path = "";
             try
             {
                 string netfld = AITOOL.ReplaceParams(cam, CurImg, cam.Action_network_folder);
 
+                string ext = Path.GetExtension(CurImg.image_path);
+                string filename = AITOOL.ReplaceParams(cam, CurImg, cam.Action_network_folder_filename).Trim() + ext;
+                
+                dest_path = System.IO.Path.Combine(netfld, filename);
+                
+                Global.Log($"  File copying from {CurImg.image_path} to {dest_path}");
+
                 if (!Directory.Exists(netfld))
                 {
                     Directory.CreateDirectory(netfld);
                 }
-                if (cam.Action_image_copy_original_name)
-                {
-                    dest_path = System.IO.Path.Combine(netfld, Path.GetFileName(CurImg.image_path));
-                    Global.Log($"  File copying from {CurImg.image_path} to {dest_path}");
-                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
-                    ret = true;
 
-                }
-                else
-                {
-                    extension = System.IO.Path.GetExtension(CurImg.image_path);
-                    dest_path = System.IO.Path.Combine(netfld, cam.name + extension);
-                    Global.Log($"  File copying from {CurImg.image_path} to {dest_path}");
-                    System.IO.File.Copy(CurImg.image_path, dest_path, true);
-                    ret = true;
-                }
+                System.IO.File.Copy(CurImg.image_path, dest_path, true);
+                
+                ret = true;
+
+                
             }
             catch (Exception ex)
             {

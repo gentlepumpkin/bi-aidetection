@@ -49,7 +49,7 @@ namespace AITool
 
         public bool Action_image_copy_enabled = false;
         public string Action_network_folder = "";
-        public bool Action_image_copy_original_name = false;
+        public string Action_network_folder_filename = "[ImageFilenameNoExt]";
         public bool Action_RunProgram = false;
         public string Action_RunProgramString = "";
         public string Action_RunProgramArgsString = "";

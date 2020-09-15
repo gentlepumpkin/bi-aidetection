@@ -436,7 +436,6 @@ namespace AITool
                 foreach (object obj in FOLV_MaskHistory.SelectedObjects)
                 {
                     CurObjPosLst.Add((ObjectPosition)obj);
-                    contextMenuPosObj = (ObjectPosition)obj;
                 }
             }
             pictureBox1.Refresh();

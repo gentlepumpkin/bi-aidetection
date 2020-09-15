@@ -222,7 +222,7 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
-    <Compile Include="ClsHistoryItem.cs" />
+    <Compile Include="History.cs" />
     <Compile Include="ClsImageQueueItem.cs" />
     <Compile Include="ClsMessage.cs" />
     <Compile Include="ClsURLItem.cs" />
@@ -264,7 +264,7 @@
       <DependentUpon>Frm_MQTTSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="Global-GUI.cs" />
-    <Compile Include="HistorySQLite.cs" />
+    <Compile Include="SQLiteHistory.cs" />
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="MaskManager.cs" />
     <Compile Include="MQTTClient.cs" />
@@ -287,6 +287,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQLite\SQLite.cs" />
+    <Compile Include="SQLite\SQLiteAsync.cs" />
     <Compile Include="ThreadSafe.cs" />
     <Compile Include="util.cs" />
     <EmbeddedResource Include="Frm_CustomMasking.resx">
