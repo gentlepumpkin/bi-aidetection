@@ -35,6 +35,7 @@ using System.Drawing;
 using AITool.Properties;
 using System.Runtime.Remoting.Channels;
 using Arch.CMessaging.Client.Core.Utils;
+using Telegram.Bot.Exceptions;
 
 namespace AITool
 {
@@ -75,7 +76,9 @@ namespace AITool
         public static Dictionary<string, ClsFileSystemWatcher> watchers = new Dictionary<string, ClsFileSystemWatcher>();
         public static ThreadSafe.Boolean AIURLSettingsChanged = new ThreadSafe.Boolean(true);
 
-        //private static readonly IHttpClientFactory _httpClientFactory;
+
+        public static DateTime last_telegram_trigger_time = DateTime.MinValue;
+        public static DateTime TelegramRetryTime = DateTime.MinValue;
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
@@ -1200,27 +1203,64 @@ namespace AITool
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
-                    using (var image_telegram = System.IO.File.OpenRead(CurImg.image_path))
+                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
                     {
-                        var bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
-
-                        //upload image to Telegram servers and send to first chat
-                        Log($"      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
-                        var message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), img_caption);
-                        string file_id = message.Photo[0].FileId; //get file_id of uploaded image
-
-                        //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                        foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
-                        {
-                            Log($"      uploading image to chat \"{chatid}\"");
-                            await bot.SendPhotoAsync(chatid, file_id, img_caption);
-                        }
-                        ret = true;
+                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
                     }
+
+                    if (TelegramRetryTime == DateTime.MinValue || DateTime.Now >= TelegramRetryTime)
+                    {
+                        double cooltime = Math.Round((DateTime.Now - last_telegram_trigger_time).TotalMinutes, 4);
+                        if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
+                        {
+                            //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
+
+
+                            using (var image_telegram = System.IO.File.OpenRead(CurImg.image_path))
+                            {
+                                TelegramBotClient bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+
+                                //upload image to Telegram servers and send to first chat
+                                Log($"      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
+                                Message message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), img_caption);
+
+                                string file_id = message.Photo[0].FileId; //get file_id of uploaded image
+
+                                //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
+                                foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
+                                {
+                                    Log($"      uploading image to chat \"{chatid}\"...");
+                                    await bot.SendPhotoAsync(chatid, file_id, img_caption);
+                                }
+                                ret = true;
+                            }
+
+                            last_telegram_trigger_time = DateTime.Now;
+                            TelegramRetryTime = DateTime.MinValue;
+                        }
+                        else
+                        {
+                            //log that nothing was done
+                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_minutes} minutes - See 'telegram_cooldown_minutes' in settings file)");
+
+                        }
+
+                    }
+                    else
+                    {
+                        Log($"   Waiting {Math.Round((TelegramRetryTime - DateTime.Now).TotalSeconds, 1)} seconds ({TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.");
+                    }
+
+
                 }
-                catch
+                catch (ApiRequestException ex)  //current version only gives webexception NOT this exception!  https://github.com/TelegramBots/Telegram.Bot/issues/891
                 {
-                    Log($"ERROR: Could not upload image {CurImg.image_path} to Telegram.");
+                    bool se = AppSettings.Settings.send_errors;
+                    AppSettings.Settings.send_errors = false;
+                    Log($"ERROR: Could not upload image {CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
+                    TelegramRetryTime = DateTime.Now.AddSeconds(ex.Parameters.RetryAfter);
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}");
+                    AppSettings.Settings.send_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
                     {
@@ -1233,6 +1273,31 @@ namespace AITool
                     {
                         image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
                     }
+                    Global.UpdateLabel("Can't upload error message to Telegram!", "lbl_errors");
+
+                }
+                catch (Exception ex)  //As of version 
+                {
+                    bool se = AppSettings.Settings.send_errors;
+                    AppSettings.Settings.send_errors = false;
+                    Log($"ERROR: Could not upload image {CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
+                    TelegramRetryTime = DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds);
+                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}");
+                    AppSettings.Settings.send_errors = se;
+                    //store image that caused an error in ./errors/
+                    if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
+                    {
+                        //create folder
+                        DirectoryInfo di = Directory.CreateDirectory("./errors");
+                        Log("./errors/" + " dir created.");
+                    }
+                    //save error image
+                    using (var image = SixLabors.ImageSharp.Image.Load(CurImg.image_path))
+                    {
+                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
+                    }
+                    Global.UpdateLabel("Can't upload error message to Telegram!", "lbl_errors");
+
                 }
 
 
@@ -1252,28 +1317,62 @@ namespace AITool
                 //telegram upload sometimes fails
                 try
                 {
-                    var bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
-                    foreach (string chatid in AppSettings.Settings.telegram_chatids)
+
+                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
                     {
-                        await bot.SendTextMessageAsync(chatid, text);
+                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
                     }
 
-                }
-                catch (Exception ex)
-                {
-                    if (AppSettings.Settings.send_errors == true && text.ToUpper().Contains("ERROR") || text.ToUpper().Contains("WARNING")) //if Error message originating from Log() methods can't be uploaded
+                    if (TelegramRetryTime == DateTime.MinValue || DateTime.Now >= TelegramRetryTime)
                     {
-                        AppSettings.Settings.send_errors = false; //shortly disable send_errors to ensure that the Log() does not try to send the 'Telegram upload failed' message via Telegram again (causing a loop)
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram: {Global.ExMsg(ex)}");
-                        AppSettings.Settings.send_errors = true;
+                        double cooltime = Math.Round((DateTime.Now - last_telegram_trigger_time).TotalMinutes, 4);
+                        if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
+                        {
+                            TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
+                            foreach (string chatid in AppSettings.Settings.telegram_chatids)
+                            {
+                                Message msg = await bot.SendTextMessageAsync(chatid, text);
 
-                        //inform on main tab that Telegram upload failed
-                        Global.UpdateLabel("Can't upload error message to Telegram!", "lbl_errors");
+                            }
+                            last_telegram_trigger_time = DateTime.Now;
+                            TelegramRetryTime = DateTime.MinValue;
+                        }
+                        else
+                        {
+                            //log that nothing was done
+                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_minutes} minutes - See 'telegram_cooldown_minutes' in settings file)");
+
+                        }
+
                     }
                     else
                     {
-                        Log($"ERROR: Could not send text \"{text}\" to Telegram: {Global.ExMsg(ex)}");
+                        Log($"   Waiting {Math.Round((TelegramRetryTime - DateTime.Now).TotalSeconds, 1)} seconds ({TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.");
                     }
+
+
+
+                }
+                catch (ApiRequestException ex)  //current version only gives webexception NOT this exception!  https://github.com/TelegramBots/Telegram.Bot/issues/891
+                {
+                    bool se = AppSettings.Settings.send_errors;
+                    AppSettings.Settings.send_errors = false;
+                    Log($"ERROR: Could not upload text '{text}' to Telegram: {Global.ExMsg(ex)}");
+                    TelegramRetryTime = DateTime.Now.AddSeconds(ex.Parameters.RetryAfter);
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}");
+                    AppSettings.Settings.send_errors = se;
+                    Global.UpdateLabel("Can't upload error message to Telegram!", "lbl_errors");
+
+                }
+                catch (Exception ex)   
+                {
+                    bool se = AppSettings.Settings.send_errors;
+                    AppSettings.Settings.send_errors = false;
+                    Log($"ERROR: Could not upload image '{text}' to Telegram: {Global.ExMsg(ex)}");
+                    TelegramRetryTime = DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds);
+                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}");
+                    AppSettings.Settings.send_errors = se;
+                    Global.UpdateLabel("Can't upload error message to Telegram!", "lbl_errors");
                 }
 
             }
@@ -1304,8 +1403,10 @@ namespace AITool
 
             try
             {
+                double cooltime = Math.Round((DateTime.Now - cam.last_trigger_time).TotalMinutes, 2);
+
                 //only trigger if cameras cooldown time since last detection has passed
-                if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= cam.cooldown_time)
+                if (cooltime >= cam.cooldown_time)
                 {
                     //call trigger urls
                     if (cam.trigger_urls.Count() > 0)
@@ -1337,25 +1438,16 @@ namespace AITool
                         //upload to telegram
                         if (cam.telegram_enabled)
                         {
-                            if ((DateTime.Now - cam.last_trigger_time).TotalMinutes >= AppSettings.Settings.telegram_cooldown_minutes)
-                            {
-                                Log("   Uploading image to Telegram...");
 
-                                string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
-                                if (!await TelegramUpload(CurImg, tmp))
-                                {
-                                    ret = false;
-                                    Log("   -> ERROR sending image to Telegram.");
-                                }
-                                else
-                                {
-                                    Log("   -> Sent image to Telegram.");
-                                }
+                            string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
+                            if (!await TelegramUpload(CurImg, tmp))
+                            {
+                                ret = false;
+                                Log("   -> ERROR sending image to Telegram.");
                             }
                             else
                             {
-                                //log that nothing was done
-                                Log($"   Camera {cam.name} is still in TELEGRAM cooldown. No image will be uploaded to Telegram.");
+                                Log("   -> Sent image to Telegram.");
                             }
                         }
 
@@ -1463,7 +1555,7 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram.");
+                    Log($"   Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {cam.cooldown_time} minutes - See Cameras 'cooldown_time' in settings file)");
                 }
 
                 cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)

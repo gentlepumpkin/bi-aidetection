@@ -203,10 +203,11 @@ namespace AITool
 
             tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
+            tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
             cb_log.Checked = AppSettings.Settings.log_everything;
             cb_send_errors.Checked = AppSettings.Settings.send_errors;
             cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
-
+            
             //---------------------------------------------------------------------------
             //STATS TAB
             comboBox1.Items.Add("All Cameras"); //add all cameras stats entry
@@ -462,7 +463,7 @@ namespace AITool
                     Invoke(LabelUpdate);
                 }
 
-                if (AppSettings.Settings.send_errors == true && (HasError || HasWarning))
+                if (AppSettings.Settings.send_errors == true && (HasError || HasWarning) && !text.ToLower().Contains("telegram"))
                 {
                     await TelegramText($"[{time}]: {text}"); //upload text to Telegram
                 }
@@ -2220,6 +2221,7 @@ namespace AITool
             AppSettings.Settings.deepstack_urls_are_queued = cb_DeepStackURLsQueued.Checked;
             AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text, "|;,", true, true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
+            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(tb_telegram_cooldown.Text);
             AppSettings.Settings.log_everything = cb_log.Checked;
             AppSettings.Settings.send_errors = cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
