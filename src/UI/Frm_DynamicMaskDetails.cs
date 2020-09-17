@@ -627,6 +627,8 @@ namespace AITool
 
                 frm.cb_enabled.Checked = cam.maskManager.masking_enabled;
 
+                frm.tb_objects.Text = cam.maskManager.objects;
+
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
@@ -644,6 +646,7 @@ namespace AITool
                     cam.maskManager.history_threshold_count = mask_create_counter;
                     cam.maskManager.mask_counter_default = mask_remove_counter;
                     cam.maskManager.thresholdPercent = variance;
+                    cam.maskManager.objects = frm.tb_objects.Text.Trim();
 
                     cam.maskManager.masking_enabled = frm.cb_enabled.Checked;
 

@@ -61,6 +61,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
+            this.cb_mergeannotations = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -97,6 +98,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox1.Controls.Add(this.cb_mergeannotations);
             this.groupBox1.Controls.Add(this.tb_network_folder_filename);
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.label7);
@@ -414,6 +416,17 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
             // 
+            // cb_mergeannotations
+            // 
+            this.cb_mergeannotations.AutoSize = true;
+            this.cb_mergeannotations.Location = new System.Drawing.Point(436, 29);
+            this.cb_mergeannotations.Name = "cb_mergeannotations";
+            this.cb_mergeannotations.Size = new System.Drawing.Size(340, 34);
+            this.cb_mergeannotations.TabIndex = 46;
+            this.cb_mergeannotations.Text = "Merge Annotations Into Images ";
+            this.toolTip1.SetToolTip(this.cb_mergeannotations, "Merge detected object text and rectangles into actual image.");
+            this.cb_mergeannotations.UseVisualStyleBackColor = true;
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
@@ -472,5 +485,6 @@
         public System.Windows.Forms.TextBox tb_telegram_caption;
         public System.Windows.Forms.TextBox tb_network_folder_filename;
         private System.Windows.Forms.Label label8;
+        public System.Windows.Forms.CheckBox cb_mergeannotations;
     }
 }

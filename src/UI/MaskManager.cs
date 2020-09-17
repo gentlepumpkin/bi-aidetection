@@ -27,6 +27,7 @@ namespace AITool
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
 
+        public string objects = "";
 
         [JsonIgnore]
         private object MaskLockObject = new object();
@@ -127,6 +128,24 @@ namespace AITool
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
             bool maskExists = false;
+
+
+            List<string> objects = Global.Split(this.objects, "|;,");
+
+            if (objects.Count > 0)
+            {
+                bool fnd = false;
+                foreach (string objname in objects)
+                {
+                    if (currentObject.label.Trim().ToLower() == objname.ToLower())
+                        fnd = true;
+                }
+                if (!fnd)
+                {
+                    Global.Log($"Skipping mask creation because '{currentObject.label}' is not one of the configured objects: '{this.objects}'");
+                    return false;
+                }
+            }
 
             Global.Log("*** Starting new object mask processing ***");
             Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);

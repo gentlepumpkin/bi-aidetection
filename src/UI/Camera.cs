@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 using System.IO;
 using Newtonsoft.Json;
+using System.Drawing;
+using SixLabors.ImageSharp.Memory;
+using System.Drawing.Imaging;
+using System.Diagnostics;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 
 namespace AITool
 {
@@ -48,6 +55,7 @@ namespace AITool
         public bool input_path_includesubfolders = false;
 
         public bool Action_image_copy_enabled = false;
+        public bool Action_image_merge_detections = false;
         public string Action_network_folder = "";
         public string Action_network_folder_filename = "[ImageFilenameNoExt]";
         public bool Action_RunProgram = false;
@@ -87,7 +95,157 @@ namespace AITool
             this.name = Name;
             this.prefix = Name;
         }
-                
+
+        public void MergeImageAnnotations(string OutputImageFile, string InputImageFile)
+        {
+            this.MergeImageAnnotations(OutputImageFile, new ClsImageQueueItem(InputImageFile,0));
+        }
+        public void MergeImageAnnotations(string OutputImageFile, ClsImageQueueItem CurImg = null)
+        {
+            int countr = 0;
+            string detections = "";
+            string lasttext = "";
+            string lastposition = "";
+
+            try
+            {
+                string InputImageFile = "";
+
+                if (CurImg == null)
+                {
+                    InputImageFile = this.last_image_file_with_detections;
+                }
+                else
+                {
+                    InputImageFile = CurImg.image_path;
+                }
+
+                if (File.Exists(InputImageFile))
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    using (Bitmap img = new Bitmap(InputImageFile))
+                    {
+                        using (Graphics g = Graphics.FromImage(img))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.SmoothingMode = SmoothingMode.HighQuality;
+                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                            g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+
+                            System.Drawing.Color color = new System.Drawing.Color();
+                            detections = this.last_detections_summary;
+                            if (string.IsNullOrEmpty(detections))
+                                detections = "";
+
+                            if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
+                            {
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                                detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                            }
+                            else
+                            {
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                            }
+
+                            //List<string> detectlist = Global.Split(detections, "|;");
+                            countr = this.last_detections.Count();
+
+                            //display a rectangle around each relevant object
+
+                            
+                            for (int i = 0; i < countr; i++)
+                            {
+                                //({ Math.Round((user.confidence * 100), 2).ToString() }%)
+                                lasttext = $"{this.last_detections[i]} ({Math.Round(this.last_confidences[i] * 100, 2)}%)";
+                                lastposition = this.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
+
+                                //store xmin, ymin, xmax, ymax in separate variables
+                                Int32.TryParse(lastposition.Split(',')[0], out int xmin);
+                                Int32.TryParse(lastposition.Split(',')[1], out int ymin);
+                                Int32.TryParse(lastposition.Split(',')[2], out int xmax);
+                                Int32.TryParse(lastposition.Split(',')[3], out int ymax);
+
+
+                                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+                                using (Pen pen = new Pen(color, 2))
+                                {
+                                    g.DrawRectangle(pen, rect); //draw rectangle
+                                }
+
+                                //object name text below rectangle
+                                rect = new System.Drawing.Rectangle(xmin - 1, ymax, img.Width, img.Height); //sets bounding box for drawn text
+
+
+                                Brush brush = new SolidBrush(color); //sets background rectangle color
+
+                                System.Drawing.SizeF size = g.MeasureString(lasttext, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
+                                g.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
+                                g.DrawString(lasttext, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
+
+                                g.Flush();
+
+                                Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
+                            }
+
+                            GraphicsState gs = g.Save();
+
+                            ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+
+                            // Create an Encoder object based on the GUID  
+                            // for the Quality parameter category.  
+                            System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
+
+                            // Create an EncoderParameters object.  
+                            // An EncoderParameters object has an array of EncoderParameter  
+                            // objects. In this case, there is only one  
+                            // EncoderParameter object in the array.  
+                            EncoderParameters myEncoderParameters = new EncoderParameters(1);
+
+                            EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, 90L);  //100=least compression, largest file size, best quality
+                            myEncoderParameters.Param[0] = myEncoderParameter;
+
+                            if (countr > 0)
+                            {
+                                img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
+
+                                Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");
+                            }
+                            else
+                            {
+                                Global.Log($"No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}");
+
+                            }
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    Global.Log("Error: could not find last image with detections: " + this.last_image_file_with_detections);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex));
+            }
+        }
+
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
         public void ReadConfig(string config_path)
         {
             //retrieve whole config file content

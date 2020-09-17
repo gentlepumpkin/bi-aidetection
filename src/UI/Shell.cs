@@ -22,11 +22,11 @@ using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 //for image cutting
-using SixLabors.ImageSharp;
+//using SixLabors.ImageSharp;
 //using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 //for telegram
-using Telegram.Bot;
-using Telegram.Bot.Types.InputFiles;
+//using Telegram.Bot;
+//using Telegram.Bot.Types.InputFiles;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -69,7 +69,11 @@ namespace AITool
             AppSettings.Load();
 
             LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+            LogWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
+
             HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+            HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
+
             RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -2254,7 +2258,23 @@ namespace AITool
             //clean history.csv database
             CleanCSVList();
 
-            //LoadList();
+            bool noneg = false;
+            if (AppSettings.Settings.telegram_chatids.Count > 0)
+            {
+                foreach (string id in AppSettings.Settings.telegram_chatids)
+                {
+                    if (!string.IsNullOrWhiteSpace(id) && !id.TrimStart().StartsWith("-"))
+                    {
+                        noneg = true;
+                    }
+                }
+            }
+
+            if (noneg)
+            {
+                MessageBox.Show("Please note that the Telegram Chat ID may need to start with a negative sign. -1234567890","Telegram Chat ID format",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            }
+
         }
 
         //input path select dialog button
@@ -2663,6 +2683,8 @@ namespace AITool
 
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
+                frm.tb_objects.Text = cam.maskManager.objects;
+
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
@@ -2684,6 +2706,8 @@ namespace AITool
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
 
                     cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
+
+                    cam.maskManager.objects = frm.tb_objects.Text.Trim();
 
                     AppSettings.Save();
 
@@ -2812,6 +2836,7 @@ namespace AITool
                 frm.tb_MQTT_Payload.Text = cam.Action_mqtt_payload;
                 frm.tb_MQTT_Topic.Text = cam.Action_mqtt_topic;
 
+                frm.cb_mergeannotations.Checked = cam.Action_image_merge_detections;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -2836,6 +2861,7 @@ namespace AITool
                     cam.Action_mqtt_payload = frm.tb_MQTT_Payload.Text.Trim();
                     cam.Action_mqtt_topic = frm.tb_MQTT_Topic.Text.Trim();
 
+                    cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 
                     AppSettings.Save();
 

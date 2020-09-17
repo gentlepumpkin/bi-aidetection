@@ -16,8 +16,8 @@ using Newtonsoft.Json;
 
 //for image cutting
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
+//using SixLabors.ImageSharp.Processing;
+//using SixLabors.Primitives;
 
 //for telegram
 using Telegram.Bot;
@@ -27,8 +27,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 
 using Microsoft.WindowsAPICodePack.Dialogs;
-using Size = SixLabors.Primitives.Size;
-using SizeF = SixLabors.Primitives.SizeF; //for file dialog
+//using Size = SixLabors.Primitives.Size;
+//using SizeF = SixLabors.Primitives.SizeF; //for file dialog
 using static AITool.Global;
 using System.Security.AccessControl;
 using System.Drawing;
@@ -36,6 +36,7 @@ using AITool.Properties;
 using System.Runtime.Remoting.Channels;
 using Arch.CMessaging.Client.Core.Utils;
 using Telegram.Bot.Exceptions;
+using SixLabors.ImageSharp.Processing;
 
 namespace AITool
 {
@@ -82,6 +83,9 @@ namespace AITool
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
+
+           
+            
             //lets wait in here forever until a URL is available...
 
             ClsURLItem ret = null;
@@ -1404,10 +1408,20 @@ namespace AITool
             try
             {
                 double cooltime = Math.Round((DateTime.Now - cam.last_trigger_time).TotalMinutes, 2);
+                string tmpfile = "";
 
                 //only trigger if cameras cooldown time since last detection has passed
                 if (cooltime >= cam.cooldown_time)
                 {
+
+                    if (cam.Action_image_merge_detections)
+                    {
+                        tmpfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(CurImg.image_path));
+                        cam.MergeImageAnnotations(tmpfile,CurImg);
+                        if (System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
+                            CurImg = new ClsImageQueueItem(tmpfile, 1);
+                    }
+
                     //call trigger urls
                     if (cam.trigger_urls.Count() > 0)
                     {
@@ -1560,6 +1574,10 @@ namespace AITool
 
                 cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
+                if (!string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
+                {
+                    System.IO.File.Delete(tmpfile);
+                }
                 //Task ignoredAwaitableResult = LastTriggerInfo(cam); //write info to label
                 Global.UpdateLabel($"{cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
 
