@@ -72,6 +72,7 @@ namespace AITool
             //public int MaxDeepStackProcessTimeSeconds = 120;
             public int RectRelevantColorAlpha = 150;  //255=solid, 127 half transparent
             public int RectIrrelevantColorAlpha = 150;
+            public int RectDetectionTextSize = 12;
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
             public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
             public string image_copy_folder = "";
