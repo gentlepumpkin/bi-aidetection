@@ -7,7 +7,7 @@ namespace AITool
     public class ObjectPosition:IEquatable<ObjectPosition>
     {
         public string label { get; } = "";
-        public DateTime createDate { get; set; }
+        public DateTime createDate { get; set; } = DateTime.MinValue;
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
 
         public int counter { get; set; }
@@ -27,9 +27,27 @@ namespace AITool
         public string cameraName { get; set; } = "";
         public string imagePath { get; set; } = "";
 
+        //store the calcs for troubleshooting
+        public bool LastMatched { get; set; } = false;
+        public double LastWidthPercentVariance { get; set; } = 0;
+        public double LastHeightPercentVariance { get; set; } = 0;
+
+        //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
+        public double LastxPercentVariance { get; set; } = 0;
+        public double LastyPercentVariance { get; set; } = 0;
+        public int LastCompared_xmin { get; set; } = 0;
+        public int LastCompared_ymin { get; set; } = 0;
+        public int LastCompared_xmax { get; set; } = 0;
+        public int LastCompared_ymax { get; set; } = 0;
+        public int LastCompared_width { get; set; } = 0;
+        public int LastCompared_height { get; set; } = 0;
+
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
-            createDate = DateTime.Now;
+            //not sure if the json deserialize is messing with createdate?   Trying to track down history not being deleted issue
+            if (this.createDate == DateTime.MinValue)
+                this.createDate = DateTime.Now;
+
             this.cameraName = cameraName;
             this.imagePath = imagePath;
             this.label = label;
@@ -56,22 +74,36 @@ namespace AITool
 
         public bool Equals(ObjectPosition other)
         {
+
+            if (other == null)
+                return false;
+
+            this.LastCompared_height = other.height;
+            this.LastCompared_width = other.width;
+
+            this.LastCompared_xmax = other.xmax;
+            this.LastCompared_ymax = other.ymax;
+            this.LastCompared_xmin = other.xmin;
+            this.LastCompared_ymin = other.ymin;
+
             //calculate the percentage variance for width and height of selected object
-            double widthVariance = (double)Math.Abs(this.width - other.width) / this.width;
-            double heightVariance = (double)Math.Abs(this.height - other.height) / this.height;
+            this.LastWidthPercentVariance = (double)Math.Abs(this.width - other.width) / this.width * 100;
+            this.LastHeightPercentVariance = (double)Math.Abs(this.height - other.height) / this.height * 100;
 
             //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-            double xPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth;
-            double yPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight;
+            this.LastxPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth * 100;
+            this.LastyPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight * 100;
 
             //convert whole number to percent
-            double percent = thresholdPercent / 100;
+            double percent = thresholdPercent; /// 100;
 
-            return (other != null &&
-                   (xPercentVariance <= percent) &&
-                   (yPercentVariance <= percent) &&
-                   (widthVariance <= percent) &&
-                   (heightVariance <= percent));
+            this.LastMatched = (this.LastxPercentVariance <= percent) &&
+                               (this.LastyPercentVariance <= percent) &&
+                               (this.LastWidthPercentVariance <= percent) &&
+                               (this.LastHeightPercentVariance <= percent);
+
+            return this.LastMatched;
+
         }
 
         public override int GetHashCode()

@@ -40,12 +40,12 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log("WARNING: Mask image file not found at location: " + contextMenuPosObj.imagePath + ". Defaulting to last processed image");
+                        Global.Log("INFO: Mask image file not found at location: " + contextMenuPosObj.imagePath + ". Defaulting to last processed image");
                     }
                 }
                 else
                 {
-                    Global.Log("WARNING: Mask image file path was blank or NULL. Defaulting to last processed image");
+                    Global.Log("INFO: Mask image file path was blank or NULL. Defaulting to last processed image");
 
                 }
 
@@ -393,9 +393,9 @@ namespace AITool
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                            System.Drawing.SizeF size = e.Graphics.MeasureString(op.label, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
+                            System.Drawing.SizeF size = e.Graphics.MeasureString(op.label, new Font("Segoe UI Semibold", AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
-                            e.Graphics.DrawString(op.label, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
+                            e.Graphics.DrawString(op.label, new Font("Segoe UI Semibold", AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
                         }
                         else
                         {

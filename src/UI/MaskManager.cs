@@ -44,7 +44,7 @@ namespace AITool
 
             //register event handler to run clean history every minute
             cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
-            cleanHistoryTimer.Interval =  60000; // 1min = 60,000ms
+            cleanHistoryTimer.Interval = 300000; // 5min = 300,000ms
 
             //Adding this here too since have seen several mysterious cases (including my machine) where history not cleaned up
             if (_masking_enabled) cleanHistoryTimer.Start();
@@ -235,12 +235,12 @@ namespace AITool
                         {
                             ObjectPosition historyObject = last_positions_history[x];
                             TimeSpan ts = DateTime.Now - historyObject.createDate;
-                            int minutes = ts.Minutes;
+                            double minutes = ts.TotalMinutes;
 
                             //Global.Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                             if (minutes >= history_save_mins)
                             {
-                                Global.Log("Removing expired history: " + historyObject.ToString() + " which existed for " + ts.Minutes + " minutes.");
+                                Global.Log($"Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={history_save_mins})");
                                 last_positions_history.RemoveAt(x);
                             }
                         }

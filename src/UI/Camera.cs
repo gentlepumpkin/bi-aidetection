@@ -56,6 +56,7 @@ namespace AITool
 
         public bool Action_image_copy_enabled = false;
         public bool Action_image_merge_detections = false;
+        public long Action_image_merge_jpegquality = 80;
         public string Action_network_folder = "";
         public string Action_network_folder_filename = "[ImageFilenameNoExt]";
         public bool Action_RunProgram = false;
@@ -188,25 +189,26 @@ namespace AITool
                                 Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
                             }
 
-                            GraphicsState gs = g.Save();
-
-                            ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
-
-                            // Create an Encoder object based on the GUID  
-                            // for the Quality parameter category.  
-                            System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
-
-                            // Create an EncoderParameters object.  
-                            // An EncoderParameters object has an array of EncoderParameter  
-                            // objects. In this case, there is only one  
-                            // EncoderParameter object in the array.  
-                            EncoderParameters myEncoderParameters = new EncoderParameters(1);
-
-                            EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, 90L);  //100=least compression, largest file size, best quality
-                            myEncoderParameters.Param[0] = myEncoderParameter;
-
                             if (countr > 0)
                             {
+
+                                GraphicsState gs = g.Save();
+
+                                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+
+                                // Create an Encoder object based on the GUID  
+                                // for the Quality parameter category.  
+                                System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
+
+                                // Create an EncoderParameters object.  
+                                // An EncoderParameters object has an array of EncoderParameter  
+                                // objects. In this case, there is only one  
+                                // EncoderParameter object in the array.  
+                                EncoderParameters myEncoderParameters = new EncoderParameters(1);
+
+                                EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, this.Action_image_merge_jpegquality);  //100=least compression, largest file size, best quality
+                                myEncoderParameters.Param[0] = myEncoderParameter;
+
                                 img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
 
                                 Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");

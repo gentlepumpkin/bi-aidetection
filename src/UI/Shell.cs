@@ -51,73 +51,24 @@ namespace AITool
             //Initialize the rich text log window writer.   You can use any 'color' name in your log text
             //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
             RTFLogger = new RichTextBoxEx(RTF_Log, true);
-            //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
-            //is locked for any reason, it will wait in the queue until it can be written
-            //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
-            LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
-            HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
-
-            //if log file does not exist, create it - this used to be in LOG function but doesnt need to be checked everytime log written to
-            if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                //the logwriter auto creates the file if needed
-                LogWriter.WriteToLog("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.", true);
-
-            }
-
-            //load settings
-            AppSettings.Load();
-
-            LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
-            LogWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
-
-            HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
-            HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
-
             RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
 
+            InitializeBackend();
+
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            Log("");
-            Log("");
             lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
-            Log($"Starting {Application.ProductName} {lbl_version.Text}");
-            if (AppSettings.AlreadyRunning)
+
+
+            if (!AppSettings.Settings.SettingsFileName.ToLower().StartsWith(Directory.GetCurrentDirectory().ToLower()) )
             {
-                Log("*** Another instance is already running *** ");
-                Log(" --- Files will not be monitored from within this session ");
-                Log(" --- Log tab will not display output from service instance. You will need to directly open log file for that ");
-                Log(" --- Changes made here to settings will require that you stop/start the service ");
-                Log(" --- You must close/reopen app to see NEW history items/detections");
+                string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
+                MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            if (Global.IsAdministrator())
-            {
-                Log("*** Running as administrator ***");
-            }
-            else
-            {
-                Log("Not running as administrator.");
-            }
-            //initialize blueiris info class to get camera names, clip paths, etc
-            BlueIrisInfo = new BlueIris();
-            if (BlueIrisInfo.IsValid)
-            {
-                Log($"BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
-            }
-            else
-            {
-                Log($"BlueIris not detected.");
-            }
+
             //---------------------------------------------------------------------------------------------------------
 
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
 
-            //if camera settings folder does not exist, create it
-            if (!Directory.Exists("./cameras/"))
-            {
-                //create folder
-                DirectoryInfo di = Directory.CreateDirectory("./cameras");
-                Log("./cameras/" + " dir created.");
-            }
 
             //---------------------------------------------------------------------------
             //CAMERAS TAB
@@ -154,25 +105,6 @@ namespace AITool
             list1.Columns[5].Width = list1.Width * 10 / 100; //checkmark if something relevant was detected or not
             list1.FullRowSelect = true; //make all columns clickable
 
-            //check if history.csv exists, if not then create it
-            if (!System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
-            {
-                Log("ATTENTION: Creating database cameras/history.csv .");
-                try
-                {
-                    HistoryWriter.WriteToLog("filename|date and time|camera|detections|positions of detections|success", true);
-
-                    //using (StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "cameras/history.csv"))
-                    //{
-                    //    sw.WriteLine("filename|date and time|camera|detections|positions of detections|success");
-                    //}
-                }
-                catch
-                {
-                    lbl_errors.Text = "Can't create cameras/history.csv database!";
-                }
-
-            }
 
 
             //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
@@ -181,10 +113,9 @@ namespace AITool
             //load entries from history.csv into history ListView
             //LoadFromCSV(); not neccessary because below, comboBox_filter_camera.SelectedIndex will call LoadFromCSV()
 
-            splitContainer1.Panel2Collapsed = true; //collapse filter panel under left list
+            //splitContainer1.Panel2Collapsed = true; //collapse filter panel under left list
             comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
             comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
-
 
 
             //---------------------------------------------------------------------------
@@ -222,10 +153,6 @@ namespace AITool
             //Deepstack server TAB
 
 
-            //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
-            //allows for stopping and starting of its service
-            DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
-
             if (!DeepStackServerControl.IsInstalled)
             {
                 //remove deepstack tab if not installed
@@ -242,13 +169,7 @@ namespace AITool
                 LoadDeepStackTab(true);
             }
             
-            //set httpclient timeout:
-            //client.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
 
-            UpdateWatchers();
-
-            //Start the thread that watches for the file queue
-            Task.Run(ImageQueueLoop);
 
 
             this.Opacity = 1;

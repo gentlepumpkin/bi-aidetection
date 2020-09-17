@@ -37,6 +37,7 @@ using System.Runtime.Remoting.Channels;
 using Arch.CMessaging.Client.Core.Utils;
 using Telegram.Bot.Exceptions;
 using SixLabors.ImageSharp.Processing;
+using System.Reflection;
 
 namespace AITool
 {
@@ -80,6 +81,114 @@ namespace AITool
 
         public static DateTime last_telegram_trigger_time = DateTime.MinValue;
         public static DateTime TelegramRetryTime = DateTime.MinValue;
+
+        public static void InitializeBackend()
+        {
+
+            try
+            {
+
+                //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
+                //is locked for any reason, it will wait in the queue until it can be written
+                //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
+                LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
+                HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
+
+                //if log file does not exist, create it - this used to be in LOG function but doesnt need to be checked everytime log written to
+                if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
+                {
+                    //the logwriter auto creates the file if needed
+                    LogWriter.WriteToLog("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.", true);
+
+                }
+
+                //load settings
+                AppSettings.Load();
+
+                LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+                LogWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
+
+                HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+                HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
+
+                Assembly CurAssm = Assembly.GetExecutingAssembly();
+                string AssemNam = CurAssm.GetName().Name;
+                string AssemVer = CurAssm.GetName().Version.ToString();
+
+                Log("");
+                Log("");
+                Log($"Starting {AssemNam} Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}");
+                if (AppSettings.AlreadyRunning)
+                {
+                    Log("*** Another instance is already running *** ");
+                    Log(" --- Files will not be monitored from within this session ");
+                    Log(" --- Log tab will not display output from service instance. You will need to directly open log file for that ");
+                    Log(" --- Changes made here to settings will require that you stop/start the service ");
+                    Log(" --- You must close/reopen app to see NEW history items/detections");
+                }
+                if (Global.IsAdministrator())
+                {
+                    Log("*** Running as administrator ***");
+                }
+                else
+                {
+                    Log("Not running as administrator.");
+                }
+
+                if (AppSettings.Settings.SettingsFileName.ToLower().StartsWith(Directory.GetCurrentDirectory().ToLower()))
+                {
+                    Log($"*** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
+                }
+                else
+                {
+                    string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
+                    Log(msg);
+                }
+
+                //initialize blueiris info class to get camera names, clip paths, etc
+                BlueIrisInfo = new BlueIris();
+                if (BlueIrisInfo.IsValid)
+                {
+                    Log($"BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
+                }
+                else
+                {
+                    Log($"BlueIris not detected.");
+                }
+
+                //if camera settings folder does not exist, create it
+                if (!Directory.Exists("./cameras/"))
+                {
+                    //create folder
+                    DirectoryInfo di = Directory.CreateDirectory("./cameras");
+                    Log("./cameras/" + " dir created.");
+                }
+
+                //check if history.csv exists, if not then create it
+                if (!System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
+                {
+                    Log("ATTENTION: Creating database cameras/history.csv .");
+                    HistoryWriter.WriteToLog("filename|date and time|camera|detections|positions of detections|success", true);
+                }
+
+                //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
+                //allows for stopping and starting of its service
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+
+                UpdateWatchers();
+
+                //Start the thread that watches for the file queue
+                Task.Run(ImageQueueLoop);
+
+
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+
+        }
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
@@ -227,7 +336,7 @@ namespace AITool
                     break;
                 }
 
-                if ((DateTime.Now - LastWaitingLog).Minutes >= 10)
+                if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
                 {
                     Log("---- All URL's are in use or disabled, waiting...");
                     LastWaitingLog = DateTime.Now;
@@ -252,6 +361,10 @@ namespace AITool
                 ClsImageQueueItem CurImg;
 
                 DateTime LastCleanDupesTime = DateTime.MinValue;
+
+
+                //lets wait 5 seconds to let the UI settle down a bit
+                await Task.Delay(5000);
 
                 //Start infinite loop waiting for images to come into queue
 
