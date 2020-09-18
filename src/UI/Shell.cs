@@ -1082,39 +1082,60 @@ namespace AITool
             if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
             {
                 //Log("Loading object rectangles...");
-                int countr = list1.SelectedItems[0].SubItems[4].Text.Split(';').Count();
 
-                System.Drawing.Color color = new System.Drawing.Color();
+                string positions = list1.SelectedItems[0].SubItems[4].Text;
                 string detections = list1.SelectedItems[0].SubItems[3].Text;
-                if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
+
+                try
                 {
-                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                    detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                    List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
+
+                    int countr = positionssArray.Count();
+
+                    System.Drawing.Color color = new System.Drawing.Color();
+
+                    if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                        detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                    }
+                    else
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                    }
+
+                    List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
+
+                    //display a rectangle around each relevant object
+                    for (int i = 0; i < countr; i++)
+                    {
+
+                        //load 'xmin,ymin,xmax,ymax' from third column into a string
+                        List<string> positionsplt = Global.Split(positionssArray[i], ",");
+
+                        //store xmin, ymin, xmax, ymax in separate variables
+                        Int32.TryParse(positionsplt[0], out int xmin);
+                        Int32.TryParse(positionsplt[1], out int ymin);
+                        Int32.TryParse(positionsplt[2], out int xmax);
+                        Int32.TryParse(positionsplt[3], out int ymax);
+
+
+                        showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
+
+                    }
+
+                    //Log($"Debug: Positions (subitem4) ='{positions}', Detections (subitem3) ='{detections}'");
+                    //Debug: Positions (subitem4) ='', Detections (subitem3) ='false alert'
+                    //Debug: Positions (subitem4) ='952,184,1069,366;', Detections (subitem3) ='person (66%);'
+
+
                 }
-                else
+                catch (Exception ex)
                 {
-                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+
+                    Log($"Error: Positions (subitem4) ='{positions}', Detections (subitem3) ='{detections}': {Global.ExMsg(ex)}");
                 }
 
-                //display a rectangle around each relevant object
-                for (int i = 0; i < countr - 1; i++)
-                {
-                    string[] detectionsArray = detections.Split(';');//creates array of detected objects, used for adding text overlay
-                    //load 'xmin,ymin,xmax,ymax' from third column into a string
-                    string position = list1.SelectedItems[0].SubItems[4].Text.Split(';')[i];
-
-                    //store xmin, ymin, xmax, ymax in separate variables
-                    Int32.TryParse(position.Split(',')[0], out int xmin);
-                    Int32.TryParse(position.Split(',')[1], out int ymin);
-                    Int32.TryParse(position.Split(',')[2], out int xmax);
-                    Int32.TryParse(position.Split(',')[3], out int ymax);
-
-                    //Log($"{i} - {xmin}, {ymin}, {xmax},  {ymax}");
-
-                    showObject(e, color, xmin, ymin, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
-
-                    //Log("Done.");
-                }
             }
         }
 
@@ -1401,24 +1422,32 @@ namespace AITool
         //check if a filter applies on given string of history list entry 
         private bool checkListFilters(string cameraname, string success, string objects_and_confidence)
         {
-            if (!objects_and_confidence.Contains("person") && cb_filter_person.Checked) { return false; }
-            if (!(objects_and_confidence.Contains("car") ||
-                  objects_and_confidence.Contains("boat") ||
-                  objects_and_confidence.Contains("bicycle") ||
-                  objects_and_confidence.Contains("truck") ||
-                  objects_and_confidence.Contains("airplane") ||
-                  objects_and_confidence.Contains("motorcycle") ||
-                  objects_and_confidence.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
-            if (!(objects_and_confidence.Contains("dog") ||
-                  objects_and_confidence.Contains("sheep") ||
-                  objects_and_confidence.Contains("bird") ||
-                  objects_and_confidence.Contains("cow") ||
-                  objects_and_confidence.Contains("cat") ||
-                  objects_and_confidence.Contains("horse") ||
-                  objects_and_confidence.Contains("bear")) && cb_filter_animal.Checked) { return false; }
-            if (success != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
-            if (success == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
+            string tmp = objects_and_confidence.ToLower();
+
+            if (!tmp.Contains("person") && cb_filter_person.Checked) { return false; }
+            
+            if (!(tmp.Contains("car") ||
+                  tmp.Contains("boat") ||
+                  tmp.Contains("bicycle") ||
+                  tmp.Contains("truck") ||
+                  tmp.Contains("airplane") ||
+                  tmp.Contains("motorcycle") ||
+                  tmp.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
+            
+            if (!(tmp.Contains("dog") ||
+                  tmp.Contains("sheep") ||
+                  tmp.Contains("bird") ||
+                  tmp.Contains("cow") ||
+                  tmp.Contains("cat") ||
+                  tmp.Contains("horse") ||
+                  tmp.Contains("bear")) && cb_filter_animal.Checked) { return false; }
+            
+            if (success.ToLower() != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
+            
+            if (success.ToLower() == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
+            
             if (comboBox_filter_camera.Text != "All Cameras" && cameraname.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) { return false; }
+
             return true;
         }
 
@@ -1896,7 +1925,7 @@ namespace AITool
                 //first create arrays with all checkboxes stored in
                 CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
                 //create array with strings of the triggering_objects related to the checkboxes in the same order
-                string[] cbstringarray = new string[] { "airplane", "bear", "bicycle", "bird", "boat", "bus", "car", "cat", "cow", "dog", "horse", "motorcycle", "person", "sheep", "truck" };
+                string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
                 //clear all checkmarks
                 foreach (CheckBox cb in cbarray)
@@ -2015,7 +2044,7 @@ namespace AITool
 
                 CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
                 //create array with strings of the triggering_objects related to the checkboxes in the same order
-                string[] cbstringarray = new string[] { "airplane", "bear", "bicycle", "bird", "boat", "bus", "car", "cat", "cow", "dog", "horse", "motorcycle", "person", "sheep", "truck" };
+                string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
                 //go through all checkboxes and write all triggering_objects in one string
                 CurCam.triggering_objects_as_string = "";

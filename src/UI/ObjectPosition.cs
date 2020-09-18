@@ -78,6 +78,8 @@ namespace AITool
             if (other == null)
                 return false;
 
+
+            //storing these to help with troubleshooting:
             this.LastCompared_height = other.height;
             this.LastCompared_width = other.width;
 

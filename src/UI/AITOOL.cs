@@ -801,6 +801,51 @@ namespace AITool
         }
 
 
+        static bool IsValidImage(string filename)
+        {
+            bool ret = false;
+
+            try
+            {
+                if (System.IO.File.Exists(filename))
+                {
+                    if (new FileInfo(filename).Length >= 1024)
+                    {
+                        using (System.Drawing.Image test = System.Drawing.Image.FromFile(filename))
+                        {
+                            ret = (test.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg));
+
+                            if (!ret)
+                            {
+                                Global.Log($"Error: Image file is not jpeg? ({test.RawFormat}): {filename}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Global.Log($"Error: Image file is too small, less than 1024 bytes: {filename}");
+                    }
+
+                }
+                else
+                {
+                    Global.Log($"Error: Image file does not exist: {filename}");
+                }
+            }
+            catch (NotSupportedException ex)
+            {
+                // System.NotSupportedException:
+                // No imaging component suitable to complete this operation was found.
+                Global.Log($"Error: Image file not valid {filename}: {Global.ExMsg(ex)}");
+            }
+            catch (Exception ex)
+            {
+                Global.Log($"Error: Image file not valid {filename}: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+        }
+
         //analyze image with AI
         public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
         {
@@ -849,45 +894,47 @@ namespace AITool
                     {
 
                         string jsonString = "";
+                       
 
-                        using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
+                        if (IsValidImage(CurImg.image_path))
                         {
+                            long FileSize = new FileInfo(CurImg.image_path).Length;
 
-                            //error = $"Can't reach DeepQuestAI Server at {fullDeepstackUrl}.";
-
-                            MultipartFormDataContent request = new MultipartFormDataContent();
-                            request.Add(new StreamContent(image_data), "image", Path.GetFileName(CurImg.image_path));
-
-                            //Be aware Microsoft recommends creating an instance once per session, but since
-                            //we may be operating in more than one thread at the same time, there is some
-                            //speculation that it may not be TOALLY thread safe.   To be on safe side, I'm
-                            //going to try to initialize once per thread, but maybe not needed and adds a
-                            //bit of overhead.....  -Vorlon
-
-
-                            //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
-                            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
+                            using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
                             {
-                                Log($"{CurSrv} - (1/6) Uploading image to DeepQuestAI Server at {DeepStackURL}");
 
-                                swposttime = Stopwatch.StartNew();
-
-                                using (HttpResponseMessage output = await DeepStackURL.HttpClient.PostAsync(url, request, cts.Token))
+                                using (MultipartFormDataContent request = new MultipartFormDataContent())
                                 {
-                                    swposttime.Stop();
+                                    request.Add(new StreamContent(image_data), "image", Path.GetFileName(CurImg.image_path));
 
-                                    if (output.IsSuccessStatusCode)
+
+                                    //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
+                                    using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
                                     {
-                                        jsonString = await output.Content.ReadAsStringAsync();
+                                        Log($"{CurSrv} - (1/6) Uploading a {FileSize} byte image to DeepQuestAI Server at {DeepStackURL}");
+
+                                        swposttime = Stopwatch.StartNew();
+
+                                        using (HttpResponseMessage output = await DeepStackURL.HttpClient.PostAsync(url, request, cts.Token))
+                                        {
+                                            swposttime.Stop();
+
+                                            if (output.IsSuccessStatusCode)
+                                            {
+                                                jsonString = await output.Content.ReadAsStringAsync();
+                                            }
+                                            else
+                                            {
+                                                error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
+                                                DeepStackURL.ErrCount.AtomicIncrementAndGet();
+                                                DeepStackURL.ResultMessage = error;
+                                                Log(error);
+                                            }
+                                        }
                                     }
-                                    else
-                                    {
-                                        error = $"{CurSrv} - ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {{yellow}}{swposttime.ElapsedMilliseconds}ms{{red}}: {output.ReasonPhrase}";
-                                        DeepStackURL.ErrCount.AtomicIncrementAndGet();
-                                        DeepStackURL.ResultMessage = error;
-                                        Log(error);
-                                    }
+
                                 }
+
                             }
 
                         }
@@ -933,8 +980,10 @@ namespace AITool
                                         {
                                             if (user != null && !string.IsNullOrEmpty(user.label))
                                             {
+                                                //force first letter to always be capitalized 
+                                                user.label = Global.UpperFirst(user.label);
                                                 DeepStackServerControl.VisionDetectionRunning = true;
-                                                outputtext += $" {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
+                                                outputtext += $" {user.label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, user.confidence * 100)}, ";  // ({Math.Round((user.confidence * 100), 2).ToString() }%), ";
                                             }
                                             else
                                             {
@@ -989,7 +1038,7 @@ namespace AITool
                                                     bool irrelevant_object = false;
 
                                                     //if object detected is one of the objects that is relevant
-                                                    if (cam.triggering_objects_as_string.Contains(user.label))
+                                                    if (cam.triggering_objects_as_string.ToLower().Contains(user.label.ToLower()))
                                                     {
                                                         // -> OBJECT IS RELEVANT
 
@@ -1018,7 +1067,7 @@ namespace AITool
                                                                 objects_confidence.Add(user.confidence);
                                                                 string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                                 objects_position.Add(position);
-                                                                Log($"{CurSrv} -    {{orange}}{ user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) confirmed.");
+                                                                Log($"{CurSrv} -    {{orange}}{ user.label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, user.confidence * 100)} confirmed.");
                                                             }
                                                             else //if the object is in a masked area
                                                             {
@@ -1044,7 +1093,7 @@ namespace AITool
                                                         irrelevant_objects_confidence.Add(user.confidence);
                                                         string position = $"{user.x_min},{user.y_min},{user.x_max},{user.y_max}";
                                                         irrelevant_objects_position.Add(position);
-                                                        Log($"{CurSrv} -    { user.label.ToString()} ({ Math.Round((user.confidence * 100), 2).ToString() }%) is irrelevant.");
+                                                        Log($"{CurSrv} -    {user.label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, user.confidence * 100)} is irrelevant.");  
                                                     }
                                                 }
 
@@ -1070,13 +1119,11 @@ namespace AITool
                                                 StringBuilder detectionsTextSb = new StringBuilder();
                                                 for (int i = 0; i < objects.Count(); i++)
                                                 {
-                                                    detectionsTextSb.Append(String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                                    detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i] * 100)}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
                                                 }
-                                                if (detectionsTextSb.Length >= 3)
-                                                {
-                                                    detectionsTextSb.Remove(detectionsTextSb.Length - 3, 3);
-                                                }
-                                                cam.last_detections_summary = detectionsTextSb.ToString();
+                                                
+                                                cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
+
                                                 Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
 
 
@@ -1094,9 +1141,11 @@ namespace AITool
                                                 string object_positions_as_string = "";
                                                 for (int i = 0; i < objects.Count; i++)
                                                 {
-                                                    objects_and_confidences += $"{objects[i]} ({Math.Round((objects_confidence[i] * 100), 0)}%); ";
+                                                    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i] * 100)}; ";
                                                     object_positions_as_string += $"{objects_position[i]};";
                                                 }
+
+                                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
                                                 //add to history list
                                                 Log($"{CurSrv} - Adding detection to history list.");
@@ -1123,9 +1172,11 @@ namespace AITool
                                                 string object_positions_as_string = "";
                                                 for (int i = 0; i < irrelevant_objects.Count; i++)
                                                 {
-                                                    objects_and_confidences += $"{irrelevant_objects[i]} ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i] * 100)}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                                   object_positions_as_string += $"{irrelevant_objects_position[i]};";
                                                 }
+
+                                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
                                                 //string text contains what is written in the log and in the history list
                                                 string text = "";

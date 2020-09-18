@@ -67,7 +67,7 @@ namespace AITool
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
             public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
-            public int HTTPClientTimeoutSeconds = 30;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            public int HTTPClientTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
             //public int MaxDeepStackProcessTimeSeconds = 120;
             public int RectRelevantColorAlpha = 150;  //255=solid, 127 half transparent
@@ -84,6 +84,8 @@ namespace AITool
             public string mqtt_clientid = "AITool";
 
             public bool Autoscroll_log = false;
+
+            public string DisplayPercentageFormat = "({0:0.00}%)";
 
         }
 

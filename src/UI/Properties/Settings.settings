@@ -1,54 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AITool.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
   <Profiles />
-  <Settings>
-    <Setting Name="telegram_token" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="telegram_chatid" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="input_path" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="deepstack_url" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">127.0.0.1:81</Value>
-    </Setting>
-    <Setting Name="log_everything" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="send_errors" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="close_instantly" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">-1</Value>
-    </Setting>
-    <Setting Name="deepstack_adminkey" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="deepstack_apikey" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="deepstack_sceneapienabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="deepstack_faceapienabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="deepstack_detectionapienabled" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="deepstack_port" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">81</Value>
-    </Setting>
-    <Setting Name="deepstack_mode" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Medium</Value>
-    </Setting>
-    <Setting Name="deepstack_autostart" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="deepstack_installfolder" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\DeepStack</Value>
-    </Setting>
-  </Settings>
+  <Settings />
 </SettingsFile>

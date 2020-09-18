@@ -33,6 +33,17 @@ namespace AITool
         public static IProgress<ClsMessage> progress = null;
 
 
+        public static string UpperFirst(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return string.Empty;
+            }
+            char[] a = s.ToCharArray();
+            a[0] = char.ToUpper(a[0]);
+            return new string(a);
+        }
+
         public static dynamic GetSetting(string Name, object DefaultValue = null, string SubKey = "")
         {
 
@@ -401,6 +412,9 @@ namespace AITool
             bool Success = false;
             try
             {
+                //lets give it an initial tiny wait
+                //await Task.Delay(RetryDelayMS);
+
                 if (File.Exists(filename))
                 {
                     int errs = 0;
