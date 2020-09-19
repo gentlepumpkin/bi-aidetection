@@ -1331,8 +1331,10 @@ namespace AITool
         }
 
         //call trigger urls
-        public static async void CallTriggerURLs(List<string> trigger_urls, bool Trigger)
+        public static async Task<bool> CallTriggerURLs(List<string> trigger_urls, bool Trigger)
         {
+
+            bool ret = true;
 
             using (WebClient client = new WebClient())
             {
@@ -1349,12 +1351,15 @@ namespace AITool
                     }
                     catch (Exception ex)
                     {
+                        ret = false;
                         Log($"ERROR: Could not {type} URL '{url}', please check if '{url}' is correct and reachable: {Global.ExMsg(ex)}");
                     }
 
                 }
 
             }
+
+            return ret;
 
 
         }
@@ -1601,7 +1606,7 @@ namespace AITool
 
                         }
 
-                        CallTriggerURLs(urls,Trigger);
+                        bool result = await CallTriggerURLs(urls, Trigger);
                     }
                     else if(!Trigger && cam.cancel_urls.Count() > 0)
                     {
@@ -1615,7 +1620,7 @@ namespace AITool
 
                         }
 
-                        CallTriggerURLs(urls,Trigger);
+                        bool result = await CallTriggerURLs(urls, Trigger);
 
                     }
 
@@ -1747,9 +1752,10 @@ namespace AITool
 
                 cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
-                if (cam.Action_image_merge_detections_makecopy && !string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
+                if (cam.Action_image_merge_detections && Trigger && cam.Action_image_merge_detections_makecopy && !string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
                 {
                     System.IO.File.Delete(tmpfile);
+                    //Log($"Debug: Deleting tmp file {tmpfile}");
                 }
 
                 if (Trigger)

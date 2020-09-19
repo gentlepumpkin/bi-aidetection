@@ -1149,6 +1149,8 @@ namespace AITool
 
             MethodInvoker LabelUpdate = delegate
             {
+                //Log($"Debug: Creating list item - filename={hist.Filename}");
+                
                 if (checkListFilters(hist)) //only show the entry in the history list if no filter applies
                 {
                     
@@ -1575,17 +1577,17 @@ namespace AITool
                     {
                         lbl_objects.Text = "Image not found";
                         pictureBox1.BackgroundImage = null;
-                        //delete entry that caused the issue
-                        try
-                        {
-                            DeleteListItem(filename);
-                        }
-                        //if deleting fails because the filename could not be retrieved, do a complete clean up
-                        catch
-                        {
-                            CleanCSVList();
-                            await LoadFromCSVAsync();
-                        }
+                        ////delete entry that caused the issue
+                        //try
+                        //{
+                        //    DeleteListItem(filename);
+                        //}
+                        ////if deleting fails because the filename could not be retrieved, do a complete clean up
+                        //catch
+                        //{
+                        //    CleanCSVList();
+                        //    await LoadFromCSVAsync();
+                        //}
                     }
 
                 }
