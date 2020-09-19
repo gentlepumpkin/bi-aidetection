@@ -1736,10 +1736,24 @@ namespace AITool
                             topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic_cancel);
                             payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload_cancel);
                         }
-                        MQTTClient mq = new MQTTClient();
-                        MqttClientPublishResult pr = await mq.PublishAsync(topic, payload);
-                        if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
-                            ret = false;
+
+                        List<string> topics = Global.Split(topic, ";|");
+                        List<string> payloads = Global.Split(payload, ";|");
+
+
+                        for (int i = 0; i < topics.Count; i++)
+                        {
+                            MQTTClient mq = new MQTTClient();
+                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i]);
+                            if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
+                                ret = false;
+
+                        }
+                        foreach (string top in topics)
+                        {
+
+                        }
+
                     }
 
 
