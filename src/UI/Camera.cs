@@ -165,7 +165,7 @@ namespace AITool
                             for (int i = 0; i < countr; i++)
                             {
                                 //({ Math.Round((user.confidence * 100), 2).ToString() }%)
-                                lasttext = $"{this.last_detections[i]} ({Math.Round(this.last_confidences[i] * 100, 2)}%)";
+                                lasttext = $"{this.last_detections[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, this.last_confidences[i] * 100)}";
                                 lastposition = this.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
 
                                 //store xmin, ymin, xmax, ymax in separate variables
