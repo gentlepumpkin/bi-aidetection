@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
+using Telegram.Bot.Types.Payments;
 //for image cutting
 //using SixLabors.ImageSharp;
 //using SixLabors.ImageSharp.MetaData.Profiles.Exif;
@@ -873,10 +874,11 @@ namespace AITool
                             //write the confidence of every detection into the green_values string
                             foreach (string detection in detections)
                             {
-                                if (detection.Contains('%'))
-                                {
+                                int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                                if (x_value > 0)
+                                { 
                                     //example: -> "person (41%)"
-                                    Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
+                                    //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
                                     orange_values[x_value]++;
                                 }
                             }
@@ -888,10 +890,11 @@ namespace AITool
                             //write the confidence of every detection into the green_values string
                             foreach (string detection in detections)
                             {
-                                if (detection.Contains('%'))
+                                int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                                if (x_value > 0)
                                 {
                                     //example: -> "person (41%)"
-                                    Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
+                                    //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
                                     green_values[x_value]++;
                                 }
                             }
@@ -1142,25 +1145,23 @@ namespace AITool
         // add new entry in left list
         public void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
-            string success = "false";
-            if (hist.Detections.Contains("%") && !hist.Detections.Contains(':'))
-                success = "true";
+            
 
             MethodInvoker LabelUpdate = delegate
             {
-                if (checkListFilters(hist.Camera, success, hist.Detections)) //only show the entry in the history list if no filter applies
+                if (checkListFilters(hist)) //only show the entry in the history list if no filter applies
                 {
                     
 
                     ListViewItem item;
-                    if (success == "true")
+                    if (hist.Success)
                     {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString("dd.MM.yy, HH:mm:ss"), hist.Camera, hist.Detections, hist.Positions, "✓" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "✓" });
                         item.ForeColor = System.Drawing.Color.Green;
                     }
                     else
                     {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString("dd.MM.yy, HH:mm:ss"), hist.Camera, hist.Detections, hist.Positions, "X" });
+                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "X" });
                     }
 
                     //add the FULL path to the item tag so we dont need to add a column
@@ -1173,7 +1174,7 @@ namespace AITool
                 }
 
                 //update history CSV
-                string line = $"{hist.Filename}|{hist.Date.ToString("dd.MM.yy, HH:mm:ss")}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{success}";
+                string line = $"{hist.Filename}|{hist.Date.ToString(AppSettings.Settings.DateFormat)}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{hist.Success}";
                 HistoryWriter.WriteToLog(line);
 
             };
@@ -1373,10 +1374,14 @@ namespace AITool
                                     string camera = val.Split('|')[2];
                                     string success = val.Split('|')[5];
                                     string objects_and_confidence = val.Split('|')[3];
-                                    if (!checkListFilters(camera, success, objects_and_confidence)) { continue; } //do not load the entry if a filter applies (checking as early as possible)
                                     string filename = val.Split('|')[0];
                                     string date = val.Split('|')[1];
                                     string object_positions = val.Split('|')[4];
+                                    DateTime date1;
+                                    DateTime.TryParse(date, out date1);
+                                    History hist = new History().Create(filename,date1,camera,objects_and_confidence,object_positions,Convert.ToBoolean(success));
+                                    if (!checkListFilters(hist)) 
+                                       continue;  //do not load the entry if a filter applies (checking as early as possible)
 
                                     ListViewItem item;
                                     if (success == "true")
@@ -1420,35 +1425,56 @@ namespace AITool
         }
 
         //check if a filter applies on given string of history list entry 
-        private bool checkListFilters(string cameraname, string success, string objects_and_confidence)
+        private bool checkListFilters(History hist)   //string cameraname, string success, string objects_and_confidence
         {
-            string tmp = objects_and_confidence.ToLower();
+            //string tmp = hist.Detections.ToLower(); // objects_and_confidence.ToLower();
 
-            if (!tmp.Contains("person") && cb_filter_person.Checked) { return false; }
+            if (!hist.IsPerson && cb_filter_person.Checked) 
+               return false;
             
-            if (!(tmp.Contains("car") ||
-                  tmp.Contains("boat") ||
-                  tmp.Contains("bicycle") ||
-                  tmp.Contains("truck") ||
-                  tmp.Contains("airplane") ||
-                  tmp.Contains("motorcycle") ||
-                  tmp.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
+            if (!hist.IsVehicle && cb_filter_vehicle.Checked) 
+               return false;
             
-            if (!(tmp.Contains("dog") ||
-                  tmp.Contains("sheep") ||
-                  tmp.Contains("bird") ||
-                  tmp.Contains("cow") ||
-                  tmp.Contains("cat") ||
-                  tmp.Contains("horse") ||
-                  tmp.Contains("bear")) && cb_filter_animal.Checked) { return false; }
+            if (!hist.IsAnimal && cb_filter_animal.Checked) 
+               return false; 
             
-            if (success.ToLower() != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
+            if (!hist.Success && cb_filter_success.Checked) 
+               return false; //if filter "only successful detections" is enabled, don't load false alerts
             
-            if (success.ToLower() == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
+            if (hist.Success && cb_filter_nosuccess.Checked) 
+               return false;   //if filter "only unsuccessful detections" is enabled, don't load true alerts
             
-            if (comboBox_filter_camera.Text != "All Cameras" && cameraname.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) { return false; }
+            if (comboBox_filter_camera.Text != "All Cameras" && hist.Camera.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) 
+               return false; 
 
             return true;
+
+            ///string tmp = hist.Detections.ToLower(); // objects_and_confidence.ToLower();
+            //
+            //            if (!tmp.Contains("person") && cb_filter_person.Checked) { return false; }
+            //            
+            //            if (!(tmp.Contains("car") ||
+            //                  tmp.Contains("boat") ||
+            //                  tmp.Contains("bicycle") ||
+            //                  tmp.Contains("truck") ||
+            //                  tmp.Contains("airplane") ||
+            //                  tmp.Contains("motorcycle") ||
+            //                  tmp.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
+            //            
+            //            if (!(tmp.Contains("dog") ||
+            //                  tmp.Contains("sheep") ||
+            //                  tmp.Contains("bird") ||
+            //                  tmp.Contains("cow") ||
+            //                  tmp.Contains("cat") ||
+            //                  tmp.Contains("horse") ||
+            //                  tmp.Contains("bear")) && cb_filter_animal.Checked) { return false; }
+            //            
+            //            if (success.ToLower() != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
+            //            
+            //            if (success.ToLower() == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
+            //            
+            //            if (comboBox_filter_camera.Text != "All Cameras" && cameraname.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) { return false; }
+
         }
 
 
@@ -2722,13 +2748,12 @@ namespace AITool
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
                 frm.cam = cam;
 
-                string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
-                frm.tbTriggerUrl.Text = tfixed;
+                frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
+                frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|;,"));
                 frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
 
-                frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
                 frm.tb_network_folder_filename.Text = cam.Action_network_folder_filename;
                 frm.tb_network_folder.Text = cam.Action_network_folder;
@@ -2737,9 +2762,9 @@ namespace AITool
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
+                    cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|;,"));
                     cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
-                    cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
                     cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
                     cam.Action_network_folder_filename = frm.tb_network_folder_filename.Text;
@@ -2762,14 +2787,13 @@ namespace AITool
                 
                 frm.cam = cam;
 
-                string tfixed = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
-                frm.tbTriggerUrl.Text = tfixed;
+                frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
+                frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|;,"));
                 frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
                 frm.tb_telegram_caption.Text = cam.telegram_caption;
 
-                frm.cb_TriggerCancels.Checked = cam.trigger_url_cancels;
 
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
                 frm.tb_network_folder_filename.Text = cam.Action_network_folder_filename;
@@ -2785,16 +2809,19 @@ namespace AITool
                 frm.cb_MQTT_enabled.Checked = cam.Action_mqtt_enabled;
                 frm.tb_MQTT_Payload.Text = cam.Action_mqtt_payload;
                 frm.tb_MQTT_Topic.Text = cam.Action_mqtt_topic;
+                frm.tb_MQTT_Payload_cancel.Text = cam.Action_mqtt_payload_cancel;
+                frm.tb_MQTT_Topic_Cancel.Text = cam.Action_mqtt_topic_cancel;
 
                 frm.cb_mergeannotations.Checked = cam.Action_image_merge_detections;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
+                    cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|;,"));
+
                     cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
-                    cam.trigger_url_cancels = frm.cb_TriggerCancels.Checked;
 
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
                     cam.Action_network_folder = frm.tb_network_folder.Text.Trim();
@@ -2810,6 +2837,8 @@ namespace AITool
                     cam.Action_mqtt_enabled = frm.cb_MQTT_enabled.Checked;
                     cam.Action_mqtt_payload = frm.tb_MQTT_Payload.Text.Trim();
                     cam.Action_mqtt_topic = frm.tb_MQTT_Topic.Text.Trim();
+                    cam.Action_mqtt_payload_cancel = frm.tb_MQTT_Payload_cancel.Text.Trim();
+                    cam.Action_mqtt_topic_cancel = frm.tb_MQTT_Topic_Cancel.Text.Trim();
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 

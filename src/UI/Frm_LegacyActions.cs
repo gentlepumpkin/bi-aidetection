@@ -84,7 +84,7 @@ namespace AITool
                 {
                     Global.Log("------ TESTING TRIGGERS --------");
 
-                    bool result = await AITOOL.Trigger(cam, null);
+                    bool result = await AITOOL.Trigger(cam, null, true);
 
                     Global.Log("------ DONE TESTING TRIGGERS --------");
 

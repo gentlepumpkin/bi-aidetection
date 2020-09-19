@@ -37,7 +37,7 @@ namespace AITool
         public History()
         {
         }
-        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions)
+        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions, bool Success)
         {
             this.Filename = filename.Trim().ToLower();
             this.Date = date;
@@ -45,7 +45,7 @@ namespace AITool
             this.Detections = objects_and_confidence.Trim();
             this.Positions = object_positions.Trim();
 
-            this.Success = this.Detections.Contains("%") && !this.Detections.Contains(':');
+            this.Success = Success; //this.Detections.Contains("%") && !this.Detections.Contains(':');
 
             string tmp = Detections.ToLower();
 

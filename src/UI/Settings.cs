@@ -86,6 +86,7 @@ namespace AITool
             public bool Autoscroll_log = false;
 
             public string DisplayPercentageFormat = "({0:0.00}%)";
+            public string DateFormat = "dd.MM.yy, HH:mm:ss";
 
         }
 
@@ -355,6 +356,12 @@ namespace AITool
                             //update threshold in all masks if changed during session
                             cam.maskManager.Update(cam);
 
+                            if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
+                            {
+                                cam.cancel_urls_as_string = cam.trigger_urls_as_string;
+                                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                            }
+
                         }
 
                         //load cameras the old way if needed
@@ -406,6 +413,7 @@ namespace AITool
 
                         //sort the camera list:
                         AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
+
 
                         Ret = true;
                     }

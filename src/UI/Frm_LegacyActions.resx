@@ -120,6 +120,9 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="tb_Sounds.ToolTip" xml:space="preserve">
     <value>Play a sound based on detected object.  
 
@@ -132,15 +135,6 @@ Examples:
 person ; C:\DADA.WAV | bird ; C:\GOBBLE.WAV
 dog, cat, bird ; C:\WOOF.WAV
 * ; C:\DEFAULT.WAV</value>
-  </data>
-  <data name="cb_TriggerCancels.ToolTip" xml:space="preserve">
-    <value>Experimental feature: Rather than triggering for a valid alert, it will trigger when 
-nothing was detected.  
-
-This *may* be useful for when you have BI recording 24/7 and you just want to
-cancel an alert.  Must have &amp;flagalert=0 in the URL.
-
-NO OTHER ACTIONS WILL BE DONE IF THIS IS CHECKED</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>

@@ -13,6 +13,7 @@ using System.Diagnostics;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.Security.AccessControl;
 
 namespace AITool
 {
@@ -41,6 +42,8 @@ namespace AITool
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "";
         public string[] trigger_urls = new string[0];
+        public string cancel_urls_as_string = "";
+        public string[] cancel_urls = new string[0];
         //public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
         public bool trigger_url_cancels = false;
         public bool telegram_enabled = false;
@@ -56,6 +59,7 @@ namespace AITool
 
         public bool Action_image_copy_enabled = false;
         public bool Action_image_merge_detections = false;
+        public bool Action_image_merge_detections_makecopy = true;
         public long Action_image_merge_jpegquality = 80;
         public string Action_network_folder = "";
         public string Action_network_folder_filename = "[ImageFilenameNoExt]";
@@ -66,8 +70,10 @@ namespace AITool
         public string Action_Sounds = "";
 
         public bool Action_mqtt_enabled = false;
-        public string Action_mqtt_topic = "ai/[camera]/motion"; 
+        public string Action_mqtt_topic = "ai/[camera]/motion";
         public string Action_mqtt_payload = "[detections]";
+        public string Action_mqtt_topic_cancel = "ai/[camera]/motioncancel";
+        public string Action_mqtt_payload_cancel = "cancel";
         public bool Action_mqtt_retain_message = false;
 
         public MaskManager maskManager = new MaskManager();
@@ -101,7 +107,7 @@ namespace AITool
         {
             this.MergeImageAnnotations(OutputImageFile, new ClsImageQueueItem(InputImageFile,0));
         }
-        public void MergeImageAnnotations(string OutputImageFile, ClsImageQueueItem CurImg = null)
+        public async void MergeImageAnnotations(string OutputImageFile, ClsImageQueueItem CurImg = null)
         {
             int countr = 0;
             string detections = "";
@@ -213,9 +219,23 @@ namespace AITool
                                 EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, this.Action_image_merge_jpegquality);  //100=least compression, largest file size, best quality
                                 myEncoderParameters.Param[0] = myEncoderParameter;
 
-                                img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
+                                bool Success = true;
+                                
+                                if (File.Exists(OutputImageFile))
+                                {
+                                    Success = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
+                                }
 
-                                Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");
+                                if (Success)
+                                {
+                                    img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
+                                    Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");
+                                }
+                                else
+                                {
+                                    Global.Log($"Error: Could not gain access to write merged file {OutputImageFile}");
+                                }
+
                             }
                             else
                             {

@@ -1127,11 +1127,9 @@ namespace AITool
                                                 Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
 
 
-                                                if (!cam.trigger_url_cancels)
-                                                {
-                                                    Log($"{CurSrv} - (5/6) Performing alert actions:");
-                                                    await Trigger(cam, CurImg); //make TRIGGER
-                                                }
+                                                Log($"{CurSrv} - (5/6) Performing alert actions:");
+                                                await Trigger(cam, CurImg,true); //make TRIGGER
+
                                                 cam.IncrementAlerts(); //stats update
                                                 Log($"{CurSrv} - (6/6) SUCCESS.");
 
@@ -1149,7 +1147,7 @@ namespace AITool
 
                                                 //add to history list
                                                 Log($"{CurSrv} - Adding detection to history list.");
-                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string));
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true));
 
                                             }
                                             //if no object fulfills all 3 requirements but there are other objects: 
@@ -1157,11 +1155,8 @@ namespace AITool
                                             {
                                                 //IRRELEVANT ALERT
 
-                                                if (cam.trigger_url_cancels)
-                                                {
-                                                    Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
-                                                    await Trigger(cam, CurImg); //make TRIGGER
-                                                }
+                                                Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
+                                                await Trigger(cam, CurImg,false); //make TRIGGER
 
                                                 cam.IncrementIrrelevantAlerts(); //stats update
                                                 Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
@@ -1200,7 +1195,7 @@ namespace AITool
 
                                                 Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
                                                 //add to history list
-                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string));
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false));
                                             }
                                         }
                                         //if no object was detected
@@ -1208,18 +1203,15 @@ namespace AITool
                                         {
                                             // FALSE ALERT
 
-                                            if (cam.trigger_url_cancels)
-                                            {
-                                                Log($"{CurSrv} - (5/6) Performing alert CANCEL actions:");
-                                                await Trigger(cam, CurImg); //make TRIGGER
-                                            }
+                                            Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
+                                            await Trigger(cam, CurImg, false); //make TRIGGER
 
                                             cam.IncrementFalseAlerts(); //stats update
                                             Log($"{CurSrv} - (6/6) Camera {cam.name} caused a false alert, nothing detected.");
 
                                             //add to history list
                                             //Log($"{CurSrv} - Adding false to history list.");
-                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", ""));
+                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false));
                                         }
                                     }
 
@@ -1339,20 +1331,27 @@ namespace AITool
         }
 
         //call trigger urls
-        public static void CallTriggerURLs(List<string> trigger_urls)
+        public static async void CallTriggerURLs(List<string> trigger_urls, bool Trigger)
         {
 
-            var client = new WebClient();
-            foreach (string x in trigger_urls)
+            using (WebClient client = new WebClient())
             {
-                try
+                string type = "trigger";
+                if (!Trigger)
+                    type = "cancel";
+
+                foreach (string url in trigger_urls)
                 {
-                    string content = client.DownloadString(x);
-                    Log($"   -> trigger URL called: {x}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
-                }
-                catch (Exception ex)
-                {
-                    Log($"ERROR: Could not trigger URL '{x}', please check if '{x}' is correct and reachable: {Global.ExMsg(ex)}");
+                    try
+                    {
+                        string content = await client.DownloadStringTaskAsync(url);
+                        Log($"   -> {type} URL called: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"ERROR: Could not {type} URL '{url}', please check if '{url}' is correct and reachable: {Global.ExMsg(ex)}");
+                    }
+
                 }
 
             }
@@ -1547,7 +1546,7 @@ namespace AITool
         }
 
         //trigger actions
-        public static async Task<bool> Trigger(Camera cam, ClsImageQueueItem CurImg)
+        public static async Task<bool> Trigger(Camera cam, ClsImageQueueItem CurImg, bool Trigger)
         {
             bool ret = true;
 
@@ -1572,162 +1571,172 @@ namespace AITool
             try
             {
                 double cooltime = Math.Round((DateTime.Now - cam.last_trigger_time).TotalMinutes, 2);
-                string tmpfile = "";
+                string tmpfile = CurImg.image_path;
 
                 //only trigger if cameras cooldown time since last detection has passed
                 if (cooltime >= cam.cooldown_time)
                 {
 
-                    if (cam.Action_image_merge_detections)
+                    if (cam.Action_image_merge_detections && Trigger)
                     {
-                        tmpfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(CurImg.image_path));
+                        if (cam.Action_image_merge_detections_makecopy)
+                            tmpfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(CurImg.image_path));
+
                         cam.MergeImageAnnotations(tmpfile,CurImg);
-                        if (System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
+                        
+                        if (cam.Action_image_merge_detections_makecopy && System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
                             CurImg = new ClsImageQueueItem(tmpfile, 1);
                     }
 
                     //call trigger urls
-                    if (cam.trigger_urls.Count() > 0)
+                    if (Trigger && cam.trigger_urls.Count() > 0)
                     {
                         //replace url paramters with according values
                         List<string> urls = new List<string>();
                         //call urls
                         foreach (string url in cam.trigger_urls)
                         {
-                            try
-                            {
-
-                                string tmp = AITOOL.ReplaceParams(cam, CurImg, url);
-                                urls.Add(tmp);
-                            }
-                            catch (Exception ex)
-                            {
-                                ret = false;
-                                Log($"{Global.ExMsg(ex)}");
-                            }
+                            string tmp = AITOOL.ReplaceParams(cam, CurImg, url);
+                            urls.Add(tmp);
 
                         }
 
-                        CallTriggerURLs(urls);
+                        CallTriggerURLs(urls,Trigger);
+                    }
+                    else if(!Trigger && cam.cancel_urls.Count() > 0)
+                    {
+                        //replace url paramters with according values
+                        List<string> urls = new List<string>();
+                        //call urls
+                        foreach (string url in cam.cancel_urls)
+                        {
+                            string tmp = AITOOL.ReplaceParams(cam, CurImg, url);
+                            urls.Add(tmp);
+
+                        }
+
+                        CallTriggerURLs(urls,Trigger);
+
                     }
 
-                    if (!cam.trigger_url_cancels)
+                    //upload to telegram
+                    if (cam.telegram_enabled && Trigger)
                     {
-                        //upload to telegram
-                        if (cam.telegram_enabled)
-                        {
 
-                            string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
-                            if (!await TelegramUpload(CurImg, tmp))
-                            {
-                                ret = false;
-                                Log("   -> ERROR sending image to Telegram.");
-                            }
-                            else
-                            {
-                                Log("   -> Sent image to Telegram.");
-                            }
+                        string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
+                        if (!await TelegramUpload(CurImg, tmp))
+                        {
+                            ret = false;
+                            Log("   -> ERROR sending image to Telegram.");
                         }
-
-                        //run external program
-                        if (cam.Action_RunProgram)
+                        else
                         {
-                            try
-                            {
-                                string run = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramString);
-                                string param = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramArgsString);
-                                Log($"   Starting external app {run} {param}");
-                                Process.Start(run, param);
-                            }
-                            catch (Exception ex)
-                            {
-
-                                ret = false;
-                                Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
-                            }
+                            Log("   -> Sent image to Telegram.");
                         }
+                    }
 
-                        //Play sounds
-                        if (cam.Action_PlaySounds)
+                    //run external program
+                    if (cam.Action_RunProgram && Trigger)
+                    {
+                        try
                         {
-                            try
+                            string run = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramString);
+                            string param = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramArgsString);
+                            Log($"   Starting external app {run} {param}");
+                            Process.Start(run, param);
+                        }
+                        catch (Exception ex)
+                        {
+
+                            ret = false;
+                            Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
+                        }
+                    }
+
+                    //Play sounds
+                    if (cam.Action_PlaySounds && Trigger)
+                    {
+                        try
+                        {
+
+                            //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
+                            string snds = AITOOL.ReplaceParams(cam, CurImg, cam.Action_Sounds);
+
+                            List<string> items = Global.Split(snds, "|");
+
+                            foreach (string itm in items)
                             {
-
-                                //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
-                                string snds = AITOOL.ReplaceParams(cam, CurImg, cam.Action_Sounds);
-
-                                List<string> items = Global.Split(snds, "|");
-
-                                foreach (string itm in items)
+                                //object1, object2 ; soundfile.wav
+                                int played = 0;
+                                List<string> prms = Global.Split(itm, "|");
+                                foreach (string prm in prms)
                                 {
-                                    //object1, object2 ; soundfile.wav
-                                    int played = 0;
-                                    List<string> prms = Global.Split(itm, "|");
-                                    foreach (string prm in prms)
+                                    //prm0 - object1, object2
+                                    //prm1 - soundfile.wav
+                                    List<string> splt = Global.Split(prm, ";");
+                                    string soundfile = splt[1];
+                                    List<string> objects = Global.Split(splt[0], ",");
+                                    foreach (string objname in objects)
                                     {
-                                        //prm0 - object1, object2
-                                        //prm1 - soundfile.wav
-                                        List<string> splt = Global.Split(prm, ";");
-                                        string soundfile = splt[1];
-                                        List<string> objects = Global.Split(splt[0], ",");
-                                        foreach (string objname in objects)
+                                        foreach (string detection in cam.last_detections)
                                         {
-                                            foreach (string detection in cam.last_detections)
+                                            if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
                                             {
-                                                if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
-                                                {
-                                                    Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
-                                                    SoundPlayer sp = new SoundPlayer(soundfile);
-                                                    sp.Play();
-                                                    played++;
-                                                }
+                                                Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
+                                                SoundPlayer sp = new SoundPlayer(soundfile);
+                                                sp.Play();
+                                                played++;
                                             }
                                         }
                                     }
-                                    if (played == 0)
-                                    {
-                                        Log("No object matched sound to play or no detections.");
-                                    }
                                 }
-
+                                if (played == 0)
+                                {
+                                    Log("No object matched sound to play or no detections.");
+                                }
                             }
-                            catch (Exception ex)
-                            {
 
-                                ret = false;
-                                Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
-                            }
                         }
-
-
-
-                        if (cam.Action_image_copy_enabled)
+                        catch (Exception ex)
                         {
-                            Log("   Copying image to network folder...");
 
-                            if (!AITOOL.CopyImage(cam, CurImg))
-                                ret = false;
-
-                            Log("   -> Image copied to network folder.");
+                            ret = false;
+                            Log($"Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
                         }
-
-
-                        if (cam.Action_mqtt_enabled)
-                        {
-                            string topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic);
-                            string payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload);
-
-                            MQTTClient mq = new MQTTClient();
-                            MqttClientPublishResult pr = await mq.PublishAsync(topic, payload);
-                            if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
-                                ret = false;
-                        }
-
                     }
-                    else
+
+
+                    if (cam.Action_image_copy_enabled && Trigger)
                     {
-                        Log($"   (Skipping all other actions due to 'Trigger cancels' camera action setting)");
+                        Log("   Copying image to network folder...");
+
+                        if (!AITOOL.CopyImage(cam, CurImg))
+                            ret = false;
+
+                        Log("   -> Image copied to network folder.");
                     }
+
+
+                    if (cam.Action_mqtt_enabled)
+                    {
+                        string topic = "";
+                        string payload = "";
+                        if (Trigger)
+                        {
+                            topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic);
+                            payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload);
+                        }
+                        else
+                        {
+                            topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic_cancel);
+                            payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload_cancel);
+                        }
+                        MQTTClient mq = new MQTTClient();
+                        MqttClientPublishResult pr = await mq.PublishAsync(topic, payload);
+                        if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
+                            ret = false;
+                    }
+
 
                 }
                 else
@@ -1738,12 +1747,13 @@ namespace AITool
 
                 cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
-                if (!string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
+                if (cam.Action_image_merge_detections_makecopy && !string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
                 {
                     System.IO.File.Delete(tmpfile);
                 }
-                //Task ignoredAwaitableResult = LastTriggerInfo(cam); //write info to label
-                Global.UpdateLabel($"{cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
+
+                if (Trigger)
+                    Global.UpdateLabel($"{cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
 
             }
             catch (Exception ex)
