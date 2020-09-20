@@ -38,6 +38,7 @@ using Arch.CMessaging.Client.Core.Utils;
 using Telegram.Bot.Exceptions;
 using SixLabors.ImageSharp.Processing;
 using System.Reflection;
+using OSVersionExtension;
 
 namespace AITool
 {
@@ -115,12 +116,31 @@ namespace AITool
                 string AssemNam = CurAssm.GetName().Name;
                 string AssemVer = CurAssm.GetName().Version.ToString();
 
+                
+                Log("");
                 Log("");
                 Log("");
                 Log($"Starting {AssemNam} Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}");
+
+                try  //just in case some weird issue comes up with older os version...
+                {
+                    OSVersionExt.VersionInfo vi = OSVersion.GetOSVersion();
+                    OSVersionExtension.OperatingSystem ov = OSVersion.GetOperatingSystem();
+
+                    Log($"   Installed NET Framework version '{Global.GetFrameworkVersion()}', Target version '{AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName}'");
+                    Log($"   Windows '{ov.ToString()}', version '{vi.Version.ToString()}' Release ID '{OSVersion.MajorVersion10Properties().ReleaseId}', 64Bit={OSVersion.Is64BitOperatingSystem}, Workstation={OSVersion.IsWorkstation}, Server={OSVersion.IsServer}");
+
+                }
+                catch (Exception ex)
+                {
+
+                    Log("Error: Problem getting OS version info: " + Global.ExMsg(ex));
+                }
+
+
                 if (AppSettings.AlreadyRunning)
                 {
-                    Log("*** Another instance is already running *** ");
+                    Log("*** Warning: Another instance is already running *** ");
                     Log(" --- Files will not be monitored from within this session ");
                     Log(" --- Log tab will not display output from service instance. You will need to directly open log file for that ");
                     Log(" --- Changes made here to settings will require that you stop/start the service ");

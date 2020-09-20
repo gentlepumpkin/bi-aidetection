@@ -2297,41 +2297,38 @@ namespace AITool
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(271, 144);
+            this.groupBox1.Size = new System.Drawing.Size(284, 154);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "API";
             // 
             // Chk_DetectionAPI
             // 
-            this.Chk_DetectionAPI.AutoSize = true;
             this.Chk_DetectionAPI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Chk_DetectionAPI.Location = new System.Drawing.Point(19, 98);
+            this.Chk_DetectionAPI.Location = new System.Drawing.Point(19, 114);
             this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(4);
             this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
-            this.Chk_DetectionAPI.Size = new System.Drawing.Size(162, 28);
+            this.Chk_DetectionAPI.Size = new System.Drawing.Size(257, 34);
             this.Chk_DetectionAPI.TabIndex = 2;
             this.Chk_DetectionAPI.Text = "Detection API";
             this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
             // 
             // Chk_FaceAPI
             // 
-            this.Chk_FaceAPI.AutoSize = true;
-            this.Chk_FaceAPI.Location = new System.Drawing.Point(19, 63);
+            this.Chk_FaceAPI.Location = new System.Drawing.Point(19, 72);
             this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(4);
             this.Chk_FaceAPI.Name = "Chk_FaceAPI";
-            this.Chk_FaceAPI.Size = new System.Drawing.Size(119, 29);
+            this.Chk_FaceAPI.Size = new System.Drawing.Size(257, 34);
             this.Chk_FaceAPI.TabIndex = 1;
             this.Chk_FaceAPI.Text = "Face API";
             this.Chk_FaceAPI.UseVisualStyleBackColor = true;
             // 
             // Chk_SceneAPI
             // 
-            this.Chk_SceneAPI.AutoSize = true;
             this.Chk_SceneAPI.Location = new System.Drawing.Point(19, 30);
             this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(4);
             this.Chk_SceneAPI.Name = "Chk_SceneAPI";
-            this.Chk_SceneAPI.Size = new System.Drawing.Size(132, 29);
+            this.Chk_SceneAPI.Size = new System.Drawing.Size(257, 34);
             this.Chk_SceneAPI.TabIndex = 0;
             this.Chk_SceneAPI.Text = "Scene API";
             this.Chk_SceneAPI.UseVisualStyleBackColor = true;
@@ -2367,18 +2364,17 @@ namespace AITool
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(270, 144);
+            this.groupBox2.Size = new System.Drawing.Size(270, 154);
             this.groupBox2.TabIndex = 4;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Mode";
             // 
             // RB_High
             // 
-            this.RB_High.AutoSize = true;
-            this.RB_High.Location = new System.Drawing.Point(19, 100);
+            this.RB_High.Location = new System.Drawing.Point(19, 116);
             this.RB_High.Margin = new System.Windows.Forms.Padding(4);
             this.RB_High.Name = "RB_High";
-            this.RB_High.Size = new System.Drawing.Size(77, 29);
+            this.RB_High.Size = new System.Drawing.Size(243, 34);
             this.RB_High.TabIndex = 3;
             this.RB_High.TabStop = true;
             this.RB_High.Text = "High";
@@ -2386,11 +2382,10 @@ namespace AITool
             // 
             // RB_Medium
             // 
-            this.RB_Medium.AutoSize = true;
-            this.RB_Medium.Location = new System.Drawing.Point(19, 65);
+            this.RB_Medium.Location = new System.Drawing.Point(19, 73);
             this.RB_Medium.Margin = new System.Windows.Forms.Padding(4);
             this.RB_Medium.Name = "RB_Medium";
-            this.RB_Medium.Size = new System.Drawing.Size(107, 29);
+            this.RB_Medium.Size = new System.Drawing.Size(243, 34);
             this.RB_Medium.TabIndex = 2;
             this.RB_Medium.TabStop = true;
             this.RB_Medium.Text = "Medium";
@@ -2398,11 +2393,10 @@ namespace AITool
             // 
             // RB_Low
             // 
-            this.RB_Low.AutoSize = true;
             this.RB_Low.Location = new System.Drawing.Point(19, 30);
             this.RB_Low.Margin = new System.Windows.Forms.Padding(4);
             this.RB_Low.Name = "RB_Low";
-            this.RB_Low.Size = new System.Drawing.Size(73, 29);
+            this.RB_Low.Size = new System.Drawing.Size(243, 34);
             this.RB_Low.TabIndex = 1;
             this.RB_Low.TabStop = true;
             this.RB_Low.Text = "Low";
@@ -2438,7 +2432,7 @@ namespace AITool
             this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(264, 144);
+            this.groupBox3.Size = new System.Drawing.Size(264, 154);
             this.groupBox3.TabIndex = 5;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Port";
@@ -2450,7 +2444,7 @@ namespace AITool
             this.Txt_Port.Location = new System.Drawing.Point(18, 33);
             this.Txt_Port.Margin = new System.Windows.Forms.Padding(4);
             this.Txt_Port.Name = "Txt_Port";
-            this.Txt_Port.Size = new System.Drawing.Size(240, 29);
+            this.Txt_Port.Size = new System.Drawing.Size(238, 29);
             this.Txt_Port.TabIndex = 0;
             // 
             // Chk_AutoStart
@@ -2633,11 +2627,9 @@ namespace AITool
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);

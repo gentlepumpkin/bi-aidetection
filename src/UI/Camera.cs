@@ -196,7 +196,7 @@ namespace AITool
 
                                 g.Flush();
 
-                                Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
+                                //Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
                             }
 
                             if (countr > 0)

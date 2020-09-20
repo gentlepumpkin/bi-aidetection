@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>AITool</RootNamespace>
     <AssemblyName>AITool</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
@@ -30,6 +30,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -65,6 +66,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="M2Mqtt.Net, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -293,6 +297,17 @@
       <DependentUpon>Frm_MQTTSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="Global-GUI.cs" />
+    <Compile Include="OSVersionExt\EnvironmentProvider.cs" />
+    <Compile Include="OSVersionExt\IEnvironment.cs" />
+    <Compile Include="OSVersionExt\IRegistry.cs" />
+    <Compile Include="OSVersionExt\IWin32API.cs" />
+    <Compile Include="OSVersionExt\MajorVersion10Properties.cs" />
+    <Compile Include="OSVersionExt\OSVersion.cs" />
+    <Compile Include="OSVersionExt\RegistryProviderDefault.cs" />
+    <Compile Include="OSVersionExt\SystemMetrics.cs" />
+    <Compile Include="OSVersionExt\VersionInfo.cs" />
+    <Compile Include="OSVersionExt\Win32ApiEnums.cs" />
+    <Compile Include="OSVersionExt\Win32ApiProvider.cs" />
     <Compile Include="SQLiteHistory.cs" />
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="MaskManager.cs" />
@@ -352,6 +367,7 @@
     <None Include="..\.editorconfig">
       <Link>.editorconfig</Link>
     </None>
+    <None Include="app.manifest" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

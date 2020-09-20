@@ -40,8 +40,12 @@
             this.tb_telegram_caption = new System.Windows.Forms.TextBox();
             this.linkLabelMqttSettings = new System.Windows.Forms.LinkLabel();
             this.label4 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.tb_MQTT_Payload_cancel = new System.Windows.Forms.TextBox();
             this.tb_MQTT_Payload = new System.Windows.Forms.TextBox();
+            this.tb_MQTT_Topic_Cancel = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.tb_MQTT_Topic = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cb_MQTT_enabled = new System.Windows.Forms.CheckBox();
@@ -52,7 +56,9 @@
             this.cb_RunProgram = new System.Windows.Forms.CheckBox();
             this.tb_network_folder = new System.Windows.Forms.TextBox();
             this.cb_copyAlertImages = new System.Windows.Forms.CheckBox();
+            this.tbCancelUrl = new System.Windows.Forms.TextBox();
             this.tbTriggerUrl = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
             this.lblTriggerUrl = new System.Windows.Forms.Label();
             this.cb_telegram = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -61,12 +67,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
-            this.label9 = new System.Windows.Forms.Label();
-            this.tb_MQTT_Topic_Cancel = new System.Windows.Forms.TextBox();
-            this.tb_MQTT_Payload_cancel = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.tbCancelUrl = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -75,7 +75,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(1135, 733);
+            this.btnCancel.Location = new System.Drawing.Point(1135, 729);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(109, 52);
@@ -88,7 +88,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(994, 733);
+            this.btnSave.Location = new System.Drawing.Point(994, 729);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(109, 52);
@@ -211,6 +211,16 @@
             this.label4.TabIndex = 40;
             this.label4.Text = "Params:";
             // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.ForeColor = System.Drawing.Color.DarkRed;
+            this.label10.Location = new System.Drawing.Point(786, 300);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(90, 30);
+            this.label10.TabIndex = 39;
+            this.label10.Text = "Payload:";
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -220,6 +230,15 @@
             this.label2.TabIndex = 39;
             this.label2.Text = "Payload:";
             // 
+            // tb_MQTT_Payload_cancel
+            // 
+            this.tb_MQTT_Payload_cancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_MQTT_Payload_cancel.Location = new System.Drawing.Point(882, 299);
+            this.tb_MQTT_Payload_cancel.Name = "tb_MQTT_Payload_cancel";
+            this.tb_MQTT_Payload_cancel.Size = new System.Drawing.Size(329, 35);
+            this.tb_MQTT_Payload_cancel.TabIndex = 38;
+            // 
             // tb_MQTT_Payload
             // 
             this.tb_MQTT_Payload.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -228,6 +247,23 @@
             this.tb_MQTT_Payload.Name = "tb_MQTT_Payload";
             this.tb_MQTT_Payload.Size = new System.Drawing.Size(329, 35);
             this.tb_MQTT_Payload.TabIndex = 38;
+            // 
+            // tb_MQTT_Topic_Cancel
+            // 
+            this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(436, 299);
+            this.tb_MQTT_Topic_Cancel.Name = "tb_MQTT_Topic_Cancel";
+            this.tb_MQTT_Topic_Cancel.Size = new System.Drawing.Size(328, 35);
+            this.tb_MQTT_Topic_Cancel.TabIndex = 37;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.ForeColor = System.Drawing.Color.DarkRed;
+            this.label9.Location = new System.Drawing.Point(296, 300);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(134, 30);
+            this.label9.TabIndex = 36;
+            this.label9.Text = "Cancel Topic:";
             // 
             // tb_MQTT_Topic
             // 
@@ -328,6 +364,19 @@
             this.toolTip1.SetToolTip(this.cb_copyAlertImages, "When an object in an image is detected, copy the image to the\r\n folder specified");
             this.cb_copyAlertImages.UseVisualStyleBackColor = false;
             // 
+            // tbCancelUrl
+            // 
+            this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbCancelUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbCancelUrl.Location = new System.Drawing.Point(13, 478);
+            this.tbCancelUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.tbCancelUrl.Multiline = true;
+            this.tbCancelUrl.Name = "tbCancelUrl";
+            this.tbCancelUrl.Size = new System.Drawing.Size(1198, 79);
+            this.tbCancelUrl.TabIndex = 22;
+            this.toolTip1.SetToolTip(this.tbCancelUrl, "URLs that cancel the alert - For BI, use ");
+            // 
             // tbTriggerUrl
             // 
             this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -342,6 +391,19 @@
             this.tbTriggerUrl.Text = "test\r\ntest2\r\ntest3";
             this.toolTip1.SetToolTip(this.tbTriggerUrl, "A list of URLs each on their own line OR seperated with commas that will be trigg" +
         "ered on an alert");
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label11.ForeColor = System.Drawing.Color.DarkRed;
+            this.label11.Location = new System.Drawing.Point(8, 449);
+            this.label11.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
+            this.label11.MinimumSize = new System.Drawing.Size(158, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(158, 30);
+            this.label11.TabIndex = 1;
+            this.label11.Text = "Cancel URL(s):";
             // 
             // lblTriggerUrl
             // 
@@ -415,7 +477,7 @@
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(853, 733);
+            this.btTest.Location = new System.Drawing.Point(853, 729);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(109, 52);
             this.btTest.TabIndex = 6;
@@ -423,75 +485,13 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
             // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.ForeColor = System.Drawing.Color.DarkRed;
-            this.label9.Location = new System.Drawing.Point(296, 300);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(134, 30);
-            this.label9.TabIndex = 36;
-            this.label9.Text = "Cancel Topic:";
-            // 
-            // tb_MQTT_Topic_Cancel
-            // 
-            this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(436, 299);
-            this.tb_MQTT_Topic_Cancel.Name = "tb_MQTT_Topic_Cancel";
-            this.tb_MQTT_Topic_Cancel.Size = new System.Drawing.Size(328, 35);
-            this.tb_MQTT_Topic_Cancel.TabIndex = 37;
-            // 
-            // tb_MQTT_Payload_cancel
-            // 
-            this.tb_MQTT_Payload_cancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_MQTT_Payload_cancel.Location = new System.Drawing.Point(882, 299);
-            this.tb_MQTT_Payload_cancel.Name = "tb_MQTT_Payload_cancel";
-            this.tb_MQTT_Payload_cancel.Size = new System.Drawing.Size(329, 35);
-            this.tb_MQTT_Payload_cancel.TabIndex = 38;
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.ForeColor = System.Drawing.Color.DarkRed;
-            this.label10.Location = new System.Drawing.Point(786, 300);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(90, 30);
-            this.label10.TabIndex = 39;
-            this.label10.Text = "Payload:";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label11.ForeColor = System.Drawing.Color.DarkRed;
-            this.label11.Location = new System.Drawing.Point(8, 449);
-            this.label11.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
-            this.label11.MinimumSize = new System.Drawing.Size(158, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(158, 30);
-            this.label11.TabIndex = 1;
-            this.label11.Text = "Cancel URL(s):";
-            // 
-            // tbCancelUrl
-            // 
-            this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbCancelUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbCancelUrl.Location = new System.Drawing.Point(13, 478);
-            this.tbCancelUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
-            this.tbCancelUrl.Multiline = true;
-            this.tbCancelUrl.Name = "tbCancelUrl";
-            this.tbCancelUrl.Size = new System.Drawing.Size(1198, 79);
-            this.tbCancelUrl.TabIndex = 22;
-            this.toolTip1.SetToolTip(this.tbCancelUrl, "URLs that cancel the alert - For BI, use ");
-            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(1257, 799);
+            this.ClientSize = new System.Drawing.Size(1257, 795);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);
