@@ -135,14 +135,24 @@ namespace AITool
                     Log("Not running as administrator.");
                 }
 
-                if (AppSettings.Settings.SettingsFileName.ToLower().StartsWith(Directory.GetCurrentDirectory().ToLower()))
+                if (AppDomain.CurrentDomain.BaseDirectory.ToLower() == Directory.GetCurrentDirectory().ToLower())
                 {
                     Log($"*** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
                 }
                 else
                 {
-                    string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
-                    Log(msg);
+                    try
+                    {
+                        Log($"*** Changing Start in/current directory from '{Directory.GetCurrentDirectory()}' to '{AppDomain.CurrentDomain.BaseDirectory}' ***");
+                        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
+                        Log(msg);
+                        Log($"...this may prevent DLL files from loading from the wrong folder.  '{ex.Message}'");
+                    }
                 }
 
                 //initialize blueiris info class to get camera names, clip paths, etc

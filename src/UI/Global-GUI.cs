@@ -28,9 +28,41 @@ namespace AITool
 
 			try
 			{
-				
+
 				olv.ClearObjects();
 				olv.SetObjects(Collection, true);
+				//update column size only if did not restore folv state file or forced
+				if (olv.Tag == null || ResizeCols)
+				{
+					olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+				}
+				if (olv.Items.Count == 0)
+				{
+					olv.EmptyListMsg = "Empty";
+				}
+
+			}
+			catch (Exception ex)
+			{
+				Global.Log("Error: " + Global.ExMsg(ex));
+			}
+			finally
+			{
+				olv.Unfreeze();
+
+			}
+		}
+		public static void UpdateFOLV_add(ref FastObjectListView olv, ICollection Collection, bool ResizeCols = false)
+		{
+
+			olv.Freeze();
+
+			try
+			{
+
+				//olv.ClearObjects();
+				olv.UpdateObjects(Collection);
+
 				//update column size only if did not restore folv state file or forced
 				if (olv.Tag == null || ResizeCols)
 				{

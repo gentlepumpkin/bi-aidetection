@@ -18,20 +18,21 @@ namespace AITool
         //      1541,870,1690,1097;1316,1521,1583,1731;226,214,1231,637;451,1028,689,1321;989,769,1225,1145;882,616,1089,938;565,647,701,814;|
         //      false
 
-        [PrimaryKey, Indexed]
-        public string Filename { get; set; } = "";
         [Indexed]
         public DateTime Date { get; set; } = DateTime.MinValue;
         [Indexed]
         public string Camera { get; set; } = "";
-        public string Detections { get; set; } = "";   //TODO: should this be a list in the db?
-        public string Positions { get; set; } = "";
         public bool Success { get; set; } = false;
         public bool IsPerson { get; set; } = false;
         public bool IsVehicle { get; set; } = false;
         public bool IsAnimal { get; set; } = false;
+        public bool WasMasked { get; set; } = false;
         public bool IsFace { get; set; } = false;
         public bool IsKnownFace { get; set; } = false;
+        [PrimaryKey, Indexed]
+        public string Filename { get; set; } = "";
+        public string Detections { get; set; } = "";
+        public string Positions { get; set; } = "";
 
 
         public History()
@@ -158,6 +159,8 @@ namespace AITool
                             tmp.Contains("elephant") ||
                             tmp.Contains("zebra") ||
                             tmp.Contains("giraffe");
+
+            this.WasMasked = tmp.Contains("mask");
         }
 
     }

@@ -190,9 +190,9 @@ namespace AITool
 
                                 Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                                System.Drawing.SizeF size = g.MeasureString(lasttext, new Font("Segoe UI Semibold", AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                                System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                                 g.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
-                                g.DrawString(lasttext, new Font("Segoe UI Semibold", AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                                g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
 
                                 g.Flush();
 

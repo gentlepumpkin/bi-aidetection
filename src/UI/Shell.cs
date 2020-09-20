@@ -62,8 +62,8 @@ namespace AITool
 
             if (!AppSettings.Settings.SettingsFileName.ToLower().StartsWith(Directory.GetCurrentDirectory().ToLower()) )
             {
-                string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
-                MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
+                //MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             //---------------------------------------------------------------------------------------------------------
@@ -1062,9 +1062,9 @@ namespace AITool
 
                     Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                    System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font("Segoe UI Semibold", 10)); //finds size of text to draw the background rectangle
+                    System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                     e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
-                    e.Graphics.DrawString(text, new Font("Segoe UI Semibold", 10), Brushes.Black, rect); //draw detection text
+                    e.Graphics.DrawString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
 
 
 
