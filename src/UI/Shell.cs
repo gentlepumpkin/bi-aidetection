@@ -1373,27 +1373,21 @@ namespace AITool
                                 //load all List elements into the ListView for each row
                                 foreach (var val in result)
                                 {
-                                    string camera = val.Split('|')[2];
-                                    string success = val.Split('|')[5];
-                                    string objects_and_confidence = val.Split('|')[3];
-                                    string filename = val.Split('|')[0];
-                                    string date = val.Split('|')[1];
-                                    string object_positions = val.Split('|')[4];
-                                    DateTime date1;
-                                    DateTime.TryParse(date, out date1);
-                                    History hist = new History().Create(filename,date1,camera,objects_and_confidence,object_positions,Convert.ToBoolean(success));
+                                    
+                                    History hist = new History().CreateFromCSV(val);
+
                                     if (!checkListFilters(hist)) 
                                        continue;  //do not load the entry if a filter applies (checking as early as possible)
 
                                     ListViewItem item;
-                                    if (success == "true")
+                                    if (hist.Success)
                                     {
-                                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "✓" });
+                                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "✓" });
                                         item.ForeColor = System.Drawing.Color.Green;
                                     }
                                     else
                                     {
-                                        item = new ListViewItem(new string[] { filename, date, camera, objects_and_confidence, object_positions, "X" });
+                                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "X" });
                                     }
 
                                     list1.Items.Insert(0, item);
