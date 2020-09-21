@@ -21,70 +21,91 @@ namespace AITool
 		// NO direct UI interaction
 		// ====================================================================
 
-		public static void UpdateFOLV(ref FastObjectListView olv, IEnumerable Collection, bool ResizeCols = false)
+		public static void UpdateFOLV(FastObjectListView olv, IEnumerable Collection, bool ResizeCols = false)
 		{
 
-			olv.Freeze();
 
-			try
+			Global_GUI.InvokeIFRequired(olv, () =>
 			{
-
-				olv.ClearObjects();
-				olv.SetObjects(Collection, true);
-				//update column size only if did not restore folv state file or forced
-				if (olv.Tag == null || ResizeCols)
+				olv.Freeze();
+				
+				try
 				{
-					olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+					olv.ClearObjects();
+					
+					olv.Tag = null;
+
+					olv.SetObjects(Collection, true);
+
+					if (olv.Items.Count > 0)
+					{
+						//update column size only if did not restore folv state file or forced
+						if (olv.Tag == null || ResizeCols)
+						{
+							olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+							olv.Tag = "resizedcols";
+
+						}
+					}
+					else
+					{
+						olv.EmptyListMsg = "Empty";
+					}
+
 				}
-				if (olv.Items.Count == 0)
+				catch (Exception ex)
 				{
-					olv.EmptyListMsg = "Empty";
+					Global.Log("Error: " + Global.ExMsg(ex));
+				}
+				finally
+				{
+					olv.Unfreeze();
+
 				}
 
-			}
-			catch (Exception ex)
-			{
-				Global.Log("Error: " + Global.ExMsg(ex));
-			}
-			finally
-			{
-				olv.Unfreeze();
-
-			}
+			});
 		}
-		public static void UpdateFOLV_add(ref FastObjectListView olv, ICollection Collection, bool ResizeCols = false)
+		public static void UpdateFOLV_add(FastObjectListView olv, ICollection Collection, bool ResizeCols = false)
 		{
 
-			olv.Freeze();
-
-			try
+			Global_GUI.InvokeIFRequired(olv, () =>
 			{
+				olv.Freeze();
 
-				//olv.ClearObjects();
-				olv.UpdateObjects(Collection);
-
-				//update column size only if did not restore folv state file or forced
-				if (olv.Tag == null || ResizeCols)
+				try
 				{
-					olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+					olv.UpdateObjects(Collection);
+
+					if (olv.Items.Count > 0)
+					{
+						//update column size only if did not restore folv state file or forced
+						if (olv.Tag == null || ResizeCols)
+						{
+							olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+							olv.Tag = "resizedcols";
+
+						}
+					}
+					else
+					{
+						olv.EmptyListMsg = "Empty";
+					}
+
 				}
-				if (olv.Items.Count == 0)
+				catch (Exception ex)
 				{
-					olv.EmptyListMsg = "Empty";
+					Global.Log("Error: " + Global.ExMsg(ex));
 				}
+				finally
+				{
+					olv.Unfreeze();
 
-			}
-			catch (Exception ex)
-			{
-				Global.Log("Error: " + Global.ExMsg(ex));
-			}
-			finally
-			{
-				olv.Unfreeze();
-
-			}
+				}
+			});
 		}
-		public static void ConfigureFOLV(ref FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList, string PrimarySortColumnName = "", SortOrder PrimarySortOrder = SortOrder.Ascending, string SecondarySortColumnName = "", SortOrder SecondarySortOrder = SortOrder.Ascending, List<string> FilterColumnList = null, Color Clr = new Color(), int RowHeight = 0, bool ShowGroups = false)
+		public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList, string PrimarySortColumnName = "", SortOrder PrimarySortOrder = SortOrder.Ascending, string SecondarySortColumnName = "", SortOrder SecondarySortOrder = SortOrder.Ascending, List<string> FilterColumnList = null, Color Clr = new Color(), int RowHeight = 0, bool ShowGroups = false)
 		{
 
 			try
@@ -308,9 +329,9 @@ namespace AITool
 
 				if (Frm.Tag != null && Frm.Tag.ToString().ToUpper() == "SAVE")
 				{
-					foreach (Control ctl in Frm.Controls)
-						if (ctl.Enabled)
-						{
+					List<Control> ctls = GetControls(Frm);
+
+					foreach (Control ctl in ctls)
 							if (ctl is SplitContainer)
 							{
 								SplitContainer sc = (SplitContainer)ctl;
@@ -348,7 +369,6 @@ namespace AITool
 							//		tc.CheckState = (CheckState)(tc.Checked ? CheckState.Checked : CheckState.Unchecked);
 							//	}
 							//}
-						}
 
 				}
 				//If Screen.AllScreens.Any(Function(screen__1) screen__1.WorkingArea.IntersectsWith(Properties.Settings.[Default].WindowPosition)) Then
@@ -406,9 +426,9 @@ endOfTry:
 
 				if (Frm.Tag != null && Frm.Tag.ToString().ToUpper() == "SAVE")
 				{
-					foreach (Control ctl in Frm.Controls)
-						if (ctl.Enabled)
-						{
+					List<Control> ctls = GetControls(Frm);
+
+					foreach (Control ctl in ctls)
 
 							if (ctl is SplitContainer)
 							{
@@ -439,7 +459,6 @@ endOfTry:
 							//	CheckBox tc = (CheckBox)ctl;
 							//	SaveSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked);
 							//}
-						}
 
 				}
 
@@ -454,6 +473,25 @@ endOfTry:
 			}
 		}
 
+
+		public static List<Control> GetControls(Control frm)
+		{
+			List<Control> ctls = new List<Control>();
+
+			foreach (Control c in frm.Controls)
+			{
+				if (!c.IsDisposed && c.Name != "" && c.Enabled )
+				{
+					ctls.Add(c);
+				}
+				if (c.HasChildren)
+				{
+					ctls.AddRange(GetControls(c));
+				}
+			}
+
+			return ctls;
+		}
 		private static bool IsVisibleOnAnyScreen(Rectangle rect)
 		{
 			bool Ret = false;

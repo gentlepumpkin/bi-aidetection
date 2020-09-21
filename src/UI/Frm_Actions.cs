@@ -22,8 +22,8 @@ namespace AITool
         {
             try
             {
-                Global_GUI.ConfigureFOLV(ref FOLV_Actions, typeof(CameraTriggerAction), null, null);
-                Global_GUI.UpdateFOLV(ref FOLV_Actions, actions, true);
+                Global_GUI.ConfigureFOLV(FOLV_Actions, typeof(CameraTriggerAction), null, null);
+                Global_GUI.UpdateFOLV(FOLV_Actions, actions, true);
 
                 Global_GUI.RestoreWindowState(this);
 

@@ -36,7 +36,7 @@ namespace AITool
     public partial class Shell:Form
     {
 
-
+        Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
 
         public Shell()
         {
@@ -58,14 +58,7 @@ namespace AITool
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
-
-
-            if (!AppSettings.Settings.SettingsFileName.ToLower().StartsWith(Directory.GetCurrentDirectory().ToLower()) )
-            {
-                //string msg = $"Error: The Start in/current directory is NOT the same as where the EXE is running from: \r\n{Directory.GetCurrentDirectory()}\r\n{AppDomain.CurrentDomain.BaseDirectory}";
-                //MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
+                        
             //---------------------------------------------------------------------------------------------------------
 
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
@@ -89,23 +82,7 @@ namespace AITool
             //---------------------------------------------------------------------------
             //HISTORY TAB
 
-            //left list column setup
-            list1.Columns.Add("Name");
-            list1.Columns.Add("Date and Time");
-            list1.Columns.Add("Camera");
-            list1.Columns.Add("Detections");
-            list1.Columns.Add("Positions");
-            list1.Columns.Add("✓");
-
-            //set left list column width segmentation
-            list1.Columns[0].Width = list1.Width * 0 / 100; //filename
-            list1.Columns[1].Width = list1.Width * 47 / 100; //date
-            list1.Columns[2].Width = list1.Width * 43 / 100; //cam name
-            list1.Columns[3].Width = list1.Width * 0 / 100; //obj and confidences
-            list1.Columns[4].Width = list1.Width * 0 / 100; // object positions of all detected objects separated by ";"
-            list1.Columns[5].Width = list1.Width * 10 / 100; //checkmark if something relevant was detected or not
-            list1.FullRowSelect = true; //make all columns clickable
-
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), null, "Date", SortOrder.Descending);
 
 
             //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
@@ -464,49 +441,7 @@ namespace AITool
             tableLayoutPanel7.SuspendLayout();
             tableLayoutPanel8.SuspendLayout();
             //tableLayoutPanel9.SuspendLayout();
-
-            //variable storing list1 effective width
-            int width = list1.Width;
-
-            //subtract vertical scrollbar width if scrollbar is shown (scrollbar is shown when there are more items(including the header row) than fit in the visible space of the list) 
-            try
-            {
-                if (list1.Items.Count > 0 && list1.Height <= (list1.GetItemRect(0).Height * (list1.Items.Count + 1)))
-                {
-                    width -= SystemInformation.VerticalScrollBarWidth;
-                }
-            }
-            catch
-            {
-                Log("ERROR in ReziseListViews(), checking if scrollbar is shown and subtracting scrollbar width failed.");
-            }
-
-            //fix an exception where form_resize calls this function too early:
-            if (list1.Columns.Count > 0)
-            {
-                if (width > 350) // if the list is wider than 350px, aditionally show the 'detections' column and mainly grow this column
-                {
-                    //set left list column width segmentation
-                    list1.Columns[0].Width = width * 0 / 100; //filename
-                    list1.Columns[1].Width = 120 + (width - 350) * 25 / 1000; //date
-                    list1.Columns[2].Width = 120 + (width - 350) * 25 / 1000; //cam name
-                    list1.Columns[3].Width = 80 + (width - 350) * 95 / 100; //obj and confidences
-                    list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
-                    list1.Columns[5].Width = 30; //checkmark if something relevant detected or not
-
-                }
-                else //if the form is smaller than 350px in width, don't show the detections column
-                {
-                    //set left list column width segmentation
-                    list1.Columns[0].Width = width * 0 / 100; //filename
-                    list1.Columns[1].Width = width * 47 / 100; //date
-                    list1.Columns[2].Width = width * 43 / 100; //cam name
-                    list1.Columns[3].Width = width * 0 / 100; //obj and confidences
-                    list1.Columns[4].Width = width * 0 / 100; // object positions of all detected objects separated by ";"
-                    list1.Columns[5].Width = width * 10 / 100; //checkmark if something relevant detected or not
-                }
-
-            }
+                      
 
             if (list2.Columns.Count > 0)
                 list2.Columns[0].Width = list2.Width - 4; //resize camera list column
@@ -517,26 +452,7 @@ namespace AITool
             //tableLayoutPanel9.ResumeLayout();
         }
 
-        //add last trigger time to label on Overview page
-        //private async Task LastTriggerInfo(Camera cam)
-        //{
-        //    Global_GUI.InvokeIFRequired(this.lbl_info, async () =>
-        //    {
-        //        string text1 = $"{cam.name} last triggered at {cam.last_trigger_time}. Sleeping for {cam.cooldown_time / 2} minutes."; //write last trigger time to label on Overview page
-        //        lbl_info.Text = text1;
-
-        //        int time = 30 * Convert.ToInt32(1000 * cam.cooldown_time);
-        //        await Task.Delay(time); // wait while the analysis is sleeping for this camera
-        //        if (lbl_info.Text == text1)
-        //        {
-        //            lbl_info.Text = $"{cam.name} last triggered at {cam.last_trigger_time}."; //Remove "sleeping for ..."
-        //        }
-
-        //    });
-
-        //}
-
-
+       
         //EVENTS:
 
         //event: mouse click on tab control
@@ -977,18 +893,21 @@ namespace AITool
             if (cb_showMask.Checked == true) //show overlay
             {
                 Log("Show mask toggled.");
-                if (list1.SelectedItems.Count > 0)
+
+                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
                 {
-                    if (System.IO.File.Exists("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".png")) //check if privacy mask file exists
+                    History hist = (History)folv_history.SelectedObjects[0];
+
+                    if (System.IO.File.Exists("./cameras/" + hist.Camera + ".png")) //check if privacy mask file exists
                     {
-                        using (var img = new Bitmap("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".png"))
+                        using (var img = new Bitmap("./cameras/" + hist.Camera + ".png"))
                         {
                             pictureBox1.Image = new Bitmap(img); //load mask as overlay
                         }
                     }
-                    else if (System.IO.File.Exists("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".bmp")) //check if privacy mask file exists
+                    else if (System.IO.File.Exists("./cameras/" + hist.Camera + ".bmp")) //check if privacy mask file exists
                     {
-                        using (var img = new Bitmap("./cameras/" + list1.SelectedItems[0].SubItems[2].Text + ".bmp"))
+                        using (var img = new Bitmap("./cameras/" + hist.Camera + ".bmp"))
                         {
                             pictureBox1.Image = new Bitmap(img); //load mask as overlay
                         }
@@ -999,6 +918,7 @@ namespace AITool
                     }
 
                 }
+
             }
             else //if showmask toggle-button is not checked, hide the mask overlay
             {
@@ -1012,7 +932,7 @@ namespace AITool
         {
             try
             {
-                if ((list1.SelectedItems.Count > 0) && (pictureBox1 != null) && (pictureBox1.BackgroundImage != null))
+                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0 && (pictureBox1 != null) && (pictureBox1.BackgroundImage != null))
                 {
                     //1. get the padding between the image and the picturebox border
 
@@ -1082,12 +1002,13 @@ namespace AITool
         //TODO: refactor detections
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            if (cb_showObjects.Checked && list1.SelectedItems.Count > 0) //if checkbox button is enabled
+            if (cb_showObjects.Checked && folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0) //if checkbox button is enabled
             {
                 //Log("Loading object rectangles...");
+                History hist = (History)folv_history.SelectedObjects[0];
 
-                string positions = list1.SelectedItems[0].SubItems[4].Text;
-                string detections = list1.SelectedItems[0].SubItems[3].Text;
+                string positions = hist.Positions;
+                string detections = hist.Detections;
 
                 try
                 {
@@ -1145,118 +1066,73 @@ namespace AITool
         // add new entry in left list
         public void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
-            
 
-            MethodInvoker LabelUpdate = delegate
+            if (!this.HistoryDic.ContainsKey(hist.Filename.ToLower()))
             {
-                //Log($"Debug: Creating list item - filename={hist.Filename}");
-                
-                if (checkListFilters(hist)) //only show the entry in the history list if no filter applies
-                {
-                    
-
-                    ListViewItem item;
-                    if (hist.Success)
-                    {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "✓" });
-                        item.ForeColor = System.Drawing.Color.Green;
-                    }
-                    else
-                    {
-                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "X" });
-                    }
-
-                    //add the FULL path to the item tag so we dont need to add a column
-                    //** no need, saving full filename in list anyway
-                    //item.Tag = filename;
-
-                    list1.Items.Insert(0, item);
-
-                    ResizeListViews();
-                }
+                this.HistoryDic.Add(hist.Filename.ToLower(), hist);
+                Global_GUI.UpdateFOLV_add(folv_history, this.HistoryDic.Values);
 
                 //update history CSV
                 string line = $"{hist.Filename}|{hist.Date.ToString(AppSettings.Settings.DateFormat)}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{hist.Success}";
                 HistoryWriter.WriteToLog(line);
-
-            };
-            Invoke(LabelUpdate);
+            }
+            else
+            {
+                Log("Error: Filename already existed in the history list??  " + hist.Filename);
+            }
 
 
         }
 
         //remove entry from left list
-        public void DeleteListItem(string filename)
+        public async void DeleteListItem(string filename)
         {
 
             using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
             {
                 Stopwatch SW = Stopwatch.StartNew();
 
-                MethodInvoker LabelUpdate = async delegate
+
+                if (this.HistoryDic.ContainsKey(filename.ToLower()))
                 {
-                    //bool isfullpath = filename.Contains("\\");
-                    //string justfile = filename;
-                    //if (isfullpath)
-                    //{
-                    //    justfile = Path.GetFileName(filename);
-                    //}
-
-                    ListViewItem listviewitem = new ListViewItem();
-                    for (int i = 0; i < list1.Items.Count; i++)
+                    this.HistoryDic.Remove(filename.ToLower());
+                    Global_GUI.UpdateFOLV_add(folv_history, this.HistoryDic.Values);
+                }
+                    
+                //remove entry from history csv
+                try
+                {
+                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                    if (Success)
                     {
-                        listviewitem = list1.Items[i];
-                        if (listviewitem.Text.ToLower().Contains(filename.ToLower()))
+                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
+                        string[] newLines = oldLines.Where(line => !line.Split('|')[0].ToLower().Contains(filename.ToLower())).ToArray();
+                        if (oldLines.Count() != newLines.Count())
                         {
-                            list1.Items.Remove(listviewitem);
-                            break;
-                        }
-                    }
-
-                    ResizeListViews();
-
-                    //remove entry from history csv
-                    try
-                    {
-                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-                        if (Success)
-                        {
-                            string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
-                            string[] newLines = oldLines.Where(line => !line.Split('|')[0].ToLower().Contains(filename.ToLower())).ToArray();
-                            if (oldLines.Count() != newLines.Count())
+                            Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                            if (Success)
                             {
-                                Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-                                if (Success)
-                                {
-                                    System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
-                                }
-                                else
-                                {
-                                    Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
+                            }
+                            else
+                            {
+                                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
 
-                                }
                             }
                         }
-                        else
-                        {
-                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
-                        }
-
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
+                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
                     }
 
-                };
+                }
+                catch (Exception ex)
+                {
+                    Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
+                }
 
-                Invoke(LabelUpdate);
-
-
-
-                //try to get a better feel how much time this function consumes - Vorlon
-                //Log($"Removed alert image '{filename}' from history list and from cameras/history.csv in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}} ({list1.Items.Count} list items)");
 
             }
 
@@ -1366,40 +1242,35 @@ namespace AITool
 
                             List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
 
-                            MethodInvoker LabelUpdate = delegate
+                            this.HistoryDic.Clear();
+
+                            //load all List elements into the ListView for each row
+                            foreach (var val in result)
                             {
-                                list1.Items.Clear();
-
-                                //load all List elements into the ListView for each row
-                                foreach (var val in result)
-                                {
                                     
-                                    History hist = new History().CreateFromCSV(val);
+                                History hist = new History().CreateFromCSV(val);
+                                this.HistoryDic.Add(hist.Filename.ToLower(), hist);
+                            }
 
-                                    if (!checkListFilters(hist)) 
-                                       continue;  //do not load the entry if a filter applies (checking as early as possible)
+                            Global_GUI.UpdateFOLV(folv_history, this.HistoryDic.Values, true);
 
-                                    ListViewItem item;
-                                    if (hist.Success)
-                                    {
-                                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "✓" });
-                                        item.ForeColor = System.Drawing.Color.Green;
-                                    }
-                                    else
-                                    {
-                                        item = new ListViewItem(new string[] { hist.Filename, hist.Date.ToString(AppSettings.Settings.DateFormat), hist.Camera, hist.Detections, hist.Positions, "X" });
-                                    }
+                            Global_GUI.InvokeIFRequired(folv_history, () =>
+                            {
+                                //filter
+                                folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
+                                {
+                                    History hist = (History)x;
+                                    return checkListFilters(hist);   //x != null && (myFile.Speed < 10 || myFile.SpeedType == "RPM");
+                                });
 
-                                    list1.Items.Insert(0, item);
-                                }
+                            });
 
-                                ResizeListViews();
 
-                            };
-                            Invoke(LabelUpdate);
+
+                            ResizeListViews();
 
                             //try to get a better feel how much time this function consumes - Vorlon
-                            Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {list1.Items.Count} lines.");
+                            Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
 
                         }
                         else
@@ -1546,65 +1417,12 @@ namespace AITool
 
 
         //event: load selected image to picturebox
-        private async void list1_SelectedIndexChanged(object sender, EventArgs e) //Bild ändern
-        {
-
-            string filename = "";
-            try
-            {
-                if (list1.SelectedItems.Count > 0)
-                {
-
-                    //this now stores the full filename
-                    filename = list1.SelectedItems[0].Text;
-
-                    if (!String.IsNullOrEmpty(filename) && filename.Contains("\\") && File.Exists(filename))
-                    {
-                        using (var img = new Bitmap(filename))
-                        {
-                            pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
-                        }
-                        showHideMask();
-                        lbl_objects.Text = list1.SelectedItems[0].SubItems[3].Text;
-                    }
-                    else
-                    {
-                        lbl_objects.Text = "Image not found";
-                        pictureBox1.BackgroundImage = null;
-                        ////delete entry that caused the issue
-                        //try
-                        //{
-                        //    DeleteListItem(filename);
-                        //}
-                        ////if deleting fails because the filename could not be retrieved, do a complete clean up
-                        //catch
-                        //{
-                        //    CleanCSVList();
-                        //    await LoadFromCSVAsync();
-                        //}
-                    }
-
-                }
-                else
-                {
-                    //lbl_objects.Text = "Nothing selected";
-                    //pictureBox1.BackgroundImage = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"ERROR: Loading entry from History list failed. This might have happened because obsolete entries weren't correctly deleted. {Global.ExMsg(ex)} )");
-
-            }
-
-
-
-        }
+      
 
         //event: show mask button clicked
         private void cb_showMask_CheckedChanged(object sender, EventArgs e)
         {
-            if (list1.SelectedItems.Count > 0)
+            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
             {
                 showHideMask();
             }
@@ -1613,10 +1431,11 @@ namespace AITool
         //event: show objects button clicked
         private void cb_showObjects_MouseUp(object sender, MouseEventArgs e)
         {
-            if (list1.SelectedItems.Count > 0)
+            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
             {
                 pictureBox1.Refresh();
             }
+
         }
 
         //event: show history list filters button clicked
@@ -2852,6 +2671,71 @@ namespace AITool
         private void tabLog_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void folv_history_SelectionChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+                {
+                    History hist = (History)folv_history.SelectedObjects[0];
+                    if (!String.IsNullOrEmpty(hist.Filename) && hist.Filename.Contains("\\") && File.Exists(hist.Filename))
+                    {
+                        using (var img = new Bitmap(hist.Filename))
+                        {
+                            pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                        }
+                        showHideMask();
+                        lbl_objects.Text = hist.Detections;
+                    }
+                    else
+                    {
+                        lbl_objects.Text = "Image not found";
+                        pictureBox1.BackgroundImage = null;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {Global.ExMsg(ex)}");
+
+            }
+
+
+
+        }
+
+        private void folv_history_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            FormatHistoryRow(sender, e);
+        }
+
+        private async void FormatHistoryRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            try
+            {
+                History hist = (History)e.Model;
+
+                // If SPI IsNot Nothing Then
+                if (hist.Success)
+                    e.Item.ForeColor = Color.Green;
+                else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
+                    e.Item.ForeColor = Color.Gray;
+                else 
+                    e.Item.ForeColor = Color.Black;
+            }
+
+
+
+            catch (Exception ex)
+            {
+            }
+            // Log("Error: " & ExMsg(ex))
+            finally
+            {
+            }
         }
     }
 

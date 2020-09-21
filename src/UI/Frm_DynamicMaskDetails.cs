@@ -170,8 +170,8 @@ namespace AITool
         {
             loading = true;
 
-            Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
-            Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
 
             Global_GUI.RestoreWindowState(this);
 
@@ -227,8 +227,8 @@ namespace AITool
                 masked = cam.maskManager.masked_positions;
             }
 
-            Global_GUI.UpdateFOLV(ref FOLV_MaskHistory, hist, true);
-            Global_GUI.UpdateFOLV(ref FOLV_Masks, masked, true);
+            Global_GUI.UpdateFOLV(FOLV_MaskHistory, hist, true);
+            Global_GUI.UpdateFOLV(FOLV_Masks, masked, true);
             this.CurObjPosLst.Clear();
             ShowMaskImage();
             ShowImageMask(null);
