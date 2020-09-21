@@ -357,7 +357,10 @@ namespace AITool
                     }
 
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log("Error getting next URL: " + ex.ToString());
+                }
 
                 if (ret != null)
                 {
