@@ -44,13 +44,7 @@ namespace AITool
 
             //register event handler to run clean history every minute
             cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
-            cleanHistoryTimer.Interval = 300000; // 5min = 300,000ms
-
-            //Adding this here too since have seen several mysterious cases (including my machine) where history not cleaned up
-            if (_masking_enabled) cleanHistoryTimer.Start();
-            else cleanHistoryTimer.Stop();
-
-            //Global.Log(" ** Initialize MaskManager **");
+            cleanHistoryTimer.Interval = 60000; // 1min = 60,000ms
         }
 
         public void Update(Camera cam)
@@ -92,6 +86,7 @@ namespace AITool
                         }
                     }
                 }
+
                 foreach (ObjectPosition op in this.masked_positions)
                 {
                     //Update threshold since it could have been changed since mask created
@@ -119,16 +114,12 @@ namespace AITool
                         }
                     }
                 }
-
-                this.CleanUpExpiredHistory();
-
             }
         }
 
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
             bool maskExists = false;
-
 
             List<string> objects = Global.Split(this.objects, "|;,");
 
@@ -223,11 +214,6 @@ namespace AITool
             {
                 try
                 {
-                    //No need for this, I believe HistoryList 'becomes' last_positions_history
-                    //List<ObjectPosition> historyList = last_positions_history;
-
-                    //Global.Log("### History objects summary for camera " + cameraName + " ###");
-
                     if (last_positions_history != null && last_positions_history.Count > 0)
                     {
                         //scan backward through the list and remove by index. Not as easy to read but the faster for removals
@@ -261,9 +247,6 @@ namespace AITool
         {
             try
             {
-                //No need for this, I believe maskedlist 'becomes' masked_positions
-                //List<ObjectPosition> maskedList = masked_positions;
-
                 if (masked_positions != null && masked_positions.Count > 0)
                 {
                     //Global.Log("Searching for object masks to remove on Camera: " + cameraName);

@@ -35,12 +35,14 @@ namespace AITool
         //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
         public double LastxPercentVariance { get; set; } = 0;
         public double LastyPercentVariance { get; set; } = 0;
-        public int LastCompared_xmin { get; set; } = 0;
-        public int LastCompared_ymin { get; set; } = 0;
-        public int LastCompared_xmax { get; set; } = 0;
-        public int LastCompared_ymax { get; set; } = 0;
-        public int LastCompared_width { get; set; } = 0;
-        public int LastCompared_height { get; set; } = 0;
+
+        //troubleshooting details - uncomment for local debugging
+        //public int LastCompared_xmin { get; set; } = 0;
+        //public int LastCompared_ymin { get; set; } = 0;
+        //public int LastCompared_xmax { get; set; } = 0;
+        //public int LastCompared_ymax { get; set; } = 0;
+        //public int LastCompared_width { get; set; } = 0;
+        //public int LastCompared_height { get; set; } = 0;
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
@@ -74,19 +76,17 @@ namespace AITool
 
         public bool Equals(ObjectPosition other)
         {
-
             if (other == null)
                 return false;
 
+            //storing these to help with troubleshooting 
+            //this.LastCompared_height = other.height;
+            //this.LastCompared_width = other.width;
 
-            //storing these to help with troubleshooting:
-            this.LastCompared_height = other.height;
-            this.LastCompared_width = other.width;
-
-            this.LastCompared_xmax = other.xmax;
-            this.LastCompared_ymax = other.ymax;
-            this.LastCompared_xmin = other.xmin;
-            this.LastCompared_ymin = other.ymin;
+            //this.LastCompared_xmax = other.xmax;
+            //this.LastCompared_ymax = other.ymax;
+            //this.LastCompared_xmin = other.xmin;
+            //this.LastCompared_ymin = other.ymin;
 
             //calculate the percentage variance for width and height of selected object
             this.LastWidthPercentVariance = (double)Math.Abs(this.width - other.width) / this.width * 100;
@@ -105,7 +105,6 @@ namespace AITool
                                (this.LastHeightPercentVariance <= percent);
 
             return this.LastMatched;
-
         }
 
         public override int GetHashCode()
@@ -115,6 +114,7 @@ namespace AITool
             hashCode = hashCode * -1521134295 + ymin.GetHashCode();
             hashCode = hashCode * -1521134295 + xmax.GetHashCode();
             hashCode = hashCode * -1521134295 + ymax.GetHashCode();
+
             return hashCode;
         }
 
