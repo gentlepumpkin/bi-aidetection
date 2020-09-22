@@ -14,7 +14,7 @@ A MQTT broker running on your local network, https://mosquitto.org/ is a commonl
     to connect to your MQTT broker.
 1.  Configure AI Tool to connect to your MQTT Broker
     * Cameras > [camera] > Action Settings > MQTT Settings
-    * ![MQTT Config](https://imgur.com/S4sDjzs)
+    * ![MQTT Config](https://imgur.com/S4sDjzs.png)
 1.  Configure AI Tool to trigger the Camera via MQTT
     * Cameras > [camera] > Action Settings
     * MQTT Trigger Topic: `ai/[camera]/motion | BlueIris/admin`
