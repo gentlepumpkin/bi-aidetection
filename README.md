@@ -11,6 +11,8 @@ https://github.com/VorlonCD/bi-aidetection/releases
 ### Install guide and discussion
 https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/
 
+* [MQTT Configuration Guide](mqtt.md)
+
 ### Key Features
 - analyze Blue Iris motion alerts using Artificial Intelligence and sort out false alerts
 - detect humans and selected objects
