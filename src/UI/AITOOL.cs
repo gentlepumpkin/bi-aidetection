@@ -1132,13 +1132,6 @@ namespace AITool
 
                                             }  //end loop over current object list
 
-                                            if (cam.maskManager.masking_enabled)
-                                            {
-                                                //remove objects from history if they have not been detected in the history_save_mins and hit counter < history_threshold_count
-                                                //cam.maskManager.CleanUpExpiredHistory();
-                                                cam.maskManager.CleanUpExpiredMasks();
-                                            }
-
                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
                                             if (objects.Count() > 0)
                                             {

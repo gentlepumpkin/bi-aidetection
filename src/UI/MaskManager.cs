@@ -15,26 +15,27 @@ namespace AITool
             set
             {
                 _masking_enabled = value;
-                if(_masking_enabled) cleanHistoryTimer.Start();
-                else cleanHistoryTimer.Stop();
+                if(_masking_enabled) cleanMaskTimer.Start();
+                else cleanMaskTimer.Stop();
             }
         }
 
-        public int mask_counter_default { get; set; } = 15;               //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins { get; set; } = 10;                   //how long to store detected objects in history before purging list 
+        public int mask_remove_mins { get; set; } = 5;                    //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
+        public int history_save_mins { get; set; } = 5 ;                  //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
+        public int mask_save_mins { get; set; } = 2;
         public double thresholdPercent { get; set; } = 15;                //what percent can the selection rectangle vary to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
+        public DateTime lastDetectionDate { get; set; } 
 
         public string objects = "";
 
         [JsonIgnore]
         private object MaskLockObject = new object();
         [JsonIgnore]
-        private Timer cleanHistoryTimer = new Timer();
+        private Timer cleanMaskTimer = new Timer();
         
-
         //I think JsonConstructor may not be needed, but adding anyway -Vorlon
         [JsonConstructor]
         public MaskManager()
@@ -43,8 +44,8 @@ namespace AITool
             masked_positions = new List<ObjectPosition>();
 
             //register event handler to run clean history every minute
-            cleanHistoryTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanHistoryEvent);
-            cleanHistoryTimer.Interval = 60000; // 1min = 60,000ms
+            cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanMaskEvent);
+            cleanMaskTimer.Interval = 60000; // 1min = 60,000ms
         }
 
         public void Update(Camera cam)
@@ -120,6 +121,7 @@ namespace AITool
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
             bool maskExists = false;
+            lastDetectionDate = DateTime.Now;
 
             List<string> objects = Global.Split(this.objects, "|;,");
 
@@ -147,9 +149,8 @@ namespace AITool
 
                 int historyIndex = last_positions_history.IndexOf(currentObject);
 
-                if (historyIndex > -1)  
+                if (historyIndex > -1)
                 {
-                    //get index to prevent another search for removal if needed
                     ObjectPosition foundObject = last_positions_history[historyIndex];
 
                     foundObject.LastSeenDate = DateTime.Now;
@@ -168,40 +169,33 @@ namespace AITool
                     {
                         Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.cameraName);
                         last_positions_history.RemoveAt(historyIndex);
-                        foundObject.isVisible = true;
-                        foundObject.counter = mask_counter_default;
+                        foundObject.createDate = DateTime.Now;  //reset create date as history object is converted to a mask
                         masked_positions.Add(foundObject);
                     }
                     return maskExists;
                 }
-            }
 
-            int maskIndex = masked_positions.IndexOf(currentObject);
+                int maskIndex = masked_positions.IndexOf(currentObject);
 
-            if (maskIndex > -1)
-            {
-                ObjectPosition maskedObject = (ObjectPosition)masked_positions[maskIndex];
-
-                maskedObject.LastSeenDate = DateTime.Now;
-
-                //Update last image that has same detection, and camera name found for existing mask
-                maskedObject.imagePath = currentObject.imagePath;
-                maskedObject.cameraName = currentObject.cameraName;
-
-                if (maskedObject.counter < mask_counter_default)
+                if (maskIndex > -1)
                 {
-                    maskedObject.counter++;
+                    ObjectPosition maskedObject = (ObjectPosition)masked_positions[maskIndex];
+
+                    maskedObject.LastSeenDate = DateTime.Now;
+
+                    //Update last image that has same detection, and camera name found for existing mask
+                    maskedObject.imagePath = currentObject.imagePath;
+                    maskedObject.cameraName = currentObject.cameraName;
+
+                    Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
+
+                    maskExists = true;
                 }
-
-                Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
-
-                maskedObject.isVisible = true;
-                maskExists = true;
-            }
-            else
-            {
-                Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
-                last_positions_history.Add(currentObject);
+                else
+                {
+                    Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
+                    last_positions_history.Add(currentObject);
+                }
             }
 
             return maskExists;
@@ -245,49 +239,45 @@ namespace AITool
 
         public void CleanUpExpiredMasks()
         {
-            try
+            lock (MaskLockObject)
             {
-                if (masked_positions != null && masked_positions.Count > 0)
+                try
                 {
-                    //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
-
-                    //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
-                    for (int x = masked_positions.Count - 1; x >= 0; x--)
+                    if (masked_positions != null && masked_positions.Count > 0)
                     {
-                        ObjectPosition maskedObject = masked_positions[x];
-                        if (!maskedObject.isVisible && !maskedObject.isStatic)
-                        {
-                            //Global.Log("Masked object NOT visible - " + maskedObject.ToString());
-                            maskedObject.counter--;
+                        //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
 
-                            if (maskedObject.counter <= 0)
+                        //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
+                        for (int x = masked_positions.Count - 1; x >= 0; x--)
+                        {
+                            ObjectPosition maskedObject = masked_positions[x];
+
+                            TimeSpan ts = lastDetectionDate - maskedObject.LastSeenDate;
+                            double minutes = ts.TotalMinutes;
+
+                            if (minutes >= mask_save_mins && !maskedObject.isStatic)
                             {
                                 Global.Log("Removing expired masked object: " + maskedObject.ToString());
-                                masked_positions.RemoveAt(x);
+                               masked_positions.RemoveAt(x);
                             }
                         }
-                        else
-                        {
-                            //Global.Log("Masked object VISIBLE - " + maskedObject.ToString());
-                            maskedObject.isVisible = false; //reset flag
-                        }
+                    }
+                    else if (masked_positions == null)
+                    {
+                        Global.Log("Error: Maskedlist is null?");
                     }
                 }
-                else if (masked_positions == null)
+                catch (Exception ex)
                 {
-                    Global.Log("Error: Maskedlist is null?");
+                    Global.Log("Error: " + Global.ExMsg(ex));
                 }
-
-            }
-            catch (Exception ex)
-            {
-                Global.Log("Error: " + Global.ExMsg(ex));
             }
         }
 
-        private void cleanHistoryEvent(object sender, EventArgs e)
+        private void cleanMaskEvent(object sender, EventArgs e)
         {
             CleanUpExpiredHistory();
+            CleanUpExpiredMasks();
         }
 
     }
