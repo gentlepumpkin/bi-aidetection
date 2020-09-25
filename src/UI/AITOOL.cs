@@ -162,7 +162,7 @@ namespace AITool
                     Log("Not running as administrator.");
                 }
 
-                if (AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\').ToLower() == Directory.GetCurrentDirectory().ToLower())
+                if (AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\').ToLower() == Directory.GetCurrentDirectory().TrimEnd('\\').ToLower())
                 {
                     Log($"*** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
                 }
@@ -170,7 +170,7 @@ namespace AITool
                 {
                     try
                     {
-                        Log($"*** Changing Start in/current directory from '{Directory.GetCurrentDirectory()}' to '{AppDomain.CurrentDomain.BaseDirectory}' ***");
+                        Log($"*** Changing Start in/current directory from '{Directory.GetCurrentDirectory().TrimEnd('\\')}' to '{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}' ***");
                         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
                     }
                     catch (Exception ex)
@@ -913,8 +913,8 @@ namespace AITool
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
-            //double halfcool = cam.cooldown_time / 2;
-            if (mins >= cam.cooldown_time)
+            double halfcool = cam.cooldown_time / 2;
+            if (mins >= halfcool)
             {
                 try
                 {
@@ -1357,8 +1357,8 @@ namespace AITool
             {
                 cam.stats_skipped_images++;
                 cam.stats_skipped_images_session++;
-                Log($"{CurSrv} - Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.00")}' of '{cam.cooldown_time.ToString("#######0.00")}' minutes, Session Skip Count={cam.stats_skipped_images_session}");
-                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{mins.ToString("#######0.00")}' of '{cam.cooldown_time.ToString("#######0.00")}' minutes.", "", false));
+                Log($"{CurSrv} - Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}");
+                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes.", "", false));
             }
 
             return (error == "");
@@ -1615,7 +1615,7 @@ namespace AITool
 
             try
             {
-                double cooltime = Math.Round((DateTime.Now - cam.last_trigger_time).TotalMinutes, 2);
+                double cooltime = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
                 string tmpfile = CurImg.image_path;
 
                 //only trigger if cameras cooldown time since last detection has passed
@@ -1794,6 +1794,14 @@ namespace AITool
                     }
 
 
+                    if (Trigger)
+                    {
+                        cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+                        Global.Log($"{cam.name} last triggered at {cam.last_trigger_time}.");
+                        Global.UpdateLabel($"{cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
+                    }
+
+
                 }
                 else
                 {
@@ -1801,7 +1809,6 @@ namespace AITool
                     Log($"   Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {cam.cooldown_time} minutes - See Cameras 'cooldown_time' in settings file)");
                 }
 
-                cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
 
                 if (cam.Action_image_merge_detections && Trigger && cam.Action_image_merge_detections_makecopy && !string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
                 {
@@ -1809,8 +1816,6 @@ namespace AITool
                     //Log($"Debug: Deleting tmp file {tmpfile}");
                 }
 
-                if (Trigger)
-                    Global.UpdateLabel($"{cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
 
             }
             catch (Exception ex)

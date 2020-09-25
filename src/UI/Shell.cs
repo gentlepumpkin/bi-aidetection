@@ -583,6 +583,7 @@ namespace AITool
             timeline.Series[1].Points.Clear();
             timeline.Series[2].Points.Clear();
             timeline.Series[3].Points.Clear();
+            timeline.Series[4].Points.Clear();
 
             Stopwatch SW = Stopwatch.StartNew();
 
