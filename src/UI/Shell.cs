@@ -36,7 +36,7 @@ namespace AITool
     public partial class Shell:Form
     {
 
-        Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
+        //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
 
         public Shell()
         {
@@ -58,7 +58,7 @@ namespace AITool
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
-                        
+
             //---------------------------------------------------------------------------------------------------------
 
             this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
@@ -84,9 +84,8 @@ namespace AITool
 
             Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), null, "Date", SortOrder.Descending);
 
+            Global_GUI.UpdateFOLV(folv_history, HistoryDB.HistoryDic.Values);
 
-            //this method is slow if the database is large, so it's usually only called on startup. During runtime, DeleteListImage() is used to remove obsolete images from the history list
-            CleanCSVList();
 
             //load entries from history.csv into history ListView
             //LoadFromCSV(); not neccessary because below, comboBox_filter_camera.SelectedIndex will call LoadFromCSV()
@@ -109,7 +108,7 @@ namespace AITool
                 cmbInput.Items.Add(pth);
 
             }
-            
+
             tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
             cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
             Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
@@ -120,7 +119,7 @@ namespace AITool
             cb_log.Checked = AppSettings.Settings.log_everything;
             cb_send_errors.Checked = AppSettings.Settings.send_errors;
             cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
-            
+
             //---------------------------------------------------------------------------
             //STATS TAB
             comboBox1.Items.Add("All Cameras"); //add all cameras stats entry
@@ -146,7 +145,7 @@ namespace AITool
                 }
                 LoadDeepStackTab(true);
             }
-            
+
 
 
 
@@ -426,6 +425,7 @@ namespace AITool
             {
                 System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
                 lbl_errors.Text = "";
+                errors = 0;
             }
             else
             {
@@ -441,7 +441,7 @@ namespace AITool
             tableLayoutPanel7.SuspendLayout();
             tableLayoutPanel8.SuspendLayout();
             //tableLayoutPanel9.SuspendLayout();
-                      
+
 
             if (list2.Columns.Count > 0)
                 list2.Columns[0].Width = list2.Width - 4; //resize camera list column
@@ -452,7 +452,7 @@ namespace AITool
             //tableLayoutPanel9.ResumeLayout();
         }
 
-       
+
         //EVENTS:
 
         //event: mouse click on tab control
@@ -573,150 +573,119 @@ namespace AITool
             timeline.Series[2].Points.Clear();
             timeline.Series[3].Points.Clear();
 
-            List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
-
             Stopwatch SW = Stopwatch.StartNew();
 
             try
             {
-                bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                List<History> result = HistoryDB.HistoryDic.Values.ToList();
 
-                if (Success)
+                if (comboBox1.Text.Trim().ToLower() != "All Cameras".ToLower()) //all cameras selected
                 {
-                    if (comboBox1.Text.Trim() == "All Cameras") //all cameras selected
+                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(comboBox1.Text.Trim().ToLower())).ToList();
+                }
+
+                //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
+                int[] all = new int[48];
+                int[] falses = new int[48];
+                int[] irrelevant = new int[48];
+                int[] relevant = new int[48];
+
+                //fill arrays with amount of calls/half hour
+                foreach (History hist in result)
+                {               //example of time column entry: 23.08.19, 18:31:09
+                                //get hour
+                    int hour = hist.Date.Hour;
+
+                    //get minute
+                    int minute = hist.Date.Minute;
+
+                    int halfhour; //stores the half hour in which the alert occured
+
+                    //add +1 to counter for corresponding half-hour
+                    if (minute > 30) //if alert occurred after half o clock
                     {
-                        //load all lines except the first line
-                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
-                        {
-                            result.Add(line);
-                        }
+                        halfhour = hour * 2 + 1;
                     }
-                    else //camera selection
+                    else //if alert occured before half o clock
                     {
-                        string cameraname = comboBox1.Text.Trim();
-
-                        //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
-                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
-                        {
-                            if (line.Split('|')[2] == cameraname)
-                            {
-                                result.Add(line);
-                            }
-                        }
+                        halfhour = hour * 2;
                     }
 
-                    //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
-                    int[] all = new int[48];
-                    int[] falses = new int[48];
-                    int[] irrelevant = new int[48];
-                    int[] relevant = new int[48];
-
-                    //fill arrays with amount of calls/half hour
-                    foreach (var val in result)
-                    {               //example of time column entry: 23.08.19, 18:31:09
-                                    //get hour
-                        string hourstring = val.Split('|')[1].Split(',')[1].Split(':')[0];
-                        int hour;
-                        Int32.TryParse(hourstring, out hour);
-
-                        //get minute
-                        string minutestring = val.Split('|')[1].Split(',')[1].Split(':')[1];
-                        int minute;
-                        Int32.TryParse(minutestring, out minute);
-
-                        int halfhour; //stores the half hour in which the alert occured
-
-                        //add +1 to counter for corresponding half-hour
-                        if (minute > 30) //if alert occurred after half o clock
-                        {
-                            halfhour = hour * 2 + 1;
-                        }
-                        else //if alert occured before half o clock
-                        {
-                            halfhour = hour * 2;
-                        }
-
-                        //if detection was successful
-                        if (val.Split('|')[5] == "true")
-                        {
-                            relevant[halfhour]++;
-                        }
-                        //if it was a false alert
-                        else if (val.Split('|')[3] == "false alert")
-                        {
-                            falses[halfhour]++;
-                        }
-                        //if something irrelevant was detected
-                        else
-                        {
-                            irrelevant[halfhour]++;
-                        }
-
-                        all[halfhour]++;
-                    }
-
-                    //add to graph "all":
-
-                    /*the graph will have a gap at the end and at the beginning if we don'f specify a value
-                    * with an x value outside the visible area at the end and before the first visible point. 
-                    * So the first point is at -0.25 and has the value of the last visible point and the 
-                    * last point is at 24.25 and has the value of the first visible point. */
-
-                    timeline.Series[0].Points.AddXY(-0.25, all[47]); // beginning point with value of last visible point
-
-                    //and now add all visible points 
-                    double x = 0.25;
-                    foreach (int halfhour in all)
+                    //if detection was successful
+                    if (hist.Success)
                     {
-                        int index = timeline.Series[0].Points.AddXY(x, halfhour);
-                        x = x + 0.5;
+                        relevant[halfhour]++;
+                    }
+                    //if it was a false alert
+                    else if (hist.Detections.ToLower() == "false alert")
+                    {
+                        falses[halfhour]++;
+                    }
+                    //if something irrelevant was detected
+                    else
+                    {
+                        irrelevant[halfhour]++;
                     }
 
-                    timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
+                    all[halfhour]++;
+                }
 
-                    //add to graph "falses":
+                //add to graph "all":
 
-                    timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
+                /*the graph will have a gap at the end and at the beginning if we don'f specify a value
+                * with an x value outside the visible area at the end and before the first visible point. 
+                * So the first point is at -0.25 and has the value of the last visible point and the 
+                * last point is at 24.25 and has the value of the first visible point. */
+
+                timeline.Series[0].Points.AddXY(-0.25, all[47]); // beginning point with value of last visible point
+
+                //and now add all visible points 
+                double x = 0.25;
+                foreach (int halfhour in all)
+                {
+                    int index = timeline.Series[0].Points.AddXY(x, halfhour);
+                    x = x + 0.5;
+                }
+
+                timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
+
+                //add to graph "falses":
+
+                timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
+                                                                    //and now add all visible points 
+                x = 0.25;
+                foreach (int halfhour in falses)
+                {
+                    int index = timeline.Series[1].Points.AddXY(x, halfhour);
+                    x = x + 0.5;
+                }
+                timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
+
+                //add to graph "irrelevant":
+
+                timeline.Series[2].Points.AddXY(-0.25, irrelevant[47]); // beginning point with value of last visible point
                                                                         //and now add all visible points 
-                    x = 0.25;
-                    foreach (int halfhour in falses)
-                    {
-                        int index = timeline.Series[1].Points.AddXY(x, halfhour);
-                        x = x + 0.5;
-                    }
-                    timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
-
-                    //add to graph "irrelevant":
-
-                    timeline.Series[2].Points.AddXY(-0.25, irrelevant[47]); // beginning point with value of last visible point
-                                                                            //and now add all visible points 
-                    x = 0.25;
-                    foreach (int halfhour in irrelevant)
-                    {
-                        int index = timeline.Series[2].Points.AddXY(x, halfhour);
-                        x = x + 0.5;
-                    }
-                    timeline.Series[2].Points.AddXY(24.25, irrelevant[0]); // finally add last point with value of first visible point
-
-                    //add to graph "relevant":
-
-                    timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
-                                                                          //and now add all visible points 
-                    x = 0.25;
-                    foreach (int halfhour in relevant)
-                    {
-                        int index = timeline.Series[3].Points.AddXY(x, halfhour);
-                        x = x + 0.5;
-                    }
-                    timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
-
-
-                }
-                else
+                x = 0.25;
+                foreach (int halfhour in irrelevant)
                 {
-                    Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
+                    int index = timeline.Series[2].Points.AddXY(x, halfhour);
+                    x = x + 0.5;
                 }
+                timeline.Series[2].Points.AddXY(24.25, irrelevant[0]); // finally add last point with value of first visible point
+
+                //add to graph "relevant":
+
+                timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
+                                                                      //and now add all visible points 
+                x = 0.25;
+                foreach (int halfhour in relevant)
+                {
+                    int index = timeline.Series[3].Points.AddXY(x, halfhour);
+                    x = x + 0.5;
+                }
+                timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
+
+
 
             }
             catch (Exception ex)
@@ -739,108 +708,81 @@ namespace AITool
             chart_confidence.Series[0].Points.Clear();
             chart_confidence.Series[1].Points.Clear();
 
-            List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
             Stopwatch SW = Stopwatch.StartNew();
 
             try
             {
-                bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
+                List<History> result = HistoryDB.HistoryDic.Values.ToList();
 
-                if (Success)
+                if (comboBox1.Text.Trim().ToLower() != "All Cameras".ToLower()) //all cameras selected
                 {
-                    if (comboBox1.Text == "All Cameras") //all cameras selected
-                    {
-                        //load all lines except the first line
-                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
-                        {
-                            result.Add(line);
-                        }
-                    }
-                    else //camera selection
-                    {
-                        string cameraname = comboBox1.Text.Trim();
-
-                        //load all lines from the history.csv except the first line into List (the first line is the table heading and not an alert entry)
-                        foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
-                        {
-                            if (line.Split('|')[2] == cameraname)
-                            {
-                                result.Add(line);
-                            }
-                        }
-                    }
-
-
-                    //this array stores the Absolute frequencies of all possible confidence values (0%-100%)
-                    int[] green_values = new int[101];
-                    int[] orange_values = new int[101];
-
-                    //fill array with frequencies
-                    foreach (var line in result)
-                    {
-                        //example of detections column entry: "person (41%); person (97%);" or "masked: person (41%); person (97%);"
-                        string detections_column = line.Split('|')[3];
-                        if (detections_column.Contains(':'))
-                        {
-                            detections_column = detections_column.Split(':')[1];
-
-                            string[] detections = detections_column.Split(';');
-
-                            //write the confidence of every detection into the green_values string
-                            foreach (string detection in detections)
-                            {
-                                int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
-                                if (x_value > 0)
-                                { 
-                                    //example: -> "person (41%)"
-                                    //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
-                                    orange_values[x_value]++;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            string[] detections = detections_column.Split(';');
-
-                            //write the confidence of every detection into the green_values string
-                            foreach (string detection in detections)
-                            {
-                                int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
-                                if (x_value > 0)
-                                {
-                                    //example: -> "person (41%)"
-                                    //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
-                                    green_values[x_value]++;
-                                }
-                            }
-                        }
-                    }
-
-
-                    //write green series in chart
-                    int i = 0;
-                    foreach (int y_value in green_values)
-                    {
-                        chart_confidence.Series[1].Points.AddXY(i, y_value);
-                        i++;
-                    }
-
-                    //write orange series in chart
-                    i = 0;
-                    foreach (int y_value in orange_values)
-                    {
-                        chart_confidence.Series[0].Points.AddXY(i, y_value);
-                        i++;
-                    }
-
-
+                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(comboBox1.Text.Trim().ToLower())).ToList();
                 }
-                else
+
+                //this array stores the Absolute frequencies of all possible confidence values (0%-100%)
+                int[] green_values = new int[101];
+                int[] orange_values = new int[101];
+
+                //fill array with frequencies
+                foreach (History hist in result)
                 {
-                    Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                    //example of detections column entry: "person (41%); person (97%);" or "masked: person (41%); person (97%);"
+                    string detections_column = hist.Detections;
+                    if (detections_column.Contains(':'))
+                    {
+                        detections_column = detections_column.Split(':')[1];
 
+                        string[] detections = detections_column.Split(';');
+
+                        //write the confidence of every detection into the green_values string
+                        foreach (string detection in detections)
+                        {
+                            int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                            if (x_value > 0)
+                            {
+                                //example: -> "person (41%)"
+                                //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
+                                orange_values[x_value]++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string[] detections = detections_column.Split(';');
+
+                        //write the confidence of every detection into the green_values string
+                        foreach (string detection in detections)
+                        {
+                            int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                            if (x_value > 0)
+                            {
+                                //example: -> "person (41%)"
+                                //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
+                                green_values[x_value]++;
+                            }
+                        }
+                    }
                 }
+
+
+                //write green series in chart
+                int i = 0;
+                foreach (int y_value in green_values)
+                {
+                    chart_confidence.Series[1].Points.AddXY(i, y_value);
+                    i++;
+                }
+
+                //write orange series in chart
+                i = 0;
+                foreach (int y_value in orange_values)
+                {
+                    chart_confidence.Series[0].Points.AddXY(i, y_value);
+                    i++;
+                }
+
+
 
             }
             catch (Exception ex)
@@ -853,41 +795,6 @@ namespace AITool
         }
 
 
-        //----------------------------------------------------------------------------------------------------------
-        //HISTORY TAB
-        //----------------------------------------------------------------------------------------------------------
-
-        // load images from input_path to left list
-        /*public void LoadList()
-        {
-            list1.Items.Clear();
-            try
-            {
-                string[] files = Directory.GetFiles(input_path, $"*.jpg");
-
-                foreach (string file in files)
-                {
-
-                    string fileName = Path.GetFileName(file);
-                    ListViewItem item = new ListViewItem(new string[] { fileName, "content" });
-                    item.Tag = file;
-
-                    list1.Items.Add(item);
-
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Can't find the input directory, please check it.");
-            }
-            if (list1.Items.Count > 0)
-            {
-                list1.Items[0].Selected = true; //select first image
-            }
-        }*/
-
-        //show or hide the privacy mask overlay
-        //TODO:refactor
         private void showHideMask()
         {
             if (cb_showMask.Checked == true) //show overlay
@@ -1064,22 +971,13 @@ namespace AITool
         }
 
         // add new entry in left list
-        public void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
+        public async void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
 
-            if (!this.HistoryDic.ContainsKey(hist.Filename.ToLower()))
-            {
-                this.HistoryDic.Add(hist.Filename.ToLower(), hist);
-                Global_GUI.UpdateFOLV_add(folv_history, this.HistoryDic.Values);
 
-                //update history CSV
-                string line = $"{hist.Filename}|{hist.Date.ToString(AppSettings.Settings.DateFormat)}|{hist.Camera}|{hist.Detections}|{hist.Positions}|{hist.Success}";
-                HistoryWriter.WriteToLog(line);
-            }
-            else
-            {
-                Log("Error: Filename already existed in the history list??  " + hist.Filename);
-            }
+            if (await HistoryDB.InsertHistoryItem(hist))
+                Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList());
+
 
 
         }
@@ -1088,202 +986,44 @@ namespace AITool
         public async void DeleteListItem(string filename)
         {
 
-            using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
-            {
-                Stopwatch SW = Stopwatch.StartNew();
 
-
-                if (this.HistoryDic.ContainsKey(filename.ToLower()))
-                {
-                    this.HistoryDic.Remove(filename.ToLower());
-                    Global_GUI.UpdateFOLV_add(folv_history, this.HistoryDic.Values);
-                }
-                    
-                //remove entry from history csv
-                try
-                {
-                    bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-                    if (Success)
-                    {
-                        string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName);
-                        string[] newLines = oldLines.Where(line => !line.Split('|')[0].ToLower().Contains(filename.ToLower())).ToArray();
-                        if (oldLines.Count() != newLines.Count())
-                        {
-                            Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-                            if (Success)
-                            {
-                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines);
-                            }
-                            else
-                            {
-                                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    Log("ERROR: Can't write to cameras/history.csv: " + Global.ExMsg(ex));
-                }
-
-
-            }
-
-        }
-
-        //remove all obsolete entries (associated image does not exist anymore) from the history.csv 
-        public void CleanCSVList()
-        {
-
-            if (AppSettings.AlreadyRunning)
-            {
-                Log($"Skipping clean of history.csv, instance already running.");
-                return;
-            }
-
-            using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
-            {
-
-                Log($"Cleaning cameras/history.csv if necessary...");
-
-                Stopwatch SW = Stopwatch.StartNew();
-                Int32 oldcsvlines = 0;
-                Int32 newcsvlines = 0;
-
-                MethodInvoker LabelUpdate = async delegate
-                {
-                    try
-                    {
-                        if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
-                        {
-
-                            bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName, FileSystemRights.Read, FileShare.ReadWrite);
-
-                            if (Success)
-                            {
-                                string[] oldLines = System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName); //old history.csv
-                                oldcsvlines = oldLines.Count();
-
-                                List<string> newLines = new List<string>(); //new history.csv
-                                newLines.Add(oldLines[0]); // add title line from old to new history.csv
-
-                                foreach (string line in oldLines.Skip(1)) //check for every line except title line if associated image still exists in input folder 
-                                {
-                                    if (System.IO.File.Exists(line.Split('|')[0]))
-                                    {
-                                        newLines.Add(line);
-                                    }
-                                }
-                                newcsvlines = newLines.Count;
-
-                                System.IO.File.WriteAllLines(AppSettings.Settings.HistoryFileName, newLines); //write new history.csv
-                            }
-                            else
-                            {
-                                Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-                            }
-
-                        }
-                        else
-                        {
-                            Log("File does not exist yet: cameras/history.csv");
-                        }
-                    }
-                    catch
-                    {
-                        Log("ERROR: Can't clean the cameras/history.csv!");
-                    }
-
-                };
-                Invoke(LabelUpdate);
-
-                //try to get a better feel how much time this function consumes - Vorlon
-                Log($"...Cleaned list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {newcsvlines} CVS lines, removed {oldcsvlines - newcsvlines}");
-
-            }
+            if (await HistoryDB.DeleteHistoryItem(filename))
+                Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList());
 
         }
 
         //load stored entries in history CSV into history ListView
-        private async Task LoadFromCSVAsync()
+        private async Task LoadHistoryAsync()
         {
             try
             {
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
                 {
 
-                    if (System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
+                    await HistoryDB.UpdateHistoryList(false);
+
+                    Global_GUI.UpdateFOLV(folv_history, HistoryDB.HistoryDic.Values);
+
+                    Global_GUI.InvokeIFRequired(folv_history, () =>
                     {
-                        Log("Loading history list from cameras/history.csv ...");
 
-                        Stopwatch SW = Stopwatch.StartNew();
-
-                        //delete obsolete entries from history.csv
-                        //CleanCSVList(); //removed to load the history list faster
-
-                        List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
-
-                        bool Success = await Global.WaitForFileAccessAsync(AppSettings.Settings.HistoryFileName);
-
-                        if (Success)
+                        if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked)
                         {
-                            //load all lines except the first line into List (the first line is the table heading and not an alert entry)
-                            foreach (string line in System.IO.File.ReadAllLines(AppSettings.Settings.HistoryFileName).Skip(1))
+                            //filter
+                            folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
                             {
-                                result.Add(line);
-                            }
-
-                            List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
-
-                            this.HistoryDic.Clear();
-
-                            //load all List elements into the ListView for each row
-                            foreach (var val in result)
-                            {
-                                    
-                                History hist = new History().CreateFromCSV(val);
-                                this.HistoryDic.Add(hist.Filename.ToLower(), hist);
-                            }
-
-                            Global_GUI.UpdateFOLV(folv_history, this.HistoryDic.Values, true);
-
-                            Global_GUI.InvokeIFRequired(folv_history, () =>
-                            {
-                                //filter
-                                folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
-                                {
-                                    History hist = (History)x;
-                                    return checkListFilters(hist);   //x != null && (myFile.Speed < 10 || myFile.SpeedType == "RPM");
-                                });
-
+                                History hist = (History)x;
+                                return checkListFilters(hist);
                             });
-
-
-
-                            ResizeListViews();
-
-                            //try to get a better feel how much time this function consumes - Vorlon
-                            Log($"...Loaded list in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
-
                         }
                         else
                         {
-                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
+                            folv_history.ModelFilter = null;
                         }
 
-                    }
-                    else
-                    {
-                        Log("File does not exist yet - cameras/history.csv");
-                    }
+                    });
+
+
 
                 }
 
@@ -1296,51 +1036,26 @@ namespace AITool
         {
             //string tmp = hist.Detections.ToLower(); // objects_and_confidence.ToLower();
 
-            if (!hist.IsPerson && cb_filter_person.Checked) 
-               return false;
-            
-            if (!hist.IsVehicle && cb_filter_vehicle.Checked) 
-               return false;
-            
-            if (!hist.IsAnimal && cb_filter_animal.Checked) 
-               return false; 
-            
-            if (!hist.Success && cb_filter_success.Checked) 
-               return false; //if filter "only successful detections" is enabled, don't load false alerts
-            
-            if (hist.Success && cb_filter_nosuccess.Checked) 
-               return false;   //if filter "only unsuccessful detections" is enabled, don't load true alerts
-            
-            if (comboBox_filter_camera.Text != "All Cameras" && hist.Camera.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) 
-               return false; 
+            if (!hist.IsPerson && cb_filter_person.Checked)
+                return false;
+
+            if (!hist.IsVehicle && cb_filter_vehicle.Checked)
+                return false;
+
+            if (!hist.IsAnimal && cb_filter_animal.Checked)
+                return false;
+
+            if (!hist.Success && cb_filter_success.Checked)
+                return false; //if filter "only successful detections" is enabled, don't load false alerts
+
+            if (hist.Success && cb_filter_nosuccess.Checked)
+                return false;   //if filter "only unsuccessful detections" is enabled, don't load true alerts
+
+            if (comboBox_filter_camera.Text != "All Cameras" && hist.Camera.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower())
+                return false;
 
             return true;
 
-            ///string tmp = hist.Detections.ToLower(); // objects_and_confidence.ToLower();
-            //
-            //            if (!tmp.Contains("person") && cb_filter_person.Checked) { return false; }
-            //            
-            //            if (!(tmp.Contains("car") ||
-            //                  tmp.Contains("boat") ||
-            //                  tmp.Contains("bicycle") ||
-            //                  tmp.Contains("truck") ||
-            //                  tmp.Contains("airplane") ||
-            //                  tmp.Contains("motorcycle") ||
-            //                  tmp.Contains("horse")) && cb_filter_vehicle.Checked) { return false; }
-            //            
-            //            if (!(tmp.Contains("dog") ||
-            //                  tmp.Contains("sheep") ||
-            //                  tmp.Contains("bird") ||
-            //                  tmp.Contains("cow") ||
-            //                  tmp.Contains("cat") ||
-            //                  tmp.Contains("horse") ||
-            //                  tmp.Contains("bear")) && cb_filter_animal.Checked) { return false; }
-            //            
-            //            if (success.ToLower() != "true" && cb_filter_success.Checked) { return false; } //if filter "only successful detections" is enabled, don't load false alerts
-            //            
-            //            if (success.ToLower() == "true" && cb_filter_nosuccess.Checked) { return false; } //if filter "only unsuccessful detections" is enabled, don't load true alerts
-            //            
-            //            if (comboBox_filter_camera.Text != "All Cameras" && cameraname.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower()) { return false; }
 
         }
 
@@ -1392,13 +1107,13 @@ namespace AITool
             {
                 if (list2.SelectedItems.Count > 0)
                 {
-                        //load only stats from Camera.cs object
+                    //load only stats from Camera.cs object
 
-                        //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                        Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                    //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
+                    Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
-                        //load cameras stats
-                        string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
+                    //load cameras stats
+                    string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
                     if (cam.maskManager.masking_enabled)
                     {
                         stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
@@ -1417,7 +1132,7 @@ namespace AITool
 
 
         //event: load selected image to picturebox
-      
+
 
         //event: show mask button clicked
         private void cb_showMask_CheckedChanged(object sender, EventArgs e)
@@ -1459,37 +1174,37 @@ namespace AITool
         //event: filter "only revelant alerts" checked or unchecked
         private async void cb_filter_success_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private async void cb_filter_person_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private async void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //event: filter "only alerts with animals" checked or unchecked
         private async void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //event: filter "only false / irrevelant alerts" checked or unchecked
         private async void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //event: filter camera dropdown changed
         private async void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
         {
-            await LoadFromCSVAsync();
+            await LoadHistoryAsync();
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -2046,8 +1761,6 @@ namespace AITool
             //update fswatcher to watch new input folder
             UpdateWatchers();
 
-            //clean history.csv database
-            CleanCSVList();
 
             bool noneg = false;
             if (AppSettings.Settings.telegram_chatids.Count > 0)
@@ -2063,7 +1776,7 @@ namespace AITool
 
             if (noneg)
             {
-                MessageBox.Show("Please note that the Telegram Chat ID may need to start with a negative sign. -1234567890","Telegram Chat ID format",MessageBoxButtons.OK,MessageBoxIcon.Information);
+                MessageBox.Show("Please note that the Telegram Chat ID may need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
         }
@@ -2599,7 +2312,7 @@ namespace AITool
 
 
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
-                
+
                 frm.cam = cam;
 
                 frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
@@ -2723,7 +2436,7 @@ namespace AITool
                     e.Item.ForeColor = Color.Green;
                 else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
                     e.Item.ForeColor = Color.Gray;
-                else 
+                else
                     e.Item.ForeColor = Color.Black;
             }
 
@@ -2736,6 +2449,36 @@ namespace AITool
             finally
             {
             }
+        }
+
+        private void btn_resetstats_Click(object sender, EventArgs e)
+        {
+
+            if (comboBox1.Text == "All Cameras")
+            {
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    cam.stats_alerts = 0;
+                    cam.stats_irrelevant_alerts = 0;
+                    cam.stats_false_alerts = 0;
+                }
+            }
+            else
+            {
+
+                Camera cam = AITOOL.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
+                if (cam != null)
+                {
+                    cam.stats_alerts = 0;
+                    cam.stats_irrelevant_alerts = 0;
+                    cam.stats_false_alerts = 0;
+                }
+            }
+
+            UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+
+            AppSettings.Save();
+
         }
     }
 

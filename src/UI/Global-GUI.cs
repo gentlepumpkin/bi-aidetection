@@ -32,7 +32,7 @@ namespace AITool
 				try
 				{
 
-					olv.ClearObjects();
+					//olv.ClearObjects();
 					
 					olv.Tag = null;
 

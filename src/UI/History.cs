@@ -23,6 +23,7 @@ namespace AITool
         [Indexed]
         public string Camera { get; set; } = "";
         public bool Success { get; set; } = false;
+        public string Detections { get; set; } = "";
         public bool IsPerson { get; set; } = false;
         public bool IsVehicle { get; set; } = false;
         public bool IsAnimal { get; set; } = false;
@@ -31,7 +32,6 @@ namespace AITool
         public bool IsKnownFace { get; set; } = false;
         [PrimaryKey, Indexed]
         public string Filename { get; set; } = "";
-        public string Detections { get; set; } = "";
         public string Positions { get; set; } = "";
 
 

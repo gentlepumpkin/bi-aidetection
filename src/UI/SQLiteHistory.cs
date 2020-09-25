@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using SQLite;
 //using Microsoft.Data.Sqlite;
@@ -14,6 +18,7 @@ namespace AITool
 		private bool disposedValue;
 
 		public string Filename { get; set; } = "";
+		public ConcurrentDictionary<string, History> HistoryDic = new ConcurrentDictionary<string, History>();
 		public SQLiteAsyncConnection sqlite_conn { get; set; } = null;
 		public bool ReadOnly { get; } = false;
 		public SQLiteHistory(string Filename, bool ReadOnly)
@@ -63,7 +68,8 @@ namespace AITool
 			{
 				Stopwatch sw = Stopwatch.StartNew();
 
-				SQLiteOpenFlags flags = SQLiteOpenFlags.Create;
+				//FullMutex for safe multithreading
+				SQLiteOpenFlags flags = SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex;
 				if (this.ReadOnly)
 				{
 					flags = flags | SQLiteOpenFlags.ReadOnly;
@@ -82,16 +88,17 @@ namespace AITool
 				sqlite_conn = new SQLiteAsyncConnection(this.Filename, flags, true);
 
 
-				await sqlite_conn.ExecuteAsync(@"PRAGMA journal_mode = 'WAL'");
-				await sqlite_conn.ExecuteAsync(@"PRAGMA busy_timeout = 30000");
-
 				//make sure table exists:
 				CreateTableResult ctr = await sqlite_conn.CreateTableAsync<History>();
-				
+
+
+				await sqlite_conn.ExecuteScalarAsync<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
+				await sqlite_conn.ExecuteScalarAsync<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
+
 
 				sw.Stop();
 
-				Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate={ctr.ToString()}");
+				Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate={ctr.ToString()}: {this.Filename}");
 
 			}
 			catch (Exception ex)
@@ -103,14 +110,145 @@ namespace AITool
 			return ret;
 		}
 
-		public async void InsertHistoryItem(History hist)
+		public async Task<bool> InsertHistoryItem(History hist)
 		{
+			bool ret = false;
+
 			try
 			{
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
-				int ret = await this.sqlite_conn.InsertAsync(hist);
+				int iret = await this.sqlite_conn.InsertAsync(hist);
+
+				if (iret != 1)
+				{
+					Global.Log($"...Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1.");
+				}
+
+				ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
+
+				if (!ret)
+				{
+					Global.Log($"...Info: File already existed in dictionary: {hist.Filename}");
+				}
+
+			}
+			catch (Exception ex)
+			{
+
+				Global.Log($"Error: {hist.Filename}: " + Global.ExMsg(ex));
+			}
+
+			return ret;
+
+		}
+		public async Task<bool> DeleteHistoryItem(string Filename)
+		{
+			bool ret = false;
+
+			try
+			{
+				if (!this.IsSQLiteDBConnected())
+					await this.CreateConnectionAsync();
+
+				History hist;
+				ret = this.HistoryDic.TryRemove(Filename.ToLower(), out hist);
+				
+				if (!ret)
+				{
+					Global.Log($"Info: File was not in dictionary '{Filename}'");
+				}
+
+				//Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
+
+				int dret = await this.sqlite_conn.DeleteAsync(Filename.ToLower());
+
+				if (dret != 1)
+				{
+					Global.Log($"...Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1.");
+				}
+
+
+			}
+			catch (Exception ex)
+			{
+
+				Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
+			}
+
+			return ret;
+
+		}
+
+		public async Task<bool> MigrateHistoryCSV(string Filename)
+		{
+
+			bool ret = false;
+
+			try
+			{
+
+				if (!this.IsSQLiteDBConnected())
+					await this.CreateConnectionAsync();
+
+
+				if (System.IO.File.Exists(Filename))
+				{
+					Global.Log("Migrating history list from cameras/history.csv ...");
+
+					Stopwatch SW = Stopwatch.StartNew();
+
+					//delete obsolete entries from history.csv
+					//CleanCSVList(); //removed to load the history list faster
+
+					List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
+
+					bool Success = await Global.WaitForFileAccessAsync(Filename);
+
+					if (Success)
+					{
+						//load all lines except the first line into List (the first line is the table heading and not an alert entry)
+						foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))
+						{
+							result.Add(line);
+						}
+
+						Global.Log($"...Found {result.Count} lines.");
+
+						List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
+
+						//load all List elements into the ListView for each row
+						int added = 0;
+						foreach (var val in result)
+						{
+
+							History hist = new History().CreateFromCSV(val);
+							if (File.Exists(hist.Filename))
+							{
+								if (await this.InsertHistoryItem(hist))
+									added++;
+							}
+						}
+
+						ret = (added > 0);
+
+						//try to get a better feel how much time this function consumes - Vorlon
+						Global.Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+
+					}
+					else
+					{
+						Global.Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+
+					}
+
+				}
+				else
+				{
+					Global.Log($"File does not exist, could not migrate: {Filename}");
+				}
+
 
 			}
 			catch (Exception ex)
@@ -119,37 +257,73 @@ namespace AITool
 				Global.Log("Error: " + Global.ExMsg(ex));
 			}
 
-		}
-		public async void DeleteHistoryItem(string Filename)
-		{
-			try
-			{
-				if (!this.IsSQLiteDBConnected())
-					await this.CreateConnectionAsync();
+			return ret;
 
-				int ret = await this.sqlite_conn.DeleteAsync(Filename);
-
-			}
-			catch (Exception ex)
-			{
-
-				Global.Log("Error: " + Global.ExMsg(ex));
-			}
 
 		}
 
-		public async Task<List<History>> GetList()
+		public async Task<bool> UpdateHistoryList(bool Clean)
 		{
-			List<History> ret = new List<History>();
+
+			bool ret = false;
 
 			try
 			{
+				Stopwatch sw = Stopwatch.StartNew();
 
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
 				AsyncTableQuery<History> query = sqlite_conn.Table<History>();
-				ret = await query.ToListAsync();
+				List<History> CurList = await query.ToListAsync();
+
+				int added = 0;
+				int removed = 0;
+				bool isnew = (this.HistoryDic.Count == 0);
+
+				Dictionary<string, String> tmpdic = new Dictionary<string, String>();
+
+				//lets try to keep the original objects in memory and not create them new
+				foreach (History hist in CurList)
+				{
+					if (!isnew)
+					{
+						//add missing
+						if (this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist))
+						{
+							added++;
+						}
+						tmpdic.Add(hist.Filename.ToLower(), hist.Filename);
+					}
+					else
+					{
+						this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
+						added++;
+					}
+				}
+
+				if (!isnew)
+				{
+					//subtract
+					foreach (History hist in this.HistoryDic.Values)
+					{
+						if (!tmpdic.ContainsKey(hist.Filename.ToLower()))
+						{
+							History th;
+							this.HistoryDic.TryRemove(hist.Filename.ToLower(), out th);
+							removed++;
+						}
+
+					}
+
+					if (Clean)
+						await this.CleanHistoryList();
+
+				}
+
+				ret = (added > 0 || removed > 0);
+
+				Global.Log($"History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count} in {sw.ElapsedMilliseconds}ms");
 
 			}
 			catch (Exception ex)
@@ -161,6 +335,84 @@ namespace AITool
 			return ret;
 
 		}
+
+		public async Task<bool> CleanHistoryList()
+		{
+
+			bool ret = false;
+
+			try
+			{
+				Stopwatch sw = Stopwatch.StartNew();
+
+				Global.Log("Removing missing files from database...");
+
+				if (!this.IsSQLiteDBConnected())
+					await this.CreateConnectionAsync();
+
+
+				if (!(this.HistoryDic.Count() > 0))
+					await this.UpdateHistoryList(false);
+
+				List<string> removed = new List<string>();
+
+
+				//run the file exists check in another thread so we dont freeze the UI, but WAIT for it
+				await Task.Run(async () =>
+				{
+					//we are allowed to do this with a ConcurrentDictionary...
+					foreach (History hist in this.HistoryDic.Values)
+					{
+						if (!File.Exists(hist.Filename))
+						{
+							removed.Add(hist.Filename.ToLower());
+							History rhist;
+							this.HistoryDic.TryRemove(hist.Filename, out rhist);
+						}
+
+					}
+				});
+				
+
+				if (removed.Count > 0)
+					{
+						//start another thread to finish cleaning the database so that the app gets the list faster...
+						//the db should be thread safe due to opening with fullmutex flag
+						Task.Run(async () =>
+						{
+							Stopwatch swr = Stopwatch.StartNew();
+							int rcnt = 0;
+							foreach (string fil in removed)
+							{
+								int rowsdeleted = await this.sqlite_conn.DeleteAsync(fil);
+								rcnt = rcnt + rowsdeleted;
+								if (rowsdeleted != 1)
+								{
+									Global.Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+								}
+							}
+							Global.Log($"...Cleaned {removed.Count} history DATABASE items in {swr.ElapsedMilliseconds}ms");
+
+						});
+					}
+
+				Global.Log($"...Cleaned {removed.Count} in-memory history items in {sw.ElapsedMilliseconds}ms");
+
+
+				ret = removed.Count > 0;
+
+
+			}
+			catch (Exception ex)
+			{
+
+				Global.Log("Error: " + Global.ExMsg(ex));
+			}
+
+			return ret;
+
+		}
+
 
 		protected virtual async void Dispose(bool disposing)
 		{

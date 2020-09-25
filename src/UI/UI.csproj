@@ -392,6 +392,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sqlite3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\truck.png" />
     <None Include="Resources\sheep.png" />
     <None Include="Resources\person.png" />

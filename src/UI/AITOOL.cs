@@ -39,6 +39,7 @@ using Telegram.Bot.Exceptions;
 using SixLabors.ImageSharp.Processing;
 using System.Reflection;
 using OSVersionExtension;
+using System.Runtime.CompilerServices;
 
 namespace AITool
 {
@@ -52,7 +53,7 @@ namespace AITool
         public static DeepStack DeepStackServerControl = null;
         public static RichTextBoxEx RTFLogger = null;
         public static LogFileWriter LogWriter = null;
-        public static LogFileWriter HistoryWriter = null;
+        //public static LogFileWriter HistoryWriter = null;
         public static BlueIris BlueIrisInfo = null;
         //public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
 
@@ -62,8 +63,14 @@ namespace AITool
         public static MovingCalcs fcalc = new MovingCalcs(250);
         public static MovingCalcs qcalc = new MovingCalcs(250);
         public static MovingCalcs qsizecalc = new MovingCalcs(250);
+        
         public static int errors = 0;
+        
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
+
+        //The sqlite db connection
+        public static SQLiteHistory HistoryDB = null;
+
 
         //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
         //public static SemaphoreSlim semaphore_detection_running = new SemaphoreSlim(1, 1);
@@ -83,7 +90,7 @@ namespace AITool
         public static DateTime last_telegram_trigger_time = DateTime.MinValue;
         public static DateTime TelegramRetryTime = DateTime.MinValue;
 
-        public static void InitializeBackend()
+        public static async Task InitializeBackend()
         {
 
             try
@@ -93,7 +100,7 @@ namespace AITool
                 //is locked for any reason, it will wait in the queue until it can be written
                 //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
                 LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
-                HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
+                //HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
 
                 //if log file does not exist, create it - this used to be in LOG function but doesnt need to be checked everytime log written to
                 if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
@@ -109,8 +116,8 @@ namespace AITool
                 LogWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
                 LogWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
 
-                HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
-                HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
+                //HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
+                //HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
 
                 Assembly CurAssm = Assembly.GetExecutingAssembly();
                 string AssemNam = CurAssm.GetName().Name;
@@ -185,25 +192,19 @@ namespace AITool
                 {
                     Log($"BlueIris not detected.");
                 }
-
-                //if camera settings folder does not exist, create it
-                if (!Directory.Exists("./cameras/"))
-                {
-                    //create folder
-                    DirectoryInfo di = Directory.CreateDirectory("./cameras");
-                    Log("./cameras/" + " dir created.");
-                }
-
-                //check if history.csv exists, if not then create it
-                if (!System.IO.File.Exists(AppSettings.Settings.HistoryFileName))
-                {
-                    Log("ATTENTION: Creating database cameras/history.csv .");
-                    HistoryWriter.WriteToLog("filename|date and time|camera|detections|positions of detections|success", true);
-                }
+                               
 
                 //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
                 //allows for stopping and starting of its service
                 DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+
+
+                //Load the database, and migrate any old csv lines if needed
+                HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName,false);
+                await HistoryDB.UpdateHistoryList(true);
+                if (HistoryDB.HistoryDic.Count == 0)
+                    await HistoryDB.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
+
 
                 UpdateWatchers();
 
@@ -605,13 +606,13 @@ namespace AITool
         //event: image in input_path renamed
         private static void OnRenamed(object source, RenamedEventArgs e)
         {
-            Global.DeleteHistoryItem(e.OldName);
+            Global.DeleteHistoryItem(e.OldFullPath);
         }
 
         //event: image in input path deleted
         private static void OnDeleted(object source, FileSystemEventArgs e)
         {
-            Global.DeleteHistoryItem(e.Name);
+            Global.DeleteHistoryItem(e.FullPath);
         }
 
         private static void OnError(object sender, ErrorEventArgs e)
@@ -1410,7 +1411,7 @@ namespace AITool
                 {
                     if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
                     {
-                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
+                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 1 second
                     }
 
                     if (TelegramRetryTime == DateTime.MinValue || DateTime.Now >= TelegramRetryTime)
@@ -1509,6 +1510,10 @@ namespace AITool
                 Log($"...Finished in {{yellow}}{sw.ElapsedMilliseconds}ms{{white}}");
 
             }
+            else
+            {
+                Log($"Error:  Telegram settings misconfigured.  telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count}, telegram_token='{AppSettings.Settings.telegram_token}'");
+            }
 
             return ret;
 
@@ -1523,9 +1528,9 @@ namespace AITool
                 try
                 {
 
-                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
+                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0166667)
                     {
-                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
+                        AppSettings.Settings.telegram_cooldown_minutes = 0.0166667;  //force to be at least 1 second
                     }
 
                     if (TelegramRetryTime == DateTime.MinValue || DateTime.Now >= TelegramRetryTime)
