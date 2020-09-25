@@ -513,6 +513,7 @@ namespace AITool
             int alerts = 0;
             int irrelevantalerts = 0;
             int falsealerts = 0;
+            int skipped = 0;
 
             if (comboBox1.Text == "All Cameras")
             {
@@ -521,6 +522,7 @@ namespace AITool
                     alerts += cam.stats_alerts;
                     irrelevantalerts += cam.stats_irrelevant_alerts;
                     falsealerts += cam.stats_false_alerts;
+                    skipped += cam.stats_skipped_images;
                 }
             }
             else
@@ -532,12 +534,14 @@ namespace AITool
                     alerts = cam.stats_alerts;
                     irrelevantalerts = cam.stats_irrelevant_alerts;
                     falsealerts = cam.stats_false_alerts;
+                    skipped = cam.stats_skipped_images;
                 }
                 else
                 {
                     alerts = 0;
                     irrelevantalerts = 0;
                     falsealerts = 0;
+                    skipped = 0;
                     Log($"Error: Could not match combobox dropdown '{comboBox1.Text}' to a known camera name?");
                 }
             }
@@ -560,6 +564,13 @@ namespace AITool
             //show false Alerts label
             index = chart1.Series[0].Points.AddXY("false Alerts", falsealerts);
             chart1.Series[0].Points[index].Color = System.Drawing.Color.OrangeRed;
+
+            //show skipped label
+            index = chart1.Series[0].Points.AddXY("Skipped Images", skipped);
+            chart1.Series[0].Points[index].Color = System.Drawing.Color.Purple;
+
+
+
         }
 
         //update timeline
@@ -589,6 +600,7 @@ namespace AITool
                 int[] falses = new int[48];
                 int[] irrelevant = new int[48];
                 int[] relevant = new int[48];
+                int[] skipped = new int[48];
 
                 //fill arrays with amount of calls/half hour
                 foreach (History hist in result)
@@ -626,6 +638,9 @@ namespace AITool
                     {
                         irrelevant[halfhour]++;
                     }
+
+                    if (hist.WasSkipped)
+                        skipped[halfhour]++;
 
                     all[halfhour]++;
                 }
@@ -684,6 +699,19 @@ namespace AITool
                     x = x + 0.5;
                 }
                 timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
+
+
+                //add to graph "skipped":
+
+                timeline.Series[4].Points.AddXY(-0.25, skipped[47]); // beginning point with value of last visible point
+                                                                      //and now add all visible points 
+                x = 0.25;
+                foreach (int halfhour in skipped)
+                {
+                    int index = timeline.Series[4].Points.AddXY(x, halfhour);
+                    x = x + 0.5;
+                }
+                timeline.Series[4].Points.AddXY(24.25, skipped[0]); // finally add last point with value of first visible point
 
 
 
@@ -974,7 +1002,7 @@ namespace AITool
         public async void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
 
-
+            
             if (await HistoryDB.InsertHistoryItem(hist))
                 Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList());
 
@@ -1050,6 +1078,9 @@ namespace AITool
 
             if (hist.Success && cb_filter_nosuccess.Checked)
                 return false;   //if filter "only unsuccessful detections" is enabled, don't load true alerts
+
+            if (hist.WasSkipped && cb_filter_skipped.Checked)
+                return false;
 
             if (comboBox_filter_camera.Text != "All Cameras" && hist.Camera.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower())
                 return false;
@@ -2434,6 +2465,8 @@ namespace AITool
                 // If SPI IsNot Nothing Then
                 if (hist.Success)
                     e.Item.ForeColor = Color.Green;
+                else if (hist.WasSkipped)
+                    e.Item.ForeColor = Color.Red;
                 else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
                     e.Item.ForeColor = Color.Gray;
                 else
@@ -2461,6 +2494,8 @@ namespace AITool
                     cam.stats_alerts = 0;
                     cam.stats_irrelevant_alerts = 0;
                     cam.stats_false_alerts = 0;
+                    cam.stats_skipped_images = 0;
+                    cam.stats_skipped_images_session = 0;
                 }
             }
             else
@@ -2472,6 +2507,8 @@ namespace AITool
                     cam.stats_alerts = 0;
                     cam.stats_irrelevant_alerts = 0;
                     cam.stats_false_alerts = 0;
+                    cam.stats_skipped_images = 0;
+                    cam.stats_skipped_images_session = 0;
                 }
             }
 
@@ -2479,6 +2516,11 @@ namespace AITool
 
             AppSettings.Save();
 
+        }
+
+        private async void cb_filter_skipped_CheckedChanged(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync();
         }
     }
 

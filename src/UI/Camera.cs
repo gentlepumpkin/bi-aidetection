@@ -84,6 +84,12 @@ namespace AITool
         public int stats_false_alerts = 0; //alert image contained no object counter
         public int stats_irrelevant_alerts = 0; //alert image contained irrelevant object counter
 
+        public int stats_skipped_images = 0; //Images that were skipped due to cooldown or retry count
+
+        [JsonIgnore]
+        public int stats_skipped_images_session = 0; //Images that were skipped due to cooldown or retry count
+
+
         public string last_image_file = "";
         public string last_image_file_with_detections = "";
         [JsonIgnore]

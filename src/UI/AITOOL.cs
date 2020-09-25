@@ -162,7 +162,7 @@ namespace AITool
                     Log("Not running as administrator.");
                 }
 
-                if (AppDomain.CurrentDomain.BaseDirectory.ToLower() == Directory.GetCurrentDirectory().ToLower())
+                if (AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\').ToLower() == Directory.GetCurrentDirectory().ToLower())
                 {
                     Log($"*** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
                 }
@@ -481,7 +481,13 @@ namespace AITool
                                         }
                                         else
                                         {
-                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                                            Camera cam = GetCamera(CurImg.image_path);
+                                            cam.stats_skipped_images++;
+                                            cam.stats_skipped_images_session++;
+
+                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }");
+                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false));
+
                                         }
                                     }
                                     else
@@ -907,8 +913,8 @@ namespace AITool
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
-            double halfcool = cam.cooldown_time / 2;
-            if (mins >= halfcool)
+            //double halfcool = cam.cooldown_time / 2;
+            if (mins >= cam.cooldown_time)
             {
                 try
                 {
@@ -1308,7 +1314,7 @@ namespace AITool
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
                 {
                     //upload the alert image which could not be analyzed to Telegram
-                    if (AppSettings.Settings.send_errors == true)
+                    if (AppSettings.Settings.send_errors && cam.telegram_enabled)
                     {
                         bool success = await TelegramUpload(CurImg, "Error");
                     }
@@ -1316,9 +1322,9 @@ namespace AITool
                 }
 
 
-                //I notice deepstack takes a lot longer the very first run?
+                    //I notice deepstack takes a lot longer the very first run?
 
-                CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
+                    CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
                 CurImg.DeepStackTimeMS = swposttime.ElapsedMilliseconds;
                 DeepStackURL.DeepStackTimeMS = swposttime.ElapsedMilliseconds;
                 tcalc.AddToCalc(CurImg.TotalTimeMS);
@@ -1349,7 +1355,10 @@ namespace AITool
             }
             else
             {
-                Log($"{CurSrv} - Skipping detection. Found='{cam.name}', Mins since last submission='{mins}', halfcool={halfcool}");
+                cam.stats_skipped_images++;
+                cam.stats_skipped_images_session++;
+                Log($"{CurSrv} - Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.00")}' of '{cam.cooldown_time.ToString("#######0.00")}' minutes, Session Skip Count={cam.stats_skipped_images_session}");
+                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{mins.ToString("#######0.00")}' of '{cam.cooldown_time.ToString("#######0.00")}' minutes.", "", false));
             }
 
             return (error == "");
@@ -1780,10 +1789,7 @@ namespace AITool
                                 ret = false;
 
                         }
-                        foreach (string top in topics)
-                        {
-
-                        }
+                        
 
                     }
 

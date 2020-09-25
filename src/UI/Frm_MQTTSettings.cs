@@ -49,12 +49,21 @@ namespace AITool
                 {
                     Global.Log("------ TESTING MQTT --------");
 
-                    MQTTClient mq = new MQTTClient();
 
                     string topic = AITOOL.ReplaceParams(this.cam, null, tb_Topic.Text.Trim());
                     string payload = AITOOL.ReplaceParams(this.cam, null, tb_Payload.Text.Trim());
 
-                    MqttClientPublishResult pr = await mq.PublishAsync(topic, payload);
+                    List<string> topics = Global.Split(topic, ";|");
+                    List<string> payloads = Global.Split(payload, ";|");
+
+                    MQTTClient mq = new MQTTClient();
+                    MqttClientPublishResult pr = null;
+
+                    for (int i = 0; i < topics.Count; i++)
+                    {
+                        pr = await mq.PublishAsync(topics[i], payloads[i]);
+
+                    }
 
                     Global.Log("------ DONE TESTING MQTT --------");
 

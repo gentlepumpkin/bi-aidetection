@@ -119,25 +119,33 @@ namespace AITool
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
+				ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
+
+				//if (!ret)
+				//{
+				//	Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
+				//}
+
 				int iret = await this.sqlite_conn.InsertAsync(hist);
 
 				if (iret != 1)
 				{
-					Global.Log($"...Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1.");
+					Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1.");
 				}
-
-				ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
-
-				if (!ret)
-				{
-					Global.Log($"...Info: File already existed in dictionary: {hist.Filename}");
-				}
+				
 
 			}
 			catch (Exception ex)
 			{
 
-				Global.Log($"Error: {hist.Filename}: " + Global.ExMsg(ex));
+				if (ex.Message.ToLower().Contains("UNIQUE constraint failed"))
+				{
+					//Global.Log($"Info: File was already in the database: {hist.Filename}");
+				}
+				else
+				{
+					Global.Log($"Error: {hist.Filename}: " + Global.ExMsg(ex));
+				}
 			}
 
 			return ret;
@@ -155,10 +163,10 @@ namespace AITool
 				History hist;
 				ret = this.HistoryDic.TryRemove(Filename.ToLower(), out hist);
 				
-				if (!ret)
-				{
-					Global.Log($"Info: File was not in dictionary '{Filename}'");
-				}
+				//if (!ret)
+				//{
+				//	Global.Log($"Info: File was not in dictionary '{Filename}'");
+				//}
 
 				//Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
 
@@ -166,7 +174,7 @@ namespace AITool
 
 				if (dret != 1)
 				{
-					Global.Log($"...Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1.");
+					Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1.");
 				}
 
 
@@ -174,7 +182,14 @@ namespace AITool
 			catch (Exception ex)
 			{
 
-				Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
+				if (ex.Message.ToLower().Contains("it has no pk"))
+				{
+					//Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
+				}
+				else
+				{
+					Global.Log($"Error: '{Filename}' - " + Global.ExMsg(ex));
+				}
 			}
 
 			return ret;
@@ -316,10 +331,10 @@ namespace AITool
 
 					}
 
-					if (Clean)
-						await this.CleanHistoryList();
-
 				}
+
+				if (Clean)
+					await this.CleanHistoryList();
 
 				ret = (added > 0 || removed > 0);
 
@@ -351,10 +366,7 @@ namespace AITool
 					await this.CreateConnectionAsync();
 
 
-				if (!(this.HistoryDic.Count() > 0))
-					await this.UpdateHistoryList(false);
-
-				List<string> removed = new List<string>();
+				ConcurrentBag<string> removed = new ConcurrentBag<string>();   //this may only need to be a list, but just being safe in threading
 
 
 				//run the file exists check in another thread so we dont freeze the UI, but WAIT for it
@@ -391,12 +403,12 @@ namespace AITool
 									Global.Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
 								}
 							}
-							Global.Log($"...Cleaned {removed.Count} history DATABASE items in {swr.ElapsedMilliseconds}ms");
+							Global.Log($"...Cleaned {removed.Count} history DATABASE items because file did not exist in {swr.ElapsedMilliseconds}ms");
 
 						});
 					}
 
-				Global.Log($"...Cleaned {removed.Count} in-memory history items in {sw.ElapsedMilliseconds}ms");
+				Global.Log($"...Cleaned {removed.Count} in-memory history items because file did not exist in {sw.ElapsedMilliseconds}ms");
 
 
 				ret = removed.Count > 0;
