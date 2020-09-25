@@ -2181,7 +2181,7 @@ namespace AITool
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
-                frm.num_mask_remove.Value = cam.maskManager.mask_counter_default; //load mask remove counter
+                frm.num_mask_remove.Value = cam.maskManager.mask_remove_mins; //load mask remove counter
                 //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
                 frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
 
@@ -2196,7 +2196,7 @@ namespace AITool
 
                     Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
                     Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
-                    Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_counter);
+                    Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
 
                     ////convert to percent
@@ -2204,7 +2204,7 @@ namespace AITool
 
                     cam.maskManager.history_save_mins = history_mins;
                     cam.maskManager.history_threshold_count = mask_create_counter;
-                    cam.maskManager.mask_counter_default = mask_remove_counter;
+                    cam.maskManager.mask_remove_mins = mask_remove_mins;
                     cam.maskManager.thresholdPercent = variance;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;

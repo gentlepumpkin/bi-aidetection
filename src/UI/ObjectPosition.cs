@@ -22,7 +22,6 @@ namespace AITool
         public long key { get; }
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }
-        public Boolean isVisible { get; set; } = false;
 
         public string cameraName { get; set; } = "";
         public string imagePath { get; set; } = "";
