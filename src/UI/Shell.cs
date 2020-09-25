@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,27 +6,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Media;
-using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.ConstrainedExecution;
-using System.Security.AccessControl;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
-using Telegram.Bot.Types.Payments;
-//for image cutting
-//using SixLabors.ImageSharp;
-//using SixLabors.ImageSharp.MetaData.Profiles.Exif;
-//for telegram
-//using Telegram.Bot;
-//using Telegram.Bot.Types.InputFiles;
+
 using static AITool.AITOOL;
 
 namespace AITool

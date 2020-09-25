@@ -116,6 +116,8 @@ namespace AITool
 
 			try
 			{
+				Stopwatch sw = Stopwatch.StartNew();
+
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
@@ -132,7 +134,10 @@ namespace AITool
 				{
 					Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1.");
 				}
-				
+
+				if (sw.ElapsedMilliseconds > 500)
+					Global.Log($"Warning: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms: {Filename}");
+
 
 			}
 			catch (Exception ex)
@@ -157,6 +162,8 @@ namespace AITool
 
 			try
 			{
+				Stopwatch sw = Stopwatch.StartNew();
+
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
@@ -176,6 +183,9 @@ namespace AITool
 				{
 					Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1.");
 				}
+
+				if (sw.ElapsedMilliseconds > 500)
+					Global.Log($"Warning: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms: {Filename}");
 
 
 			}
@@ -207,62 +217,68 @@ namespace AITool
 				if (!this.IsSQLiteDBConnected())
 					await this.CreateConnectionAsync();
 
-
-				if (System.IO.File.Exists(Filename))
+				//run in another thread so we dont block UI
+				await Task.Run(async () =>
 				{
-					Global.Log("Migrating history list from cameras/history.csv ...");
 
-					Stopwatch SW = Stopwatch.StartNew();
-
-					//delete obsolete entries from history.csv
-					//CleanCSVList(); //removed to load the history list faster
-
-					List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
-
-					bool Success = await Global.WaitForFileAccessAsync(Filename);
-
-					if (Success)
+					if (System.IO.File.Exists(Filename))
 					{
-						//load all lines except the first line into List (the first line is the table heading and not an alert entry)
-						foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))
+						Global.Log("Migrating history list from cameras/history.csv ...");
+
+						Stopwatch SW = Stopwatch.StartNew();
+
+						//delete obsolete entries from history.csv
+						//CleanCSVList(); //removed to load the history list faster
+
+						List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
+
+						bool Success = await Global.WaitForFileAccessAsync(Filename);
+
+						if (Success)
 						{
-							result.Add(line);
-						}
-
-						Global.Log($"...Found {result.Count} lines.");
-
-						List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
-
-						//load all List elements into the ListView for each row
-						int added = 0;
-						foreach (var val in result)
-						{
-
-							History hist = new History().CreateFromCSV(val);
-							if (File.Exists(hist.Filename))
+							//load all lines except the first line into List (the first line is the table heading and not an alert entry)
+							foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))
 							{
-								if (await this.InsertHistoryItem(hist))
-									added++;
+								result.Add(line);
 							}
+
+							Global.Log($"...Found {result.Count} lines.");
+
+							List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
+
+							//load all List elements into the ListView for each row
+							int added = 0;
+							foreach (var val in result)
+							{
+
+								History hist = new History().CreateFromCSV(val);
+								if (File.Exists(hist.Filename))
+								{
+									if (await this.InsertHistoryItem(hist))
+										added++;
+								}
+							}
+
+							ret = (added > 0);
+
+							//try to get a better feel how much time this function consumes - Vorlon
+							Global.Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+
 						}
+						else
+						{
+							Global.Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
 
-						ret = (added > 0);
-
-						//try to get a better feel how much time this function consumes - Vorlon
-						Global.Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+						}
 
 					}
 					else
 					{
-						Global.Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
-
+						Global.Log($"File does not exist, could not migrate: {Filename}");
 					}
 
-				}
-				else
-				{
-					Global.Log($"File does not exist, could not migrate: {Filename}");
-				}
+
+				});
 
 
 			}
@@ -296,49 +312,57 @@ namespace AITool
 				int removed = 0;
 				bool isnew = (this.HistoryDic.Count == 0);
 
-				Dictionary<string, String> tmpdic = new Dictionary<string, String>();
-
-				//lets try to keep the original objects in memory and not create them new
-				foreach (History hist in CurList)
+				//Dont block UI, but wait for the thread to finish
+				await Task.Run(async () =>
 				{
-					if (!isnew)
+
+					Dictionary<string, String> tmpdic = new Dictionary<string, String>();
+
+					//lets try to keep the original objects in memory and not create them new
+					foreach (History hist in CurList)
 					{
-						//add missing
-						if (this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist))
+						if (!isnew)
 						{
+							//add missing
+							if (this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist))
+							{
+								added++;
+							}
+							tmpdic.Add(hist.Filename.ToLower(), hist.Filename);
+						}
+						else
+						{
+							this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
 							added++;
 						}
-						tmpdic.Add(hist.Filename.ToLower(), hist.Filename);
 					}
-					else
-					{
-						this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
-						added++;
-					}
-				}
 
-				if (!isnew)
-				{
-					//subtract
-					foreach (History hist in this.HistoryDic.Values)
+					if (!isnew)
 					{
-						if (!tmpdic.ContainsKey(hist.Filename.ToLower()))
+						//subtract
+						foreach (History hist in this.HistoryDic.Values)
 						{
-							History th;
-							this.HistoryDic.TryRemove(hist.Filename.ToLower(), out th);
-							removed++;
+							if (!tmpdic.ContainsKey(hist.Filename.ToLower()))
+							{
+								History th;
+								this.HistoryDic.TryRemove(hist.Filename.ToLower(), out th);
+								removed++;
+							}
+
 						}
 
 					}
 
-				}
+					if (Clean)
+						await this.CleanHistoryList();
 
-				if (Clean)
-					await this.CleanHistoryList();
+
+				});
 
 				ret = (added > 0 || removed > 0);
 
 				Global.Log($"History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count} in {sw.ElapsedMilliseconds}ms");
+
 
 			}
 			catch (Exception ex)
@@ -383,19 +407,19 @@ namespace AITool
 						}
 
 					}
-				});
-				
 
-				if (removed.Count > 0)
+					if (removed.Count > 0)
 					{
 						//start another thread to finish cleaning the database so that the app gets the list faster...
 						//the db should be thread safe due to opening with fullmutex flag
+						//DONT WAIT TO FINISH
 						Task.Run(async () =>
 						{
 							Stopwatch swr = Stopwatch.StartNew();
 							int rcnt = 0;
 							foreach (string fil in removed)
 							{
+								//the db should be thread safe due to opening with fullmutex flag
 								int rowsdeleted = await this.sqlite_conn.DeleteAsync(fil);
 								rcnt = rcnt + rowsdeleted;
 								if (rowsdeleted != 1)
@@ -408,7 +432,11 @@ namespace AITool
 						});
 					}
 
-				Global.Log($"...Cleaned {removed.Count} in-memory history items because file did not exist in {sw.ElapsedMilliseconds}ms");
+
+				});
+
+
+				Global.Log($"...Cleaned {removed.Count} in-memory history items because files did not exist in {sw.ElapsedMilliseconds}ms");
 
 
 				ret = removed.Count > 0;

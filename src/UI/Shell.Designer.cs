@@ -50,6 +50,51 @@ namespace AITool
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
+            this.tabStats = new System.Windows.Forms.TabPage();
+            this.tabHistory = new System.Windows.Forms.TabPage();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.cb_filter_skipped = new System.Windows.Forms.CheckBox();
+            this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
+            this.cb_filter_nosuccess = new System.Windows.Forms.CheckBox();
+            this.cb_filter_success = new System.Windows.Forms.CheckBox();
+            this.cb_filter_person = new System.Windows.Forms.CheckBox();
+            this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
+            this.cb_filter_animal = new System.Windows.Forms.CheckBox();
+            this.tabCameras = new System.Windows.Forms.TabPage();
+            this.tabSettings = new System.Windows.Forms.TabPage();
+            this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
+            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
+            this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
+            this.Btn_Save = new System.Windows.Forms.Button();
+            this.label11 = new System.Windows.Forms.Label();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.Txt_APIKey = new System.Windows.Forms.TextBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.Chk_DetectionAPI = new System.Windows.Forms.CheckBox();
+            this.Chk_FaceAPI = new System.Windows.Forms.CheckBox();
+            this.Chk_SceneAPI = new System.Windows.Forms.CheckBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.Txt_AdminKey = new System.Windows.Forms.TextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.RB_High = new System.Windows.Forms.RadioButton();
+            this.RB_Medium = new System.Windows.Forms.RadioButton();
+            this.RB_Low = new System.Windows.Forms.RadioButton();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.Txt_DeepStackInstallFolder = new System.Windows.Forms.TextBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.Txt_Port = new System.Windows.Forms.TextBox();
+            this.Chk_AutoStart = new System.Windows.Forms.CheckBox();
+            this.Btn_Start = new System.Windows.Forms.Button();
+            this.Btn_Stop = new System.Windows.Forms.Button();
+            this.tabLog = new System.Windows.Forms.TabPage();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.RTF_Log = new System.Windows.Forms.RichTextBox();
+            this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -59,7 +104,6 @@ namespace AITool
             this.lbl_errors = new System.Windows.Forms.Label();
             this.lbl_info = new System.Windows.Forms.Label();
             this.lblQueue = new System.Windows.Forms.Label();
-            this.tabStats = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel16 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel23 = new AITool.DBLayoutPanel(this.components);
             this.label8 = new System.Windows.Forms.Label();
@@ -70,27 +114,15 @@ namespace AITool
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.btn_resetstats = new System.Windows.Forms.Button();
-            this.tabHistory = new System.Windows.Forms.TabPage();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel19 = new AITool.DBLayoutPanel(this.components);
             this.cb_showFilters = new System.Windows.Forms.CheckBox();
             this.folv_history = new BrightIdeasSoftware.FastObjectListView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.cb_filter_skipped = new System.Windows.Forms.CheckBox();
-            this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
-            this.cb_filter_nosuccess = new System.Windows.Forms.CheckBox();
-            this.cb_filter_success = new System.Windows.Forms.CheckBox();
-            this.cb_filter_person = new System.Windows.Forms.CheckBox();
-            this.cb_filter_vehicle = new System.Windows.Forms.CheckBox();
-            this.cb_filter_animal = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel21 = new AITool.DBLayoutPanel(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel22 = new AITool.DBLayoutPanel(this.components);
             this.cb_showObjects = new System.Windows.Forms.CheckBox();
             this.cb_showMask = new System.Windows.Forms.CheckBox();
             this.lbl_objects = new System.Windows.Forms.Label();
-            this.tabCameras = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel3 = new AITool.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
@@ -148,7 +180,6 @@ namespace AITool
             this.btnCameraDel = new System.Windows.Forms.Button();
             this.btnCameraSave = new System.Windows.Forms.Button();
             this.lbl_camstats = new System.Windows.Forms.Label();
-            this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel5 = new AITool.DBLayoutPanel(this.components);
             this.label4 = new System.Windows.Forms.Label();
@@ -176,49 +207,10 @@ namespace AITool
             this.lbl_telegram_chatid = new System.Windows.Forms.Label();
             this.tb_telegram_token = new System.Windows.Forms.TextBox();
             this.BtnSettingsSave = new System.Windows.Forms.Button();
-            this.tabDeepStack = new System.Windows.Forms.TabPage();
-            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
-            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
-            this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
-            this.Btn_Save = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.Txt_APIKey = new System.Windows.Forms.TextBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.Chk_DetectionAPI = new System.Windows.Forms.CheckBox();
-            this.Chk_FaceAPI = new System.Windows.Forms.CheckBox();
-            this.Chk_SceneAPI = new System.Windows.Forms.CheckBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.Txt_AdminKey = new System.Windows.Forms.TextBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.RB_High = new System.Windows.Forms.RadioButton();
-            this.RB_Medium = new System.Windows.Forms.RadioButton();
-            this.RB_Low = new System.Windows.Forms.RadioButton();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.Txt_DeepStackInstallFolder = new System.Windows.Forms.TextBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.Txt_Port = new System.Windows.Forms.TextBox();
-            this.Chk_AutoStart = new System.Windows.Forms.CheckBox();
-            this.Btn_Start = new System.Windows.Forms.Button();
-            this.Btn_Stop = new System.Windows.Forms.Button();
-            this.tabLog = new System.Windows.Forms.TabPage();
-            this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.RTF_Log = new System.Windows.Forms.RichTextBox();
-            this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.HistoryImageList = new System.Windows.Forms.ImageList(this.components);
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
-            this.tableLayoutPanel14.SuspendLayout();
-            this.tableLayoutPanel15.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.tabStats.SuspendLayout();
-            this.tableLayoutPanel16.SuspendLayout();
-            this.tableLayoutPanel23.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.timeline)).BeginInit();
-            this.tableLayoutPanel17.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.tabHistory.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -228,13 +220,32 @@ namespace AITool
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.tabCameras.SuspendLayout();
+            this.tabSettings.SuspendLayout();
+            this.tabDeepStack.SuspendLayout();
+            this.groupBox6.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.groupBox4.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            this.tabLog.SuspendLayout();
+            this.groupBox7.SuspendLayout();
+            this.tableLayoutPanel14.SuspendLayout();
+            this.tableLayoutPanel15.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.tableLayoutPanel16.SuspendLayout();
+            this.tableLayoutPanel23.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeline)).BeginInit();
+            this.tableLayoutPanel17.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.tableLayoutPanel19.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.folv_history)).BeginInit();
-            this.panel1.SuspendLayout();
             this.tableLayoutPanel21.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tableLayoutPanel22.SuspendLayout();
-            this.tabCameras.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
@@ -246,22 +257,12 @@ namespace AITool
             this.tableLayoutPanel27.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
-            this.tabSettings.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel25.SuspendLayout();
             this.tableLayoutPanel18.SuspendLayout();
             this.dbLayoutPanel1.SuspendLayout();
             this.dbLayoutPanel2.SuspendLayout();
-            this.tabDeepStack.SuspendLayout();
-            this.groupBox6.SuspendLayout();
-            this.groupBox1.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.tabLog.SuspendLayout();
-            this.groupBox7.SuspendLayout();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -301,6 +302,567 @@ namespace AITool
             this.tabOverview.TabIndex = 4;
             this.tabOverview.Text = "Overview";
             this.tabOverview.UseVisualStyleBackColor = true;
+            // 
+            // tabStats
+            // 
+            this.tabStats.Controls.Add(this.tableLayoutPanel16);
+            this.tabStats.Location = new System.Drawing.Point(4, 33);
+            this.tabStats.Margin = new System.Windows.Forms.Padding(5);
+            this.tabStats.Name = "tabStats";
+            this.tabStats.Size = new System.Drawing.Size(1671, 824);
+            this.tabStats.TabIndex = 5;
+            this.tabStats.Text = "Stats";
+            this.tabStats.UseVisualStyleBackColor = true;
+            // 
+            // tabHistory
+            // 
+            this.tabHistory.Controls.Add(this.splitContainer2);
+            this.tabHistory.Location = new System.Drawing.Point(4, 33);
+            this.tabHistory.Margin = new System.Windows.Forms.Padding(5);
+            this.tabHistory.Name = "tabHistory";
+            this.tabHistory.Padding = new System.Windows.Forms.Padding(5);
+            this.tabHistory.Size = new System.Drawing.Size(1671, 824);
+            this.tabHistory.TabIndex = 0;
+            this.tabHistory.Text = "History";
+            this.tabHistory.UseVisualStyleBackColor = true;
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(5, 5);
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.tableLayoutPanel21);
+            this.splitContainer2.Size = new System.Drawing.Size(1661, 814);
+            this.splitContainer2.SplitterDistance = 797;
+            this.splitContainer2.TabIndex = 4;
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(5);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel19);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.BackColor = System.Drawing.Color.Transparent;
+            this.splitContainer1.Panel2.Controls.Add(this.panel1);
+            this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
+            this.splitContainer1.Size = new System.Drawing.Size(797, 814);
+            this.splitContainer1.SplitterDistance = 440;
+            this.splitContainer1.SplitterWidth = 7;
+            this.splitContainer1.TabIndex = 6;
+            // 
+            // panel1
+            // 
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.cb_filter_skipped);
+            this.panel1.Controls.Add(this.comboBox_filter_camera);
+            this.panel1.Controls.Add(this.cb_filter_nosuccess);
+            this.panel1.Controls.Add(this.cb_filter_success);
+            this.panel1.Controls.Add(this.cb_filter_person);
+            this.panel1.Controls.Add(this.cb_filter_vehicle);
+            this.panel1.Controls.Add(this.cb_filter_animal);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(5, 5);
+            this.panel1.Margin = new System.Windows.Forms.Padding(5);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(783, 353);
+            this.panel1.TabIndex = 2;
+            // 
+            // cb_filter_skipped
+            // 
+            this.cb_filter_skipped.AutoSize = true;
+            this.cb_filter_skipped.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_skipped.Location = new System.Drawing.Point(5, 290);
+            this.cb_filter_skipped.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_skipped.Name = "cb_filter_skipped";
+            this.cb_filter_skipped.Size = new System.Drawing.Size(250, 35);
+            this.cb_filter_skipped.TabIndex = 3;
+            this.cb_filter_skipped.Text = "only skipped images";
+            this.toolTip1.SetToolTip(this.cb_filter_skipped, "Images that have been skipped due to cooldown or actual retry failure");
+            this.cb_filter_skipped.UseVisualStyleBackColor = true;
+            this.cb_filter_skipped.CheckedChanged += new System.EventHandler(this.cb_filter_skipped_CheckedChanged);
+            // 
+            // comboBox_filter_camera
+            // 
+            this.comboBox_filter_camera.Dock = System.Windows.Forms.DockStyle.Top;
+            this.comboBox_filter_camera.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox_filter_camera.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBox_filter_camera.FormattingEnabled = true;
+            this.comboBox_filter_camera.Location = new System.Drawing.Point(0, 0);
+            this.comboBox_filter_camera.Margin = new System.Windows.Forms.Padding(5);
+            this.comboBox_filter_camera.Name = "comboBox_filter_camera";
+            this.comboBox_filter_camera.Size = new System.Drawing.Size(781, 39);
+            this.comboBox_filter_camera.TabIndex = 2;
+            this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
+            // 
+            // cb_filter_nosuccess
+            // 
+            this.cb_filter_nosuccess.AutoSize = true;
+            this.cb_filter_nosuccess.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_nosuccess.Location = new System.Drawing.Point(5, 98);
+            this.cb_filter_nosuccess.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_nosuccess.Name = "cb_filter_nosuccess";
+            this.cb_filter_nosuccess.Size = new System.Drawing.Size(315, 35);
+            this.cb_filter_nosuccess.TabIndex = 1;
+            this.cb_filter_nosuccess.Text = "only false / irrelevant alerts";
+            this.cb_filter_nosuccess.UseVisualStyleBackColor = true;
+            this.cb_filter_nosuccess.CheckedChanged += new System.EventHandler(this.cb_filter_nosuccess_CheckedChanged);
+            // 
+            // cb_filter_success
+            // 
+            this.cb_filter_success.AutoSize = true;
+            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_success.Location = new System.Drawing.Point(5, 49);
+            this.cb_filter_success.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_success.Name = "cb_filter_success";
+            this.cb_filter_success.Size = new System.Drawing.Size(233, 35);
+            this.cb_filter_success.TabIndex = 0;
+            this.cb_filter_success.Text = "only relevant alerts";
+            this.cb_filter_success.UseVisualStyleBackColor = true;
+            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
+            // 
+            // cb_filter_person
+            // 
+            this.cb_filter_person.AutoSize = true;
+            this.cb_filter_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_person.Location = new System.Drawing.Point(5, 149);
+            this.cb_filter_person.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_person.Name = "cb_filter_person";
+            this.cb_filter_person.Size = new System.Drawing.Size(272, 35);
+            this.cb_filter_person.TabIndex = 0;
+            this.cb_filter_person.Text = "only alerts with people";
+            this.cb_filter_person.UseVisualStyleBackColor = true;
+            this.cb_filter_person.CheckedChanged += new System.EventHandler(this.cb_filter_person_CheckedChanged);
+            // 
+            // cb_filter_vehicle
+            // 
+            this.cb_filter_vehicle.AutoSize = true;
+            this.cb_filter_vehicle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_vehicle.Location = new System.Drawing.Point(5, 200);
+            this.cb_filter_vehicle.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_vehicle.Name = "cb_filter_vehicle";
+            this.cb_filter_vehicle.Size = new System.Drawing.Size(282, 35);
+            this.cb_filter_vehicle.TabIndex = 0;
+            this.cb_filter_vehicle.Text = "only alerts with vehicles";
+            this.cb_filter_vehicle.UseVisualStyleBackColor = true;
+            this.cb_filter_vehicle.CheckedChanged += new System.EventHandler(this.cb_filter_vehicle_CheckedChanged);
+            // 
+            // cb_filter_animal
+            // 
+            this.cb_filter_animal.AutoSize = true;
+            this.cb_filter_animal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cb_filter_animal.Location = new System.Drawing.Point(5, 245);
+            this.cb_filter_animal.Margin = new System.Windows.Forms.Padding(5);
+            this.cb_filter_animal.Name = "cb_filter_animal";
+            this.cb_filter_animal.Size = new System.Drawing.Size(280, 35);
+            this.cb_filter_animal.TabIndex = 0;
+            this.cb_filter_animal.Text = "only alerts with animals";
+            this.cb_filter_animal.UseVisualStyleBackColor = true;
+            this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
+            // 
+            // tabCameras
+            // 
+            this.tabCameras.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabCameras.Controls.Add(this.tableLayoutPanel2);
+            this.tabCameras.Location = new System.Drawing.Point(4, 33);
+            this.tabCameras.Margin = new System.Windows.Forms.Padding(5);
+            this.tabCameras.Name = "tabCameras";
+            this.tabCameras.Padding = new System.Windows.Forms.Padding(5);
+            this.tabCameras.Size = new System.Drawing.Size(1671, 824);
+            this.tabCameras.TabIndex = 2;
+            this.tabCameras.Text = "Cameras";
+            // 
+            // tabSettings
+            // 
+            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
+            this.tabSettings.Location = new System.Drawing.Point(4, 33);
+            this.tabSettings.Margin = new System.Windows.Forms.Padding(5);
+            this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Size = new System.Drawing.Size(1671, 824);
+            this.tabSettings.TabIndex = 3;
+            this.tabSettings.Text = "Settings";
+            this.tabSettings.UseVisualStyleBackColor = true;
+            // 
+            // tabDeepStack
+            // 
+            this.tabDeepStack.Controls.Add(this.chk_HighPriority);
+            this.tabDeepStack.Controls.Add(this.Chk_DSDebug);
+            this.tabDeepStack.Controls.Add(this.Lbl_BlueStackRunning);
+            this.tabDeepStack.Controls.Add(this.Btn_Save);
+            this.tabDeepStack.Controls.Add(this.label11);
+            this.tabDeepStack.Controls.Add(this.groupBox6);
+            this.tabDeepStack.Controls.Add(this.groupBox1);
+            this.tabDeepStack.Controls.Add(this.groupBox5);
+            this.tabDeepStack.Controls.Add(this.groupBox2);
+            this.tabDeepStack.Controls.Add(this.groupBox4);
+            this.tabDeepStack.Controls.Add(this.groupBox3);
+            this.tabDeepStack.Controls.Add(this.Chk_AutoStart);
+            this.tabDeepStack.Controls.Add(this.Btn_Start);
+            this.tabDeepStack.Controls.Add(this.Btn_Stop);
+            this.tabDeepStack.Location = new System.Drawing.Point(4, 33);
+            this.tabDeepStack.Margin = new System.Windows.Forms.Padding(4);
+            this.tabDeepStack.Name = "tabDeepStack";
+            this.tabDeepStack.Size = new System.Drawing.Size(1671, 824);
+            this.tabDeepStack.TabIndex = 6;
+            this.tabDeepStack.Text = "DeepStack";
+            this.tabDeepStack.UseVisualStyleBackColor = true;
+            // 
+            // chk_HighPriority
+            // 
+            this.chk_HighPriority.AutoSize = true;
+            this.chk_HighPriority.Location = new System.Drawing.Point(598, 527);
+            this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(4);
+            this.chk_HighPriority.Name = "chk_HighPriority";
+            this.chk_HighPriority.Size = new System.Drawing.Size(177, 29);
+            this.chk_HighPriority.TabIndex = 15;
+            this.chk_HighPriority.Text = "Run high priority";
+            this.chk_HighPriority.UseVisualStyleBackColor = true;
+            // 
+            // Chk_DSDebug
+            // 
+            this.Chk_DSDebug.AutoSize = true;
+            this.Chk_DSDebug.Location = new System.Drawing.Point(360, 527);
+            this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_DSDebug.Name = "Chk_DSDebug";
+            this.Chk_DSDebug.Size = new System.Drawing.Size(194, 29);
+            this.Chk_DSDebug.TabIndex = 14;
+            this.Chk_DSDebug.Text = "Debug Deepstack";
+            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
+        "ersion, installed on same machine)");
+            this.Chk_DSDebug.UseVisualStyleBackColor = true;
+            // 
+            // Lbl_BlueStackRunning
+            // 
+            this.Lbl_BlueStackRunning.AutoSize = true;
+            this.Lbl_BlueStackRunning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(494, 609);
+            this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
+            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(169, 24);
+            this.Lbl_BlueStackRunning.TabIndex = 13;
+            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+            // 
+            // Btn_Save
+            // 
+            this.Btn_Save.Location = new System.Drawing.Point(334, 592);
+            this.Btn_Save.Margin = new System.Windows.Forms.Padding(4);
+            this.Btn_Save.Name = "Btn_Save";
+            this.Btn_Save.Size = new System.Drawing.Size(133, 58);
+            this.Btn_Save.TabIndex = 12;
+            this.Btn_Save.Text = "Save";
+            this.Btn_Save.UseVisualStyleBackColor = true;
+            this.Btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
+            // 
+            // label11
+            // 
+            this.label11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label11.ForeColor = System.Drawing.Color.RoyalBlue;
+            this.label11.Location = new System.Drawing.Point(10, 18);
+            this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(1496, 60);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "When the WINDOWS version of DeepStack will be running on the same machine as AI T" +
+    "ool, this tab can replace the DeepStack UI. (Deepstack.exe) - No control over Do" +
+    "cker version yet.";
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.Txt_APIKey);
+            this.groupBox6.Location = new System.Drawing.Point(19, 256);
+            this.groupBox6.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox6.Size = new System.Drawing.Size(845, 79);
+            this.groupBox6.TabIndex = 11;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "API Key (Optional)";
+            // 
+            // Txt_APIKey
+            // 
+            this.Txt_APIKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_APIKey.Location = new System.Drawing.Point(12, 30);
+            this.Txt_APIKey.Margin = new System.Windows.Forms.Padding(4);
+            this.Txt_APIKey.Name = "Txt_APIKey";
+            this.Txt_APIKey.Size = new System.Drawing.Size(823, 29);
+            this.Txt_APIKey.TabIndex = 0;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
+            this.groupBox1.Controls.Add(this.Chk_FaceAPI);
+            this.groupBox1.Controls.Add(this.Chk_SceneAPI);
+            this.groupBox1.Location = new System.Drawing.Point(14, 355);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox1.Size = new System.Drawing.Size(284, 154);
+            this.groupBox1.TabIndex = 3;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "API";
+            // 
+            // Chk_DetectionAPI
+            // 
+            this.Chk_DetectionAPI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Chk_DetectionAPI.Location = new System.Drawing.Point(19, 114);
+            this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
+            this.Chk_DetectionAPI.Size = new System.Drawing.Size(257, 34);
+            this.Chk_DetectionAPI.TabIndex = 2;
+            this.Chk_DetectionAPI.Text = "Detection API";
+            this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
+            // 
+            // Chk_FaceAPI
+            // 
+            this.Chk_FaceAPI.Location = new System.Drawing.Point(19, 72);
+            this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_FaceAPI.Name = "Chk_FaceAPI";
+            this.Chk_FaceAPI.Size = new System.Drawing.Size(257, 34);
+            this.Chk_FaceAPI.TabIndex = 1;
+            this.Chk_FaceAPI.Text = "Face API";
+            this.Chk_FaceAPI.UseVisualStyleBackColor = true;
+            // 
+            // Chk_SceneAPI
+            // 
+            this.Chk_SceneAPI.Location = new System.Drawing.Point(19, 30);
+            this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_SceneAPI.Name = "Chk_SceneAPI";
+            this.Chk_SceneAPI.Size = new System.Drawing.Size(257, 34);
+            this.Chk_SceneAPI.TabIndex = 0;
+            this.Chk_SceneAPI.Text = "Scene API";
+            this.Chk_SceneAPI.UseVisualStyleBackColor = true;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.Txt_AdminKey);
+            this.groupBox5.Location = new System.Drawing.Point(19, 168);
+            this.groupBox5.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox5.Size = new System.Drawing.Size(845, 79);
+            this.groupBox5.TabIndex = 10;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Admin Key (Optional)";
+            // 
+            // Txt_AdminKey
+            // 
+            this.Txt_AdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_AdminKey.Location = new System.Drawing.Point(12, 28);
+            this.Txt_AdminKey.Margin = new System.Windows.Forms.Padding(4);
+            this.Txt_AdminKey.Name = "Txt_AdminKey";
+            this.Txt_AdminKey.Size = new System.Drawing.Size(823, 29);
+            this.Txt_AdminKey.TabIndex = 0;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.RB_High);
+            this.groupBox2.Controls.Add(this.RB_Medium);
+            this.groupBox2.Controls.Add(this.RB_Low);
+            this.groupBox2.Location = new System.Drawing.Point(306, 355);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox2.Size = new System.Drawing.Size(270, 154);
+            this.groupBox2.TabIndex = 4;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Mode";
+            // 
+            // RB_High
+            // 
+            this.RB_High.Location = new System.Drawing.Point(19, 116);
+            this.RB_High.Margin = new System.Windows.Forms.Padding(4);
+            this.RB_High.Name = "RB_High";
+            this.RB_High.Size = new System.Drawing.Size(243, 34);
+            this.RB_High.TabIndex = 3;
+            this.RB_High.TabStop = true;
+            this.RB_High.Text = "High";
+            this.RB_High.UseVisualStyleBackColor = true;
+            // 
+            // RB_Medium
+            // 
+            this.RB_Medium.Location = new System.Drawing.Point(19, 73);
+            this.RB_Medium.Margin = new System.Windows.Forms.Padding(4);
+            this.RB_Medium.Name = "RB_Medium";
+            this.RB_Medium.Size = new System.Drawing.Size(243, 34);
+            this.RB_Medium.TabIndex = 2;
+            this.RB_Medium.TabStop = true;
+            this.RB_Medium.Text = "Medium";
+            this.RB_Medium.UseVisualStyleBackColor = true;
+            // 
+            // RB_Low
+            // 
+            this.RB_Low.Location = new System.Drawing.Point(19, 30);
+            this.RB_Low.Margin = new System.Windows.Forms.Padding(4);
+            this.RB_Low.Name = "RB_Low";
+            this.RB_Low.Size = new System.Drawing.Size(243, 34);
+            this.RB_Low.TabIndex = 1;
+            this.RB_Low.TabStop = true;
+            this.RB_Low.Text = "Low";
+            this.RB_Low.UseVisualStyleBackColor = true;
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.Txt_DeepStackInstallFolder);
+            this.groupBox4.Location = new System.Drawing.Point(19, 82);
+            this.groupBox4.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox4.Size = new System.Drawing.Size(845, 79);
+            this.groupBox4.TabIndex = 9;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "DeepStack Install Folder";
+            // 
+            // Txt_DeepStackInstallFolder
+            // 
+            this.Txt_DeepStackInstallFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_DeepStackInstallFolder.Location = new System.Drawing.Point(12, 30);
+            this.Txt_DeepStackInstallFolder.Margin = new System.Windows.Forms.Padding(4);
+            this.Txt_DeepStackInstallFolder.Name = "Txt_DeepStackInstallFolder";
+            this.Txt_DeepStackInstallFolder.ReadOnly = true;
+            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(823, 29);
+            this.Txt_DeepStackInstallFolder.TabIndex = 2;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.Txt_Port);
+            this.groupBox3.Location = new System.Drawing.Point(598, 355);
+            this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox3.Size = new System.Drawing.Size(264, 154);
+            this.groupBox3.TabIndex = 5;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Port";
+            // 
+            // Txt_Port
+            // 
+            this.Txt_Port.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_Port.Location = new System.Drawing.Point(18, 33);
+            this.Txt_Port.Margin = new System.Windows.Forms.Padding(4);
+            this.Txt_Port.Name = "Txt_Port";
+            this.Txt_Port.Size = new System.Drawing.Size(238, 29);
+            this.Txt_Port.TabIndex = 0;
+            // 
+            // Chk_AutoStart
+            // 
+            this.Chk_AutoStart.AutoSize = true;
+            this.Chk_AutoStart.Location = new System.Drawing.Point(23, 527);
+            this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_AutoStart.Name = "Chk_AutoStart";
+            this.Chk_AutoStart.Size = new System.Drawing.Size(302, 29);
+            this.Chk_AutoStart.TabIndex = 8;
+            this.Chk_AutoStart.Text = "Automatically Start DeepStack";
+            this.Chk_AutoStart.UseVisualStyleBackColor = true;
+            // 
+            // Btn_Start
+            // 
+            this.Btn_Start.Location = new System.Drawing.Point(14, 592);
+            this.Btn_Start.Margin = new System.Windows.Forms.Padding(4);
+            this.Btn_Start.Name = "Btn_Start";
+            this.Btn_Start.Size = new System.Drawing.Size(133, 58);
+            this.Btn_Start.TabIndex = 6;
+            this.Btn_Start.Text = "Start";
+            this.Btn_Start.UseVisualStyleBackColor = true;
+            this.Btn_Start.Click += new System.EventHandler(this.Btn_Start_Click);
+            // 
+            // Btn_Stop
+            // 
+            this.Btn_Stop.Location = new System.Drawing.Point(173, 592);
+            this.Btn_Stop.Margin = new System.Windows.Forms.Padding(4);
+            this.Btn_Stop.Name = "Btn_Stop";
+            this.Btn_Stop.Size = new System.Drawing.Size(133, 58);
+            this.Btn_Stop.TabIndex = 7;
+            this.Btn_Stop.Text = "Stop";
+            this.Btn_Stop.UseVisualStyleBackColor = true;
+            this.Btn_Stop.Click += new System.EventHandler(this.Btn_Stop_Click);
+            // 
+            // tabLog
+            // 
+            this.tabLog.Controls.Add(this.groupBox7);
+            this.tabLog.Controls.Add(this.Chk_AutoScroll);
+            this.tabLog.Controls.Add(this.button1);
+            this.tabLog.Location = new System.Drawing.Point(4, 33);
+            this.tabLog.Margin = new System.Windows.Forms.Padding(4);
+            this.tabLog.Name = "tabLog";
+            this.tabLog.Size = new System.Drawing.Size(1671, 824);
+            this.tabLog.TabIndex = 7;
+            this.tabLog.Text = "Log";
+            this.tabLog.UseVisualStyleBackColor = true;
+            this.tabLog.Click += new System.EventHandler(this.tabLog_Click);
+            // 
+            // groupBox7
+            // 
+            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox7.Controls.Add(this.RTF_Log);
+            this.groupBox7.Location = new System.Drawing.Point(9, 61);
+            this.groupBox7.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox7.Size = new System.Drawing.Size(1658, 759);
+            this.groupBox7.TabIndex = 5;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "Log";
+            // 
+            // RTF_Log
+            // 
+            this.RTF_Log.BackColor = System.Drawing.Color.RoyalBlue;
+            this.RTF_Log.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.RTF_Log.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RTF_Log.ForeColor = System.Drawing.Color.White;
+            this.RTF_Log.Location = new System.Drawing.Point(4, 26);
+            this.RTF_Log.Margin = new System.Windows.Forms.Padding(4);
+            this.RTF_Log.Name = "RTF_Log";
+            this.RTF_Log.Size = new System.Drawing.Size(1650, 729);
+            this.RTF_Log.TabIndex = 0;
+            this.RTF_Log.Text = "";
+            // 
+            // Chk_AutoScroll
+            // 
+            this.Chk_AutoScroll.AutoSize = true;
+            this.Chk_AutoScroll.Checked = true;
+            this.Chk_AutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.Chk_AutoScroll.Location = new System.Drawing.Point(150, 19);
+            this.Chk_AutoScroll.Margin = new System.Windows.Forms.Padding(4);
+            this.Chk_AutoScroll.Name = "Chk_AutoScroll";
+            this.Chk_AutoScroll.Size = new System.Drawing.Size(247, 29);
+            this.Chk_AutoScroll.TabIndex = 4;
+            this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
+            this.Chk_AutoScroll.UseVisualStyleBackColor = true;
+            this.Chk_AutoScroll.CheckedChanged += new System.EventHandler(this.Chk_AutoScroll_CheckedChanged);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(10, 12);
+            this.button1.Margin = new System.Windows.Forms.Padding(5);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(107, 42);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "Open Log";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // tableLayoutPanel14
             // 
@@ -446,17 +1008,6 @@ namespace AITool
             this.lblQueue.TabIndex = 9;
             this.lblQueue.Text = "Images in Queue: 0";
             this.lblQueue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tabStats
-            // 
-            this.tabStats.Controls.Add(this.tableLayoutPanel16);
-            this.tabStats.Location = new System.Drawing.Point(4, 33);
-            this.tabStats.Margin = new System.Windows.Forms.Padding(5);
-            this.tabStats.Name = "tabStats";
-            this.tabStats.Size = new System.Drawing.Size(1671, 824);
-            this.tabStats.TabIndex = 5;
-            this.tabStats.Text = "Stats";
-            this.tabStats.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel16
             // 
@@ -706,59 +1257,6 @@ namespace AITool
             this.btn_resetstats.UseVisualStyleBackColor = true;
             this.btn_resetstats.Click += new System.EventHandler(this.btn_resetstats_Click);
             // 
-            // tabHistory
-            // 
-            this.tabHistory.Controls.Add(this.splitContainer2);
-            this.tabHistory.Location = new System.Drawing.Point(4, 33);
-            this.tabHistory.Margin = new System.Windows.Forms.Padding(5);
-            this.tabHistory.Name = "tabHistory";
-            this.tabHistory.Padding = new System.Windows.Forms.Padding(5);
-            this.tabHistory.Size = new System.Drawing.Size(1671, 824);
-            this.tabHistory.TabIndex = 0;
-            this.tabHistory.Text = "History";
-            this.tabHistory.UseVisualStyleBackColor = true;
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(5, 5);
-            this.splitContainer2.Name = "splitContainer2";
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.tableLayoutPanel21);
-            this.splitContainer2.Size = new System.Drawing.Size(1661, 814);
-            this.splitContainer2.SplitterDistance = 797;
-            this.splitContainer2.TabIndex = 4;
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(5);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel19);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.BackColor = System.Drawing.Color.Transparent;
-            this.splitContainer1.Panel2.Controls.Add(this.panel1);
-            this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
-            this.splitContainer1.Size = new System.Drawing.Size(797, 814);
-            this.splitContainer1.SplitterDistance = 440;
-            this.splitContainer1.SplitterWidth = 7;
-            this.splitContainer1.TabIndex = 6;
-            // 
             // tableLayoutPanel19
             // 
             this.tableLayoutPanel19.ColumnCount = 1;
@@ -808,115 +1306,6 @@ namespace AITool
             this.folv_history.VirtualMode = true;
             this.folv_history.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.folv_history_FormatRow);
             this.folv_history.SelectionChanged += new System.EventHandler(this.folv_history_SelectionChanged);
-            // 
-            // panel1
-            // 
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.cb_filter_skipped);
-            this.panel1.Controls.Add(this.comboBox_filter_camera);
-            this.panel1.Controls.Add(this.cb_filter_nosuccess);
-            this.panel1.Controls.Add(this.cb_filter_success);
-            this.panel1.Controls.Add(this.cb_filter_person);
-            this.panel1.Controls.Add(this.cb_filter_vehicle);
-            this.panel1.Controls.Add(this.cb_filter_animal);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(5, 5);
-            this.panel1.Margin = new System.Windows.Forms.Padding(5);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(783, 353);
-            this.panel1.TabIndex = 2;
-            // 
-            // cb_filter_skipped
-            // 
-            this.cb_filter_skipped.AutoSize = true;
-            this.cb_filter_skipped.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_skipped.Location = new System.Drawing.Point(5, 290);
-            this.cb_filter_skipped.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_skipped.Name = "cb_filter_skipped";
-            this.cb_filter_skipped.Size = new System.Drawing.Size(250, 35);
-            this.cb_filter_skipped.TabIndex = 3;
-            this.cb_filter_skipped.Text = "only skipped images";
-            this.toolTip1.SetToolTip(this.cb_filter_skipped, "Images that have been skipped due to cooldown or actual retry failure");
-            this.cb_filter_skipped.UseVisualStyleBackColor = true;
-            this.cb_filter_skipped.CheckedChanged += new System.EventHandler(this.cb_filter_skipped_CheckedChanged);
-            // 
-            // comboBox_filter_camera
-            // 
-            this.comboBox_filter_camera.Dock = System.Windows.Forms.DockStyle.Top;
-            this.comboBox_filter_camera.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox_filter_camera.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.comboBox_filter_camera.FormattingEnabled = true;
-            this.comboBox_filter_camera.Location = new System.Drawing.Point(0, 0);
-            this.comboBox_filter_camera.Margin = new System.Windows.Forms.Padding(5);
-            this.comboBox_filter_camera.Name = "comboBox_filter_camera";
-            this.comboBox_filter_camera.Size = new System.Drawing.Size(781, 39);
-            this.comboBox_filter_camera.TabIndex = 2;
-            this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
-            // 
-            // cb_filter_nosuccess
-            // 
-            this.cb_filter_nosuccess.AutoSize = true;
-            this.cb_filter_nosuccess.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_nosuccess.Location = new System.Drawing.Point(5, 98);
-            this.cb_filter_nosuccess.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_nosuccess.Name = "cb_filter_nosuccess";
-            this.cb_filter_nosuccess.Size = new System.Drawing.Size(315, 35);
-            this.cb_filter_nosuccess.TabIndex = 1;
-            this.cb_filter_nosuccess.Text = "only false / irrelevant alerts";
-            this.cb_filter_nosuccess.UseVisualStyleBackColor = true;
-            this.cb_filter_nosuccess.CheckedChanged += new System.EventHandler(this.cb_filter_nosuccess_CheckedChanged);
-            // 
-            // cb_filter_success
-            // 
-            this.cb_filter_success.AutoSize = true;
-            this.cb_filter_success.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_success.Location = new System.Drawing.Point(5, 49);
-            this.cb_filter_success.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_success.Name = "cb_filter_success";
-            this.cb_filter_success.Size = new System.Drawing.Size(233, 35);
-            this.cb_filter_success.TabIndex = 0;
-            this.cb_filter_success.Text = "only relevant alerts";
-            this.cb_filter_success.UseVisualStyleBackColor = true;
-            this.cb_filter_success.CheckedChanged += new System.EventHandler(this.cb_filter_success_CheckedChanged);
-            // 
-            // cb_filter_person
-            // 
-            this.cb_filter_person.AutoSize = true;
-            this.cb_filter_person.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_person.Location = new System.Drawing.Point(5, 149);
-            this.cb_filter_person.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_person.Name = "cb_filter_person";
-            this.cb_filter_person.Size = new System.Drawing.Size(272, 35);
-            this.cb_filter_person.TabIndex = 0;
-            this.cb_filter_person.Text = "only alerts with people";
-            this.cb_filter_person.UseVisualStyleBackColor = true;
-            this.cb_filter_person.CheckedChanged += new System.EventHandler(this.cb_filter_person_CheckedChanged);
-            // 
-            // cb_filter_vehicle
-            // 
-            this.cb_filter_vehicle.AutoSize = true;
-            this.cb_filter_vehicle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_vehicle.Location = new System.Drawing.Point(5, 200);
-            this.cb_filter_vehicle.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_vehicle.Name = "cb_filter_vehicle";
-            this.cb_filter_vehicle.Size = new System.Drawing.Size(282, 35);
-            this.cb_filter_vehicle.TabIndex = 0;
-            this.cb_filter_vehicle.Text = "only alerts with vehicles";
-            this.cb_filter_vehicle.UseVisualStyleBackColor = true;
-            this.cb_filter_vehicle.CheckedChanged += new System.EventHandler(this.cb_filter_vehicle_CheckedChanged);
-            // 
-            // cb_filter_animal
-            // 
-            this.cb_filter_animal.AutoSize = true;
-            this.cb_filter_animal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cb_filter_animal.Location = new System.Drawing.Point(5, 245);
-            this.cb_filter_animal.Margin = new System.Windows.Forms.Padding(5);
-            this.cb_filter_animal.Name = "cb_filter_animal";
-            this.cb_filter_animal.Size = new System.Drawing.Size(280, 35);
-            this.cb_filter_animal.TabIndex = 0;
-            this.cb_filter_animal.Text = "only alerts with animals";
-            this.cb_filter_animal.UseVisualStyleBackColor = true;
-            this.cb_filter_animal.CheckedChanged += new System.EventHandler(this.cb_filter_animal_CheckedChanged);
             // 
             // tableLayoutPanel21
             // 
@@ -1013,18 +1402,6 @@ namespace AITool
             this.lbl_objects.Size = new System.Drawing.Size(514, 65);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // tabCameras
-            // 
-            this.tabCameras.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabCameras.Controls.Add(this.tableLayoutPanel2);
-            this.tabCameras.Location = new System.Drawing.Point(4, 33);
-            this.tabCameras.Margin = new System.Windows.Forms.Padding(5);
-            this.tabCameras.Name = "tabCameras";
-            this.tabCameras.Padding = new System.Windows.Forms.Padding(5);
-            this.tabCameras.Size = new System.Drawing.Size(1671, 824);
-            this.tabCameras.TabIndex = 2;
-            this.tabCameras.Text = "Cameras";
             // 
             // tableLayoutPanel2
             // 
@@ -1834,17 +2211,6 @@ namespace AITool
             this.lbl_camstats.TabIndex = 4;
             this.lbl_camstats.Text = "Stats";
             // 
-            // tabSettings
-            // 
-            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
-            this.tabSettings.Location = new System.Drawing.Point(4, 33);
-            this.tabSettings.Margin = new System.Windows.Forms.Padding(5);
-            this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Size = new System.Drawing.Size(1671, 824);
-            this.tabSettings.TabIndex = 3;
-            this.tabSettings.Text = "Settings";
-            this.tabSettings.UseVisualStyleBackColor = true;
-            // 
             // tableLayoutPanel4
             // 
             this.tableLayoutPanel4.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -2223,370 +2589,11 @@ namespace AITool
             this.BtnSettingsSave.UseVisualStyleBackColor = true;
             this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
             // 
-            // tabDeepStack
+            // HistoryImageList
             // 
-            this.tabDeepStack.Controls.Add(this.chk_HighPriority);
-            this.tabDeepStack.Controls.Add(this.Chk_DSDebug);
-            this.tabDeepStack.Controls.Add(this.Lbl_BlueStackRunning);
-            this.tabDeepStack.Controls.Add(this.Btn_Save);
-            this.tabDeepStack.Controls.Add(this.label11);
-            this.tabDeepStack.Controls.Add(this.groupBox6);
-            this.tabDeepStack.Controls.Add(this.groupBox1);
-            this.tabDeepStack.Controls.Add(this.groupBox5);
-            this.tabDeepStack.Controls.Add(this.groupBox2);
-            this.tabDeepStack.Controls.Add(this.groupBox4);
-            this.tabDeepStack.Controls.Add(this.groupBox3);
-            this.tabDeepStack.Controls.Add(this.Chk_AutoStart);
-            this.tabDeepStack.Controls.Add(this.Btn_Start);
-            this.tabDeepStack.Controls.Add(this.Btn_Stop);
-            this.tabDeepStack.Location = new System.Drawing.Point(4, 33);
-            this.tabDeepStack.Margin = new System.Windows.Forms.Padding(4);
-            this.tabDeepStack.Name = "tabDeepStack";
-            this.tabDeepStack.Size = new System.Drawing.Size(1671, 824);
-            this.tabDeepStack.TabIndex = 6;
-            this.tabDeepStack.Text = "DeepStack";
-            this.tabDeepStack.UseVisualStyleBackColor = true;
-            // 
-            // chk_HighPriority
-            // 
-            this.chk_HighPriority.AutoSize = true;
-            this.chk_HighPriority.Location = new System.Drawing.Point(598, 527);
-            this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(4);
-            this.chk_HighPriority.Name = "chk_HighPriority";
-            this.chk_HighPriority.Size = new System.Drawing.Size(177, 29);
-            this.chk_HighPriority.TabIndex = 15;
-            this.chk_HighPriority.Text = "Run high priority";
-            this.chk_HighPriority.UseVisualStyleBackColor = true;
-            // 
-            // Chk_DSDebug
-            // 
-            this.Chk_DSDebug.AutoSize = true;
-            this.Chk_DSDebug.Location = new System.Drawing.Point(360, 527);
-            this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_DSDebug.Name = "Chk_DSDebug";
-            this.Chk_DSDebug.Size = new System.Drawing.Size(194, 29);
-            this.Chk_DSDebug.TabIndex = 14;
-            this.Chk_DSDebug.Text = "Debug Deepstack";
-            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
-        "ersion, installed on same machine)");
-            this.Chk_DSDebug.UseVisualStyleBackColor = true;
-            // 
-            // Lbl_BlueStackRunning
-            // 
-            this.Lbl_BlueStackRunning.AutoSize = true;
-            this.Lbl_BlueStackRunning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(494, 609);
-            this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
-            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(169, 24);
-            this.Lbl_BlueStackRunning.TabIndex = 13;
-            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
-            // 
-            // Btn_Save
-            // 
-            this.Btn_Save.Location = new System.Drawing.Point(334, 592);
-            this.Btn_Save.Margin = new System.Windows.Forms.Padding(4);
-            this.Btn_Save.Name = "Btn_Save";
-            this.Btn_Save.Size = new System.Drawing.Size(133, 58);
-            this.Btn_Save.TabIndex = 12;
-            this.Btn_Save.Text = "Save";
-            this.Btn_Save.UseVisualStyleBackColor = true;
-            this.Btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
-            // 
-            // label11
-            // 
-            this.label11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label11.ForeColor = System.Drawing.Color.RoyalBlue;
-            this.label11.Location = new System.Drawing.Point(10, 18);
-            this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(1496, 60);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "When the WINDOWS version of DeepStack will be running on the same machine as AI T" +
-    "ool, this tab can replace the DeepStack UI. (Deepstack.exe) - No control over Do" +
-    "cker version yet.";
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Controls.Add(this.Txt_APIKey);
-            this.groupBox6.Location = new System.Drawing.Point(19, 256);
-            this.groupBox6.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox6.Size = new System.Drawing.Size(845, 79);
-            this.groupBox6.TabIndex = 11;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "API Key (Optional)";
-            // 
-            // Txt_APIKey
-            // 
-            this.Txt_APIKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_APIKey.Location = new System.Drawing.Point(12, 30);
-            this.Txt_APIKey.Margin = new System.Windows.Forms.Padding(4);
-            this.Txt_APIKey.Name = "Txt_APIKey";
-            this.Txt_APIKey.Size = new System.Drawing.Size(823, 29);
-            this.Txt_APIKey.TabIndex = 0;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
-            this.groupBox1.Controls.Add(this.Chk_FaceAPI);
-            this.groupBox1.Controls.Add(this.Chk_SceneAPI);
-            this.groupBox1.Location = new System.Drawing.Point(14, 355);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(284, 154);
-            this.groupBox1.TabIndex = 3;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "API";
-            // 
-            // Chk_DetectionAPI
-            // 
-            this.Chk_DetectionAPI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Chk_DetectionAPI.Location = new System.Drawing.Point(19, 114);
-            this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
-            this.Chk_DetectionAPI.Size = new System.Drawing.Size(257, 34);
-            this.Chk_DetectionAPI.TabIndex = 2;
-            this.Chk_DetectionAPI.Text = "Detection API";
-            this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
-            // 
-            // Chk_FaceAPI
-            // 
-            this.Chk_FaceAPI.Location = new System.Drawing.Point(19, 72);
-            this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_FaceAPI.Name = "Chk_FaceAPI";
-            this.Chk_FaceAPI.Size = new System.Drawing.Size(257, 34);
-            this.Chk_FaceAPI.TabIndex = 1;
-            this.Chk_FaceAPI.Text = "Face API";
-            this.Chk_FaceAPI.UseVisualStyleBackColor = true;
-            // 
-            // Chk_SceneAPI
-            // 
-            this.Chk_SceneAPI.Location = new System.Drawing.Point(19, 30);
-            this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_SceneAPI.Name = "Chk_SceneAPI";
-            this.Chk_SceneAPI.Size = new System.Drawing.Size(257, 34);
-            this.Chk_SceneAPI.TabIndex = 0;
-            this.Chk_SceneAPI.Text = "Scene API";
-            this.Chk_SceneAPI.UseVisualStyleBackColor = true;
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.Txt_AdminKey);
-            this.groupBox5.Location = new System.Drawing.Point(19, 168);
-            this.groupBox5.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox5.Size = new System.Drawing.Size(845, 79);
-            this.groupBox5.TabIndex = 10;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Admin Key (Optional)";
-            // 
-            // Txt_AdminKey
-            // 
-            this.Txt_AdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_AdminKey.Location = new System.Drawing.Point(12, 28);
-            this.Txt_AdminKey.Margin = new System.Windows.Forms.Padding(4);
-            this.Txt_AdminKey.Name = "Txt_AdminKey";
-            this.Txt_AdminKey.Size = new System.Drawing.Size(823, 29);
-            this.Txt_AdminKey.TabIndex = 0;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.RB_High);
-            this.groupBox2.Controls.Add(this.RB_Medium);
-            this.groupBox2.Controls.Add(this.RB_Low);
-            this.groupBox2.Location = new System.Drawing.Point(306, 355);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(270, 154);
-            this.groupBox2.TabIndex = 4;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Mode";
-            // 
-            // RB_High
-            // 
-            this.RB_High.Location = new System.Drawing.Point(19, 116);
-            this.RB_High.Margin = new System.Windows.Forms.Padding(4);
-            this.RB_High.Name = "RB_High";
-            this.RB_High.Size = new System.Drawing.Size(243, 34);
-            this.RB_High.TabIndex = 3;
-            this.RB_High.TabStop = true;
-            this.RB_High.Text = "High";
-            this.RB_High.UseVisualStyleBackColor = true;
-            // 
-            // RB_Medium
-            // 
-            this.RB_Medium.Location = new System.Drawing.Point(19, 73);
-            this.RB_Medium.Margin = new System.Windows.Forms.Padding(4);
-            this.RB_Medium.Name = "RB_Medium";
-            this.RB_Medium.Size = new System.Drawing.Size(243, 34);
-            this.RB_Medium.TabIndex = 2;
-            this.RB_Medium.TabStop = true;
-            this.RB_Medium.Text = "Medium";
-            this.RB_Medium.UseVisualStyleBackColor = true;
-            // 
-            // RB_Low
-            // 
-            this.RB_Low.Location = new System.Drawing.Point(19, 30);
-            this.RB_Low.Margin = new System.Windows.Forms.Padding(4);
-            this.RB_Low.Name = "RB_Low";
-            this.RB_Low.Size = new System.Drawing.Size(243, 34);
-            this.RB_Low.TabIndex = 1;
-            this.RB_Low.TabStop = true;
-            this.RB_Low.Text = "Low";
-            this.RB_Low.UseVisualStyleBackColor = true;
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.Txt_DeepStackInstallFolder);
-            this.groupBox4.Location = new System.Drawing.Point(19, 82);
-            this.groupBox4.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox4.Size = new System.Drawing.Size(845, 79);
-            this.groupBox4.TabIndex = 9;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "DeepStack Install Folder";
-            // 
-            // Txt_DeepStackInstallFolder
-            // 
-            this.Txt_DeepStackInstallFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_DeepStackInstallFolder.Location = new System.Drawing.Point(12, 30);
-            this.Txt_DeepStackInstallFolder.Margin = new System.Windows.Forms.Padding(4);
-            this.Txt_DeepStackInstallFolder.Name = "Txt_DeepStackInstallFolder";
-            this.Txt_DeepStackInstallFolder.ReadOnly = true;
-            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(823, 29);
-            this.Txt_DeepStackInstallFolder.TabIndex = 2;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.Txt_Port);
-            this.groupBox3.Location = new System.Drawing.Point(598, 355);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(264, 154);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Port";
-            // 
-            // Txt_Port
-            // 
-            this.Txt_Port.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_Port.Location = new System.Drawing.Point(18, 33);
-            this.Txt_Port.Margin = new System.Windows.Forms.Padding(4);
-            this.Txt_Port.Name = "Txt_Port";
-            this.Txt_Port.Size = new System.Drawing.Size(238, 29);
-            this.Txt_Port.TabIndex = 0;
-            // 
-            // Chk_AutoStart
-            // 
-            this.Chk_AutoStart.AutoSize = true;
-            this.Chk_AutoStart.Location = new System.Drawing.Point(23, 527);
-            this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_AutoStart.Name = "Chk_AutoStart";
-            this.Chk_AutoStart.Size = new System.Drawing.Size(302, 29);
-            this.Chk_AutoStart.TabIndex = 8;
-            this.Chk_AutoStart.Text = "Automatically Start DeepStack";
-            this.Chk_AutoStart.UseVisualStyleBackColor = true;
-            // 
-            // Btn_Start
-            // 
-            this.Btn_Start.Location = new System.Drawing.Point(14, 592);
-            this.Btn_Start.Margin = new System.Windows.Forms.Padding(4);
-            this.Btn_Start.Name = "Btn_Start";
-            this.Btn_Start.Size = new System.Drawing.Size(133, 58);
-            this.Btn_Start.TabIndex = 6;
-            this.Btn_Start.Text = "Start";
-            this.Btn_Start.UseVisualStyleBackColor = true;
-            this.Btn_Start.Click += new System.EventHandler(this.Btn_Start_Click);
-            // 
-            // Btn_Stop
-            // 
-            this.Btn_Stop.Location = new System.Drawing.Point(173, 592);
-            this.Btn_Stop.Margin = new System.Windows.Forms.Padding(4);
-            this.Btn_Stop.Name = "Btn_Stop";
-            this.Btn_Stop.Size = new System.Drawing.Size(133, 58);
-            this.Btn_Stop.TabIndex = 7;
-            this.Btn_Stop.Text = "Stop";
-            this.Btn_Stop.UseVisualStyleBackColor = true;
-            this.Btn_Stop.Click += new System.EventHandler(this.Btn_Stop_Click);
-            // 
-            // tabLog
-            // 
-            this.tabLog.Controls.Add(this.groupBox7);
-            this.tabLog.Controls.Add(this.Chk_AutoScroll);
-            this.tabLog.Controls.Add(this.button1);
-            this.tabLog.Location = new System.Drawing.Point(4, 33);
-            this.tabLog.Margin = new System.Windows.Forms.Padding(4);
-            this.tabLog.Name = "tabLog";
-            this.tabLog.Size = new System.Drawing.Size(1671, 824);
-            this.tabLog.TabIndex = 7;
-            this.tabLog.Text = "Log";
-            this.tabLog.UseVisualStyleBackColor = true;
-            this.tabLog.Click += new System.EventHandler(this.tabLog_Click);
-            // 
-            // groupBox7
-            // 
-            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox7.Controls.Add(this.RTF_Log);
-            this.groupBox7.Location = new System.Drawing.Point(9, 61);
-            this.groupBox7.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox7.Size = new System.Drawing.Size(1658, 759);
-            this.groupBox7.TabIndex = 5;
-            this.groupBox7.TabStop = false;
-            this.groupBox7.Text = "Log";
-            // 
-            // RTF_Log
-            // 
-            this.RTF_Log.BackColor = System.Drawing.Color.RoyalBlue;
-            this.RTF_Log.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.RTF_Log.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RTF_Log.ForeColor = System.Drawing.Color.White;
-            this.RTF_Log.Location = new System.Drawing.Point(4, 26);
-            this.RTF_Log.Margin = new System.Windows.Forms.Padding(4);
-            this.RTF_Log.Name = "RTF_Log";
-            this.RTF_Log.Size = new System.Drawing.Size(1650, 729);
-            this.RTF_Log.TabIndex = 0;
-            this.RTF_Log.Text = "";
-            // 
-            // Chk_AutoScroll
-            // 
-            this.Chk_AutoScroll.AutoSize = true;
-            this.Chk_AutoScroll.Checked = true;
-            this.Chk_AutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.Chk_AutoScroll.Location = new System.Drawing.Point(150, 19);
-            this.Chk_AutoScroll.Margin = new System.Windows.Forms.Padding(4);
-            this.Chk_AutoScroll.Name = "Chk_AutoScroll";
-            this.Chk_AutoScroll.Size = new System.Drawing.Size(247, 29);
-            this.Chk_AutoScroll.TabIndex = 4;
-            this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
-            this.Chk_AutoScroll.UseVisualStyleBackColor = true;
-            this.Chk_AutoScroll.CheckedChanged += new System.EventHandler(this.Chk_AutoScroll_CheckedChanged);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(10, 12);
-            this.button1.Margin = new System.Windows.Forms.Padding(5);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(107, 42);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Open Log";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.HistoryImageList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            this.HistoryImageList.ImageSize = new System.Drawing.Size(16, 16);
+            this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
             // 
             // Shell
             // 
@@ -2607,18 +2614,7 @@ namespace AITool
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.tabControl1.ResumeLayout(false);
             this.tabOverview.ResumeLayout(false);
-            this.tableLayoutPanel14.ResumeLayout(false);
-            this.tableLayoutPanel15.ResumeLayout(false);
-            this.tableLayoutPanel15.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.tabStats.ResumeLayout(false);
-            this.tableLayoutPanel16.ResumeLayout(false);
-            this.tableLayoutPanel23.ResumeLayout(false);
-            this.tableLayoutPanel23.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.timeline)).EndInit();
-            this.tableLayoutPanel17.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.tabHistory.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
@@ -2628,15 +2624,42 @@ namespace AITool
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
-            this.tableLayoutPanel19.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.folv_history)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.tabCameras.ResumeLayout(false);
+            this.tabSettings.ResumeLayout(false);
+            this.tabDeepStack.ResumeLayout(false);
+            this.tabDeepStack.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            this.tabLog.ResumeLayout(false);
+            this.tabLog.PerformLayout();
+            this.groupBox7.ResumeLayout(false);
+            this.tableLayoutPanel14.ResumeLayout(false);
+            this.tableLayoutPanel15.ResumeLayout(false);
+            this.tableLayoutPanel15.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.tableLayoutPanel16.ResumeLayout(false);
+            this.tableLayoutPanel23.ResumeLayout(false);
+            this.tableLayoutPanel23.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeline)).EndInit();
+            this.tableLayoutPanel17.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
+            this.tableLayoutPanel19.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.folv_history)).EndInit();
             this.tableLayoutPanel21.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tableLayoutPanel22.ResumeLayout(false);
             this.tableLayoutPanel22.PerformLayout();
-            this.tabCameras.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel6.ResumeLayout(false);
@@ -2656,7 +2679,6 @@ namespace AITool
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.tableLayoutPanel11.ResumeLayout(false);
-            this.tabSettings.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
             this.tableLayoutPanel5.ResumeLayout(false);
             this.tableLayoutPanel5.PerformLayout();
@@ -2667,21 +2689,6 @@ namespace AITool
             this.dbLayoutPanel1.PerformLayout();
             this.dbLayoutPanel2.ResumeLayout(false);
             this.dbLayoutPanel2.PerformLayout();
-            this.tabDeepStack.ResumeLayout(false);
-            this.tabDeepStack.PerformLayout();
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.tabLog.ResumeLayout(false);
-            this.tabLog.PerformLayout();
-            this.groupBox7.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -2848,6 +2855,7 @@ namespace AITool
         private BrightIdeasSoftware.FastObjectListView folv_history;
         private System.Windows.Forms.Button btn_resetstats;
         private System.Windows.Forms.CheckBox cb_filter_skipped;
+        private System.Windows.Forms.ImageList HistoryImageList;
     }
 }
 
