@@ -2615,9 +2615,13 @@ namespace AITool
             // 
             // HistoryImageList
             // 
-            this.HistoryImageList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
-            this.HistoryImageList.ImageSize = new System.Drawing.Size(16, 16);
+            this.HistoryImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("HistoryImageList.ImageStream")));
             this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.HistoryImageList.Images.SetKeyName(0, "error");
+            this.HistoryImageList.Images.SetKeyName(1, "person");
+            this.HistoryImageList.Images.SetKeyName(2, "nothing");
+            this.HistoryImageList.Images.SetKeyName(3, "detection");
+            this.HistoryImageList.Images.SetKeyName(4, "success");
             // 
             // HistoryUpdateListTimer
             // 

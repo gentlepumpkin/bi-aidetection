@@ -72,7 +72,7 @@ namespace AITool
             //---------------------------------------------------------------------------
             //HISTORY TAB
 
-            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), null, "Date", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular),HistoryImageList, "Date", SortOrder.Descending);
 
 
 

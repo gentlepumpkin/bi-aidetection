@@ -193,19 +193,20 @@ namespace AITool
 					OLVColumn cl = new OLVColumn();
 					if (ImageList != null)
 					{
-						//if (FOLV.Name == "FOLV_UpdateList" && colcnt == 1)
-						//{
-						//	cl.ImageGetter = GetImageForUpdateList;
-						//}
-						//else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
-						//{
-						//	cl.ImageGetter = GetImageForBlocklistViewerRIR;
-						//}
-						//else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
-						//{
-						//	cl.ImageGetter = GetImageForProdList;
-						//}
-					}
+                        
+						if (FOLV.Name.ToLower() == "folv_history" && colcnt == 1)
+                        {
+                            cl.ImageGetter = GetImageForHistoryList;
+                        }
+                        //else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
+                        //{
+                        //	cl.ImageGetter = GetImageForBlocklistViewerRIR;
+                        //}
+                        //else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
+                        //{
+                        //	cl.ImageGetter = GetImageForProdList;
+                        //}
+                    }
 					//cl.AspectName = ei.Name
 					cl.UseFiltering = true;
 					cl.Searchable = true;
@@ -540,44 +541,43 @@ endOfTry:
 			}
 		}
 
-		//		public string GetImageForProdList(object row)
-		//		{
-		//			string RetKey = "";
+        public static string GetImageForHistoryList(object row)
+        {
+            string RetKey = "";
 
-		//			try
-		//			{
-		//				if (!(row is ClsProdConfEntryShort))
-		//				{
-		//					//INSTANT C# WARNING: 'Exit Try' statements have no equivalent in C#, so it has been replaced with a 'goto' statement:
-		//					//ORIGINAL LINE: Exit Try
-		//					goto ExitLabel1;
-		//				}
+            try
+            {
 
-		//				ClsProdConfEntryShort Prod = (ClsProdConfEntryShort)row;
-		//				if (Frm_Main.ImageList1.Images.ContainsKey(Prod.Source.ToString().ToLower()))
-		//				{
-		//					RetKey = Prod.Source.ToString().ToLower();
-		//				}
-		//				else
-		//				{
-		//					RetKey = "unknown";
-		//				}
-
-		//			}
-		//			catch (Exception ex)
-		//			{
-		//				if (DebugApp)
-		//				{
-		//					Debug.Print("Error: " + ExMsg(ex));
-		//				}
-		//			}
-		//ExitLabel1:
-		//			return RetKey;
-
-		//		}
+                History hist = (History)row;
+                if (hist.Success)
+                {
+					RetKey = "success";
+				}
+				else if (hist.WasSkipped)
+				{
+					RetKey = "error";
+				}
+				else if (!hist.IsAnimal && !hist.IsFace && !hist.IsPerson && !hist.IsVehicle && !hist.IsAnimal)
+				{
+					RetKey = "nothing";
+				}
+				else
+				{
+					RetKey = "detection";
+				}
 
 
-		public class CursorWait:IDisposable
+			}
+			catch (Exception ex)
+            {
+            }
+
+            return RetKey;
+
+        }
+
+
+        public class CursorWait:IDisposable
 		{
 			public CursorWait(bool appStarting = false, bool applicationCursor = true)
 			{

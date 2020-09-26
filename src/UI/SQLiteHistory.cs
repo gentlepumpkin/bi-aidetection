@@ -288,7 +288,7 @@ namespace AITool
                                     if (await this.InsertHistoryItem(hist))
                                     {
                                         added++;
-                                        this.AddedCount.AtomicIncrementAndGet();
+                                        //this.AddedCount.AtomicIncrementAndGet();
                                     }
                                 }
                             }
@@ -421,6 +421,14 @@ namespace AITool
                 });
 
                 ret = (added > 0 || removed > 0);
+
+                if (ret)
+                {
+                    //this.DeletedCount.AtomicAddAndGet(removed);
+                    //this.AddedCount.AtomicAddAndGet(added);
+                    this.LastUpdateTime = DateTime.Now;
+                    this.HasChanged.WriteFullFence(true);
+                }
 
                 this.HasChanged.WriteFullFence(false);
 
