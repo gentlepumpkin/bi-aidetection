@@ -66,20 +66,31 @@ namespace AITool
 
 			});
 		}
-		public static void UpdateFOLV_add(FastObjectListView olv, ICollection Collection, bool ResizeCols = false)
+		public static void UpdateFOLV_add(FastObjectListView olv, ICollection Collection, bool ResizeCols = false, bool Follow = false)
 		{
 
 			Global_GUI.InvokeIFRequired(olv, () =>
 			{
-				olv.Freeze();
 
 				try
 				{
+					if (olv.Items.Count == 0)
+                    {
+						olv.EmptyListMsg = "Loading...";
+					}
+
+					olv.Freeze();
 
 					olv.UpdateObjects(Collection);
-
+					
 					if (olv.Items.Count > 0)
 					{
+						if (Follow)
+                        {
+							olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+							olv.EnsureModelVisible(olv.SelectedObject);
+                        }
+						
 						//update column size only if did not restore folv state file or forced
 						if (olv.Tag == null || ResizeCols)
 						{

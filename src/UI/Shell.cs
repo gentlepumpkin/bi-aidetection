@@ -8,8 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Arch.CMessaging.Client.Core.Utils;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 
@@ -22,14 +24,17 @@ namespace AITool
     {
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
+        private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
+
+        //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
+        public static SemaphoreSlim Semaphore_List_Updating = new SemaphoreSlim(1, 1);
+
 
         public Shell()
         {
             InitializeComponent();
 
-            //---------------------------------------------------------------------------------------------------------
-            // Section added by Vorlon
-            //---------------------------------------------------------------------------------------------------------
+            toolStripStatusLabelHistoryItems.Alignment = ToolStripItemAlignment.Right;
 
             //this is to log messages from other classes to the RTF in Shell form, and to log file...
             Global.progress = new Progress<ClsMessage>(EventMessage);
@@ -61,7 +66,7 @@ namespace AITool
 
             LoadCameras(); //load camera list
 
-            this.Opacity = 0;
+            //this.Opacity = 0;
             this.Show();
 
             //---------------------------------------------------------------------------
@@ -69,7 +74,6 @@ namespace AITool
 
             Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), null, "Date", SortOrder.Descending);
 
-            Global_GUI.UpdateFOLV(folv_history, HistoryDB.HistoryDic.Values);
 
 
             //load entries from history.csv into history ListView
@@ -132,9 +136,14 @@ namespace AITool
             }
 
 
+            HistoryUpdateListTimer.Enabled = true;
+            HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
+            HistoryUpdateListTimer.Start();
 
 
-            this.Opacity = 1;
+            LoadHistoryAsync(true, cb_follow.Checked);
+
+            //this.Opacity = 1;
 
             Log("APP START complete.");
         }
@@ -152,27 +161,33 @@ namespace AITool
             }
             else if (msg.MessageType == MessageType.CreateHistoryItem)
             {
-                JsonSerializerSettings jset = new JsonSerializerSettings { };
-                jset.TypeNameHandling = TypeNameHandling.All;
-                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
-                History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
-                CreateListItem(hist);
+                if (!HistoryDB.ReadOnly)  //otherwise another service is doing all the updating
+                {
+                    JsonSerializerSettings jset = new JsonSerializerSettings { };
+                    jset.TypeNameHandling = TypeNameHandling.All;
+                    jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                    History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
+                    CreateListItem(hist);
+                }
             }
             else if (msg.MessageType == MessageType.DeleteHistoryItem)
             {
-                DeleteListItem(msg.Description);
+                //DeleteListItem(msg.Description);
             }
             else if (msg.MessageType == MessageType.ImageAddedToQueue)
             {
                 UpdateQueueLabel();
+                UpdateToolstrip();
             }
             else if (msg.MessageType == MessageType.BeginProcessImage)
             {
                 BeginProcessImage(msg.Description);
+                UpdateToolstrip();
             }
             else if (msg.MessageType == MessageType.EndProcessImage)
             {
                 EndProcessImage(msg.Description);
+                UpdateToolstrip();
             }
             else if (msg.MessageType == MessageType.UpdateLabel)
             {
@@ -213,7 +228,7 @@ namespace AITool
 
                 }
 
-
+                UpdateToolstrip();
             }
             else
             {
@@ -229,7 +244,7 @@ namespace AITool
         //save how many times an error happened
         public void IncrementErrorCounter()
         {
-            errors++;
+            errors.AtomicIncrementAndGet();
             try
             {
                 if (this.Visible)
@@ -238,6 +253,7 @@ namespace AITool
                     {
                         lbl_errors.Show();
                         lbl_errors.Text = $"{errors.ToString()} error(s) occurred. Click to open Log."; //update error counter label
+                        UpdateToolstrip();
                     };
                     //getting error here when called too early - had to check if Visible or not -Vorlon
                     Invoke(LabelUpdate);
@@ -396,11 +412,12 @@ namespace AITool
         }
 
         //open from tray
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        private async void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             this.Show();
             this.WindowState = FormWindowState.Normal;
             notifyIcon.Visible = false;
+            await LoadHistoryAsync(true, cb_follow.Checked);
         }
 
         //open Log when clicking or error message
@@ -410,7 +427,9 @@ namespace AITool
             {
                 System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
                 lbl_errors.Text = "";
-                errors = 0;
+                errors.WriteFullFence(0);
+                UpdateToolstrip();
+
             }
             else
             {
@@ -447,15 +466,17 @@ namespace AITool
         }
 
         //event: another tab selected (Only load certain things in tabs if they are actually open)
-        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        private async void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            Application.DoEvents();
+
             if (tabControl1.SelectedIndex == 1)
             {
                 UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
             }
             else if (tabControl1.SelectedIndex == 2)
             {
-                //CleanCSVList(); //removed to load the history list faster
+                await LoadHistoryAsync(true, cb_follow.Checked);
             }
             else if (tabControl1.SelectedTab == tabControl1.TabPages["tabDeepStack"])
             {
@@ -465,15 +486,16 @@ namespace AITool
             {
                 //scroll to bottom, only when tab is active for better performance 
 
-                //Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
-                //{
-                //    if (Chk_AutoScroll.Checked)
-                //    {
-                //        this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
-                //        this.RTF_Log.ScrollToCaret();
-                //    }
-                //});
+                Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
+                {
+                    if (Chk_AutoScroll.Checked)
+                    {
+                        this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
+                        this.RTF_Log.ScrollToCaret();
+                    }
+                });
             }
+            Application.DoEvents();
 
         }
 
@@ -495,6 +517,10 @@ namespace AITool
         //update pie chart
         public void UpdatePieChart()
         {
+
+            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized)
+                return;
+
             int alerts = 0;
             int irrelevantalerts = 0;
             int falsealerts = 0;
@@ -561,6 +587,10 @@ namespace AITool
         //update timeline
         public async void UpdateTimeline()
         {
+
+            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized)
+                return;
+
             Log("Loading time line from cameras/history.csv ...");
 
             //clear previous values
@@ -690,7 +720,7 @@ namespace AITool
                 //add to graph "skipped":
 
                 timeline.Series[4].Points.AddXY(-0.25, skipped[47]); // beginning point with value of last visible point
-                                                                      //and now add all visible points 
+                                                                     //and now add all visible points 
                 x = 0.25;
                 foreach (int halfhour in skipped)
                 {
@@ -716,6 +746,11 @@ namespace AITool
         //update confidence_frequency chart
         public async void UpdateConfidenceChart()
         {
+
+            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized)
+                return;
+
+
             Log("Loading confidence-frequency chart from cameras/history.csv ...");
 
             //clear previous values
@@ -987,62 +1022,133 @@ namespace AITool
         // add new entry in left list
         public async void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
         {
-
-            
-            if (await HistoryDB.InsertHistoryItem(hist))
-                Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList());
-
-
+            HistoryDB.InsertHistoryItem(hist).ConfigureAwait(false);
 
         }
 
-        //remove entry from left list
-        public async void DeleteListItem(string filename)
-        {
-
-
-            if (await HistoryDB.DeleteHistoryItem(filename))
-                Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList());
-
-        }
-
-        //load stored entries in history CSV into history ListView
-        private async Task LoadHistoryAsync()
+        private void UpdateToolstrip()
         {
             try
             {
-                using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait(false, false))
+
+
+                if (!this.Visible || (this.WindowState == FormWindowState.Minimized))
+                    return;  //save a tree
+
+                int alerts = 0;
+                int irrelevantalerts = 0;
+                int falsealerts = 0;
+                int skipped = 0;
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    alerts += cam.stats_alerts;
+                    irrelevantalerts += cam.stats_irrelevant_alerts;
+                    falsealerts += cam.stats_false_alerts;
+                    skipped += cam.stats_skipped_images;
+                }
+
+                Global_GUI.InvokeIFRequired(toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
                 {
 
-                    await HistoryDB.UpdateHistoryList(false);
+                    double hpm = 0;
+                    if (HistoryDB.AddedCount.ReadFullFence() > 0)
+                        hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
-                    Global_GUI.UpdateFOLV(folv_history, HistoryDB.HistoryDic.Values);
+                    toolStripStatusLabelHistoryItems.Text = $"{HistoryDB.HistoryDic.Count()} history items ({hpm.ToString("###0.0")} per minute)";
 
-                    Global_GUI.InvokeIFRequired(folv_history, () =>
+                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant Alerts | {falsealerts} False Alerts | {skipped} Skipped Images | {ImageProcessQueue.Count} in Queue";
+
+                    toolStripStatusErrors.Text = $"| {errors.ReadFullFence()} New Errors";
+
+
+
+                    if (errors.ReadFullFence() > 0)
                     {
+                        toolStripStatusErrors.ForeColor = Color.Red;
+                    }
+                    else
+                    {
+                        toolStripStatusErrors.ForeColor = toolStripStatusLabelHistoryItems.GetCurrentParent().ForeColor;
+                    }
 
-                        if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked)
+                });
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+        }
+        //load stored entries in history CSV into history ListView
+        private async Task LoadHistoryAsync(bool FilterChanged, bool Follow)
+        {
+            //make sure only one thread updating at a time
+
+            await Semaphore_List_Updating.WaitAsync();
+
+            Global_GUI.CursorWait cw = null;
+
+            try
+            {
+                //Dont update list unless we are on the tab and it is visible for performance reasons.
+                if (FilterChanged || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
+                {
+
+                    if (FilterChanged)
+                        cw = new Global_GUI.CursorWait();
+
+                    if (await HistoryDB.HasUpdates() || FilterChanged)
+                    {
+                        Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList(),FilterChanged,Follow);
+
+                        this.UpdateToolstrip();
+
+                        if (FilterChanged)
                         {
-                            //filter
-                            folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
+                            Global_GUI.InvokeIFRequired(folv_history, () =>
                             {
-                                History hist = (History)x;
-                                return checkListFilters(hist);
+
+                                if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked || cb_filter_skipped.Checked)
+                                {
+                                        //filter
+                                        folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
+                                    {
+                                        History hist = (History)x;
+                                        return checkListFilters(hist);
+                                    });
+                                }
+                                else
+                                {
+                                    folv_history.ModelFilter = null;
+                                }
+
                             });
-                        }
-                        else
-                        {
-                            folv_history.ModelFilter = null;
+
                         }
 
-                    });
-
+                    }
+                    else
+                    {
+                        Log("No history file updates.");
+                    }
 
 
                 }
 
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                if (cw != null)
+                    cw.Dispose();
+
+                Semaphore_List_Updating.Release();
+            }
+
         }
 
         //check if a filter applies on given string of history list entry 
@@ -1111,11 +1217,7 @@ namespace AITool
             LabelUpdate = delegate
             {
 
-                if (tabControl1.SelectedIndex == 1)
-                {
-
-                    UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
-                }
+                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
             };
             Invoke(LabelUpdate);
 
@@ -1191,37 +1293,37 @@ namespace AITool
         //event: filter "only revelant alerts" checked or unchecked
         private async void cb_filter_success_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private async void cb_filter_person_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //event: filter "only alerts with people" checked or unchecked
         private async void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //event: filter "only alerts with animals" checked or unchecked
         private async void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //event: filter "only false / irrevelant alerts" checked or unchecked
         private async void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //event: filter camera dropdown changed
         private async void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -2421,6 +2523,7 @@ namespace AITool
                     }
                     else
                     {
+                        HistoryDB.DeleteHistoryItem(hist.Filename);
                         lbl_objects.Text = "Image not found";
                         pictureBox1.BackgroundImage = null;
                     }
@@ -2500,13 +2603,45 @@ namespace AITool
 
             UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
 
+            UpdateQueueLabel();
+
             AppSettings.Save();
 
         }
 
         private async void cb_filter_skipped_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync();
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private async void HistoryUpdateListTimer_Tick(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(false, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private void folv_history_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripStatusErrors_Click(object sender, EventArgs e)
+        {
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            {
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
+                lbl_errors.Text = "";
+                errors.WriteFullFence(0);
+                UpdateToolstrip();
+            }
+            else
+            {
+                MessageBox.Show("log missing");
+            }
+        }
+
+        private async void cb_follow_CheckedChanged(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
     }
 

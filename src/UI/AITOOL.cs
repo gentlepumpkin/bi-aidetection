@@ -64,16 +64,13 @@ namespace AITool
         public static MovingCalcs qcalc = new MovingCalcs(250);
         public static MovingCalcs qsizecalc = new MovingCalcs(250);
         
-        public static int errors = 0;
+        public static ThreadSafe.Integer errors = new ThreadSafe.Integer(0);
         
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
 
         //The sqlite db connection
         public static SQLiteHistory HistoryDB = null;
 
-
-        //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
-        //public static SemaphoreSlim semaphore_detection_running = new SemaphoreSlim(1, 1);
 
         public static object FileWatcherLockObject = new object();
         public static object ImageLoopLockObject = new object();
@@ -151,7 +148,6 @@ namespace AITool
                     Log(" --- Files will not be monitored from within this session ");
                     Log(" --- Log tab will not display output from service instance. You will need to directly open log file for that ");
                     Log(" --- Changes made here to settings will require that you stop/start the service ");
-                    Log(" --- You must close/reopen app to see NEW history items/detections");
                 }
                 if (Global.IsAdministrator())
                 {
@@ -200,7 +196,7 @@ namespace AITool
 
 
                 //Load the database, and migrate any old csv lines if needed
-                HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName,false);
+                HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName, AppSettings.AlreadyRunning);
                 await HistoryDB.UpdateHistoryList(true);
                 if (HistoryDB.HistoryDic.Count == 0)
                     await HistoryDB.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
@@ -209,7 +205,8 @@ namespace AITool
                 UpdateWatchers();
 
                 //Start the thread that watches for the file queue
-                Task.Run(ImageQueueLoop);
+                if (!AppSettings.AlreadyRunning)
+                    Task.Run(ImageQueueLoop);
 
 
             }

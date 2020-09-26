@@ -89,6 +89,7 @@ namespace AITool
 
             public string DisplayPercentageFormat = "({0:0.00}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
+            public int TimeBetweenListRefreshsMS = 3000;
 
         }
 
