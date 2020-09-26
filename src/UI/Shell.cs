@@ -1130,7 +1130,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log("No history file updates.");
+                        //Log("No history file updates.");
                     }
 
 
