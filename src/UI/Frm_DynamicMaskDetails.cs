@@ -366,9 +366,10 @@ namespace AITool
                         {
                             //Global.Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                            int xmin = (int)(scale * op.xmin) + absX;
+                            
+                            int xmin = (int)(scale * op.xmin + this.cam.XOffset) + absX;
                             int xmax = (int)(scale * op.xmax) + absX;
-                            int ymin = (int)(scale * op.ymin) + absY;
+                            int ymin = (int)(scale * op.ymin + this.cam.YOffset) + absY;
                             int ymax = (int)(scale * op.ymax) + absY;
 
                             Color color;

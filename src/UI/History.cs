@@ -18,9 +18,7 @@ namespace AITool
         //      1541,870,1690,1097;1316,1521,1583,1731;226,214,1231,637;451,1028,689,1321;989,769,1225,1145;882,616,1089,938;565,647,701,814;|
         //      false
 
-        [Indexed]
         public DateTime Date { get; set; } = DateTime.MinValue;
-        [Indexed]
         public string Camera { get; set; } = "";
         public bool Success { get; set; } = false;
         public string Detections { get; set; } = "";
@@ -31,7 +29,7 @@ namespace AITool
         public bool WasSkipped { get; set; } = false;
         public bool IsFace { get; set; } = false;
         public bool IsKnownFace { get; set; } = false;
-        [PrimaryKey, Indexed]
+        [SQLite.PrimaryKey, SQLite.Unique]  //cannot have indexed here also - pk auto creates index I think
         public string Filename { get; set; } = "";
         public string Positions { get; set; } = "";
 
@@ -52,7 +50,7 @@ namespace AITool
             
             this.Camera = sp[2].Trim();
             this.Detections = sp[3];
-            this.Filename = sp[0].Trim();
+            this.Filename = sp[0].Trim().ToLower();
             this.Positions = sp[4].Trim();
 
             bool suc = false;

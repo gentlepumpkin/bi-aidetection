@@ -29,6 +29,9 @@ namespace AITool
         public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
         private ThreadSafe.Boolean HasChanged { get; set; } = new ThreadSafe.Boolean(true);
 
+        public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000);
+        public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000);
+
         public SQLiteHistory(string Filename, bool ReadOnly)
         {
             if (string.IsNullOrEmpty(Filename))
@@ -132,35 +135,38 @@ namespace AITool
 
             try
             {
-                Stopwatch sw = Stopwatch.StartNew();
 
                 if (!this.IsSQLiteDBConnected())
                     await this.CreateConnectionAsync();
 
                 ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
 
-                //if (!ret)
-                //{
-                //	Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
-                //}
+                if (!ret)
+                {
+                    Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
+                }
+
+                Stopwatch sw = Stopwatch.StartNew();
 
                 int iret = await this.sqlite_conn.InsertAsync(hist);
+
+                this.AddTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
 
                 if (iret != 1)
                 {
                     Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
                 }
 
-                if (sw.ElapsedMilliseconds > 1000)
-                    Global.Log($"Warning: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
-                
+                if (sw.ElapsedMilliseconds > 250)
+                    Global.Log($"Warning: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+
             }
             catch (Exception ex)
             {
 
                 if (ex.Message.ToLower().Contains("UNIQUE constraint failed"))
                 {
-                    //Global.Log($"Info: File was already in the database: {hist.Filename}");
+                    Global.Log($"Info: File was already in the database: {hist.Filename}");
                 }
                 else
                 {
@@ -185,7 +191,6 @@ namespace AITool
 
             try
             {
-                Stopwatch sw = Stopwatch.StartNew();
 
                 if (!this.IsSQLiteDBConnected())
                     await this.CreateConnectionAsync();
@@ -193,22 +198,29 @@ namespace AITool
                 History hist;
                 ret = this.HistoryDic.TryRemove(Filename.ToLower(), out hist);
 
-                //if (!ret)
-                //{
-                //	Global.Log($"Info: File was not in dictionary '{Filename}'");
-                //}
-
-                //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
-
-                int dret = await this.sqlite_conn.DeleteAsync(Filename.ToLower());
-
-                if (dret != 1)
+                if (!ret)
                 {
-                    Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    Global.Log($"Info: File was not in dictionary '{Filename}'");
+                }
+                else
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+                    //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
+                    //trying to use object rather than primarykey to delete
+                    int dret = await this.sqlite_conn.DeleteAsync(hist);
+
+                    this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
+
+                    if (dret != 1)
+                    {
+                        Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    }
+
+                    if (sw.ElapsedMilliseconds > 250)
+                        Global.Log($"Warning: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
                 }
 
-                if (sw.ElapsedMilliseconds > 1000)
-                    Global.Log($"Warning: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+
 
 
 
@@ -218,7 +230,7 @@ namespace AITool
 
                 if (ex.Message.ToLower().Contains("it has no pk"))
                 {
-                    //Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
+                    Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
                 }
                 else
                 {
@@ -349,7 +361,7 @@ namespace AITool
             {
                 return await UpdateHistoryList(false);
             }
-            
+
             return false;
 
         }
@@ -379,13 +391,13 @@ namespace AITool
 
                     Dictionary<string, String> tmpdic = new Dictionary<string, String>();
 
-                        //lets try to keep the original objects in memory and not create them new
-                        foreach (History hist in CurList)
+                    //lets try to keep the original objects in memory and not create them new
+                    foreach (History hist in CurList)
                     {
                         if (!isnew)
                         {
-                                //add missing
-                                if (this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist))
+                            //add missing
+                            if (this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist))
                             {
                                 added++;
                             }
@@ -400,8 +412,8 @@ namespace AITool
 
                     if (!isnew)
                     {
-                            //subtract
-                            foreach (History hist in this.HistoryDic.Values)
+                        //subtract
+                        foreach (History hist in this.HistoryDic.Values)
                         {
                             if (!tmpdic.ContainsKey(hist.Filename.ToLower()))
                             {
@@ -458,59 +470,88 @@ namespace AITool
             {
                 Stopwatch sw = Stopwatch.StartNew();
 
-                Global.Log("Removing missing files from database...");
 
                 if (!this.IsSQLiteDBConnected())
                     await this.CreateConnectionAsync();
 
 
-                ConcurrentBag<string> removed = new ConcurrentBag<string>();   //this may only need to be a list, but just being safe in threading
+                ConcurrentBag<History> removed = new ConcurrentBag<History>();   //this may only need to be a list, but just being safe in threading
 
 
                 //run the file exists check in another thread so we dont freeze the UI, but WAIT for it
                 await Task.Run(async () =>
                 {
+                    Global.Log("Removing missing files from in-memory database...");
+
                     //we are allowed to do this with a ConcurrentDictionary...
                     foreach (History hist in this.HistoryDic.Values)
                     {
                         if (!File.Exists(hist.Filename))
                         {
-                            removed.Add(hist.Filename.ToLower());
+                            removed.Add(hist);
                             History rhist;
-                            this.HistoryDic.TryRemove(hist.Filename, out rhist);
+                            if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
+                                Global.Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
                         }
 
                     }
 
                     if (removed.Count > 0)
                     {
+                        Global.Log($"Removing {removed.Count} missing files from file database...");
                         //start another thread to finish cleaning the database so that the app gets the list faster...
                         //the db should be thread safe due to opening with fullmutex flag
-                        //DONT WAIT TO FINISH
-                        Task.Run(async () =>
+                        Stopwatch swr = Stopwatch.StartNew();
+                        int rcnt = 0;
+                        int failedcnt = 0;
+                        int notindbcnt = 0;
+                        foreach (History hist in removed)
                         {
-                            Stopwatch swr = Stopwatch.StartNew();
-                            int rcnt = 0;
-                            foreach (string fil in removed)
+                            //the db should be thread safe due to opening with fullmutex flag
+                            int rowsdeleted = 0;
+                            
+                            try
                             {
-                                //the db should be thread safe due to opening with fullmutex flag
-                                int rowsdeleted = await this.sqlite_conn.DeleteAsync(fil);
-                                rcnt = rcnt + rowsdeleted;
+                                Stopwatch dsw = Stopwatch.StartNew();
+
+                                rowsdeleted = await this.sqlite_conn.DeleteAsync(hist);
+
+                                this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
+                                
                                 if (rowsdeleted != 1)
                                 {
+                                    failedcnt++;
                                     Global.Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
                                 }
                             }
-                            Global.Log($"...Cleaned {removed.Count} history DATABASE items because file did not exist in {swr.ElapsedMilliseconds}ms");
+                            catch (Exception ex)
+                            {
+                                if (ex.Message.ToLower().Contains("it has no pk"))
+                                {
+                                    Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
+                                    notindbcnt++;
+                                }
+                                else
+                                {
+                                    failedcnt++;
+                                    Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
+                                }
+                            }
+                            rcnt = rcnt + rowsdeleted;
+                        }
+                        Global.Log($"...Cleaned {rcnt} of {removed.Count} (Not in db={notindbcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
 
-                        });
+                    }
+                    else
+                    {
+                        Global.Log("Info: No missing files to clean from database?");
                     }
 
 
                 });
 
 
-                Global.Log($"...Cleaned {removed.Count} in-memory history items because files did not exist in {sw.ElapsedMilliseconds}ms");
+                Global.Log($"...Cleaned {removed.Count} items in {sw.ElapsedMilliseconds}ms");
 
 
                 ret = removed.Count > 0;

@@ -214,6 +214,7 @@ namespace AITool
             this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -1017,6 +1018,7 @@ namespace AITool
             // lbl_objects
             // 
             this.lbl_objects.AutoSize = true;
+            this.lbl_objects.BackColor = System.Drawing.SystemColors.Info;
             this.lbl_objects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbl_objects.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_objects.Location = new System.Drawing.Point(532, 0);
@@ -2622,6 +2624,17 @@ namespace AITool
             this.HistoryImageList.Images.SetKeyName(2, "nothing");
             this.HistoryImageList.Images.SetKeyName(3, "detection");
             this.HistoryImageList.Images.SetKeyName(4, "success");
+            this.HistoryImageList.Images.SetKeyName(5, "bear");
+            this.HistoryImageList.Images.SetKeyName(6, "cat");
+            this.HistoryImageList.Images.SetKeyName(7, "dog");
+            this.HistoryImageList.Images.SetKeyName(8, "horse");
+            this.HistoryImageList.Images.SetKeyName(9, "bird");
+            this.HistoryImageList.Images.SetKeyName(10, "alien");
+            this.HistoryImageList.Images.SetKeyName(11, "cow");
+            this.HistoryImageList.Images.SetKeyName(12, "car");
+            this.HistoryImageList.Images.SetKeyName(13, "truck");
+            this.HistoryImageList.Images.SetKeyName(14, "motorcycle");
+            this.HistoryImageList.Images.SetKeyName(15, "bicycle");
             // 
             // HistoryUpdateListTimer
             // 
@@ -2634,10 +2647,11 @@ namespace AITool
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabelHistoryItems,
             this.toolStripStatusErrors,
-            this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 822);
+            this.toolStripStatusLabel1,
+            this.toolStripStatusLabelInfo});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 815);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1679, 39);
+            this.statusStrip1.Size = new System.Drawing.Size(1679, 46);
             this.statusStrip1.TabIndex = 5;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -2645,21 +2659,29 @@ namespace AITool
             // 
             this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
             this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
-            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(152, 30);
+            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(152, 37);
             this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
             // 
             // toolStripStatusErrors
             // 
             this.toolStripStatusErrors.Name = "toolStripStatusErrors";
-            this.toolStripStatusErrors.Size = new System.Drawing.Size(18, 30);
+            this.toolStripStatusErrors.Size = new System.Drawing.Size(18, 37);
             this.toolStripStatusErrors.Text = ".";
             this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(18, 30);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(18, 37);
             this.toolStripStatusLabel1.Text = ".";
+            // 
+            // toolStripStatusLabelInfo
+            // 
+            this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 11.14286F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
+            this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
+            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(67, 37);
+            this.toolStripStatusLabelInfo.Text = "Idle.";
             // 
             // Shell
             // 
@@ -2931,6 +2953,7 @@ namespace AITool
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusErrors;
         private System.Windows.Forms.CheckBox cb_follow;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelInfo;
     }
 }
 

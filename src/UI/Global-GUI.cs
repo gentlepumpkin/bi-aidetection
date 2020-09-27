@@ -75,7 +75,7 @@ namespace AITool
 				try
 				{
 					if (olv.Items.Count == 0)
-                    {
+					{
 						olv.EmptyListMsg = "Loading...";
 					}
 
@@ -86,10 +86,10 @@ namespace AITool
 					if (olv.Items.Count > 0)
 					{
 						if (Follow)
-                        {
+						{
 							olv.SelectedIndex = 0;  //olv.Items.Count - 1;
 							olv.EnsureModelVisible(olv.SelectedObject);
-                        }
+						}
 						
 						//update column size only if did not restore folv state file or forced
 						if (olv.Tag == null || ResizeCols)
@@ -193,20 +193,37 @@ namespace AITool
 					OLVColumn cl = new OLVColumn();
 					if (ImageList != null)
 					{
-                        
-						if (FOLV.Name.ToLower() == "folv_history" && colcnt == 1)
-                        {
-                            cl.ImageGetter = GetImageForHistoryList;
-                        }
-                        //else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
-                        //{
-                        //	cl.ImageGetter = GetImageForBlocklistViewerRIR;
-                        //}
-                        //else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
-                        //{
-                        //	cl.ImageGetter = GetImageForProdList;
-                        //}
-                    }
+						
+						if (FOLV.Name.ToLower() == "folv_history")
+						{
+                            if (colcnt == 1)
+                            {
+								cl.ImageGetter = GetImageForHistoryList;
+							}
+							else if (ei.Name == "IsPerson")
+							{
+								cl.ImageGetter = GetImageForHistoryListPerson;
+								cl.AspectToStringConverter = delegate (object x) {
+									return String.Empty;
+								};
+							}
+							else if (ei.Name == "Success")
+							{
+								cl.ImageGetter = GetImageForHistoryListSuccess;
+								cl.AspectToStringConverter = delegate (object x) {
+									return String.Empty;
+								};
+							}
+						}
+						//else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
+						//{
+						//	cl.ImageGetter = GetImageForBlocklistViewerRIR;
+						//}
+						//else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
+						//{
+						//	cl.ImageGetter = GetImageForProdList;
+						//}
+					}
 					//cl.AspectName = ei.Name
 					cl.UseFiltering = true;
 					cl.Searchable = true;
@@ -541,23 +558,24 @@ endOfTry:
 			}
 		}
 
-        public static string GetImageForHistoryList(object row)
-        {
-            string RetKey = "";
+		public static string GetImageForHistoryList(object row)
+		{
+			string RetKey = "";
 
-            try
-            {
+			try
+			{
 
-                History hist = (History)row;
-                if (hist.Success)
-                {
+
+				History hist = (History)row;
+				if (hist.Success)
+				{
 					RetKey = "success";
 				}
 				else if (hist.WasSkipped)
 				{
 					RetKey = "error";
 				}
-				else if (!hist.IsAnimal && !hist.IsFace && !hist.IsPerson && !hist.IsVehicle && !hist.IsAnimal)
+				else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
 				{
 					RetKey = "nothing";
 				}
@@ -569,15 +587,117 @@ endOfTry:
 
 			}
 			catch (Exception ex)
-            {
-            }
+			{
+			}
 
-            return RetKey;
+			return RetKey;
 
-        }
+		}
+		public static string GetImageForHistoryListPerson(object row)
+		{
+			string RetKey = "";
+
+			try
+			{
 
 
-        public class CursorWait:IDisposable
+				History hist = (History)row;
+				if (hist.IsPerson)
+				{
+					RetKey = "person";
+				}
+				else
+				{
+					RetKey = "nothing";
+				}
+
+
+			}
+			catch {	}
+
+			return RetKey;
+
+		}
+
+		public static string GetImageForHistoryListSuccess(object row)
+		{
+			string RetKey = "";
+
+			try
+			{
+				//"Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck"
+
+				History hist = (History)row;
+				if (hist.Success)
+                {
+					if (hist.IsPerson)
+					{
+						RetKey = "person";
+					}
+					else if (hist.IsAnimal)
+					{
+						if (hist.Detections.ToLower().Contains("bear"))
+						{
+							RetKey = "bear";
+						}
+						else if (hist.Detections.ToLower().Contains("dog"))
+						{
+							RetKey = "dog";
+						}
+						else if (hist.Detections.ToLower().Contains("cat"))
+						{
+							RetKey = "cat";
+						}
+						else if (hist.Detections.ToLower().Contains("bird"))
+						{
+							RetKey = "bird";
+						}
+						else if (hist.Detections.ToLower().Contains("horse"))
+						{
+							RetKey = "horse";
+						}
+						else
+                        {
+							RetKey = "alien";
+						}
+
+
+					}
+					else if (hist.IsVehicle)
+					{
+						if (hist.Detections.ToLower().Contains("truck") || hist.Detections.ToLower().Contains("bus"))
+						{
+							RetKey = "truck";
+						}
+						else if (hist.Detections.ToLower().Contains("car"))
+						{
+							RetKey = "car";
+						}
+						else if (hist.Detections.ToLower().Contains("motorcycle"))
+						{
+							RetKey = "motorcycle";
+						}
+						else if (hist.Detections.ToLower().Contains("bicycle"))
+						{
+							RetKey = "bicycle";
+						}
+					}
+				}
+				else
+				{
+					RetKey = "nothing";
+				}
+
+
+			}
+			catch { }
+
+			return RetKey;
+
+		}
+
+
+		public class CursorWait:IDisposable
 		{
 			public CursorWait(bool appStarting = false, bool applicationCursor = true)
 			{
