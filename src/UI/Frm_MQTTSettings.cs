@@ -61,7 +61,7 @@ namespace AITool
 
                     for (int i = 0; i < topics.Count; i++)
                     {
-                        pr = await mq.PublishAsync(topics[i], payloads[i]);
+                        pr = await mq.PublishAsync(topics[i], payloads[i], cam.Action_mqtt_retain_message);
 
                     }
 

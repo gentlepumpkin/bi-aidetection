@@ -1803,7 +1803,7 @@ namespace AITool
                         for (int i = 0; i < topics.Count; i++)
                         {
                             MQTTClient mq = new MQTTClient();
-                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i]);
+                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], cam.Action_mqtt_retain_message);
                             if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                 ret = false;
 

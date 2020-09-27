@@ -25,7 +25,7 @@ namespace AITool
 
         }
 
-        public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload)
+        public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain)
         {
             MqttClientPublishResult res = null;
             Stopwatch sw = Stopwatch.StartNew();
@@ -238,6 +238,7 @@ namespace AITool
                                                                     .WithTopic(topic)
                                                                     .WithPayload(payload)
                                                                     .WithAtLeastOnceQoS()
+                                                                    .WithRetainFlag(retain)
                                                                     .Build();
 
                                             res = await mqttClient.PublishAsync(ma, CancellationToken.None);
