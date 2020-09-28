@@ -16,7 +16,9 @@ namespace AITool
         CreateHistoryItem,
         DeleteHistoryItem,
         BeginProcessImage,
-        EndProcessImage
+        EndProcessImage,
+        SettingsSaved,
+        SettingsLoaded
 
     }
 
