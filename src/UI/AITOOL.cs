@@ -213,7 +213,7 @@ namespace AITool
                     Task.Run(ImageQueueLoop);
 
 
-                if (AppSettings.LastShutdownState.StartsWith("checkpoint"))
+                if (AppSettings.LastShutdownState.StartsWith("checkpoint") && !AppSettings.AlreadyRunning)
                     Global.Log($"Error: Program did not shutdown gracefully.  Last log entry was '{AppSettings.LastLogEntry}', '{AppSettings.LastShutdownState}'");
 
 

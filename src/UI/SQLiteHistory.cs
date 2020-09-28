@@ -100,14 +100,18 @@ namespace AITool
                 this.AddedCount.WriteFullFence(0);
 
                 //https://www.sqlite.org/threadsafe.html
-                SQLiteOpenFlags flags = SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
+                SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
+                string sflags = "SharedCache";
+
                 if (this.ReadOnly)
                 {
                     flags = flags | SQLiteOpenFlags.ReadOnly;
+                    sflags += "|ReadOnly";
                 }
                 else
                 {
-                    flags = flags | SQLiteOpenFlags.ReadWrite;
+                    flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
+                    sflags += "|Create|ReadWrite";
                 }
 
                 if (await this.IsSQLiteDBConnectedAsync())
@@ -129,7 +133,7 @@ namespace AITool
 
                 sw.Stop();
 
-                Global.Log($"Created {} connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate={ctr.ToString()}: {this.Filename}");
+                Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
 
                 HasChanged.WriteFullFence(true);
 
@@ -486,7 +490,7 @@ namespace AITool
 
                     }
 
-                    if (Clean)
+                    if (Clean && !this.ReadOnly)
                         await this.CleanHistoryList();
 
 

@@ -361,9 +361,11 @@ namespace AITool
                     RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
                 }
 
-
-                Global.SaveSetting("LastLogEntry", RTFText);
-                Global.SaveSetting("LastShutdownState", $"checkpoint: GUI.Log: {DateTime.Now}");
+                if (!AppSettings.AlreadyRunning)
+                {
+                    Global.SaveSetting("LastLogEntry", RTFText);
+                    Global.SaveSetting("LastShutdownState", $"checkpoint: GUI.Log: {DateTime.Now}");
+                }
 
                 //get rid of any common color coding before logging to file or console
                 text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
@@ -2057,8 +2059,9 @@ namespace AITool
             AppSettings.Save();  //save settings in any case
 
             IsClosing.WriteFullFence(true);
+            if (!AppSettings.AlreadyRunning)
+                Global.SaveSetting("LastShutdownState", "graceful shutdown");
 
-            Global.SaveSetting("LastShutdownState", "graceful shutdown");
 
         }
 
@@ -2712,7 +2715,8 @@ namespace AITool
             if (IsClosing.ReadFullFence())
                 return;
 
-            Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
+            if (!AppSettings.AlreadyRunning)
+               Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
 
             if (!this.IsListUpdating.ReadFullFence() && (DateTime.Now - this.LastListUpdate.Read()).TotalSeconds >= 3)
                 await LoadHistoryAsync(false, cb_follow.Checked);
