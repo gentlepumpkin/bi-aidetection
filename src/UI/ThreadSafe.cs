@@ -57,6 +57,31 @@ namespace Arch.CMessaging.Client.Core.Utils
             return desiredVal;
         }
 
+        /// <summary>
+        /// A Datetime value that is threadsafe - Note only has 20ms resolution because uses Ticks
+        /// </summary>
+        /// https://stackoverflow.com/questions/1531668/thread-safe-datetime-update-using-interlocked
+        public class Datetime
+        {
+            long _value;
+
+            public Datetime(DateTime value)
+            {
+                _value = value.ToBinary();
+            }
+
+            public void Write(DateTime value)
+            {
+                Interlocked.Exchange(ref _value, value.ToBinary());
+            }
+            public DateTime Read()
+            {
+                long lastvalue = Interlocked.CompareExchange(ref _value, 0, 0);
+                return DateTime.FromBinary(lastvalue);
+
+            }
+
+        }
         public class Integer
         {
             private int _value;

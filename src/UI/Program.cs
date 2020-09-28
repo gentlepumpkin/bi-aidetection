@@ -27,6 +27,10 @@ namespace AITool
                 //return;
                 AppSettings.AlreadyRunning = true;
             }
+
+            AppSettings.LastShutdownState = Global.GetSetting("LastShutdownState", "not set");
+            AppSettings.LastLogEntry = Global.GetSetting("LastLogEntry", "not set");
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Shell());

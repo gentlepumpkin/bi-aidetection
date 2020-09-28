@@ -22,6 +22,10 @@ namespace AITool
 
     public partial class Shell:Form
     {
+        private ThreadSafe.Datetime LastListUpdate = new ThreadSafe.Datetime(DateTime.MinValue);
+        
+
+        private ThreadSafe.Boolean IsListUpdating = new ThreadSafe.Boolean(false);
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
         private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
@@ -48,6 +52,16 @@ namespace AITool
 
             UpdateToolstrip("Initializing and cleaning history database...");
 
+            //---------------------------------------------------------------------------
+            //HISTORY TAB
+
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending);
+
+
+            folv_history.EmptyListMsg = "Initializing database";
+
+            Application.DoEvents();
+
             AITOOL.InitializeBackend();
 
             string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -69,13 +83,6 @@ namespace AITool
             list2.FullRowSelect = true; //make all columns clickable
 
             LoadCameras(); //load camera list
-
-
-            //---------------------------------------------------------------------------
-            //HISTORY TAB
-
-            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular),HistoryImageList, "Date", SortOrder.Descending);
-
 
 
             //load entries from history.csv into history ListView
@@ -273,6 +280,9 @@ namespace AITool
         public async void Log(string text, [CallerMemberName] string memberName = null)
         {
 
+            if (IsClosing.ReadFullFence())
+                return;
+            
             try
             {
 
@@ -318,8 +328,11 @@ namespace AITool
 
                 //make the error and warning detection case insensitive:
                 bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1);
-                bool HasWarning = (text.IndexOf("warning", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool HasWarning = (text.IndexOf("warning:", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool HasInfo = (text.IndexOf("info:", StringComparison.InvariantCultureIgnoreCase) > -1);
+                bool HasDebug = (text.IndexOf("debug:", StringComparison.InvariantCultureIgnoreCase) > -1);
                 bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
+                
                 string RTFText = "";
 
                 //set the color for RTF text window:
@@ -335,10 +348,22 @@ namespace AITool
                 {
                     RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
                 }
+                else if (HasInfo)
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{yellow}}{text}";
+                }
+                else if (HasDebug)
+                {
+                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{text}";
+                }
                 else
                 {
                     RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
                 }
+
+
+                Global.SaveSetting("LastLogEntry", RTFText);
+                Global.SaveSetting("LastShutdownState", $"checkpoint: GUI.Log: {DateTime.Now}");
 
                 //get rid of any common color coding before logging to file or console
                 text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
@@ -355,18 +380,9 @@ namespace AITool
 
 
 
-                //add text to log
-                try
-                {
-                    RTFLogger.LogToRTF(RTFText);
-                    LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
+                RTFLogger.LogToRTF(RTFText);
+                LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
 
-                }
-                catch
-                {
-                    MethodInvoker LabelUpdate = delegate { lbl_errors.Text = "Can't write to log.txt file!"; };
-                    Invoke(LabelUpdate);
-                }
 
                 if (AppSettings.Settings.send_errors == true && (HasError || HasWarning) && !text.ToLower().Contains("telegram"))
                 {
@@ -1066,14 +1082,18 @@ namespace AITool
 
                     double hpm = 0;
                     int items = 0;
+                    int removed = 0;
 
                     if (HistoryDB != null)
+                    {
                         items = HistoryDB.HistoryDic.Count();
+                        removed = HistoryDB.DeletedCount.ReadFullFence();
+                    }
 
                     if (HistoryDB != null && HistoryDB.AddedCount.ReadFullFence() > 0)
                         hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
-                    toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")} per minute)";
+                    toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")} per minute) | {removed} removed ";
 
                     toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant Alerts | {falsealerts} False Alerts | {skipped} Skipped Images | {ImageProcessQueue.Count} in Queue";
 
@@ -1113,16 +1133,46 @@ namespace AITool
         //load stored entries in history CSV into history ListView
         private async Task LoadHistoryAsync(bool FilterChanged, bool Follow)
         {
-            //make sure only one thread updating at a time
 
+            //Log("---Enter");
+
+            Stopwatch semsw = Stopwatch.StartNew();
+
+            //make sure only one thread updating at a time
             await Semaphore_List_Updating.WaitAsync();
+
+            this.IsListUpdating.WriteFullFence(true);
+            this.LastListUpdate.Write(DateTime.Now);
 
             Global_GUI.CursorWait cw = null;
 
             try
             {
+                if (semsw.ElapsedMilliseconds > 50)
+                    Log($"Info: Waited {semsw.ElapsedMilliseconds}ms while waiting for other threads to finish.");
+
+                //wait a bit for the list to be available
+                Stopwatch sw = Stopwatch.StartNew();
+                bool displayed = false;
+                do
+                {
+                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null)
+                        break;
+                    else if (!displayed)
+                    {
+
+                        Log("Info: Waiting for database to finish initializing...");
+                        displayed = true;
+                    }
+                    await Task.Delay(50);
+
+                } while (sw.ElapsedMilliseconds < 20000);
+
+                if (displayed)
+                    Log($"...Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
+
                 //Dont update list unless we are on the tab and it is visible for performance reasons.
-                if (FilterChanged || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
+                if (FilterChanged || folv_history.Items.Count == 0 || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
                 {
 
                     if (this.Visible && !(this.WindowState == FormWindowState.Minimized))
@@ -1131,9 +1181,9 @@ namespace AITool
                     if (FilterChanged)
                         cw = new Global_GUI.CursorWait();
 
-                    if ((HistoryDB !=null && (await HistoryDB.HasUpdates()) || FilterChanged))
+                    if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
-                        Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList(),FilterChanged,Follow);
+                        Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList(), FilterChanged, Follow);
 
 
                         if (FilterChanged)
@@ -1143,12 +1193,12 @@ namespace AITool
 
                                 if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked || cb_filter_skipped.Checked)
                                 {
-                                        //filter
-                                        folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
-                                    {
-                                        History hist = (History)x;
-                                        return checkListFilters(hist);
-                                    });
+                                    //filter
+                                    folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
+                                {
+                                    History hist = (History)x;
+                                    return checkListFilters(hist);
+                                });
                                 }
                                 else
                                 {
@@ -1183,8 +1233,11 @@ namespace AITool
             {
                 if (cw != null)
                     cw.Dispose();
-
+                this.LastListUpdate.Write(DateTime.Now);
+                this.IsListUpdating.WriteFullFence(false);
                 Semaphore_List_Updating.Release();
+                //Log("---Exit");
+
             }
 
         }
@@ -1193,22 +1246,24 @@ namespace AITool
         private bool checkListFilters(History hist)   //string cameraname, string success, string objects_and_confidence
         {
 
-            bool ret = false;
+            bool ret = true;
 
-            if (hist.Success && cb_filter_success.Checked)
-                ret = true;
-            else if (!hist.Success && cb_filter_nosuccess.Checked)
-                ret = true;
-            else if (hist.WasSkipped && cb_filter_skipped.Checked)
-                ret = true;
-            else if (hist.IsPerson && cb_filter_person.Checked)
-                ret = true;
-            else if (hist.IsVehicle && cb_filter_vehicle.Checked)
-                ret = true;
-            else if (hist.IsAnimal && cb_filter_animal.Checked)
-                ret = true;
+            if (!hist.Success && cb_filter_success.Checked)
+                ret = false;
+            else if (hist.Success && cb_filter_nosuccess.Checked)
+                ret = false;
+            else if (!hist.WasSkipped && cb_filter_skipped.Checked)
+                ret = false;
+            else if (!hist.IsPerson && cb_filter_person.Checked)
+                ret = false;
+            else if (!hist.IsVehicle && cb_filter_vehicle.Checked)
+                ret = false;
+            else if (!hist.IsAnimal && cb_filter_animal.Checked)
+                ret = false;
 
-            if (ret && comboBox_filter_camera.Text != "All Cameras" && hist.Camera.Trim().ToLower() != comboBox_filter_camera.Text.Trim().ToLower())
+            bool CameraValid = ((comboBox_filter_camera.Text.Trim() == "All Cameras") || hist.Camera.Trim().ToLower() == comboBox_filter_camera.Text.Trim().ToLower());
+
+            if (!CameraValid)
                 ret = false;
 
             return ret;
@@ -1996,10 +2051,14 @@ namespace AITool
                 }
             }
 
+
             Global_GUI.SaveWindowState(this);
 
             AppSettings.Save();  //save settings in any case
 
+            IsClosing.WriteFullFence(true);
+
+            Global.SaveSetting("LastShutdownState", "graceful shutdown");
 
         }
 
@@ -2650,7 +2709,16 @@ namespace AITool
 
         private async void HistoryUpdateListTimer_Tick(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(false, cb_follow.Checked).ConfigureAwait(false);
+            if (IsClosing.ReadFullFence())
+                return;
+
+            Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
+
+            if (!this.IsListUpdating.ReadFullFence() && (DateTime.Now - this.LastListUpdate.Read()).TotalSeconds >= 3)
+                await LoadHistoryAsync(false, cb_follow.Checked);
+            //else
+                //Log("Skipped");
+
         }
 
         private void folv_history_SelectedIndexChanged(object sender, EventArgs e)

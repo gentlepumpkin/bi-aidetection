@@ -33,6 +33,46 @@ namespace AITool
         public static IProgress<ClsMessage> progress = null;
 
 
+        /// <summary>
+        ///     ''' Gets a value indicating whether the application is a windows service.
+        ///     ''' </summary>
+        ///     ''' <value>
+        ///     ''' <c>true</c> if this instance is service; otherwise, <c>false</c>.
+
+        ///     ''' </value>
+        public static bool IsService
+        {
+            get
+            {
+                // Determining whether or not the host application is a service is
+                // an expensive operation (it uses reflection), so we cache the
+                // result of the first call to this method so that we don't have to
+                // recalculate it every call.
+
+                // If we have not already determined whether or not the application
+                // is running as a service...
+                if (! _isService.HasValue)
+                {
+
+                    // Get details of the host assembly.
+                    System.Reflection.Assembly entryAssembly = System.Reflection.Assembly.GetEntryAssembly();
+
+                    // Get the method that was called to enter the host assembly.
+                    System.Reflection.MethodInfo entryPoint = entryAssembly.EntryPoint;
+
+                    // If the base type of the host assembly inherits from the
+                    // "ServiceBase" class, it must be a windows service. We store
+                    // the result ready for the next caller of this method.
+                    _isService = (entryPoint.ReflectedType.BaseType.FullName == "System.ServiceProcess.ServiceBase");
+                }
+
+                // Return the cached result.
+                return System.Convert.ToBoolean(_isService);
+            }
+        }
+
+        private static Nullable<bool> _isService = default(Boolean?);
+
         public static Version GetFrameworkVersion()
         {
             using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
@@ -155,7 +195,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log($"Error: {Global.ExMsg(ex)}");
+                //Global.Log($"Error: {Global.ExMsg(ex)}");
             }
 
             return RetVal;
@@ -309,7 +349,11 @@ namespace AITool
                 mn = $"{memberName}>> ";
             }
             msg.Description = $"{mn}{Message}";
-            
+
+            SaveSetting("LastLogEntry", msg.Description);
+            Global.SaveSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
+
+
             progress.Report(msg);
 
         }
