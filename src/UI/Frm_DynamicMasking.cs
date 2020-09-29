@@ -12,6 +12,8 @@ namespace AITool
 {
     public partial class Frm_DynamicMasking:Form
     {
+        public Camera cam;
+
         public Frm_DynamicMasking()
         {
             InitializeComponent();
@@ -59,6 +61,39 @@ namespace AITool
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void btnAdvanced_Click(object sender, EventArgs e)
+        {
+            using (Frm_DynamicMaskingAdvanced frm = new Frm_DynamicMaskingAdvanced())
+            {
+                frm.cbEnableScaling.Checked = cam.maskManager.scaleConfig.isScaledObject;
+                frm.numSmallObjMax.Value = cam.maskManager.scaleConfig.smallObjectMaxPercent;
+                frm.numSmallObjPercent.Value = cam.maskManager.scaleConfig.smallObjectScalePercent;
+                frm.numMidObjMin.Value = cam.maskManager.scaleConfig.mediumObjectMinPercent;
+                frm.numMidObjMax.Value = cam.maskManager.scaleConfig.mediumObjectMaxPercent;
+                frm.numMidObjPercent.Value = cam.maskManager.scaleConfig.mediumObjectScalePercent;
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    Int32.TryParse(frm.numSmallObjMax.Text, out int smallObjMax);
+                    Int32.TryParse(frm.numSmallObjPercent.Text, out int smallObjPercent);
+                    Int32.TryParse(frm.numMidObjMin.Text, out int midObjMin);
+                    Int32.TryParse(frm.numMidObjMax.Text, out int midObjMax);
+                    Int32.TryParse(frm.numMidObjPercent.Text, out int midObjPercent);
+
+                    cam.maskManager.scaleConfig.isScaledObject = frm.cbEnableScaling.Checked;
+
+                    cam.maskManager.scaleConfig.smallObjectMaxPercent = smallObjMax;
+                    cam.maskManager.scaleConfig.smallObjectScalePercent = smallObjPercent;
+                    cam.maskManager.scaleConfig.mediumObjectMinPercent = midObjMin;
+                    cam.maskManager.scaleConfig.mediumObjectMaxPercent = midObjMax;
+                    cam.maskManager.scaleConfig.mediumObjectScalePercent = midObjPercent;
+
+                    AppSettings.Save();
+                }
+            }
+
         }
     }
 }

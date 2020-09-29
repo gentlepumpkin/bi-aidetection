@@ -35,24 +35,29 @@ namespace AITool
         public double LastxPercentVariance { get; set; } = 0;
         public double LastyPercentVariance { get; set; } = 0;
 
-        //troubleshooting details - uncomment for local debugging
-        //public int LastCompared_xmin { get; set; } = 0;
-        //public int LastCompared_ymin { get; set; } = 0;
-        //public int LastCompared_xmax { get; set; } = 0;
-        //public int LastCompared_ymax { get; set; } = 0;
-        //public int LastCompared_width { get; set; } = 0;
-        //public int LastCompared_height { get; set; } = 0;
+        //scaling of object based on size
+        public int scalePercent { get; set; } 
+        public double objectImagePercent { get; }
+
+        private ObjectScale _scaleConfig;
+        public ObjectScale scaleConfig
+        {
+            get => _scaleConfig;
+            set
+            {
+                _scaleConfig = value;
+                scalePercent = getImagePercentVariance();
+            }
+        }
+
 
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
-            //not sure if the json deserialize is messing with createdate?   Trying to track down history not being deleted issue
-            if (this.createDate == DateTime.MinValue)
-                this.createDate = DateTime.Now;
-
+            this.createDate = DateTime.Now;
+            this.LastSeenDate = DateTime.Now;
             this.cameraName = cameraName;
             this.imagePath = imagePath;
             this.label = label;
-
             this.xmin = xmin;
             this.ymin = ymin;
             this.xmax = xmax;
@@ -64,8 +69,36 @@ namespace AITool
             this.width = xmax - xmin;
             this.height = ymax - ymin;
 
+            //object percent of image area
+            objectImagePercent = (width * height) / (float)(imageWidth * imageHeight) * 100;
+
             //starting x * y point + width * height of rectangle - used for debugging only
             key = ((xmin + 1) * (ymin + 1) + (width * height));
+        }
+
+        /*Increases object variance percentage for smaller objects. 
+        Due to thier size, smaller objects are more sensitive to slight changes in postion. 
+        This settings allows sensivity adjustments based on the object size.*/
+        private int getImagePercentVariance()
+        {
+            int scalePercent = 0;
+
+            if (scaleConfig != null)
+            {
+                if (scaleConfig.isScaledObject)
+                {
+                    if (objectImagePercent <= scaleConfig.smallObjectMaxPercent)
+                    {
+                        scalePercent = scaleConfig.smallObjectScalePercent;
+                    }
+                    else if (objectImagePercent >= scaleConfig.mediumObjectMinPercent 
+                            &&  objectImagePercent <= scaleConfig.mediumObjectMaxPercent)
+                    {
+                        scalePercent = scaleConfig.mediumObjectScalePercent;
+                    }
+                }
+            }
+            return scalePercent;
         }
 
         public override bool Equals(object obj)
@@ -78,15 +111,6 @@ namespace AITool
             if (other == null)
                 return false;
 
-            //storing these to help with troubleshooting 
-            //this.LastCompared_height = other.height;
-            //this.LastCompared_width = other.width;
-
-            //this.LastCompared_xmax = other.xmax;
-            //this.LastCompared_ymax = other.ymax;
-            //this.LastCompared_xmin = other.xmin;
-            //this.LastCompared_ymin = other.ymin;
-
             //calculate the percentage variance for width and height of selected object
             this.LastWidthPercentVariance = (double)Math.Abs(this.width - other.width) / this.width * 100;
             this.LastHeightPercentVariance = (double)Math.Abs(this.height - other.height) / this.height * 100;
@@ -94,9 +118,7 @@ namespace AITool
             //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
             this.LastxPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth * 100;
             this.LastyPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight * 100;
-
-            //convert whole number to percent
-            double percent = thresholdPercent; /// 100;
+            double percent = thresholdPercent + scalePercent;
 
             this.LastMatched = (this.LastxPercentVariance <= percent) &&
                                (this.LastyPercentVariance <= percent) &&
