@@ -258,6 +258,12 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="Frm_DynamicMaskingAdvanced.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_DynamicMaskingAdvanced.Designer.cs">
+      <DependentUpon>Frm_DynamicMaskingAdvanced.cs</DependentUpon>
+    </Compile>
     <Compile Include="History.cs" />
     <Compile Include="ClsImageQueueItem.cs" />
     <Compile Include="ClsMessage.cs" />
@@ -350,6 +356,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_DynamicMasking.resx">
       <DependentUpon>Frm_DynamicMasking.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_DynamicMaskingAdvanced.resx">
+      <DependentUpon>Frm_DynamicMaskingAdvanced.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_LegacyActions.resx">
       <DependentUpon>Frm_LegacyActions.cs</DependentUpon>

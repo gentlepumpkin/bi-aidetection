@@ -2389,9 +2389,8 @@ namespace AITool
             {
 
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
-
+                frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.name;
-
 
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
