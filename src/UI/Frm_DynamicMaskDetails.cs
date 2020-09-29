@@ -614,7 +614,7 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-
+                frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.name;
 
                 //Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);

@@ -28,8 +28,8 @@ namespace AITool
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
         public DateTime lastDetectionDate { get; set; } 
-
         public string objects = "";
+        public ObjectScale scaleConfig { get; set; }
 
         [JsonIgnore]
         private object MaskLockObject = new object();
@@ -42,6 +42,7 @@ namespace AITool
         {
             last_positions_history = new List<ObjectPosition>();
             masked_positions = new List<ObjectPosition>();
+            scaleConfig = new ObjectScale();
 
             //register event handler to run clean history every minute
             cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanMaskEvent);
@@ -142,6 +143,7 @@ namespace AITool
 
             Global.Log("*** Starting new object mask processing ***");
             Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
+            currentObject.scaleConfig = scaleConfig;
 
             lock (MaskLockObject)
             {
@@ -279,6 +281,16 @@ namespace AITool
             CleanUpExpiredHistory();
             CleanUpExpiredMasks();
         }
-
     }
+
+    public class ObjectScale
+    {
+        public bool isScaledObject { get; set; } = false;
+        public int smallObjectMaxPercent { get; set; } = 2;
+        public int smallObjectScalePercent { get; set; } = 10;
+        public int mediumObjectMinPercent { get; set; } = 3;
+        public int mediumObjectMaxPercent { get; set; } = 10;
+        public int mediumObjectScalePercent { get; set; } = 0;
+    }
+
 }
