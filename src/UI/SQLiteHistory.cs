@@ -182,7 +182,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                if (ex.Message.ToLower().Contains("UNIQUE constraint failed"))
+                if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
                 {
                     Global.Log($"Info: File was already in the database: {hist.Filename}");
                 }
@@ -552,13 +552,24 @@ namespace AITool
                 {
                     Global.Log("Removing missing files from in-memory database...");
 
+                    int missing = 0;
+                    int tooold = 0;
                     //we are allowed to do this with a ConcurrentDictionary...
                     foreach (History hist in this.HistoryDic.Values)
                     {
-                        if (!File.Exists(hist.Filename))
+                        bool IsTooOld = (DateTime.Now - hist.Date).TotalDays >= AppSettings.Settings.MaxHistoryAgeDays;
+
+                        if (IsTooOld  || !File.Exists(hist.Filename))
                         {
+                            if (IsTooOld)
+                                tooold++;
+                            else
+                                missing++;
+
                             removed.Add(hist);
+                            
                             History rhist;
+                            
                             if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
                                 Global.Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
                         }
@@ -567,7 +578,7 @@ namespace AITool
 
                     if (removed.Count > 0)
                     {
-                        Global.Log($"Removing {removed.Count} missing files from file database...");
+                        Global.Log($"Removing {missing} files and {tooold} database entries that are older than {AppSettings.Settings.MaxHistoryAgeDays} days (MaxHistoryAgeDays) from file database...");
                         //start another thread to finish cleaning the database so that the app gets the list faster...
                         //the db should be thread safe due to opening with fullmutex flag
                         Stopwatch swr = Stopwatch.StartNew();
@@ -575,7 +586,7 @@ namespace AITool
                         int failedcnt = 0;
                         foreach (History hist in removed)
                         {
-                            //the db should be thread safe due to opening with fullmutex flag
+                            
                             int rowsdeleted = 0;
                             
                             try

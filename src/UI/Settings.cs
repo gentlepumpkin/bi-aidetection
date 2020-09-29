@@ -69,6 +69,7 @@ namespace AITool
             public int MaxImageQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
+            public int MaxHistoryAgeDays = 14;
             public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
             public int HTTPClientTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1

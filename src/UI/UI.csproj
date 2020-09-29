@@ -301,6 +301,14 @@
     </Compile>
     <Compile Include="Global-GUI.cs" />
     <Compile Include="MessageManager.cs" />
+    <Compile Include="NamedPipeWrapper\NamedPipeClient.cs" />
+    <Compile Include="NamedPipeWrapper\NamedPipeConnection.cs" />
+    <Compile Include="NamedPipeWrapper\NamedPipeServer.cs" />
+    <Compile Include="NamedPipeWrapper\PipeExceptionEventHandler.cs" />
+    <Compile Include="NamedPipeWrapper\PipeStreamReader.cs" />
+    <Compile Include="NamedPipeWrapper\PipeStreamWrapper.cs" />
+    <Compile Include="NamedPipeWrapper\PipeStreamWriter.cs" />
+    <Compile Include="NamedPipeWrapper\Worker.cs" />
     <Compile Include="OSVersionExt\EnvironmentProvider.cs" />
     <Compile Include="OSVersionExt\IEnvironment.cs" />
     <Compile Include="OSVersionExt\IRegistry.cs" />
