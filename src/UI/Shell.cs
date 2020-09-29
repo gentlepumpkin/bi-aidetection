@@ -527,11 +527,7 @@ namespace AITool
         //other camera in combobox selected, display according PieChart
         private void comboBox1_SelectedIndexChanged_1(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 1)
-            {
-
-                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
-            }
+           
         }
 
         //update pie chart
@@ -1411,11 +1407,7 @@ namespace AITool
             await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
         }
 
-        //event: filter camera dropdown changed
-        private async void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
+        
 
         //----------------------------------------------------------------------------------------------------------
         //CAMERAS TAB
@@ -1431,9 +1423,17 @@ namespace AITool
             {
 
                 //start by getting last selected camera if any
-                string oldname = "";
+                string oldnamecameras = "";
                 if (list2.SelectedItems != null && list2.SelectedItems.Count > 0)
-                    oldname = list2.SelectedItems[0].Text;
+                    oldnamecameras = list2.SelectedItems[0].Text;
+
+                string oldnamefilters = "";
+                if (comboBox_filter_camera.Items.Count > 0)
+                    oldnamefilters = comboBox_filter_camera.Text;
+
+                string oldnamestats = "";
+                if (comboBox1.Items.Count > 0)
+                    oldnamestats = comboBox1.Text;
 
                 list2.Items.Clear();
                 comboBox1.Items.Clear();
@@ -1442,7 +1442,9 @@ namespace AITool
                 comboBox_filter_camera.Items.Add("All Cameras");
 
                 int i = 0;
-                int oldidx = 0;
+                int oldidxcameras = 0;
+                int oldidxfilters = 0;
+                int oldidxstats = 0;
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
                     //Add loaded camera to list2
@@ -1456,19 +1458,33 @@ namespace AITool
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
                     comboBox1.Items.Add($"   {cam.name}");
                     comboBox_filter_camera.Items.Add($"   {cam.name}");
-                    if (oldname.Trim().ToLower() == cam.name.Trim().ToLower())
+                    if (oldnamecameras.Trim().ToLower() == cam.name.Trim().ToLower())
                     {
-                        oldidx = i;
+                        oldidxcameras = i;
+                    }
+                    if (oldnamefilters.Trim().ToLower() == cam.name.Trim().ToLower())
+                    {
+                        oldidxfilters = i + 1;
+                    }
+                    if (oldnamestats.Trim().ToLower() == cam.name.Trim().ToLower())
+                    {
+                        oldidxstats = i + 1;
                     }
                     i++;
 
                 }
 
                 //select first camera, or last selected camera
-                if (list2.Items.Count > 0 && list2.Items.Count >= oldidx)
+                if (list2.Items.Count > 0 && list2.Items.Count >= oldidxcameras)
                 {
-                    list2.Items[oldidx].Selected = true;
+                    list2.Items[oldidxcameras].Selected = true;
                 }
+
+                if (comboBox_filter_camera.Items.Count > 0)
+                    comboBox_filter_camera.SelectedIndex = oldidxfilters;
+
+                if (comboBox1.Items.Count > 0)
+                    comboBox1.SelectedIndex = oldidxstats;
 
 
             }
@@ -2747,6 +2763,20 @@ namespace AITool
         private async void cb_follow_CheckedChanged(object sender, EventArgs e)
         {
             await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private async void comboBox_filter_camera_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedIndex == 1)
+            {
+
+                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+            }
         }
     }
 

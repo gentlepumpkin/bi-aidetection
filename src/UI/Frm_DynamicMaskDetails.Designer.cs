@@ -47,6 +47,7 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
             this.BtnDynamicMaskingSettings = new System.Windows.Forms.Button();
+            this.createDynamicMaskTemporaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -138,17 +139,19 @@
             // 
             this.staticMaskMenu.ImageScalingSize = new System.Drawing.Size(28, 28);
             this.staticMaskMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.createStaticMaskToolStripMenuItem});
+            this.createStaticMaskToolStripMenuItem,
+            this.createDynamicMaskTemporaryToolStripMenuItem});
             this.staticMaskMenu.Name = "staticMaskMenu";
             this.staticMaskMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.staticMaskMenu.ShowImageMargin = false;
-            this.staticMaskMenu.Size = new System.Drawing.Size(233, 40);
+            this.staticMaskMenu.Size = new System.Drawing.Size(379, 114);
+            this.staticMaskMenu.Opening += new System.ComponentModel.CancelEventHandler(this.staticMaskMenu_Opening);
             // 
             // createStaticMaskToolStripMenuItem
             // 
             this.createStaticMaskToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.createStaticMaskToolStripMenuItem.Name = "createStaticMaskToolStripMenuItem";
-            this.createStaticMaskToolStripMenuItem.Size = new System.Drawing.Size(232, 36);
+            this.createStaticMaskToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
             this.createStaticMaskToolStripMenuItem.Text = "Create Static Mask";
             this.createStaticMaskToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.createStaticMaskToolStripMenuItem.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem_Click);
@@ -309,6 +312,14 @@
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
             this.BtnDynamicMaskingSettings.Click += new System.EventHandler(this.BtnDynamicMaskingSettings_Click);
             // 
+            // createDynamicMaskTemporaryToolStripMenuItem
+            // 
+            this.createDynamicMaskTemporaryToolStripMenuItem.Name = "createDynamicMaskTemporaryToolStripMenuItem";
+            this.createDynamicMaskTemporaryToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
+            this.createDynamicMaskTemporaryToolStripMenuItem.Text = "Create Dynamic Mask (Temporary)";
+            this.createDynamicMaskTemporaryToolStripMenuItem.ToolTipText = "Forced creation of dynamic mask before conditions in settings are met.";
+            this.createDynamicMaskTemporaryToolStripMenuItem.Click += new System.EventHandler(this.createDynamicMaskTemporaryToolStripMenuItem_Click);
+            // 
             // Frm_DynamicMaskDetails
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
@@ -365,5 +376,6 @@
         private System.Windows.Forms.Label lbl_lastfile;
         private System.Windows.Forms.ComboBox comboBox_filter_camera;
         private System.Windows.Forms.Button BtnDynamicMaskingSettings;
+        private System.Windows.Forms.ToolStripMenuItem createDynamicMaskTemporaryToolStripMenuItem;
     }
 }

@@ -703,6 +703,7 @@ namespace AITool
             this.comboBox1.Size = new System.Drawing.Size(481, 39);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
+            this.comboBox1.SelectionChangeCommitted += new System.EventHandler(this.comboBox1_SelectionChangeCommitted);
             // 
             // btn_resetstats
             // 
@@ -863,7 +864,7 @@ namespace AITool
             this.comboBox_filter_camera.Name = "comboBox_filter_camera";
             this.comboBox_filter_camera.Size = new System.Drawing.Size(780, 39);
             this.comboBox_filter_camera.TabIndex = 2;
-            this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
+            this.comboBox_filter_camera.SelectionChangeCommitted += new System.EventHandler(this.comboBox_filter_camera_SelectionChangeCommitted);
             // 
             // cb_filter_nosuccess
             // 

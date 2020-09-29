@@ -656,5 +656,25 @@ namespace AITool
                 }
             }
         }
+
+        private void staticMaskMenu_Opening(object sender, CancelEventArgs e)
+        {
+
+        }
+
+        private void createDynamicMaskTemporaryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (contextMenuPosObj != null)
+            {
+                contextMenuPosObj.isStatic = false;
+                contextMenuPosObj.createDate = DateTime.Now;
+                //contextMenuPosObj.counter = 0;
+                cam.maskManager.masked_positions.Add(contextMenuPosObj);
+                cam.maskManager.last_positions_history.Remove(contextMenuPosObj);
+                contextMenuPosObj = null;
+                Refresh();
+                AppSettings.Save();
+            }
+        }
     }
 }
