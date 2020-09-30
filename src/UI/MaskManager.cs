@@ -122,7 +122,7 @@ namespace AITool
         public bool CreateDynamicMask(ObjectPosition currentObject)
         {
             bool maskExists = false;
-            lastDetectionDate = DateTime.Now;
+            //lastDetectionDate = DateTime.Now;
 
             List<string> objects = Global.Split(this.objects, "|;,");
 
