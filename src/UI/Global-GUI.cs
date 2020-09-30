@@ -119,180 +119,187 @@ namespace AITool
 		public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList, string PrimarySortColumnName = "", SortOrder PrimarySortOrder = SortOrder.Ascending, string SecondarySortColumnName = "", SortOrder SecondarySortOrder = SortOrder.Ascending, List<string> FilterColumnList = null, Color Clr = new Color(), int RowHeight = 0, bool ShowGroups = false)
 		{
 
-			try
+
+			Global_GUI.InvokeIFRequired(FOLV, () =>
 			{
 
-				FOLV.AllowColumnReorder = true;
-				FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
-				FOLV.CopySelectionOnControlC = true;
-				FOLV.FullRowSelect = true;
-				FOLV.GridLines = true;
-				FOLV.HideSelection = false;
-				FOLV.IncludeColumnHeadersInCopy = true;
-				FOLV.OwnerDraw = true;
-				FOLV.SelectColumnsOnRightClick = true;
-				FOLV.SelectColumnsOnRightClickBehaviour = ObjectListView.ColumnSelectBehaviour.ModelDialog;
-				FOLV.SelectedColumnTint = Color.LawnGreen;
-				FOLV.ShowCommandMenuOnRightClick = true;
-				FOLV.ShowFilterMenuOnRightClick = true;
-				FOLV.ShowGroups = false;
-				FOLV.ShowImagesOnSubItems = true;
-				FOLV.ShowItemCountOnGroups = true;
-				FOLV.ShowItemToolTips = true;
-				FOLV.ShowSortIndicators = true;
-				FOLV.SortGroupItemsByPrimaryColumn = true;
-				FOLV.TintSortColumn = true;
-				FOLV.UseFiltering = true;
-				FOLV.UseHyperlinks = false; //may cause column save/restore error?
-				FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
-				FOLV.UseCellFormatEvents = true;
-				FOLV.UseNotifyPropertyChanged = true;
-
-				if (ImageList != null)
+				try
 				{
-					FOLV.SmallImageList = ImageList;
-				}
 
-				if (Fnt != null)
-				{
-					FOLV.Font = Fnt;
-				}
-				else
-				{
-					FOLV.Font = new Font("Consolas", 8, FontStyle.Regular);
-				}
+					FOLV.AllowColumnReorder = true;
+					FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
+					FOLV.CopySelectionOnControlC = true;
+					FOLV.FullRowSelect = true;
+					FOLV.GridLines = true;
+					FOLV.HideSelection = false;
+					FOLV.IncludeColumnHeadersInCopy = true;
+					FOLV.OwnerDraw = true;
+					FOLV.SelectColumnsOnRightClick = true;
+					FOLV.SelectColumnsOnRightClickBehaviour = ObjectListView.ColumnSelectBehaviour.ModelDialog;
+					FOLV.SelectedColumnTint = Color.LawnGreen;
+					FOLV.ShowCommandMenuOnRightClick = true;
+					FOLV.ShowFilterMenuOnRightClick = true;
+					FOLV.ShowGroups = false;
+					FOLV.ShowImagesOnSubItems = true;
+					FOLV.ShowItemCountOnGroups = true;
+					FOLV.ShowItemToolTips = true;
+					FOLV.ShowSortIndicators = true;
+					FOLV.SortGroupItemsByPrimaryColumn = true;
+					FOLV.TintSortColumn = true;
+					FOLV.UseFiltering = true;
+					FOLV.UseHyperlinks = false; //may cause column save/restore error?
+					FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
+					FOLV.UseCellFormatEvents = true;
+					FOLV.UseNotifyPropertyChanged = true;
 
-				if (Clr.IsEmpty)
-				{
-					FOLV.ForeColor = Clr;
-				}
-
-				PropertyInfo[] IIProps2 = Cls.GetProperties(); //Cls.GetType().GetProperties
-
-
-				// Uncomment this to see a fancy cell highlighting while editing
-				EditingCellBorderDecoration EC = new EditingCellBorderDecoration(true);
-				EC.UseLightbox = true;
-
-				FOLV.AddDecoration(EC);
-				FOLV.BuildList();
-				int colcnt = 0;
-
-				foreach (PropertyInfo ei in IIProps2)
-				{
-					if (typeof(IEnumerable).IsAssignableFrom(ei.PropertyType) && !(ei.PropertyType.Name == "String"))
-					{
-						continue;
-					}
-					else if (ei.PropertyType.Name == "Object")
-					{
-						continue;
-					}
-
-					colcnt = colcnt + 1;
-					OLVColumn cl = new OLVColumn();
 					if (ImageList != null)
 					{
-						
-						if (FOLV.Name.ToLower() == "folv_history")
-						{
-                            if (colcnt == 1)
-                            {
-								cl.ImageGetter = GetImageForHistoryList;
-							}
-							else if (ei.Name == "IsPerson")
-							{
-								cl.ImageGetter = GetImageForHistoryListPerson;
-								cl.AspectToStringConverter = delegate (object x) {
-									return String.Empty;
-								};
-							}
-							else if (ei.Name == "Success")
-							{
-								cl.ImageGetter = GetImageForHistoryListSuccess;
-								cl.AspectToStringConverter = delegate (object x) {
-									return String.Empty;
-								};
-							}
-						}
-						//else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
-						//{
-						//	cl.ImageGetter = GetImageForBlocklistViewerRIR;
-						//}
-						//else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
-						//{
-						//	cl.ImageGetter = GetImageForProdList;
-						//}
-					}
-					//cl.AspectName = ei.Name
-					cl.UseFiltering = true;
-					cl.Searchable = true;
-					cl.Text = ei.Name;
-					cl.Name = ei.Name;
-
-					cl.DataType = ei.PropertyType;
-					cl.AspectName = ei.Name;
-
-					if (ei.PropertyType.Name == "Int64" || ei.PropertyType.Name == "Int32" || ei.PropertyType.Name == "Timespan")
-					{
-						cl.TextAlign = HorizontalAlignment.Right;
+						FOLV.SmallImageList = ImageList;
 					}
 
-					if (ei.Name == "UniqueID" || ei.Name == "FoundElementList")
+					if (Fnt != null)
 					{
-						cl.MinimumWidth = 0;
-						cl.MaximumWidth = 0;
-						cl.Width = 0;
+						FOLV.Font = Fnt;
 					}
 					else
 					{
-						cl.MinimumWidth = 50;
-						//cl.MaximumWidth = 20000
-						//cl.Width = -2
+						FOLV.Font = new Font("Consolas", 8, FontStyle.Regular);
 					}
 
-					if (ei.Name.ToLower().Contains("url"))
+					if (Clr.IsEmpty)
 					{
-						cl.Hyperlink = true;
+						FOLV.ForeColor = Clr;
 					}
-					//If cl.DataType = GetType(Boolean) Then
-					//    cl.CheckBoxes = True
-					//    cl.IsEditable = False
-					//End If
+
+					PropertyInfo[] IIProps2 = Cls.GetProperties(); //Cls.GetType().GetProperties
 
 
-					if (ei.Name.ToLower() == PrimarySortColumnName.ToLower())
+					// Uncomment this to see a fancy cell highlighting while editing
+					EditingCellBorderDecoration EC = new EditingCellBorderDecoration(true);
+					EC.UseLightbox = true;
+
+					FOLV.AddDecoration(EC);
+					FOLV.BuildList();
+					int colcnt = 0;
+
+					foreach (PropertyInfo ei in IIProps2)
 					{
-						FOLV.PrimarySortColumn = cl;
-						FOLV.PrimarySortOrder = PrimarySortOrder; //SortOrder.Descending
+						if (typeof(IEnumerable).IsAssignableFrom(ei.PropertyType) && !(ei.PropertyType.Name == "String"))
+						{
+							continue;
+						}
+						else if (ei.PropertyType.Name == "Object")
+						{
+							continue;
+						}
 
-						//cl.ImageGetter = AddressOf GetImageFromProd
-					}
-					if (ei.Name.ToLower() == SecondarySortColumnName.ToLower())
-					{
-						FOLV.SecondarySortColumn = cl;
-						FOLV.SecondarySortOrder = SecondarySortOrder; //SortOrder.Descending
+						colcnt = colcnt + 1;
+						OLVColumn cl = new OLVColumn();
+						if (ImageList != null)
+						{
+
+							if (FOLV.Name.ToLower() == "folv_history")
+							{
+								if (colcnt == 1)
+								{
+									cl.ImageGetter = GetImageForHistoryList;
+								}
+								else if (ei.Name == "IsPerson")
+								{
+									cl.ImageGetter = GetImageForHistoryListPerson;
+									cl.AspectToStringConverter = delegate (object x) {
+										return String.Empty;
+									};
+								}
+								else if (ei.Name == "Success")
+								{
+									cl.ImageGetter = GetImageForHistoryListSuccess;
+									cl.AspectToStringConverter = delegate (object x) {
+										return String.Empty;
+									};
+								}
+							}
+							//else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
+							//{
+							//	cl.ImageGetter = GetImageForBlocklistViewerRIR;
+							//}
+							//else if (FOLV.Name == "FOLV_Apps" && colcnt == 1)
+							//{
+							//	cl.ImageGetter = GetImageForProdList;
+							//}
+						}
+						//cl.AspectName = ei.Name
+						cl.UseFiltering = true;
+						cl.Searchable = true;
+						cl.Text = ei.Name;
+						cl.Name = ei.Name;
+
+						cl.DataType = ei.PropertyType;
+						cl.AspectName = ei.Name;
+
+						if (ei.PropertyType.Name == "Int64" || ei.PropertyType.Name == "Int32" || ei.PropertyType.Name == "Timespan")
+						{
+							cl.TextAlign = HorizontalAlignment.Right;
+						}
+
+						if (ei.Name == "UniqueID" || ei.Name == "FoundElementList")
+						{
+							cl.MinimumWidth = 0;
+							cl.MaximumWidth = 0;
+							cl.Width = 0;
+						}
+						else
+						{
+							cl.MinimumWidth = 50;
+							//cl.MaximumWidth = 20000
+							//cl.Width = -2
+						}
+
+						//if (ei.Name.ToLower().Contains("url"))
+						//{
+						//	cl.Hyperlink = true;
+						//}
+						//If cl.DataType = GetType(Boolean) Then
+						//    cl.CheckBoxes = True
+						//    cl.IsEditable = False
+						//End If
+
+
+						if (ei.Name.ToLower() == PrimarySortColumnName.ToLower())
+						{
+							FOLV.PrimarySortColumn = cl;
+							FOLV.PrimarySortOrder = PrimarySortOrder; //SortOrder.Descending
+
+							//cl.ImageGetter = AddressOf GetImageFromProd
+						}
+						if (ei.Name.ToLower() == SecondarySortColumnName.ToLower())
+						{
+							FOLV.SecondarySortColumn = cl;
+							FOLV.SecondarySortOrder = SecondarySortOrder; //SortOrder.Descending
+						}
+
+						FOLV.Columns.Add(cl);
+
 					}
 
-					FOLV.Columns.Add(cl);
+
+					//OLV.RebuildColumns()
+					FOLV.Refresh();
+					FOLV.BuildList();
+					Application.DoEvents();
+
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("Error: " + ex.Message);
+				}
+				finally
+				{
 
 				}
 
+			});
 
-				//OLV.RebuildColumns()
-				FOLV.Refresh();
-				FOLV.BuildList();
-				Application.DoEvents();
-
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Error: " + ex.Message);
-			}
-			finally
-			{
-				
-			}
 		}
 
 		public static void RestoreWindowState(Form Frm)

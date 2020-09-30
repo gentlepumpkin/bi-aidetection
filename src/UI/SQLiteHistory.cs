@@ -6,8 +6,10 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Arch.CMessaging.Client.Core.Utils;
 using SQLite;
 //using Microsoft.Data.Sqlite;
@@ -93,6 +95,7 @@ namespace AITool
             {
                 Stopwatch sw = Stopwatch.StartNew();
 
+                Global.UpdateProgressBar("Initializing history database...", 1, 1);
 
                 this.HistoryDic.Clear();
                 this.HasChanged.WriteFullFence(false);
@@ -150,8 +153,12 @@ namespace AITool
         public async Task<bool> InsertHistoryItem(History hist)
         {
             bool ret = false;
-            
-            this.IsUpdating.WriteFullFence(true);
+            int iret = 0;
+
+            //make sure only one thread updating at a time
+            //await Semaphore_Updating.WaitAsync();
+
+            //this.IsUpdating.WriteFullFence(true);
 
             try
             {
@@ -166,7 +173,7 @@ namespace AITool
 
                 Stopwatch sw = Stopwatch.StartNew();
 
-                int iret = await this.sqlite_conn.InsertAsync(hist);
+                iret = await this.sqlite_conn.InsertAsync(hist);
 
                 this.AddTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
 
@@ -192,15 +199,17 @@ namespace AITool
                 }
             }
 
-            if (ret)
+            if (ret || iret > 0)
             {
-                this.AddedCount.AtomicIncrementAndGet();
+                this.AddedCount.AtomicAddAndGet(1); // AtomicIncrementAndGet();
                 this.LastUpdateTime = DateTime.Now;
                 this.HasChanged.WriteFullFence(true);
 
             }
 
-            this.IsUpdating.WriteFullFence(false);
+            //Semaphore_Updating.Release();
+
+            //this.IsUpdating.WriteFullFence(false);
 
             return ret;
 
@@ -208,8 +217,12 @@ namespace AITool
         public async Task<bool> DeleteHistoryItem(string Filename)
         {
             bool ret = false;
+            int dret = 0;
 
-            this.IsUpdating.WriteFullFence(true);
+            //make sure only one thread updating at a time
+            //await Semaphore_Updating.WaitAsync();
+
+            //this.IsUpdating.WriteFullFence(true);
 
             try
             {
@@ -218,50 +231,50 @@ namespace AITool
                 History hist;
                 ret = this.HistoryDic.TryRemove(Filename.ToLower(), out hist);
 
-                if (!ret)
-                {
-                    Global.Log($"Info: File was not in dictionary '{Filename}'");
-                }
-                else
-                {
-                    Stopwatch sw = Stopwatch.StartNew();
-                    //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
-                    //trying to use object rather than primarykey to delete
-                    int dret = await this.sqlite_conn.DeleteAsync(hist);
+                //if (!ret)
+                //{
+                //    Global.Log($"Info: File was not in dictionary '{Filename}'");
+                //}
 
-                    this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
+                Stopwatch sw = Stopwatch.StartNew();
+                //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
+                //trying to use object rather than primarykey to delete
+                if (hist == null)
+                    hist = new History().Create(Filename,DateTime.Now,"unknown","","",false);
 
-                    if (dret != 1)
-                    {
-                        Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
-                    }
+                dret = await this.sqlite_conn.DeleteAsync(hist);
 
-                    if (sw.ElapsedMilliseconds > 250)
-                        Global.Log($"Warning: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
-                }
+                this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
+
+                //if (dret != 1)
+                //{
+                //    Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                //}
+                //else
+                //{
+                //    Global.Log($"Removed {dret} database entry for '{Filename}'");
+                //}
+
+                if (sw.ElapsedMilliseconds > 250)
+                    Global.Log($"Info: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
 
             }
             catch (Exception ex)
             {
 
-                if (ex.Message.ToLower().Contains("it has no pk"))
-                {
-                    Global.Log($"Info: File was not in database '{Filename}' - " + ex.Message);
-                }
-                else
-                {
-                    Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
-                }
+                Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
             }
 
-            if (ret)
+            if (ret || dret > 0)
             {
-                this.DeletedCount.AtomicIncrementAndGet();
+                this.DeletedCount.AtomicAddAndGet(1); // AtomicIncrementAndGet();
                 this.LastUpdateTime = DateTime.Now;
                 this.HasChanged.WriteFullFence(true);
             }
 
-            this.IsUpdating.WriteFullFence(false);
+            //Semaphore_Updating.Release();
+
+            //this.IsUpdating.WriteFullFence(false);
 
             return ret;
 
@@ -388,14 +401,14 @@ namespace AITool
 
                 bool HadToWait = false;
 
-                while (this.IsUpdating.ReadFullFence())
+                while (this.IsUpdating.ReadFullFence()) // || sw.ElapsedMilliseconds <= 10000)
                 {
                     HadToWait = true;
                     await Task.Delay(50);
                 }
 
                 if (sw.ElapsedMilliseconds > 1000)
-                    Global.Log($"Info: Had to wait {sw.ElapsedMilliseconds}ms for database to become free.");
+                    Global.Log($"Info: Had to wait {sw.ElapsedMilliseconds}ms for database to become free");
 
                 if (!this.ReadOnly || HadToWait)  //assume if we had to wait the database was just updating
                 {
@@ -437,6 +450,8 @@ namespace AITool
 
             try
             {
+                Global.UpdateProgressBar("Reading database...", 1, 1);
+
                 Stopwatch sw = Stopwatch.StartNew();
 
                 if (!await this.IsSQLiteDBConnectedAsync())
@@ -456,8 +471,16 @@ namespace AITool
                     Dictionary<string, String> tmpdic = new Dictionary<string, String>();
 
                     //lets try to keep the original objects in memory and not create them new
+                    int cnt = 0;
                     foreach (History hist in CurList)
                     {
+                        cnt++;
+
+                        if (cnt == 1 || cnt == CurList.Count || (cnt % (CurList.Count / 10) > 0))
+                        {
+                            Global.UpdateProgressBar("Reading database...", cnt, CurList.Count);
+                        }
+
                         if (!isnew)
                         {
                             //add missing
@@ -508,13 +531,7 @@ namespace AITool
                     this.HasChanged.WriteFullFence(true);
                 }
 
-                this.HasChanged.WriteFullFence(false);
-
                 Global.Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
-
-
-
-
 
             }
             catch (Exception ex)
@@ -523,7 +540,10 @@ namespace AITool
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
 
+
             this.IsUpdating.WriteFullFence(false);
+
+            Global.UpdateProgressBar("", 0, 1);
 
 
             return ret;
@@ -554,12 +574,21 @@ namespace AITool
 
                     int missing = 0;
                     int tooold = 0;
+                    int cnt = 0;
+                    int HistCount = this.HistoryDic.Count;
                     //we are allowed to do this with a ConcurrentDictionary...
                     foreach (History hist in this.HistoryDic.Values)
                     {
+                        cnt++;
+
+                        if (cnt == 1 || cnt == HistCount || (cnt % (HistCount / 10) > 0))
+                        {
+                            Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
+                        }
+
                         bool IsTooOld = (DateTime.Now - hist.Date).TotalDays >= AppSettings.Settings.MaxHistoryAgeDays;
 
-                        if (IsTooOld  || !File.Exists(hist.Filename))
+                        if (IsTooOld || !File.Exists(hist.Filename))
                         {
                             if (IsTooOld)
                                 tooold++;
@@ -567,9 +596,9 @@ namespace AITool
                                 missing++;
 
                             removed.Add(hist);
-                            
+
                             History rhist;
-                            
+
                             if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
                                 Global.Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
                         }
@@ -584,11 +613,18 @@ namespace AITool
                         Stopwatch swr = Stopwatch.StartNew();
                         int rcnt = 0;
                         int failedcnt = 0;
+                        cnt = 0;
                         foreach (History hist in removed)
                         {
-                            
+                            cnt++;
+
+                            if (cnt == 1 || cnt == removed.Count || (cnt % (removed.Count / 10) > 0))
+                            {
+                                Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
+                            }
+
                             int rowsdeleted = 0;
-                            
+
                             try
                             {
                                 Stopwatch dsw = Stopwatch.StartNew();
@@ -596,7 +632,7 @@ namespace AITool
                                 rowsdeleted = await this.sqlite_conn.DeleteAsync(hist);
 
                                 this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
-                                
+
                                 if (rowsdeleted != 1)
                                 {
                                     failedcnt++;
@@ -605,8 +641,8 @@ namespace AITool
                             }
                             catch (Exception ex)
                             {
-                                    failedcnt++;
-                                    Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
+                                failedcnt++;
+                                Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
                             }
                             rcnt = rcnt + rowsdeleted;
                         }

@@ -38,7 +38,6 @@ namespace AITool
         {
             InitializeComponent();
 
-            toolStripStatusLabelHistoryItems.Alignment = ToolStripItemAlignment.Right;
 
             //this is to log messages from other classes to the RTF in Shell form, and to log file...
             Global.progress = new Progress<ClsMessage>(EventMessage);
@@ -50,7 +49,8 @@ namespace AITool
 
             this.Show();
 
-            UpdateToolstrip("Initializing and cleaning history database...");
+            toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
+            toolStripProgressBar1.MarqueeAnimationSpeed = 30;
 
             //---------------------------------------------------------------------------
             //HISTORY TAB
@@ -177,16 +177,35 @@ namespace AITool
                     jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
                     History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
                     CreateListItem(hist);
+                    UpdateToolstrip();
                 }
             }
             else if (msg.MessageType == MessageType.DeleteHistoryItem)
             {
-                //DeleteListItem(msg.Description);
+                
+                if (!HistoryDB.ReadOnly)  //assume service or other instance will be handling 
+                {
+                    //Log("Deleting missing file from database: " + msg.Description);
+                    HistoryDB.DeleteHistoryItem(msg.Description);
+                    UpdateToolstrip();
+                }
             }
             else if (msg.MessageType == MessageType.ImageAddedToQueue)
             {
                 UpdateQueueLabel();
                 UpdateToolstrip();
+            }
+            else if (msg.MessageType == MessageType.UpdateProgressBar)
+            {
+                if (toolStripProgressBar1.Maximum != msg.MaxVal)
+                    toolStripProgressBar1.Maximum = msg.MaxVal;
+                
+                toolStripProgressBar1.Value = msg.CurVal;
+
+                if (toolStripProgressBar1.Style != ProgressBarStyle.Continuous)
+                    toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
+
+                UpdateToolstrip(msg.Description);
             }
             else if (msg.MessageType == MessageType.BeginProcessImage)
             {
@@ -251,9 +270,10 @@ namespace AITool
 
 
         //save how many times an error happened
-        public void IncrementErrorCounter()
+        public void IncrementErrorCounter(string text, string ModName)
         {
-            errors.AtomicIncrementAndGet();
+            errors.Add(text,DetailType.Unknown,DateTime.Now,ModName);
+
             try
             {
                 if (this.Visible)
@@ -399,7 +419,7 @@ namespace AITool
                 //increment error counter
                 if (HasError || HasWarning)
                 {
-                    IncrementErrorCounter();
+                    IncrementErrorCounter(text,ModName);
                 }
 
             }
@@ -443,19 +463,24 @@ namespace AITool
         //open Log when clicking or error message
         private void lbl_errors_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
-                errors.WriteFullFence(0);
-                UpdateToolstrip();
+            ShowErrors();
 
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+        }
 
+        private void ShowErrors()
+        {
+            
+            using (Frm_Errors frm = new Frm_Errors())
+            {
+                frm.errors = errors.Values;
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                        lbl_errors.Text = "";
+                        errors.Clear();
+                        UpdateToolstrip();
+                }
+            }
         }
 
         //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
@@ -1095,22 +1120,28 @@ namespace AITool
 
                     toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant Alerts | {falsealerts} False Alerts | {skipped} Skipped Images | {ImageProcessQueue.Count} in Queue";
 
-                    toolStripStatusErrors.Text = $"| {errors.ReadFullFence()} New Errors";
+                    toolStripStatusErrors.Text = $"| {errors.Values.Count} New Errors";
 
                     if (!string.IsNullOrEmpty(Message))
                     {
                         toolStripStatusLabelInfo.Text = Message;
                     }
-                    else if (ImageProcessQueue.Count > 0)
+                    else if (ImageProcessQueue.Count > 0 && toolStripProgressBar1.Value == 0)
                     {
                         toolStripStatusLabelInfo.Text = "Working...";
                     }
-                    else
+                    else if (toolStripProgressBar1.Value == 0) 
                     {
                         toolStripStatusLabelInfo.Text = "Idle.";
                     }
 
-                    if (errors.ReadFullFence() > 0)
+                    //if (toolStripProgressBar1.Style == ProgressBarStyle.Marquee && toolStripStatusLabelInfo.Text == "Idle.")
+                    //{
+                    //    toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
+                    //}
+
+
+                    if (errors.Values.Count() > 0)
                     {
                         toolStripStatusErrors.ForeColor = Color.Red;
                     }
@@ -1174,7 +1205,7 @@ namespace AITool
                 {
 
                     if (this.Visible && !(this.WindowState == FormWindowState.Minimized))
-                        this.UpdateToolstrip("Updating List...");
+                        this.UpdateToolstrip("Updating History List...");
 
                     if (FilterChanged)
                         cw = new Global_GUI.CursorWait();
@@ -2359,15 +2390,7 @@ namespace AITool
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+            ShowErrors();
         }
 
         private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
@@ -2634,6 +2657,7 @@ namespace AITool
                     }
                     else
                     {
+                        Log("Removing missing file from database: " + hist.Filename);
                         HistoryDB.DeleteHistoryItem(hist.Filename);
                         lbl_objects.Text = "Image not found";
                         pictureBox1.BackgroundImage = null;
@@ -2747,17 +2771,7 @@ namespace AITool
 
         private void toolStripStatusErrors_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
-                errors.WriteFullFence(0);
-                UpdateToolstrip();
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+            ShowErrors();
         }
 
         private async void cb_follow_CheckedChanged(object sender, EventArgs e)

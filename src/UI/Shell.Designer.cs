@@ -214,7 +214,9 @@ namespace AITool
             this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -2649,7 +2651,9 @@ namespace AITool
             this.toolStripStatusLabelHistoryItems,
             this.toolStripStatusErrors,
             this.toolStripStatusLabel1,
-            this.toolStripStatusLabelInfo});
+            this.toolStripStatusLabel2,
+            this.toolStripStatusLabelInfo,
+            this.toolStripProgressBar1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 815);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1679, 46);
@@ -2676,6 +2680,12 @@ namespace AITool
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(18, 37);
             this.toolStripStatusLabel1.Text = ".";
             // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(1205, 37);
+            this.toolStripStatusLabel2.Spring = true;
+            // 
             // toolStripStatusLabelInfo
             // 
             this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 11.14286F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -2683,6 +2693,13 @@ namespace AITool
             this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
             this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(67, 37);
             this.toolStripStatusLabelInfo.Text = "Idle.";
+            // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            this.toolStripProgressBar1.Size = new System.Drawing.Size(200, 36);
+            this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             // 
             // Shell
             // 
@@ -2955,6 +2972,8 @@ namespace AITool
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusErrors;
         private System.Windows.Forms.CheckBox cb_follow;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelInfo;
+        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
     }
 }
 

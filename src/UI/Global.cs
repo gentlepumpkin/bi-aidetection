@@ -311,6 +311,16 @@ namespace AITool
             progress.Report(msg);
 
         }
+        public static void UpdateProgressBar(string label, int CurVal, int MaxVal, [CallerMemberName] string memberName = null)
+        {
+            if (progress == null)
+                return;
+
+            ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName,CurVal,MaxVal);
+
+            progress.Report(msg);
+
+        }
 
         public static void CreateHistoryItem(History hist, [CallerMemberName] string memberName = null)
         {

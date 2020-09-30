@@ -64,7 +64,7 @@ namespace AITool
         public static MovingCalcs qcalc = new MovingCalcs(250);
         public static MovingCalcs qsizecalc = new MovingCalcs(250);
         
-        public static ThreadSafe.Integer errors = new ThreadSafe.Integer(0);
+        public static ClsDetail errors = new ClsDetail();
         
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
 
