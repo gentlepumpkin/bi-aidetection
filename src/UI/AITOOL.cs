@@ -1098,7 +1098,7 @@ namespace AITool
                                             //add all triggering_objects of the specific camera into a list and the correlating confidence levels into a second list
                                             foreach (Object user in response.predictions)
                                             {
-                                                // just extra log lines - Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%):");
+                                                Log($"   {user.label.ToString()} ({Math.Round((user.confidence * 100), 2).ToString() }%): Upper: {cam.threshold_lower} Lower: {cam.threshold_upper}");
 
                                                 using (var img = new Bitmap(CurImg.image_path))
                                                 {

@@ -176,7 +176,7 @@ namespace AITool
                     jset.TypeNameHandling = TypeNameHandling.All;
                     jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
                     History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
-                    CreateListItem(hist);
+                    HistoryDB.InsertHistoryItem(hist);
                     UpdateToolstrip();
                 }
             }
@@ -281,7 +281,7 @@ namespace AITool
                     MethodInvoker LabelUpdate = delegate
                     {
                         lbl_errors.Show();
-                        lbl_errors.Text = $"{errors.ToString()} error(s) occurred. Click to open Log."; //update error counter label
+                        lbl_errors.Text = $"{errors.Values.Count.ToString()} error(s) occurred. Click to open Log."; //update error counter label
                         UpdateToolstrip();
                     };
                     //getting error here when called too early - had to check if Visible or not -Vorlon
@@ -1073,11 +1073,7 @@ namespace AITool
         }
 
         // add new entry in left list
-        public async void CreateListItem(History hist)  //string filename, string date, string camera, string objects_and_confidence, string object_positions
-        {
-            HistoryDB.InsertHistoryItem(hist).ConfigureAwait(false);
-
-        }
+        
 
         private void UpdateToolstrip(string Message = "")
         {
@@ -1749,7 +1745,7 @@ namespace AITool
                 //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
                 for (int j = 0; j < cbarray.Length; j++)
                 {
-                    if (cam.triggering_objects_as_string.Contains(cbstringarray[j]))
+                    if (cam.triggering_objects_as_string.ToLower().Contains(cbstringarray[j].ToLower()))
                     {
                         cbarray[j].Checked = true;
                     }
