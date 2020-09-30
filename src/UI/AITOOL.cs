@@ -1166,6 +1166,12 @@ namespace AITool
 
                                             }  //end loop over current object list
 
+                                            if (cam.maskManager.masking_enabled)
+                                            {
+                                                //mark the end of AI detection for the current image
+                                                cam.maskManager.lastDetectionDate = DateTime.Now; 
+                                            }
+
                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
                                             if (objects.Count() > 0)
                                             {
