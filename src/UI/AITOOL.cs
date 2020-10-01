@@ -1666,6 +1666,24 @@ namespace AITool
                             CurImg = new ClsImageQueueItem(tmpfile, 1);
                     }
 
+                    if (cam.Action_image_copy_enabled && Trigger)
+                    {
+                        Log("   Copying image to network folder...");
+                        string newimagepath = "";
+                        if (!AITOOL.CopyImage(cam, CurImg, ref newimagepath))
+                        {
+                            ret = false;
+                            Log("   -> Warning: Image could not be copied to network folder.");
+                        }
+                        else
+                        {
+                            Log("   -> Image copied to network folder.");
+                            //set the image path to the new path so all imagename variable works
+                            CurImg = new ClsImageQueueItem(newimagepath, 1);
+                        }
+
+                    }
+
                     //call trigger urls
                     if (Trigger && cam.trigger_urls.Count() > 0)
                     {
@@ -1783,16 +1801,7 @@ namespace AITool
                         }
                     }
 
-
-                    if (cam.Action_image_copy_enabled && Trigger)
-                    {
-                        Log("   Copying image to network folder...");
-
-                        if (!AITOOL.CopyImage(cam, CurImg))
-                            ret = false;
-
-                        Log("   -> Image copied to network folder.");
-                    }
+                                     
 
 
                     if (cam.Action_mqtt_enabled)
@@ -2029,11 +2038,10 @@ namespace AITool
             return ret;
 
         }
-        public static bool CopyImage(Camera cam, ClsImageQueueItem CurImg)
+        public static bool CopyImage(Camera cam, ClsImageQueueItem CurImg, ref string dest_path)
         {
             bool ret = false;
 
-            string dest_path = "";
             try
             {
                 string netfld = AITOOL.ReplaceParams(cam, CurImg, cam.Action_network_folder);

@@ -182,8 +182,8 @@ namespace AITool
                     Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
                 }
 
-                if (sw.ElapsedMilliseconds > 1000)
-                    Global.Log($"Warning: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                if (sw.ElapsedMilliseconds > 5000)
+                    Global.Log($"Info: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
 
             }
             catch (Exception ex)
@@ -255,7 +255,7 @@ namespace AITool
                 //    Global.Log($"Removed {dret} database entry for '{Filename}'");
                 //}
 
-                if (sw.ElapsedMilliseconds > 1000)
+                if (sw.ElapsedMilliseconds > 5000)
                     Global.Log($"Info: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
 
             }
