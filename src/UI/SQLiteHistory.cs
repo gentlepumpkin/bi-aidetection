@@ -401,7 +401,7 @@ namespace AITool
 
                 bool HadToWait = false;
 
-                while (this.IsUpdating.ReadFullFence()) // || sw.ElapsedMilliseconds <= 10000)
+                while (this.IsUpdating.ReadFullFence() || sw.ElapsedMilliseconds <= 10000)
                 {
                     HadToWait = true;
                     await Task.Delay(50);
@@ -581,7 +581,7 @@ namespace AITool
                     {
                         cnt++;
 
-                        if (cnt == 1 || cnt == HistCount || (cnt % (HistCount / 10) > 0))
+                        if (cnt == 1 || cnt == HistCount || (HistCount > 0 && cnt % (HistCount / 10) > 0))
                         {
                             Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
                         }
@@ -618,7 +618,7 @@ namespace AITool
                         {
                             cnt++;
 
-                            if (cnt == 1 || cnt == removed.Count || (cnt % (removed.Count / 10) > 0))
+                            if (cnt == 1 || cnt == removed.Count || (removed.Count > 0 && cnt % (removed.Count / 10) > 0))
                             {
                                 Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
                             }
