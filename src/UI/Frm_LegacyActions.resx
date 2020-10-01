@@ -134,6 +134,6 @@ dog, cat, bird ; C:\WOOF.WAV
 * ; C:\DEFAULT.WAV</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
+    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImagePathEscaped], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
   </data>
 </root>
