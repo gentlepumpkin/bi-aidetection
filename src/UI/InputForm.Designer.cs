@@ -89,7 +89,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.cb_1.FormattingEnabled = true;
             this.cb_1.Location = new System.Drawing.Point(34, 60);
-            this.cb_1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cb_1.Margin = new System.Windows.Forms.Padding(4);
             this.cb_1.Name = "cb_1";
             this.cb_1.Size = new System.Drawing.Size(499, 32);
             this.cb_1.TabIndex = 5;
@@ -99,8 +99,7 @@
             // InputForm
             // 
             this.AcceptButton = this.btn_1;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btn_2;
             this.ClientSize = new System.Drawing.Size(582, 220);
             this.ControlBox = false;

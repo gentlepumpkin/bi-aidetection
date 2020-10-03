@@ -95,8 +95,9 @@ namespace AITool
         
         public int XOffset = 0;   //these are for when deepstack is having a problem with detection rectangle being in the wrong location
         public int YOffset = 0;   //  Can be negative numbers
-
-        [JsonIgnore]
+        
+        
+            [JsonIgnore]
         public DateTime last_trigger_time;
         [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
@@ -191,7 +192,7 @@ namespace AITool
 
                                 
 
-                                using (Pen pen = new Pen(color, 2))
+                                using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
                                 {
                                     g.DrawRectangle(pen, rect); //draw rectangle
                                 }

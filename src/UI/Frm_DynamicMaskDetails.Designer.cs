@@ -35,6 +35,7 @@
             this.FOLV_MaskHistory = new BrightIdeasSoftware.FastObjectListView();
             this.staticMaskMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.createStaticMaskToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.createDynamicMaskTemporaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lblClearMasks = new System.Windows.Forms.Label();
@@ -47,7 +48,6 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.comboBox_filter_camera = new System.Windows.Forms.ComboBox();
             this.BtnDynamicMaskingSettings = new System.Windows.Forms.Button();
-            this.createDynamicMaskTemporaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -144,7 +144,7 @@
             this.staticMaskMenu.Name = "staticMaskMenu";
             this.staticMaskMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.staticMaskMenu.ShowImageMargin = false;
-            this.staticMaskMenu.Size = new System.Drawing.Size(379, 114);
+            this.staticMaskMenu.Size = new System.Drawing.Size(379, 76);
             this.staticMaskMenu.Opening += new System.ComponentModel.CancelEventHandler(this.staticMaskMenu_Opening);
             // 
             // createStaticMaskToolStripMenuItem
@@ -155,6 +155,14 @@
             this.createStaticMaskToolStripMenuItem.Text = "Create Static Mask";
             this.createStaticMaskToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.createStaticMaskToolStripMenuItem.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem_Click);
+            // 
+            // createDynamicMaskTemporaryToolStripMenuItem
+            // 
+            this.createDynamicMaskTemporaryToolStripMenuItem.Name = "createDynamicMaskTemporaryToolStripMenuItem";
+            this.createDynamicMaskTemporaryToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
+            this.createDynamicMaskTemporaryToolStripMenuItem.Text = "Create Dynamic Mask (Temporary)";
+            this.createDynamicMaskTemporaryToolStripMenuItem.ToolTipText = "Forced creation of dynamic mask before conditions in settings are met.";
+            this.createDynamicMaskTemporaryToolStripMenuItem.Click += new System.EventHandler(this.createDynamicMaskTemporaryToolStripMenuItem_Click);
             // 
             // label3
             // 
@@ -312,18 +320,9 @@
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
             this.BtnDynamicMaskingSettings.Click += new System.EventHandler(this.BtnDynamicMaskingSettings_Click);
             // 
-            // createDynamicMaskTemporaryToolStripMenuItem
-            // 
-            this.createDynamicMaskTemporaryToolStripMenuItem.Name = "createDynamicMaskTemporaryToolStripMenuItem";
-            this.createDynamicMaskTemporaryToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
-            this.createDynamicMaskTemporaryToolStripMenuItem.Text = "Create Dynamic Mask (Temporary)";
-            this.createDynamicMaskTemporaryToolStripMenuItem.ToolTipText = "Forced creation of dynamic mask before conditions in settings are met.";
-            this.createDynamicMaskTemporaryToolStripMenuItem.Click += new System.EventHandler(this.createDynamicMaskTemporaryToolStripMenuItem_Click);
-            // 
             // Frm_DynamicMaskDetails
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(1452, 793);
             this.Controls.Add(this.BtnDynamicMaskingSettings);
             this.Controls.Add(this.comboBox_filter_camera);

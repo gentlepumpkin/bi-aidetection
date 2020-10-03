@@ -22,6 +22,8 @@ namespace AITool
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
         public ThreadSafe.Integer RetryCount { get; set; } = new ThreadSafe.Integer(0); 
         public string ResultMessage { get; set; }
+        public int Width { get; set; } = 0;
+        public int Height { get; set; } = 0;
         public ClsImageQueueItem(String FileName, long CurQueueSize)
         {
             this.image_path = FileName;

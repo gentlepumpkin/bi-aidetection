@@ -73,7 +73,7 @@
             this.flowLayoutButtons.Controls.Add(this.btnOk);
             this.flowLayoutButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutButtons.Location = new System.Drawing.Point(22, 463);
-            this.flowLayoutButtons.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.flowLayoutButtons.Margin = new System.Windows.Forms.Padding(6);
             this.flowLayoutButtons.Name = "flowLayoutButtons";
             this.flowLayoutButtons.Size = new System.Drawing.Size(1001, 63);
             this.flowLayoutButtons.TabIndex = 1;
@@ -83,7 +83,7 @@
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnCancel.Location = new System.Drawing.Point(852, 6);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(6);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(143, 50);
             this.btnCancel.TabIndex = 0;
@@ -95,7 +95,7 @@
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnOk.Location = new System.Drawing.Point(697, 6);
-            this.btnOk.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnOk.Margin = new System.Windows.Forms.Padding(6);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(143, 50);
             this.btnOk.TabIndex = 1;
@@ -106,9 +106,9 @@
             // 
             this.groupBox1.Controls.Add(this.flowLayoutSmallObjects);
             this.groupBox1.Location = new System.Drawing.Point(28, 181);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(6);
             this.groupBox1.Size = new System.Drawing.Size(990, 109);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
@@ -124,7 +124,7 @@
             this.flowLayoutSmallObjects.Controls.Add(this.numSmallObjPercent);
             this.flowLayoutSmallObjects.Controls.Add(this.label11);
             this.flowLayoutSmallObjects.Location = new System.Drawing.Point(17, 35);
-            this.flowLayoutSmallObjects.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.flowLayoutSmallObjects.Margin = new System.Windows.Forms.Padding(6);
             this.flowLayoutSmallObjects.Name = "flowLayoutSmallObjects";
             this.flowLayoutSmallObjects.Size = new System.Drawing.Size(953, 44);
             this.flowLayoutSmallObjects.TabIndex = 38;
@@ -133,7 +133,7 @@
             // 
             this.numericUpDown2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.numericUpDown2.Location = new System.Drawing.Point(6, 6);
-            this.numericUpDown2.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.numericUpDown2.Margin = new System.Windows.Forms.Padding(6);
             this.numericUpDown2.Name = "numericUpDown2";
             this.numericUpDown2.Size = new System.Drawing.Size(0, 29);
             this.numericUpDown2.TabIndex = 10;
@@ -247,7 +247,7 @@
             this.flowLayoutMidObjects.Controls.Add(this.numMidObjPercent);
             this.flowLayoutMidObjects.Controls.Add(this.label5);
             this.flowLayoutMidObjects.Location = new System.Drawing.Point(17, 35);
-            this.flowLayoutMidObjects.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.flowLayoutMidObjects.Margin = new System.Windows.Forms.Padding(6);
             this.flowLayoutMidObjects.Name = "flowLayoutMidObjects";
             this.flowLayoutMidObjects.Size = new System.Drawing.Size(953, 44);
             this.flowLayoutMidObjects.TabIndex = 39;
@@ -256,7 +256,7 @@
             // 
             this.numericUpDown1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.numericUpDown1.Location = new System.Drawing.Point(6, 6);
-            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(6);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(0, 29);
             this.numericUpDown1.TabIndex = 10;
@@ -401,7 +401,7 @@
             this.cbEnableScaling.AutoSize = true;
             this.cbEnableScaling.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cbEnableScaling.Location = new System.Drawing.Point(28, 107);
-            this.cbEnableScaling.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.cbEnableScaling.Margin = new System.Windows.Forms.Padding(6);
             this.cbEnableScaling.Name = "cbEnableScaling";
             this.cbEnableScaling.Size = new System.Drawing.Size(234, 34);
             this.cbEnableScaling.TabIndex = 9;
@@ -412,9 +412,9 @@
             // 
             this.groupBox2.Controls.Add(this.flowLayoutMidObjects);
             this.groupBox2.Location = new System.Drawing.Point(28, 318);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(6);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(6);
             this.groupBox2.Size = new System.Drawing.Size(990, 109);
             this.groupBox2.TabIndex = 40;
             this.groupBox2.TabStop = false;
@@ -422,15 +422,14 @@
             // 
             // Frm_DynamicMaskingAdvanced
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(1045, 548);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cbEnableScaling);
             this.Controls.Add(this.flowLayoutButtons);
-            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Frm_DynamicMaskingAdvanced";
             this.Text = "Dynamic Masking Advanced";
             this.Load += new System.EventHandler(this.Frm_DynamicMaskingAdvanced_Load);

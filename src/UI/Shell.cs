@@ -57,6 +57,10 @@ namespace AITool
 
             Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending);
 
+            cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
+            cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
+            cb_follow.Checked = AppSettings.Settings.HistoryFollow;
+            automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
 
             folv_history.EmptyListMsg = "Initializing database";
 
@@ -895,16 +899,11 @@ namespace AITool
                 {
                     History hist = (History)folv_history.SelectedObjects[0];
 
-                    if (System.IO.File.Exists("./cameras/" + hist.Camera + ".png")) //check if privacy mask file exists
+                    string imagefile = AITOOL.GetMaskFile(hist.Camera);
+
+                    if (!string.IsNullOrEmpty(imagefile))
                     {
-                        using (var img = new Bitmap("./cameras/" + hist.Camera + ".png"))
-                        {
-                            pictureBox1.Image = new Bitmap(img); //load mask as overlay
-                        }
-                    }
-                    else if (System.IO.File.Exists("./cameras/" + hist.Camera + ".bmp")) //check if privacy mask file exists
-                    {
-                        using (var img = new Bitmap("./cameras/" + hist.Camera + ".bmp"))
+                        using (var img = new Bitmap(imagefile))
                         {
                             pictureBox1.Image = new Bitmap(img); //load mask as overlay
                         }
@@ -968,7 +967,7 @@ namespace AITool
 
                     //3. paint rectangle
                     System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                    using (Pen pen = new Pen(color, 2))
+                    using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
                     {
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                     }
@@ -1112,11 +1111,11 @@ namespace AITool
                     if (HistoryDB != null && HistoryDB.AddedCount.ReadFullFence() > 0)
                         hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
-                    toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")} per minute) | {removed} removed ";
+                    toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed";
 
-                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant Alerts | {falsealerts} False Alerts | {skipped} Skipped Images | {ImageProcessQueue.Count} in Queue";
+                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped | {ImageProcessQueue.Count} Queued";
 
-                    toolStripStatusErrors.Text = $"| {errors.Values.Count} New Errors";
+                    toolStripStatusErrors.Text = $"| {errors.Values.Count} Errors";
 
                     if (!string.IsNullOrEmpty(Message))
                     {
@@ -1285,6 +1284,8 @@ namespace AITool
                 ret = false;
             else if (!hist.IsAnimal && cb_filter_animal.Checked)
                 ret = false;
+            else if (!hist.WasMasked && cb_filter_masked.Checked)
+                ret = false;
 
             bool CameraValid = ((comboBox_filter_camera.Text.Trim() == "All Cameras") || hist.Camera.Trim().ToLower() == comboBox_filter_camera.Text.Trim().ToLower());
 
@@ -1387,53 +1388,25 @@ namespace AITool
         }
 
         //event: show history list filters button clicked
-        private void cb_showFilters_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cb_showFilters.Checked)
-            {
-                cb_showFilters.Text = "˅ Filter";
-                splitContainer1.Panel2Collapsed = false;
-            }
-            else
-            {
-                cb_showFilters.Text = "˄ Filter";
-                splitContainer1.Panel2Collapsed = true;
-            }
+        //private void cb_showFilters_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    if (cb_showFilters.Checked)
+        //    {
+        //        cb_showFilters.Text = "˅ Filter";
+        //        splitContainer1.Panel2Collapsed = false;
+        //    }
+        //    else
+        //    {
+        //        cb_showFilters.Text = "˄ Filter";
+        //        splitContainer1.Panel2Collapsed = true;
+        //    }
 
-            ResizeListViews();
+        //    ResizeListViews();
 
-        }
+        //}
 
         //event: filter "only revelant alerts" checked or unchecked
-        private async void cb_filter_success_CheckedChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
-
-        //event: filter "only alerts with people" checked or unchecked
-        private async void cb_filter_person_CheckedChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
-
-        //event: filter "only alerts with people" checked or unchecked
-        private async void cb_filter_vehicle_CheckedChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
-
-        //event: filter "only alerts with animals" checked or unchecked
-        private async void cb_filter_animal_CheckedChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
-
-        //event: filter "only false / irrevelant alerts" checked or unchecked
-        private async void cb_filter_nosuccess_CheckedChanged(object sender, EventArgs e)
-        {
-            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
-        }
-
+        
         
 
         //----------------------------------------------------------------------------------------------------------
@@ -2070,6 +2043,8 @@ namespace AITool
         //ask before closing AI Tool to prevent accidentally closing
         private void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
+            IsClosing.WriteFullFence(true);
+
             if (AppSettings.Settings.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
             {
                 using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
@@ -2101,9 +2076,9 @@ namespace AITool
 
             AppSettings.Save();  //save settings in any case
 
-            IsClosing.WriteFullFence(true);
             if (!AppSettings.AlreadyRunning)
                 Global.SaveSetting("LastShutdownState", "graceful shutdown");
+
 
 
         }
@@ -2658,6 +2633,22 @@ namespace AITool
                         lbl_objects.Text = "Image not found";
                         pictureBox1.BackgroundImage = null;
                     }
+
+                    if (!string.IsNullOrEmpty(hist.PredictionsJSON))
+                    {
+                        toolStripButtonDetails.Enabled = true;
+                    }
+                    else
+                    {
+                        toolStripButtonDetails.Enabled = false;
+                    }
+
+                }
+                else
+                {
+                    lbl_objects.Text = "No selection";
+                    pictureBox1.BackgroundImage = null;
+                    toolStripButtonDetails.Enabled = false;
                 }
 
             }
@@ -2788,29 +2779,123 @@ namespace AITool
                 UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
             }
         }
-    }
 
+        private void Shell_DpiChanged(object sender, DpiChangedEventArgs e)
+        {
+            //Controls get really messed up when DPI changes when app is open.   Just trying to figure out the right way to handle....
+            Log($"[System DPI Changed from {e.DeviceDpiOld} to {e.DeviceDpiNew}]");
+            
+            //we need to figure out how to force a full resize of all components - something is preventing that from happening
+            //automatically upon DPI change.   A suspicion is the custom DBLayoutPanel, but its a clusterfuck to try to 
+            //revert back to TableLayoutPanel for everything.
+            
+        }
 
-    //classes for AI analysis
+        private async void cb_filter_success_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
-    class Response
-    {
+        private async void cb_filter_nosuccess_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
-        public bool success { get; set; }
-        public Object[] predictions { get; set; }
+        private async void cb_filter_person_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
-    }
+        private async void cb_filter_animal_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
-    class Object
-    {
+        private async void cb_filter_vehicle_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
-        public string label { get; set; }
-        public float confidence { get; set; }
-        public int y_min { get; set; }
-        public int x_min { get; set; }
-        public int y_max { get; set; }
-        public int x_max { get; set; }
+        private async void cb_filter_skipped_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
 
+        private async void cb_filter_masked_Click(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private async void comboBox_filter_camera_DropDownClosed(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync(true, cb_follow.Checked).ConfigureAwait(false);
+        }
+
+        private void cb_showMask_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryShowMask = cb_showMask.Checked;
+            AppSettings.Save();
+            showHideMask();
+        }
+
+        private void cb_showObjects_CheckedChanged(object sender, EventArgs e)
+        {
+            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            {
+                pictureBox1.Refresh();
+            }
+        }
+
+        private void automaticallyRefreshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (automaticallyRefreshToolStripMenuItem.Checked)
+                HistoryUpdateListTimer.Enabled = true;
+            else
+                HistoryUpdateListTimer.Enabled = false;
+
+            AppSettings.Settings.HistoryAutoRefresh = automaticallyRefreshToolStripMenuItem.Checked;
+            AppSettings.Save();
+
+        }
+
+        private void cb_showObjects_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryShowObjects = cb_showObjects.Checked;
+            AppSettings.Save();
+        }
+
+        private void cb_follow_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryFollow = cb_follow.Checked;
+            AppSettings.Save();
+        }
+
+        private void toolStripButtonDetails_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                History hist = (History)folv_history.SelectedObjects[0];
+
+                List<ClsPrediction> predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+
+                if (predictions != null && predictions.Count > 0)
+                {
+                    Frm_ObjectDetail frm = new Frm_ObjectDetail();
+                    frm.PredictionObjectDetail = predictions;
+                    frm.Show();
+                }
+                else
+                {
+                    MessageBox.Show($"No predictions, Json='{hist.PredictionsJSON}'");
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+        }
     }
 
 
@@ -2822,15 +2907,15 @@ namespace AITool
             SetStyle(ControlStyles.AllPaintingInWmPaint |
               ControlStyles.OptimizedDoubleBuffer |
               ControlStyles.UserPaint, true);
-        }
+}
 
-        public DBLayoutPanel(IContainer container)
+public DBLayoutPanel(IContainer container)
         {
-            container.Add(this);
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-              ControlStyles.OptimizedDoubleBuffer |
-              ControlStyles.UserPaint, true);
-        }
+    container.Add(this);
+    SetStyle(ControlStyles.AllPaintingInWmPaint |
+      ControlStyles.OptimizedDoubleBuffer |
+      ControlStyles.UserPaint, true);
+}
     }
 }
 

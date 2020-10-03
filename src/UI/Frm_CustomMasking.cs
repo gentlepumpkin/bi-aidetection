@@ -8,12 +8,11 @@ using System.Windows.Forms;
 
 namespace AITool
 {
-    public partial class Frm_CustomMasking : Form
+    public partial class Frm_CustomMasking:Form
     {
         public Camera cam { get; set; }
         private Bitmap transparentLayer, cameraLayer, inProgessLayer;
-        private const string baseDirectory = "./cameras/";
-        private const string FILE_TYPE = ".bmp";
+        private string maskfilename {get;set;} = "";
         private const float DEFAULT_OPACITY = .5f;
         public int brushSize { get; set; }
         bool drawing = false;
@@ -31,6 +30,7 @@ namespace AITool
         {
             InitializeComponent();
             DoubleBuffered = true;
+            this.maskfilename = AITOOL.GetMaskFile(this.cam.name);
         }
 
         private void ShowImage()
@@ -45,9 +45,9 @@ namespace AITool
                         cameraLayer = new Bitmap(this.cam.last_image_file);
 
                         //merge layer if masks exist
-                        if (File.Exists(baseDirectory + cam.name + FILE_TYPE))
+                        if (!string.IsNullOrEmpty(this.maskfilename))
                         {
-                            using (Bitmap maskLayer = new Bitmap(baseDirectory + cam.name + FILE_TYPE)) 
+                            using (Bitmap maskLayer = new Bitmap(this.maskfilename)) 
                             {
                                 pbMaskImage.Image = MergeBitmaps(cameraLayer, maskLayer);
                                 transparentLayer = new Bitmap(AdjustImageOpacity(maskLayer,2f)); // create new bitmap here to prevent file locks and increase to 100% opacity
@@ -248,6 +248,8 @@ namespace AITool
 
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
+            Global_GUI.RestoreWindowState(this);
+
             brushSize = cam.mask_brush_size;
             numBrushSize.Value = cam.mask_brush_size;
             ShowImage();
@@ -344,9 +346,9 @@ namespace AITool
             allPointLists.Clear();
 
             //if mask exists, delete it
-            if (File.Exists(baseDirectory + cam.name + FILE_TYPE))
+            if (!string.IsNullOrEmpty(this.maskfilename))
             {
-                File.Delete(baseDirectory + cam.name + FILE_TYPE);
+                File.Delete(this.maskfilename);
             }
             
             ShowImage();
@@ -367,13 +369,22 @@ namespace AITool
 
         }
 
+        private void flowLayoutPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void Frm_CustomMasking_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Global_GUI.SaveWindowState(this);
+        }
+
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (transparentLayer != null)
             {
-                string path = baseDirectory + cam.name + FILE_TYPE;
                 //save masks at 50% opacity 
-                AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY).Save(path);
+                AdjustImageOpacity(transparentLayer, DEFAULT_OPACITY).Save(this.maskfilename);
             }
 
             this.DialogResult = DialogResult.OK;

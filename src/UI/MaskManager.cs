@@ -119,87 +119,121 @@ namespace AITool
             }
         }
 
-        public bool CreateDynamicMask(ObjectPosition currentObject)
+        public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject)
         {
-            bool maskExists = false;
+            MaskResultInfo ret = new MaskResultInfo();
 
-            List<string> objects = Global.Split(this.objects, "|;,");
-
-            if (objects.Count > 0)
+            try
             {
-                bool fnd = false;
-                foreach (string objname in objects)
+                List<string> objects = Global.Split(this.objects, "|;,");
+
+                if (objects.Count > 0)
                 {
-                    if (currentObject.label.Trim().ToLower() == objname.ToLower())
-                        fnd = true;
-                }
-                if (!fnd)
-                {
-                    Global.Log($"Skipping mask creation because '{currentObject.label}' is not one of the configured objects: '{this.objects}'");
-                    return false;
-                }
-            }
-
-            Global.Log("*** Starting new object mask processing ***");
-            Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
-            currentObject.scaleConfig = scaleConfig;
-
-            lock (MaskLockObject)
-            {
-                currentObject.thresholdPercent = thresholdPercent;
-
-                int historyIndex = last_positions_history.IndexOf(currentObject);
-
-                if (historyIndex > -1)
-                {
-                    ObjectPosition foundObject = last_positions_history[historyIndex];
-
-                    foundObject.LastSeenDate = DateTime.Now;
-
-                    //Update last image that has same detection, and camera name found for existing mask
-                    foundObject.imagePath = currentObject.imagePath;
-                    foundObject.cameraName = currentObject.cameraName;
-
-                    Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.cameraName);
-
-                    if (foundObject.counter < history_threshold_count)
+                    bool fnd = false;
+                    foreach (string objname in objects)
                     {
-                        foundObject.counter++;
+                        if (currentObject.label.Trim().ToLower() == objname.ToLower())
+                            fnd = true;
+                    }
+                    if (!fnd)
+                    {
+                        Global.Log($"Skipping mask creation because '{currentObject.label}' is not one of the configured objects: '{this.objects}'");
+                        ret.IsMasked = false;
+                        ret.MaskType = MaskType.Unknown;
+                        ret.Result = MaskResult.Unwanted;
+                        return ret;
+                    }
+                }
+
+                Global.Log("*** Starting new object mask processing ***");
+                Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
+                currentObject.scaleConfig = scaleConfig;
+
+                lock (MaskLockObject)
+                {
+                    currentObject.thresholdPercent = thresholdPercent;
+
+                    int historyIndex = last_positions_history.IndexOf(currentObject);
+
+                    if (historyIndex > -1)
+                    {
+                        ObjectPosition foundObject = last_positions_history[historyIndex];
+
+                        foundObject.LastSeenDate = DateTime.Now;
+
+                        //Update last image that has same detection, and camera name found for existing mask
+                        foundObject.imagePath = currentObject.imagePath;
+                        foundObject.cameraName = currentObject.cameraName;
+
+                        Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.cameraName);
+
+                        if (foundObject.counter < history_threshold_count)
+                        {
+                            foundObject.counter++;
+
+                            ret.MaskType = MaskType.History;
+                            ret.Result = MaskResult.ThresholdNotMet;
+                            ret.IsMasked = false;
+                        }
+                        else
+                        {
+                            Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.cameraName);
+                            last_positions_history.RemoveAt(historyIndex);
+                            foundObject.createDate = DateTime.Now;  //reset create date as history object is converted to a mask
+                            masked_positions.Add(foundObject);
+
+                            ret.MaskType = MaskType.Dynamic;
+                            ret.Result = MaskResult.NewDynamicCreated;
+                            ret.IsMasked = true;
+
+                        }
+                        return ret;
+                    }
+
+                    int maskIndex = masked_positions.IndexOf(currentObject);
+
+                    if (maskIndex > -1)
+                    {
+                        ObjectPosition maskedObject = (ObjectPosition)masked_positions[maskIndex];
+
+                        maskedObject.LastSeenDate = DateTime.Now;
+
+                        //Update last image that has same detection, and camera name found for existing mask
+                        maskedObject.imagePath = currentObject.imagePath;
+                        maskedObject.cameraName = currentObject.cameraName;
+
+                        Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
+
+                        if (maskedObject.isStatic)
+                            ret.MaskType = MaskType.Static;
+                        else
+                            ret.MaskType = MaskType.Dynamic;
+
+                        ret.Result = MaskResult.Found;
+                        ret.IsMasked = true;
+
                     }
                     else
                     {
-                        Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.cameraName);
-                        last_positions_history.RemoveAt(historyIndex);
-                        foundObject.createDate = DateTime.Now;  //reset create date as history object is converted to a mask
-                        masked_positions.Add(foundObject);
+                        Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
+                        last_positions_history.Add(currentObject);
+
+                        ret.MaskType = MaskType.History;
+                        ret.Result = MaskResult.New;
+                        ret.IsMasked = false;
+
                     }
-                    return maskExists;
                 }
 
-                int maskIndex = masked_positions.IndexOf(currentObject);
-
-                if (maskIndex > -1)
-                {
-                    ObjectPosition maskedObject = (ObjectPosition)masked_positions[maskIndex];
-
-                    maskedObject.LastSeenDate = DateTime.Now;
-
-                    //Update last image that has same detection, and camera name found for existing mask
-                    maskedObject.imagePath = currentObject.imagePath;
-                    maskedObject.cameraName = currentObject.cameraName;
-
-                    Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
-
-                    maskExists = true;
-                }
-                else
-                {
-                    Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.cameraName);
-                    last_positions_history.Add(currentObject);
-                }
+            }
+            catch (Exception ex)
+            {
+                Global.Log($"Error: {Global.ExMsg(ex)}");
+                ret.Result = MaskResult.Error;
             }
 
-            return maskExists;
+
+            return ret;
         }
 
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count

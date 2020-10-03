@@ -75,12 +75,20 @@ namespace AITool
             public int HTTPClientTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
             //public int MaxDeepStackProcessTimeSeconds = 120;
-            public int RectRelevantColorAlpha = 150;  //255=solid, 127 half transparent
+            
+            public int RectRelevantColorAlpha = 150;    //255=solid, 127 half transparent
             public int RectIrrelevantColorAlpha = 150;
+            public int RectMaskedColorAlpha = 150;
+
+            public int RectBorderWidth = 2;
+
             public int RectDetectionTextSize = 12;
             public string RectDetectionTextFont = "Segoe UI Semibold";
+
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
             public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
+            public System.Drawing.Color RectMaskedColor = System.Drawing.Color.DarkGray;
+
             public string image_copy_folder = "";
 
             public string mqtt_serverandport = "mqtt:1883";
@@ -93,7 +101,12 @@ namespace AITool
 
             public string DisplayPercentageFormat = "({0:0.00}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
-            public int TimeBetweenListRefreshsMS = 3000;
+            public int TimeBetweenListRefreshsMS = 5000;
+            public bool HistoryShowMask = false;
+            public bool HistoryShowObjects = true;
+            public bool HistoryFollow = true;
+            public bool HistoryAutoRefresh = true;
+
 
         }
 

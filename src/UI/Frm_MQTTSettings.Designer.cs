@@ -223,8 +223,7 @@
             // 
             // Frm_MQTTSettings
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(617, 452);
             this.Controls.Add(this.btTest);

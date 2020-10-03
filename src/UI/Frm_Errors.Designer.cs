@@ -74,8 +74,7 @@
             // 
             // Frm_Errors
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(168F, 168F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(800, 411);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.folv_errors);

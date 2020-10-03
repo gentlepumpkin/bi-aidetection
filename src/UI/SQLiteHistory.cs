@@ -240,7 +240,7 @@ namespace AITool
                 //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
                 //trying to use object rather than primarykey to delete
                 if (hist == null)
-                    hist = new History().Create(Filename,DateTime.Now,"unknown","","",false);
+                    hist = new History().Create(Filename,DateTime.Now,"unknown","","",false,"");
 
                 dret = await this.sqlite_conn.DeleteAsync(hist);
 

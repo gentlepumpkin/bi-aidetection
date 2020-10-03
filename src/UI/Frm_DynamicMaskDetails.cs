@@ -360,6 +360,8 @@ namespace AITool
                         absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
+                    bool showkey = CurObjPosLst.Count() > 1;
+
                     foreach (ObjectPosition op in CurObjPosLst)
                     {
                         if (op != null)
@@ -384,7 +386,7 @@ namespace AITool
 
                             //3. paint rectangle
                             System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                            using (Pen pen = new Pen(color, 2))
+                            using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
                             {
                                 e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                             }
@@ -394,7 +396,12 @@ namespace AITool
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                            System.Drawing.SizeF size = e.Graphics.MeasureString(op.label, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                            string display = $"{op.label}";
+                            
+                            if (showkey)
+                                display += $" ({op.key})";
+
+                            System.Drawing.SizeF size = e.Graphics.MeasureString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
                             e.Graphics.DrawString(op.label, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
                         }
