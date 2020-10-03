@@ -5,111 +5,285 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.IO;
+using Newtonsoft.Json;
+using System.Drawing;
+using SixLabors.ImageSharp.Memory;
+using System.Drawing.Imaging;
+using System.Diagnostics;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
+using System.Security.AccessControl;
 
-namespace WindowsFormsApp2
+namespace AITool
 {
-    class Camera
+
+    public enum TriggerType
     {
-        public string name;
-        public string prefix;
-        public string triggering_objects_as_string;
-        public string[] triggering_objects;
-        public string trigger_urls_as_string;
-        public string[] trigger_urls;
-        public bool telegram_enabled;
-        public bool enabled;
-        public DateTime last_trigger_time;
-        public double cooldown_time;
-        public int threshold_lower;
-        public int threshold_upper;
+        Unknown,
+        DownloadURL,
+        PostURL,
+        Telegram,
+        Sound,
+        Run,
+        MQTT
+    }
+    public class CameraTriggerAction
+    {
+        public TriggerType Type = TriggerType.Unknown;
+        public string Description = "";
+        public string LastResponse = "";
+    }
+    public class Camera
+    {
+        public string name = "";
+        public string prefix = "";
+        public string triggering_objects_as_string = "Person";
+        public string[] triggering_objects = new string[0];
+        public string trigger_urls_as_string = "";
+        public string[] trigger_urls = new string[0];
+        public string cancel_urls_as_string = "";
+        public string[] cancel_urls = new string[0];
+        //public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
+        public bool trigger_url_cancels = false;
+        public bool telegram_enabled = false;
+        public string telegram_caption = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
+        public bool enabled = true;
+        public double cooldown_time = 0;
+        public int threshold_lower = 0;
+        public int threshold_upper = 100;
 
-        public List<string> last_detections = new List<string>(); //stores objects that were detected last
-        public List<float> last_confidences = new List<float>(); //stores last objects confidences
-        public List<string> last_positions = new List<string>(); //stores last objects positions
-        public String last_detections_summary; //summary text of last detection
+        //watch folder for each camera
+        public string input_path = "";
+        public bool input_path_includesubfolders = false;
 
+        public bool Action_image_copy_enabled = false;
+        public bool Action_image_merge_detections = false;
+        public bool Action_image_merge_detections_makecopy = true;
+        public long Action_image_merge_jpegquality = 80;
+        public string Action_network_folder = "";
+        public string Action_network_folder_filename = "[ImageFilenameNoExt]";
+        public bool Action_RunProgram = false;
+        public string Action_RunProgramString = "";
+        public string Action_RunProgramArgsString = "";
+        public bool Action_PlaySounds = false;
+        public string Action_Sounds = "";
+
+        public bool Action_mqtt_enabled = false;
+        public string Action_mqtt_topic = "ai/[camera]/motion";
+        public string Action_mqtt_payload = "[detections]";
+        public string Action_mqtt_topic_cancel = "ai/[camera]/motioncancel";
+        public string Action_mqtt_payload_cancel = "cancel";
+        public bool Action_mqtt_retain_message = false;
+
+        public MaskManager maskManager = new MaskManager();
+        public int mask_brush_size = 35;
 
         //stats
-        public int stats_alerts; //alert image contained relevant object counter
-        public int stats_false_alerts; //alert image contained no object counter
-        public int stats_irrelevant_alerts; //alert image contained irrelevant object counter
+        public int stats_alerts = 0; //alert image contained relevant object counter
+        public int stats_false_alerts = 0; //alert image contained no object counter
+        public int stats_irrelevant_alerts = 0; //alert image contained irrelevant object counter
 
-        //write config to file
-        public void WriteConfig(string _name, string _prefix, string _triggering_objects_as_string, string _trigger_urls_as_string, bool _telegram_enabled, bool _enabled, double _cooldown_time, int _threshold_lower, int _threshold_upper)
+        public int stats_skipped_images = 0; //Images that were skipped due to cooldown or retry count
+
+        [JsonIgnore]
+        public int stats_skipped_images_session = 0; //Images that were skipped due to cooldown or retry count
+
+
+        public string last_image_file = "";
+        public string last_image_file_with_detections = "";
+        
+        public int XOffset = 0;   //these are for when deepstack is having a problem with detection rectangle being in the wrong location
+        public int YOffset = 0;   //  Can be negative numbers
+
+        [JsonIgnore]
+        public DateTime last_trigger_time;
+        [JsonIgnore]
+        public List<string> last_detections = new List<string>(); //stores objects that were detected last
+        [JsonIgnore]
+        public List<float> last_confidences = new List<float>(); //stores last objects confidences
+        [JsonIgnore]
+        public List<string> last_positions = new List<string>(); //stores last objects positions
+        [JsonIgnore]
+        public String last_detections_summary; //summary text of last detection
+
+        public Camera(string Name = "")
         {
-            //if camera name (= settings file name) changed, the old settings file must be deleted
-            if(name != _name)
+            this.name = Name;
+            this.prefix = Name;
+        }
+
+        public void MergeImageAnnotations(string OutputImageFile, string InputImageFile)
+        {
+            this.MergeImageAnnotations(OutputImageFile, new ClsImageQueueItem(InputImageFile,0));
+        }
+        public async void MergeImageAnnotations(string OutputImageFile, ClsImageQueueItem CurImg = null)
+        {
+            int countr = 0;
+            string detections = "";
+            string lasttext = "";
+            string lastposition = "";
+
+            try
             {
-                System.IO.File.Delete(AppDomain.CurrentDomain.BaseDirectory + $"/cameras/{ name }.txt");
-            }
+                string InputImageFile = "";
 
-            //write config file
-            using (StreamWriter sw = System.IO.File.CreateText(AppDomain.CurrentDomain.BaseDirectory + $"/cameras/{ _name }.txt"))
-            {
-                name = _name;
-                prefix = _prefix;
-                triggering_objects_as_string = _triggering_objects_as_string;
-                trigger_urls_as_string = _trigger_urls_as_string;
-                telegram_enabled = _telegram_enabled;
-                enabled = _enabled;
-                cooldown_time = _cooldown_time;
-                threshold_lower = _threshold_lower;
-                threshold_upper = _threshold_upper;
-
-
-                triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
-
-                trigger_urls = trigger_urls_as_string.Replace(" ", "").Split(','); //all trigger urls in an array
-                trigger_urls = trigger_urls.Except(new string[] { "" }).ToArray(); //remove empty entries
-
-                //rewrite trigger_urls_as_string without possible empty entires
-                int i = 0;
-                trigger_urls_as_string = "";
-                foreach (string c in trigger_urls)
+                if (CurImg == null)
                 {
-                    trigger_urls_as_string += c;
-                    if(i < (trigger_urls.Length - 1))
+                    InputImageFile = this.last_image_file_with_detections;
+                }
+                else
+                {
+                    InputImageFile = CurImg.image_path;
+                }
+
+                if (File.Exists(InputImageFile))
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    using (Bitmap img = new Bitmap(InputImageFile))
                     {
-                        trigger_urls_as_string += ", ";
+                        using (Graphics g = Graphics.FromImage(img))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.SmoothingMode = SmoothingMode.HighQuality;
+                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                            //http://csharphelper.com/blog/2014/09/understand-font-aliasing-issues-in-c/
+                            g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+
+                            System.Drawing.Color color = new System.Drawing.Color();
+                            detections = this.last_detections_summary;
+                            if (string.IsNullOrEmpty(detections))
+                                detections = "";
+
+                            if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
+                            {
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                                detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                            }
+                            else
+                            {
+                                color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                            }
+
+                            //List<string> detectlist = Global.Split(detections, "|;");
+                            countr = this.last_detections.Count();
+
+                            //display a rectangle around each relevant object
+
+                            
+                            for (int i = 0; i < countr; i++)
+                            {
+                                //({ Math.Round((user.confidence * 100), 2).ToString() }%)
+                                lasttext = $"{this.last_detections[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, this.last_confidences[i] * 100)}";
+                                lastposition = this.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
+
+                                //store xmin, ymin, xmax, ymax in separate variables
+                                Int32.TryParse(lastposition.Split(',')[0], out int xmin);
+                                Int32.TryParse(lastposition.Split(',')[1], out int ymin);
+                                Int32.TryParse(lastposition.Split(',')[2], out int xmax);
+                                Int32.TryParse(lastposition.Split(',')[3], out int ymax);
+
+                                xmin = xmin + this.XOffset;
+                                ymin = ymin + this.YOffset;
+
+                                System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+
+                                
+
+                                using (Pen pen = new Pen(color, 2))
+                                {
+                                    g.DrawRectangle(pen, rect); //draw rectangle
+                                }
+
+                                //object name text below rectangle
+                                rect = new System.Drawing.Rectangle(xmin - 1, ymax, img.Width, img.Height); //sets bounding box for drawn text
+
+
+                                Brush brush = new SolidBrush(color); //sets background rectangle color
+
+                                System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                                g.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
+                                g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+
+                                g.Flush();
+
+                                //Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
+                            }
+
+                            if (countr > 0)
+                            {
+
+                                GraphicsState gs = g.Save();
+
+                                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+
+                                // Create an Encoder object based on the GUID  
+                                // for the Quality parameter category.  
+                                System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
+
+                                // Create an EncoderParameters object.  
+                                // An EncoderParameters object has an array of EncoderParameter  
+                                // objects. In this case, there is only one  
+                                // EncoderParameter object in the array.  
+                                EncoderParameters myEncoderParameters = new EncoderParameters(1);
+
+                                EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, this.Action_image_merge_jpegquality);  //100=least compression, largest file size, best quality
+                                myEncoderParameters.Param[0] = myEncoderParameter;
+
+                                bool Success = true;
+                                
+                                if (File.Exists(OutputImageFile))
+                                {
+                                    Success = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
+                                }
+
+                                if (Success)
+                                {
+                                    img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
+                                    Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");
+                                }
+                                else
+                                {
+                                    Global.Log($"Error: Could not gain access to write merged file {OutputImageFile}");
+                                }
+
+                            }
+                            else
+                            {
+                                Global.Log($"No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}");
+
+                            }
+
+                        }
+
                     }
-                    i++;
-                }
 
-                sw.WriteLine($"Trigger URL(s): \"{trigger_urls_as_string.Replace(", ,", "")}\" (input one or multiple urls, leave empty to disable; format: \"url, url, url\", example: \"http://192.168.1.133:80/admin?trigger&camera=frontyard&user=admin&pw=secretpassword, http://google.com\")");
-                sw.WriteLine($"Relevant objects: \"{triggering_objects_as_string}\" (format: \"object, object, ...\", options: see below, example: \"person, bicycle, car\")");
-                sw.WriteLine($"Input file begins with: \"{prefix}\" (only analyze images which names start with this text, leave empty to disable the feature, example: \"backyardcam\")");
-                if (telegram_enabled == true)
-                {
-                    sw.WriteLine("Send images to Telegram: \"yes\"(options: yes, no)");
                 }
                 else
                 {
-                    sw.WriteLine("Send images to Telegram: \"no\"(options: yes, no)");
+                    Global.Log("Error: could not find last image with detections: " + this.last_image_file_with_detections);
                 }
+            }
+            catch (Exception ex)
+            {
 
-                if (enabled == true)
-                {
-                    sw.WriteLine("ai detection enabled?: \"yes\"(options: yes, no)");
-                }
-                else
-                {
-                    sw.WriteLine("ai detection enabled?: \"no\"(options: yes, no)");
-                }
-                sw.WriteLine($"Cooldown time: \"{cooldown_time}\" minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one alert.)");
-                sw.WriteLine($"Certainty threshold: \"{threshold_lower},{threshold_upper}\" (format: \"lower % limit, upper % limit\")");
-                sw.WriteLine($"STATS: alerts,irrelevant alerts,false alerts: \"{stats_alerts.ToString()}, {stats_irrelevant_alerts.ToString()}, {stats_false_alerts.ToString()}\" ");
-
-
+                Global.Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex));
             }
         }
 
-        //delete config file
-        public void Delete()
+        private ImageCodecInfo GetEncoder(ImageFormat format)
         {
-            System.IO.File.Delete(AppDomain.CurrentDomain.BaseDirectory + $"/cameras/{ this.name }.txt");
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
         }
-
-        //read config from file
         public void ReadConfig(string config_path)
         {
             //retrieve whole config file content
@@ -121,8 +295,9 @@ namespace WindowsFormsApp2
 
             //read triggering objects
             triggering_objects_as_string = content[1].Split('"')[1].Replace(" ", ""); //take the second line, split it between every ", take the part after the first ", remove every " " in this part
-            triggering_objects = triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
-            
+            triggering_objects = Global.Split(triggering_objects_as_string, ",").ToArray(); //split the row of triggering objects between every ','
+
+            //input_path = AppSettings.Settings.input_path;
 
             //read trigger urls
             trigger_urls_as_string = content[0].Split('"')[1]; //takes the first line, cuts out everything between the first and the second " marker; all trigger urls in one string, ! still contains possible spaces etc.
@@ -188,21 +363,24 @@ namespace WindowsFormsApp2
         public void IncrementAlerts()
         {
             stats_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            AppSettings.Save();
+            //WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
         }
 
         //one alarm that contained no objects counter
         public void IncrementFalseAlerts()
         {
             stats_false_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            AppSettings.Save();
+            //WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
         }
 
         //one alarm that contained irrelevant objects counter
         public void IncrementIrrelevantAlerts()
         {
             stats_irrelevant_alerts++;
-            WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
+            AppSettings.Save();
+            //WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
         }
 
 

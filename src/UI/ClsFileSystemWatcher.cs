@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AITool
+{
+    public class ClsFileSystemWatcher
+    {
+        public string Name = "";
+        public string Path = "";
+        public bool IncludeSubdirectories = false;
+        public FileSystemWatcher watcher = null;
+        public ClsFileSystemWatcher(string Name, string Path, FileSystemWatcher Watcher, bool IncludeSubFolders)
+        {
+            this.Name = Name;
+            this.Path = Path;
+            this.watcher = Watcher;
+            this.IncludeSubdirectories = IncludeSubFolders;
+        }
+    }
+}
