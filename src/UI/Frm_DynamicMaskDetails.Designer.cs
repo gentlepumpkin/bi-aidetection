@@ -80,8 +80,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer1.Size = new System.Drawing.Size(745, 739);
-            this.splitContainer1.SplitterDistance = 368;
+            this.splitContainer1.Size = new System.Drawing.Size(567, 459);
+            this.splitContainer1.SplitterDistance = 228;
             this.splitContainer1.TabIndex = 0;
             // 
             // groupBox1
@@ -94,7 +94,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(745, 368);
+            this.groupBox1.Size = new System.Drawing.Size(567, 228);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "History";
@@ -110,7 +110,7 @@
             this.lblClearHistory.Location = new System.Drawing.Point(79, 0);
             this.lblClearHistory.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblClearHistory.Name = "lblClearHistory";
-            this.lblClearHistory.Size = new System.Drawing.Size(124, 25);
+            this.lblClearHistory.Size = new System.Drawing.Size(66, 13);
             this.lblClearHistory.TabIndex = 3;
             this.lblClearHistory.Text = "Clear History";
             this.lblClearHistory.Click += new System.EventHandler(this.lblClearHistory_Click);
@@ -121,11 +121,11 @@
             this.FOLV_MaskHistory.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FOLV_MaskHistory.EmptyListMsg = "None";
             this.FOLV_MaskHistory.HideSelection = false;
-            this.FOLV_MaskHistory.Location = new System.Drawing.Point(4, 26);
+            this.FOLV_MaskHistory.Location = new System.Drawing.Point(4, 17);
             this.FOLV_MaskHistory.Margin = new System.Windows.Forms.Padding(4);
             this.FOLV_MaskHistory.Name = "FOLV_MaskHistory";
             this.FOLV_MaskHistory.ShowGroups = false;
-            this.FOLV_MaskHistory.Size = new System.Drawing.Size(737, 338);
+            this.FOLV_MaskHistory.Size = new System.Drawing.Size(559, 207);
             this.FOLV_MaskHistory.TabIndex = 0;
             this.FOLV_MaskHistory.UseCompatibleStateImageBehavior = false;
             this.FOLV_MaskHistory.View = System.Windows.Forms.View.Details;
@@ -144,14 +144,14 @@
             this.staticMaskMenu.Name = "staticMaskMenu";
             this.staticMaskMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.staticMaskMenu.ShowImageMargin = false;
-            this.staticMaskMenu.Size = new System.Drawing.Size(379, 76);
+            this.staticMaskMenu.Size = new System.Drawing.Size(232, 48);
             this.staticMaskMenu.Opening += new System.ComponentModel.CancelEventHandler(this.staticMaskMenu_Opening);
             // 
             // createStaticMaskToolStripMenuItem
             // 
             this.createStaticMaskToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.createStaticMaskToolStripMenuItem.Name = "createStaticMaskToolStripMenuItem";
-            this.createStaticMaskToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
+            this.createStaticMaskToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.createStaticMaskToolStripMenuItem.Text = "Create Static Mask";
             this.createStaticMaskToolStripMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.createStaticMaskToolStripMenuItem.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem_Click);
@@ -159,7 +159,7 @@
             // createDynamicMaskTemporaryToolStripMenuItem
             // 
             this.createDynamicMaskTemporaryToolStripMenuItem.Name = "createDynamicMaskTemporaryToolStripMenuItem";
-            this.createDynamicMaskTemporaryToolStripMenuItem.Size = new System.Drawing.Size(378, 36);
+            this.createDynamicMaskTemporaryToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.createDynamicMaskTemporaryToolStripMenuItem.Text = "Create Dynamic Mask (Temporary)";
             this.createDynamicMaskTemporaryToolStripMenuItem.ToolTipText = "Forced creation of dynamic mask before conditions in settings are met.";
             this.createDynamicMaskTemporaryToolStripMenuItem.Click += new System.EventHandler(this.createDynamicMaskTemporaryToolStripMenuItem_Click);
@@ -170,10 +170,10 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.label3.Location = new System.Drawing.Point(661, 0);
+            this.label3.Location = new System.Drawing.Point(483, 0);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(79, 25);
+            this.label3.Size = new System.Drawing.Size(44, 13);
             this.label3.TabIndex = 2;
             this.label3.Text = "Refresh";
             this.label3.Click += new System.EventHandler(this.label3_Click);
@@ -187,7 +187,7 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(745, 367);
+            this.groupBox2.Size = new System.Drawing.Size(567, 227);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Active Masks";
@@ -202,7 +202,7 @@
             this.lblClearMasks.Location = new System.Drawing.Point(135, 0);
             this.lblClearMasks.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblClearMasks.Name = "lblClearMasks";
-            this.lblClearMasks.Size = new System.Drawing.Size(122, 25);
+            this.lblClearMasks.Size = new System.Drawing.Size(65, 13);
             this.lblClearMasks.TabIndex = 4;
             this.lblClearMasks.Text = "Clear Masks";
             this.lblClearMasks.Click += new System.EventHandler(this.lblClearMasks_Click);
@@ -213,11 +213,11 @@
             this.FOLV_Masks.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FOLV_Masks.EmptyListMsg = "Empty";
             this.FOLV_Masks.HideSelection = false;
-            this.FOLV_Masks.Location = new System.Drawing.Point(4, 26);
+            this.FOLV_Masks.Location = new System.Drawing.Point(4, 17);
             this.FOLV_Masks.Margin = new System.Windows.Forms.Padding(4);
             this.FOLV_Masks.Name = "FOLV_Masks";
             this.FOLV_Masks.ShowGroups = false;
-            this.FOLV_Masks.Size = new System.Drawing.Size(737, 337);
+            this.FOLV_Masks.Size = new System.Drawing.Size(559, 206);
             this.FOLV_Masks.TabIndex = 0;
             this.FOLV_Masks.UseCompatibleStateImageBehavior = false;
             this.FOLV_Masks.View = System.Windows.Forms.View.Details;
@@ -234,19 +234,19 @@
             this.createStaticMaskToolStripMenuItem1});
             this.removeMaskMenu.Name = "removeMaskMenu";
             this.removeMaskMenu.ShowImageMargin = false;
-            this.removeMaskMenu.Size = new System.Drawing.Size(233, 76);
+            this.removeMaskMenu.Size = new System.Drawing.Size(147, 48);
             // 
             // removeMaskToolStripMenuItem
             // 
             this.removeMaskToolStripMenuItem.Name = "removeMaskToolStripMenuItem";
-            this.removeMaskToolStripMenuItem.Size = new System.Drawing.Size(232, 36);
+            this.removeMaskToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.removeMaskToolStripMenuItem.Text = "Remove Mask";
             this.removeMaskToolStripMenuItem.Click += new System.EventHandler(this.removeMaskToolStripMenuItem_Click);
             // 
             // createStaticMaskToolStripMenuItem1
             // 
             this.createStaticMaskToolStripMenuItem1.Name = "createStaticMaskToolStripMenuItem1";
-            this.createStaticMaskToolStripMenuItem1.Size = new System.Drawing.Size(232, 36);
+            this.createStaticMaskToolStripMenuItem1.Size = new System.Drawing.Size(146, 22);
             this.createStaticMaskToolStripMenuItem1.Text = "Create Static Mask";
             this.createStaticMaskToolStripMenuItem1.Click += new System.EventHandler(this.createStaticMaskToolStripMenuItem1_Click);
             // 
@@ -255,7 +255,7 @@
             this.splitContainer2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer2.Location = new System.Drawing.Point(0, 54);
+            this.splitContainer2.Location = new System.Drawing.Point(4, 41);
             this.splitContainer2.Margin = new System.Windows.Forms.Padding(4);
             this.splitContainer2.Name = "splitContainer2";
             // 
@@ -267,8 +267,8 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.lbl_lastfile);
             this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
-            this.splitContainer2.Size = new System.Drawing.Size(1452, 739);
-            this.splitContainer2.SplitterDistance = 745;
+            this.splitContainer2.Size = new System.Drawing.Size(1106, 459);
+            this.splitContainer2.SplitterDistance = 567;
             this.splitContainer2.TabIndex = 1;
             // 
             // lbl_lastfile
@@ -276,7 +276,7 @@
             this.lbl_lastfile.AutoSize = true;
             this.lbl_lastfile.Location = new System.Drawing.Point(-2, 2);
             this.lbl_lastfile.Name = "lbl_lastfile";
-            this.lbl_lastfile.Size = new System.Drawing.Size(0, 25);
+            this.lbl_lastfile.Size = new System.Drawing.Size(0, 13);
             this.lbl_lastfile.TabIndex = 1;
             // 
             // pictureBox1
@@ -288,7 +288,7 @@
             this.pictureBox1.Location = new System.Drawing.Point(0, 31);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(703, 708);
+            this.pictureBox1.Size = new System.Drawing.Size(535, 428);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
@@ -303,7 +303,7 @@
             this.comboBox_filter_camera.Location = new System.Drawing.Point(4, 6);
             this.comboBox_filter_camera.Margin = new System.Windows.Forms.Padding(5);
             this.comboBox_filter_camera.Name = "comboBox_filter_camera";
-            this.comboBox_filter_camera.Size = new System.Drawing.Size(337, 39);
+            this.comboBox_filter_camera.Size = new System.Drawing.Size(196, 25);
             this.comboBox_filter_camera.TabIndex = 3;
             this.comboBox_filter_camera.SelectedIndexChanged += new System.EventHandler(this.comboBox_filter_camera_SelectedIndexChanged);
             this.comboBox_filter_camera.SelectionChangeCommitted += new System.EventHandler(this.comboBox_filter_camera_SelectionChangeCommitted);
@@ -311,10 +311,10 @@
             // BtnDynamicMaskingSettings
             // 
             this.BtnDynamicMaskingSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(355, 3);
+            this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(214, 3);
             this.BtnDynamicMaskingSettings.Margin = new System.Windows.Forms.Padding(9, 2, 9, 2);
             this.BtnDynamicMaskingSettings.Name = "BtnDynamicMaskingSettings";
-            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(108, 44);
+            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 30);
             this.BtnDynamicMaskingSettings.TabIndex = 23;
             this.BtnDynamicMaskingSettings.Text = "Settings";
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
@@ -323,7 +323,7 @@
             // Frm_DynamicMaskDetails
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.ClientSize = new System.Drawing.Size(1452, 793);
+            this.ClientSize = new System.Drawing.Size(1114, 504);
             this.Controls.Add(this.BtnDynamicMaskingSettings);
             this.Controls.Add(this.comboBox_filter_camera);
             this.Controls.Add(this.splitContainer2);

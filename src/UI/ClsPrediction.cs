@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,11 +46,11 @@ namespace AITool
         public int PointsOutsideImageMask { get; set; } = 0;
 
         public float Confidence { get; set; } = 0;
-        public string Filename { get; set; } = "";
         public int ymin { get; set; } = 0;
         public int xmin { get; set; } = 0;
         public int ymax { get; set; } = 0;
         public int xmax { get; set; } = 0;
+        public string Filename { get; set; } = "";
 
         public ClsPrediction()
         { 
@@ -82,6 +83,63 @@ namespace AITool
             this.AnalyzePrediction();
 
         }
+
+        //public List<ClsPrediction> HistToPredictionArray(History hist)
+        //{
+
+        //    List<ClsPrediction> ret = new List<ClsPrediction>();
+            
+        //    string positions = hist.Positions;
+        //    string detections = hist.Detections;
+
+        //    try
+        //    {
+        //        List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
+
+        //        int countr = positionssArray.Count();
+
+
+        //        if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence") || detections.Contains("error"))
+        //        {
+        //            detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+        //        }
+
+        //        List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
+                              
+
+        //        //display a rectangle around each relevant object
+        //        for (int i = 0; i < countr; i++)
+        //        {
+
+        //            //load 'xmin,ymin,xmax,ymax' from third column into a string
+        //            List<string> positionsplt = Global.Split(positionssArray[i], ",");
+
+        //            //store xmin, ymin, xmax, ymax in separate variables
+        //            Int32.TryParse(positionsplt[0], out int xmin);
+        //            Int32.TryParse(positionsplt[1], out int ymin);
+        //            Int32.TryParse(positionsplt[2], out int xmax);
+        //            Int32.TryParse(positionsplt[3], out int ymax);
+
+        //            ClsPrediction pred = new ClsPrediction();
+        //            pred.Label = Global.GetWordBetween(detectionsArray[i], "", " ");
+        //            pred.Confidence = Global.GetNumberInt(detectionsArray[i]);
+
+        //            showObject(e, color, xmin , ymin +, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
+
+        //        }
+
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //        Global.Log($"Error: Positions ='{positions}', Detections ='{detections}': {Global.ExMsg(ex)}");
+        //    }
+
+        //    return ret;
+
+
+        //}
 
         public void AnalyzePrediction()
         {

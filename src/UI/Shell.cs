@@ -57,12 +57,12 @@ namespace AITool
 
             Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending);
 
+            folv_history.EmptyListMsg = "Initializing database";
+
             cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
             cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
             cb_follow.Checked = AppSettings.Settings.HistoryFollow;
             automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
-
-            folv_history.EmptyListMsg = "Initializing database";
 
             Application.DoEvents();
 
@@ -93,7 +93,7 @@ namespace AITool
             //LoadFromCSV(); not neccessary because below, comboBox_filter_camera.SelectedIndex will call LoadFromCSV()
 
             //splitContainer1.Panel2Collapsed = true; //collapse filter panel under left list
-            comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
+            //comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
             comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
 
 
@@ -148,11 +148,18 @@ namespace AITool
                 LoadDeepStackTab(true);
             }
 
-
-            HistoryUpdateListTimer.Enabled = true;
             HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
-            HistoryUpdateListTimer.Start();
 
+            if (AppSettings.Settings.HistoryAutoRefresh)
+            {
+                HistoryUpdateListTimer.Enabled = true;
+                HistoryUpdateListTimer.Start();
+            }
+            else
+            {
+                HistoryUpdateListTimer.Enabled = false;
+                HistoryUpdateListTimer.Stop();
+            }
 
             LoadHistoryAsync(true, cb_follow.Checked);
 
@@ -833,6 +840,11 @@ namespace AITool
                         foreach (string detection in detections)
                         {
                             int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                            
+                            //fix temp bug from earlier where whole number percentages were multiplied by 100 when they shouldnt have been.
+                            if (x_value > 500)
+                                x_value = x_value / 100;
+
                             if (x_value > 0)
                             {
                                 //example: -> "person (41%)"
@@ -924,12 +936,30 @@ namespace AITool
         }
 
         //show rectangle overlay
-        private void showObject(PaintEventArgs e, System.Drawing.Color color, int _xmin, int _ymin, int _xmax, int _ymax, string text)
+        private void showObject(PaintEventArgs e, int _xmin, int _ymin, int _xmax, int _ymax, string text, ResultType result)
         {
             try
             {
                 if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0 && (pictureBox1 != null) && (pictureBox1.BackgroundImage != null))
                 {
+
+                    System.Drawing.Color color = new System.Drawing.Color();
+                    int BorderWidth = AppSettings.Settings.RectBorderWidth
+;
+
+                    if (result == ResultType.Relevant)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                    }
+                    else if (result == ResultType.DynamicMasked || result == ResultType.ImageMasked || result == ResultType.StaticMasked)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                    }
+                    else
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                    }
+
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
@@ -967,7 +997,7 @@ namespace AITool
 
                     //3. paint rectangle
                     System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-                    using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
+                    using (Pen pen = new Pen(color, BorderWidth))
                     {
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                     }
@@ -1006,59 +1036,87 @@ namespace AITool
                 string positions = hist.Positions;
                 string detections = hist.Detections;
 
+                int XOffset = 0;
+                int YOffset = 0;
+
+                Camera cam = AITOOL.GetCamera(hist.Camera);
+                if (cam != null)
+                {
+                    //apply offset if one is defined by user in json file
+                    XOffset = cam.XOffset;
+                    YOffset = cam.YOffset;
+                }
+
                 try
                 {
-                    List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
 
-                    int countr = positionssArray.Count();
-
-                    System.Drawing.Color color = new System.Drawing.Color();
-
-                    if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence"))
+                    if (!string.IsNullOrEmpty(hist.PredictionsJSON))
                     {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                        detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                        List<ClsPrediction> predictions = new List<ClsPrediction>();
+
+                        predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+
+                        foreach (var pred in predictions)
+                        {
+
+                            showObject(e, pred.xmin + XOffset, pred.ymin + YOffset, pred.xmax, pred.ymax, pred.ToString(),pred.Result); //call rectangle drawing method, calls appropriate detection text
+
+                        }
+
                     }
                     else
                     {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                        List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
+
+                        int countr = positionssArray.Count();
+
+                        ResultType result = ResultType.Unknown;
+
+                        if (detections.ToLower().Contains("irrelevant") || detections.ToLower().Contains("masked") || detections.ToLower().Contains("confidence"))
+                        {
+                            detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                            if (detections.Contains("masked"))
+                            {
+                                result = ResultType.ImageMasked;
+                            }
+                            else
+                            {
+                                result = ResultType.Unknown;
+                            }
+                        }
+                        else
+                        {
+                            result = ResultType.Relevant;
+                        }
+
+                        List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
+
+                        if (cam != null)
+                        {
+                            //apply offset if one is defined by user in json file
+                            XOffset = cam.XOffset;
+                            YOffset = cam.YOffset;
+                        }
+
+                        //display a rectangle around each relevant object
+                        for (int i = 0; i < countr; i++)
+                        {
+
+                            //load 'xmin,ymin,xmax,ymax' from third column into a string
+                            List<string> positionsplt = Global.Split(positionssArray[i], ",");
+
+                            //store xmin, ymin, xmax, ymax in separate variables
+                            Int32.TryParse(positionsplt[0], out int xmin);
+                            Int32.TryParse(positionsplt[1], out int ymin);
+                            Int32.TryParse(positionsplt[2], out int xmax);
+                            Int32.TryParse(positionsplt[3], out int ymax);
+
+
+                            showObject(e, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i], result); //call rectangle drawing method, calls appropriate detection text
+
+                        }
+
                     }
-
-                    List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
-
-
-                    int XOffset = 0;
-                    int YOffset = 0;
-
-                    Camera cam = AITOOL.GetCamera(hist.Camera);
-                    if (cam != null)
-                    {
-                        //apply offset if one is defined by user in json file
-                        XOffset = cam.XOffset;
-                        YOffset = cam.YOffset;
-                    }
-
-                    //display a rectangle around each relevant object
-                    for (int i = 0; i < countr; i++)
-                    {
-
-                        //load 'xmin,ymin,xmax,ymax' from third column into a string
-                        List<string> positionsplt = Global.Split(positionssArray[i], ",");
-
-                        //store xmin, ymin, xmax, ymax in separate variables
-                        Int32.TryParse(positionsplt[0], out int xmin);
-                        Int32.TryParse(positionsplt[1], out int ymin);
-                        Int32.TryParse(positionsplt[2], out int xmax);
-                        Int32.TryParse(positionsplt[3], out int ymax);
-
-
-                        showObject(e, color, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
-
-                    }
-
-                    //Log($"Debug: Positions (subitem4) ='{positions}', Detections (subitem3) ='{detections}'");
-                    //Debug: Positions (subitem4) ='', Detections (subitem3) ='false alert'
-                    //Debug: Positions (subitem4) ='952,184,1069,366;', Detections (subitem3) ='person (66%);'
 
 
                 }
@@ -1278,13 +1336,13 @@ namespace AITool
                 ret = false;
             else if (!hist.WasSkipped && cb_filter_skipped.Checked)
                 ret = false;
+            else if (!hist.WasMasked && cb_filter_masked.Checked)
+                ret = false;
             else if (!hist.IsPerson && cb_filter_person.Checked)
                 ret = false;
             else if (!hist.IsVehicle && cb_filter_vehicle.Checked)
                 ret = false;
             else if (!hist.IsAnimal && cb_filter_animal.Checked)
-                ret = false;
-            else if (!hist.WasMasked && cb_filter_masked.Checked)
                 ret = false;
 
             bool CameraValid = ((comboBox_filter_camera.Text.Trim() == "All Cameras") || hist.Camera.Trim().ToLower() == comboBox_filter_camera.Text.Trim().ToLower());
@@ -2085,7 +2143,7 @@ namespace AITool
 
         private void Shell_Load(object sender, EventArgs e)
         {
-            Global_GUI.RestoreWindowState(this);
+            //Global_GUI.RestoreWindowState(this);
         }
         private void SaveDeepStackTab()
         {
@@ -2617,6 +2675,7 @@ namespace AITool
                 if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
                 {
                     History hist = (History)folv_history.SelectedObjects[0];
+
                     if (!String.IsNullOrEmpty(hist.Filename) && hist.Filename.Contains("\\") && File.Exists(hist.Filename))
                     {
                         using (var img = new Bitmap(hist.Filename))
@@ -2849,9 +2908,15 @@ namespace AITool
         private void automaticallyRefreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (automaticallyRefreshToolStripMenuItem.Checked)
+            {
                 HistoryUpdateListTimer.Enabled = true;
+                HistoryUpdateListTimer.Start();
+            }
             else
+            {
                 HistoryUpdateListTimer.Enabled = false;
+                HistoryUpdateListTimer.Stop();
+            }
 
             AppSettings.Settings.HistoryAutoRefresh = automaticallyRefreshToolStripMenuItem.Checked;
             AppSettings.Save();

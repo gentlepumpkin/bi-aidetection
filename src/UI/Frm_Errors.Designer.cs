@@ -37,10 +37,10 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(532, 355);
+            this.button1.Location = new System.Drawing.Point(640, 247);
             this.button1.Margin = new System.Windows.Forms.Padding(5);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(107, 42);
+            this.button1.Size = new System.Drawing.Size(70, 30);
             this.button1.TabIndex = 4;
             this.button1.Text = "Open Log";
             this.button1.UseVisualStyleBackColor = true;
@@ -55,7 +55,7 @@
             this.folv_errors.Location = new System.Drawing.Point(12, 12);
             this.folv_errors.Name = "folv_errors";
             this.folv_errors.ShowGroups = false;
-            this.folv_errors.Size = new System.Drawing.Size(776, 333);
+            this.folv_errors.Size = new System.Drawing.Size(776, 227);
             this.folv_errors.TabIndex = 5;
             this.folv_errors.UseCompatibleStateImageBehavior = false;
             this.folv_errors.View = System.Windows.Forms.View.Details;
@@ -64,9 +64,9 @@
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(681, 355);
+            this.button2.Location = new System.Drawing.Point(718, 247);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(107, 42);
+            this.button2.Size = new System.Drawing.Size(70, 30);
             this.button2.TabIndex = 6;
             this.button2.Text = "Clear";
             this.button2.UseVisualStyleBackColor = true;
@@ -75,7 +75,7 @@
             // Frm_Errors
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.ClientSize = new System.Drawing.Size(800, 411);
+            this.ClientSize = new System.Drawing.Size(800, 289);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.folv_errors);
             this.Controls.Add(this.button1);

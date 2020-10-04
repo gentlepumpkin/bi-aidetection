@@ -42,7 +42,7 @@
             this.lbl_1.Location = new System.Drawing.Point(34, 20);
             this.lbl_1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.lbl_1.Name = "lbl_1";
-            this.lbl_1.Size = new System.Drawing.Size(512, 24);
+            this.lbl_1.Size = new System.Drawing.Size(328, 24);
             this.lbl_1.TabIndex = 0;
             this.lbl_1.Text = "label1";
             // 
@@ -53,7 +53,7 @@
             this.tb_1.Location = new System.Drawing.Point(34, 61);
             this.tb_1.Margin = new System.Windows.Forms.Padding(37, 6, 37, 6);
             this.tb_1.Name = "tb_1";
-            this.tb_1.Size = new System.Drawing.Size(499, 29);
+            this.tb_1.Size = new System.Drawing.Size(315, 20);
             this.tb_1.TabIndex = 1;
             this.tb_1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tb_1_KeyDown);
             // 
@@ -61,10 +61,10 @@
             // 
             this.btn_2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btn_2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btn_2.Location = new System.Drawing.Point(397, 125);
+            this.btn_2.Location = new System.Drawing.Point(292, 89);
             this.btn_2.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.btn_2.Name = "btn_2";
-            this.btn_2.Size = new System.Drawing.Size(137, 38);
+            this.btn_2.Size = new System.Drawing.Size(70, 30);
             this.btn_2.TabIndex = 4;
             this.btn_2.Text = "Cancel";
             this.btn_2.UseVisualStyleBackColor = true;
@@ -73,10 +73,10 @@
             // btn_1
             // 
             this.btn_1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_1.Location = new System.Drawing.Point(233, 125);
+            this.btn_1.Location = new System.Drawing.Point(212, 89);
             this.btn_1.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.btn_1.Name = "btn_1";
-            this.btn_1.Size = new System.Drawing.Size(137, 38);
+            this.btn_1.Size = new System.Drawing.Size(70, 30);
             this.btn_1.TabIndex = 3;
             this.btn_1.Text = "Ok";
             this.btn_1.UseVisualStyleBackColor = true;
@@ -91,7 +91,7 @@
             this.cb_1.Location = new System.Drawing.Point(34, 60);
             this.cb_1.Margin = new System.Windows.Forms.Padding(4);
             this.cb_1.Name = "cb_1";
-            this.cb_1.Size = new System.Drawing.Size(499, 32);
+            this.cb_1.Size = new System.Drawing.Size(328, 21);
             this.cb_1.TabIndex = 5;
             this.cb_1.SelectedIndexChanged += new System.EventHandler(this.cb_1_SelectedIndexChanged);
             this.cb_1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cb_1_KeyDown);
@@ -101,7 +101,7 @@
             this.AcceptButton = this.btn_1;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btn_2;
-            this.ClientSize = new System.Drawing.Size(582, 220);
+            this.ClientSize = new System.Drawing.Size(398, 134);
             this.ControlBox = false;
             this.Controls.Add(this.cb_1);
             this.Controls.Add(this.btn_2);

@@ -1085,10 +1085,11 @@ namespace AITool
                                                     objects.Add(pred.Label);
                                                     objects_confidence.Add(pred.Confidence);
                                                     objects_position.Add($"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}");
-                                                    clr = "{orange}";
+                                                    clr = $"{AppSettings.Settings.RectRelevantColor.Name}";
                                                 }
                                                 else
                                                 {
+                                                    clr = $"{AppSettings.Settings.RectIrrelevantColor.Name}";
                                                     irrelevant_objects.Add(pred.Label);
                                                     irrelevant_objects_confidence.Add(pred.Confidence);
                                                     string position = $"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}";
@@ -1098,8 +1099,9 @@ namespace AITool
                                                     {
                                                         threshold_counter++;
                                                     }
-                                                    else if (pred.Result.ToString().ToLower().Contains("masked"))
+                                                    else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked )
                                                     {
+                                                        clr = $"{AppSettings.Settings.RectMaskedColor.Name}";
                                                         masked_counter++;
                                                     }
                                                     else if (pred.Result == ResultType.UnwantedObject)

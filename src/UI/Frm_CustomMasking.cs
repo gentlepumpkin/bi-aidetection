@@ -29,8 +29,6 @@ namespace AITool
         public Frm_CustomMasking()
         {
             InitializeComponent();
-            DoubleBuffered = true;
-            this.maskfilename = AITOOL.GetMaskFile(this.cam.name);
         }
 
         private void ShowImage()
@@ -249,6 +247,7 @@ namespace AITool
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
             Global_GUI.RestoreWindowState(this);
+            this.maskfilename = AITOOL.GetMaskFile(this.cam.name);
 
             brushSize = cam.mask_brush_size;
             numBrushSize.Value = cam.mask_brush_size;
