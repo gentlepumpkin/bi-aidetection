@@ -82,7 +82,7 @@ namespace AITool
 					olv.Freeze();
 
 					olv.UpdateObjects(Collection);
-					
+
 					if (olv.Items.Count > 0)
 					{
 						if (Follow)
@@ -90,7 +90,7 @@ namespace AITool
 							olv.SelectedIndex = 0;  //olv.Items.Count - 1;
 							olv.EnsureModelVisible(olv.SelectedObject);
 						}
-						
+
 						//update column size only if did not restore folv state file or forced
 						if (olv.Tag == null || ResizeCols)
 						{
@@ -112,6 +112,102 @@ namespace AITool
 				finally
 				{
 					olv.Unfreeze();
+
+				}
+			});
+		}
+		public static void UpdateFOLV_AddObject(FastObjectListView olv, object obj, bool Follow = false)
+		{
+
+			Global_GUI.InvokeIFRequired(olv, () =>
+			{
+				try
+				{
+					olv.AddObject(obj);
+
+					if (Follow)
+					{
+						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+						olv.EnsureModelVisible(olv.SelectedObject);
+					}
+				}
+				catch (Exception ex)
+				{
+					Global.Log("Error: " + Global.ExMsg(ex));
+				}
+				finally
+				{
+
+				}
+			});
+		}
+		public static void UpdateFOLV_AddObjects(FastObjectListView olv, object[] objs, bool Follow)
+		{
+
+			Global_GUI.InvokeIFRequired(olv, () =>
+			{
+				try
+				{
+					olv.AddObjects(objs);
+
+					if (Follow)
+					{
+						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+						olv.EnsureModelVisible(olv.SelectedObject);
+					}
+				}
+				catch (Exception ex)
+				{
+					Global.Log("Error: " + Global.ExMsg(ex));
+				}
+				finally
+				{
+
+				}
+			});
+		}
+
+		public static void UpdateFOLV_DeleteObjects(FastObjectListView olv, object[] objs, bool Follow)
+		{
+
+			Global_GUI.InvokeIFRequired(olv, () =>
+			{
+				try
+				{
+					olv.RemoveObjects(objs);
+
+					if (Follow)
+					{
+						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+						olv.EnsureModelVisible(olv.SelectedObject);
+					}
+
+				}
+				catch (Exception ex)
+				{
+					Global.Log("Error: " + Global.ExMsg(ex));
+				}
+				finally
+				{
+
+				}
+			});
+		}
+		public static void UpdateFOLV_DeleteObject(FastObjectListView olv, object obj)
+		{
+
+			Global_GUI.InvokeIFRequired(olv, () =>
+			{
+				try
+				{
+					olv.RemoveObject(obj);
+				}
+				catch (Exception ex)
+				{
+					Global.Log("Error: " + Global.ExMsg(ex));
+				}
+				finally
+				{
 
 				}
 			});

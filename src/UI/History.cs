@@ -27,6 +27,7 @@ namespace AITool
         public bool IsAnimal { get; set; } = false;
         public bool WasMasked { get; set; } = false;
         public bool WasSkipped { get; set; } = false;
+        public bool HasError { get; set; } = false;
         public bool IsFace { get; set; } = false;
         public bool IsKnownFace { get; set; } = false;
         [SQLite.PrimaryKey, SQLite.Unique]  //cannot have indexed here also - pk auto creates index I think
@@ -164,6 +165,8 @@ namespace AITool
             this.WasMasked = tmp.Contains("mask");
 
             this.WasSkipped = tmp.Contains("skipped");
+
+            this.HasError = tmp.Contains("error");
         }
 
     }

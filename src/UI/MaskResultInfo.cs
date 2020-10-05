@@ -36,7 +36,9 @@ namespace AITool
         public bool IsMasked = false;
         public MaskType MaskType = MaskType.Unknown;
         public MaskResult Result = MaskResult.Unknown;
-        public int PointsOutsideImageMask = 0;
-    
+        public int Image_PointsOutsideMask = 0;
+        public int Dynamic_Threshold_Count = 0;
+
+
     }
 }

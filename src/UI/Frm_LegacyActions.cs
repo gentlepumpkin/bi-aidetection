@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,20 +83,38 @@ namespace AITool
             {
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
                 {
-                    Global.Log("------ TESTING TRIGGERS --------");
+                    Global.Log("----------------------- TESTING TRIGGERS ----------------------------");
 
-                    bool result = await AITOOL.Trigger(cam, null, true);
-
-                    Global.Log("------ DONE TESTING TRIGGERS --------");
-
-                    if (result)
+                    if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections) && File.Exists(this.cam.last_image_file_with_detections))
                     {
-                        MessageBox.Show($"Succeeded! See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        //test by copying the file as a new file into the watched folder'
+                        string folder = Path.GetDirectoryName(this.cam.last_image_file_with_detections);
+                        string filename = Path.GetFileNameWithoutExtension(this.cam.last_image_file_with_detections);
+                        string ext = Path.GetExtension(this.cam.last_image_file_with_detections);
+                        string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds}{ext}");
+                        File.Copy(this.cam.last_image_file_with_detections, testfile, true);
+                        string str = "Created test image file based on last detected object for the camera: " + testfile;
+                        Global.Log(str);
+                        MessageBox.Show(str, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
                     {
-                        MessageBox.Show($"Failed. See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        //do a generic test of the trigger
+                        bool result = await AITOOL.Trigger(cam, null, true);
+
+
+                        if (result)
+                        {
+                            MessageBox.Show($"Succeeded! See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Failed. See log for details.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+
                     }
+
+                    Global.Log("---------------------- DONE TESTING TRIGGERS -------------------------");
                 }
             }
             catch { }

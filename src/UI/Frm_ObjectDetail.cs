@@ -57,6 +57,39 @@ namespace AITool
             Global_GUI.SaveWindowState(this);
         }
 
-        
+        private void folv_ObjectDetail_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            FormatRow(sender, e);
+        }
+
+        private async void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            try
+            {
+                ClsPrediction OP = (ClsPrediction)e.Model;
+
+                // If SPI IsNot Nothing Then
+                if (OP.Result == ResultType.Relevant)
+                    e.Item.ForeColor = AppSettings.Settings.RectRelevantColor;
+                else if (OP.Result == ResultType.DynamicMasked || OP.Result == ResultType.ImageMasked || OP.Result == ResultType.StaticMasked)
+                    e.Item.ForeColor = AppSettings.Settings.RectMaskedColor;
+                else if (OP.Result == ResultType.Error)
+                {
+                    e.Item.ForeColor = Color.Black;
+                    e.Item.BackColor = Color.Red;
+                }
+                else
+                    e.Item.ForeColor = AppSettings.Settings.RectIrrelevantColor;
+            }
+
+
+
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+            }
+        }
     }
 }

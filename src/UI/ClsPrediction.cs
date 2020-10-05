@@ -41,9 +41,12 @@ namespace AITool
         public string Label { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
-        public MaskType MaskType { get; set; } = MaskType.Unknown;
-        public MaskResult MaskResult { get; set; } = MaskResult.Unknown;
-        public int PointsOutsideImageMask { get; set; } = 0;
+        public MaskType DynMaskType { get; set; } = MaskType.Unknown;
+        public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
+        public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
+        public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
+        public int Dynamic_Threshold_Count { get; set; } = 0;
+        public int Image_PointsOutsideMask { get; set; } = 0;
 
         public float Confidence { get; set; } = 0;
         public int ymin { get; set; } = 0;
@@ -168,15 +171,22 @@ namespace AITool
                                 {
                                     //creates history and masked lists for objects returned
                                     result = this._cam.maskManager.CreateDynamicMask(currentObject);
+                                    this.DynMaskResult = result.Result;
+                                    this.DynMaskType = result.MaskType;
+                                    this.Dynamic_Threshold_Count = result.Dynamic_Threshold_Count;
                                     //mark the end of AI detection for the current image
                                     this._cam.maskManager.lastDetectionDate = DateTime.Now;
                                 }
 
-                                //check the external image mask
+                                //check the external image mask IF the mask manager didnt flag anything
                                 if (!result.IsMasked)
                                 {
                                     //only if the object is outside of the masked area
                                     result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
+                                    this.ImgMaskResult = result.Result;
+                                    this.ImgMaskType = result.MaskType;
+                                    this.Image_PointsOutsideMask = result.Image_PointsOutsideMask;
+
                                     if (!result.IsMasked)
                                     {
                                         this.Result = ResultType.Relevant;
@@ -193,7 +203,17 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    this.Result = ResultType.Relevant;
+                                    //there is a dynamic or static mask
+                                    if (result.MaskType == MaskType.Dynamic)
+                                        this.Result = ResultType.DynamicMasked;
+                                    else if (result.MaskType == MaskType.Static)
+                                        this.Result = ResultType.StaticMasked;
+                                }
+
+                                if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
+                                {
+                                    this.Result = ResultType.Error;
+                                    Global.Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}");
                                 }
 
                             }
@@ -229,9 +249,6 @@ namespace AITool
                 this.Result = ResultType.Error;
             }
 
-            this.MaskResult = result.Result;
-            this.MaskType = result.MaskType;
-            this.PointsOutsideImageMask = result.PointsOutsideImageMask;
             
 
         }
@@ -276,6 +293,7 @@ namespace AITool
                      tmp.Equals("motorcycle") ||
                      tmp.Equals("horse") ||
                      tmp.Equals("boat") ||
+                     tmp.Equals("train") ||
                      tmp.Equals("airplane"))
                 this.ObjType = ObjectType.Vehicle;
             else

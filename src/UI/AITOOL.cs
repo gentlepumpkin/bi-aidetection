@@ -1085,23 +1085,23 @@ namespace AITool
                                                     objects.Add(pred.Label);
                                                     objects_confidence.Add(pred.Confidence);
                                                     objects_position.Add($"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}");
-                                                    clr = $"{AppSettings.Settings.RectRelevantColor.Name}";
+                                                    clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
                                                 }
                                                 else
                                                 {
-                                                    clr = $"{AppSettings.Settings.RectIrrelevantColor.Name}";
+                                                    clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
                                                     irrelevant_objects.Add(pred.Label);
                                                     irrelevant_objects_confidence.Add(pred.Confidence);
                                                     string position = $"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}";
                                                     irrelevant_objects_position.Add(position);
-
+                                                    
                                                     if (pred.Result == ResultType.NoConfidence)
                                                     {
                                                         threshold_counter++;
                                                     }
                                                     else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked )
                                                     {
-                                                        clr = $"{AppSettings.Settings.RectMaskedColor.Name}";
+                                                        clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
                                                         masked_counter++;
                                                     }
                                                     else if (pred.Result == ResultType.UnwantedObject)
@@ -1115,7 +1115,7 @@ namespace AITool
                                                     }
                                                 }
 
-                                                Log($"{CurSrv} -      {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', MaskResult='{pred.MaskResult}', MaskType='{pred.MaskType}'");
+                                                Log($"{CurSrv} -      {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'");
                                             }
 
                                             string PredictionsJSON = Global.GetJSONString(predictions);
@@ -1846,6 +1846,18 @@ namespace AITool
                         break;
                     }
                 }
+                if (string.IsNullOrEmpty(ret))
+                {
+                    //let it be a default file that doesnt exist:
+                    if (Directory.Exists(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "cameras")))
+                    {
+                        ret = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.bmp");
+                    }
+                    else
+                    {
+                        ret = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cameraname}.bmp");
+                    }
+                }
 
 
             }
@@ -1869,7 +1881,7 @@ namespace AITool
 
                 foundfile = GetMaskFile(cameraname);
 
-                if (!string.IsNullOrEmpty(foundfile))
+                if (System.IO.File.Exists(foundfile))
                 {
                     Log($"     ->Using found mask file {foundfile}...");
                     fileType = Path.GetExtension(foundfile).ToLower();
@@ -1917,24 +1929,24 @@ namespace AITool
                             //if the pixel is transparent (A refers to the alpha channel), the point is outside of masked area(s)
                             if (pixelColor.A < 10)
                             {
-                                ret.PointsOutsideImageMask++;
+                                ret.Image_PointsOutsideMask++;
                             }
                         }
                         else
                         {
                             if (pixelColor.A == 0)  // object is in a transparent section of the image (not masked)
                             {
-                                ret.PointsOutsideImageMask++;
+                                ret.Image_PointsOutsideMask++;
                             }
                         }
 
                     }
 
-                    if (ret.PointsOutsideImageMask > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
+                    if (ret.Image_PointsOutsideMask > 4) //if 5 or more of the 9 detection points are outside of masked areas, the majority of the object is outside of masked area(s)
                     {
-                        if (ret.PointsOutsideImageMask == 9)
+                        if (ret.Image_PointsOutsideMask == 9)
                         {
-                            Log($"      ->ALL of the object is OUTSIDE of masked area(s). ({ret.PointsOutsideImageMask} of 9 points)");
+                            Log($"      ->ALL of the object is OUTSIDE of masked area(s). ({ret.Image_PointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityOutsideMask;
@@ -1942,7 +1954,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"      ->Most of the object is OUTSIDE of masked area(s). ({ret.PointsOutsideImageMask} of 9 points)");
+                            Log($"      ->Most of the object is OUTSIDE of masked area(s). ({ret.Image_PointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyOutsideMask;
@@ -1952,9 +1964,9 @@ namespace AITool
 
                     else //if 4 or less of 9 detection points are outside, then 5 or more points are in masked areas and the majority of the object is so too
                     {
-                        if (ret.PointsOutsideImageMask == 0)
+                        if (ret.Image_PointsOutsideMask == 0)
                         {
-                            Log($"      ->All of the object is INSIDE a masked area. ({ret.PointsOutsideImageMask} of 9 points)");
+                            Log($"      ->All of the object is INSIDE a masked area. ({ret.Image_PointsOutsideMask} of 9 points)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyInsideMask;
@@ -1963,7 +1975,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"      ->Most of the object is INSIDE a masked area. ({ret.PointsOutsideImageMask} of 9 points)");
+                            Log($"      ->Most of the object is INSIDE a masked area. ({ret.Image_PointsOutsideMask} of 9 points)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityInsideMask;

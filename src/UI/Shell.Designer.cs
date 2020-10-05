@@ -88,9 +88,16 @@ namespace AITool
             this.cb_follow = new System.Windows.Forms.ToolStripMenuItem();
             this.automaticallyRefreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButtonDetails = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonMaskDetails = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonEditImageMask = new System.Windows.Forms.ToolStripButton();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
             this.folv_history = new BrightIdeasSoftware.FastObjectListView();
+            this.contextMenuStripHistory = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.testDetectionAgainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.detailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dynamicMaskDetailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
@@ -239,6 +246,7 @@ namespace AITool
             this.splitContainer2.SuspendLayout();
             this.groupBox8.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.folv_history)).BeginInit();
+            this.contextMenuStripHistory.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabCameras.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -727,7 +735,9 @@ namespace AITool
             this.toolStripSeparator1,
             this.toolStripDropDownButtonFilters,
             this.toolStripDropDownButtonOptions,
-            this.toolStripButtonDetails});
+            this.toolStripButtonDetails,
+            this.toolStripButtonMaskDetails,
+            this.toolStripButtonEditImageMask});
             this.toolStrip1.Location = new System.Drawing.Point(3, 3);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
@@ -881,6 +891,24 @@ namespace AITool
             this.toolStripButtonDetails.Text = "Prediction Details";
             this.toolStripButtonDetails.Click += new System.EventHandler(this.toolStripButtonDetails_Click);
             // 
+            // toolStripButtonMaskDetails
+            // 
+            this.toolStripButtonMaskDetails.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonMaskDetails.Image")));
+            this.toolStripButtonMaskDetails.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonMaskDetails.Name = "toolStripButtonMaskDetails";
+            this.toolStripButtonMaskDetails.Size = new System.Drawing.Size(155, 23);
+            this.toolStripButtonMaskDetails.Text = "Dynamic Mask Details";
+            this.toolStripButtonMaskDetails.Click += new System.EventHandler(this.toolStripButtonMaskDetails_Click);
+            // 
+            // toolStripButtonEditImageMask
+            // 
+            this.toolStripButtonEditImageMask.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonEditImageMask.Image")));
+            this.toolStripButtonEditImageMask.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonEditImageMask.Name = "toolStripButtonEditImageMask";
+            this.toolStripButtonEditImageMask.Size = new System.Drawing.Size(126, 23);
+            this.toolStripButtonEditImageMask.Text = "Edit Image Mask";
+            this.toolStripButtonEditImageMask.Click += new System.EventHandler(this.toolStripButtonEditImageMask_Click);
+            // 
             // splitContainer2
             // 
             this.splitContainer2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -921,6 +949,7 @@ namespace AITool
             // 
             // folv_history
             // 
+            this.folv_history.ContextMenuStrip = this.contextMenuStripHistory;
             this.folv_history.Dock = System.Windows.Forms.DockStyle.Fill;
             this.folv_history.Font = new System.Drawing.Font("Segoe UI", 9.75F);
             this.folv_history.HideSelection = false;
@@ -938,6 +967,45 @@ namespace AITool
             this.folv_history.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.folv_history_FormatRow);
             this.folv_history.SelectionChanged += new System.EventHandler(this.folv_history_SelectionChanged);
             this.folv_history.SelectedIndexChanged += new System.EventHandler(this.folv_history_SelectedIndexChanged);
+            this.folv_history.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.folv_history_MouseDoubleClick);
+            // 
+            // contextMenuStripHistory
+            // 
+            this.contextMenuStripHistory.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.testDetectionAgainToolStripMenuItem,
+            this.detailsToolStripMenuItem,
+            this.refreshToolStripMenuItem,
+            this.dynamicMaskDetailsToolStripMenuItem});
+            this.contextMenuStripHistory.Name = "contextMenuStripHistory";
+            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 92);
+            // 
+            // testDetectionAgainToolStripMenuItem
+            // 
+            this.testDetectionAgainToolStripMenuItem.Name = "testDetectionAgainToolStripMenuItem";
+            this.testDetectionAgainToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.testDetectionAgainToolStripMenuItem.Text = "Test Detection Again";
+            this.testDetectionAgainToolStripMenuItem.Click += new System.EventHandler(this.testDetectionAgainToolStripMenuItem_Click);
+            // 
+            // detailsToolStripMenuItem
+            // 
+            this.detailsToolStripMenuItem.Name = "detailsToolStripMenuItem";
+            this.detailsToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.detailsToolStripMenuItem.Text = "Prediction Details";
+            this.detailsToolStripMenuItem.Click += new System.EventHandler(this.detailsToolStripMenuItem_Click);
+            // 
+            // refreshToolStripMenuItem
+            // 
+            this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.refreshToolStripMenuItem.Text = "Refresh";
+            this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
+            // 
+            // dynamicMaskDetailsToolStripMenuItem
+            // 
+            this.dynamicMaskDetailsToolStripMenuItem.Name = "dynamicMaskDetailsToolStripMenuItem";
+            this.dynamicMaskDetailsToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.dynamicMaskDetailsToolStripMenuItem.Text = "Dynamic Mask Details";
+            this.dynamicMaskDetailsToolStripMenuItem.Click += new System.EventHandler(this.dynamicMaskDetailsToolStripMenuItem_Click);
             // 
             // lbl_objects
             // 
@@ -949,7 +1017,7 @@ namespace AITool
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(737, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(789, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -962,7 +1030,7 @@ namespace AITool
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(726, 400);
+            this.pictureBox1.Size = new System.Drawing.Size(778, 400);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2598,6 +2666,7 @@ namespace AITool
             // toolStripProgressBar1
             // 
             this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripProgressBar1.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.toolStripProgressBar1.Name = "toolStripProgressBar1";
             this.toolStripProgressBar1.Size = new System.Drawing.Size(114, 23);
             this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
@@ -2643,6 +2712,7 @@ namespace AITool
             this.splitContainer2.ResumeLayout(false);
             this.groupBox8.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.folv_history)).EndInit();
+            this.contextMenuStripHistory.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabCameras.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
@@ -2871,6 +2941,13 @@ namespace AITool
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelInfo;
         private System.Windows.Forms.ToolStripButton toolStripButtonDetails;
         private System.Windows.Forms.GroupBox groupBox8;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripHistory;
+        private System.Windows.Forms.ToolStripMenuItem testDetectionAgainToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem detailsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton toolStripButtonMaskDetails;
+        private System.Windows.Forms.ToolStripMenuItem dynamicMaskDetailsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton toolStripButtonEditImageMask;
     }
 }
 

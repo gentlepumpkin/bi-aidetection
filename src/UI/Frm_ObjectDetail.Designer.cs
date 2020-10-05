@@ -46,6 +46,7 @@
             this.folv_ObjectDetail.UseCompatibleStateImageBehavior = false;
             this.folv_ObjectDetail.View = System.Windows.Forms.View.Details;
             this.folv_ObjectDetail.VirtualMode = true;
+            this.folv_ObjectDetail.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.folv_ObjectDetail_FormatRow);
             // 
             // Frm_ObjectDetail
             // 

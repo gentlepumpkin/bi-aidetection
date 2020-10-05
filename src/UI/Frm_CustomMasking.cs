@@ -38,12 +38,17 @@ namespace AITool
                 //first check for saved image in cameras folder. If doesn't exist load the last camera image.
                 if (pbMaskImage.Tag == null || pbMaskImage.Tag.ToString().ToLower() != this.cam.last_image_file.ToLower())
                 {
+                    lbl_imagefile.Text = this.cam.last_image_file;
+                    pbMaskImage.Tag = this.cam.last_image_file;
+
                     if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)) && (File.Exists(this.cam.last_image_file)))
                     {
+                        lbl_imagefile.ForeColor = Color.Black;
+
                         cameraLayer = new Bitmap(this.cam.last_image_file);
 
                         //merge layer if masks exist
-                        if (!string.IsNullOrEmpty(this.maskfilename))
+                        if (File.Exists(this.maskfilename))
                         {
                             using (Bitmap maskLayer = new Bitmap(this.maskfilename)) 
                             {
@@ -56,6 +61,11 @@ namespace AITool
                             pbMaskImage.Image = new Bitmap(cameraLayer);
                             transparentLayer = new Bitmap(pbMaskImage.Image.Width, pbMaskImage.Image.Height, PixelFormat.Format32bppPArgb);
                         }
+                    }
+                    else
+                    {
+                        lbl_imagefile.ForeColor = Color.Gray;
+                        lbl_imagefile.Text += " (Missing)";
                     }
                 }
 
@@ -248,6 +258,15 @@ namespace AITool
         {
             Global_GUI.RestoreWindowState(this);
             this.maskfilename = AITOOL.GetMaskFile(this.cam.name);
+            this.lbl_maskfile.Text = this.maskfilename;
+
+            if (!File.Exists(this.maskfilename))
+            {
+                this.lbl_maskfile.ForeColor = Color.Gray;
+                lbl_maskfile.Text += " (Missing)";
+            }
+            else
+                this.lbl_maskfile.ForeColor = Color.Black;
 
             brushSize = cam.mask_brush_size;
             numBrushSize.Value = cam.mask_brush_size;
@@ -345,7 +364,7 @@ namespace AITool
             allPointLists.Clear();
 
             //if mask exists, delete it
-            if (!string.IsNullOrEmpty(this.maskfilename))
+            if (File.Exists(this.maskfilename))
             {
                 File.Delete(this.maskfilename);
             }

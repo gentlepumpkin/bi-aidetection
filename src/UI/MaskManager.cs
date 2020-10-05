@@ -15,19 +15,19 @@ namespace AITool
             set
             {
                 _masking_enabled = value;
-                if(_masking_enabled) cleanMaskTimer.Start();
+                if (_masking_enabled) cleanMaskTimer.Start();
                 else cleanMaskTimer.Stop();
             }
         }
 
         public int mask_remove_mins { get; set; } = 5;                    //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins { get; set; } = 5 ;                  //how long to store detected objects in history before purging list 
+        public int history_save_mins { get; set; } = 5;                  //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public int mask_save_mins { get; set; } = 2;
         public double thresholdPercent { get; set; } = 15;                //what percent can the selection rectangle vary to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
-        public DateTime lastDetectionDate { get; set; } 
+        public DateTime lastDetectionDate { get; set; }
         public string objects = "";
         public ObjectScale scaleConfig { get; set; }
 
@@ -35,7 +35,7 @@ namespace AITool
         private object MaskLockObject = new object();
         [JsonIgnore]
         private Timer cleanMaskTimer = new Timer();
-        
+
         //I think JsonConstructor may not be needed, but adding anyway -Vorlon
         [JsonConstructor]
         public MaskManager()
@@ -125,32 +125,32 @@ namespace AITool
 
             try
             {
-                List<string> objects = Global.Split(this.objects, "|;,");
-
-                if (objects.Count > 0)
+                lock (MaskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
-                    bool fnd = false;
-                    foreach (string objname in objects)
-                    {
-                        if (currentObject.label.Trim().ToLower() == objname.ToLower())
-                            fnd = true;
-                    }
-                    if (!fnd)
-                    {
-                        Global.Log($"Skipping mask creation because '{currentObject.label}' is not one of the configured objects: '{this.objects}'");
-                        ret.IsMasked = false;
-                        ret.MaskType = MaskType.Unknown;
-                        ret.Result = MaskResult.Unwanted;
-                        return ret;
-                    }
-                }
+                    List<string> objects = Global.Split(this.objects, "|;,");
 
-                Global.Log("*** Starting new object mask processing ***");
-                Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
-                currentObject.scaleConfig = scaleConfig;
+                    if (objects.Count > 0)
+                    {
+                        bool fnd = false;
+                        foreach (string objname in objects)
+                        {
+                            if (currentObject.label.Trim().ToLower() == objname.ToLower())
+                                fnd = true;
+                        }
+                        if (!fnd)
+                        {
+                            Global.Log($"Skipping mask creation because '{currentObject.label}' is not one of the configured objects: '{this.objects}'");
+                            ret.IsMasked = false;
+                            ret.MaskType = MaskType.Unknown;
+                            ret.Result = MaskResult.Unwanted;
+                            return ret;
+                        }
+                    }
 
-                lock (MaskLockObject)
-                {
+                    Global.Log("*** Starting new object mask processing ***");
+                    Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
+                    currentObject.scaleConfig = scaleConfig;
+
                     currentObject.thresholdPercent = thresholdPercent;
 
                     int historyIndex = last_positions_history.IndexOf(currentObject);
@@ -173,6 +173,7 @@ namespace AITool
 
                             ret.MaskType = MaskType.History;
                             ret.Result = MaskResult.ThresholdNotMet;
+                            ret.Dynamic_Threshold_Count = foundObject.counter;
                             ret.IsMasked = false;
                         }
                         else
@@ -184,6 +185,8 @@ namespace AITool
 
                             ret.MaskType = MaskType.Dynamic;
                             ret.Result = MaskResult.NewDynamicCreated;
+                            ret.Dynamic_Threshold_Count = foundObject.counter;
+
                             ret.IsMasked = true;
 
                         }
@@ -204,13 +207,19 @@ namespace AITool
 
                         Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.cameraName);
 
-                        if (maskedObject.isStatic)
-                            ret.MaskType = MaskType.Static;
-                        else
-                            ret.MaskType = MaskType.Dynamic;
-
                         ret.Result = MaskResult.Found;
                         ret.IsMasked = true;
+                        ret.Dynamic_Threshold_Count = maskedObject.counter;
+
+                        if (maskedObject.isStatic)
+                        {
+                            ret.MaskType = MaskType.Static;
+                        }
+                        else
+                        {
+                            ret.MaskType = MaskType.Dynamic;
+                        }
+
 
                     }
                     else
@@ -220,6 +229,7 @@ namespace AITool
 
                         ret.MaskType = MaskType.History;
                         ret.Result = MaskResult.New;
+                        ret.Dynamic_Threshold_Count = currentObject.counter;
                         ret.IsMasked = false;
 
                     }
@@ -293,7 +303,7 @@ namespace AITool
                             if (minutes >= mask_save_mins && !maskedObject.isStatic)
                             {
                                 Global.Log("Removing expired masked object: " + maskedObject.ToString());
-                               masked_positions.RemoveAt(x);
+                                masked_positions.RemoveAt(x);
                             }
                         }
                     }
