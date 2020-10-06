@@ -398,7 +398,13 @@ namespace AITool
                                         catch { errs++; }
                                     }
                                 }
-                                Global.Log($"...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+                                if (errs == 0)
+                                    Global.Log($"...Deleted {deleted} out of {filist.Count} files");
+                                else
+                                    Global.Log($"...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+
+
                             }
 
                         }
