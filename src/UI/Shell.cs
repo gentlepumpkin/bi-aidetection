@@ -973,7 +973,7 @@ namespace AITool
         {
             if (cb_showMask.Checked == true) //show overlay
             {
-                Log("Show mask toggled.");
+                //Log("Show mask toggled.");
 
                 if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
                 {

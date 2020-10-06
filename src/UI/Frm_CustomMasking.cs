@@ -38,12 +38,11 @@ namespace AITool
                 //first check for saved image in cameras folder. If doesn't exist load the last camera image.
                 if (pbMaskImage.Tag == null || pbMaskImage.Tag.ToString().ToLower() != this.cam.last_image_file.ToLower())
                 {
-                    lbl_imagefile.Text = this.cam.last_image_file;
                     pbMaskImage.Tag = this.cam.last_image_file;
 
                     if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)) && (File.Exists(this.cam.last_image_file)))
                     {
-                        lbl_imagefile.ForeColor = Color.Black;
+                        //lbl_imagefile.ForeColor = Color.Black;
 
                         cameraLayer = new Bitmap(this.cam.last_image_file);
 
@@ -64,8 +63,8 @@ namespace AITool
                     }
                     else
                     {
-                        lbl_imagefile.ForeColor = Color.Gray;
-                        lbl_imagefile.Text += " (Missing)";
+                        //lbl_imagefile.ForeColor = Color.Gray;
+                        //this.Text += " (Missing)";
                     }
                 }
 
@@ -258,15 +257,12 @@ namespace AITool
         {
             Global_GUI.RestoreWindowState(this);
             this.maskfilename = AITOOL.GetMaskFile(this.cam.name);
-            this.lbl_maskfile.Text = this.maskfilename;
+            this.Text = "Custom Masking - " + this.maskfilename; 
 
             if (!File.Exists(this.maskfilename))
             {
-                this.lbl_maskfile.ForeColor = Color.Gray;
-                lbl_maskfile.Text += " (Missing)";
+               this.Text += " (Missing)";
             }
-            else
-                this.lbl_maskfile.ForeColor = Color.Black;
 
             brushSize = cam.mask_brush_size;
             numBrushSize.Value = cam.mask_brush_size;
@@ -362,6 +358,8 @@ namespace AITool
         private void btnClear_Click(object sender, EventArgs e)
         {
             allPointLists.Clear();
+            
+            pbMaskImage.Tag = null;
 
             //if mask exists, delete it
             if (File.Exists(this.maskfilename))
