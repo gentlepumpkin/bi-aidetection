@@ -1070,14 +1070,16 @@ namespace AITool
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                     }
 
-                    //object name text below rectangle
-                    rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
+                    //we need this since people can change the border width in the json file
+                    int halfbrd = BorderWidth / 2;
 
+                    //object name text below rectangle
+                    rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
 
                     Brush brush = new SolidBrush(color); //sets background rectangle color
 
                     System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-                    e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
+                    e.Graphics.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
                     e.Graphics.DrawString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
 
 
@@ -3154,6 +3156,32 @@ namespace AITool
                 ShowEditImageMaskDialog(hist.Camera);
 
             }
+        }
+
+        private void btn_enabletelegram_Click(object sender, EventArgs e)
+        {
+            foreach (Camera cam in AppSettings.Settings.CameraList)
+            {
+                if (!cam.telegram_enabled)
+                {
+                    cam.telegram_enabled = true;
+                    Log($"Enabled Telegram on camera '{cam.name}'.");
+                }
+            }
+            AppSettings.Save();
+        }
+
+        private void btn_disabletelegram_Click(object sender, EventArgs e)
+        {
+            foreach (Camera cam in AppSettings.Settings.CameraList)
+            {
+                if (cam.telegram_enabled)
+                {
+                    cam.telegram_enabled = false;
+                    Log($"Disabled Telegram on camera '{cam.name}'.");
+                }
+            }
+            AppSettings.Save();
         }
     }
 

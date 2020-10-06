@@ -1683,10 +1683,12 @@ namespace AITool
                     //run external program
                     if (cam.Action_RunProgram && Trigger)
                     {
+                        string run = "";
+                        string param = "";
                         try
                         {
-                            string run = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramString);
-                            string param = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramArgsString);
+                            run = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramString);
+                            param = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramArgsString);
                             Log($"   Starting external app {run} {param}");
                             Process.Start(run, param);
                         }
@@ -1694,7 +1696,7 @@ namespace AITool
                         {
 
                             ret = false;
-                            Log($"Error: while running '{cam.Action_RunProgramString}', got: {Global.ExMsg(ex)}");
+                            Log($"Error: while running program '{run}' with params '{param}', got: {Global.ExMsg(ex)}");
                         }
                     }
 

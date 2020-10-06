@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Threading;
 using SixLabors.ImageSharp;
 using System.Collections.ObjectModel;
+using System.Windows.Forms;
 
 namespace AITool
 {
@@ -87,7 +88,7 @@ namespace AITool
 
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
             public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
-            public System.Drawing.Color RectMaskedColor = System.Drawing.Color.DarkGray;
+            public System.Drawing.Color RectMaskedColor = System.Drawing.Color.DarkSlateGray;
 
             public string image_copy_folder = "";
 
@@ -380,6 +381,24 @@ namespace AITool
                             {
                                 cam.cancel_urls_as_string = cam.trigger_urls_as_string;
                                 cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                            }
+
+                            if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
+                            {
+                                Global.Log($"Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
+
+                                List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
+                                int deleted = 0;
+                                int errs = 0;
+                                foreach (FileInfo fi in filist)
+                                {
+                                    if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
+                                    {
+                                        try { fi.Delete(); deleted++; }
+                                        catch { errs++; }
+                                    }
+                                }
+                                Global.Log($"...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
                             }
 
                         }
