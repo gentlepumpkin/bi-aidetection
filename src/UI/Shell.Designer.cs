@@ -31,26 +31,45 @@ namespace AITool
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Shell));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea7 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series17 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series18 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series19 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series20 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series21 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series22 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series23 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series24 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint7 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint8 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint9 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
-            System.Windows.Forms.DataVisualization.Charting.Title title3 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series11 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series12 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series13 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series14 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series15 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series16 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint4 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint5 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint dataPoint6 = new System.Windows.Forms.DataVisualization.Charting.DataPoint(1D, 30D);
+            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabOverview = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.lbl_version = new System.Windows.Forms.Label();
+            this.lbl_errors = new System.Windows.Forms.Label();
+            this.lbl_info = new System.Windows.Forms.Label();
+            this.lblQueue = new System.Windows.Forms.Label();
             this.tabStats = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel16 = new AITool.DBLayoutPanel(this.components);
+            this.tableLayoutPanel23 = new AITool.DBLayoutPanel(this.components);
+            this.label8 = new System.Windows.Forms.Label();
+            this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.label7 = new System.Windows.Forms.Label();
+            this.tableLayoutPanel17 = new AITool.DBLayoutPanel(this.components);
+            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.btn_resetstats = new System.Windows.Forms.Button();
             this.tabHistory = new System.Windows.Forms.TabPage();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.comboBox_filter_camera = new System.Windows.Forms.ToolStripComboBox();
@@ -82,66 +101,6 @@ namespace AITool
             this.lbl_objects = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tabSettings = new System.Windows.Forms.TabPage();
-            this.tabDeepStack = new System.Windows.Forms.TabPage();
-            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
-            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
-            this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
-            this.Btn_Save = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.Txt_APIKey = new System.Windows.Forms.TextBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.Chk_DetectionAPI = new System.Windows.Forms.CheckBox();
-            this.Chk_FaceAPI = new System.Windows.Forms.CheckBox();
-            this.Chk_SceneAPI = new System.Windows.Forms.CheckBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.Txt_AdminKey = new System.Windows.Forms.TextBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.RB_High = new System.Windows.Forms.RadioButton();
-            this.RB_Medium = new System.Windows.Forms.RadioButton();
-            this.RB_Low = new System.Windows.Forms.RadioButton();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.Txt_DeepStackInstallFolder = new System.Windows.Forms.TextBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.Txt_Port = new System.Windows.Forms.TextBox();
-            this.Chk_AutoStart = new System.Windows.Forms.CheckBox();
-            this.Btn_Start = new System.Windows.Forms.Button();
-            this.Btn_Stop = new System.Windows.Forms.Button();
-            this.tabLog = new System.Windows.Forms.TabPage();
-            this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.RTF_Log = new System.Windows.Forms.RichTextBox();
-            this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.HistoryImageList = new System.Windows.Forms.ImageList(this.components);
-            this.HistoryUpdateListTimer = new System.Windows.Forms.Timer(this.components);
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
-            this.tableLayoutPanel14 = new AITool.DBLayoutPanel(this.components);
-            this.tableLayoutPanel15 = new AITool.DBLayoutPanel(this.components);
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.lbl_version = new System.Windows.Forms.Label();
-            this.lbl_errors = new System.Windows.Forms.Label();
-            this.lbl_info = new System.Windows.Forms.Label();
-            this.lblQueue = new System.Windows.Forms.Label();
-            this.tableLayoutPanel16 = new AITool.DBLayoutPanel(this.components);
-            this.tableLayoutPanel23 = new AITool.DBLayoutPanel(this.components);
-            this.label8 = new System.Windows.Forms.Label();
-            this.chart_confidence = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.timeline = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.label7 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel17 = new AITool.DBLayoutPanel(this.components);
-            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.btn_resetstats = new System.Windows.Forms.Button();
             this.tableLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel3 = new AITool.DBLayoutPanel(this.components);
             this.list2 = new System.Windows.Forms.ListView();
@@ -199,6 +158,7 @@ namespace AITool
             this.lbl_threshold_upper = new System.Windows.Forms.Label();
             this.tb_threshold_upper = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
+            this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new AITool.DBLayoutPanel(this.components);
             this.BtnSettingsSave = new System.Windows.Forms.Button();
             this.tableLayoutPanel5 = new AITool.DBLayoutPanel(this.components);
@@ -229,9 +189,58 @@ namespace AITool
             this.cb_send_errors = new System.Windows.Forms.CheckBox();
             this.btn_enabletelegram = new System.Windows.Forms.Button();
             this.btn_disabletelegram = new System.Windows.Forms.Button();
+            this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.chk_HighPriority = new System.Windows.Forms.CheckBox();
+            this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
+            this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
+            this.Btn_Save = new System.Windows.Forms.Button();
+            this.label11 = new System.Windows.Forms.Label();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.Txt_APIKey = new System.Windows.Forms.TextBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.Chk_DetectionAPI = new System.Windows.Forms.CheckBox();
+            this.Chk_FaceAPI = new System.Windows.Forms.CheckBox();
+            this.Chk_SceneAPI = new System.Windows.Forms.CheckBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.Txt_AdminKey = new System.Windows.Forms.TextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.RB_High = new System.Windows.Forms.RadioButton();
+            this.RB_Medium = new System.Windows.Forms.RadioButton();
+            this.RB_Low = new System.Windows.Forms.RadioButton();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.Txt_DeepStackInstallFolder = new System.Windows.Forms.TextBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.Txt_Port = new System.Windows.Forms.TextBox();
+            this.Chk_AutoStart = new System.Windows.Forms.CheckBox();
+            this.Btn_Start = new System.Windows.Forms.Button();
+            this.Btn_Stop = new System.Windows.Forms.Button();
+            this.tabLog = new System.Windows.Forms.TabPage();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.RTF_Log = new System.Windows.Forms.RichTextBox();
+            this.Chk_AutoScroll = new System.Windows.Forms.CheckBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.HistoryImageList = new System.Windows.Forms.ImageList(this.components);
+            this.HistoryUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
+            this.tableLayoutPanel14.SuspendLayout();
+            this.tableLayoutPanel15.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.tabStats.SuspendLayout();
+            this.tableLayoutPanel16.SuspendLayout();
+            this.tableLayoutPanel23.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeline)).BeginInit();
+            this.tableLayoutPanel17.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.tabHistory.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
@@ -243,26 +252,6 @@ namespace AITool
             this.contextMenuStripHistory.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabCameras.SuspendLayout();
-            this.tabSettings.SuspendLayout();
-            this.tabDeepStack.SuspendLayout();
-            this.groupBox6.SuspendLayout();
-            this.groupBox1.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.tabLog.SuspendLayout();
-            this.groupBox7.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
-            this.tableLayoutPanel14.SuspendLayout();
-            this.tableLayoutPanel15.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            this.tableLayoutPanel16.SuspendLayout();
-            this.tableLayoutPanel23.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.timeline)).BeginInit();
-            this.tableLayoutPanel17.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
@@ -274,6 +263,7 @@ namespace AITool
             this.tableLayoutPanel26.SuspendLayout();
             this.tableLayoutPanel27.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.tabSettings.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel25.SuspendLayout();
@@ -281,6 +271,16 @@ namespace AITool
             this.dbLayoutPanel1.SuspendLayout();
             this.dbLayoutPanel2.SuspendLayout();
             this.dbLayoutPanel3.SuspendLayout();
+            this.tabDeepStack.SuspendLayout();
+            this.groupBox6.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.groupBox4.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            this.tabLog.SuspendLayout();
+            this.groupBox7.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -321,6 +321,148 @@ namespace AITool
             this.tabOverview.Text = "Overview";
             this.tabOverview.UseVisualStyleBackColor = true;
             // 
+            // tableLayoutPanel14
+            // 
+            this.tableLayoutPanel14.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel14.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel14.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
+            this.tableLayoutPanel14.ColumnCount = 1;
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 21F));
+            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 21F));
+            this.tableLayoutPanel14.Controls.Add(this.tableLayoutPanel15, 0, 0);
+            this.tableLayoutPanel14.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel14.Name = "tableLayoutPanel14";
+            this.tableLayoutPanel14.RowCount = 1;
+            this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel14.Size = new System.Drawing.Size(1023, 457);
+            this.tableLayoutPanel14.TabIndex = 3;
+            // 
+            // tableLayoutPanel15
+            // 
+            this.tableLayoutPanel15.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel15.ColumnCount = 1;
+            this.tableLayoutPanel15.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel15.Controls.Add(this.pictureBox2, 0, 0);
+            this.tableLayoutPanel15.Controls.Add(this.label2, 0, 2);
+            this.tableLayoutPanel15.Controls.Add(this.label3, 0, 1);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_version, 0, 5);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_errors, 0, 3);
+            this.tableLayoutPanel15.Controls.Add(this.lbl_info, 0, 5);
+            this.tableLayoutPanel15.Controls.Add(this.lblQueue, 0, 4);
+            this.tableLayoutPanel15.Location = new System.Drawing.Point(4, 4);
+            this.tableLayoutPanel15.Name = "tableLayoutPanel15";
+            this.tableLayoutPanel15.RowCount = 6;
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 47.14285F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 0.9523811F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 28.57143F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 13.80951F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 4.761905F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 4.761905F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
+            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel15.Size = new System.Drawing.Size(1015, 449);
+            this.tableLayoutPanel15.TabIndex = 0;
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox2.Image = global::AITool.Properties.Resources.logo;
+            this.pictureBox2.Location = new System.Drawing.Point(3, 67);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(1009, 131);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox2.TabIndex = 4;
+            this.pictureBox2.TabStop = false;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoEllipsis = true;
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.Color.Green;
+            this.label2.Location = new System.Drawing.Point(3, 205);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(1009, 32);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Running";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.label3.Location = new System.Drawing.Point(63, 201);
+            this.label3.Margin = new System.Windows.Forms.Padding(63, 0, 63, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(889, 2);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "label3";
+            // 
+            // lbl_version
+            // 
+            this.lbl_version.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_version.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lbl_version.Location = new System.Drawing.Point(3, 406);
+            this.lbl_version.Name = "lbl_version";
+            this.lbl_version.Size = new System.Drawing.Size(1009, 20);
+            this.lbl_version.TabIndex = 6;
+            this.lbl_version.Text = "Version 1.67 preview 7  (VorlonCD MOD)";
+            this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            // 
+            // lbl_errors
+            // 
+            this.lbl_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_errors.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_errors.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.lbl_errors.Location = new System.Drawing.Point(3, 327);
+            this.lbl_errors.Name = "lbl_errors";
+            this.lbl_errors.Size = new System.Drawing.Size(1009, 59);
+            this.lbl_errors.TabIndex = 7;
+            this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lbl_errors.Visible = false;
+            this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
+            // 
+            // lbl_info
+            // 
+            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_info.AutoSize = true;
+            this.lbl_info.Location = new System.Drawing.Point(3, 426);
+            this.lbl_info.Name = "lbl_info";
+            this.lbl_info.Size = new System.Drawing.Size(1009, 23);
+            this.lbl_info.TabIndex = 8;
+            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblQueue
+            // 
+            this.lblQueue.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblQueue.AutoSize = true;
+            this.lblQueue.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.lblQueue.ForeColor = System.Drawing.Color.DarkOrange;
+            this.lblQueue.Location = new System.Drawing.Point(3, 386);
+            this.lblQueue.Name = "lblQueue";
+            this.lblQueue.Size = new System.Drawing.Size(1009, 20);
+            this.lblQueue.TabIndex = 9;
+            this.lblQueue.Text = "Images in Queue: 0";
+            this.lblQueue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // tabStats
             // 
             this.tabStats.Controls.Add(this.tableLayoutPanel16);
@@ -330,6 +472,251 @@ namespace AITool
             this.tabStats.TabIndex = 5;
             this.tabStats.Text = "Stats";
             this.tabStats.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel16
+            // 
+            this.tableLayoutPanel16.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel16.ColumnCount = 2;
+            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel23, 0, 0);
+            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel17, 0, 0);
+            this.tableLayoutPanel16.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel16.Name = "tableLayoutPanel16";
+            this.tableLayoutPanel16.RowCount = 1;
+            this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel16.Size = new System.Drawing.Size(1020, 456);
+            this.tableLayoutPanel16.TabIndex = 0;
+            // 
+            // tableLayoutPanel23
+            // 
+            this.tableLayoutPanel23.ColumnCount = 1;
+            this.tableLayoutPanel23.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel23.Controls.Add(this.label8, 0, 2);
+            this.tableLayoutPanel23.Controls.Add(this.chart_confidence, 0, 2);
+            this.tableLayoutPanel23.Controls.Add(this.timeline, 0, 1);
+            this.tableLayoutPanel23.Controls.Add(this.label7, 0, 0);
+            this.tableLayoutPanel23.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel23.Location = new System.Drawing.Point(309, 3);
+            this.tableLayoutPanel23.Name = "tableLayoutPanel23";
+            this.tableLayoutPanel23.RowCount = 3;
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
+            this.tableLayoutPanel23.Size = new System.Drawing.Size(708, 450);
+            this.tableLayoutPanel23.TabIndex = 7;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label8.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(3, 228);
+            this.label8.Margin = new System.Windows.Forms.Padding(3);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(702, 29);
+            this.label8.TabIndex = 9;
+            this.label8.Text = "Frequencies of alert result confidences";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // chart_confidence
+            // 
+            this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
+            this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea4.AxisX.Interval = 10D;
+            chartArea4.AxisX.MajorGrid.Interval = 6D;
+            chartArea4.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea4.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea4.AxisX.MajorTickMark.Interval = 1D;
+            chartArea4.AxisX.Maximum = 100D;
+            chartArea4.AxisX.Minimum = 0D;
+            chartArea4.AxisX.Title = "Alert confidence";
+            chartArea4.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea4.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea4.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea4.AxisY.Title = "Frequency";
+            chartArea4.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea4.BackColor = System.Drawing.Color.Transparent;
+            chartArea4.Name = "ChartArea1";
+            this.chart_confidence.ChartAreas.Add(chartArea4);
+            this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chart_confidence.Location = new System.Drawing.Point(3, 263);
+            this.chart_confidence.Name = "chart_confidence";
+            series9.BorderWidth = 4;
+            series9.ChartArea = "ChartArea1";
+            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series9.Color = System.Drawing.Color.Orange;
+            series9.Name = "no alert";
+            series10.BorderWidth = 3;
+            series10.ChartArea = "ChartArea1";
+            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series10.Color = System.Drawing.Color.Green;
+            series10.Legend = "Legend1";
+            series10.Name = "alert";
+            this.chart_confidence.Series.Add(series9);
+            this.chart_confidence.Series.Add(series10);
+            this.chart_confidence.Size = new System.Drawing.Size(702, 184);
+            this.chart_confidence.TabIndex = 8;
+            // 
+            // timeline
+            // 
+            this.timeline.BackColor = System.Drawing.Color.Transparent;
+            this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea5.AxisX.Interval = 3D;
+            chartArea5.AxisX.MajorGrid.Interval = 6D;
+            chartArea5.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea5.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
+            chartArea5.AxisX.MajorTickMark.Interval = 1D;
+            chartArea5.AxisX.Maximum = 24D;
+            chartArea5.AxisX.Minimum = 0D;
+            chartArea5.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea5.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea5.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            chartArea5.AxisY.Title = "Number";
+            chartArea5.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            chartArea5.BackColor = System.Drawing.Color.Transparent;
+            chartArea5.Name = "ChartArea1";
+            this.timeline.ChartAreas.Add(chartArea5);
+            this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.timeline.Location = new System.Drawing.Point(3, 38);
+            this.timeline.Name = "timeline";
+            series11.ChartArea = "ChartArea1";
+            series11.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
+            series11.Color = System.Drawing.Color.Silver;
+            series11.Legend = "Legend1";
+            series11.Name = "all";
+            series12.BorderWidth = 3;
+            series12.ChartArea = "ChartArea1";
+            series12.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series12.Color = System.Drawing.Color.OrangeRed;
+            series12.Legend = "Legend1";
+            series12.Name = "falses";
+            series13.BorderWidth = 3;
+            series13.ChartArea = "ChartArea1";
+            series13.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series13.Color = System.Drawing.Color.Orange;
+            series13.Legend = "Legend1";
+            series13.Name = "irrelevant";
+            series14.BorderWidth = 4;
+            series14.ChartArea = "ChartArea1";
+            series14.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series14.Color = System.Drawing.Color.Green;
+            series14.Legend = "Legend1";
+            series14.Name = "relevant";
+            series15.ChartArea = "ChartArea1";
+            series15.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series15.Color = System.Drawing.Color.Purple;
+            series15.Name = "skipped";
+            this.timeline.Series.Add(series11);
+            this.timeline.Series.Add(series12);
+            this.timeline.Series.Add(series13);
+            this.timeline.Series.Add(series14);
+            this.timeline.Series.Add(series15);
+            this.timeline.Size = new System.Drawing.Size(702, 184);
+            this.timeline.TabIndex = 6;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(3, 3);
+            this.label7.Margin = new System.Windows.Forms.Padding(3);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(702, 29);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "Timeline";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // tableLayoutPanel17
+            // 
+            this.tableLayoutPanel17.ColumnCount = 1;
+            this.tableLayoutPanel17.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel17.Controls.Add(this.chart1, 0, 2);
+            this.tableLayoutPanel17.Controls.Add(this.comboBox1, 0, 0);
+            this.tableLayoutPanel17.Controls.Add(this.btn_resetstats, 0, 1);
+            this.tableLayoutPanel17.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel17.Name = "tableLayoutPanel17";
+            this.tableLayoutPanel17.RowCount = 3;
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel17.Size = new System.Drawing.Size(300, 450);
+            this.tableLayoutPanel17.TabIndex = 3;
+            // 
+            // chart1
+            // 
+            this.chart1.BackColor = System.Drawing.Color.Transparent;
+            this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
+            chartArea6.Area3DStyle.Enable3D = true;
+            chartArea6.Area3DStyle.Inclination = 35;
+            chartArea6.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
+            chartArea6.BackColor = System.Drawing.Color.Transparent;
+            chartArea6.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea6);
+            this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
+            legend2.Alignment = System.Drawing.StringAlignment.Center;
+            legend2.BackColor = System.Drawing.Color.Transparent;
+            legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            legend2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            legend2.IsTextAutoFit = false;
+            legend2.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
+            legend2.Name = "Legend1";
+            this.chart1.Legends.Add(legend2);
+            this.chart1.Location = new System.Drawing.Point(3, 59);
+            this.chart1.Name = "chart1";
+            series16.ChartArea = "ChartArea1";
+            series16.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
+            series16.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            series16.IsValueShownAsLabel = true;
+            series16.Legend = "Legend1";
+            series16.Name = "s1";
+            dataPoint4.IsVisibleInLegend = true;
+            series16.Points.Add(dataPoint4);
+            series16.Points.Add(dataPoint5);
+            series16.Points.Add(dataPoint6);
+            this.chart1.Series.Add(series16);
+            this.chart1.Size = new System.Drawing.Size(294, 388);
+            this.chart1.TabIndex = 2;
+            this.chart1.Text = "chart1";
+            title2.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            title2.Name = "Title1";
+            title2.Text = "Input Rates";
+            this.chart1.Titles.Add(title2);
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(3, 3);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(294, 25);
+            this.comboBox1.TabIndex = 3;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
+            this.comboBox1.SelectionChangeCommitted += new System.EventHandler(this.comboBox1_SelectionChangeCommitted);
+            // 
+            // btn_resetstats
+            // 
+            this.btn_resetstats.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_resetstats.Location = new System.Drawing.Point(2, 33);
+            this.btn_resetstats.Margin = new System.Windows.Forms.Padding(2);
+            this.btn_resetstats.Name = "btn_resetstats";
+            this.btn_resetstats.Size = new System.Drawing.Size(296, 21);
+            this.btn_resetstats.TabIndex = 4;
+            this.btn_resetstats.Text = "Reset Stats";
+            this.btn_resetstats.UseVisualStyleBackColor = true;
+            this.btn_resetstats.Click += new System.EventHandler(this.btn_resetstats_Click);
             // 
             // tabHistory
             // 
@@ -645,7 +1032,7 @@ namespace AITool
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(805, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(809, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -658,7 +1045,7 @@ namespace AITool
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(737, 392);
+            this.pictureBox1.Size = new System.Drawing.Size(741, 392);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -674,854 +1061,6 @@ namespace AITool
             this.tabCameras.Size = new System.Drawing.Size(1023, 459);
             this.tabCameras.TabIndex = 2;
             this.tabCameras.Text = "Cameras";
-            // 
-            // tabSettings
-            // 
-            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
-            this.tabSettings.Location = new System.Drawing.Point(4, 22);
-            this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Size = new System.Drawing.Size(1023, 459);
-            this.tabSettings.TabIndex = 3;
-            this.tabSettings.Text = "Settings";
-            this.tabSettings.UseVisualStyleBackColor = true;
-            // 
-            // tabDeepStack
-            // 
-            this.tabDeepStack.Controls.Add(this.chk_HighPriority);
-            this.tabDeepStack.Controls.Add(this.Chk_DSDebug);
-            this.tabDeepStack.Controls.Add(this.Lbl_BlueStackRunning);
-            this.tabDeepStack.Controls.Add(this.Btn_Save);
-            this.tabDeepStack.Controls.Add(this.label11);
-            this.tabDeepStack.Controls.Add(this.groupBox6);
-            this.tabDeepStack.Controls.Add(this.groupBox1);
-            this.tabDeepStack.Controls.Add(this.groupBox5);
-            this.tabDeepStack.Controls.Add(this.groupBox2);
-            this.tabDeepStack.Controls.Add(this.groupBox4);
-            this.tabDeepStack.Controls.Add(this.groupBox3);
-            this.tabDeepStack.Controls.Add(this.Chk_AutoStart);
-            this.tabDeepStack.Controls.Add(this.Btn_Start);
-            this.tabDeepStack.Controls.Add(this.Btn_Stop);
-            this.tabDeepStack.Location = new System.Drawing.Point(4, 22);
-            this.tabDeepStack.Margin = new System.Windows.Forms.Padding(2);
-            this.tabDeepStack.Name = "tabDeepStack";
-            this.tabDeepStack.Size = new System.Drawing.Size(1023, 459);
-            this.tabDeepStack.TabIndex = 6;
-            this.tabDeepStack.Text = "DeepStack";
-            this.tabDeepStack.UseVisualStyleBackColor = true;
-            // 
-            // chk_HighPriority
-            // 
-            this.chk_HighPriority.AutoSize = true;
-            this.chk_HighPriority.Location = new System.Drawing.Point(342, 301);
-            this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
-            this.chk_HighPriority.Name = "chk_HighPriority";
-            this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
-            this.chk_HighPriority.TabIndex = 15;
-            this.chk_HighPriority.Text = "Run high priority";
-            this.chk_HighPriority.UseVisualStyleBackColor = true;
-            // 
-            // Chk_DSDebug
-            // 
-            this.Chk_DSDebug.AutoSize = true;
-            this.Chk_DSDebug.Location = new System.Drawing.Point(206, 301);
-            this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_DSDebug.Name = "Chk_DSDebug";
-            this.Chk_DSDebug.Size = new System.Drawing.Size(113, 17);
-            this.Chk_DSDebug.TabIndex = 14;
-            this.Chk_DSDebug.Text = "Debug Deepstack";
-            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
-        "ersion, installed on same machine)");
-            this.Chk_DSDebug.UseVisualStyleBackColor = true;
-            // 
-            // Lbl_BlueStackRunning
-            // 
-            this.Lbl_BlueStackRunning.AutoSize = true;
-            this.Lbl_BlueStackRunning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(282, 348);
-            this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
-            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(105, 13);
-            this.Lbl_BlueStackRunning.TabIndex = 13;
-            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
-            // 
-            // Btn_Save
-            // 
-            this.Btn_Save.Location = new System.Drawing.Point(191, 338);
-            this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
-            this.Btn_Save.Name = "Btn_Save";
-            this.Btn_Save.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Save.TabIndex = 12;
-            this.Btn_Save.Text = "Save";
-            this.Btn_Save.UseVisualStyleBackColor = true;
-            this.Btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
-            // 
-            // label11
-            // 
-            this.label11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label11.ForeColor = System.Drawing.Color.RoyalBlue;
-            this.label11.Location = new System.Drawing.Point(6, 10);
-            this.label11.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(727, 34);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "When the WINDOWS version of DeepStack will be running on the same machine as AI T" +
-    "ool, this tab can replace the DeepStack UI. (Deepstack.exe) - No control over Do" +
-    "cker version yet.";
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Controls.Add(this.Txt_APIKey);
-            this.groupBox6.Location = new System.Drawing.Point(11, 146);
-            this.groupBox6.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox6.Size = new System.Drawing.Size(483, 45);
-            this.groupBox6.TabIndex = 11;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "API Key (Optional)";
-            // 
-            // Txt_APIKey
-            // 
-            this.Txt_APIKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_APIKey.Location = new System.Drawing.Point(7, 17);
-            this.Txt_APIKey.Margin = new System.Windows.Forms.Padding(2);
-            this.Txt_APIKey.Name = "Txt_APIKey";
-            this.Txt_APIKey.Size = new System.Drawing.Size(472, 20);
-            this.Txt_APIKey.TabIndex = 0;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
-            this.groupBox1.Controls.Add(this.Chk_FaceAPI);
-            this.groupBox1.Controls.Add(this.Chk_SceneAPI);
-            this.groupBox1.Location = new System.Drawing.Point(8, 203);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(162, 88);
-            this.groupBox1.TabIndex = 3;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "API";
-            // 
-            // Chk_DetectionAPI
-            // 
-            this.Chk_DetectionAPI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Chk_DetectionAPI.Location = new System.Drawing.Point(11, 63);
-            this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
-            this.Chk_DetectionAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_DetectionAPI.TabIndex = 2;
-            this.Chk_DetectionAPI.Text = "Detection API";
-            this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
-            // 
-            // Chk_FaceAPI
-            // 
-            this.Chk_FaceAPI.Location = new System.Drawing.Point(11, 40);
-            this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_FaceAPI.Name = "Chk_FaceAPI";
-            this.Chk_FaceAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_FaceAPI.TabIndex = 1;
-            this.Chk_FaceAPI.Text = "Face API";
-            this.Chk_FaceAPI.UseVisualStyleBackColor = true;
-            // 
-            // Chk_SceneAPI
-            // 
-            this.Chk_SceneAPI.Location = new System.Drawing.Point(11, 17);
-            this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_SceneAPI.Name = "Chk_SceneAPI";
-            this.Chk_SceneAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_SceneAPI.TabIndex = 0;
-            this.Chk_SceneAPI.Text = "Scene API";
-            this.Chk_SceneAPI.UseVisualStyleBackColor = true;
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.Txt_AdminKey);
-            this.groupBox5.Location = new System.Drawing.Point(11, 96);
-            this.groupBox5.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox5.Size = new System.Drawing.Size(483, 45);
-            this.groupBox5.TabIndex = 10;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Admin Key (Optional)";
-            // 
-            // Txt_AdminKey
-            // 
-            this.Txt_AdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_AdminKey.Location = new System.Drawing.Point(7, 16);
-            this.Txt_AdminKey.Margin = new System.Windows.Forms.Padding(2);
-            this.Txt_AdminKey.Name = "Txt_AdminKey";
-            this.Txt_AdminKey.Size = new System.Drawing.Size(472, 20);
-            this.Txt_AdminKey.TabIndex = 0;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.RB_High);
-            this.groupBox2.Controls.Add(this.RB_Medium);
-            this.groupBox2.Controls.Add(this.RB_Low);
-            this.groupBox2.Location = new System.Drawing.Point(175, 203);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Size = new System.Drawing.Size(154, 88);
-            this.groupBox2.TabIndex = 4;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Mode";
-            // 
-            // RB_High
-            // 
-            this.RB_High.Location = new System.Drawing.Point(11, 63);
-            this.RB_High.Margin = new System.Windows.Forms.Padding(2);
-            this.RB_High.Name = "RB_High";
-            this.RB_High.Size = new System.Drawing.Size(139, 19);
-            this.RB_High.TabIndex = 3;
-            this.RB_High.TabStop = true;
-            this.RB_High.Text = "High";
-            this.RB_High.UseVisualStyleBackColor = true;
-            // 
-            // RB_Medium
-            // 
-            this.RB_Medium.Location = new System.Drawing.Point(11, 40);
-            this.RB_Medium.Margin = new System.Windows.Forms.Padding(2);
-            this.RB_Medium.Name = "RB_Medium";
-            this.RB_Medium.Size = new System.Drawing.Size(139, 19);
-            this.RB_Medium.TabIndex = 2;
-            this.RB_Medium.TabStop = true;
-            this.RB_Medium.Text = "Medium";
-            this.RB_Medium.UseVisualStyleBackColor = true;
-            // 
-            // RB_Low
-            // 
-            this.RB_Low.Location = new System.Drawing.Point(11, 17);
-            this.RB_Low.Margin = new System.Windows.Forms.Padding(2);
-            this.RB_Low.Name = "RB_Low";
-            this.RB_Low.Size = new System.Drawing.Size(139, 19);
-            this.RB_Low.TabIndex = 1;
-            this.RB_Low.TabStop = true;
-            this.RB_Low.Text = "Low";
-            this.RB_Low.UseVisualStyleBackColor = true;
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.Txt_DeepStackInstallFolder);
-            this.groupBox4.Location = new System.Drawing.Point(11, 47);
-            this.groupBox4.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox4.Size = new System.Drawing.Size(483, 45);
-            this.groupBox4.TabIndex = 9;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "DeepStack Install Folder";
-            // 
-            // Txt_DeepStackInstallFolder
-            // 
-            this.Txt_DeepStackInstallFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_DeepStackInstallFolder.Location = new System.Drawing.Point(7, 17);
-            this.Txt_DeepStackInstallFolder.Margin = new System.Windows.Forms.Padding(2);
-            this.Txt_DeepStackInstallFolder.Name = "Txt_DeepStackInstallFolder";
-            this.Txt_DeepStackInstallFolder.ReadOnly = true;
-            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(472, 20);
-            this.Txt_DeepStackInstallFolder.TabIndex = 2;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.Txt_Port);
-            this.groupBox3.Location = new System.Drawing.Point(342, 203);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox3.Size = new System.Drawing.Size(151, 88);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Port";
-            // 
-            // Txt_Port
-            // 
-            this.Txt_Port.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Txt_Port.Location = new System.Drawing.Point(10, 19);
-            this.Txt_Port.Margin = new System.Windows.Forms.Padding(2);
-            this.Txt_Port.Name = "Txt_Port";
-            this.Txt_Port.Size = new System.Drawing.Size(127, 20);
-            this.Txt_Port.TabIndex = 0;
-            // 
-            // Chk_AutoStart
-            // 
-            this.Chk_AutoStart.AutoSize = true;
-            this.Chk_AutoStart.Location = new System.Drawing.Point(13, 301);
-            this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_AutoStart.Name = "Chk_AutoStart";
-            this.Chk_AutoStart.Size = new System.Drawing.Size(170, 17);
-            this.Chk_AutoStart.TabIndex = 8;
-            this.Chk_AutoStart.Text = "Automatically Start DeepStack";
-            this.Chk_AutoStart.UseVisualStyleBackColor = true;
-            // 
-            // Btn_Start
-            // 
-            this.Btn_Start.Location = new System.Drawing.Point(8, 338);
-            this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
-            this.Btn_Start.Name = "Btn_Start";
-            this.Btn_Start.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Start.TabIndex = 6;
-            this.Btn_Start.Text = "Start";
-            this.Btn_Start.UseVisualStyleBackColor = true;
-            this.Btn_Start.Click += new System.EventHandler(this.Btn_Start_Click);
-            // 
-            // Btn_Stop
-            // 
-            this.Btn_Stop.Location = new System.Drawing.Point(99, 338);
-            this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
-            this.Btn_Stop.Name = "Btn_Stop";
-            this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Stop.TabIndex = 7;
-            this.Btn_Stop.Text = "Stop";
-            this.Btn_Stop.UseVisualStyleBackColor = true;
-            this.Btn_Stop.Click += new System.EventHandler(this.Btn_Stop_Click);
-            // 
-            // tabLog
-            // 
-            this.tabLog.Controls.Add(this.groupBox7);
-            this.tabLog.Controls.Add(this.Chk_AutoScroll);
-            this.tabLog.Controls.Add(this.button1);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
-            this.tabLog.Margin = new System.Windows.Forms.Padding(2);
-            this.tabLog.Name = "tabLog";
-            this.tabLog.Size = new System.Drawing.Size(1023, 459);
-            this.tabLog.TabIndex = 7;
-            this.tabLog.Text = "Log";
-            this.tabLog.UseVisualStyleBackColor = true;
-            this.tabLog.Click += new System.EventHandler(this.tabLog_Click);
-            // 
-            // groupBox7
-            // 
-            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox7.Controls.Add(this.RTF_Log);
-            this.groupBox7.Location = new System.Drawing.Point(5, 42);
-            this.groupBox7.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox7.Size = new System.Drawing.Size(1017, 412);
-            this.groupBox7.TabIndex = 5;
-            this.groupBox7.TabStop = false;
-            this.groupBox7.Text = "Log";
-            // 
-            // RTF_Log
-            // 
-            this.RTF_Log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.RTF_Log.BackColor = System.Drawing.Color.RoyalBlue;
-            this.RTF_Log.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RTF_Log.ForeColor = System.Drawing.Color.White;
-            this.RTF_Log.Location = new System.Drawing.Point(2, 15);
-            this.RTF_Log.Margin = new System.Windows.Forms.Padding(2);
-            this.RTF_Log.Name = "RTF_Log";
-            this.RTF_Log.Size = new System.Drawing.Size(1011, 393);
-            this.RTF_Log.TabIndex = 0;
-            this.RTF_Log.Text = "";
-            // 
-            // Chk_AutoScroll
-            // 
-            this.Chk_AutoScroll.AutoSize = true;
-            this.Chk_AutoScroll.Checked = true;
-            this.Chk_AutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.Chk_AutoScroll.Location = new System.Drawing.Point(81, 15);
-            this.Chk_AutoScroll.Margin = new System.Windows.Forms.Padding(2);
-            this.Chk_AutoScroll.Name = "Chk_AutoScroll";
-            this.Chk_AutoScroll.Size = new System.Drawing.Size(140, 17);
-            this.Chk_AutoScroll.TabIndex = 4;
-            this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
-            this.Chk_AutoScroll.UseVisualStyleBackColor = true;
-            this.Chk_AutoScroll.CheckedChanged += new System.EventHandler(this.Chk_AutoScroll_CheckedChanged);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(6, 7);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(70, 30);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Open Log";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // HistoryImageList
-            // 
-            this.HistoryImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("HistoryImageList.ImageStream")));
-            this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.HistoryImageList.Images.SetKeyName(0, "error");
-            this.HistoryImageList.Images.SetKeyName(1, "person");
-            this.HistoryImageList.Images.SetKeyName(2, "nothing");
-            this.HistoryImageList.Images.SetKeyName(3, "detection");
-            this.HistoryImageList.Images.SetKeyName(4, "success");
-            this.HistoryImageList.Images.SetKeyName(5, "bear");
-            this.HistoryImageList.Images.SetKeyName(6, "cat");
-            this.HistoryImageList.Images.SetKeyName(7, "dog");
-            this.HistoryImageList.Images.SetKeyName(8, "horse");
-            this.HistoryImageList.Images.SetKeyName(9, "bird");
-            this.HistoryImageList.Images.SetKeyName(10, "alien");
-            this.HistoryImageList.Images.SetKeyName(11, "cow");
-            this.HistoryImageList.Images.SetKeyName(12, "car");
-            this.HistoryImageList.Images.SetKeyName(13, "truck");
-            this.HistoryImageList.Images.SetKeyName(14, "motorcycle");
-            this.HistoryImageList.Images.SetKeyName(15, "bicycle");
-            // 
-            // HistoryUpdateListTimer
-            // 
-            this.HistoryUpdateListTimer.Interval = 3000;
-            this.HistoryUpdateListTimer.Tick += new System.EventHandler(this.HistoryUpdateListTimer_Tick);
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(28, 28);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabelHistoryItems,
-            this.toolStripStatusErrors,
-            this.toolStripStatusLabel1,
-            this.toolStripStatusLabel2,
-            this.toolStripStatusLabelInfo,
-            this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 490);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 8, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1031, 29);
-            this.statusStrip1.TabIndex = 5;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabelHistoryItems
-            // 
-            this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
-            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(86, 24);
-            this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
-            // 
-            // toolStripStatusErrors
-            // 
-            this.toolStripStatusErrors.Name = "toolStripStatusErrors";
-            this.toolStripStatusErrors.Size = new System.Drawing.Size(10, 24);
-            this.toolStripStatusErrors.Text = ".";
-            this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
-            // 
-            // toolStripStatusLabel1
-            // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(10, 24);
-            this.toolStripStatusLabel1.Text = ".";
-            // 
-            // toolStripStatusLabel2
-            // 
-            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            this.toolStripStatusLabel2.Size = new System.Drawing.Size(766, 24);
-            this.toolStripStatusLabel2.Spring = true;
-            // 
-            // toolStripStatusLabelInfo
-            // 
-            this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 9.857143F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
-            this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
-            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(34, 24);
-            this.toolStripStatusLabelInfo.Text = "Idle";
-            // 
-            // toolStripProgressBar1
-            // 
-            this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripProgressBar1.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(114, 23);
-            this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            // 
-            // tableLayoutPanel14
-            // 
-            this.tableLayoutPanel14.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel14.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel14.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
-            this.tableLayoutPanel14.ColumnCount = 1;
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel14.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel14.Controls.Add(this.tableLayoutPanel15, 0, 0);
-            this.tableLayoutPanel14.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel14.Name = "tableLayoutPanel14";
-            this.tableLayoutPanel14.RowCount = 1;
-            this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel14.Size = new System.Drawing.Size(1023, 457);
-            this.tableLayoutPanel14.TabIndex = 3;
-            // 
-            // tableLayoutPanel15
-            // 
-            this.tableLayoutPanel15.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel15.ColumnCount = 1;
-            this.tableLayoutPanel15.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel15.Controls.Add(this.pictureBox2, 0, 0);
-            this.tableLayoutPanel15.Controls.Add(this.label2, 0, 2);
-            this.tableLayoutPanel15.Controls.Add(this.label3, 0, 1);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_version, 0, 5);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_errors, 0, 3);
-            this.tableLayoutPanel15.Controls.Add(this.lbl_info, 0, 5);
-            this.tableLayoutPanel15.Controls.Add(this.lblQueue, 0, 4);
-            this.tableLayoutPanel15.Location = new System.Drawing.Point(4, 4);
-            this.tableLayoutPanel15.Name = "tableLayoutPanel15";
-            this.tableLayoutPanel15.RowCount = 6;
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 47.14285F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 0.9523811F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 28.57143F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 13.80951F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 4.761905F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 4.761905F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel15.Size = new System.Drawing.Size(1015, 449);
-            this.tableLayoutPanel15.TabIndex = 0;
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBox2.Image = global::AITool.Properties.Resources.logo;
-            this.pictureBox2.Location = new System.Drawing.Point(3, 67);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(1009, 131);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox2.TabIndex = 4;
-            this.pictureBox2.TabStop = false;
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.AutoEllipsis = true;
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.Green;
-            this.label2.Location = new System.Drawing.Point(3, 205);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(1009, 32);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Running";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label3.Location = new System.Drawing.Point(63, 201);
-            this.label3.Margin = new System.Windows.Forms.Padding(63, 0, 63, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(889, 2);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "label3";
-            // 
-            // lbl_version
-            // 
-            this.lbl_version.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_version.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_version.Location = new System.Drawing.Point(3, 406);
-            this.lbl_version.Name = "lbl_version";
-            this.lbl_version.Size = new System.Drawing.Size(1009, 20);
-            this.lbl_version.TabIndex = 6;
-            this.lbl_version.Text = "Version 1.67 preview 7  (VorlonCD MOD)";
-            this.lbl_version.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            // 
-            // lbl_errors
-            // 
-            this.lbl_errors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_errors.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_errors.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lbl_errors.Location = new System.Drawing.Point(3, 327);
-            this.lbl_errors.Name = "lbl_errors";
-            this.lbl_errors.Size = new System.Drawing.Size(1009, 59);
-            this.lbl_errors.TabIndex = 7;
-            this.lbl_errors.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lbl_errors.Visible = false;
-            this.lbl_errors.Click += new System.EventHandler(this.lbl_errors_Click);
-            // 
-            // lbl_info
-            // 
-            this.lbl_info.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_info.AutoSize = true;
-            this.lbl_info.Location = new System.Drawing.Point(3, 426);
-            this.lbl_info.Name = "lbl_info";
-            this.lbl_info.Size = new System.Drawing.Size(1009, 23);
-            this.lbl_info.TabIndex = 8;
-            this.lbl_info.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lblQueue
-            // 
-            this.lblQueue.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblQueue.AutoSize = true;
-            this.lblQueue.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.lblQueue.ForeColor = System.Drawing.Color.DarkOrange;
-            this.lblQueue.Location = new System.Drawing.Point(3, 386);
-            this.lblQueue.Name = "lblQueue";
-            this.lblQueue.Size = new System.Drawing.Size(1009, 20);
-            this.lblQueue.TabIndex = 9;
-            this.lblQueue.Text = "Images in Queue: 0";
-            this.lblQueue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tableLayoutPanel16
-            // 
-            this.tableLayoutPanel16.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel16.ColumnCount = 2;
-            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
-            this.tableLayoutPanel16.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
-            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel23, 0, 0);
-            this.tableLayoutPanel16.Controls.Add(this.tableLayoutPanel17, 0, 0);
-            this.tableLayoutPanel16.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel16.Name = "tableLayoutPanel16";
-            this.tableLayoutPanel16.RowCount = 1;
-            this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel16.Size = new System.Drawing.Size(1020, 456);
-            this.tableLayoutPanel16.TabIndex = 0;
-            // 
-            // tableLayoutPanel23
-            // 
-            this.tableLayoutPanel23.ColumnCount = 1;
-            this.tableLayoutPanel23.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel23.Controls.Add(this.label8, 0, 2);
-            this.tableLayoutPanel23.Controls.Add(this.chart_confidence, 0, 2);
-            this.tableLayoutPanel23.Controls.Add(this.timeline, 0, 1);
-            this.tableLayoutPanel23.Controls.Add(this.label7, 0, 0);
-            this.tableLayoutPanel23.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel23.Location = new System.Drawing.Point(309, 3);
-            this.tableLayoutPanel23.Name = "tableLayoutPanel23";
-            this.tableLayoutPanel23.RowCount = 3;
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel23.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel23.Size = new System.Drawing.Size(708, 450);
-            this.tableLayoutPanel23.TabIndex = 7;
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label8.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(3, 228);
-            this.label8.Margin = new System.Windows.Forms.Padding(3);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(702, 29);
-            this.label8.TabIndex = 9;
-            this.label8.Text = "Frequencies of alert result confidences";
-            this.label8.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // chart_confidence
-            // 
-            this.chart_confidence.BackColor = System.Drawing.Color.Transparent;
-            this.chart_confidence.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea7.AxisX.Interval = 10D;
-            chartArea7.AxisX.MajorGrid.Interval = 6D;
-            chartArea7.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea7.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea7.AxisX.MajorTickMark.Interval = 1D;
-            chartArea7.AxisX.Maximum = 100D;
-            chartArea7.AxisX.Minimum = 0D;
-            chartArea7.AxisX.Title = "Alert confidence";
-            chartArea7.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea7.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea7.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea7.AxisY.Title = "Frequency";
-            chartArea7.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea7.BackColor = System.Drawing.Color.Transparent;
-            chartArea7.Name = "ChartArea1";
-            this.chart_confidence.ChartAreas.Add(chartArea7);
-            this.chart_confidence.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chart_confidence.Location = new System.Drawing.Point(3, 263);
-            this.chart_confidence.Name = "chart_confidence";
-            series17.BorderWidth = 4;
-            series17.ChartArea = "ChartArea1";
-            series17.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series17.Color = System.Drawing.Color.Orange;
-            series17.Name = "no alert";
-            series18.BorderWidth = 3;
-            series18.ChartArea = "ChartArea1";
-            series18.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series18.Color = System.Drawing.Color.Green;
-            series18.Legend = "Legend1";
-            series18.Name = "alert";
-            this.chart_confidence.Series.Add(series17);
-            this.chart_confidence.Series.Add(series18);
-            this.chart_confidence.Size = new System.Drawing.Size(702, 184);
-            this.chart_confidence.TabIndex = 8;
-            // 
-            // timeline
-            // 
-            this.timeline.BackColor = System.Drawing.Color.Transparent;
-            this.timeline.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea8.AxisX.Interval = 3D;
-            chartArea8.AxisX.MajorGrid.Interval = 6D;
-            chartArea8.AxisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea8.AxisX.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dash;
-            chartArea8.AxisX.MajorTickMark.Interval = 1D;
-            chartArea8.AxisX.Maximum = 24D;
-            chartArea8.AxisX.Minimum = 0D;
-            chartArea8.AxisX.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea8.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
-            chartArea8.AxisY.MajorGrid.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            chartArea8.AxisY.Title = "Number";
-            chartArea8.AxisY.TitleFont = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            chartArea8.BackColor = System.Drawing.Color.Transparent;
-            chartArea8.Name = "ChartArea1";
-            this.timeline.ChartAreas.Add(chartArea8);
-            this.timeline.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.timeline.Location = new System.Drawing.Point(3, 38);
-            this.timeline.Name = "timeline";
-            series19.ChartArea = "ChartArea1";
-            series19.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.SplineArea;
-            series19.Color = System.Drawing.Color.Silver;
-            series19.Legend = "Legend1";
-            series19.Name = "all";
-            series20.BorderWidth = 3;
-            series20.ChartArea = "ChartArea1";
-            series20.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series20.Color = System.Drawing.Color.OrangeRed;
-            series20.Legend = "Legend1";
-            series20.Name = "falses";
-            series21.BorderWidth = 3;
-            series21.ChartArea = "ChartArea1";
-            series21.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series21.Color = System.Drawing.Color.Orange;
-            series21.Legend = "Legend1";
-            series21.Name = "irrelevant";
-            series22.BorderWidth = 4;
-            series22.ChartArea = "ChartArea1";
-            series22.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series22.Color = System.Drawing.Color.Green;
-            series22.Legend = "Legend1";
-            series22.Name = "relevant";
-            series23.ChartArea = "ChartArea1";
-            series23.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series23.Color = System.Drawing.Color.Purple;
-            series23.Name = "skipped";
-            this.timeline.Series.Add(series19);
-            this.timeline.Series.Add(series20);
-            this.timeline.Series.Add(series21);
-            this.timeline.Series.Add(series22);
-            this.timeline.Series.Add(series23);
-            this.timeline.Size = new System.Drawing.Size(702, 184);
-            this.timeline.TabIndex = 6;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label7.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(3, 3);
-            this.label7.Margin = new System.Windows.Forms.Padding(3);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(702, 29);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "Timeline";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // tableLayoutPanel17
-            // 
-            this.tableLayoutPanel17.ColumnCount = 1;
-            this.tableLayoutPanel17.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel17.Controls.Add(this.chart1, 0, 2);
-            this.tableLayoutPanel17.Controls.Add(this.comboBox1, 0, 0);
-            this.tableLayoutPanel17.Controls.Add(this.btn_resetstats, 0, 1);
-            this.tableLayoutPanel17.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanel17.Name = "tableLayoutPanel17";
-            this.tableLayoutPanel17.RowCount = 3;
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel17.Size = new System.Drawing.Size(300, 450);
-            this.tableLayoutPanel17.TabIndex = 3;
-            // 
-            // chart1
-            // 
-            this.chart1.BackColor = System.Drawing.Color.Transparent;
-            this.chart1.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea9.Area3DStyle.Enable3D = true;
-            chartArea9.Area3DStyle.Inclination = 35;
-            chartArea9.Area3DStyle.LightStyle = System.Windows.Forms.DataVisualization.Charting.LightStyle.None;
-            chartArea9.BackColor = System.Drawing.Color.Transparent;
-            chartArea9.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea9);
-            this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend3.Alignment = System.Drawing.StringAlignment.Center;
-            legend3.BackColor = System.Drawing.Color.Transparent;
-            legend3.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            legend3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            legend3.IsTextAutoFit = false;
-            legend3.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
-            legend3.Name = "Legend1";
-            this.chart1.Legends.Add(legend3);
-            this.chart1.Location = new System.Drawing.Point(3, 59);
-            this.chart1.Name = "chart1";
-            series24.ChartArea = "ChartArea1";
-            series24.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
-            series24.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            series24.IsValueShownAsLabel = true;
-            series24.Legend = "Legend1";
-            series24.Name = "s1";
-            dataPoint7.IsVisibleInLegend = true;
-            series24.Points.Add(dataPoint7);
-            series24.Points.Add(dataPoint8);
-            series24.Points.Add(dataPoint9);
-            this.chart1.Series.Add(series24);
-            this.chart1.Size = new System.Drawing.Size(294, 388);
-            this.chart1.TabIndex = 2;
-            this.chart1.Text = "chart1";
-            title3.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            title3.Name = "Title1";
-            title3.Text = "Input Rates";
-            this.chart1.Titles.Add(title3);
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(3, 3);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(294, 25);
-            this.comboBox1.TabIndex = 3;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
-            this.comboBox1.SelectionChangeCommitted += new System.EventHandler(this.comboBox1_SelectionChangeCommitted);
-            // 
-            // btn_resetstats
-            // 
-            this.btn_resetstats.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_resetstats.Location = new System.Drawing.Point(2, 33);
-            this.btn_resetstats.Margin = new System.Windows.Forms.Padding(2);
-            this.btn_resetstats.Name = "btn_resetstats";
-            this.btn_resetstats.Size = new System.Drawing.Size(296, 21);
-            this.btn_resetstats.TabIndex = 4;
-            this.btn_resetstats.Text = "Reset Stats";
-            this.btn_resetstats.UseVisualStyleBackColor = true;
-            this.btn_resetstats.Click += new System.EventHandler(this.btn_resetstats_Click);
             // 
             // tableLayoutPanel2
             // 
@@ -2321,6 +1860,16 @@ namespace AITool
             this.label10.TabIndex = 29;
             this.label10.Text = "%";
             // 
+            // tabSettings
+            // 
+            this.tabSettings.Controls.Add(this.tableLayoutPanel4);
+            this.tabSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Size = new System.Drawing.Size(1023, 459);
+            this.tabSettings.TabIndex = 3;
+            this.tabSettings.Text = "Settings";
+            this.tabSettings.UseVisualStyleBackColor = true;
+            // 
             // tableLayoutPanel4
             // 
             this.tableLayoutPanel4.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2411,7 +1960,7 @@ namespace AITool
             this.tableLayoutPanel25.Name = "tableLayoutPanel25";
             this.tableLayoutPanel25.RowCount = 1;
             this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 52F));
+            this.tableLayoutPanel25.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 62F));
             this.tableLayoutPanel25.Size = new System.Drawing.Size(856, 62);
             this.tableLayoutPanel25.TabIndex = 14;
             // 
@@ -2683,7 +2232,7 @@ namespace AITool
             this.dbLayoutPanel3.ColumnCount = 3;
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 84.57375F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15.42625F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 117F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 119F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_errors, 0, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_enabletelegram, 1, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_disabletelegram, 2, 0);
@@ -2708,7 +2257,7 @@ namespace AITool
             // btn_enabletelegram
             // 
             this.btn_enabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_enabletelegram.Location = new System.Drawing.Point(646, 16);
+            this.btn_enabletelegram.Location = new System.Drawing.Point(644, 16);
             this.btn_enabletelegram.Name = "btn_enabletelegram";
             this.btn_enabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_enabletelegram.TabIndex = 13;
@@ -2720,7 +2269,7 @@ namespace AITool
             // btn_disabletelegram
             // 
             this.btn_disabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_disabletelegram.Location = new System.Drawing.Point(762, 16);
+            this.btn_disabletelegram.Location = new System.Drawing.Point(761, 16);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_disabletelegram.TabIndex = 13;
@@ -2728,6 +2277,457 @@ namespace AITool
             this.toolTip1.SetToolTip(this.btn_disabletelegram, "Disable Telegram on all Cameras");
             this.btn_disabletelegram.UseVisualStyleBackColor = true;
             this.btn_disabletelegram.Click += new System.EventHandler(this.btn_disabletelegram_Click);
+            // 
+            // tabDeepStack
+            // 
+            this.tabDeepStack.Controls.Add(this.chk_HighPriority);
+            this.tabDeepStack.Controls.Add(this.Chk_DSDebug);
+            this.tabDeepStack.Controls.Add(this.Lbl_BlueStackRunning);
+            this.tabDeepStack.Controls.Add(this.Btn_Save);
+            this.tabDeepStack.Controls.Add(this.label11);
+            this.tabDeepStack.Controls.Add(this.groupBox6);
+            this.tabDeepStack.Controls.Add(this.groupBox1);
+            this.tabDeepStack.Controls.Add(this.groupBox5);
+            this.tabDeepStack.Controls.Add(this.groupBox2);
+            this.tabDeepStack.Controls.Add(this.groupBox4);
+            this.tabDeepStack.Controls.Add(this.groupBox3);
+            this.tabDeepStack.Controls.Add(this.Chk_AutoStart);
+            this.tabDeepStack.Controls.Add(this.Btn_Start);
+            this.tabDeepStack.Controls.Add(this.Btn_Stop);
+            this.tabDeepStack.Location = new System.Drawing.Point(4, 22);
+            this.tabDeepStack.Margin = new System.Windows.Forms.Padding(2);
+            this.tabDeepStack.Name = "tabDeepStack";
+            this.tabDeepStack.Size = new System.Drawing.Size(1023, 459);
+            this.tabDeepStack.TabIndex = 6;
+            this.tabDeepStack.Text = "DeepStack";
+            this.tabDeepStack.UseVisualStyleBackColor = true;
+            // 
+            // chk_HighPriority
+            // 
+            this.chk_HighPriority.AutoSize = true;
+            this.chk_HighPriority.Location = new System.Drawing.Point(342, 301);
+            this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
+            this.chk_HighPriority.Name = "chk_HighPriority";
+            this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
+            this.chk_HighPriority.TabIndex = 15;
+            this.chk_HighPriority.Text = "Run high priority";
+            this.chk_HighPriority.UseVisualStyleBackColor = true;
+            // 
+            // Chk_DSDebug
+            // 
+            this.Chk_DSDebug.AutoSize = true;
+            this.Chk_DSDebug.Location = new System.Drawing.Point(206, 301);
+            this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_DSDebug.Name = "Chk_DSDebug";
+            this.Chk_DSDebug.Size = new System.Drawing.Size(113, 17);
+            this.Chk_DSDebug.TabIndex = 14;
+            this.Chk_DSDebug.Text = "Debug Deepstack";
+            this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
+        "ersion, installed on same machine)");
+            this.Chk_DSDebug.UseVisualStyleBackColor = true;
+            // 
+            // Lbl_BlueStackRunning
+            // 
+            this.Lbl_BlueStackRunning.AutoSize = true;
+            this.Lbl_BlueStackRunning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(282, 348);
+            this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
+            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(105, 13);
+            this.Lbl_BlueStackRunning.TabIndex = 13;
+            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+            // 
+            // Btn_Save
+            // 
+            this.Btn_Save.Location = new System.Drawing.Point(191, 338);
+            this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
+            this.Btn_Save.Name = "Btn_Save";
+            this.Btn_Save.Size = new System.Drawing.Size(70, 30);
+            this.Btn_Save.TabIndex = 12;
+            this.Btn_Save.Text = "Save";
+            this.Btn_Save.UseVisualStyleBackColor = true;
+            this.Btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
+            // 
+            // label11
+            // 
+            this.label11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label11.ForeColor = System.Drawing.Color.RoyalBlue;
+            this.label11.Location = new System.Drawing.Point(6, 10);
+            this.label11.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(727, 34);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "When the WINDOWS version of DeepStack will be running on the same machine as AI T" +
+    "ool, this tab can replace the DeepStack UI. (Deepstack.exe) - No control over Do" +
+    "cker version yet.";
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.Txt_APIKey);
+            this.groupBox6.Location = new System.Drawing.Point(11, 146);
+            this.groupBox6.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox6.Size = new System.Drawing.Size(483, 45);
+            this.groupBox6.TabIndex = 11;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "API Key (Optional)";
+            // 
+            // Txt_APIKey
+            // 
+            this.Txt_APIKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_APIKey.Location = new System.Drawing.Point(7, 17);
+            this.Txt_APIKey.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_APIKey.Name = "Txt_APIKey";
+            this.Txt_APIKey.Size = new System.Drawing.Size(472, 20);
+            this.Txt_APIKey.TabIndex = 0;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
+            this.groupBox1.Controls.Add(this.Chk_FaceAPI);
+            this.groupBox1.Controls.Add(this.Chk_SceneAPI);
+            this.groupBox1.Location = new System.Drawing.Point(8, 203);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox1.Size = new System.Drawing.Size(162, 88);
+            this.groupBox1.TabIndex = 3;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "API";
+            // 
+            // Chk_DetectionAPI
+            // 
+            this.Chk_DetectionAPI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Chk_DetectionAPI.Location = new System.Drawing.Point(11, 63);
+            this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
+            this.Chk_DetectionAPI.Size = new System.Drawing.Size(147, 19);
+            this.Chk_DetectionAPI.TabIndex = 2;
+            this.Chk_DetectionAPI.Text = "Detection API";
+            this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
+            // 
+            // Chk_FaceAPI
+            // 
+            this.Chk_FaceAPI.Location = new System.Drawing.Point(11, 40);
+            this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_FaceAPI.Name = "Chk_FaceAPI";
+            this.Chk_FaceAPI.Size = new System.Drawing.Size(147, 19);
+            this.Chk_FaceAPI.TabIndex = 1;
+            this.Chk_FaceAPI.Text = "Face API";
+            this.Chk_FaceAPI.UseVisualStyleBackColor = true;
+            // 
+            // Chk_SceneAPI
+            // 
+            this.Chk_SceneAPI.Location = new System.Drawing.Point(11, 17);
+            this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_SceneAPI.Name = "Chk_SceneAPI";
+            this.Chk_SceneAPI.Size = new System.Drawing.Size(147, 19);
+            this.Chk_SceneAPI.TabIndex = 0;
+            this.Chk_SceneAPI.Text = "Scene API";
+            this.Chk_SceneAPI.UseVisualStyleBackColor = true;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.Txt_AdminKey);
+            this.groupBox5.Location = new System.Drawing.Point(11, 96);
+            this.groupBox5.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox5.Size = new System.Drawing.Size(483, 45);
+            this.groupBox5.TabIndex = 10;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Admin Key (Optional)";
+            // 
+            // Txt_AdminKey
+            // 
+            this.Txt_AdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_AdminKey.Location = new System.Drawing.Point(7, 16);
+            this.Txt_AdminKey.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_AdminKey.Name = "Txt_AdminKey";
+            this.Txt_AdminKey.Size = new System.Drawing.Size(472, 20);
+            this.Txt_AdminKey.TabIndex = 0;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.RB_High);
+            this.groupBox2.Controls.Add(this.RB_Medium);
+            this.groupBox2.Controls.Add(this.RB_Low);
+            this.groupBox2.Location = new System.Drawing.Point(175, 203);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox2.Size = new System.Drawing.Size(154, 88);
+            this.groupBox2.TabIndex = 4;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Mode";
+            // 
+            // RB_High
+            // 
+            this.RB_High.Location = new System.Drawing.Point(11, 63);
+            this.RB_High.Margin = new System.Windows.Forms.Padding(2);
+            this.RB_High.Name = "RB_High";
+            this.RB_High.Size = new System.Drawing.Size(139, 19);
+            this.RB_High.TabIndex = 3;
+            this.RB_High.TabStop = true;
+            this.RB_High.Text = "High";
+            this.RB_High.UseVisualStyleBackColor = true;
+            // 
+            // RB_Medium
+            // 
+            this.RB_Medium.Location = new System.Drawing.Point(11, 40);
+            this.RB_Medium.Margin = new System.Windows.Forms.Padding(2);
+            this.RB_Medium.Name = "RB_Medium";
+            this.RB_Medium.Size = new System.Drawing.Size(139, 19);
+            this.RB_Medium.TabIndex = 2;
+            this.RB_Medium.TabStop = true;
+            this.RB_Medium.Text = "Medium";
+            this.RB_Medium.UseVisualStyleBackColor = true;
+            // 
+            // RB_Low
+            // 
+            this.RB_Low.Location = new System.Drawing.Point(11, 17);
+            this.RB_Low.Margin = new System.Windows.Forms.Padding(2);
+            this.RB_Low.Name = "RB_Low";
+            this.RB_Low.Size = new System.Drawing.Size(139, 19);
+            this.RB_Low.TabIndex = 1;
+            this.RB_Low.TabStop = true;
+            this.RB_Low.Text = "Low";
+            this.RB_Low.UseVisualStyleBackColor = true;
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.Txt_DeepStackInstallFolder);
+            this.groupBox4.Location = new System.Drawing.Point(11, 47);
+            this.groupBox4.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox4.Size = new System.Drawing.Size(483, 45);
+            this.groupBox4.TabIndex = 9;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "DeepStack Install Folder";
+            // 
+            // Txt_DeepStackInstallFolder
+            // 
+            this.Txt_DeepStackInstallFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_DeepStackInstallFolder.Location = new System.Drawing.Point(7, 17);
+            this.Txt_DeepStackInstallFolder.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_DeepStackInstallFolder.Name = "Txt_DeepStackInstallFolder";
+            this.Txt_DeepStackInstallFolder.ReadOnly = true;
+            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(472, 20);
+            this.Txt_DeepStackInstallFolder.TabIndex = 2;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.Txt_Port);
+            this.groupBox3.Location = new System.Drawing.Point(342, 203);
+            this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox3.Size = new System.Drawing.Size(151, 88);
+            this.groupBox3.TabIndex = 5;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Port";
+            // 
+            // Txt_Port
+            // 
+            this.Txt_Port.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_Port.Location = new System.Drawing.Point(10, 19);
+            this.Txt_Port.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_Port.Name = "Txt_Port";
+            this.Txt_Port.Size = new System.Drawing.Size(127, 20);
+            this.Txt_Port.TabIndex = 0;
+            // 
+            // Chk_AutoStart
+            // 
+            this.Chk_AutoStart.AutoSize = true;
+            this.Chk_AutoStart.Location = new System.Drawing.Point(13, 301);
+            this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_AutoStart.Name = "Chk_AutoStart";
+            this.Chk_AutoStart.Size = new System.Drawing.Size(170, 17);
+            this.Chk_AutoStart.TabIndex = 8;
+            this.Chk_AutoStart.Text = "Automatically Start DeepStack";
+            this.Chk_AutoStart.UseVisualStyleBackColor = true;
+            // 
+            // Btn_Start
+            // 
+            this.Btn_Start.Location = new System.Drawing.Point(8, 338);
+            this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
+            this.Btn_Start.Name = "Btn_Start";
+            this.Btn_Start.Size = new System.Drawing.Size(70, 30);
+            this.Btn_Start.TabIndex = 6;
+            this.Btn_Start.Text = "Start";
+            this.Btn_Start.UseVisualStyleBackColor = true;
+            this.Btn_Start.Click += new System.EventHandler(this.Btn_Start_Click);
+            // 
+            // Btn_Stop
+            // 
+            this.Btn_Stop.Location = new System.Drawing.Point(99, 338);
+            this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
+            this.Btn_Stop.Name = "Btn_Stop";
+            this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
+            this.Btn_Stop.TabIndex = 7;
+            this.Btn_Stop.Text = "Stop";
+            this.Btn_Stop.UseVisualStyleBackColor = true;
+            this.Btn_Stop.Click += new System.EventHandler(this.Btn_Stop_Click);
+            // 
+            // tabLog
+            // 
+            this.tabLog.Controls.Add(this.groupBox7);
+            this.tabLog.Controls.Add(this.Chk_AutoScroll);
+            this.tabLog.Controls.Add(this.button1);
+            this.tabLog.Location = new System.Drawing.Point(4, 22);
+            this.tabLog.Margin = new System.Windows.Forms.Padding(2);
+            this.tabLog.Name = "tabLog";
+            this.tabLog.Size = new System.Drawing.Size(1023, 459);
+            this.tabLog.TabIndex = 7;
+            this.tabLog.Text = "Log";
+            this.tabLog.UseVisualStyleBackColor = true;
+            this.tabLog.Click += new System.EventHandler(this.tabLog_Click);
+            // 
+            // groupBox7
+            // 
+            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox7.Controls.Add(this.RTF_Log);
+            this.groupBox7.Location = new System.Drawing.Point(5, 42);
+            this.groupBox7.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox7.Size = new System.Drawing.Size(1017, 412);
+            this.groupBox7.TabIndex = 5;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "Log";
+            // 
+            // RTF_Log
+            // 
+            this.RTF_Log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.RTF_Log.BackColor = System.Drawing.Color.RoyalBlue;
+            this.RTF_Log.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RTF_Log.ForeColor = System.Drawing.Color.White;
+            this.RTF_Log.Location = new System.Drawing.Point(2, 15);
+            this.RTF_Log.Margin = new System.Windows.Forms.Padding(2);
+            this.RTF_Log.Name = "RTF_Log";
+            this.RTF_Log.Size = new System.Drawing.Size(1011, 393);
+            this.RTF_Log.TabIndex = 0;
+            this.RTF_Log.Text = "";
+            // 
+            // Chk_AutoScroll
+            // 
+            this.Chk_AutoScroll.AutoSize = true;
+            this.Chk_AutoScroll.Checked = true;
+            this.Chk_AutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.Chk_AutoScroll.Location = new System.Drawing.Point(81, 15);
+            this.Chk_AutoScroll.Margin = new System.Windows.Forms.Padding(2);
+            this.Chk_AutoScroll.Name = "Chk_AutoScroll";
+            this.Chk_AutoScroll.Size = new System.Drawing.Size(140, 17);
+            this.Chk_AutoScroll.TabIndex = 4;
+            this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
+            this.Chk_AutoScroll.UseVisualStyleBackColor = true;
+            this.Chk_AutoScroll.CheckedChanged += new System.EventHandler(this.Chk_AutoScroll_CheckedChanged);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(6, 7);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(70, 30);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "Open Log";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // HistoryImageList
+            // 
+            this.HistoryImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("HistoryImageList.ImageStream")));
+            this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.HistoryImageList.Images.SetKeyName(0, "error");
+            this.HistoryImageList.Images.SetKeyName(1, "person");
+            this.HistoryImageList.Images.SetKeyName(2, "nothing");
+            this.HistoryImageList.Images.SetKeyName(3, "detection");
+            this.HistoryImageList.Images.SetKeyName(4, "success");
+            this.HistoryImageList.Images.SetKeyName(5, "bear");
+            this.HistoryImageList.Images.SetKeyName(6, "cat");
+            this.HistoryImageList.Images.SetKeyName(7, "dog");
+            this.HistoryImageList.Images.SetKeyName(8, "horse");
+            this.HistoryImageList.Images.SetKeyName(9, "bird");
+            this.HistoryImageList.Images.SetKeyName(10, "alien");
+            this.HistoryImageList.Images.SetKeyName(11, "cow");
+            this.HistoryImageList.Images.SetKeyName(12, "car");
+            this.HistoryImageList.Images.SetKeyName(13, "truck");
+            this.HistoryImageList.Images.SetKeyName(14, "motorcycle");
+            this.HistoryImageList.Images.SetKeyName(15, "bicycle");
+            // 
+            // HistoryUpdateListTimer
+            // 
+            this.HistoryUpdateListTimer.Interval = 3000;
+            this.HistoryUpdateListTimer.Tick += new System.EventHandler(this.HistoryUpdateListTimer_Tick);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(28, 28);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabelHistoryItems,
+            this.toolStripStatusErrors,
+            this.toolStripStatusLabel1,
+            this.toolStripStatusLabel2,
+            this.toolStripStatusLabelInfo,
+            this.toolStripProgressBar1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 490);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 8, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(1031, 29);
+            this.statusStrip1.TabIndex = 5;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelHistoryItems
+            // 
+            this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
+            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(86, 24);
+            this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
+            // 
+            // toolStripStatusErrors
+            // 
+            this.toolStripStatusErrors.Name = "toolStripStatusErrors";
+            this.toolStripStatusErrors.Size = new System.Drawing.Size(10, 24);
+            this.toolStripStatusErrors.Text = ".";
+            this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(10, 24);
+            this.toolStripStatusLabel1.Text = ".";
+            // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(766, 24);
+            this.toolStripStatusLabel2.Spring = true;
+            // 
+            // toolStripStatusLabelInfo
+            // 
+            this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 9.857143F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
+            this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
+            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(34, 24);
+            this.toolStripStatusLabelInfo.Text = "Idle";
+            // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripProgressBar1.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            this.toolStripProgressBar1.Size = new System.Drawing.Size(114, 23);
+            this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             // 
             // Shell
             // 
@@ -2749,7 +2749,18 @@ namespace AITool
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.tabControl1.ResumeLayout(false);
             this.tabOverview.ResumeLayout(false);
+            this.tableLayoutPanel14.ResumeLayout(false);
+            this.tableLayoutPanel15.ResumeLayout(false);
+            this.tableLayoutPanel15.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.tabStats.ResumeLayout(false);
+            this.tableLayoutPanel16.ResumeLayout(false);
+            this.tableLayoutPanel23.ResumeLayout(false);
+            this.tableLayoutPanel23.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.timeline)).EndInit();
+            this.tableLayoutPanel17.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.tabHistory.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -2762,35 +2773,6 @@ namespace AITool
             this.contextMenuStripHistory.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabCameras.ResumeLayout(false);
-            this.tabSettings.ResumeLayout(false);
-            this.tabDeepStack.ResumeLayout(false);
-            this.tabDeepStack.PerformLayout();
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.tabLog.ResumeLayout(false);
-            this.tabLog.PerformLayout();
-            this.groupBox7.ResumeLayout(false);
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
-            this.tableLayoutPanel14.ResumeLayout(false);
-            this.tableLayoutPanel15.ResumeLayout(false);
-            this.tableLayoutPanel15.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            this.tableLayoutPanel16.ResumeLayout(false);
-            this.tableLayoutPanel23.ResumeLayout(false);
-            this.tableLayoutPanel23.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chart_confidence)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.timeline)).EndInit();
-            this.tableLayoutPanel17.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel6.ResumeLayout(false);
@@ -2810,6 +2792,7 @@ namespace AITool
             this.tableLayoutPanel27.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
+            this.tabSettings.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
             this.tableLayoutPanel5.ResumeLayout(false);
             this.tableLayoutPanel5.PerformLayout();
@@ -2823,6 +2806,23 @@ namespace AITool
             this.dbLayoutPanel2.PerformLayout();
             this.dbLayoutPanel3.ResumeLayout(false);
             this.dbLayoutPanel3.PerformLayout();
+            this.tabDeepStack.ResumeLayout(false);
+            this.tabDeepStack.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            this.tabLog.ResumeLayout(false);
+            this.tabLog.PerformLayout();
+            this.groupBox7.ResumeLayout(false);
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

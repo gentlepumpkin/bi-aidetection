@@ -16,7 +16,17 @@ using SQLite;
 
 namespace AITool
 {
-
+    //this is mainly so we only need one thread for adding and deleting
+    public class DBQueueHistoryItem
+    {
+        public bool add = false;  //otherwise delete
+        public History hist;
+        public DBQueueHistoryItem(History hist, bool add)
+        {
+            this.add = add;
+            this.hist = hist;
+        }
+    }
     public class SQLiteHistory:IDisposable
     {
         private bool disposedValue;
@@ -26,16 +36,17 @@ namespace AITool
         public ConcurrentDictionary<string, History> HistoryDic { get; } = new ConcurrentDictionary<string, History>();
         public DateTime InitializeTime { get; } = DateTime.Now;
         public DateTime LastUpdateTime { get; set; } = DateTime.MinValue;
-        private SQLiteAsyncConnection sqlite_conn { get; set; } = null;
-        public ThreadSafe.Integer AddedCount { get; set; } = new ThreadSafe.Integer(0);
-        public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
-        private ThreadSafe.Boolean HasChanged { get; set; } = new ThreadSafe.Boolean(true);
-        private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
-
+        private SQLiteConnection sqlite_conn { get; set; } = null;
+        public ConcurrentBag<History> RecentlyAdded { get; set; } = new ConcurrentBag<History>();
+        public ConcurrentBag<History> RecentlyDeleted { get; set; } = new ConcurrentBag<History>();
+        public ThreadSafe.Integer AddedCount = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer DeletedCount = new ThreadSafe.Integer(0);
+        //private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
+        private BlockingCollection<DBQueueHistoryItem> DBQueueHistory = new BlockingCollection<DBQueueHistoryItem>();
         public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000);
         public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000);
 
-        public static SemaphoreSlim Semaphore_Updating = new SemaphoreSlim(1, 1);
+        public static object DBLock = new object();
 
         public SQLiteHistory(string Filename, bool ReadOnly)
         {
@@ -45,10 +56,31 @@ namespace AITool
             this.Filename = Filename;
             this.ReadOnly = ReadOnly;
 
+            Task.Run(HistoryJobQueueLoop);
 
         }
 
-        private async Task<bool> IsSQLiteDBConnectedAsync()
+        private async void HistoryJobQueueLoop()
+        {
+            try
+            {
+                //this runs forever and blocks if nothing is in the queue
+                foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
+                {
+                    if (hitm.add)
+                        this.InsertHistoryItem(hitm.hist);
+                    else
+                        this.DeleteHistoryItem(hitm.hist);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+        }
+
+        private bool IsSQLiteDBConnected()
         {
 
             //make sure only one thread updating at a time
@@ -70,12 +102,15 @@ namespace AITool
             }
         }
 
-        private async void DisposeConnection()
+        private void DisposeConnection()
         {
             try
             {
-                await sqlite_conn.CloseAsync();
-                sqlite_conn = null;
+                lock (DBLock)
+                {
+                    sqlite_conn.Close();
+                    sqlite_conn = null;
+                }
 
             }
             catch (Exception ex)
@@ -84,73 +119,81 @@ namespace AITool
 
             }
         }
-        private async System.Threading.Tasks.Task<bool> CreateConnectionAsync()
+        private bool CreateConnection()
         {
             bool ret = false;
 
             //make sure only one thread updating at a time
             //await Semaphore_Updating.WaitAsync();
-
-            try
+            lock (DBLock)
             {
-                Stopwatch sw = Stopwatch.StartNew();
-
-                Global.UpdateProgressBar("Initializing history database...", 1, 1);
-
-                this.HistoryDic.Clear();
-                this.HasChanged.WriteFullFence(false);
-                this.DeletedCount.WriteFullFence(0);
-                this.AddedCount.WriteFullFence(0);
-
-                //https://www.sqlite.org/threadsafe.html
-                SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
-                string sflags = "SharedCache";
-
-                if (this.ReadOnly)
+                try
                 {
-                    flags = flags | SQLiteOpenFlags.ReadOnly;
-                    sflags += "|ReadOnly";
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    Global.UpdateProgressBar("Initializing history database...", 1, 1);
+
+                    this.HistoryDic.Clear();
+                    this.RecentlyDeleted = new ConcurrentBag<History>();
+                    this.RecentlyAdded = new ConcurrentBag<History>();
+
+                    //https://www.sqlite.org/threadsafe.html
+                    SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
+                    string sflags = "SharedCache";
+
+                    if (this.ReadOnly)
+                    {
+                        flags = flags | SQLiteOpenFlags.ReadOnly;
+                        sflags += "|ReadOnly";
+                    }
+                    else
+                    {
+                        flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
+                        sflags += "|Create|ReadWrite";
+                    }
+
+                    if (this.IsSQLiteDBConnected())
+                    {
+                        this.DisposeConnection();
+                    }
+
+                    //If the database file doesn't exist, the default behaviour is to create a new file
+                    sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
+
+
+                    //make sure table exists:
+                    CreateTableResult ctr = sqlite_conn.CreateTable<History>();
+
+
+                    sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
+                    sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
+
+
+                    sw.Stop();
+
+                    Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
+
+
                 }
-                else
+                catch (Exception ex)
                 {
-                    flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
-                    sflags += "|Create|ReadWrite";
+
+                    Global.Log("Error: " + Global.ExMsg(ex));
                 }
 
-                if (await this.IsSQLiteDBConnectedAsync())
-                {
-                    this.DisposeConnection();
-                }
-
-                //If the database file doesn't exist, the default behaviour is to create a new file
-                sqlite_conn = new SQLiteAsyncConnection(this.Filename, flags, true);
-
-
-                //make sure table exists:
-                CreateTableResult ctr = await sqlite_conn.CreateTableAsync<History>();
-
-
-                await sqlite_conn.ExecuteScalarAsync<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
-                await sqlite_conn.ExecuteScalarAsync<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
-
-
-                sw.Stop();
-
-                Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
-
-                HasChanged.WriteFullFence(true);
-
-            }
-            catch (Exception ex)
-            {
-
-                Global.Log("Error: " + Global.ExMsg(ex));
             }
 
             return ret;
         }
 
-        public async Task<bool> InsertHistoryItem(History hist)
+        public bool InsertHistoryQueue(History hist)
+        {
+            //simply add to the queue
+            DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, true);
+            return this.DBQueueHistory.TryAdd(ditm);
+        }
+
+        private bool InsertHistoryItem(History hist)
         {
             bool ret = false;
             int iret = 0;
@@ -159,51 +202,51 @@ namespace AITool
             //await Semaphore_Updating.WaitAsync();
 
             //this.IsUpdating.WriteFullFence(true);
-
-            try
+            lock (DBLock)
             {
 
-
-                ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
-
-                if (!ret)
+                try
                 {
-                    Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
+                    ret = this.HistoryDic.TryAdd(hist.Filename.ToLower(), hist);
+
+                    if (!ret)
+                    {
+                        Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
+                    }
+
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    iret = this.sqlite_conn.Insert(hist);
+
+                    this.AddTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
+
+                    if (iret != 1)
+                    {
+                        Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    }
+
+                    if (sw.ElapsedMilliseconds > 5000)
+                        Global.Log($"Info: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+
+                }
+                catch (Exception ex)
+                {
+
+                    if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
+                    {
+                        Global.Log($"Info: File was already in the database: {hist.Filename}");
+                    }
+                    else
+                    {
+                        Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex));
+                    }
                 }
 
-                Stopwatch sw = Stopwatch.StartNew();
-
-                iret = await this.sqlite_conn.InsertAsync(hist);
-
-                this.AddTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
-
-                if (iret != 1)
+                if (ret || iret > 0)
                 {
-                    Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    this.RecentlyAdded.Add(hist);
+                    this.LastUpdateTime = DateTime.Now;
                 }
-
-                if (sw.ElapsedMilliseconds > 5000)
-                    Global.Log($"Info: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
-
-            }
-            catch (Exception ex)
-            {
-
-                if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
-                {
-                    Global.Log($"Info: File was already in the database: {hist.Filename}");
-                }
-                else
-                {
-                    Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex));
-                }
-            }
-
-            if (ret || iret > 0)
-            {
-                this.AddedCount.AtomicAddAndGet(1); // AtomicIncrementAndGet();
-                this.LastUpdateTime = DateTime.Now;
-                this.HasChanged.WriteFullFence(true);
 
             }
 
@@ -214,35 +257,42 @@ namespace AITool
             return ret;
 
         }
-        public async Task<bool> DeleteHistoryItem(string Filename)
+
+        public bool DeleteHistoryQueue(History hist)
+        {
+            //simply add to the queue
+            DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
+            return this.DBQueueHistory.TryAdd(ditm);
+        }
+        public bool DeleteHistoryQueue(string Filename)
+        {
+            //simply add to the queue
+            History hist;
+            this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
+
+            if (hist == null)
+                hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "");
+
+            DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
+
+            return this.DBQueueHistory.TryAdd(ditm);
+        }
+
+        private bool DeleteHistoryItem(History hist)
         {
             bool ret = false;
             int dret = 0;
 
-            //make sure only one thread updating at a time
-            //await Semaphore_Updating.WaitAsync();
-
-            //this.IsUpdating.WriteFullFence(true);
-
             try
             {
 
-
-                History hist;
-                ret = this.HistoryDic.TryRemove(Filename.ToLower(), out hist);
-
-                //if (!ret)
-                //{
-                //    Global.Log($"Info: File was not in dictionary '{Filename}'");
-                //}
+                ret = this.HistoryDic.TryRemove(hist.Filename.ToLower(), out hist);
 
                 Stopwatch sw = Stopwatch.StartNew();
                 //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
                 //trying to use object rather than primarykey to delete
-                if (hist == null)
-                    hist = new History().Create(Filename,DateTime.Now,"unknown","","",false,"");
 
-                dret = await this.sqlite_conn.DeleteAsync(hist);
+                dret = this.sqlite_conn.Delete(hist);
 
                 this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
 
@@ -262,14 +312,14 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
+                Global.Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex));
             }
 
             if (ret || dret > 0)
             {
-                this.DeletedCount.AtomicAddAndGet(1); // AtomicIncrementAndGet();
+                this.DeletedCount.AtomicIncrementAndGet();
                 this.LastUpdateTime = DateTime.Now;
-                this.HasChanged.WriteFullFence(true);
+                this.RecentlyDeleted.Add(hist);
             }
 
             //Semaphore_Updating.Release();
@@ -323,32 +373,36 @@ namespace AITool
                             //load all List elements into the ListView for each row
                             int added = 0;
                             int removed = 0;
-                            foreach (var val in result)
+                            lock (DBLock)
                             {
-
-                                History hist = new History().CreateFromCSV(val);
-                                if (File.Exists(hist.Filename))
+                                foreach (var val in result)
                                 {
-                                    if (await this.InsertHistoryItem(hist))
+
+                                    History hist = new History().CreateFromCSV(val);
+                                    if (File.Exists(hist.Filename))
                                     {
-                                        added++;
-                                        //this.AddedCount.AtomicIncrementAndGet();
+                                        if (this.InsertHistoryItem(hist))
+                                        {
+                                            added++;
+                                            //this.AddedCount.AtomicIncrementAndGet();
+                                        }
+                                        else
+                                        {
+                                            removed++;
+                                        }
                                     }
                                     else
                                     {
                                         removed++;
                                     }
                                 }
-                                else
-                                {
-                                    removed++;
-                                }
+
                             }
 
                             ret = (added > 0);
 
                             //this.AddedCount.AtomicAddAndGet(added);
-                            this.DeletedCount.AtomicAddAndGet(removed);
+                            //this.DeletedCount.AtomicAddAndGet(removed);
 
                             //try to get a better feel how much time this function consumes - Vorlon
                             Global.Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
@@ -377,53 +431,54 @@ namespace AITool
                 Global.Log("Error: " + Global.ExMsg(ex));
             }
 
-            if (ret)
-            {
-                HasChanged.WriteFullFence(true);
-            }
 
             return ret;
 
 
         }
 
+        public List<History> GetRecentlyDeleted()
+        {
+            List<History> ret = new List<History>();
+            while (!this.RecentlyDeleted.IsEmpty)
+            {
+                History hist;
+                if (this.RecentlyDeleted.TryTake(out hist))
+                    ret.Add(hist);
+            }
+            return ret;
+        }
+        public List<History> GetRecentlyAdded()
+        {
+            List<History> ret = new List<History>();
+            while (!this.RecentlyAdded.IsEmpty)
+            {
+                History hist;
+                if (this.RecentlyAdded.TryTake(out hist))
+                    ret.Add(hist);
+            }
+            return ret;
+        }
 
         public async Task<bool> HasUpdates()
         {
 
-            //make sure only one thread updating at a time
-            //await Semaphore_Updating.WaitAsync();
-
             try
             {
-                //lets loop in case the db is still initializing in the background
-                Stopwatch sw = Stopwatch.StartNew();
 
-                bool HadToWait = false;
-
-                while (this.IsUpdating.ReadFullFence() || sw.ElapsedMilliseconds <= 10000)
-                {
-                    HadToWait = true;
-                    await Task.Delay(50);
-                }
-
-                if (sw.ElapsedMilliseconds > 1000)
-                    Global.Log($"Info: Had to wait {sw.ElapsedMilliseconds}ms for database to become free");
-
-                if (!this.ReadOnly || HadToWait)  //assume if we had to wait the database was just updating
+                if (!this.ReadOnly)  //assume if we had to wait the database was just updating
                 {
                     //we are running in the same process as the database updater
                     //no need to re-check sqlite db every time
 
-                    if (this.HasChanged.ReadFullFence())
+                    if (!this.RecentlyAdded.IsEmpty || !this.RecentlyDeleted.IsEmpty)
                     {
-                        this.HasChanged.WriteFullFence(false);
                         return true;
                     }
                 }
                 else
                 {
-                    return await UpdateHistoryList(false);
+                    return await UpdateHistoryListAsync(false);
                 }
 
             }
@@ -441,32 +496,34 @@ namespace AITool
 
         }
 
-        public async Task<bool> UpdateHistoryList(bool Clean)
+        public async Task<bool> UpdateHistoryListAsync(bool Clean)
+        {
+            return await Task.Run(() => UpdateHistoryList(Clean));
+        }
+
+        public bool UpdateHistoryList(bool Clean)
         {
 
             bool ret = false;
 
-            this.IsUpdating.WriteFullFence(true);
-
-            try
+            lock (DBLock)
             {
-                Global.UpdateProgressBar("Reading database...", 1, 1);
-
-                Stopwatch sw = Stopwatch.StartNew();
-
-                if (!await this.IsSQLiteDBConnectedAsync())
-                    await this.CreateConnectionAsync();
-
-                AsyncTableQuery<History> query = sqlite_conn.Table<History>();
-                List<History> CurList = await query.ToListAsync();
-
-                int added = 0;
-                int removed = 0;
-                bool isnew = (this.HistoryDic.Count == 0);
-
-                //Dont block UI, but wait for the thread to finish
-                await Task.Run(async () =>
+                try
                 {
+                    Global.UpdateProgressBar("Reading database...", 1, 1);
+
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    if (!this.IsSQLiteDBConnected())
+                        this.CreateConnection();
+
+                    TableQuery<History> query = sqlite_conn.Table<History>();
+                    List<History> CurList = query.ToList();
+
+                    int added = 0;
+                    int removed = 0;
+                    bool isnew = (this.HistoryDic.Count == 0);
+
 
                     Dictionary<string, String> tmpdic = new Dictionary<string, String>();
 
@@ -514,34 +571,29 @@ namespace AITool
                     }
 
                     if (Clean && !this.ReadOnly)
-                        await this.CleanHistoryList();
+                        this.CleanHistoryList();
 
+                    ret = (added > 0 || removed > 0);
 
-                });
+                    if (ret)
+                    {
+                        //this.DeletedCount.AtomicAddAndGet(removed);
+                        if (!isnew)
+                            this.AddedCount.AtomicAddAndGet(added);
 
-                ret = (added > 0 || removed > 0);
+                        this.LastUpdateTime = DateTime.Now;
+                    }
 
-                if (ret)
+                    Global.Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
+
+                }
+                catch (Exception ex)
                 {
-                    this.DeletedCount.AtomicAddAndGet(removed);
-                    if (!isnew)
-                        this.AddedCount.AtomicAddAndGet(added);
 
-                    this.LastUpdateTime = DateTime.Now;
-                    this.HasChanged.WriteFullFence(true);
+                    Global.Log("Error: " + Global.ExMsg(ex));
                 }
 
-                Global.Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
-
             }
-            catch (Exception ex)
-            {
-
-                Global.Log("Error: " + Global.ExMsg(ex));
-            }
-
-
-            this.IsUpdating.WriteFullFence(false);
 
             Global.UpdateProgressBar("", 0, 1);
 
@@ -550,7 +602,7 @@ namespace AITool
 
         }
 
-        public async Task<bool> CleanHistoryList()
+        private async Task<bool> CleanHistoryList()
         {
 
             bool ret = false;
@@ -560,12 +612,10 @@ namespace AITool
                 Stopwatch sw = Stopwatch.StartNew();
 
 
-                if (!await this.IsSQLiteDBConnectedAsync())
-                    await this.CreateConnectionAsync();
-
+                if (!this.IsSQLiteDBConnected())
+                    this.CreateConnection();
 
                 ConcurrentBag<History> removed = new ConcurrentBag<History>();   //this may only need to be a list, but just being safe in threading
-
 
                 //run the file exists check in another thread so we dont freeze the UI, but WAIT for it
                 await Task.Run(async () =>
@@ -629,7 +679,7 @@ namespace AITool
                             {
                                 Stopwatch dsw = Stopwatch.StartNew();
 
-                                rowsdeleted = await this.sqlite_conn.DeleteAsync(hist);
+                                rowsdeleted = this.sqlite_conn.Delete(hist);
 
                                 this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
 
@@ -647,7 +697,7 @@ namespace AITool
                             rcnt = rcnt + rowsdeleted;
                         }
 
-                        this.DeletedCount.AtomicAddAndGet(rcnt);
+                        //this.DeletedCount.AtomicAddAndGet(rcnt);
 
                         Global.Log($"...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
 
@@ -685,7 +735,7 @@ namespace AITool
             {
                 if (disposing)
                 {
-                    if (await this.IsSQLiteDBConnectedAsync())
+                    if (this.IsSQLiteDBConnected())
                     {
                         this.DisposeConnection();
                     }

@@ -34,8 +34,8 @@ namespace AITool
         //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
         public static SemaphoreSlim Semaphore_List_Updating = new SemaphoreSlim(1, 1);
 
-        public static ConcurrentQueue<History> AddedHistoryItems = new ConcurrentQueue<History>();
-        public static ConcurrentQueue<History> DeletedHistoryItems = new ConcurrentQueue<History>();
+        //public static ConcurrentQueue<History> AddedHistoryItems = new ConcurrentQueue<History>();
+        //public static ConcurrentQueue<History> DeletedHistoryItems = new ConcurrentQueue<History>();
 
 
         public Shell()
@@ -174,10 +174,19 @@ namespace AITool
         }
 
 
-        void UpdateHistoryAddedRemoved()
+        async 
+
+        Task
+UpdateHistoryAddedRemoved()
         {
             //this should be a quicker list update
-            if (AppSettings.Settings.HistoryAutoRefresh && !this.IsListUpdating.ReadFullFence() && tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized) && (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS)
+            if (AppSettings.Settings.HistoryAutoRefresh &&
+                !this.IsListUpdating.ReadFullFence() &&
+                tabControl1.SelectedIndex == 2 &&
+                this.Visible &&
+                !(this.WindowState == FormWindowState.Minimized) &&
+                (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS &&
+                await HistoryDB.HasUpdates())
             {
                 this.IsListUpdating.WriteFullFence(true);
 
@@ -185,25 +194,12 @@ namespace AITool
 
                 UpdateToolstrip("Updating list...");
 
-                List<History> added = new List<History>();
-                while (!AddedHistoryItems.IsEmpty)
-                {
-                    History thist;
-                    if (AddedHistoryItems.TryDequeue(out thist))
-                        added.Add(thist);
-                }
+                List<History> added = HistoryDB.GetRecentlyAdded();
 
                 if (added.Count > 0)
                     Global_GUI.UpdateFOLV_AddObjects(folv_history, added.ToArray(), AppSettings.Settings.HistoryFollow);
 
-
-                List<History> removed = new List<History>();
-                while (!DeletedHistoryItems.IsEmpty)
-                {
-                    History thist;
-                    if (DeletedHistoryItems.TryDequeue(out thist))
-                        removed.Add(thist);
-                }
+                List<History> removed = HistoryDB.GetRecentlyDeleted();
 
                 if (removed.Count > 0)
                     Global_GUI.UpdateFOLV_DeleteObjects(folv_history, removed.ToArray(), AppSettings.Settings.HistoryFollow);
@@ -240,12 +236,10 @@ namespace AITool
 
                 if (!HistoryDB.ReadOnly)  //otherwise another service is doing all the updating
                 {
-                    HistoryDB.InsertHistoryItem(hist);
+                    HistoryDB.InsertHistoryQueue(hist);
                 }
 
-                AddedHistoryItems.Enqueue(hist);
-
-                UpdateHistoryAddedRemoved();
+                //UpdateHistoryAddedRemoved();
 
                 UpdateToolstrip();
             }
@@ -254,17 +248,10 @@ namespace AITool
 
                 if (!HistoryDB.ReadOnly)  //assume service or other instance will be handling 
                 {
-                    HistoryDB.DeleteHistoryItem(msg.Description);
+                    HistoryDB.DeleteHistoryQueue(msg.Description);
                 }
 
-
-                History hist;
-                if (HistoryDB.HistoryDic.TryGetValue(msg.Description.ToLower(), out hist))
-                {
-                    DeletedHistoryItems.Enqueue(hist);
-                    UpdateHistoryAddedRemoved();
-
-                }
+                //UpdateHistoryAddedRemoved();
 
                 UpdateToolstrip();
 
@@ -1364,9 +1351,6 @@ namespace AITool
 
                         }
 
-                        //clear queue if we are doing a full update
-                        DeletedHistoryItems = new ConcurrentQueue<History>();
-                        AddedHistoryItems = new ConcurrentQueue<History>();
 
                     }
                     else
@@ -2775,7 +2759,7 @@ namespace AITool
                     else
                     {
                         Log("Removing missing file from database: " + hist.Filename);
-                        HistoryDB.DeleteHistoryItem(hist.Filename);
+                        HistoryDB.DeleteHistoryQueue(hist.Filename);
                         lbl_objects.Text = "Image not found";
                         pictureBox1.BackgroundImage = null;
                     }
@@ -2904,9 +2888,7 @@ namespace AITool
             if (!AppSettings.AlreadyRunning)
                 Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
 
-            UpdateHistoryAddedRemoved();
-
-
+            await UpdateHistoryAddedRemoved();
 
         }
 

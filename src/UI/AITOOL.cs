@@ -96,8 +96,6 @@ namespace AITool
             try
             {
 
-
-
                 //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
                 //is locked for any reason, it will wait in the queue until it can be written
                 //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
@@ -202,7 +200,7 @@ namespace AITool
 
                 //Load the database, and migrate any old csv lines if needed
                 HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName, AppSettings.AlreadyRunning);
-                await HistoryDB.UpdateHistoryList(true);
+                await HistoryDB.UpdateHistoryListAsync(true);
                 if (!AppSettings.AlreadyRunning && HistoryDB.HistoryDic.Count == 0)
                     await HistoryDB.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
 
