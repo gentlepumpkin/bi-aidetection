@@ -67,10 +67,17 @@ namespace AITool
                 //this runs forever and blocks if nothing is in the queue
                 foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
                 {
-                    if (hitm.add)
-                        this.InsertHistoryItem(hitm.hist);
+                    if (hitm == null || hitm.hist == null)
+                    {
+                        Global.Log("Info: hist is null?");
+                    }
                     else
-                        this.DeleteHistoryItem(hitm.hist);
+                    {
+                        if (hitm.add)
+                            this.InsertHistoryItem(hitm.hist);
+                        else
+                            this.DeleteHistoryItem(hitm.hist);
+                    }
                 }
             }
             catch (Exception ex)
@@ -266,67 +273,75 @@ namespace AITool
         }
         public bool DeleteHistoryQueue(string Filename)
         {
-            //simply add to the queue
-            History hist;
-            this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
+            lock (DBLock)
+            {
+                //simply add to the queue
+                History hist;
+                this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
 
-            if (hist == null)
-                hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "");
+                if (hist == null)
+                    hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "");
 
-            DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
+                DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
 
-            return this.DBQueueHistory.TryAdd(ditm);
+                return this.DBQueueHistory.TryAdd(ditm);
+
+            }
+
         }
 
         private bool DeleteHistoryItem(History hist)
         {
             bool ret = false;
             int dret = 0;
-
-            try
+            lock (DBLock)
             {
+                try
+                {
 
-                ret = this.HistoryDic.TryRemove(hist.Filename.ToLower(), out hist);
+                    ret = this.HistoryDic.TryRemove(hist.Filename.ToLower(), out hist);
 
-                Stopwatch sw = Stopwatch.StartNew();
-                //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
-                //trying to use object rather than primarykey to delete
+                    Stopwatch sw = Stopwatch.StartNew();
+                    //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
+                    //trying to use object rather than primarykey to delete
 
-                dret = this.sqlite_conn.Delete(hist);
+                    dret = this.sqlite_conn.Delete(hist);
 
-                this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
+                    this.DeleteTimeCalc.AddToCalc(sw.ElapsedMilliseconds);
 
-                //if (dret != 1)
-                //{
-                //    Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
-                //}
-                //else
-                //{
-                //    Global.Log($"Removed {dret} database entry for '{Filename}'");
-                //}
+                    //if (dret != 1)
+                    //{
+                    //    Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    //}
+                    //else
+                    //{
+                    //    Global.Log($"Removed {dret} database entry for '{Filename}'");
+                    //}
 
-                if (sw.ElapsedMilliseconds > 5000)
-                    Global.Log($"Info: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                    if (sw.ElapsedMilliseconds > 3000)
+                        Global.Log($"Info: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+
+                }
+                catch (Exception ex)
+                {
+
+                    Global.Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex));
+                }
+
+                if (ret || dret > 0)
+                {
+                    this.DeletedCount.AtomicIncrementAndGet();
+                    this.LastUpdateTime = DateTime.Now;
+                    this.RecentlyDeleted.Add(hist);
+                }
+
+                //Semaphore_Updating.Release();
+
+                //this.IsUpdating.WriteFullFence(false);
+
+                return ret;
 
             }
-            catch (Exception ex)
-            {
-
-                Global.Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex));
-            }
-
-            if (ret || dret > 0)
-            {
-                this.DeletedCount.AtomicIncrementAndGet();
-                this.LastUpdateTime = DateTime.Now;
-                this.RecentlyDeleted.Add(hist);
-            }
-
-            //Semaphore_Updating.Release();
-
-            //this.IsUpdating.WriteFullFence(false);
-
-            return ret;
 
         }
 
