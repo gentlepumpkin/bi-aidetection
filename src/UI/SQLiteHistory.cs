@@ -20,7 +20,7 @@ namespace AITool
     public class DBQueueHistoryItem
     {
         public bool add = false;  //otherwise delete
-        public History hist;
+        public History hist = new History();
         public DBQueueHistoryItem(History hist, bool add)
         {
             this.add = add;
@@ -56,35 +56,54 @@ namespace AITool
             this.Filename = Filename;
             this.ReadOnly = ReadOnly;
 
+            Task.Run(Initialize);
+
+        }
+        private void Initialize()
+        {
+
+            UpdateHistoryList(true);
+
+            if (this.HistoryDic.Count == 0)
+                this.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
+
             Task.Run(HistoryJobQueueLoop);
+
 
         }
 
         private async void HistoryJobQueueLoop()
         {
-            try
+            //this runs forever and blocks if nothing is in the queue
+
+            foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
             {
-                //this runs forever and blocks if nothing is in the queue
-                foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
+                string file = ""; 
+                try
                 {
-                    if (hitm == null || hitm.hist == null)
+                    if (hitm == null || hitm.hist == null || string.IsNullOrEmpty(hitm.hist.Filename))
                     {
-                        Global.Log("Info: hist is null?");
+                        Global.Log("Error: hist should not be null?");
                     }
                     else
                     {
+                        file = hitm.hist.Filename;
                         if (hitm.add)
                             this.InsertHistoryItem(hitm.hist);
                         else
                             this.DeleteHistoryItem(hitm.hist);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
+                catch (Exception ex)
+                {
 
-                Global.Log("Error: " + Global.ExMsg(ex));
+                    Global.Log($"Error: ({file})" + Global.ExMsg(ex));
+                }
+
             }
+            
+            Global.Log($"Error: Should not have left HistoryJobQueueLoop?");
+
         }
 
         private bool IsSQLiteDBConnected()
@@ -130,65 +149,60 @@ namespace AITool
         {
             bool ret = false;
 
-            //make sure only one thread updating at a time
-            //await Semaphore_Updating.WaitAsync();
-            lock (DBLock)
+            try
             {
-                try
+                Stopwatch sw = Stopwatch.StartNew();
+
+                Global.UpdateProgressBar("Initializing history database...", 1, 1);
+
+                this.HistoryDic.Clear();
+                this.RecentlyDeleted = new ConcurrentBag<History>();
+                this.RecentlyAdded = new ConcurrentBag<History>();
+
+                //https://www.sqlite.org/threadsafe.html
+                SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
+                string sflags = "SharedCache";
+
+                if (this.ReadOnly)
                 {
-                    Stopwatch sw = Stopwatch.StartNew();
-
-                    Global.UpdateProgressBar("Initializing history database...", 1, 1);
-
-                    this.HistoryDic.Clear();
-                    this.RecentlyDeleted = new ConcurrentBag<History>();
-                    this.RecentlyAdded = new ConcurrentBag<History>();
-
-                    //https://www.sqlite.org/threadsafe.html
-                    SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
-                    string sflags = "SharedCache";
-
-                    if (this.ReadOnly)
-                    {
-                        flags = flags | SQLiteOpenFlags.ReadOnly;
-                        sflags += "|ReadOnly";
-                    }
-                    else
-                    {
-                        flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
-                        sflags += "|Create|ReadWrite";
-                    }
-
-                    if (this.IsSQLiteDBConnected())
-                    {
-                        this.DisposeConnection();
-                    }
-
-                    //If the database file doesn't exist, the default behaviour is to create a new file
-                    sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
-
-
-                    //make sure table exists:
-                    CreateTableResult ctr = sqlite_conn.CreateTable<History>();
-
-
-                    sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
-                    sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
-
-
-                    sw.Stop();
-
-                    Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
-
-
+                    flags = flags | SQLiteOpenFlags.ReadOnly;
+                    sflags += "|ReadOnly";
                 }
-                catch (Exception ex)
+                else
                 {
-
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
+                    sflags += "|Create|ReadWrite";
                 }
+
+                if (this.IsSQLiteDBConnected())
+                {
+                    this.DisposeConnection();
+                }
+
+                //If the database file doesn't exist, the default behaviour is to create a new file
+                sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
+
+
+                //make sure table exists:
+                CreateTableResult ctr = sqlite_conn.CreateTable<History>();
+
+
+                sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
+                sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
+
+
+                sw.Stop();
+
+                Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
+
 
             }
+            catch (Exception ex)
+            {
+
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+
 
             return ret;
         }
@@ -273,8 +287,6 @@ namespace AITool
         }
         public bool DeleteHistoryQueue(string Filename)
         {
-            lock (DBLock)
-            {
                 //simply add to the queue
                 History hist;
                 this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
@@ -285,8 +297,6 @@ namespace AITool
                 DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
 
                 return this.DBQueueHistory.TryAdd(ditm);
-
-            }
 
         }
 
@@ -339,29 +349,32 @@ namespace AITool
 
                 //this.IsUpdating.WriteFullFence(false);
 
-                return ret;
-
             }
+
+            return ret;
 
         }
 
-        public async Task<bool> MigrateHistoryCSV(string Filename)
+        public bool MigrateHistoryCSV(string Filename)
         {
 
             bool ret = false;
-
-            try
+            lock (DBLock)
             {
-
-                //if (!await this.IsSQLiteDBConnectedAsync())
-                //    await this.CreateConnectionAsync();
-
-                //run in another thread so we dont block UI
-                await Task.Run(async () =>
+                try
                 {
+
+                    //if (!await this.IsSQLiteDBConnectedAsync())
+                    //    await this.CreateConnectionAsync();
+
+                    //run in another thread so we dont block UI
+                    //await Task.Run(async () =>
+                    //{
 
                     if (System.IO.File.Exists(Filename))
                     {
+                        Global.UpdateProgressBar("Migrating history.csv...", 1, 1);
+
                         Global.Log("Migrating history list from cameras/history.csv ...");
 
                         Stopwatch SW = Stopwatch.StartNew();
@@ -371,9 +384,9 @@ namespace AITool
 
                         List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-                        bool Success = await Global.WaitForFileAccessAsync(Filename);
+                        Task<bool> tsk = Global.WaitForFileAccess(Filename);
 
-                        if (Success)
+                        if (tsk.Result)
                         {
                             //load all lines except the first line into List (the first line is the table heading and not an alert entry)
                             foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))
@@ -388,31 +401,35 @@ namespace AITool
                             //load all List elements into the ListView for each row
                             int added = 0;
                             int removed = 0;
-                            lock (DBLock)
+                            int cnt = 0;
+                            foreach (var val in result)
                             {
-                                foreach (var val in result)
-                                {
+                                cnt++;
 
-                                    History hist = new History().CreateFromCSV(val);
-                                    if (File.Exists(hist.Filename))
+                                if (cnt == 1 || cnt == result.Count || (cnt % (result.Count / 10) > 0))
+                                {
+                                    Global.UpdateProgressBar("Migrating history.csv...", cnt, result.Count);
+                                }
+
+                                History hist = new History().CreateFromCSV(val);
+                                if (File.Exists(hist.Filename))
+                                {
+                                    if (this.InsertHistoryItem(hist))
                                     {
-                                        if (this.InsertHistoryItem(hist))
-                                        {
-                                            added++;
-                                            //this.AddedCount.AtomicIncrementAndGet();
-                                        }
-                                        else
-                                        {
-                                            removed++;
-                                        }
+                                        added++;
+                                        //this.AddedCount.AtomicIncrementAndGet();
                                     }
                                     else
                                     {
                                         removed++;
                                     }
                                 }
-
+                                else
+                                {
+                                    removed++;
+                                }
                             }
+
 
                             ret = (added > 0);
 
@@ -432,19 +449,23 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log($"File does not exist, could not migrate: {Filename}");
+                        Global.Log($"Old history file does not exist, could not migrate: {Filename}");
                     }
 
 
-                });
+                    //});
 
+
+                }
+                catch (Exception ex)
+                {
+
+                    Global.Log("Error: " + Global.ExMsg(ex));
+                }
 
             }
-            catch (Exception ex)
-            {
 
-                Global.Log("Error: " + Global.ExMsg(ex));
-            }
+            Global.UpdateProgressBar("", 0, 1);
 
 
             return ret;
@@ -493,6 +514,7 @@ namespace AITool
                 }
                 else
                 {
+                    //do a full update for now, later figure out best way to communicate updates from service to gui
                     return await UpdateHistoryListAsync(false);
                 }
 
@@ -538,7 +560,6 @@ namespace AITool
                     int added = 0;
                     int removed = 0;
                     bool isnew = (this.HistoryDic.Count == 0);
-
 
                     Dictionary<string, String> tmpdic = new Dictionary<string, String>();
 

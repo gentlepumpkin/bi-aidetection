@@ -200,10 +200,6 @@ namespace AITool
 
                 //Load the database, and migrate any old csv lines if needed
                 HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName, AppSettings.AlreadyRunning);
-                await HistoryDB.UpdateHistoryListAsync(true);
-                if (!AppSettings.AlreadyRunning && HistoryDB.HistoryDic.Count == 0)
-                    await HistoryDB.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
-
 
                 UpdateWatchers(false);
 

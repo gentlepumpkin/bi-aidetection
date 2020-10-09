@@ -174,10 +174,7 @@ namespace AITool
         }
 
 
-        async 
-
-        Task
-UpdateHistoryAddedRemoved()
+        async Task UpdateHistoryAddedRemoved()
         {
             //this should be a quicker list update
             if (AppSettings.Settings.HistoryAutoRefresh &&
@@ -192,7 +189,7 @@ UpdateHistoryAddedRemoved()
 
                 //Global.Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
 
-                UpdateToolstrip("Updating list...");
+                //UpdateToolstrip("Updating list...");
 
                 List<History> added = HistoryDB.GetRecentlyAdded();
 
@@ -209,7 +206,7 @@ UpdateHistoryAddedRemoved()
 
                 this.IsListUpdating.WriteFullFence(false);
 
-                UpdateToolstrip("");
+                //UpdateToolstrip("");
 
             }
             else
@@ -1307,7 +1304,7 @@ UpdateHistoryAddedRemoved()
                     }
                     await Task.Delay(50);
 
-                } while (sw.ElapsedMilliseconds < 20000);
+                } while (sw.ElapsedMilliseconds < 30000);
 
                 if (displayed)
                     Log($"...Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
