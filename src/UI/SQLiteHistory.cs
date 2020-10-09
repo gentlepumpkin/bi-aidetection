@@ -91,13 +91,13 @@ namespace AITool
                         if (hitm.add)
                             this.InsertHistoryItem(hitm.hist);
                         else
-                            this.DeleteHistoryItem(hitm.hist);
+                            this.DeleteHistoryItem(hitm.hist);  //Getting nullreferenceexception here and cant figure out why
                     }
                 }
                 catch (Exception ex)
                 {
 
-                    Global.Log($"Error: ({file})" + Global.ExMsg(ex));
+                    Global.Log($"Error: ({file})" + ex.ToString());
                 }
 
             }
@@ -309,11 +309,15 @@ namespace AITool
                 try
                 {
 
-                    ret = this.HistoryDic.TryRemove(hist.Filename.ToLower(), out hist);
+                    History thist = null;
+                    ret = this.HistoryDic.TryRemove(hist.Filename.ToLower(), out thist);
 
                     Stopwatch sw = Stopwatch.StartNew();
                     //Error: Cannot delete String: it has no PK [NotSupportedException] Mod: <DeleteHistoryItem>d__18 Line:150:5
                     //trying to use object rather than primarykey to delete
+
+                    if (thist != null)
+                        hist = thist;  //probably dont have to do this in order to delete from db
 
                     dret = this.sqlite_conn.Delete(hist);
 
