@@ -1116,6 +1116,9 @@ namespace AITool
                                                 Log($"{CurSrv} -      {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'");
                                             }
 
+                                            //mark the end of AI detection for the current image
+                                            cam.maskManager.lastDetectionDate = DateTime.Now;
+
                                             string PredictionsJSON = Global.GetJSONString(predictions);
 
                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas

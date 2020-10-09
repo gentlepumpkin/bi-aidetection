@@ -343,11 +343,19 @@ namespace AITool
             progress.Report(msg);
 
         }
-
+        private static bool warnedlog = false;
         public static void Log(string Message, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog)
+                {
+                    warnedlog = true;
+                    MessageBox.Show("Debug warning: Progress event logger is null?");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MessageType.LogEntry, "", null, memberName);
 

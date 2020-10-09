@@ -174,8 +174,6 @@ namespace AITool
                                     this.DynMaskResult = result.Result;
                                     this.DynMaskType = result.MaskType;
                                     this.Dynamic_Threshold_Count = result.Dynamic_Threshold_Count;
-                                    //mark the end of AI detection for the current image
-                                    this._cam.maskManager.lastDetectionDate = DateTime.Now;
                                 }
 
                                 //check the external image mask IF the mask manager didnt flag anything
