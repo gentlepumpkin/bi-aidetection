@@ -937,7 +937,7 @@ namespace AITool
 
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
-            double mins = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
+            double mins = (DateTime.Now - cam.last_trigger_time.Read()).TotalMinutes;
             double halfcool = cam.cooldown_time / 2;
             if (mins >= halfcool)
             {

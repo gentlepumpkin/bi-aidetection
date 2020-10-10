@@ -185,7 +185,7 @@ namespace AITool
 
             try
             {
-                double cooltime = (DateTime.Now - cam.last_trigger_time).TotalMinutes;
+                double cooltime = (DateTime.Now - cam.last_trigger_time.Read()).TotalMinutes;
                 string tmpfile = CurImg.image_path;
 
                 //only trigger if cameras cooldown time since last detection has passed
@@ -374,7 +374,7 @@ namespace AITool
 
                     if (Trigger)
                     {
-                        cam.last_trigger_time = DateTime.Now; //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+                        cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
                         Global.Log($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time}.");
                         Global.UpdateLabel($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
                     }

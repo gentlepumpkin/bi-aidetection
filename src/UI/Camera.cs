@@ -100,8 +100,8 @@ namespace AITool
         public int YOffset = 0;   //  Can be negative numbers
         
         
-            [JsonIgnore]
-        public DateTime last_trigger_time;
+        [JsonIgnore]
+        public ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);
         [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
