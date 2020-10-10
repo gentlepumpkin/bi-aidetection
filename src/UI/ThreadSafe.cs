@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.CompilerServices;
 
-namespace Arch.CMessaging.Client.Core.Utils
+namespace AITool
 {
     public class ThreadSafe
     {

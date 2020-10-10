@@ -100,8 +100,8 @@ namespace AITool
                     else
                     {
                         //do a generic test of the trigger
-                        bool result = await AITOOL.Trigger(cam, null, true);
-
+                        //bool result = await AITOOL.Trigger(cam, null, true);
+                        bool result = await AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, null, true, true, null, "");
 
                         if (result)
                         {

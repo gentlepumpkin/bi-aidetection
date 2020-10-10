@@ -21,9 +21,11 @@ namespace AITool
     public enum TriggerType
     {
         Unknown,
+        All,
         DownloadURL,
         PostURL,
-        Telegram,
+        TelegramImageUpload,
+        TelegramText,
         Sound,
         Run,
         MQTT

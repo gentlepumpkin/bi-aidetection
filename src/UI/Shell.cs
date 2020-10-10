@@ -12,7 +12,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Arch.CMessaging.Client.Core.Utils;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 
@@ -168,8 +167,6 @@ namespace AITool
                 HistoryUpdateListTimer.Stop();
             }
 
-            LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
-
             Log("APP START complete.");
         }
 
@@ -183,6 +180,7 @@ namespace AITool
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
                 (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS &&
+                HistoryDB.HasInitialized.ReadFullFence() &&
                 await HistoryDB.HasUpdates())
             {
                 this.IsListUpdating.WriteFullFence(true);
@@ -224,6 +222,9 @@ namespace AITool
             {
                 Log(msg.Description, "");
             }
+            else if (msg.MessageType == MessageType.DatabaseInitialized)
+                LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
+
             else if (msg.MessageType == MessageType.CreateHistoryItem)
             {
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
@@ -254,6 +255,11 @@ namespace AITool
 
             }
             else if (msg.MessageType == MessageType.ImageAddedToQueue)
+            {
+                UpdateQueueLabel();
+                UpdateToolstrip();
+            }
+            else if (msg.MessageType == MessageType.UpdateStatus)
             {
                 UpdateQueueLabel();
                 UpdateToolstrip();
@@ -471,12 +477,12 @@ namespace AITool
 
                 if (AppSettings.Settings.send_errors == true && (HasError || HasWarning) && !text.ToLower().Contains("telegram"))
                 {
-                    await TelegramText($"[{time}]: {text}"); //upload text to Telegram
+                    //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
+                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, null, null, true, false, null, $"[{time}]: {text}");
+
                 }
 
-
-
-                //add log text to console
+                                //add log text to console
                 Console.WriteLine($"[{rtftime}]: {ModName}{text}");
 
                 //increment error counter
@@ -1227,7 +1233,7 @@ namespace AITool
 
                     toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed";
 
-                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} Queued";
+                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued | {TriggerActionQueue.Count} Action Queued";
 
                     toolStripStatusErrors.Text = $"| {errors.Values.Count} Errors";
 
@@ -1294,7 +1300,7 @@ namespace AITool
                 bool displayed = false;
                 do
                 {
-                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null)
+                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null && HistoryDB.HasInitialized.ReadFullFence())
                         break;
                     else if (!displayed)
                     {
@@ -1304,7 +1310,7 @@ namespace AITool
                     }
                     await Task.Delay(50);
 
-                } while (sw.ElapsedMilliseconds < 30000);
+                } while (sw.ElapsedMilliseconds < 60000);
 
                 if (displayed)
                     Log($"...Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
@@ -1324,6 +1330,9 @@ namespace AITool
                     {
                         Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList(), FilterChanged, Follow);
 
+                        //reset any that snuck in while waiting since we just did a full list update
+                        HistoryDB.GetRecentlyAdded();
+                        HistoryDB.GetRecentlyDeleted();
 
                         if (FilterChanged)
                         {

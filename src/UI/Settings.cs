@@ -68,6 +68,7 @@ namespace AITool
             public int MaxLogFileAgeDays = 14;
             public long MaxLogFileSize = ((1024 * 2024) * 5);  //5mb in bytes
             public int MaxImageQueueSize = 100;
+            public int MaxActionQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
             public int MaxHistoryAgeDays = 14;

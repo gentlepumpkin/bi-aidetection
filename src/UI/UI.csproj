@@ -259,7 +259,7 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
-    <Compile Include="ClsActionQueue.cs" />
+    <Compile Include="ClsTriggerActionQueue.cs" />
     <Compile Include="ClsDetaiI.cs" />
     <Compile Include="ClsDetailItm.cs" />
     <Compile Include="Frm_ObjectDetail.cs">

@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Arch.CMessaging.Client.Core.Utils;
 using SQLite;
 //using Microsoft.Data.Sqlite;
 
@@ -36,6 +35,7 @@ namespace AITool
         public ConcurrentDictionary<string, History> HistoryDic { get; } = new ConcurrentDictionary<string, History>();
         public DateTime InitializeTime { get; } = DateTime.Now;
         public DateTime LastUpdateTime { get; set; } = DateTime.MinValue;
+        public ThreadSafe.Boolean HasInitialized = new ThreadSafe.Boolean(false);
         private SQLiteConnection sqlite_conn { get; set; } = null;
         public ConcurrentBag<History> RecentlyAdded { get; set; } = new ConcurrentBag<History>();
         public ConcurrentBag<History> RecentlyDeleted { get; set; } = new ConcurrentBag<History>();
@@ -69,6 +69,9 @@ namespace AITool
 
             Task.Run(HistoryJobQueueLoop);
 
+            this.HasInitialized.WriteFullFence(true);
+
+            Global.SendMessage(MessageType.DatabaseInitialized);
 
         }
 
