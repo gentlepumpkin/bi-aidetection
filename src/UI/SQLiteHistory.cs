@@ -269,6 +269,7 @@ namespace AITool
                 if (ret || iret > 0)
                 {
                     this.RecentlyAdded.Add(hist);
+                    this.AddedCount.AtomicIncrementAndGet();
                     this.LastUpdateTime = DateTime.Now;
                 }
 
