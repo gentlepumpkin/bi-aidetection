@@ -41,6 +41,7 @@ using System.Reflection;
 using OSVersionExtension;
 using System.Runtime.CompilerServices;
 using SQLitePCL;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace AITool
 {
@@ -2249,6 +2250,17 @@ namespace AITool
 
             return cam;
 
+        }
+
+        public static float getObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
+        {
+
+            Rectangle objIntersect = Rectangle.Intersect(masterRectangle, compareRectangle);
+
+            float percentage = (((objIntersect.Width * objIntersect.Height) * 2) * 100f) /
+                   ((compareRectangle.Width * compareRectangle.Height) + (compareRectangle.Width * masterRectangle.Height));
+
+            return percentage;
         }
 
     }

@@ -1,6 +1,7 @@
 using BrightIdeasSoftware;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace AITool
 {
@@ -11,29 +12,21 @@ namespace AITool
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
 
         public int counter { get; set; }
-        public double thresholdPercent { get; set; }
+        public double percentMatch { get; set; }
         public Boolean isStatic { get; set; } = false;
         public int xmin { get; }
         public int ymin { get; }
         public int xmax { get; }
         public int ymax { get; }
-        public int height { get; }
-        public int width { get; }
+
         public long key { get; }
         public int imageWidth { get; set; }
         public int imageHeight { get; set; }
 
+        private Rectangle objRectangle;
+
         public string cameraName { get; set; } = "";
         public string imagePath { get; set; } = "";
-
-        //store the calcs for troubleshooting
-        public bool LastMatched { get; set; } = false;
-        public double LastWidthPercentVariance { get; set; } = 0;
-        public double LastHeightPercentVariance { get; set; } = 0;
-
-        //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-        public double LastxPercentVariance { get; set; } = 0;
-        public double LastyPercentVariance { get; set; } = 0;
 
         //scaling of object based on size
         public int scalePercent { get; set; } 
@@ -62,18 +55,16 @@ namespace AITool
             this.ymin = ymin;
             this.xmax = xmax;
             this.ymax = ymax;
+            objRectangle = Rectangle.FromLTRB(xmin, ymin, xmax, ymax);
+
             this.imageHeight = imageHeight;
             this.imageWidth = imageWidth;
 
-            //calc width and height of box
-            this.width = xmax - xmin;
-            this.height = ymax - ymin;
-
             //object percent of image area
-            objectImagePercent = (width * height) / (float)(imageWidth * imageHeight) * 100;
+            objectImagePercent = (objRectangle.Width * objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            key = ((xmin + 1) * (ymin + 1) + (width * height));
+            key = ((xmin + 1) * (ymin + 1) + (objRectangle.Width * objRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -111,21 +102,22 @@ namespace AITool
             if (other == null)
                 return false;
 
-            //calculate the percentage variance for width and height of selected object
-            this.LastWidthPercentVariance = (double)Math.Abs(this.width - other.width) / this.width * 100;
-            this.LastHeightPercentVariance = (double)Math.Abs(this.height - other.height) / this.height * 100;
+            bool isMatch = false;
 
-            //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-            this.LastxPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth * 100;
-            this.LastyPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight * 100;
-            double percent = thresholdPercent + scalePercent;
+            float percentageIntersect = AITOOL.getObjIntersectPercent(this.objRectangle, other.objRectangle);
 
-            this.LastMatched = (this.LastxPercentVariance <= percent) &&
-                               (this.LastyPercentVariance <= percent) &&
-                               (this.LastWidthPercentVariance <= percent) &&
-                               (this.LastHeightPercentVariance <= percent);
+            Global.Log("@@@@@@@ Match percent: " + percentageIntersect + "%" 
+                + "\n compare obj: " + other.ToString() 
+                + "\n master obj: "  + this.ToString()); 
 
-            return this.LastMatched;
+            double matchPercent = percentMatch - scalePercent;
+
+            if(percentageIntersect >= matchPercent)
+            {
+                isMatch = true;
+            }
+
+            return isMatch;
         }
 
         public override int GetHashCode()

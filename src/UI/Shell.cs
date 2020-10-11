@@ -2513,7 +2513,6 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
                 frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.name;
@@ -2522,8 +2521,7 @@ namespace AITool
                 frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
                 frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
                 frm.num_mask_remove.Value = cam.maskManager.mask_remove_mins; //load mask remove counter
-                //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
-                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
+                frm.num_percent_var.Value = (decimal)cam.maskManager.percentMatch;
 
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
@@ -2532,38 +2530,28 @@ namespace AITool
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
-
-
                     Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
                     Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
                     Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
 
-                    ////convert to percent
-                    //Double percent_variance = (double)variance / 100;
-
                     cam.maskManager.history_save_mins = history_mins;
                     cam.maskManager.history_threshold_count = mask_create_counter;
                     cam.maskManager.mask_remove_mins = mask_remove_mins;
-                    cam.maskManager.thresholdPercent = variance;
+                    cam.maskManager.percentMatch = variance;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
-
                     cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
-
                     cam.maskManager.objects = frm.tb_objects.Text.Trim();
 
                     AppSettings.Save();
-
                 }
             }
         }
 
         private void btnDetails_Click(object sender, EventArgs e)
         {
-
             ShowMaskDetailsDialog(list2.SelectedItems[0].Text);
-
         }
 
         private void ShowMaskDetailsDialog(string cameraname)

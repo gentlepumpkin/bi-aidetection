@@ -21,10 +21,10 @@ namespace AITool
         }
 
         public int mask_remove_mins { get; set; } = 5;                    //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
-        public int history_save_mins { get; set; } = 5;                  //how long to store detected objects in history before purging list 
+        public int history_save_mins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int history_threshold_count { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public int mask_save_mins { get; set; } = 2;
-        public double thresholdPercent { get; set; } = 15;                //what percent can the selection rectangle vary to be considered a match
+        public double percentMatch { get; set; } = 80;                    //miniumn percentage match to be considered a match
         public List<ObjectPosition> last_positions_history { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> masked_positions { get; set; }        //stores dynamic masked object list (created in default constructor)
         public DateTime lastDetectionDate { get; set; }
@@ -56,15 +56,15 @@ namespace AITool
                 //This will run on save/load settings
 
                 //lets store thresholdpercent as the same value the user sees in UI for easier troubleshooting in mask dialog
-                if (this.thresholdPercent < 1)
+                if (this.percentMatch < 1)
                 {
-                    this.thresholdPercent = this.thresholdPercent * 100;
+                    this.percentMatch = this.percentMatch * 100;
                 }
 
                 foreach (ObjectPosition op in this.last_positions_history)
                 {
                     //Update threshold since it could have been changed since mask created
-                    op.thresholdPercent = this.thresholdPercent;
+                    op.percentMatch = this.percentMatch;
                     //update the camera name since it could have been renamed since the mask was created
                     op.cameraName = cam.name;
                     //update last seen date if hasnt been set
@@ -92,7 +92,7 @@ namespace AITool
                 foreach (ObjectPosition op in this.masked_positions)
                 {
                     //Update threshold since it could have been changed since mask created
-                    op.thresholdPercent = this.thresholdPercent;
+                    op.percentMatch = this.percentMatch;
                     //update the camera name since it could have been renamed since the mask was created
                     op.cameraName = cam.name;
                     //update last seen date if hasnt been set
@@ -151,7 +151,7 @@ namespace AITool
                     Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.cameraName);
                     currentObject.scaleConfig = scaleConfig;
 
-                    currentObject.thresholdPercent = thresholdPercent;
+                    currentObject.percentMatch = percentMatch;
 
                     int historyIndex = last_positions_history.IndexOf(currentObject);
 
