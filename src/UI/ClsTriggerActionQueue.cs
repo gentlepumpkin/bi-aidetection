@@ -16,25 +16,32 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.InputFiles;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace AITool
 {
     public class ClsTriggerActionQueueItem
     {
-        public TriggerType _ttype = TriggerType.Unknown;
-        public Camera _cam = null;
-        public ClsImageQueueItem _curmg = null;
-        public bool _trigger = true;
-        public string _text = "";
-        public DateTime _addedTime = DateTime.MinValue;
-        public ClsTriggerActionQueueItem(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, bool Trigger, string Text)
+        public TriggerType TType { get; set; } = TriggerType.Unknown;
+        public Camera cam { get; set; } = null;
+        public ClsImageQueueItem CurImg { get; set; } = null;
+        public bool Trigger { get; set; } = true;
+        public string Text { get; set; } = "";
+        public DateTime AddedTime { get; set; } = DateTime.MinValue;
+        public long QueueCount { get; set; } = 0;
+        public long QueueWaitMS { get; set; } = 0;
+        public bool IsQueued { get; set; } = false;
+        public long ActionTimeMS { get; set; } = 0;
+        public long TotalTimeMS { get; set; } = 0;
+        public ClsTriggerActionQueueItem(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, bool Trigger, string Text, bool IsQueued)
         {
-            this._cam = cam;
-            this._ttype = ttype;
-            this._curmg = CurImg;
-            this._trigger = Trigger;
-            this._addedTime = DateTime.Now;
-            this._text = Text;
+            this.cam = cam;
+            this.TType = ttype;
+            this.CurImg = CurImg;
+            this.Trigger = Trigger;
+            this.AddedTime = DateTime.Now;
+            this.Text = Text;
+            this.IsQueued = IsQueued;
         }
     }
 
@@ -46,7 +53,12 @@ namespace AITool
         public ThreadSafe.Datetime TelegramRetryTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ClsURLItem _url { get; set; } = null;
         private String CurSrv = "";
+        string ImgPath = "NoImage";
         public ThreadSafe.Integer Count { get; set; } = new ThreadSafe.Integer(0);
+        public MovingCalcs QCountCalc { get; set; } = new MovingCalcs(250);
+        public MovingCalcs QTimeCalc { get; set; } = new MovingCalcs(250);
+        public MovingCalcs ActionTimeCalc { get; set; } = new MovingCalcs(250);
+        public MovingCalcs TotalTimeCalc { get; set; } = new MovingCalcs(250);
         public ClsTriggerActionQueue()
         {
             Task.Run(TriggerActionJobQueueLoop);
@@ -55,7 +67,6 @@ namespace AITool
         public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
         {
             bool ret = false;
-            string imgpath = "NoImage";
             this._url = ds_url;
             if (ds_url != null)
             {
@@ -68,13 +79,12 @@ namespace AITool
             }
             if (CurImg != null)
             {
-                imgpath = CurImg.image_path;
+                ImgPath = CurImg.image_path;
             }
 
-            ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, Trigger, Text);
+            ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, Trigger, Text, !Wait);
 
-
-            if (Wait)
+            if (Wait)  //not queued
             {
                 ret = await RunTriggers(AQI);
             }
@@ -84,7 +94,7 @@ namespace AITool
                 {
                     if (!this.TriggerActionQueue.TryAdd(AQI))
                     {
-                        Global.Log($"{CurSrv} - Error: Action '{AQI._ttype}' could not be added? {imgpath}");
+                        Global.Log($"{CurSrv} - Error: Action '{AQI.TType}' could not be added? {ImgPath}");
                     }
                     else
                     {
@@ -93,7 +103,7 @@ namespace AITool
                 }
                 else
                 {
-                    Global.Log($"{CurSrv} - Error: Action '{AQI._ttype}' could not be added because queue size is {TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {imgpath}");
+                    Global.Log($"{CurSrv} - Error: Action '{AQI.TType}' could not be added because queue size is {TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {ImgPath}");
                 }
 
             }
@@ -128,40 +138,58 @@ namespace AITool
         {
             bool res = false;
 
+            try
+            {
+                AQI.QueueWaitMS = Convert.ToInt64((DateTime.Now - AQI.AddedTime).TotalMilliseconds);
+                this.QTimeCalc.AddToCalc(AQI.QueueWaitMS);
 
-            Stopwatch sw = Stopwatch.StartNew();
+                Stopwatch sw = Stopwatch.StartNew();
 
-            if (this.TriggerActionQueue.Count == 0)
-                this.Count.WriteFullFence(1);
-            else
+                if (this.TriggerActionQueue.Count == 0)
+                    this.Count.WriteFullFence(1);
+                else
+                    this.Count.WriteFullFence(this.TriggerActionQueue.Count);
+
+                AQI.QueueCount = this.Count.ReadFullFence();
+                this.QCountCalc.AddToCalc(AQI.QueueCount);
+
+                Global.SendMessage(MessageType.UpdateStatus);
+
+                if (AQI.TType == TriggerType.TelegramText)
+                {
+                    res = await TelegramText(AQI.Text, AQI.IsQueued);
+                }
+                else if (AQI.TType == TriggerType.TelegramImageUpload)
+                {
+                    res = await TelegramUpload(AQI.CurImg, AQI.Text, AQI.IsQueued);
+                }
+                else
+                {
+                    res = await Trigger(AQI.cam, AQI.CurImg, AQI.Trigger, AQI.IsQueued);
+                }
+
                 this.Count.WriteFullFence(this.TriggerActionQueue.Count);
 
-            Global.SendMessage(MessageType.UpdateStatus);
+                AQI.ActionTimeMS = sw.ElapsedMilliseconds;
+                AQI.TotalTimeMS = Convert.ToInt64((DateTime.Now - AQI.AddedTime).TotalMilliseconds);
+                this.TotalTimeCalc.AddToCalc(AQI.TotalTimeMS);
+                this.ActionTimeCalc.AddToCalc(AQI.ActionTimeMS);
 
-            if (AQI._ttype == TriggerType.TelegramText)
-            {
-                res = await TelegramText(AQI._text);
+                Global.Log($"{CurSrv} - Action '{AQI.TType}' done.  Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min}ms,Max={this.QCountCalc.Max}ms,Avg={this.QCountCalc.Average}ms), Total time={AQI.TotalTimeMS} (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={this.TotalTimeCalc.Average}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={this.QTimeCalc.Average}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={this.ActionTimeCalc.Average}ms), Image={this.ImgPath}");
+
+                Global.SendMessage(MessageType.UpdateStatus);
+
             }
-            else if (AQI._ttype == TriggerType.TelegramImageUpload)
+            catch (Exception ex)
             {
-                res = await TelegramUpload(AQI._curmg, AQI._text);
+                Global.Log("Error: " + Global.ExMsg(ex));
             }
-            else
-            {
-                res = await Trigger(AQI._cam, AQI._curmg, AQI._trigger);
-            }
-
-            this.Count.WriteFullFence(this.TriggerActionQueue.Count);
-
-            Global.Log($"{CurSrv} - Action completion time was {sw.ElapsedMilliseconds}ms.");
-
-            Global.SendMessage(MessageType.UpdateStatus);
 
             return res;
         }
 
         //trigger actions
-        public async Task<bool> Trigger(Camera cam, ClsImageQueueItem CurImg, bool Trigger)
+        public async Task<bool> Trigger(Camera cam, ClsImageQueueItem CurImg, bool Trigger, bool IsQueued)
         {
             bool ret = true;
 
@@ -250,22 +278,6 @@ namespace AITool
 
                         bool result = await CallTriggerURLs(urls, Trigger);
 
-                    }
-
-                    //upload to telegram
-                    if (cam.telegram_enabled && Trigger)
-                    {
-
-                        string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
-                        if (!await TelegramUpload(CurImg, tmp))
-                        {
-                            ret = false;
-                            Global.Log($"{CurSrv} -    -> ERROR sending image to Telegram.");
-                        }
-                        else
-                        {
-                            Global.Log($"{CurSrv} -    -> Sent image to Telegram.");
-                        }
                     }
 
                     //run external program
@@ -371,12 +383,28 @@ namespace AITool
 
                     }
 
+                    //upload to telegram
+                    if (cam.telegram_enabled && Trigger)
+                    {
+
+                        string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
+                        if (!await TelegramUpload(CurImg, tmp, IsQueued))
+                        {
+                            ret = false;
+                            Global.Log($"{CurSrv} -    -> ERROR sending image to Telegram.");
+                        }
+                        else
+                        {
+                            Global.Log($"{CurSrv} -    -> Sent image to Telegram.");
+                        }
+                    }
+
 
                     if (Trigger)
                     {
                         cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                        Global.Log($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time}.");
-                        Global.UpdateLabel($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time}.", "lbl_info");
+                        Global.Log($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time.Read()}.");
+                        Global.UpdateLabel($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time.Read()}.", "lbl_info");
                     }
 
 
@@ -476,7 +504,7 @@ namespace AITool
         }
 
         //send image to Telegram
-        public async Task<bool> TelegramUpload(ClsImageQueueItem CurImg, string img_caption)
+        public async Task<bool> TelegramUpload(ClsImageQueueItem CurImg, string img_caption, bool IsQueued)
         {
             bool ret = false;
 
@@ -488,7 +516,7 @@ namespace AITool
                 {
                     if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
                     {
-                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 1 second
+                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
                     }
 
                     if (TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= TelegramRetryTime.Read())
@@ -520,6 +548,14 @@ namespace AITool
 
                             last_telegram_trigger_time.Write(DateTime.Now);
                             TelegramRetryTime.Write(DateTime.MinValue);
+
+                            if (IsQueued)
+                            {
+                                //add a minimum delay if we are in a queue to prevent minimum cooldown error
+                                Global.Log($"Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...");
+                                await Task.Delay(TimeSpan.FromMinutes(AppSettings.Settings.telegram_cooldown_minutes));
+                            }
+
                         }
                         else
                         {
@@ -597,7 +633,7 @@ namespace AITool
         }
 
         //send text to Telegram
-        public async Task<bool> TelegramText(string text)
+        public async Task<bool> TelegramText(string text, bool IsQueued)
         {
             bool ret = false;
             if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
@@ -624,6 +660,14 @@ namespace AITool
                             }
                             last_telegram_trigger_time.Write(DateTime.Now);
                             TelegramRetryTime.Write(DateTime.MinValue);
+
+                            if (IsQueued)
+                            {
+                                //add a minimum delay if we are in a queue to prevent minimum cooldown error
+                                Global.Log($"Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...");
+                                await Task.Delay(TimeSpan.FromMinutes(AppSettings.Settings.telegram_cooldown_minutes));
+                            }
+
                             ret = true;
                         }
                         else

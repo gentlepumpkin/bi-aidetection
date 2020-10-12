@@ -24,8 +24,11 @@ namespace AITool
     {
         private ThreadSafe.Datetime LastListUpdate = new ThreadSafe.Datetime(DateTime.MinValue);
 
+        private ThreadSafe.Boolean DatabaseInitialized = new ThreadSafe.Boolean(false);
 
         private ThreadSafe.Boolean IsListUpdating = new ThreadSafe.Boolean(false);
+
+        private ThreadSafe.Boolean DoneLoading = new ThreadSafe.Boolean(false);
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
         private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
@@ -153,19 +156,12 @@ namespace AITool
             cb_follow.Checked = AppSettings.Settings.HistoryFollow;
             automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
 
+            storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
+            storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
 
             HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
-            if (AppSettings.Settings.HistoryAutoRefresh)
-            {
-                HistoryUpdateListTimer.Enabled = true;
-                HistoryUpdateListTimer.Start();
-            }
-            else
-            {
-                HistoryUpdateListTimer.Enabled = false;
-                HistoryUpdateListTimer.Stop();
-            }
+            this.DoneLoading.WriteFullFence(true);
 
             Log("APP START complete.");
         }
@@ -173,6 +169,7 @@ namespace AITool
 
         async Task UpdateHistoryAddedRemoved()
         {
+            //Log("===Enter");
             //this should be a quicker list update
             if (AppSettings.Settings.HistoryAutoRefresh &&
                 !this.IsListUpdating.ReadFullFence() &&
@@ -180,7 +177,8 @@ namespace AITool
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
                 (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS &&
-                HistoryDB.HasInitialized.ReadFullFence() &&
+                this.DatabaseInitialized.ReadFullFence() &&
+                this.DoneLoading.ReadFullFence() &&
                 await HistoryDB.HasUpdates())
             {
                 this.IsListUpdating.WriteFullFence(true);
@@ -211,11 +209,13 @@ namespace AITool
             {
                 //Global.Log($"Debug: List not updated - Refresh={AppSettings.Settings.HistoryAutoRefresh}, Visible={tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)}, IsListUpdating={this.IsListUpdating.ReadFullFence()}, LastListUpdateMS={(DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds}");
             }
+            //Log("===Exit");
+
 
         }
 
 
-        void EventMessage(ClsMessage msg)
+        async void EventMessage(ClsMessage msg)
         {
             //output messages from the deepstack, blueiris, etc class to the text log window and log file
             if (msg.MessageType == MessageType.LogEntry)
@@ -223,8 +223,23 @@ namespace AITool
                 Log(msg.Description, "");
             }
             else if (msg.MessageType == MessageType.DatabaseInitialized)
-                LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
+            {
+             
+                Log("Info: Database initialized.");
+                this.DatabaseInitialized.WriteFullFence(true);
+                await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
+                if (AppSettings.Settings.HistoryAutoRefresh)
+                {
+                    HistoryUpdateListTimer.Enabled = true;
+                    HistoryUpdateListTimer.Start();
+                }
+                else
+                {
+                    HistoryUpdateListTimer.Enabled = false;
+                    HistoryUpdateListTimer.Stop();
+                }
 
+            }
             else if (msg.MessageType == MessageType.CreateHistoryItem)
             {
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
@@ -232,9 +247,23 @@ namespace AITool
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
                 History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
 
-                if (!HistoryDB.ReadOnly)  //otherwise another service is doing all the updating
+
+                if (!HistoryDB.ReadOnly)
                 {
-                    HistoryDB.InsertHistoryQueue(hist);
+                    bool StoreMasked = hist.Success || !hist.WasMasked || (hist.WasMasked && AppSettings.Settings.HistoryStoreMaskedAlerts);
+                    bool StoreFalse = hist.Success || !hist.Detections.ToLower().Contains("false alert") || (hist.Detections.ToLower().Contains("false alert") && AppSettings.Settings.HistoryStoreFalseAlerts);
+                    bool Save = true;
+                    if (!StoreMasked || !StoreFalse)
+                        Save = false;
+
+                    if (Save)
+                    {
+                        HistoryDB.InsertHistoryQueue(hist);
+                    }
+                    else
+                    {
+                        Log($"Info: Not storing item in db - StoreMasked={StoreMasked}, StoreFalse={StoreFalse}: {hist.Detections}");
+                    }
                 }
 
                 //UpdateHistoryAddedRemoved();
@@ -1280,10 +1309,22 @@ namespace AITool
 
             //Log("---Enter");
 
-            Stopwatch semsw = Stopwatch.StartNew();
+            if (!this.DoneLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
+            {
+                //Log("---Exit (still loading)");
+                return;
+            }
 
             //make sure only one thread updating at a time
-            await Semaphore_List_Updating.WaitAsync();
+            //await Semaphore_List_Updating.WaitAsync();
+
+            if (this.IsListUpdating.ReadFullFence())
+            {
+                Log("---Exit (already updating)");
+                return;
+            }
+
+            Stopwatch semsw = Stopwatch.StartNew();
 
             this.IsListUpdating.WriteFullFence(true);
             this.LastListUpdate.Write(DateTime.Now);
@@ -1300,7 +1341,7 @@ namespace AITool
                 bool displayed = false;
                 do
                 {
-                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null && HistoryDB.HasInitialized.ReadFullFence())
+                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null && this.DatabaseInitialized.ReadFullFence())
                         break;
                     else if (!displayed)
                     {
@@ -1313,7 +1354,7 @@ namespace AITool
                 } while (sw.ElapsedMilliseconds < 60000);
 
                 if (displayed)
-                    Log($"...Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
+                    Log($"...Info: Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
 
                 //Dont update list unless we are on the tab and it is visible for performance reasons.
                 if (FilterChanged || folv_history.Items.Count == 0 || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
@@ -1384,7 +1425,7 @@ namespace AITool
                     cw.Dispose();
                 this.LastListUpdate.Write(DateTime.Now);
                 this.IsListUpdating.WriteFullFence(false);
-                Semaphore_List_Updating.Release();
+                //Semaphore_List_Updating.Release();
                 //Log("---Exit");
 
             }
@@ -1399,17 +1440,23 @@ namespace AITool
 
             if (!hist.Success && cb_filter_success.Checked)
                 ret = false;
-            else if (hist.Success && cb_filter_nosuccess.Checked)
+            
+            if (hist.Success && cb_filter_nosuccess.Checked)
                 ret = false;
-            else if (!hist.WasSkipped && cb_filter_skipped.Checked)
+            
+            if (!hist.WasSkipped && cb_filter_skipped.Checked)
                 ret = false;
-            else if (!hist.WasMasked && cb_filter_masked.Checked)
+            
+            if (!hist.WasMasked && cb_filter_masked.Checked)
+                ret = false;  
+            
+            if (!hist.IsPerson && cb_filter_person.Checked)
                 ret = false;
-            else if (!hist.IsPerson && cb_filter_person.Checked)
+            
+            if (!hist.IsVehicle && cb_filter_vehicle.Checked)
                 ret = false;
-            else if (!hist.IsVehicle && cb_filter_vehicle.Checked)
-                ret = false;
-            else if (!hist.IsAnimal && cb_filter_animal.Checked)
+            
+            if (!hist.IsAnimal && cb_filter_animal.Checked)
                 ret = false;
 
             bool CameraValid = ((comboBox_filter_camera.Text.Trim() == "All Cameras") || hist.Camera.Trim().ToLower() == comboBox_filter_camera.Text.Trim().ToLower());
@@ -2699,6 +2746,8 @@ namespace AITool
                 frm.tb_MQTT_Payload_cancel.Text = cam.Action_mqtt_payload_cancel;
                 frm.tb_MQTT_Topic_Cancel.Text = cam.Action_mqtt_topic_cancel;
 
+                frm.cb_queue_actions.Checked = cam.Action_queued;
+
                 frm.cb_mergeannotations.Checked = cam.Action_image_merge_detections;
 
                 if (frm.ShowDialog() == DialogResult.OK)
@@ -2729,6 +2778,8 @@ namespace AITool
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 
+                    cam.Action_queued = frm.cb_queue_actions.Checked;
+                    
                     AppSettings.Save();
 
                 }
@@ -3170,6 +3221,19 @@ namespace AITool
                 }
             }
             AppSettings.Save();
+        }
+
+        private void storeFalseAlertsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryStoreFalseAlerts = storeFalseAlertsToolStripMenuItem.Checked;
+            AppSettings.Save();
+        }
+
+        private void storeMaskedAlertsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryStoreMaskedAlerts = storeMaskedAlertsToolStripMenuItem.Checked;
+            AppSettings.Save();
+
         }
     }
 

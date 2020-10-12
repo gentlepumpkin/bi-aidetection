@@ -972,7 +972,6 @@ namespace AITool
                                 {
                                     request.Add(new StreamContent(image_data), "image", Path.GetFileName(CurImg.image_path));
 
-
                                     //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
                                     using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
                                     {
@@ -1137,7 +1136,7 @@ namespace AITool
 
 
                                                 Log($"{CurSrv} - (5/6) Performing alert actions:");
-                                                TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, true, false, DeepStackURL, ""); //make TRIGGER
+                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, true, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                                 cam.IncrementAlerts(); //stats update
                                                 Log($"{CurSrv} - (6/6) SUCCESS.");
@@ -1165,7 +1164,7 @@ namespace AITool
                                                 //IRRELEVANT ALERT
 
                                                 Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
-                                                TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, false, DeepStackURL, ""); //make TRIGGER
+                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                                 cam.IncrementIrrelevantAlerts(); //stats update
                                                 Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
@@ -1217,7 +1216,7 @@ namespace AITool
                                             // FALSE ALERT
 
                                             Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
-                                            TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, false, DeepStackURL, ""); //make TRIGGER
+                                            await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                             cam.IncrementFalseAlerts(); //stats update
 
@@ -1294,7 +1293,7 @@ namespace AITool
                     if (AppSettings.Settings.send_errors && cam.telegram_enabled)
                     {
                         //bool success = await TelegramUpload(CurImg, "Error");
-                        TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, false, false, DeepStackURL, "Error"); //make TRIGGER
+                        await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, false, !cam.Action_queued, DeepStackURL, "Error"); //make TRIGGER
 
                     }
 

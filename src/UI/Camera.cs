@@ -78,6 +78,7 @@ namespace AITool
         public string Action_mqtt_topic_cancel = "ai/[camera]/motioncancel";
         public string Action_mqtt_payload_cancel = "cancel";
         public bool Action_mqtt_retain_message = false;
+        public bool Action_queued = false;
 
         public MaskManager maskManager = new MaskManager();
         public int mask_brush_size = 35;

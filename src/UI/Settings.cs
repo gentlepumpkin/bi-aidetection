@@ -108,7 +108,8 @@ namespace AITool
             public bool HistoryShowObjects = true;
             public bool HistoryFollow = true;
             public bool HistoryAutoRefresh = true;
-
+            public bool HistoryStoreFalseAlerts = true;
+            public bool HistoryStoreMaskedAlerts = true;
 
         }
 

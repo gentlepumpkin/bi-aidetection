@@ -67,6 +67,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
+            this.cb_queue_actions = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -103,6 +104,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox1.Controls.Add(this.cb_queue_actions);
             this.groupBox1.Controls.Add(this.cb_mergeannotations);
             this.groupBox1.Controls.Add(this.tb_network_folder_filename);
             this.groupBox1.Controls.Add(this.label15);
@@ -442,7 +444,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label5.Location = new System.Drawing.Point(11, 20);
+            this.label5.Location = new System.Drawing.Point(11, 21);
             this.label5.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(91, 15);
@@ -454,7 +456,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label6.Location = new System.Drawing.Point(162, 20);
+            this.label6.Location = new System.Drawing.Point(162, 21);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 5, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(50, 15);
@@ -493,6 +495,17 @@
             this.btTest.Text = "Test";
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
+            // 
+            // cb_queue_actions
+            // 
+            this.cb_queue_actions.AutoSize = true;
+            this.cb_queue_actions.Location = new System.Drawing.Point(484, 19);
+            this.cb_queue_actions.Name = "cb_queue_actions";
+            this.cb_queue_actions.Size = new System.Drawing.Size(104, 19);
+            this.cb_queue_actions.TabIndex = 47;
+            this.cb_queue_actions.Text = "Queue Actions";
+            this.toolTip1.SetToolTip(this.cb_queue_actions, resources.GetString("cb_queue_actions.ToolTip"));
+            this.cb_queue_actions.UseVisualStyleBackColor = true;
             // 
             // Frm_LegacyActions
             // 
@@ -557,5 +570,6 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label12;
+        public System.Windows.Forms.CheckBox cb_queue_actions;
     }
 }

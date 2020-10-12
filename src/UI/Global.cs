@@ -349,7 +349,7 @@ namespace AITool
             if (progress == null)
             {
                 //TODO: trying to catch a logging failure, should take out messagebox later
-                if (!warnedlog)
+                if (!warnedlog && !Global.IsService)
                 {
                     warnedlog = true;
                     MessageBox.Show("Debug warning: Progress event logger is null?");
@@ -699,6 +699,14 @@ namespace AITool
                     //}
                     //GetPublicIPAddress
                     StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
+
+                    //string mods = "";
+
+                    //for (int i = 1; i < Frames.Count(); i++)
+                    //{
+
+                    //}
+
                     ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}:{Frames[Frames.Count() - 1].GetFileColumnNumber()}";
                 }
             }
@@ -2366,7 +2374,9 @@ namespace AITool
                     this.sampleAccumulator -= this.samples.Dequeue();
                 }
 
-                this.Average = this.sampleAccumulator / samples.Count;
+                if (this.sampleAccumulator > 0)  //divide by 0?
+                    this.Average = this.sampleAccumulator / samples.Count;
+                
                 if (this.Min == 0)
                 {
                     this.Min = newSample;
