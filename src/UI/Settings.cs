@@ -106,6 +106,7 @@ namespace AITool
             public int TimeBetweenListRefreshsMS = 5000;
             public bool HistoryShowMask = false;
             public bool HistoryShowObjects = true;
+            public bool HistoryOnlyDisplayRelevantObjects = true;
             public bool HistoryFollow = true;
             public bool HistoryAutoRefresh = true;
             public bool HistoryStoreFalseAlerts = true;
@@ -379,11 +380,15 @@ namespace AITool
                             //update threshold in all masks if changed during session
                             cam.maskManager.Update(cam);
 
+                            ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
                             if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
                             {
                                 cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                                cam.trigger_url_cancels = false;  
                             }
+
+                            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
+                            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
                             if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
                             {

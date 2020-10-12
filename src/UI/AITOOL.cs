@@ -935,6 +935,8 @@ namespace AITool
             Camera cam = AITOOL.GetCamera(CurImg.image_path);
             cam.last_image_file = CurImg.image_path;
 
+            History hist = null;
+
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double mins = (DateTime.Now - cam.last_trigger_time.Read()).TotalMinutes;
@@ -1123,6 +1125,9 @@ namespace AITool
                                                 cam.last_positions = objects_position;
                                                 cam.last_image_file_with_detections = CurImg.image_path;
 
+                                                //the new way
+                                                
+
                                                 //create summary string for this detection
                                                 StringBuilder detectionsTextSb = new StringBuilder();
                                                 for (int i = 0; i < objects.Count(); i++)
@@ -1131,16 +1136,6 @@ namespace AITool
                                                 }
 
                                                 cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
-
-                                                Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
-
-
-                                                Log($"{CurSrv} - (5/6) Performing alert actions:");
-                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, true, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
-
-                                                cam.IncrementAlerts(); //stats update
-                                                Log($"{CurSrv} - (6/6) SUCCESS.");
-
 
                                                 //create text string objects and confidences
                                                 string objects_and_confidences = "";
@@ -1153,22 +1148,26 @@ namespace AITool
 
                                                 objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
+                                                Log($"{CurSrv} - The summary:" + cam.last_detections_summary);
+
+                                                Log($"{CurSrv} - (5/6) Performing alert actions:");
+
+                                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON);
+                                                
+                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
+
+                                                cam.IncrementAlerts(); //stats update
+                                                Log($"{CurSrv} - (6/6) SUCCESS.");
+
                                                 //add to history list
                                                 Log($"{CurSrv} - Adding detection to history list.");
-                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON));
+                                                Global.CreateHistoryItem(hist);
 
                                             }
                                             //if no object fulfills all 3 requirements but there are other objects: 
                                             else if (irrelevant_objects.Count() > 0)
                                             {
                                                 //IRRELEVANT ALERT
-
-                                                Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
-                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
-
-                                                cam.IncrementIrrelevantAlerts(); //stats update
-                                                Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
-                                                //Log("Adding irrelevant detection to history list.");
 
                                                 //retrieve confidences and positions
                                                 string objects_and_confidences = "";
@@ -1206,8 +1205,18 @@ namespace AITool
                                                 }
 
                                                 Log($"{CurSrv} - {text}, so it's an irrelevant alert.");
+
+                                                Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
+
+                                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON);
+
+                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
+
+                                                cam.IncrementIrrelevantAlerts(); //stats update
+                                                Log($"{CurSrv} - (6/6) Camera {cam.name} caused an irrelevant alert.");
+
                                                 //add to history list
-                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON));
+                                                Global.CreateHistoryItem(hist);
                                             }
                                         }
                                         else
@@ -1215,15 +1224,18 @@ namespace AITool
                                             Log($"{CurSrv} -       ((NO DETECTED OBJECTS))");
                                             // FALSE ALERT
 
-                                            Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
-                                            await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
-
                                             cam.IncrementFalseAlerts(); //stats update
+
+                                            Log($"{CurSrv} - (5/6) Performing CANCEL actions:");
+
+                                            hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "");
+
+                                            await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                             Log($"{CurSrv} - (6/6) Camera {cam.name} caused a false alert, nothing detected.");
 
                                             //add to history list
-                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, ""));
+                                            Global.CreateHistoryItem(hist);
                                         }
 
                                     }
@@ -1293,7 +1305,11 @@ namespace AITool
                     if (AppSettings.Settings.send_errors && cam.telegram_enabled)
                     {
                         //bool success = await TelegramUpload(CurImg, "Error");
-                        await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, false, !cam.Action_queued, DeepStackURL, "Error"); //make TRIGGER
+                        if (hist == null)
+                        {
+                            hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "error", "", false, "");
+                        }
+                        await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, "Error"); //make TRIGGER
 
                     }
 

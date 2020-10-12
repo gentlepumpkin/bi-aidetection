@@ -17,6 +17,11 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.InputFiles;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
+using System.Drawing;
+using System.Drawing.Text;
+using System.Security.AccessControl;
 
 namespace AITool
 {
@@ -24,6 +29,7 @@ namespace AITool
     {
         public TriggerType TType { get; set; } = TriggerType.Unknown;
         public Camera cam { get; set; } = null;
+        public History Hist { get; set; } = null;
         public ClsImageQueueItem CurImg { get; set; } = null;
         public bool Trigger { get; set; } = true;
         public string Text { get; set; } = "";
@@ -33,7 +39,7 @@ namespace AITool
         public bool IsQueued { get; set; } = false;
         public long ActionTimeMS { get; set; } = 0;
         public long TotalTimeMS { get; set; } = 0;
-        public ClsTriggerActionQueueItem(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, bool Trigger, string Text, bool IsQueued)
+        public ClsTriggerActionQueueItem(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, string Text, bool IsQueued)
         {
             this.cam = cam;
             this.TType = ttype;
@@ -42,6 +48,7 @@ namespace AITool
             this.AddedTime = DateTime.Now;
             this.Text = Text;
             this.IsQueued = IsQueued;
+            this.Hist = hist;
         }
     }
 
@@ -64,7 +71,7 @@ namespace AITool
             Task.Run(TriggerActionJobQueueLoop);
         }
 
-        public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
+        public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
         {
             bool ret = false;
             this._url = ds_url;
@@ -82,7 +89,7 @@ namespace AITool
                 ImgPath = CurImg.image_path;
             }
 
-            ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, Trigger, Text, !Wait);
+            ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, hist, Trigger, Text, !Wait);
 
             if (Wait)  //not queued
             {
@@ -142,6 +149,7 @@ namespace AITool
             {
                 AQI.QueueWaitMS = Convert.ToInt64((DateTime.Now - AQI.AddedTime).TotalMilliseconds);
                 this.QTimeCalc.AddToCalc(AQI.QueueWaitMS);
+                bool WasSkipped = false;
 
                 Stopwatch sw = Stopwatch.StartNew();
 
@@ -157,15 +165,21 @@ namespace AITool
 
                 if (AQI.TType == TriggerType.TelegramText)
                 {
-                    res = await TelegramText(AQI.Text, AQI.IsQueued);
+                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
+                        res = await TelegramText(AQI);
+                    else
+                        WasSkipped = true;
                 }
                 else if (AQI.TType == TriggerType.TelegramImageUpload)
                 {
-                    res = await TelegramUpload(AQI.CurImg, AQI.Text, AQI.IsQueued);
+                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
+                        res = await TelegramUpload(AQI);
+                    else
+                        WasSkipped = true;
                 }
                 else
                 {
-                    res = await Trigger(AQI.cam, AQI.CurImg, AQI.Trigger, AQI.IsQueued);
+                    res = await Trigger(AQI);
                 }
 
                 this.Count.WriteFullFence(this.TriggerActionQueue.Count);
@@ -175,7 +189,10 @@ namespace AITool
                 this.TotalTimeCalc.AddToCalc(AQI.TotalTimeMS);
                 this.ActionTimeCalc.AddToCalc(AQI.ActionTimeMS);
 
-                Global.Log($"{CurSrv} - Action '{AQI.TType}' done.  Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min}ms,Max={this.QCountCalc.Max}ms,Avg={this.QCountCalc.Average}ms), Total time={AQI.TotalTimeMS} (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={this.TotalTimeCalc.Average}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={this.QTimeCalc.Average}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={this.ActionTimeCalc.Average}ms), Image={this.ImgPath}");
+                if (!WasSkipped)
+                {
+                    Global.Log($"{CurSrv} - Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min}ms,Max={this.QCountCalc.Max}ms,Avg={this.QCountCalc.Average}ms), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.Average)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={Convert.ToInt64(this.QTimeCalc.Average)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.Average)}ms), Image={this.ImgPath}");
+                }
 
                 Global.SendMessage(MessageType.UpdateStatus);
 
@@ -189,20 +206,20 @@ namespace AITool
         }
 
         //trigger actions
-        public async Task<bool> Trigger(Camera cam, ClsImageQueueItem CurImg, bool Trigger, bool IsQueued)
+        public async Task<bool> Trigger(ClsTriggerActionQueueItem AQI)
         {
             bool ret = true;
 
             //mostly for testing when we dont have a current image...
-            if (CurImg == null)
+            if (AQI.CurImg == null)
             {
-                if (!string.IsNullOrEmpty(cam.last_image_file_with_detections))
+                if (!string.IsNullOrEmpty(AQI.cam.last_image_file_with_detections))
                 {
-                    CurImg = new ClsImageQueueItem(cam.last_image_file_with_detections, 1);
+                    AQI.CurImg = new ClsImageQueueItem(AQI.cam.last_image_file_with_detections, 1);
                 }
-                else if (!string.IsNullOrEmpty(cam.last_image_file))
+                else if (!string.IsNullOrEmpty(AQI.cam.last_image_file))
                 {
-                    CurImg = new ClsImageQueueItem(cam.last_image_file, 1);
+                    AQI.CurImg = new ClsImageQueueItem(AQI.cam.last_image_file, 1);
                 }
                 else
                 {
@@ -213,29 +230,26 @@ namespace AITool
 
             try
             {
-                double cooltime = (DateTime.Now - cam.last_trigger_time.Read()).TotalMinutes;
-                string tmpfile = CurImg.image_path;
+                double cooltime = (DateTime.Now - AQI.cam.last_trigger_time.Read()).TotalMinutes;
+                string tmpfile = "";
 
                 //only trigger if cameras cooldown time since last detection has passed
-                if (cooltime >= cam.cooldown_time)
+                if (cooltime >= AQI.cam.cooldown_time)
                 {
 
-                    if (cam.Action_image_merge_detections && Trigger)
+                    if (AQI.cam.Action_image_merge_detections && AQI.Trigger)
                     {
-                        if (cam.Action_image_merge_detections_makecopy)
-                            tmpfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(CurImg.image_path));
-
-                        cam.MergeImageAnnotations(tmpfile, CurImg);
-
-                        if (cam.Action_image_merge_detections_makecopy && System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
-                            CurImg = new ClsImageQueueItem(tmpfile, 1);
+                        tmpfile = await MergeImageAnnotations(AQI);
+                        
+                        if (AQI.CurImg.image_path.ToLower() != tmpfile.ToLower() && System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
+                            AQI.CurImg = new ClsImageQueueItem(tmpfile, 1);
                     }
 
-                    if (cam.Action_image_copy_enabled && Trigger)
+                    if (AQI.cam.Action_image_copy_enabled && AQI.Trigger)
                     {
                         Global.Log($"{CurSrv} -    Copying image to network folder...");
                         string newimagepath = "";
-                        if (!CopyImage(cam, CurImg, ref newimagepath))
+                        if (!CopyImage(AQI.cam, AQI.CurImg, ref newimagepath))
                         {
                             ret = false;
                             Global.Log($"{CurSrv} -    -> Warning: Image could not be copied to network folder.");
@@ -244,52 +258,52 @@ namespace AITool
                         {
                             Global.Log($"{CurSrv} -    -> Image copied to network folder.");
                             //set the image path to the new path so all imagename variable works
-                            CurImg = new ClsImageQueueItem(newimagepath, 1);
+                            AQI.CurImg = new ClsImageQueueItem(newimagepath, 1);
                         }
 
                     }
 
                     //call trigger urls
-                    if (Trigger && cam.trigger_urls.Count() > 0)
+                    if (AQI.Trigger && AQI.cam.trigger_urls.Count() > 0)
                     {
                         //replace url paramters with according values
                         List<string> urls = new List<string>();
                         //call urls
-                        foreach (string url in cam.trigger_urls)
+                        foreach (string url in AQI.cam.trigger_urls)
                         {
-                            string tmp = AITOOL.ReplaceParams(cam, CurImg, url);
+                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, url);
                             urls.Add(tmp);
 
                         }
 
-                        bool result = await CallTriggerURLs(urls, Trigger);
+                        bool result = await CallTriggerURLs(urls, AQI.Trigger);
                     }
-                    else if (!Trigger && cam.cancel_urls.Count() > 0)
+                    else if (!AQI.Trigger && AQI.cam.cancel_urls.Count() > 0)
                     {
                         //replace url paramters with according values
                         List<string> urls = new List<string>();
                         //call urls
-                        foreach (string url in cam.cancel_urls)
+                        foreach (string url in AQI.cam.cancel_urls)
                         {
-                            string tmp = AITOOL.ReplaceParams(cam, CurImg, url);
+                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, url);
                             urls.Add(tmp);
 
                         }
 
-                        bool result = await CallTriggerURLs(urls, Trigger);
+                        bool result = await CallTriggerURLs(urls, AQI.Trigger);
 
                     }
 
                     //run external program
-                    if (cam.Action_RunProgram && Trigger)
+                    if (AQI.cam.Action_RunProgram && AQI.Trigger)
                     {
                         string run = "";
                         string param = "";
                         try
                         {
-                            run = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramString);
-                            param = AITOOL.ReplaceParams(cam, CurImg, cam.Action_RunProgramArgsString);
-                            Global.Log($"{CurSrv} -    Starting external app - Camera={cam.name} run='{run}', param='{param}'");
+                            run = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_RunProgramString);
+                            param = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_RunProgramArgsString);
+                            Global.Log($"{CurSrv} -    Starting external app - Camera={AQI.cam.name} run='{run}', param='{param}'");
                             Process.Start(run, param);
                         }
                         catch (Exception ex)
@@ -301,13 +315,13 @@ namespace AITool
                     }
 
                     //Play sounds
-                    if (cam.Action_PlaySounds && Trigger)
+                    if (AQI.cam.Action_PlaySounds && AQI.Trigger)
                     {
                         try
                         {
 
                             //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
-                            string snds = AITOOL.ReplaceParams(cam, CurImg, cam.Action_Sounds);
+                            string snds = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_Sounds);
 
                             List<string> items = Global.Split(snds, "|");
 
@@ -325,7 +339,7 @@ namespace AITool
                                     List<string> objects = Global.Split(splt[0], ",");
                                     foreach (string objname in objects)
                                     {
-                                        foreach (string detection in cam.last_detections)
+                                        foreach (string detection in AQI.cam.last_detections)
                                         {
                                             if (detection.ToLower().Contains(objname.ToLower()) || (objname == "*"))
                                             {
@@ -348,23 +362,23 @@ namespace AITool
                         {
 
                             ret = false;
-                            Global.Log($"{CurSrv} - Error: while calling sound '{cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
+                            Global.Log($"{CurSrv} - Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}");
                         }
                     }
 
-                    if (cam.Action_mqtt_enabled)
+                    if (AQI.cam.Action_mqtt_enabled)
                     {
                         string topic = "";
                         string payload = "";
-                        if (Trigger)
+                        if (AQI.Trigger)
                         {
-                            topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic);
-                            payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload);
+                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_mqtt_topic);
+                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_mqtt_payload);
                         }
                         else
                         {
-                            topic = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_topic_cancel);
-                            payload = AITOOL.ReplaceParams(cam, CurImg, cam.Action_mqtt_payload_cancel);
+                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_mqtt_topic_cancel);
+                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel);
                         }
 
                         List<string> topics = Global.Split(topic, ";|");
@@ -374,7 +388,7 @@ namespace AITool
                         for (int i = 0; i < topics.Count; i++)
                         {
                             MQTTClient mq = new MQTTClient();
-                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], cam.Action_mqtt_retain_message);
+                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message);
                             if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                 ret = false;
 
@@ -384,11 +398,11 @@ namespace AITool
                     }
 
                     //upload to telegram
-                    if (cam.telegram_enabled && Trigger)
+                    if (AQI.cam.telegram_enabled && AQI.Trigger)
                     {
 
-                        string tmp = AITOOL.ReplaceParams(cam, CurImg, cam.telegram_caption);
-                        if (!await TelegramUpload(CurImg, tmp, IsQueued))
+                        string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.CurImg, AQI.cam.telegram_caption);
+                        if (!await TelegramUpload(AQI))
                         {
                             ret = false;
                             Global.Log($"{CurSrv} -    -> ERROR sending image to Telegram.");
@@ -400,11 +414,11 @@ namespace AITool
                     }
 
 
-                    if (Trigger)
+                    if (AQI.Trigger)
                     {
-                        cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                        Global.Log($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time.Read()}.");
-                        Global.UpdateLabel($"{CurSrv} - {cam.name} last triggered at {cam.last_trigger_time.Read()}.", "lbl_info");
+                        AQI.cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
+                        Global.Log($"{CurSrv} - {AQI.cam.name} last triggered at {AQI.cam.last_trigger_time.Read()}.");
+                        Global.UpdateLabel($"{CurSrv} - {AQI.cam.name} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
                     }
 
 
@@ -412,11 +426,11 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Global.Log($"{CurSrv} -    Camera {cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {cam.cooldown_time} minutes - See Cameras 'cooldown_time' in settings file)");
+                    Global.Log($"{CurSrv} -    Camera {AQI.cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time} minutes - See Cameras 'cooldown_time' in settings file)");
                 }
 
 
-                if (cam.Action_image_merge_detections && Trigger && cam.Action_image_merge_detections_makecopy && !string.IsNullOrEmpty(tmpfile) && System.IO.File.Exists(tmpfile))
+                if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.ToLower().Contains(Environment.GetEnvironmentVariable("TEMP").ToLower()) && System.IO.File.Exists(tmpfile))
                 {
                     System.IO.File.Delete(tmpfile);
                     //Log($"Debug: Deleting tmp file {tmpfile}");
@@ -433,6 +447,258 @@ namespace AITool
 
             return ret;
 
+        }
+
+        
+        public async Task<string> MergeImageAnnotations(ClsTriggerActionQueueItem AQI)
+        {
+            int countr = 0;
+            string detections = "";
+            string lasttext = "";
+            string lastposition = "";
+            string OutputImageFile = "";
+
+            try
+            {
+                Global.Log("Merging image annotations: " + AQI.CurImg.image_path);
+
+                if (System.IO.File.Exists(AQI.CurImg.image_path))
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    using (Bitmap img = new Bitmap(AQI.CurImg.image_path))
+                    {
+                        using (Graphics g = Graphics.FromImage(img))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.SmoothingMode = SmoothingMode.HighQuality;
+                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                            //http://csharphelper.com/blog/2014/09/understand-font-aliasing-issues-in-c/
+                            g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+
+
+                            System.Drawing.Color color = new System.Drawing.Color();
+
+                            if (AQI.Hist != null && !string.IsNullOrEmpty(AQI.Hist.PredictionsJSON))
+                            {
+                                List<ClsPrediction> predictions = new List<ClsPrediction>();
+
+                                predictions = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
+
+                                foreach (var pred in predictions)
+                                {
+                                    bool Merge = false;
+
+                                    if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                                        Merge = true;
+                                    else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                        Merge = true;
+
+                                    if (Merge)
+                                    {
+                                        if (pred.Result == ResultType.Relevant)
+                                        {
+                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                                        }
+                                        else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
+                                        {
+                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                                        }
+                                        else
+                                        {
+                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                                        }
+
+                                        int xmin = pred.xmin + AQI.cam.XOffset;
+                                        int ymin = pred.ymin + AQI.cam.YOffset;
+                                        int xmax = pred.xmax;
+                                        int ymax = pred.ymax;
+
+                                        System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+
+                                        using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
+                                        {
+                                            g.DrawRectangle(pen, rect); //draw rectangle
+                                        }
+
+                                        //we need this since people can change the border width in the json file
+                                        int halfbrd = AppSettings.Settings.RectBorderWidth / 2;
+
+                                        //object name text below rectangle
+                                        rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, img.Width, img.Height); //sets bounding box for drawn text
+
+                                        Brush brush = new SolidBrush(color); //sets background rectangle color
+
+                                        lasttext = pred.ToString();
+
+                                        System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                                        g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
+                                        g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+
+                                        g.Flush();
+
+                                        countr++;
+                                    }
+
+                                }
+
+                            }
+                            else
+                            {
+                                //Use the old way -this code really doesnt need to be here but leaving just to make sure
+                                detections = AQI.cam.last_detections_summary;
+                                if (string.IsNullOrEmpty(detections))
+                                    detections = "";
+
+                                string label = Global.GetWordBetween(detections, "", ":");
+
+                                if (label.Contains("irrelevant") || label.Contains("confidence") || label.Contains("masked") || label.Contains("errors"))
+                                {
+                                    detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+
+                                    if (label.Contains("masked"))
+                                    {
+                                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                                    }
+                                    else
+                                    {
+                                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                                    }
+                                }
+                                else
+                                {
+                                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                                }
+
+                                //List<string> detectlist = Global.Split(detections, "|;");
+                                countr = AQI.cam.last_detections.Count();
+
+                                //display a rectangle around each relevant object
+
+
+                                for (int i = 0; i < countr; i++)
+                                {
+                                    //({ Math.Round((user.confidence * 100), 2).ToString() }%)
+                                    lasttext = $"{AQI.cam.last_detections[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, AQI.cam.last_confidences[i])}";
+                                    lastposition = AQI.cam.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
+
+                                    //store xmin, ymin, xmax, ymax in separate variables
+                                    Int32.TryParse(lastposition.Split(',')[0], out int xmin);
+                                    Int32.TryParse(lastposition.Split(',')[1], out int ymin);
+                                    Int32.TryParse(lastposition.Split(',')[2], out int xmax);
+                                    Int32.TryParse(lastposition.Split(',')[3], out int ymax);
+
+                                    xmin = xmin + AQI.cam.XOffset;
+                                    ymin = ymin + AQI.cam.YOffset;
+
+                                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+
+
+                                    using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
+                                    {
+                                        g.DrawRectangle(pen, rect); //draw rectangle
+                                    }
+
+                                    //we need this since people can change the border width in the json file
+                                    int halfbrd = AppSettings.Settings.RectBorderWidth / 2;
+
+                                    //object name text below rectangle
+                                    rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, img.Width, img.Height); //sets bounding box for drawn text
+
+
+                                    Brush brush = new SolidBrush(color); //sets background rectangle color
+
+                                    System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                                    g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
+                                    g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+
+                                    g.Flush();
+
+                                    //Global.Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
+                                }
+
+                            }
+
+
+                            if (countr > 0)
+                            {
+
+                                GraphicsState gs = g.Save();
+
+                                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+
+                                // Create an Encoder object based on the GUID  
+                                // for the Quality parameter category.  
+                                System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
+
+                                // Create an EncoderParameters object.  
+                                // An EncoderParameters object has an array of EncoderParameter  
+                                // objects. In this case, there is only one  
+                                // EncoderParameter object in the array.  
+                                EncoderParameters myEncoderParameters = new EncoderParameters(1);
+
+                                EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, AQI.cam.Action_image_merge_jpegquality);  //100=least compression, largest file size, best quality
+                                myEncoderParameters.Param[0] = myEncoderParameter;
+
+                                bool Success = true;
+
+                                if (AQI.cam.Action_image_merge_detections_makecopy)
+                                    OutputImageFile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(AQI.CurImg.image_path));
+                                else
+                                    OutputImageFile = AQI.CurImg.image_path;
+
+                                if (System.IO.File.Exists(OutputImageFile))
+                                {
+                                    Success = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
+                                }
+
+                                if (Success)
+                                {
+                                    img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
+                                    Global.Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}");
+                                }
+                                else
+                                {
+                                    Global.Log($"Error: Could not gain access to write merged file {OutputImageFile}");
+                                }
+
+                            }
+                            else
+                            {
+                                Global.Log($"No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}");
+
+                            }
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    Global.Log("Error: could not find last image with detections: " + AQI.CurImg.image_path);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Global.Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex));
+            }
+
+            return OutputImageFile;
+        }
+
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
         }
 
         public bool CopyImage(Camera cam, ClsImageQueueItem CurImg, ref string dest_path)
@@ -504,7 +770,7 @@ namespace AITool
         }
 
         //send image to Telegram
-        public async Task<bool> TelegramUpload(ClsImageQueueItem CurImg, string img_caption, bool IsQueued)
+        public async Task<bool> TelegramUpload(ClsTriggerActionQueueItem AQI)
         {
             bool ret = false;
 
@@ -527,13 +793,13 @@ namespace AITool
                             //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
 
 
-                            using (var image_telegram = System.IO.File.OpenRead(CurImg.image_path))
+                            using (var image_telegram = System.IO.File.OpenRead(AQI.CurImg.image_path))
                             {
                                 TelegramBotClient bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
 
                                 //upload image to Telegram servers and send to first chat
                                 Global.Log($"{CurSrv} -       uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"");
-                                Message message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), img_caption);
+                                Message message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), AQI.Text);
 
                                 string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
@@ -541,7 +807,7 @@ namespace AITool
                                 foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
                                 {
                                     Global.Log($"{CurSrv} -       uploading image to chat \"{chatid}\"...");
-                                    await bot.SendPhotoAsync(chatid, file_id, img_caption);
+                                    await bot.SendPhotoAsync(chatid, file_id, AQI.Text);
                                 }
                                 ret = true;
                             }
@@ -549,7 +815,7 @@ namespace AITool
                             last_telegram_trigger_time.Write(DateTime.Now);
                             TelegramRetryTime.Write(DateTime.MinValue);
 
-                            if (IsQueued)
+                            if (AQI.IsQueued)
                             {
                                 //add a minimum delay if we are in a queue to prevent minimum cooldown error
                                 Global.Log($"Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...");
@@ -576,7 +842,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
-                    Global.Log($"{CurSrv} - ERROR: Could not upload image {CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
+                    Global.Log($"{CurSrv} - ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
                     TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
                     Global.Log($"{CurSrv} - ...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}");
                     AppSettings.Settings.send_errors = se;
@@ -588,9 +854,9 @@ namespace AITool
                         Global.Log($"{CurSrv} - ./errors/" + " dir created.");
                     }
                     //save error image
-                    using (var image = SixLabors.ImageSharp.Image.Load(CurImg.image_path))
+                    using (var image = SixLabors.ImageSharp.Image.Load(AQI.CurImg.image_path))
                     {
-                        image.Save($"{CurSrv} - ./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
+                        image.Save($"{CurSrv} - ./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(AQI.CurImg.image_path) + ".jpg");
                     }
                     Global.UpdateLabel($"{CurSrv} - Can't upload error message to Telegram!", "lbl_errors");
 
@@ -599,7 +865,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
-                    Global.Log($"{CurSrv} -ERROR: Could not upload image {CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
+                    Global.Log($"{CurSrv} -ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram: {Global.ExMsg(ex)}");
                     TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
                     Global.Log($"{CurSrv} -...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}");
                     AppSettings.Settings.send_errors = se;
@@ -611,9 +877,9 @@ namespace AITool
                         Global.Log($"{CurSrv} - ./errors/" + " dir created.");
                     }
                     //save error image
-                    using (var image = SixLabors.ImageSharp.Image.Load(CurImg.image_path))
+                    using (var image = SixLabors.ImageSharp.Image.Load(AQI.CurImg.image_path))
                     {
-                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(CurImg.image_path) + ".jpg");
+                        image.Save("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(AQI.CurImg.image_path) + ".jpg");
                     }
                     Global.UpdateLabel($"{CurSrv} - Can't upload error message to Telegram!", "lbl_errors");
 
@@ -633,11 +899,9 @@ namespace AITool
         }
 
         //send text to Telegram
-        public async Task<bool> TelegramText(string text, bool IsQueued)
+        public async Task<bool> TelegramText(ClsTriggerActionQueueItem AQI)
         {
             bool ret = false;
-            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
-            {
                 //telegram upload sometimes fails
                 try
                 {
@@ -655,13 +919,13 @@ namespace AITool
                             TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
                             foreach (string chatid in AppSettings.Settings.telegram_chatids)
                             {
-                                Message msg = await bot.SendTextMessageAsync(chatid, text);
+                                Message msg = await bot.SendTextMessageAsync(chatid, AQI.Text);
 
                             }
                             last_telegram_trigger_time.Write(DateTime.Now);
                             TelegramRetryTime.Write(DateTime.MinValue);
 
-                            if (IsQueued)
+                            if (AQI.IsQueued)
                             {
                                 //add a minimum delay if we are in a queue to prevent minimum cooldown error
                                 Global.Log($"Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...");
@@ -690,7 +954,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
-                    Global.Log($"{CurSrv} - ERROR: Could not upload text '{text}' to Telegram: {Global.ExMsg(ex)}");
+                    Global.Log($"{CurSrv} - ERROR: Could not upload text '{AQI.Text}' to Telegram: {Global.ExMsg(ex)}");
                     TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
                     Global.Log($"{CurSrv} - ...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}");
                     AppSettings.Settings.send_errors = se;
@@ -701,14 +965,14 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
-                    Global.Log($"{CurSrv} - ERROR: Could not upload image '{text}' to Telegram: {Global.ExMsg(ex)}");
+                    Global.Log($"{CurSrv} - ERROR: Could not upload image '{AQI.Text}' to Telegram: {Global.ExMsg(ex)}");
                     TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
                     Global.Log($"{CurSrv} - ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}");
                     AppSettings.Settings.send_errors = se;
                     Global.UpdateLabel($"{CurSrv} - Can't upload error message to Telegram!", "lbl_errors");
                 }
 
-            }
+            
 
             return ret;
         }

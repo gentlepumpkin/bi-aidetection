@@ -293,7 +293,19 @@ namespace AITool
         public static void SendMessage(MessageType MT, string Descript = "", object Payload = null, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog && !Global.IsService)
+                {
+                    warnedlog = true;
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"SendMessage {MT.ToString()} Debug warning: Progress event logger is null? calling function='{member}'");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MT, Descript, Payload, memberName);
 
@@ -304,7 +316,19 @@ namespace AITool
         public static void DeleteHistoryItem(string filename, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog && !Global.IsService)
+                {
+                    warnedlog = true;
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"DeleteHistoryItem Debug warning: Progress event logger is null? calling function='{member}'");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MessageType.DeleteHistoryItem, filename, null, memberName);
 
@@ -314,7 +338,19 @@ namespace AITool
         public static void UpdateProgressBar(string label, int CurVal, int MaxVal, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog && !Global.IsService)
+                {
+                    warnedlog = true;
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"UpdateProgressBar Debug warning: Progress event logger is null? calling function='{member}'");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName,CurVal,MaxVal);
 
@@ -325,7 +361,19 @@ namespace AITool
         public static void CreateHistoryItem(History hist, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog && !Global.IsService)
+                {
+                    warnedlog = true;
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"CreateHistoryItem Debug warning: Progress event logger is null? calling function='{member}'");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MessageType.CreateHistoryItem, "", hist, memberName);
 
@@ -336,7 +384,19 @@ namespace AITool
         public static void UpdateLabel(string Message, string LabelControlName, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
+            {
+                //TODO: trying to catch a logging failure, should take out messagebox later
+                if (!warnedlog && !Global.IsService)
+                {
+                    warnedlog = true;
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"UpdateLabel Debug warning: Progress event logger is null? calling function='{member}'");
+                }
                 return;
+            }
 
             ClsMessage msg = new ClsMessage(MessageType.UpdateLabel, Message, LabelControlName, memberName);
 
@@ -352,7 +412,11 @@ namespace AITool
                 if (!warnedlog && !Global.IsService)
                 {
                     warnedlog = true;
-                    MessageBox.Show("Debug warning: Progress event logger is null?");
+                    string member = "unknown";
+                    if (memberName != null)
+                        member = memberName;
+
+                    MessageBox.Show($"Log Debug warning: Progress event logger is null? calling function='{member}'");
                 }
                 return;
             }
