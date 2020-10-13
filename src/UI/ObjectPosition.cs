@@ -43,19 +43,22 @@ namespace AITool
             }
         }
 
-        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
+        //empty default constructor used by JSON deserialization
+        public ObjectPosition() {}
+
+        public ObjectPosition(Object imageObject, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
             this.CreateDate = DateTime.Now;
             this.LastSeenDate = DateTime.Now;
             this.CameraName = cameraName;
             this.ImagePath = imagePath;
-            this.Label = label;
-            this.Xmin = xmin;
-            this.Ymin = ymin;
-            this.Xmax = xmax;
-            this.Ymax = ymax;
+            this.Label = imageObject.label;
+            this.Xmin = imageObject.x_min;
+            this.Ymin = imageObject.y_min;
+            this.Xmax = imageObject.x_max;
+            this.Ymax = imageObject.y_max;
 
-            ObjRectangle = Rectangle.FromLTRB(xmin, ymin, xmax, ymax);
+            ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
 
             this.ImageHeight = imageHeight;
             this.ImageWidth = imageWidth;
@@ -64,12 +67,12 @@ namespace AITool
             ObjectImagePercent = (ObjRectangle.Width * ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            Key = ((xmin + 1) * (ymin + 1) + (ObjRectangle.Width * ObjRectangle.Height));
+            Key = ((Xmin + 1) * (Ymin + 1) + (ObjRectangle.Width * ObjRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
         Due to thier size, smaller objects are more sensitive to slight changes in postion. 
-        This settings allows sensivity adjustments based on the object size.*/
+        This settings allows for a custom percentage match value based on the object size.*/
         private int getImagePercentVariance()
         {
             int scalePercent = 0;
@@ -78,7 +81,7 @@ namespace AITool
             {
                 if (ScaleConfig.IsScaledObject)
                 {
-                    if (ObjectImagePercent <= ScaleConfig.SmallObjectMaxPercent)
+                    if (ObjectImagePercent < ScaleConfig.SmallObjectMaxPercent)
                     {
                         scalePercent = ScaleConfig.SmallObjectMatchPercent;
                     }
@@ -106,12 +109,10 @@ namespace AITool
 
             float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
-            Global.Log("@@@@@@@ percent Intersection: " + percentageIntersect + "%" 
-                + "\n compare obj: " + other.ToString() 
-                + "\n master obj: "  + this.ToString()); 
+            if (percentageIntersect > 0)
+                Global.Log("Percentage Intersection of object: " + percentageIntersect + "%");
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
-            Global.Log("@@@@@ Configured percent Match = " + percentMatch);
 
             if(percentageIntersect >= percentMatch)
             {
@@ -149,7 +150,7 @@ namespace AITool
 
         public override string ToString()
         {
-            string value = "key=" + getKey() + ", name=" + Label + ", xmin=" + Xmin + ", ymin=" + Ymin + ", xmax=" + Xmax + ", ymax=" + Ymax + ", counter=" + Counter + ", camera=" + CameraName + ", create date: " + CreateDate + ", image path: " + ImagePath ;
+            string value = "key=" + getKey() + ", name=" + Label + ", xmin=" + Xmin + ", ymin=" + Ymin + ", xmax=" + Xmax + ", ymax=" + Ymax + ", counter=" + Counter + ", camera=" + CameraName + ", create date: " + CreateDate + ", imagePath: " + ImagePath ;
 
             return value;
         }

@@ -31,7 +31,7 @@ namespace AITool
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public int MaskSaveMins { get; set; } = 2;
         public double PercentMatch { get; set; } = 85;                  //miniumn percentage match to be considered a match
-        public int MaskRemoveThreshold { get; set; }
+        public int MaskRemoveThreshold { get; set; } = 1;
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
         
@@ -285,8 +285,6 @@ namespace AITool
                 {
                     if (MaskedPositions != null && MaskedPositions.Count > 0)
                     {
-                        //Global.Log("Searching for object masks to remove on Camera: " + cameraName);
-
                         //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
                         for (int x = MaskedPositions.Count - 1; x >= 0; x--)
                         {
@@ -298,15 +296,13 @@ namespace AITool
                             switch (trigger)
                             {
                                 case RemoveEvent.Timer:
-                                    Global.Log("@@@@ Timer event fired: mask counter=" + maskedObject.Counter);
                                     if (minutes >= MaskSaveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Global.Log("Removing expired masked object by timer: " + maskedObject.ToString());
+                                        Global.Log("Removing expired masked object by timer thread: " + maskedObject.ToString());
                                         MaskedPositions.RemoveAt(x);
                                     }
                                     break;
                                 case RemoveEvent.Detection:
-                                    Global.Log("@@@@ Detection event fired. Minutes= " + minutes + " and counter=" + maskedObject.Counter);
                                     if (minutes > 1 && !maskedObject.IsStatic)  //if not visiable and not marked as a static mask
                                     {
                                         if (maskedObject.Counter == 0)
@@ -314,11 +310,10 @@ namespace AITool
                                             Global.Log("Removing expired masked object after detection: " + maskedObject.ToString());
                                             MaskedPositions.RemoveAt(x);
                                         }
-                                        else maskedObject.Counter --;
+                                        else maskedObject.Counter--;
                                     }
                                     break;
                             }
-                        
                         }
                     }
                     else if (MaskedPositions == null)
@@ -344,10 +339,10 @@ namespace AITool
     {
         public bool IsScaledObject { get; set; } = false;
         public int SmallObjectMaxPercent { get; set; } = 2;
-        public int SmallObjectMatchPercent { get; set; } = 75;
-        public int MediumObjectMinPercent { get; set; } = 3;
-        public int MediumObjectMaxPercent { get; set; } = 80;
-        public int MediumObjectMatchPercent { get; set; } = 0;
+        public int SmallObjectMatchPercent { get; set; } = 78;
+        public int MediumObjectMinPercent { get; set; } = 2;
+        public int MediumObjectMaxPercent { get; set; } = 5;
+        public int MediumObjectMatchPercent { get; set; } = 82;
     }
 
 }
