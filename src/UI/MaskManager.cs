@@ -79,6 +79,9 @@ namespace AITool
                     this.PercentMatch = this.PercentMatch * 100;
                 }
 
+                if (cam.maskManager.ScaleConfig == null)
+                    cam.maskManager.ScaleConfig = new ObjectScale();
+
                 foreach (ObjectPosition op in this.LastPositionsHistory)
                 {
                     //Update threshold since it could have been changed since mask created
