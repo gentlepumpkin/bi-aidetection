@@ -1901,7 +1901,7 @@
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
         VauoSaSxJGOFrE24QwaUBAJpIEAohJCaQZyUcjQUGHZgECBQczVADJjTBsxhLmNufMSYwxw2YI6YI8B3
         z/vyrlJEo25aYB/pJ7/v73qe97l+P9t8G+++fer3J0984PpXezc/V0efjz3PX4n18byWePlS2P3AKzcK
         ggOjvm4f+UdkXPQMTrrg5h/rcu7D8Pft3S+fsj3rzuzBbfefkZlZ9iMfz6Do4MBbxYL03GFFh2p6YGDQ
@@ -1943,7 +1943,7 @@ to review footage from night before.</value>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
         FVGzkOjcnPOGiyFkIsmIJmaCCBdzhkWZiBkSQzLRzGj4Uf6Ruci/WJFS6A+lpaUtlAKlUP4EBr57npfv
         Y2UK0zl3kpPv+9q+73POc55zvrdB/8aysrK+LisraywuKPi9AF5VVdUYExPzpfL167ezZ8/em5mdFb7R
         UeH3+wXt2LFjRcrXr99OnjzZ5B0ZEe6BATE4NCymn8yIhISESuXr/8bi4uLO19bWPrp48eL7ykdBeXl5
@@ -1978,7 +1978,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
         AkJfRVCSWaRNsKVVSkxqTIzVWiMpuIVw7H97G0q4RDP0JmAOHO49l1zOl+GHRKmCthZWSzJ1Kw3XdeMk
         SSDT1EndBKBG0Ry+H0g1dVI3A5jNPhdEHsLwC3Ecs5VyUWfv52XqXAEcTKcfsO0xHIfssJVyUWfv52Xq
         pG4GMJm8YTSy0Ol0oWkaWykXdfZ+XqbOFCAIXjEcPkg1daYAvv+Cfn8g1dSZArjuM0zzTqqpMwVASRIC
@@ -1990,7 +1990,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonMaskDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
         xizR1EwoTEtAGVsW6qZdcF0czQZ0TRqyNTGr0SEY4rQGU0PBuE5px6CrrLP0SddRupLy+kNbNh6rFBkl
         lSYN9Z3HLSlQDFvafsmXl3vfOfd859x77nusx8Xls69mh2bvif5238rHU+mFz35DGKD0aH5uQnSsOCcL
         T6cPTYe35dr0UmTTSlFtLSsTT6cPkx6iilAJkcfaI8RTqUc0Gt0QCoVejEQiZ8LBAAoHKUR5CeQd7X05
@@ -2016,7 +2016,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonEditImageMask.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
         YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
         0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
         bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
@@ -2042,7 +2042,7 @@ to review footage from night before.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABm
-        LgAAAk1TRnQBSQFMAgEBEAEAAbABBAGwAQQBEAEAARABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAFA
+        LgAAAk1TRnQBSQFMAgEBEAEAAbgBBAG4AQQBEAEAARABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAFA
         AwABUAMAAQEBAAEgBgABUP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wBvAAMHAQkDTgGY
         A0oBiwNCAXQoAAI2ATUBWAJeAVwBzgNOAZkDBwEJQwAB/wMAAf8PAAH/IwAB/wMAAf8bAAH/AwAB/xQA
         AxkBIwNeAc4CAAHFAf8BjwIAAf8DXAH4AwcBCiAAAy8BSQMAAf8BlgGbAY4B/wGKAZMBiAH/AlwBWQHM

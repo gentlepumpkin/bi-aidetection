@@ -51,7 +51,7 @@ namespace AITool
         public SQLiteHistory(string Filename, bool ReadOnly)
         {
             if (string.IsNullOrEmpty(Filename))
-                throw new System.ArgumentException("Parameter cannot be empty", "Filename");
+                throw new System.ArgumentException("Parameter cannot be empty", nameof(Filename));
 
             this.Filename = Filename;
             this.ReadOnly = ReadOnly;

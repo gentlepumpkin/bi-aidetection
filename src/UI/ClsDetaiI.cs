@@ -37,14 +37,11 @@ namespace AITool
         {
             lock (this._LockObj)
             {
-                if (!this.Values.Contains(CDI))
-                {
-                    this._LastIDX += 1;
-                    this._NotDisplayedCount += 1;
-                    this._LastDetailItm = CDI;
-                    CDI.Idx = this._LastIDX;
-                    this.Values.Add(this._LastDetailItm);
-                }
+                this._LastIDX += 1;
+                this._NotDisplayedCount += 1;
+                this._LastDetailItm = CDI;
+                CDI.Idx = this._LastIDX;
+                this.Values.Add(this._LastDetailItm);
             }
         }
 
@@ -82,13 +79,13 @@ namespace AITool
                 this._LastDetailItm.MemberName = memberName;
                 if (Type == DetailType.Unknown)
                 {
-                    if (this._LastDetailItm.Detail.ToLower().Contains("error:"))
+                    if (this._LastDetailItm.Detail.IndexOf("error:", StringComparison.OrdinalIgnoreCase) >= 0)
                         Type = DetailType.Error;
-                    else if (this._LastDetailItm.Detail.ToLower().Contains("warning:"))
+                    else if (this._LastDetailItm.Detail.IndexOf("warning:", StringComparison.OrdinalIgnoreCase) >= 0)
                         Type = DetailType.Warning;
-                    else if (this._LastDetailItm.Detail.ToLower().Contains("info:"))
+                    else if (this._LastDetailItm.Detail.IndexOf("info:", StringComparison.OrdinalIgnoreCase) >= 0)
                         Type = DetailType.Info;
-                    else if (this._LastDetailItm.Detail.ToLower().Contains("debug:"))
+                    else if (this._LastDetailItm.Detail.IndexOf("debug:", StringComparison.OrdinalIgnoreCase) >= 0)
                         Type = DetailType.Debug;
                     else
                         Type = DetailType.Detail;

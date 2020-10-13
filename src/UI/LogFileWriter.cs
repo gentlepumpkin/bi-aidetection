@@ -830,14 +830,8 @@ public class IOFile:IDisposable
 		return Ret;
 	}
 
-	// Properties
-	public List<string> Strings
-	{
-		get
-		{
-			return this.m_strings;
-		}
-	}
+    // Properties
+    public List<string> Strings => this.m_strings;
 
 
 }

@@ -318,9 +318,9 @@ namespace AITool
             // tabOverview
             // 
             this.tabOverview.Controls.Add(this.tableLayoutPanel14);
-            this.tabOverview.Location = new System.Drawing.Point(4, 22);
+            this.tabOverview.Location = new System.Drawing.Point(4, 29);
             this.tabOverview.Name = "tabOverview";
-            this.tabOverview.Size = new System.Drawing.Size(1027, 457);
+            this.tabOverview.Size = new System.Drawing.Size(1027, 450);
             this.tabOverview.TabIndex = 4;
             this.tabOverview.Text = "Overview";
             this.tabOverview.UseVisualStyleBackColor = true;
@@ -395,7 +395,7 @@ namespace AITool
             this.label2.ForeColor = System.Drawing.Color.Green;
             this.label2.Location = new System.Drawing.Point(3, 205);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(1009, 32);
+            this.label2.Size = new System.Drawing.Size(1009, 48);
             this.label2.TabIndex = 3;
             this.label2.Text = "Running";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -470,9 +470,9 @@ namespace AITool
             // tabStats
             // 
             this.tabStats.Controls.Add(this.tableLayoutPanel16);
-            this.tabStats.Location = new System.Drawing.Point(4, 22);
+            this.tabStats.Location = new System.Drawing.Point(4, 29);
             this.tabStats.Name = "tabStats";
-            this.tabStats.Size = new System.Drawing.Size(1027, 457);
+            this.tabStats.Size = new System.Drawing.Size(1027, 450);
             this.tabStats.TabIndex = 5;
             this.tabStats.Text = "Stats";
             this.tabStats.UseVisualStyleBackColor = true;
@@ -672,7 +672,7 @@ namespace AITool
             legend1.LegendStyle = System.Windows.Forms.DataVisualization.Charting.LegendStyle.Column;
             legend1.Name = "Legend1";
             this.chart1.Legends.Add(legend1);
-            this.chart1.Location = new System.Drawing.Point(3, 59);
+            this.chart1.Location = new System.Drawing.Point(3, 70);
             this.chart1.Name = "chart1";
             series8.ChartArea = "ChartArea1";
             series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Pie;
@@ -685,7 +685,7 @@ namespace AITool
             series8.Points.Add(dataPoint2);
             series8.Points.Add(dataPoint3);
             this.chart1.Series.Add(series8);
-            this.chart1.Size = new System.Drawing.Size(294, 388);
+            this.chart1.Size = new System.Drawing.Size(294, 377);
             this.chart1.TabIndex = 2;
             this.chart1.Text = "chart1";
             title1.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -703,7 +703,7 @@ namespace AITool
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(3, 3);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(294, 25);
+            this.comboBox1.Size = new System.Drawing.Size(294, 36);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged_1);
             this.comboBox1.SelectionChangeCommitted += new System.EventHandler(this.comboBox1_SelectionChangeCommitted);
@@ -713,7 +713,7 @@ namespace AITool
             this.btn_resetstats.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_resetstats.Location = new System.Drawing.Point(2, 33);
+            this.btn_resetstats.Location = new System.Drawing.Point(2, 44);
             this.btn_resetstats.Margin = new System.Windows.Forms.Padding(2);
             this.btn_resetstats.Name = "btn_resetstats";
             this.btn_resetstats.Size = new System.Drawing.Size(296, 21);
@@ -726,10 +726,10 @@ namespace AITool
             // 
             this.tabHistory.Controls.Add(this.toolStrip1);
             this.tabHistory.Controls.Add(this.splitContainer2);
-            this.tabHistory.Location = new System.Drawing.Point(4, 22);
+            this.tabHistory.Location = new System.Drawing.Point(4, 29);
             this.tabHistory.Name = "tabHistory";
             this.tabHistory.Padding = new System.Windows.Forms.Padding(3);
-            this.tabHistory.Size = new System.Drawing.Size(1027, 457);
+            this.tabHistory.Size = new System.Drawing.Size(1027, 450);
             this.tabHistory.TabIndex = 0;
             this.tabHistory.Text = "History";
             this.tabHistory.UseVisualStyleBackColor = true;
@@ -779,7 +779,7 @@ namespace AITool
             this.toolStripDropDownButtonFilters.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonFilters.Image")));
             this.toolStripDropDownButtonFilters.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonFilters.Name = "toolStripDropDownButtonFilters";
-            this.toolStripDropDownButtonFilters.Size = new System.Drawing.Size(120, 35);
+            this.toolStripDropDownButtonFilters.Size = new System.Drawing.Size(166, 33);
             this.toolStripDropDownButtonFilters.Text = "History Filters";
             // 
             // cb_filter_success
@@ -787,7 +787,7 @@ namespace AITool
             this.cb_filter_success.CheckOnClick = true;
             this.cb_filter_success.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_success.Name = "cb_filter_success";
-            this.cb_filter_success.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_success.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_success.Text = "Only Relevant";
             this.cb_filter_success.Click += new System.EventHandler(this.cb_filter_success_Click);
             // 
@@ -796,7 +796,7 @@ namespace AITool
             this.cb_filter_nosuccess.CheckOnClick = true;
             this.cb_filter_nosuccess.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_nosuccess.Name = "cb_filter_nosuccess";
-            this.cb_filter_nosuccess.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_nosuccess.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_nosuccess.Text = "Only False / Irrelevant";
             this.cb_filter_nosuccess.Click += new System.EventHandler(this.cb_filter_nosuccess_Click);
             // 
@@ -805,7 +805,7 @@ namespace AITool
             this.cb_filter_person.CheckOnClick = true;
             this.cb_filter_person.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_person.Name = "cb_filter_person";
-            this.cb_filter_person.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_person.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_person.Text = "Only People";
             this.cb_filter_person.Click += new System.EventHandler(this.cb_filter_person_Click);
             // 
@@ -814,7 +814,7 @@ namespace AITool
             this.cb_filter_animal.CheckOnClick = true;
             this.cb_filter_animal.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_animal.Name = "cb_filter_animal";
-            this.cb_filter_animal.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_animal.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_animal.Text = "Only Animals";
             this.cb_filter_animal.Click += new System.EventHandler(this.cb_filter_animal_Click);
             // 
@@ -823,7 +823,7 @@ namespace AITool
             this.cb_filter_vehicle.CheckOnClick = true;
             this.cb_filter_vehicle.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_vehicle.Name = "cb_filter_vehicle";
-            this.cb_filter_vehicle.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_vehicle.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_vehicle.Text = "Only Vehicles";
             this.cb_filter_vehicle.Click += new System.EventHandler(this.cb_filter_vehicle_Click);
             // 
@@ -832,7 +832,7 @@ namespace AITool
             this.cb_filter_skipped.CheckOnClick = true;
             this.cb_filter_skipped.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_skipped.Name = "cb_filter_skipped";
-            this.cb_filter_skipped.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_skipped.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_skipped.Text = "Only Skipped";
             this.cb_filter_skipped.Click += new System.EventHandler(this.cb_filter_skipped_Click);
             // 
@@ -841,7 +841,7 @@ namespace AITool
             this.cb_filter_masked.CheckOnClick = true;
             this.cb_filter_masked.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_filter_masked.Name = "cb_filter_masked";
-            this.cb_filter_masked.Size = new System.Drawing.Size(188, 22);
+            this.cb_filter_masked.Size = new System.Drawing.Size(284, 34);
             this.cb_filter_masked.Text = "Only Masked";
             this.cb_filter_masked.Click += new System.EventHandler(this.cb_filter_masked_Click);
             // 
@@ -858,7 +858,7 @@ namespace AITool
             this.toolStripDropDownButtonOptions.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonOptions.Image")));
             this.toolStripDropDownButtonOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonOptions.Name = "toolStripDropDownButtonOptions";
-            this.toolStripDropDownButtonOptions.Size = new System.Drawing.Size(131, 35);
+            this.toolStripDropDownButtonOptions.Size = new System.Drawing.Size(184, 33);
             this.toolStripDropDownButtonOptions.Text = "History Settings";
             // 
             // cb_showMask
@@ -866,7 +866,7 @@ namespace AITool
             this.cb_showMask.CheckOnClick = true;
             this.cb_showMask.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_showMask.Name = "cb_showMask";
-            this.cb_showMask.Size = new System.Drawing.Size(222, 22);
+            this.cb_showMask.Size = new System.Drawing.Size(336, 34);
             this.cb_showMask.Text = "Show Mask";
             this.cb_showMask.Click += new System.EventHandler(this.cb_showMask_Click);
             // 
@@ -877,7 +877,7 @@ namespace AITool
             this.cb_showObjects.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cb_showObjects.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_showObjects.Name = "cb_showObjects";
-            this.cb_showObjects.Size = new System.Drawing.Size(222, 22);
+            this.cb_showObjects.Size = new System.Drawing.Size(336, 34);
             this.cb_showObjects.Text = "Show Objects";
             this.cb_showObjects.CheckedChanged += new System.EventHandler(this.cb_showObjects_CheckedChanged);
             this.cb_showObjects.Click += new System.EventHandler(this.cb_showObjects_Click);
@@ -887,7 +887,7 @@ namespace AITool
             this.showOnlyRelevantObjectsToolStripMenuItem.CheckOnClick = true;
             this.showOnlyRelevantObjectsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.showOnlyRelevantObjectsToolStripMenuItem.Name = "showOnlyRelevantObjectsToolStripMenuItem";
-            this.showOnlyRelevantObjectsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.showOnlyRelevantObjectsToolStripMenuItem.Size = new System.Drawing.Size(336, 34);
             this.showOnlyRelevantObjectsToolStripMenuItem.Text = "Show Only Relevant Objects";
             this.showOnlyRelevantObjectsToolStripMenuItem.ToolTipText = "The setting applies to both the right-hand image display and to merging of annota" +
     "tions.\r\nIt does not change the history list.";
@@ -898,7 +898,7 @@ namespace AITool
             this.cb_follow.CheckOnClick = true;
             this.cb_follow.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_follow.Name = "cb_follow";
-            this.cb_follow.Size = new System.Drawing.Size(222, 22);
+            this.cb_follow.Size = new System.Drawing.Size(336, 34);
             this.cb_follow.Text = "Follow History List";
             this.cb_follow.ToolTipText = "Automatically select the latest history item in the list for every update";
             this.cb_follow.Click += new System.EventHandler(this.cb_follow_Click);
@@ -910,7 +910,7 @@ namespace AITool
             this.automaticallyRefreshToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.automaticallyRefreshToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.automaticallyRefreshToolStripMenuItem.Name = "automaticallyRefreshToolStripMenuItem";
-            this.automaticallyRefreshToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.automaticallyRefreshToolStripMenuItem.Size = new System.Drawing.Size(336, 34);
             this.automaticallyRefreshToolStripMenuItem.Text = "Automatically Refresh";
             this.automaticallyRefreshToolStripMenuItem.Click += new System.EventHandler(this.automaticallyRefreshToolStripMenuItem_Click);
             // 
@@ -920,7 +920,7 @@ namespace AITool
             this.storeFalseAlertsToolStripMenuItem.DoubleClickEnabled = true;
             this.storeFalseAlertsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.storeFalseAlertsToolStripMenuItem.Name = "storeFalseAlertsToolStripMenuItem";
-            this.storeFalseAlertsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.storeFalseAlertsToolStripMenuItem.Size = new System.Drawing.Size(336, 34);
             this.storeFalseAlertsToolStripMenuItem.Text = "Store False Alerts";
             this.storeFalseAlertsToolStripMenuItem.ToolTipText = resources.GetString("storeFalseAlertsToolStripMenuItem.ToolTipText");
             this.storeFalseAlertsToolStripMenuItem.Click += new System.EventHandler(this.storeFalseAlertsToolStripMenuItem_Click);
@@ -931,7 +931,7 @@ namespace AITool
             this.storeMaskedAlertsToolStripMenuItem.DoubleClickEnabled = true;
             this.storeMaskedAlertsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.storeMaskedAlertsToolStripMenuItem.Name = "storeMaskedAlertsToolStripMenuItem";
-            this.storeMaskedAlertsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.storeMaskedAlertsToolStripMenuItem.Size = new System.Drawing.Size(336, 34);
             this.storeMaskedAlertsToolStripMenuItem.Text = "Store Masked Alerts";
             this.storeMaskedAlertsToolStripMenuItem.ToolTipText = "If disabled the database will be smaller, leave enabled for better troubleshootin" +
     "g";
@@ -943,7 +943,7 @@ namespace AITool
             this.toolStripButtonDetails.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDetails.Image")));
             this.toolStripButtonDetails.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDetails.Name = "toolStripButtonDetails";
-            this.toolStripButtonDetails.Size = new System.Drawing.Size(131, 35);
+            this.toolStripButtonDetails.Size = new System.Drawing.Size(181, 33);
             this.toolStripButtonDetails.Text = "Prediction Details";
             this.toolStripButtonDetails.Click += new System.EventHandler(this.toolStripButtonDetails_Click);
             // 
@@ -952,7 +952,7 @@ namespace AITool
             this.toolStripButtonMaskDetails.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonMaskDetails.Image")));
             this.toolStripButtonMaskDetails.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonMaskDetails.Name = "toolStripButtonMaskDetails";
-            this.toolStripButtonMaskDetails.Size = new System.Drawing.Size(155, 35);
+            this.toolStripButtonMaskDetails.Size = new System.Drawing.Size(218, 33);
             this.toolStripButtonMaskDetails.Text = "Dynamic Mask Details";
             this.toolStripButtonMaskDetails.Click += new System.EventHandler(this.toolStripButtonMaskDetails_Click);
             // 
@@ -961,7 +961,7 @@ namespace AITool
             this.toolStripButtonEditImageMask.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonEditImageMask.Image")));
             this.toolStripButtonEditImageMask.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonEditImageMask.Name = "toolStripButtonEditImageMask";
-            this.toolStripButtonEditImageMask.Size = new System.Drawing.Size(126, 35);
+            this.toolStripButtonEditImageMask.Size = new System.Drawing.Size(176, 32);
             this.toolStripButtonEditImageMask.Text = "Edit Image Mask";
             this.toolStripButtonEditImageMask.Click += new System.EventHandler(this.toolStripButtonEditImageMask_Click);
             // 
@@ -1009,11 +1009,11 @@ namespace AITool
             this.folv_history.Dock = System.Windows.Forms.DockStyle.Fill;
             this.folv_history.Font = new System.Drawing.Font("Segoe UI", 9.75F);
             this.folv_history.HideSelection = false;
-            this.folv_history.Location = new System.Drawing.Point(2, 15);
+            this.folv_history.Location = new System.Drawing.Point(2, 21);
             this.folv_history.Margin = new System.Windows.Forms.Padding(2);
             this.folv_history.Name = "folv_history";
             this.folv_history.ShowGroups = false;
-            this.folv_history.Size = new System.Drawing.Size(276, 388);
+            this.folv_history.Size = new System.Drawing.Size(276, 382);
             this.folv_history.TabIndex = 10;
             this.folv_history.UseCellFormatEvents = true;
             this.folv_history.UseCompatibleStateImageBehavior = false;
@@ -1034,33 +1034,33 @@ namespace AITool
             this.refreshToolStripMenuItem,
             this.dynamicMaskDetailsToolStripMenuItem});
             this.contextMenuStripHistory.Name = "contextMenuStripHistory";
-            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 92);
+            this.contextMenuStripHistory.Size = new System.Drawing.Size(259, 132);
             // 
             // testDetectionAgainToolStripMenuItem
             // 
             this.testDetectionAgainToolStripMenuItem.Name = "testDetectionAgainToolStripMenuItem";
-            this.testDetectionAgainToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.testDetectionAgainToolStripMenuItem.Size = new System.Drawing.Size(258, 32);
             this.testDetectionAgainToolStripMenuItem.Text = "Test Detection Again";
             this.testDetectionAgainToolStripMenuItem.Click += new System.EventHandler(this.testDetectionAgainToolStripMenuItem_Click);
             // 
             // detailsToolStripMenuItem
             // 
             this.detailsToolStripMenuItem.Name = "detailsToolStripMenuItem";
-            this.detailsToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.detailsToolStripMenuItem.Size = new System.Drawing.Size(258, 32);
             this.detailsToolStripMenuItem.Text = "Prediction Details";
             this.detailsToolStripMenuItem.Click += new System.EventHandler(this.detailsToolStripMenuItem_Click);
             // 
             // refreshToolStripMenuItem
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(258, 32);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
             // dynamicMaskDetailsToolStripMenuItem
             // 
             this.dynamicMaskDetailsToolStripMenuItem.Name = "dynamicMaskDetailsToolStripMenuItem";
-            this.dynamicMaskDetailsToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.dynamicMaskDetailsToolStripMenuItem.Size = new System.Drawing.Size(258, 32);
             this.dynamicMaskDetailsToolStripMenuItem.Text = "Dynamic Mask Details";
             this.dynamicMaskDetailsToolStripMenuItem.Click += new System.EventHandler(this.dynamicMaskDetailsToolStripMenuItem_Click);
             // 
@@ -1074,7 +1074,7 @@ namespace AITool
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(844, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(846, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1087,7 +1087,7 @@ namespace AITool
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(737, 379);
+            this.pictureBox1.Size = new System.Drawing.Size(739, 379);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -1097,10 +1097,10 @@ namespace AITool
             // 
             this.tabCameras.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabCameras.Controls.Add(this.tableLayoutPanel2);
-            this.tabCameras.Location = new System.Drawing.Point(4, 22);
+            this.tabCameras.Location = new System.Drawing.Point(4, 29);
             this.tabCameras.Name = "tabCameras";
             this.tabCameras.Padding = new System.Windows.Forms.Padding(3);
-            this.tabCameras.Size = new System.Drawing.Size(1027, 457);
+            this.tabCameras.Size = new System.Drawing.Size(1027, 450);
             this.tabCameras.TabIndex = 2;
             this.tabCameras.Text = "Cameras";
             // 
@@ -1118,7 +1118,7 @@ namespace AITool
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(1021, 451);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(1021, 444);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // tableLayoutPanel3
@@ -1134,7 +1134,7 @@ namespace AITool
             this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 445F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(188, 445);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(188, 438);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
             // list2
@@ -1145,7 +1145,7 @@ namespace AITool
             this.list2.HideSelection = false;
             this.list2.Location = new System.Drawing.Point(3, 3);
             this.list2.Name = "list2";
-            this.list2.Size = new System.Drawing.Size(182, 439);
+            this.list2.Size = new System.Drawing.Size(182, 432);
             this.list2.TabIndex = 1;
             this.list2.UseCompatibleStateImageBehavior = false;
             this.list2.View = System.Windows.Forms.View.Details;
@@ -1170,7 +1170,7 @@ namespace AITool
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 6.82557F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 93.17443F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(821, 445);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(821, 438);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
             // tableLayoutPanel11
@@ -1186,7 +1186,7 @@ namespace AITool
             this.tableLayoutPanel11.Controls.Add(this.btnCameraDel, 1, 0);
             this.tableLayoutPanel11.Controls.Add(this.btnSaveTo, 2, 0);
             this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel11.Location = new System.Drawing.Point(3, 407);
+            this.tableLayoutPanel11.Location = new System.Drawing.Point(3, 400);
             this.tableLayoutPanel11.Name = "tableLayoutPanel11";
             this.tableLayoutPanel11.RowCount = 1;
             this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -1248,9 +1248,9 @@ namespace AITool
             this.lbl_camstats.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lbl_camstats.AutoSize = true;
             this.lbl_camstats.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_camstats.Location = new System.Drawing.Point(3, 5);
+            this.lbl_camstats.Location = new System.Drawing.Point(3, 0);
             this.lbl_camstats.Name = "lbl_camstats";
-            this.lbl_camstats.Size = new System.Drawing.Size(38, 17);
+            this.lbl_camstats.Size = new System.Drawing.Size(59, 27);
             this.lbl_camstats.TabIndex = 4;
             this.lbl_camstats.Text = "Stats";
             // 
@@ -1288,7 +1288,7 @@ namespace AITool
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.516F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.52095F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.51843F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(815, 371);
+            this.tableLayoutPanel7.Size = new System.Drawing.Size(815, 364);
             this.tableLayoutPanel7.TabIndex = 2;
             this.tableLayoutPanel7.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel7_Paint);
             // 
@@ -1297,9 +1297,9 @@ namespace AITool
             this.label14.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label14.Location = new System.Drawing.Point(65, 95);
+            this.label14.Location = new System.Drawing.Point(24, 88);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(75, 15);
+            this.label14.Size = new System.Drawing.Size(116, 25);
             this.label14.TabIndex = 17;
             this.label14.Text = "Input Folder";
             // 
@@ -1329,14 +1329,14 @@ namespace AITool
             this.tableLayoutPanel8.Controls.Add(this.cb_bus, 1, 2);
             this.tableLayoutPanel8.Controls.Add(this.cb_truck, 1, 1);
             this.tableLayoutPanel8.Controls.Add(this.cb_car, 1, 0);
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(147, 127);
+            this.tableLayoutPanel8.Location = new System.Drawing.Point(147, 124);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
             this.tableLayoutPanel8.RowCount = 3;
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(664, 109);
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(664, 106);
             this.tableLayoutPanel8.TabIndex = 14;
             // 
             // cb_person
@@ -1344,10 +1344,10 @@ namespace AITool
             this.cb_person.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_person.AutoSize = true;
             this.cb_person.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_person.Location = new System.Drawing.Point(21, 8);
+            this.cb_person.Location = new System.Drawing.Point(21, 3);
             this.cb_person.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_person.Name = "cb_person";
-            this.cb_person.Size = new System.Drawing.Size(62, 19);
+            this.cb_person.Size = new System.Drawing.Size(91, 29);
             this.cb_person.TabIndex = 4;
             this.cb_person.Text = "Person";
             this.cb_person.UseVisualStyleBackColor = true;
@@ -1357,10 +1357,10 @@ namespace AITool
             this.cb_bicycle.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bicycle.AutoSize = true;
             this.cb_bicycle.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bicycle.Location = new System.Drawing.Point(21, 44);
+            this.cb_bicycle.Location = new System.Drawing.Point(21, 38);
             this.cb_bicycle.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bicycle.Name = "cb_bicycle";
-            this.cb_bicycle.Size = new System.Drawing.Size(63, 19);
+            this.cb_bicycle.Size = new System.Drawing.Size(90, 29);
             this.cb_bicycle.TabIndex = 9;
             this.cb_bicycle.Text = "Bicycle";
             this.cb_bicycle.UseVisualStyleBackColor = true;
@@ -1370,10 +1370,10 @@ namespace AITool
             this.cb_motorcycle.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_motorcycle.AutoSize = true;
             this.cb_motorcycle.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_motorcycle.Location = new System.Drawing.Point(21, 81);
+            this.cb_motorcycle.Location = new System.Drawing.Point(21, 73);
             this.cb_motorcycle.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_motorcycle.Name = "cb_motorcycle";
-            this.cb_motorcycle.Size = new System.Drawing.Size(86, 19);
+            this.cb_motorcycle.Size = new System.Drawing.Size(108, 29);
             this.cb_motorcycle.TabIndex = 14;
             this.cb_motorcycle.Text = "Motorcycle";
             this.cb_motorcycle.UseVisualStyleBackColor = true;
@@ -1383,10 +1383,10 @@ namespace AITool
             this.cb_bear.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bear.AutoSize = true;
             this.cb_bear.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bear.Location = new System.Drawing.Point(549, 81);
+            this.cb_bear.Location = new System.Drawing.Point(549, 73);
             this.cb_bear.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bear.Name = "cb_bear";
-            this.cb_bear.Size = new System.Drawing.Size(49, 19);
+            this.cb_bear.Size = new System.Drawing.Size(72, 29);
             this.cb_bear.TabIndex = 18;
             this.cb_bear.Text = "Bear";
             this.cb_bear.UseVisualStyleBackColor = true;
@@ -1396,10 +1396,10 @@ namespace AITool
             this.cb_cow.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cow.AutoSize = true;
             this.cb_cow.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_cow.Location = new System.Drawing.Point(549, 44);
+            this.cb_cow.Location = new System.Drawing.Point(549, 38);
             this.cb_cow.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cow.Name = "cb_cow";
-            this.cb_cow.Size = new System.Drawing.Size(50, 19);
+            this.cb_cow.Size = new System.Drawing.Size(73, 29);
             this.cb_cow.TabIndex = 13;
             this.cb_cow.Text = "Cow";
             this.cb_cow.UseVisualStyleBackColor = true;
@@ -1409,10 +1409,10 @@ namespace AITool
             this.cb_sheep.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_sheep.AutoSize = true;
             this.cb_sheep.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_sheep.Location = new System.Drawing.Point(549, 8);
+            this.cb_sheep.Location = new System.Drawing.Point(549, 3);
             this.cb_sheep.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_sheep.Name = "cb_sheep";
-            this.cb_sheep.Size = new System.Drawing.Size(58, 19);
+            this.cb_sheep.Size = new System.Drawing.Size(87, 29);
             this.cb_sheep.TabIndex = 8;
             this.cb_sheep.Text = "Sheep";
             this.cb_sheep.UseVisualStyleBackColor = true;
@@ -1422,10 +1422,10 @@ namespace AITool
             this.cb_horse.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_horse.AutoSize = true;
             this.cb_horse.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_horse.Location = new System.Drawing.Point(417, 81);
+            this.cb_horse.Location = new System.Drawing.Point(417, 73);
             this.cb_horse.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_horse.Name = "cb_horse";
-            this.cb_horse.Size = new System.Drawing.Size(57, 19);
+            this.cb_horse.Size = new System.Drawing.Size(85, 29);
             this.cb_horse.TabIndex = 17;
             this.cb_horse.Text = "Horse";
             this.cb_horse.UseVisualStyleBackColor = true;
@@ -1435,10 +1435,10 @@ namespace AITool
             this.cb_bird.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bird.AutoSize = true;
             this.cb_bird.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bird.Location = new System.Drawing.Point(417, 44);
+            this.cb_bird.Location = new System.Drawing.Point(417, 38);
             this.cb_bird.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bird.Name = "cb_bird";
-            this.cb_bird.Size = new System.Drawing.Size(47, 19);
+            this.cb_bird.Size = new System.Drawing.Size(69, 29);
             this.cb_bird.TabIndex = 12;
             this.cb_bird.Text = "Bird";
             this.cb_bird.UseVisualStyleBackColor = true;
@@ -1448,10 +1448,10 @@ namespace AITool
             this.cb_dog.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_dog.AutoSize = true;
             this.cb_dog.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_dog.Location = new System.Drawing.Point(417, 8);
+            this.cb_dog.Location = new System.Drawing.Point(417, 3);
             this.cb_dog.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_dog.Name = "cb_dog";
-            this.cb_dog.Size = new System.Drawing.Size(48, 19);
+            this.cb_dog.Size = new System.Drawing.Size(73, 29);
             this.cb_dog.TabIndex = 7;
             this.cb_dog.Text = "Dog";
             this.cb_dog.UseVisualStyleBackColor = true;
@@ -1461,10 +1461,10 @@ namespace AITool
             this.cb_cat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cat.AutoSize = true;
             this.cb_cat.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_cat.Location = new System.Drawing.Point(285, 81);
+            this.cb_cat.Location = new System.Drawing.Point(285, 73);
             this.cb_cat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cat.Name = "cb_cat";
-            this.cb_cat.Size = new System.Drawing.Size(44, 19);
+            this.cb_cat.Size = new System.Drawing.Size(64, 29);
             this.cb_cat.TabIndex = 16;
             this.cb_cat.Text = "Cat";
             this.cb_cat.UseVisualStyleBackColor = true;
@@ -1474,10 +1474,10 @@ namespace AITool
             this.cb_airplane.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_airplane.AutoSize = true;
             this.cb_airplane.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_airplane.Location = new System.Drawing.Point(285, 44);
+            this.cb_airplane.Location = new System.Drawing.Point(285, 38);
             this.cb_airplane.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_airplane.Name = "cb_airplane";
-            this.cb_airplane.Size = new System.Drawing.Size(70, 19);
+            this.cb_airplane.Size = new System.Drawing.Size(103, 29);
             this.cb_airplane.TabIndex = 11;
             this.cb_airplane.Text = "Airplane";
             this.cb_airplane.UseVisualStyleBackColor = true;
@@ -1487,10 +1487,10 @@ namespace AITool
             this.cb_boat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_boat.AutoSize = true;
             this.cb_boat.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_boat.Location = new System.Drawing.Point(285, 8);
+            this.cb_boat.Location = new System.Drawing.Point(285, 3);
             this.cb_boat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_boat.Name = "cb_boat";
-            this.cb_boat.Size = new System.Drawing.Size(50, 19);
+            this.cb_boat.Size = new System.Drawing.Size(74, 29);
             this.cb_boat.TabIndex = 6;
             this.cb_boat.Text = "Boat";
             this.cb_boat.UseVisualStyleBackColor = true;
@@ -1500,10 +1500,10 @@ namespace AITool
             this.cb_bus.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bus.AutoSize = true;
             this.cb_bus.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bus.Location = new System.Drawing.Point(153, 81);
+            this.cb_bus.Location = new System.Drawing.Point(153, 73);
             this.cb_bus.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bus.Name = "cb_bus";
-            this.cb_bus.Size = new System.Drawing.Size(45, 19);
+            this.cb_bus.Size = new System.Drawing.Size(66, 29);
             this.cb_bus.TabIndex = 15;
             this.cb_bus.Text = "Bus";
             this.cb_bus.UseVisualStyleBackColor = true;
@@ -1513,10 +1513,10 @@ namespace AITool
             this.cb_truck.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_truck.AutoSize = true;
             this.cb_truck.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_truck.Location = new System.Drawing.Point(153, 44);
+            this.cb_truck.Location = new System.Drawing.Point(153, 38);
             this.cb_truck.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_truck.Name = "cb_truck";
-            this.cb_truck.Size = new System.Drawing.Size(54, 19);
+            this.cb_truck.Size = new System.Drawing.Size(78, 29);
             this.cb_truck.TabIndex = 10;
             this.cb_truck.Text = "Truck";
             this.cb_truck.UseVisualStyleBackColor = true;
@@ -1526,10 +1526,10 @@ namespace AITool
             this.cb_car.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_car.AutoSize = true;
             this.cb_car.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_car.Location = new System.Drawing.Point(153, 8);
+            this.cb_car.Location = new System.Drawing.Point(153, 3);
             this.cb_car.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_car.Name = "cb_car";
-            this.cb_car.Size = new System.Drawing.Size(44, 19);
+            this.cb_car.Size = new System.Drawing.Size(64, 29);
             this.cb_car.TabIndex = 5;
             this.cb_car.Text = "Car";
             this.cb_car.UseVisualStyleBackColor = true;
@@ -1539,9 +1539,9 @@ namespace AITool
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label1.Location = new System.Drawing.Point(92, 295);
+            this.label1.Location = new System.Drawing.Point(64, 283);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(48, 15);
+            this.label1.Size = new System.Drawing.Size(76, 25);
             this.label1.TabIndex = 9;
             this.label1.Text = "Actions";
             // 
@@ -1550,9 +1550,9 @@ namespace AITool
             this.lblPrefix.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblPrefix.AutoSize = true;
             this.lblPrefix.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblPrefix.Location = new System.Drawing.Point(15, 55);
+            this.lblPrefix.Location = new System.Drawing.Point(30, 42);
             this.lblPrefix.Name = "lblPrefix";
-            this.lblPrefix.Size = new System.Drawing.Size(125, 15);
+            this.lblPrefix.Size = new System.Drawing.Size(110, 38);
             this.lblPrefix.TabIndex = 2;
             this.lblPrefix.Text = "Input file begins with";
             this.lblPrefix.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -1562,9 +1562,9 @@ namespace AITool
             this.lblName.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblName.AutoSize = true;
             this.lblName.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblName.Location = new System.Drawing.Point(100, 14);
+            this.lblName.Location = new System.Drawing.Point(78, 8);
             this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(40, 15);
+            this.lblName.Size = new System.Drawing.Size(62, 25);
             this.lblName.TabIndex = 10;
             this.lblName.Text = "Name";
             // 
@@ -1576,31 +1576,31 @@ namespace AITool
             this.tableLayoutPanel12.Controls.Add(this.lbl_prefix, 1, 0);
             this.tableLayoutPanel12.Controls.Add(this.tbPrefix, 0, 0);
             this.tableLayoutPanel12.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel12.Location = new System.Drawing.Point(146, 45);
+            this.tableLayoutPanel12.Location = new System.Drawing.Point(146, 44);
             this.tableLayoutPanel12.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel12.Name = "tableLayoutPanel12";
             this.tableLayoutPanel12.RowCount = 1;
             this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel12.Size = new System.Drawing.Size(666, 35);
+            this.tableLayoutPanel12.Size = new System.Drawing.Size(666, 34);
             this.tableLayoutPanel12.TabIndex = 12;
             // 
             // lbl_prefix
             // 
             this.lbl_prefix.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lbl_prefix.AutoSize = true;
-            this.lbl_prefix.Location = new System.Drawing.Point(499, 10);
+            this.lbl_prefix.Location = new System.Drawing.Point(499, 4);
             this.lbl_prefix.Name = "lbl_prefix";
-            this.lbl_prefix.Size = new System.Drawing.Size(0, 15);
+            this.lbl_prefix.Size = new System.Drawing.Size(0, 25);
             this.lbl_prefix.TabIndex = 6;
             // 
             // tbPrefix
             // 
             this.tbPrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbPrefix.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tbPrefix.Location = new System.Drawing.Point(21, 6);
+            this.tbPrefix.Location = new System.Drawing.Point(21, 3);
             this.tbPrefix.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbPrefix.Name = "tbPrefix";
-            this.tbPrefix.Size = new System.Drawing.Size(291, 23);
+            this.tbPrefix.Size = new System.Drawing.Size(291, 31);
             this.tbPrefix.TabIndex = 3;
             this.tbPrefix.TextChanged += new System.EventHandler(this.tbPrefix_TextChanged);
             // 
@@ -1616,7 +1616,7 @@ namespace AITool
             this.tableLayoutPanel13.Name = "tableLayoutPanel13";
             this.tableLayoutPanel13.RowCount = 1;
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel13.Size = new System.Drawing.Size(664, 35);
+            this.tableLayoutPanel13.Size = new System.Drawing.Size(664, 34);
             this.tableLayoutPanel13.TabIndex = 13;
             // 
             // cb_enabled
@@ -1624,10 +1624,10 @@ namespace AITool
             this.cb_enabled.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_enabled.AutoSize = true;
             this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_enabled.Location = new System.Drawing.Point(353, 8);
+            this.cb_enabled.Location = new System.Drawing.Point(353, 3);
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_enabled.Name = "cb_enabled";
-            this.cb_enabled.Size = new System.Drawing.Size(211, 19);
+            this.cb_enabled.Size = new System.Drawing.Size(308, 28);
             this.cb_enabled.TabIndex = 2;
             this.cb_enabled.Text = "Enable AI Detection for this camera";
             this.cb_enabled.UseVisualStyleBackColor = true;
@@ -1636,10 +1636,10 @@ namespace AITool
             // 
             this.tbName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbName.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tbName.Location = new System.Drawing.Point(21, 6);
+            this.tbName.Location = new System.Drawing.Point(21, 3);
             this.tbName.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbName.Name = "tbName";
-            this.tbName.Size = new System.Drawing.Size(290, 23);
+            this.tbName.Size = new System.Drawing.Size(290, 31);
             this.tbName.TabIndex = 1;
             // 
             // lblRelevantObjects
@@ -1647,9 +1647,9 @@ namespace AITool
             this.lblRelevantObjects.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblRelevantObjects.AutoSize = true;
             this.lblRelevantObjects.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblRelevantObjects.Location = new System.Drawing.Point(38, 174);
+            this.lblRelevantObjects.Location = new System.Drawing.Point(48, 152);
             this.lblRelevantObjects.Name = "lblRelevantObjects";
-            this.lblRelevantObjects.Size = new System.Drawing.Size(102, 15);
+            this.lblRelevantObjects.Size = new System.Drawing.Size(92, 50);
             this.lblRelevantObjects.TabIndex = 1;
             this.lblRelevantObjects.Text = "Relevant Objects";
             // 
@@ -1658,9 +1658,9 @@ namespace AITool
             this.lbl_threshold.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_threshold.AutoSize = true;
             this.lbl_threshold.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lbl_threshold.Location = new System.Drawing.Point(37, 253);
+            this.lbl_threshold.Location = new System.Drawing.Point(27, 234);
             this.lbl_threshold.Name = "lbl_threshold";
-            this.lbl_threshold.Size = new System.Drawing.Size(103, 15);
+            this.lbl_threshold.Size = new System.Drawing.Size(113, 40);
             this.lbl_threshold.TabIndex = 15;
             this.lbl_threshold.Text = "Confidence limits";
             // 
@@ -1674,13 +1674,13 @@ namespace AITool
             this.tableLayoutPanel26.Controls.Add(this.cb_monitorCamInputfolder, 1, 0);
             this.tableLayoutPanel26.Controls.Add(this.button2, 2, 0);
             this.tableLayoutPanel26.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel26.Location = new System.Drawing.Point(146, 85);
+            this.tableLayoutPanel26.Location = new System.Drawing.Point(146, 83);
             this.tableLayoutPanel26.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel26.Name = "tableLayoutPanel26";
             this.tableLayoutPanel26.RowCount = 1;
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
-            this.tableLayoutPanel26.Size = new System.Drawing.Size(666, 36);
+            this.tableLayoutPanel26.Size = new System.Drawing.Size(666, 35);
             this.tableLayoutPanel26.TabIndex = 18;
             // 
             // cmbcaminput
@@ -1690,10 +1690,10 @@ namespace AITool
             this.cmbcaminput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.cmbcaminput.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cmbcaminput.FormattingEnabled = true;
-            this.cmbcaminput.Location = new System.Drawing.Point(21, 6);
+            this.cmbcaminput.Location = new System.Drawing.Point(21, 2);
             this.cmbcaminput.Margin = new System.Windows.Forms.Padding(21, 2, 21, 2);
             this.cmbcaminput.Name = "cmbcaminput";
-            this.cmbcaminput.Size = new System.Drawing.Size(374, 23);
+            this.cmbcaminput.Size = new System.Drawing.Size(374, 33);
             this.cmbcaminput.TabIndex = 7;
             // 
             // cb_monitorCamInputfolder
@@ -1701,10 +1701,10 @@ namespace AITool
             this.cb_monitorCamInputfolder.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cb_monitorCamInputfolder.AutoSize = true;
             this.cb_monitorCamInputfolder.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_monitorCamInputfolder.Location = new System.Drawing.Point(435, 8);
+            this.cb_monitorCamInputfolder.Location = new System.Drawing.Point(418, 3);
             this.cb_monitorCamInputfolder.Margin = new System.Windows.Forms.Padding(2);
             this.cb_monitorCamInputfolder.Name = "cb_monitorCamInputfolder";
-            this.cb_monitorCamInputfolder.Size = new System.Drawing.Size(128, 19);
+            this.cb_monitorCamInputfolder.Size = new System.Drawing.Size(162, 29);
             this.cb_monitorCamInputfolder.TabIndex = 5;
             this.cb_monitorCamInputfolder.Text = "Monitor Subfolders";
             this.cb_monitorCamInputfolder.UseVisualStyleBackColor = true;
@@ -1726,10 +1726,10 @@ namespace AITool
             this.label15.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label15.AutoSize = true;
             this.label15.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label15.Location = new System.Drawing.Point(88, 339);
+            this.label15.Location = new System.Drawing.Point(57, 327);
             this.label15.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(53, 15);
+            this.label15.Size = new System.Drawing.Size(84, 25);
             this.label15.TabIndex = 19;
             this.label15.Text = "Masking";
             this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -1750,7 +1750,7 @@ namespace AITool
             this.tableLayoutPanel27.Controls.Add(this.btnDetails, 2, 0);
             this.tableLayoutPanel27.Controls.Add(this.btnCustomMask, 4, 0);
             this.tableLayoutPanel27.Controls.Add(this.lblDrawMask, 3, 0);
-            this.tableLayoutPanel27.Location = new System.Drawing.Point(146, 325);
+            this.tableLayoutPanel27.Location = new System.Drawing.Point(146, 318);
             this.tableLayoutPanel27.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.tableLayoutPanel27.Name = "tableLayoutPanel27";
             this.tableLayoutPanel27.RowCount = 1;
@@ -1763,10 +1763,10 @@ namespace AITool
             this.cb_masking_enabled.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_masking_enabled.AutoSize = true;
             this.cb_masking_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_masking_enabled.Location = new System.Drawing.Point(21, 14);
+            this.cb_masking_enabled.Location = new System.Drawing.Point(21, 9);
             this.cb_masking_enabled.Margin = new System.Windows.Forms.Padding(21, 3, 5, 0);
             this.cb_masking_enabled.Name = "cb_masking_enabled";
-            this.cb_masking_enabled.Size = new System.Drawing.Size(158, 19);
+            this.cb_masking_enabled.Size = new System.Drawing.Size(170, 29);
             this.cb_masking_enabled.TabIndex = 21;
             this.cb_masking_enabled.Text = "Enable dynamic masking";
             this.cb_masking_enabled.UseVisualStyleBackColor = true;
@@ -1823,7 +1823,7 @@ namespace AITool
             // btnActions
             // 
             this.btnActions.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.btnActions.Location = new System.Drawing.Point(165, 287);
+            this.btnActions.Location = new System.Drawing.Point(165, 280);
             this.btnActions.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
             this.btnActions.Name = "btnActions";
             this.btnActions.Size = new System.Drawing.Size(70, 30);
@@ -1841,7 +1841,7 @@ namespace AITool
             this.flowLayoutPanel1.Controls.Add(this.lbl_threshold_upper);
             this.flowLayoutPanel1.Controls.Add(this.tb_threshold_upper);
             this.flowLayoutPanel1.Controls.Add(this.label10);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(147, 246);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(147, 239);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(500, 29);
             this.flowLayoutPanel1.TabIndex = 22;
@@ -1850,7 +1850,7 @@ namespace AITool
             // 
             this.lbl_threshold_lower.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_threshold_lower.Location = new System.Drawing.Point(21, 6);
+            this.lbl_threshold_lower.Location = new System.Drawing.Point(21, 10);
             this.lbl_threshold_lower.Margin = new System.Windows.Forms.Padding(21, 0, 3, 0);
             this.lbl_threshold_lower.Name = "lbl_threshold_lower";
             this.lbl_threshold_lower.Size = new System.Drawing.Size(40, 16);
@@ -1865,7 +1865,7 @@ namespace AITool
             this.tb_threshold_lower.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
             this.tb_threshold_lower.MaxLength = 3;
             this.tb_threshold_lower.Name = "tb_threshold_lower";
-            this.tb_threshold_lower.Size = new System.Drawing.Size(34, 23);
+            this.tb_threshold_lower.Size = new System.Drawing.Size(34, 31);
             this.tb_threshold_lower.TabIndex = 25;
             this.tb_threshold_lower.Leave += new System.EventHandler(this.tb_threshold_lower_Leave);
             // 
@@ -1874,10 +1874,10 @@ namespace AITool
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(103, 6);
+            this.label9.Location = new System.Drawing.Point(103, 4);
             this.label9.Margin = new System.Windows.Forms.Padding(1, 0, 3, 0);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(19, 17);
+            this.label9.Size = new System.Drawing.Size(28, 28);
             this.label9.TabIndex = 28;
             this.label9.Text = "%";
             // 
@@ -1885,7 +1885,7 @@ namespace AITool
             // 
             this.lbl_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_threshold_upper.Location = new System.Drawing.Point(146, 6);
+            this.lbl_threshold_upper.Location = new System.Drawing.Point(155, 10);
             this.lbl_threshold_upper.Margin = new System.Windows.Forms.Padding(21, 0, 1, 0);
             this.lbl_threshold_upper.Name = "lbl_threshold_upper";
             this.lbl_threshold_upper.Size = new System.Drawing.Size(40, 16);
@@ -1896,11 +1896,11 @@ namespace AITool
             // 
             this.tb_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tb_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_threshold_upper.Location = new System.Drawing.Point(190, 3);
+            this.tb_threshold_upper.Location = new System.Drawing.Point(199, 3);
             this.tb_threshold_upper.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
             this.tb_threshold_upper.MaxLength = 3;
             this.tb_threshold_upper.Name = "tb_threshold_upper";
-            this.tb_threshold_upper.Size = new System.Drawing.Size(34, 23);
+            this.tb_threshold_upper.Size = new System.Drawing.Size(34, 31);
             this.tb_threshold_upper.TabIndex = 26;
             this.tb_threshold_upper.Leave += new System.EventHandler(this.tb_threshold_upper_Leave);
             // 
@@ -1909,19 +1909,19 @@ namespace AITool
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label10.Location = new System.Drawing.Point(226, 7);
+            this.label10.Location = new System.Drawing.Point(235, 6);
             this.label10.Margin = new System.Windows.Forms.Padding(1, 0, 3, 0);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(17, 15);
+            this.label10.Size = new System.Drawing.Size(27, 25);
             this.label10.TabIndex = 29;
             this.label10.Text = "%";
             // 
             // tabSettings
             // 
             this.tabSettings.Controls.Add(this.tableLayoutPanel4);
-            this.tabSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabSettings.Location = new System.Drawing.Point(4, 29);
             this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Size = new System.Drawing.Size(1027, 457);
+            this.tabSettings.Size = new System.Drawing.Size(1027, 450);
             this.tabSettings.TabIndex = 3;
             this.tabSettings.Text = "Settings";
             this.tabSettings.UseVisualStyleBackColor = true;
@@ -1998,9 +1998,9 @@ namespace AITool
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(118, 301);
+            this.label4.Location = new System.Drawing.Point(103, 296);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(31, 17);
+            this.label4.Size = new System.Drawing.Size(46, 28);
             this.label4.TabIndex = 15;
             this.label4.Text = "Log";
             // 
@@ -2049,9 +2049,9 @@ namespace AITool
             this.lbl_input.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_input.AutoSize = true;
             this.lbl_input.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_input.Location = new System.Drawing.Point(26, 26);
+            this.lbl_input.Location = new System.Drawing.Point(4, 7);
             this.lbl_input.Name = "lbl_input";
-            this.lbl_input.Size = new System.Drawing.Size(123, 17);
+            this.lbl_input.Size = new System.Drawing.Size(145, 56);
             this.lbl_input.TabIndex = 1;
             this.lbl_input.Text = "Default Input Path";
             // 
@@ -2060,9 +2060,9 @@ namespace AITool
             this.lbl_telegram_token.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_telegram_token.AutoSize = true;
             this.lbl_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_telegram_token.Location = new System.Drawing.Point(43, 163);
+            this.lbl_telegram_token.Location = new System.Drawing.Point(44, 144);
             this.lbl_telegram_token.Name = "lbl_telegram_token";
-            this.lbl_telegram_token.Size = new System.Drawing.Size(106, 17);
+            this.lbl_telegram_token.Size = new System.Drawing.Size(105, 56);
             this.lbl_telegram_token.TabIndex = 6;
             this.lbl_telegram_token.Text = "Telegram Token";
             // 
@@ -2100,20 +2100,20 @@ namespace AITool
             this.cmbInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.cmbInput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.cmbInput.FormattingEnabled = true;
-            this.cmbInput.Location = new System.Drawing.Point(3, 20);
+            this.cmbInput.Location = new System.Drawing.Point(3, 17);
             this.cmbInput.Margin = new System.Windows.Forms.Padding(3, 2, 2, 2);
             this.cmbInput.Name = "cmbInput";
-            this.cmbInput.Size = new System.Drawing.Size(619, 21);
+            this.cmbInput.Size = new System.Drawing.Size(619, 28);
             this.cmbInput.TabIndex = 3;
             // 
             // cb_inputpathsubfolders
             // 
             this.cb_inputpathsubfolders.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_inputpathsubfolders.AutoSize = true;
-            this.cb_inputpathsubfolders.Location = new System.Drawing.Point(635, 22);
+            this.cb_inputpathsubfolders.Location = new System.Drawing.Point(635, 19);
             this.cb_inputpathsubfolders.Margin = new System.Windows.Forms.Padding(11, 2, 2, 2);
             this.cb_inputpathsubfolders.Name = "cb_inputpathsubfolders";
-            this.cb_inputpathsubfolders.Size = new System.Drawing.Size(76, 17);
+            this.cb_inputpathsubfolders.Size = new System.Drawing.Size(101, 24);
             this.cb_inputpathsubfolders.TabIndex = 4;
             this.cb_inputpathsubfolders.Text = "Subfolders";
             this.cb_inputpathsubfolders.UseVisualStyleBackColor = true;
@@ -2123,10 +2123,10 @@ namespace AITool
             this.label13.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
-            this.label13.Location = new System.Drawing.Point(113, 372);
+            this.label13.Location = new System.Drawing.Point(91, 367);
             this.label13.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(37, 17);
+            this.label13.Size = new System.Drawing.Size(59, 28);
             this.label13.TabIndex = 16;
             this.label13.Text = "Start";
             // 
@@ -2134,10 +2134,10 @@ namespace AITool
             // 
             this.cbStartWithWindows.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbStartWithWindows.AutoSize = true;
-            this.cbStartWithWindows.Location = new System.Drawing.Point(155, 372);
+            this.cbStartWithWindows.Location = new System.Drawing.Point(155, 369);
             this.cbStartWithWindows.Margin = new System.Windows.Forms.Padding(2);
             this.cbStartWithWindows.Name = "cbStartWithWindows";
-            this.cbStartWithWindows.Size = new System.Drawing.Size(182, 17);
+            this.cbStartWithWindows.Size = new System.Drawing.Size(288, 24);
             this.cbStartWithWindows.TabIndex = 17;
             this.cbStartWithWindows.Text = "Start with user login (non-service)";
             this.cbStartWithWindows.UseVisualStyleBackColor = true;
@@ -2147,9 +2147,9 @@ namespace AITool
             this.lbl_deepstackurl.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_deepstackurl.AutoSize = true;
             this.lbl_deepstackurl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_deepstackurl.Location = new System.Drawing.Point(34, 95);
+            this.lbl_deepstackurl.Location = new System.Drawing.Point(33, 75);
             this.lbl_deepstackurl.Name = "lbl_deepstackurl";
-            this.lbl_deepstackurl.Size = new System.Drawing.Size(115, 17);
+            this.lbl_deepstackurl.Size = new System.Drawing.Size(116, 56);
             this.lbl_deepstackurl.TabIndex = 4;
             this.lbl_deepstackurl.Text = "Deepstack URL(s)";
             // 
@@ -2175,9 +2175,9 @@ namespace AITool
             // 
             this.tbDeepstackUrl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbDeepstackUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbDeepstackUrl.Location = new System.Drawing.Point(3, 19);
+            this.tbDeepstackUrl.Location = new System.Drawing.Point(3, 15);
             this.tbDeepstackUrl.Name = "tbDeepstackUrl";
-            this.tbDeepstackUrl.Size = new System.Drawing.Size(620, 25);
+            this.tbDeepstackUrl.Size = new System.Drawing.Size(620, 33);
             this.tbDeepstackUrl.TabIndex = 6;
             this.toolTip1.SetToolTip(this.tbDeepstackUrl, "Enter SERVER:PORT for DeepStack server - Use ; to separate more than one URL for " +
         "parallel processing");
@@ -2186,10 +2186,10 @@ namespace AITool
             // 
             this.cb_DeepStackURLsQueued.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_DeepStackURLsQueued.AutoSize = true;
-            this.cb_DeepStackURLsQueued.Location = new System.Drawing.Point(637, 23);
+            this.cb_DeepStackURLsQueued.Location = new System.Drawing.Point(637, 19);
             this.cb_DeepStackURLsQueued.Margin = new System.Windows.Forms.Padding(11, 2, 2, 2);
             this.cb_DeepStackURLsQueued.Name = "cb_DeepStackURLsQueued";
-            this.cb_DeepStackURLsQueued.Size = new System.Drawing.Size(64, 17);
+            this.cb_DeepStackURLsQueued.Size = new System.Drawing.Size(93, 24);
             this.cb_DeepStackURLsQueued.TabIndex = 7;
             this.cb_DeepStackURLsQueued.Text = "Queued";
             this.toolTip1.SetToolTip(this.cb_DeepStackURLsQueued, "When checked, all urls will take turns processing the images.\r\nWhen unchecked, th" +
@@ -2224,9 +2224,9 @@ namespace AITool
             // 
             this.tb_telegram_cooldown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_cooldown.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_telegram_cooldown.Location = new System.Drawing.Point(742, 19);
+            this.tb_telegram_cooldown.Location = new System.Drawing.Point(742, 15);
             this.tb_telegram_cooldown.Name = "tb_telegram_cooldown";
-            this.tb_telegram_cooldown.Size = new System.Drawing.Size(113, 25);
+            this.tb_telegram_cooldown.Size = new System.Drawing.Size(113, 33);
             this.tb_telegram_cooldown.TabIndex = 12;
             // 
             // label5
@@ -2234,9 +2234,9 @@ namespace AITool
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(632, 23);
+            this.label5.Location = new System.Drawing.Point(630, 4);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(104, 17);
+            this.label5.Size = new System.Drawing.Size(106, 56);
             this.label5.TabIndex = 11;
             this.label5.Text = "Cooldown Mins";
             // 
@@ -2244,9 +2244,9 @@ namespace AITool
             // 
             this.tb_telegram_chatid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_telegram_chatid.Location = new System.Drawing.Point(354, 19);
+            this.tb_telegram_chatid.Location = new System.Drawing.Point(354, 15);
             this.tb_telegram_chatid.Name = "tb_telegram_chatid";
-            this.tb_telegram_chatid.Size = new System.Drawing.Size(268, 25);
+            this.tb_telegram_chatid.Size = new System.Drawing.Size(268, 33);
             this.tb_telegram_chatid.TabIndex = 10;
             // 
             // lbl_telegram_chatid
@@ -2254,9 +2254,9 @@ namespace AITool
             this.lbl_telegram_chatid.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lbl_telegram_chatid.AutoSize = true;
             this.lbl_telegram_chatid.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_telegram_chatid.Location = new System.Drawing.Point(294, 23);
+            this.lbl_telegram_chatid.Location = new System.Drawing.Point(287, 4);
             this.lbl_telegram_chatid.Name = "lbl_telegram_chatid";
-            this.lbl_telegram_chatid.Size = new System.Drawing.Size(54, 17);
+            this.lbl_telegram_chatid.Size = new System.Drawing.Size(61, 56);
             this.lbl_telegram_chatid.TabIndex = 7;
             this.lbl_telegram_chatid.Text = "Chat ID";
             // 
@@ -2264,9 +2264,9 @@ namespace AITool
             // 
             this.tb_telegram_token.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_token.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_telegram_token.Location = new System.Drawing.Point(3, 19);
+            this.tb_telegram_token.Location = new System.Drawing.Point(3, 15);
             this.tb_telegram_token.Name = "tb_telegram_token";
-            this.tb_telegram_token.Size = new System.Drawing.Size(274, 25);
+            this.tb_telegram_token.Size = new System.Drawing.Size(274, 33);
             this.tb_telegram_token.TabIndex = 9;
             // 
             // label12
@@ -2274,9 +2274,9 @@ namespace AITool
             this.label12.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(31, 232);
+            this.label12.Location = new System.Drawing.Point(50, 213);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(118, 17);
+            this.label12.Size = new System.Drawing.Size(99, 56);
             this.label12.TabIndex = 13;
             this.label12.Text = "Send To Telegram";
             // 
@@ -2288,7 +2288,7 @@ namespace AITool
             this.dbLayoutPanel3.ColumnCount = 3;
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 84.57375F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15.42625F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 143F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 144F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_errors, 0, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_enabletelegram, 1, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_disabletelegram, 2, 0);
@@ -2303,9 +2303,9 @@ namespace AITool
             // 
             this.cb_send_errors.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_send_errors.AutoSize = true;
-            this.cb_send_errors.Location = new System.Drawing.Point(3, 22);
+            this.cb_send_errors.Location = new System.Drawing.Point(3, 19);
             this.cb_send_errors.Name = "cb_send_errors";
-            this.cb_send_errors.Size = new System.Drawing.Size(150, 17);
+            this.cb_send_errors.Size = new System.Drawing.Size(233, 24);
             this.cb_send_errors.TabIndex = 12;
             this.cb_send_errors.Text = "Send Errors and Warnings";
             this.cb_send_errors.UseVisualStyleBackColor = true;
@@ -2313,7 +2313,7 @@ namespace AITool
             // btn_enabletelegram
             // 
             this.btn_enabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_enabletelegram.Location = new System.Drawing.Point(622, 16);
+            this.btn_enabletelegram.Location = new System.Drawing.Point(621, 16);
             this.btn_enabletelegram.Name = "btn_enabletelegram";
             this.btn_enabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_enabletelegram.TabIndex = 13;
@@ -2325,7 +2325,7 @@ namespace AITool
             // btn_disabletelegram
             // 
             this.btn_disabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_disabletelegram.Location = new System.Drawing.Point(749, 16);
+            this.btn_disabletelegram.Location = new System.Drawing.Point(748, 16);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_disabletelegram.TabIndex = 13;
@@ -2350,10 +2350,10 @@ namespace AITool
             this.tabDeepStack.Controls.Add(this.Chk_AutoStart);
             this.tabDeepStack.Controls.Add(this.Btn_Start);
             this.tabDeepStack.Controls.Add(this.Btn_Stop);
-            this.tabDeepStack.Location = new System.Drawing.Point(4, 22);
+            this.tabDeepStack.Location = new System.Drawing.Point(4, 29);
             this.tabDeepStack.Margin = new System.Windows.Forms.Padding(2);
             this.tabDeepStack.Name = "tabDeepStack";
-            this.tabDeepStack.Size = new System.Drawing.Size(1027, 457);
+            this.tabDeepStack.Size = new System.Drawing.Size(1027, 450);
             this.tabDeepStack.TabIndex = 6;
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
@@ -2364,7 +2364,7 @@ namespace AITool
             this.chk_HighPriority.Location = new System.Drawing.Point(342, 301);
             this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
             this.chk_HighPriority.Name = "chk_HighPriority";
-            this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
+            this.chk_HighPriority.Size = new System.Drawing.Size(157, 24);
             this.chk_HighPriority.TabIndex = 15;
             this.chk_HighPriority.Text = "Run high priority";
             this.chk_HighPriority.UseVisualStyleBackColor = true;
@@ -2375,7 +2375,7 @@ namespace AITool
             this.Chk_DSDebug.Location = new System.Drawing.Point(206, 301);
             this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_DSDebug.Name = "Chk_DSDebug";
-            this.Chk_DSDebug.Size = new System.Drawing.Size(113, 17);
+            this.Chk_DSDebug.Size = new System.Drawing.Size(169, 24);
             this.Chk_DSDebug.TabIndex = 14;
             this.Chk_DSDebug.Text = "Debug Deepstack";
             this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
@@ -2389,7 +2389,7 @@ namespace AITool
             this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(282, 348);
             this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
-            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(105, 13);
+            this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(145, 20);
             this.Lbl_BlueStackRunning.TabIndex = 13;
             this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
             // 
@@ -2437,7 +2437,7 @@ namespace AITool
             this.Txt_APIKey.Location = new System.Drawing.Point(7, 17);
             this.Txt_APIKey.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_APIKey.Name = "Txt_APIKey";
-            this.Txt_APIKey.Size = new System.Drawing.Size(472, 20);
+            this.Txt_APIKey.Size = new System.Drawing.Size(472, 26);
             this.Txt_APIKey.TabIndex = 0;
             // 
             // groupBox1
@@ -2504,7 +2504,7 @@ namespace AITool
             this.Txt_AdminKey.Location = new System.Drawing.Point(7, 16);
             this.Txt_AdminKey.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_AdminKey.Name = "Txt_AdminKey";
-            this.Txt_AdminKey.Size = new System.Drawing.Size(472, 20);
+            this.Txt_AdminKey.Size = new System.Drawing.Size(472, 26);
             this.Txt_AdminKey.TabIndex = 0;
             // 
             // groupBox2
@@ -2574,7 +2574,7 @@ namespace AITool
             this.Txt_DeepStackInstallFolder.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_DeepStackInstallFolder.Name = "Txt_DeepStackInstallFolder";
             this.Txt_DeepStackInstallFolder.ReadOnly = true;
-            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(472, 20);
+            this.Txt_DeepStackInstallFolder.Size = new System.Drawing.Size(472, 26);
             this.Txt_DeepStackInstallFolder.TabIndex = 2;
             // 
             // groupBox3
@@ -2596,7 +2596,7 @@ namespace AITool
             this.Txt_Port.Location = new System.Drawing.Point(10, 19);
             this.Txt_Port.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_Port.Name = "Txt_Port";
-            this.Txt_Port.Size = new System.Drawing.Size(127, 20);
+            this.Txt_Port.Size = new System.Drawing.Size(127, 26);
             this.Txt_Port.TabIndex = 0;
             // 
             // Chk_AutoStart
@@ -2605,7 +2605,7 @@ namespace AITool
             this.Chk_AutoStart.Location = new System.Drawing.Point(13, 301);
             this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_AutoStart.Name = "Chk_AutoStart";
-            this.Chk_AutoStart.Size = new System.Drawing.Size(170, 17);
+            this.Chk_AutoStart.Size = new System.Drawing.Size(263, 24);
             this.Chk_AutoStart.TabIndex = 8;
             this.Chk_AutoStart.Text = "Automatically Start DeepStack";
             this.Chk_AutoStart.UseVisualStyleBackColor = true;
@@ -2637,10 +2637,10 @@ namespace AITool
             this.tabLog.Controls.Add(this.groupBox7);
             this.tabLog.Controls.Add(this.Chk_AutoScroll);
             this.tabLog.Controls.Add(this.button1);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
+            this.tabLog.Location = new System.Drawing.Point(4, 29);
             this.tabLog.Margin = new System.Windows.Forms.Padding(2);
             this.tabLog.Name = "tabLog";
-            this.tabLog.Size = new System.Drawing.Size(1027, 457);
+            this.tabLog.Size = new System.Drawing.Size(1027, 450);
             this.tabLog.TabIndex = 7;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -2684,7 +2684,7 @@ namespace AITool
             this.Chk_AutoScroll.Location = new System.Drawing.Point(81, 15);
             this.Chk_AutoScroll.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_AutoScroll.Name = "Chk_AutoScroll";
-            this.Chk_AutoScroll.Size = new System.Drawing.Size(140, 17);
+            this.Chk_AutoScroll.Size = new System.Drawing.Size(214, 24);
             this.Chk_AutoScroll.TabIndex = 4;
             this.Chk_AutoScroll.Text = "Auto Scroll Log Window";
             this.Chk_AutoScroll.UseVisualStyleBackColor = true;
@@ -2736,10 +2736,10 @@ namespace AITool
             this.toolStripStatusLabel2,
             this.toolStripStatusLabelInfo,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 488);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 486);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 8, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1035, 33);
+            this.statusStrip1.Size = new System.Drawing.Size(1035, 35);
             this.statusStrip1.TabIndex = 5;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -2747,26 +2747,26 @@ namespace AITool
             // 
             this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
             this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
-            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(86, 28);
+            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(133, 28);
             this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
             // 
             // toolStripStatusErrors
             // 
             this.toolStripStatusErrors.Name = "toolStripStatusErrors";
-            this.toolStripStatusErrors.Size = new System.Drawing.Size(10, 28);
+            this.toolStripStatusErrors.Size = new System.Drawing.Size(16, 28);
             this.toolStripStatusErrors.Text = ".";
             this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(10, 28);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(16, 28);
             this.toolStripStatusLabel1.Text = ".";
             // 
             // toolStripStatusLabel2
             // 
             this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            this.toolStripStatusLabel2.Size = new System.Drawing.Size(784, 28);
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(710, 28);
             this.toolStripStatusLabel2.Spring = true;
             // 
             // toolStripStatusLabelInfo
@@ -2774,7 +2774,7 @@ namespace AITool
             this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 9.857143F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
             this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
-            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(34, 28);
+            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(47, 28);
             this.toolStripStatusLabelInfo.Text = "Idle";
             // 
             // toolStripProgressBar1
@@ -2785,7 +2785,7 @@ namespace AITool
             // 
             // Shell
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1035, 521);
             this.Controls.Add(this.tabControl1);

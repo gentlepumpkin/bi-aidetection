@@ -365,7 +365,7 @@ namespace AITool
             {
                 if (value != False && value != True)
                 {
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 return value == True;
