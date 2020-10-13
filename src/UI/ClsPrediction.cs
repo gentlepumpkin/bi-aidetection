@@ -34,7 +34,7 @@ namespace AITool
     }
     public class ClsPrediction
     {
-        private ObjectType _DefaultObjType;
+        private ObjectType _defaultObjType;
         private Camera _cam;
         private ClsImageQueueItem _curimg;
 
@@ -45,8 +45,8 @@ namespace AITool
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
         public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
-        public int Dynamic_Threshold_Count { get; set; } = 0;
-        public int Image_PointsOutsideMask { get; set; } = 0;
+        public int DynamicThresholdCount { get; set; } = 0;
+        public int ImagePointsOutsideMask { get; set; } = 0;
 
         public float Confidence { get; set; } = 0;
         public int ymin { get; set; } = 0;
@@ -54,19 +54,18 @@ namespace AITool
         public int ymax { get; set; } = 0;
         public int xmax { get; set; } = 0;
         public string Filename { get; set; } = "";
+        private Object _imageObject;
 
-        public ClsPrediction()
-        { 
+        public ClsPrediction(){}
 
-        }
-
-        public ClsPrediction(ObjectType DefaultObjType, Camera cam, Object user, ClsImageQueueItem CurImg) 
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Object imageObject, ClsImageQueueItem curImg) 
         {
-            this._DefaultObjType = DefaultObjType;
+            this._defaultObjType = defaultObjType;
             this._cam = cam;
-            this._curimg = CurImg;
+            this._curimg = curImg;
+            this._imageObject = imageObject;
 
-            if (user == null || cam == null || string.IsNullOrWhiteSpace(user.label))
+            if (imageObject == null || cam == null || string.IsNullOrWhiteSpace(imageObject.label))
             {
                 Global.Log("Error: Prediction or Camera was null?");
                 this.Result = ResultType.Error;
@@ -74,17 +73,16 @@ namespace AITool
             }
 
             //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(user.label);
-            this.xmax = user.x_max;
-            this.ymax = user.y_max;
-            this.xmin = user.x_min;
-            this.ymin = user.y_min;
-            this.Confidence = user.confidence * 100;  //store as whole number percent 
-            this.Filename = CurImg.image_path;
+            this.Label = Global.UpperFirst(imageObject.label);
+            this.xmax = imageObject.x_max;
+            this.ymax = imageObject.y_max;
+            this.xmin = imageObject.x_min;
+            this.ymin = imageObject.y_min;
+            this.Confidence = imageObject.confidence * 100;  //store as whole number percent 
+            this.Filename = curImg.image_path;
 
             this.GetObjectType();
             this.AnalyzePrediction();
-
         }
 
         
@@ -112,7 +110,7 @@ namespace AITool
                                 result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
                                 this.ImgMaskResult = result.Result;
                                 this.ImgMaskType = result.MaskType;
-                                this.Image_PointsOutsideMask = result.Image_PointsOutsideMask;
+                                this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
 
                                 if (!result.IsMasked)
                                 {
@@ -131,15 +129,14 @@ namespace AITool
                                 if (!result.IsMasked)
                                 {
                                     //check the dynamic or static masks
-                                    if (this._cam.maskManager.masking_enabled)
+                                    if (this._cam.maskManager.MaskingEnabled)
                                     {
-                                        ObjectPosition currentObject = new ObjectPosition(this.xmin, this.ymin, this.xmax, this.ymax, this.Label,
-                                                                                          this._curimg.Width, this._curimg.Height, this._cam.name, this._curimg.image_path);
+                                        ObjectPosition currentObject = new ObjectPosition(_imageObject, _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
                                         //creates history and masked lists for objects returned
                                         result = this._cam.maskManager.CreateDynamicMask(currentObject);
                                         this.DynMaskResult = result.Result;
                                         this.DynMaskType = result.MaskType;
-                                        this.Dynamic_Threshold_Count = result.Dynamic_Threshold_Count;
+                                        this.DynamicThresholdCount = result.DynamicThresholdCount;
                                         //there is a dynamic or static mask
                                         if (result.MaskType == MaskType.Dynamic)
                                             this.Result = ResultType.DynamicMasked;
@@ -188,14 +185,13 @@ namespace AITool
                 this.Result = ResultType.Error;
             }
 
-            
-
         }
 
         public override string ToString()
         {
             return $"{this.Label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, this.Confidence)}";
         }
+
         private void GetObjectType()
         {
             string tmp = this.Label.Trim().ToLower();
@@ -236,8 +232,7 @@ namespace AITool
                      tmp.Equals("airplane"))
                 this.ObjType = ObjectType.Vehicle;
             else
-                this.ObjType = this._DefaultObjType;
-
+                this.ObjType = this._defaultObjType;
         }
     }
 }

@@ -1,100 +1,94 @@
 using BrightIdeasSoftware;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace AITool
 {
     public class ObjectPosition:IEquatable<ObjectPosition>
     {
-        public string label { get; } = "";
-        public DateTime createDate { get; set; } = DateTime.MinValue;
+        public string Label { get; } = "";
+        public DateTime CreateDate { get; set; } = DateTime.MinValue;
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
 
-        public int counter { get; set; }
-        public double thresholdPercent { get; set; }
-        public Boolean isStatic { get; set; } = false;
-        public int xmin { get; }
-        public int ymin { get; }
-        public int xmax { get; }
-        public int ymax { get; }
-        public int height { get; }
-        public int width { get; }
-        public long key { get; }
-        public int imageWidth { get; set; }
-        public int imageHeight { get; set; }
+        public int Counter { get; set; }
+        public double PercentMatch { get; set; }
+        public Boolean IsStatic { get; set; } = false;
+        public int Xmin { get; }
+        public int Ymin { get; }
+        public int Xmax { get; }
+        public int Ymax { get; }
 
-        public string cameraName { get; set; } = "";
-        public string imagePath { get; set; } = "";
+        public long Key { get; }
+        public int ImageWidth { get; set; }
+        public int ImageHeight { get; set; }
 
-        //store the calcs for troubleshooting
-        public bool LastMatched { get; set; } = false;
-        public double LastWidthPercentVariance { get; set; } = 0;
-        public double LastHeightPercentVariance { get; set; } = 0;
+        private Rectangle ObjRectangle;
 
-        //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-        public double LastxPercentVariance { get; set; } = 0;
-        public double LastyPercentVariance { get; set; } = 0;
+        public string CameraName { get; set; } = "";
+        public string ImagePath { get; set; } = "";
 
         //scaling of object based on size
-        public int scalePercent { get; set; } 
-        public double objectImagePercent { get; }
+        public int ScalePercent { get; set; } 
+        public double ObjectImagePercent { get; }
 
         private ObjectScale _scaleConfig;
-        public ObjectScale scaleConfig
+        public ObjectScale ScaleConfig
         {
             get => _scaleConfig;
             set
             {
                 _scaleConfig = value;
-                scalePercent = getImagePercentVariance();
+                ScalePercent = getImagePercentVariance();
             }
         }
 
+        //empty default constructor used by JSON deserialization
+        public ObjectPosition() {}
 
-        public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
+        public ObjectPosition(Object imageObject, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
-            this.createDate = DateTime.Now;
+            this.CreateDate = DateTime.Now;
             this.LastSeenDate = DateTime.Now;
-            this.cameraName = cameraName;
-            this.imagePath = imagePath;
-            this.label = label;
-            this.xmin = xmin;
-            this.ymin = ymin;
-            this.xmax = xmax;
-            this.ymax = ymax;
-            this.imageHeight = imageHeight;
-            this.imageWidth = imageWidth;
+            this.CameraName = cameraName;
+            this.ImagePath = imagePath;
+            this.Label = imageObject.label;
+            this.Xmin = imageObject.x_min;
+            this.Ymin = imageObject.y_min;
+            this.Xmax = imageObject.x_max;
+            this.Ymax = imageObject.y_max;
 
-            //calc width and height of box
-            this.width = xmax - xmin;
-            this.height = ymax - ymin;
+            ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
+
+            this.ImageHeight = imageHeight;
+            this.ImageWidth = imageWidth;
 
             //object percent of image area
-            objectImagePercent = (width * height) / (float)(imageWidth * imageHeight) * 100;
+            ObjectImagePercent = (ObjRectangle.Width * ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            key = ((xmin + 1) * (ymin + 1) + (width * height));
+            Key = ((Xmin + 1) * (Ymin + 1) + (ObjRectangle.Width * ObjRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
         Due to thier size, smaller objects are more sensitive to slight changes in postion. 
-        This settings allows sensivity adjustments based on the object size.*/
+        This settings allows for a custom percentage match value based on the object size.*/
         private int getImagePercentVariance()
         {
             int scalePercent = 0;
 
-            if (scaleConfig != null)
+            if (ScaleConfig != null)
             {
-                if (scaleConfig.isScaledObject)
+                if (ScaleConfig.IsScaledObject)
                 {
-                    if (objectImagePercent <= scaleConfig.smallObjectMaxPercent)
+                    if (ObjectImagePercent < ScaleConfig.SmallObjectMaxPercent)
                     {
-                        scalePercent = scaleConfig.smallObjectScalePercent;
+                        scalePercent = ScaleConfig.SmallObjectMatchPercent;
                     }
-                    else if (objectImagePercent >= scaleConfig.mediumObjectMinPercent 
-                            &&  objectImagePercent <= scaleConfig.mediumObjectMaxPercent)
+                    else if (ObjectImagePercent >= ScaleConfig.MediumObjectMinPercent 
+                            &&  ObjectImagePercent <= ScaleConfig.MediumObjectMaxPercent)
                     {
-                        scalePercent = scaleConfig.mediumObjectScalePercent;
+                        scalePercent = ScaleConfig.MediumObjectMatchPercent;
                     }
                 }
             }
@@ -111,30 +105,30 @@ namespace AITool
             if (other == null)
                 return false;
 
-            //calculate the percentage variance for width and height of selected object
-            this.LastWidthPercentVariance = (double)Math.Abs(this.width - other.width) / this.width * 100;
-            this.LastHeightPercentVariance = (double)Math.Abs(this.height - other.height) / this.height * 100;
+            bool isMatch = false;
 
-            //calculate percentage change in starting corner of the x,y axis (upper-left corner of the rectangle)
-            this.LastxPercentVariance = (double)(Math.Abs(this.xmin - other.xmin)) / imageWidth * 100;
-            this.LastyPercentVariance = (double)(Math.Abs(this.ymin - other.ymin)) / imageHeight * 100;
-            double percent = thresholdPercent + scalePercent;
+            float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
-            this.LastMatched = (this.LastxPercentVariance <= percent) &&
-                               (this.LastyPercentVariance <= percent) &&
-                               (this.LastWidthPercentVariance <= percent) &&
-                               (this.LastHeightPercentVariance <= percent);
+            if (percentageIntersect > 0)
+                Global.Log("Percentage Intersection of object: " + percentageIntersect + "%");
 
-            return this.LastMatched;
+            double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
+
+            if(percentageIntersect >= percentMatch)
+            {
+                isMatch = true;
+            }
+
+            return isMatch;
         }
 
         public override int GetHashCode()
         {
             int hashCode = -853659638;
-            hashCode = hashCode * -1521134295 + xmin.GetHashCode();
-            hashCode = hashCode * -1521134295 + ymin.GetHashCode();
-            hashCode = hashCode * -1521134295 + xmax.GetHashCode();
-            hashCode = hashCode * -1521134295 + ymax.GetHashCode();
+            hashCode = hashCode * -1521134295 + Xmin.GetHashCode();
+            hashCode = hashCode * -1521134295 + Ymin.GetHashCode();
+            hashCode = hashCode * -1521134295 + Xmax.GetHashCode();
+            hashCode = hashCode * -1521134295 + Ymax.GetHashCode();
 
             return hashCode;
         }
@@ -151,12 +145,12 @@ namespace AITool
 
         public long getKey()
         {
-            return key;
+            return Key;
         }
 
         public override string ToString()
         {
-            string value = "key=" + getKey() + ", name=" + label + ", xmin=" + xmin + ", ymin=" + ymin + ", xmax=" + xmax + ", ymax=" + ymax + ", counter=" + counter + ", camera=" + cameraName + ", create date: " + createDate;
+            string value = "key=" + getKey() + ", name=" + Label + ", xmin=" + Xmin + ", ymin=" + Ymin + ", xmax=" + Xmax + ", ymax=" + Ymax + ", counter=" + Counter + ", camera=" + CameraName + ", create date: " + CreateDate + ", imagePath: " + ImagePath ;
 
             return value;
         }

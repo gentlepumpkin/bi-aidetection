@@ -1527,9 +1527,9 @@ namespace AITool
 
                     //load cameras stats
                     string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
-                    if (cam.maskManager.masking_enabled)
+                    if (cam.maskManager.MaskingEnabled)
                     {
-                        stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
+                        stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
                     }
                     lbl_camstats.Text = stats;
                 }
@@ -1841,9 +1841,9 @@ namespace AITool
 
                 string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
 
-                if (cam.maskManager.masking_enabled)
+                if (cam.maskManager.MaskingEnabled)
                 {
-                    stats += $" | Mask History Count: {cam.maskManager.last_positions_history.Count()} | Current Dynamic Masks: {cam.maskManager.masked_positions.Count()}";
+                    stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
                 }
                 lbl_camstats.Text = stats;
 
@@ -1876,7 +1876,7 @@ namespace AITool
                 tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
-                cb_masking_enabled.Checked = cam.maskManager.masking_enabled;
+                cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
 
 
 
@@ -2034,7 +2034,7 @@ namespace AITool
                 cam.name = tbName.Text.Trim();  //just in case we needed to rename it
                 cam.prefix = tbPrefix.Text.Trim();
                 cam.enabled = cb_enabled.Checked;
-                cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
+                cam.maskManager.MaskingEnabled = cb_masking_enabled.Checked;
                 cam.input_path = cmbcaminput.Text.Trim();
                 cam.input_path_includesubfolders = cb_monitorCamInputfolder.Checked;
 
@@ -2101,13 +2101,13 @@ namespace AITool
                                         }
                                         if (frm.cb_apply_mask_settings.Checked)
                                         {
-                                            icam.maskManager.masking_enabled = cam.maskManager.masking_enabled;
+                                            icam.maskManager.MaskingEnabled = cam.maskManager.MaskingEnabled;
 
-                                            icam.maskManager.history_save_mins = cam.maskManager.history_save_mins;
-                                            icam.maskManager.history_threshold_count = cam.maskManager.history_threshold_count;
-                                            icam.maskManager.mask_remove_mins = cam.maskManager.mask_remove_mins;
-                                            icam.maskManager.thresholdPercent = cam.maskManager.thresholdPercent;
-                                            icam.maskManager.objects = cam.maskManager.objects;
+                                            icam.maskManager.HistorySaveMins = cam.maskManager.HistorySaveMins;
+                                            icam.maskManager.HistoryThresholdCount = cam.maskManager.HistoryThresholdCount;
+                                            icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
+                                            icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
+                                            icam.maskManager.Objects = cam.maskManager.Objects;
                                         }
 
                                     }
@@ -2669,57 +2669,48 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
                 frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.name;
 
                 //Merge ClassObject's code
-                frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
-                frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
-                frm.num_mask_remove.Value = cam.maskManager.mask_remove_mins; //load mask remove counter
-                //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
-                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
+                frm.num_history_mins.Value = cam.maskManager.HistorySaveMins;//load minutes to retain history objects that have yet to become masks
+                frm.num_mask_create.Value = cam.maskManager.HistoryThresholdCount; // load mask create counter
+                frm.num_mask_remove.Value = cam.maskManager.MaskRemoveMins; //load mask remove counter
+                frm.num_percent_var.Value = (decimal)cam.maskManager.PercentMatch;
+                frm.numMaskThreshold.Value = cam.maskManager.MaskRemoveThreshold;
 
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
-                frm.tb_objects.Text = cam.maskManager.objects;
+                frm.tb_objects.Text = cam.maskManager.Objects;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
-
-
                     Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
                     Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
                     Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
+                    Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
 
-                    ////convert to percent
-                    //Double percent_variance = (double)variance / 100;
-
-                    cam.maskManager.history_save_mins = history_mins;
-                    cam.maskManager.history_threshold_count = mask_create_counter;
-                    cam.maskManager.mask_remove_mins = mask_remove_mins;
-                    cam.maskManager.thresholdPercent = variance;
+                    cam.maskManager.HistorySaveMins = history_mins;
+                    cam.maskManager.HistoryThresholdCount = mask_create_counter;
+                    cam.maskManager.MaskRemoveMins = mask_remove_mins;
+                    cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
+                    cam.maskManager.PercentMatch = variance;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
-
-                    cam.maskManager.masking_enabled = cb_masking_enabled.Checked;
-
-                    cam.maskManager.objects = frm.tb_objects.Text.Trim();
+                    cam.maskManager.MaskingEnabled = cb_masking_enabled.Checked;
+                    cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
                     AppSettings.Save();
-
                 }
             }
         }
 
         private void btnDetails_Click(object sender, EventArgs e)
         {
-
             ShowMaskDetailsDialog(list2.SelectedItems[0].Text);
-
         }
 
         private void ShowMaskDetailsDialog(string cameraname)
@@ -2732,7 +2723,7 @@ namespace AITool
 
                 frm.ShowDialog();
 
-                cb_masking_enabled.Checked = CurCam.maskManager.masking_enabled;
+                cb_masking_enabled.Checked = CurCam.maskManager.MaskingEnabled;
 
             }
 

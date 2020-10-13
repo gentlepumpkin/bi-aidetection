@@ -30,17 +30,17 @@ namespace AITool
             {
                 string lastfolder = "";
 
-                if (contextMenuPosObj != null && !string.IsNullOrEmpty(contextMenuPosObj.imagePath))
+                if (contextMenuPosObj != null && !string.IsNullOrEmpty(contextMenuPosObj.ImagePath))
                 {
-                    lastfolder = Path.GetDirectoryName(contextMenuPosObj.imagePath);
-                    if (File.Exists(contextMenuPosObj.imagePath))
+                    lastfolder = Path.GetDirectoryName(contextMenuPosObj.ImagePath);
+                    if (File.Exists(contextMenuPosObj.ImagePath))
                     {
-                        Global.Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.imagePath})");
-                        return contextMenuPosObj.imagePath;
+                        Global.Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.ImagePath})");
+                        return contextMenuPosObj.ImagePath;
                     }
                     else
                     {
-                        Global.Log("INFO: Mask image file not found at location: " + contextMenuPosObj.imagePath + ". Defaulting to last processed image");
+                        Global.Log("INFO: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
                     }
                 }
                 else
@@ -217,14 +217,14 @@ namespace AITool
             {
                 foreach (Camera curcam in AppSettings.Settings.CameraList)
                 {
-                    hist.AddRange(curcam.maskManager.last_positions_history);
-                    masked.AddRange(curcam.maskManager.masked_positions);
+                    hist.AddRange(curcam.maskManager.LastPositionsHistory);
+                    masked.AddRange(curcam.maskManager.MaskedPositions);
                 }
             }
             else
             {
-                hist = cam.maskManager.last_positions_history;
-                masked = cam.maskManager.masked_positions;
+                hist = cam.maskManager.LastPositionsHistory;
+                masked = cam.maskManager.MaskedPositions;
             }
 
             Global_GUI.UpdateFOLV(FOLV_MaskHistory, hist, true);
@@ -249,9 +249,9 @@ namespace AITool
                     }
 
                     pictureBox1.Tag = imagePath;
-                    if (contextMenuPosObj != null && contextMenuPosObj.imagePath != null)
+                    if (contextMenuPosObj != null && contextMenuPosObj.ImagePath != null)
                     {
-                        if (contextMenuPosObj.imagePath.ToLower() != imagePath.ToLower())
+                        if (contextMenuPosObj.ImagePath.ToLower() != imagePath.ToLower())
                         {
                             lbl_lastfile.ForeColor = Color.DarkMagenta;
                             lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
@@ -369,13 +369,13 @@ namespace AITool
                             //Global.Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
                             
-                            int xmin = (int)(scale * op.xmin + this.cam.XOffset) + absX;
-                            int xmax = (int)(scale * op.xmax) + absX;
-                            int ymin = (int)(scale * op.ymin + this.cam.YOffset) + absY;
-                            int ymax = (int)(scale * op.ymax) + absY;
+                            int xmin = (int)(scale * op.Xmin + this.cam.XOffset) + absX;
+                            int xmax = (int)(scale * op.Xmax) + absX;
+                            int ymin = (int)(scale * op.Ymin + this.cam.YOffset) + absY;
+                            int ymax = (int)(scale * op.Ymax) + absY;
 
                             Color color;
-                            if (op.isStatic)
+                            if (op.IsStatic)
                             {
                                 color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
                             }
@@ -396,10 +396,10 @@ namespace AITool
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                            string display = $"{op.label}";
+                            string display = $"{op.Label}";
                             
                             if (showkey)
-                                display += $" ({op.key})";
+                                display += $" ({op.Key})";
 
                             System.Drawing.SizeF size = e.Graphics.MeasureString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
@@ -437,7 +437,7 @@ namespace AITool
             if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
                 contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObjects[0];
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
 
                 ShowMaskImage();
 
@@ -456,7 +456,7 @@ namespace AITool
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
                 contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObjects[0];
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
 
                 ShowMaskImage();
 
@@ -485,14 +485,14 @@ namespace AITool
 
         private void lblClearMasks_Click(object sender, EventArgs e)
         {
-            cam.maskManager.masked_positions.Clear();
+            cam.maskManager.MaskedPositions.Clear();
             Refresh();
             AppSettings.Save();
         }
 
         private void lblClearHistory_Click(object sender, EventArgs e)
         {
-            cam.maskManager.last_positions_history.Clear();
+            cam.maskManager.LastPositionsHistory.Clear();
             Refresh();
             AppSettings.Save();
         }
@@ -502,7 +502,7 @@ namespace AITool
             if (e.Model != null)
             {
                 contextMenuPosObj = (ObjectPosition)e.Model;
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.cameraName);
+                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
             }
         }
 
@@ -510,10 +510,10 @@ namespace AITool
         {
             if (contextMenuPosObj != null)
             {
-                contextMenuPosObj.isStatic = true;
-                contextMenuPosObj.counter = 0;
-                cam.maskManager.masked_positions.Add(contextMenuPosObj);
-                cam.maskManager.last_positions_history.Remove(contextMenuPosObj);
+                contextMenuPosObj.IsStatic = true;
+                contextMenuPosObj.Counter = 0;
+                cam.maskManager.MaskedPositions.Add(contextMenuPosObj);
+                cam.maskManager.LastPositionsHistory.Remove(contextMenuPosObj);
                 contextMenuPosObj = null;
                 Refresh();
                 AppSettings.Save();
@@ -532,7 +532,7 @@ namespace AITool
         {
             if (contextMenuPosObj != null)
             {
-                cam.maskManager.masked_positions.Remove(contextMenuPosObj);
+                cam.maskManager.MaskedPositions.Remove(contextMenuPosObj);
                 contextMenuPosObj = null;
                 Refresh();
                 AppSettings.Save();
@@ -556,9 +556,9 @@ namespace AITool
                 ObjectPosition OP = (ObjectPosition)e.Model;
 
                 // If SPI IsNot Nothing Then
-                if (OP.isStatic && e.Item.ForeColor != Color.Blue)
+                if (OP.IsStatic && e.Item.ForeColor != Color.Blue)
                     e.Item.ForeColor = Color.Blue;
-                else if (!OP.isStatic && e.Item.ForeColor != Color.Black)
+                else if (!OP.IsStatic && e.Item.ForeColor != Color.Black)
                     e.Item.ForeColor = Color.Black;
             }
 
@@ -582,8 +582,8 @@ namespace AITool
         {
             if (contextMenuPosObj != null)
             {
-                contextMenuPosObj.isStatic = true;
-                contextMenuPosObj.counter = 0;
+                contextMenuPosObj.IsStatic = true;
+                contextMenuPosObj.Counter = 0;
                 contextMenuPosObj = null;
                 Refresh();
                 AppSettings.Save();
@@ -627,36 +627,38 @@ namespace AITool
                 //Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
                 //Merge ClassObject's code
-                frm.num_history_mins.Value = cam.maskManager.history_save_mins;//load minutes to retain history objects that have yet to become masks
-                frm.num_mask_create.Value = cam.maskManager.history_threshold_count; // load mask create counter
-                frm.num_mask_remove.Value = cam.maskManager.mask_remove_mins; //load mask remove counter
+                frm.num_history_mins.Value = cam.maskManager.HistorySaveMins;//load minutes to retain history objects that have yet to become masks
+                frm.num_mask_create.Value = cam.maskManager.HistoryThresholdCount; // load mask create counter
+                frm.num_mask_remove.Value = cam.maskManager.MaskRemoveMins; //load mask remove counter
+                frm.numMaskThreshold.Value = cam.maskManager.MaskRemoveThreshold;
+
                 //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
-                frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent;
+                frm.num_percent_var.Value = (decimal)cam.maskManager.PercentMatch;
 
-                frm.cb_enabled.Checked = cam.maskManager.masking_enabled;
+                frm.cb_enabled.Checked = cam.maskManager.MaskingEnabled;
 
-                frm.tb_objects.Text = cam.maskManager.objects;
+                frm.tb_objects.Text = cam.maskManager.Objects;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
-
-
                     Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
                     Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
                     Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
-                    Int32.TryParse(frm.num_percent_var.Text, out int variance);
+                    Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
+                    Int32.TryParse(frm.num_percent_var.Text, out int percent_match);
 
                     ////convert to percent
                     //Double percent_variance = (double)variance / 100;
 
-                    cam.maskManager.history_save_mins = history_mins;
-                    cam.maskManager.history_threshold_count = mask_create_counter;
-                    cam.maskManager.mask_remove_mins = mask_remove_mins;
-                    cam.maskManager.thresholdPercent = variance;
-                    cam.maskManager.objects = frm.tb_objects.Text.Trim();
+                    cam.maskManager.HistorySaveMins = history_mins;
+                    cam.maskManager.HistoryThresholdCount = mask_create_counter;
+                    cam.maskManager.MaskRemoveMins = mask_remove_mins;
+                    cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
+                    cam.maskManager.PercentMatch = percent_match;
+                    cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
-                    cam.maskManager.masking_enabled = frm.cb_enabled.Checked;
+                    cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
 
                     AppSettings.Save();
 
@@ -673,11 +675,11 @@ namespace AITool
         {
             if (contextMenuPosObj != null)
             {
-                contextMenuPosObj.isStatic = false;
-                contextMenuPosObj.createDate = DateTime.Now;
+                contextMenuPosObj.IsStatic = false;
+                contextMenuPosObj.CreateDate = DateTime.Now;
                 //contextMenuPosObj.counter = 0;
-                cam.maskManager.masked_positions.Add(contextMenuPosObj);
-                cam.maskManager.last_positions_history.Remove(contextMenuPosObj);
+                cam.maskManager.MaskedPositions.Add(contextMenuPosObj);
+                cam.maskManager.LastPositionsHistory.Remove(contextMenuPosObj);
                 contextMenuPosObj = null;
                 Refresh();
                 AppSettings.Save();

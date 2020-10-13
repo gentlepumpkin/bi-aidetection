@@ -176,7 +176,7 @@
             0,
             0});
             this.numSmallObjMax.Name = "numSmallObjMax";
-            this.numSmallObjMax.Size = new System.Drawing.Size(62, 20);
+            this.numSmallObjMax.Size = new System.Drawing.Size(40, 20);
             this.numSmallObjMax.TabIndex = 8;
             this.numSmallObjMax.Value = new decimal(new int[] {
             1,
@@ -191,30 +191,25 @@
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label2.Location = new System.Drawing.Point(184, 8);
+            this.label2.Location = new System.Drawing.Point(162, 8);
             this.label2.Margin = new System.Windows.Forms.Padding(0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(179, 15);
             this.label2.TabIndex = 27;
-            this.label2.Text = "% of image increase variance by ";
+            this.label2.Text = "% of image set percent match to";
             // 
             // numSmallObjPercent
             // 
             this.numSmallObjPercent.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numSmallObjPercent.Location = new System.Drawing.Point(363, 6);
+            this.numSmallObjPercent.Location = new System.Drawing.Point(341, 6);
             this.numSmallObjPercent.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
-            this.numSmallObjPercent.Maximum = new decimal(new int[] {
-            99,
-            0,
-            0,
-            0});
             this.numSmallObjPercent.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.numSmallObjPercent.Name = "numSmallObjPercent";
-            this.numSmallObjPercent.Size = new System.Drawing.Size(64, 20);
+            this.numSmallObjPercent.Size = new System.Drawing.Size(40, 20);
             this.numSmallObjPercent.TabIndex = 11;
             this.numSmallObjPercent.Value = new decimal(new int[] {
             5,
@@ -228,7 +223,7 @@
             this.label11.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label11.Location = new System.Drawing.Point(427, 8);
+            this.label11.Location = new System.Drawing.Point(381, 8);
             this.label11.Margin = new System.Windows.Forms.Padding(0);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(17, 15);
@@ -299,7 +294,7 @@
             0,
             0});
             this.numMidObjMin.Name = "numMidObjMin";
-            this.numMidObjMin.Size = new System.Drawing.Size(64, 20);
+            this.numMidObjMin.Size = new System.Drawing.Size(40, 20);
             this.numMidObjMin.TabIndex = 40;
             this.numMidObjMin.Value = new decimal(new int[] {
             1,
@@ -314,7 +309,7 @@
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label10.Location = new System.Drawing.Point(188, 8);
+            this.label10.Location = new System.Drawing.Point(164, 8);
             this.label10.Margin = new System.Windows.Forms.Padding(0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(27, 15);
@@ -324,7 +319,7 @@
             // numMidObjMax
             // 
             this.numMidObjMax.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMidObjMax.Location = new System.Drawing.Point(215, 6);
+            this.numMidObjMax.Location = new System.Drawing.Point(191, 6);
             this.numMidObjMax.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
             this.numMidObjMax.Maximum = new decimal(new int[] {
             99,
@@ -337,7 +332,7 @@
             0,
             0});
             this.numMidObjMax.Name = "numMidObjMax";
-            this.numMidObjMax.Size = new System.Drawing.Size(64, 20);
+            this.numMidObjMax.Size = new System.Drawing.Size(40, 20);
             this.numMidObjMax.TabIndex = 36;
             this.numMidObjMax.Value = new decimal(new int[] {
             1,
@@ -351,26 +346,26 @@
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label6.Location = new System.Drawing.Point(279, 8);
+            this.label6.Location = new System.Drawing.Point(231, 8);
             this.label6.Margin = new System.Windows.Forms.Padding(0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(179, 15);
+            this.label6.Size = new System.Drawing.Size(182, 15);
             this.label6.TabIndex = 39;
-            this.label6.Text = "% of image increase variance by ";
+            this.label6.Text = "% of image set percent match to ";
             // 
             // numMidObjPercent
             // 
             this.numMidObjPercent.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMidObjPercent.Location = new System.Drawing.Point(458, 6);
+            this.numMidObjPercent.Location = new System.Drawing.Point(413, 6);
             this.numMidObjPercent.Margin = new System.Windows.Forms.Padding(0, 6, 2, 6);
-            this.numMidObjPercent.Maximum = new decimal(new int[] {
-            99,
+            this.numMidObjPercent.Name = "numMidObjPercent";
+            this.numMidObjPercent.Size = new System.Drawing.Size(40, 20);
+            this.numMidObjPercent.TabIndex = 30;
+            this.numMidObjPercent.Value = new decimal(new int[] {
+            1,
             0,
             0,
             0});
-            this.numMidObjPercent.Name = "numMidObjPercent";
-            this.numMidObjPercent.Size = new System.Drawing.Size(66, 20);
-            this.numMidObjPercent.TabIndex = 30;
             this.numMidObjPercent.Leave += new System.EventHandler(this.numMidObjPercent_Leave);
             // 
             // label5
@@ -378,7 +373,7 @@
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label5.Location = new System.Drawing.Point(526, 8);
+            this.label5.Location = new System.Drawing.Point(455, 8);
             this.label5.Margin = new System.Windows.Forms.Padding(0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(17, 15);
@@ -391,10 +386,10 @@
             this.label4.Location = new System.Drawing.Point(22, 17);
             this.label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(996, 22);
+            this.label4.Size = new System.Drawing.Size(801, 22);
             this.label4.TabIndex = 10;
             this.label4.Text = "Objects in the distance are more sensitive to changes in detected positions. This" +
-    " setting allows the percent variance to be increased for distant objects.";
+    " setting allows custom percentage match settings for distant objects.";
             // 
             // cbEnableScaling
             // 
