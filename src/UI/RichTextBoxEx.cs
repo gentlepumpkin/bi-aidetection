@@ -8,7 +8,7 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Collections;
-using Arch.CMessaging.Client.Core.Utils;
+using AITool;
 
 public class RichTextBoxEx
 {
@@ -148,7 +148,7 @@ public class RichTextBoxEx
 	public long MaxRTFWriteTime = 200;
 	public long LastRTFWriteTime = 0;
 	public ThreadSafe.Boolean AutoScroll = new ThreadSafe.Boolean(true);
-	private Object LockObject = new object();
+	private System.Object LockObject = new object();
 	private RichTextBox _RTF;
 	private Dictionary<string, Color> KnownColors { get; set; } = new Dictionary<string, Color>();
 	public RichTextBoxEx(RichTextBox RTF, bool AutoScroll)

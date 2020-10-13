@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Arch.CMessaging.Client.Core.Utils;
 using SQLite;
 //using Microsoft.Data.Sqlite;
 
@@ -36,11 +35,12 @@ namespace AITool
         public ConcurrentDictionary<string, History> HistoryDic { get; } = new ConcurrentDictionary<string, History>();
         public DateTime InitializeTime { get; } = DateTime.Now;
         public DateTime LastUpdateTime { get; set; } = DateTime.MinValue;
+        public ThreadSafe.Boolean HasInitialized { get; set; } = new ThreadSafe.Boolean(false);
         private SQLiteConnection sqlite_conn { get; set; } = null;
         public ConcurrentBag<History> RecentlyAdded { get; set; } = new ConcurrentBag<History>();
         public ConcurrentBag<History> RecentlyDeleted { get; set; } = new ConcurrentBag<History>();
-        public ThreadSafe.Integer AddedCount = new ThreadSafe.Integer(0);
-        public ThreadSafe.Integer DeletedCount = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer AddedCount { get; set; } = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
         //private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
         private BlockingCollection<DBQueueHistoryItem> DBQueueHistory = new BlockingCollection<DBQueueHistoryItem>();
         public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000);
@@ -62,13 +62,25 @@ namespace AITool
         private void Initialize()
         {
 
-            UpdateHistoryList(true);
+            try
+            {
+                UpdateHistoryList(true);
 
-            if (this.HistoryDic.Count == 0)
-                this.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
+                if (this.HistoryDic.Count == 0)
+                    this.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
 
-            Task.Run(HistoryJobQueueLoop);
+                Task.Run(HistoryJobQueueLoop);
 
+            }
+            catch (Exception ex)
+            {
+                Global.Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                this.HasInitialized.WriteFullFence(true);
+                Global.SendMessage(MessageType.DatabaseInitialized);
+            }
 
         }
 
@@ -266,6 +278,7 @@ namespace AITool
                 if (ret || iret > 0)
                 {
                     this.RecentlyAdded.Add(hist);
+                    this.AddedCount.AtomicIncrementAndGet();
                     this.LastUpdateTime = DateTime.Now;
                 }
 
@@ -707,8 +720,11 @@ namespace AITool
                         foreach (History hist in removed)
                         {
                             cnt++;
+                            int rnum = 0;
+                            if (removed.Count > 0)
+                                rnum = (removed.Count / 10);
 
-                            if (cnt == 1 || cnt == removed.Count || (removed.Count > 0 && cnt % (removed.Count / 10) > 0))
+                            if (cnt == 1 || cnt == removed.Count || (cnt % rnum > 0))
                             {
                                 Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
                             }

@@ -85,62 +85,7 @@ namespace AITool
             this.AnalyzePrediction();
         }
 
-        //public List<ClsPrediction> HistToPredictionArray(History hist)
-        //{
-
-        //    List<ClsPrediction> ret = new List<ClsPrediction>();
-            
-        //    string positions = hist.Positions;
-        //    string detections = hist.Detections;
-
-        //    try
-        //    {
-        //        List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
-
-        //        int countr = positionssArray.Count();
-
-
-        //        if (detections.Contains("irrelevant") || detections.Contains("masked") || detections.Contains("confidence") || detections.Contains("error"))
-        //        {
-        //            detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
-        //        }
-
-        //        List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
-                              
-
-        //        //display a rectangle around each relevant object
-        //        for (int i = 0; i < countr; i++)
-        //        {
-
-        //            //load 'xmin,ymin,xmax,ymax' from third column into a string
-        //            List<string> positionsplt = Global.Split(positionssArray[i], ",");
-
-        //            //store xmin, ymin, xmax, ymax in separate variables
-        //            Int32.TryParse(positionsplt[0], out int xmin);
-        //            Int32.TryParse(positionsplt[1], out int ymin);
-        //            Int32.TryParse(positionsplt[2], out int xmax);
-        //            Int32.TryParse(positionsplt[3], out int ymax);
-
-        //            ClsPrediction pred = new ClsPrediction();
-        //            pred.Label = Global.GetWordBetween(detectionsArray[i], "", " ");
-        //            pred.Confidence = Global.GetNumberInt(detectionsArray[i]);
-
-        //            showObject(e, color, xmin , ymin +, xmax, ymax, detectionsArray[i]); //call rectangle drawing method, calls appropriate detection text
-
-        //        }
-
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //        Global.Log($"Error: Positions ='{positions}', Detections ='{detections}': {Global.ExMsg(ex)}");
-        //    }
-
-        //    return ret;
-
-
-        //}
+        
 
         public void AnalyzePrediction()
         {
@@ -160,48 +105,45 @@ namespace AITool
                             if (this.Confidence >= this._cam.threshold_lower && this.Confidence  <= this._cam.threshold_upper)
                             {
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
-                                ObjectPosition currentObject = new ObjectPosition(_imageObject, _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
 
-                                //check the dynamic or static masks
-                                if (this._cam.maskManager.MaskingEnabled)
-                                {
-                                    //creates history and masked lists for objects returned
-                                    result = this._cam.maskManager.CreateDynamicMask(currentObject);
-                                    this.DynMaskResult = result.Result;
-                                    this.DynMaskType = result.MaskType;
-                                    this.DynamicThresholdCount = result.Dynamic_Threshold_Count;
-                                }
+                                //only if the object is outside of the masked area
+                                result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
+                                this.ImgMaskResult = result.Result;
+                                this.ImgMaskType = result.MaskType;
+                                this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
 
-                                //check the external image mask IF the mask manager didnt flag anything
                                 if (!result.IsMasked)
                                 {
-                                    //only if the object is outside of the masked area
-                                    result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
-                                    this.ImgMaskResult = result.Result;
-                                    this.ImgMaskType = result.MaskType;
-                                    this.ImagePointsOutsideMask = result.Image_PointsOutsideMask;
-
-                                    if (!result.IsMasked)
-                                    {
-                                        this.Result = ResultType.Relevant;
-                                    }
-                                    else if (result.MaskType == MaskType.None) //if the object is in a masked area
-                                    {
-                                        this.Result = ResultType.NoMask;
-                                    }
-                                    else if (result.MaskType == MaskType.Image) //if the object is in a masked area
-                                    {
-                                        this.Result = ResultType.ImageMasked;
-                                    }
-
+                                    this.Result = ResultType.Relevant;
                                 }
-                                else
+                                else if (result.MaskType == MaskType.None) //if the object is in a masked area
                                 {
-                                    //there is a dynamic or static mask
-                                    if (result.MaskType == MaskType.Dynamic)
-                                        this.Result = ResultType.DynamicMasked;
-                                    else if (result.MaskType == MaskType.Static)
-                                        this.Result = ResultType.StaticMasked;
+                                    this.Result = ResultType.NoMask;
+                                }
+                                else if (result.MaskType == MaskType.Image) //if the object is in a masked area
+                                {
+                                    this.Result = ResultType.ImageMasked;
+                                }
+
+                                //check the mask manager if the image mask didnt flag anything
+                                if (!result.IsMasked)
+                                {
+                                    //check the dynamic or static masks
+                                    if (this._cam.maskManager.MaskingEnabled)
+                                    {
+                                        ObjectPosition currentObject = new ObjectPosition(_imageObject, _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
+                                        //creates history and masked lists for objects returned
+                                        result = this._cam.maskManager.CreateDynamicMask(currentObject);
+                                        this.DynMaskResult = result.Result;
+                                        this.DynMaskType = result.MaskType;
+                                        this.DynamicThresholdCount = result.DynamicThresholdCount;
+                                        //there is a dynamic or static mask
+                                        if (result.MaskType == MaskType.Dynamic)
+                                            this.Result = ResultType.DynamicMasked;
+                                        else if (result.MaskType == MaskType.Static)
+                                            this.Result = ResultType.StaticMasked;
+                                    }
+
                                 }
 
                                 if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)

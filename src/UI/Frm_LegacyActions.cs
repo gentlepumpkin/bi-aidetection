@@ -100,8 +100,8 @@ namespace AITool
                     else
                     {
                         //do a generic test of the trigger
-                        bool result = await AITOOL.Trigger(cam, null, true);
-
+                        //bool result = await AITOOL.Trigger(cam, null, true);
+                        bool result = await AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, null, null, true, true, null, "");
 
                         if (result)
                         {
@@ -131,6 +131,15 @@ namespace AITool
         private void label3_Click(object sender, EventArgs e)
         {
             MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, label3.Text));
+        }
+
+        private void cb_mergeannotations_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_mergeannotations.Checked)
+                tb_jpeg_merge_quality.Enabled = true;
+            else
+                tb_jpeg_merge_quality.Enabled = false;
+
         }
     }
 }

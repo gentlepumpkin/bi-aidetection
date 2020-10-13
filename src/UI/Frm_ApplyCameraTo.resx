@@ -117,34 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="cb_queue_actions.ToolTip" xml:space="preserve">
-    <value>This will send any actions to a background thread.  It will allow the main detection routine
-to finish without waiting for Telegram, mqtt, etc.   It is possible this will affect how the
-telegram cooldown feature works.</value>
-  </data>
-  <data name="tb_Sounds.ToolTip" xml:space="preserve">
-    <value>Play a sound based on detected object.  
-
-Place a common between object names, a semi colon
-between object names and the file, and a pipe symbol 
-between multiple entries.
-
-Examples:
-
-person ; C:\DADA.WAV | bird ; C:\GOBBLE.WAV
-dog, cat, bird ; C:\WOOF.WAV
-* ; C:\DEFAULT.WAV</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImagePathEscaped], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
-  </data>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>35</value>
-  </metadata>
 </root>

@@ -36,8 +36,8 @@ namespace AITool
         public bool IsMasked = false;
         public MaskType MaskType = MaskType.Unknown;
         public MaskResult Result = MaskResult.Unknown;
-        public int Image_PointsOutsideMask = 0;
-        public int Dynamic_Threshold_Count = 0;
+        public int ImagePointsOutsideMask = 0;
+        public int DynamicThresholdCount = 0;
 
         public void SetResults(MaskType type, MaskResult result)
         {
@@ -58,7 +58,7 @@ namespace AITool
 
         public void SetResults(MaskType type, MaskResult result, int counter)
         {
-            Dynamic_Threshold_Count = counter;
+            DynamicThresholdCount = counter;
             SetResults(type, result);
         }
     }

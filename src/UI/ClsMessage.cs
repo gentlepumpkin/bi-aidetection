@@ -19,7 +19,8 @@ namespace AITool
         EndProcessImage,
         SettingsSaved,
         SettingsLoaded,
-        UpdateProgressBar
+        UpdateProgressBar,
+        DatabaseInitialized
 
     }
 

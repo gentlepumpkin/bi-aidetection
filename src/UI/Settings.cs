@@ -68,6 +68,7 @@ namespace AITool
             public int MaxLogFileAgeDays = 14;
             public long MaxLogFileSize = ((1024 * 2024) * 5);  //5mb in bytes
             public int MaxImageQueueSize = 100;
+            public int MaxActionQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
             public int MaxHistoryAgeDays = 14;
@@ -105,9 +106,11 @@ namespace AITool
             public int TimeBetweenListRefreshsMS = 5000;
             public bool HistoryShowMask = false;
             public bool HistoryShowObjects = true;
+            public bool HistoryOnlyDisplayRelevantObjects = true;
             public bool HistoryFollow = true;
             public bool HistoryAutoRefresh = true;
-
+            public bool HistoryStoreFalseAlerts = true;
+            public bool HistoryStoreMaskedAlerts = true;
 
         }
 
@@ -377,11 +380,15 @@ namespace AITool
                             //update threshold in all masks if changed during session
                             cam.maskManager.Update(cam);
 
+                            ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
                             if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
                             {
                                 cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                                cam.trigger_url_cancels = false;  
                             }
+
+                            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
+                            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
                             if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
                             {

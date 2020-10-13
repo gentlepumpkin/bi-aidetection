@@ -33,6 +33,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cb_queue_actions = new System.Windows.Forms.CheckBox();
             this.cb_mergeannotations = new System.Windows.Forms.CheckBox();
             this.tb_network_folder_filename = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
@@ -67,6 +68,8 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tb_jpeg_merge_quality = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -103,6 +106,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox1.Controls.Add(this.tb_jpeg_merge_quality);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.cb_queue_actions);
             this.groupBox1.Controls.Add(this.cb_mergeannotations);
             this.groupBox1.Controls.Add(this.tb_network_folder_filename);
             this.groupBox1.Controls.Add(this.label15);
@@ -142,16 +148,28 @@
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             // 
+            // cb_queue_actions
+            // 
+            this.cb_queue_actions.AutoSize = true;
+            this.cb_queue_actions.Location = new System.Drawing.Point(263, 19);
+            this.cb_queue_actions.Name = "cb_queue_actions";
+            this.cb_queue_actions.Size = new System.Drawing.Size(104, 19);
+            this.cb_queue_actions.TabIndex = 47;
+            this.cb_queue_actions.Text = "Queue Actions";
+            this.toolTip1.SetToolTip(this.cb_queue_actions, resources.GetString("cb_queue_actions.ToolTip"));
+            this.cb_queue_actions.UseVisualStyleBackColor = true;
+            // 
             // cb_mergeannotations
             // 
             this.cb_mergeannotations.AutoSize = true;
-            this.cb_mergeannotations.Location = new System.Drawing.Point(263, 19);
+            this.cb_mergeannotations.Location = new System.Drawing.Point(408, 19);
             this.cb_mergeannotations.Name = "cb_mergeannotations";
-            this.cb_mergeannotations.Size = new System.Drawing.Size(196, 19);
+            this.cb_mergeannotations.Size = new System.Drawing.Size(193, 19);
             this.cb_mergeannotations.TabIndex = 46;
-            this.cb_mergeannotations.Text = "Merge Annotations Into Images ";
+            this.cb_mergeannotations.Text = "Merge Annotations Into Images";
             this.toolTip1.SetToolTip(this.cb_mergeannotations, "Merge detected object text and rectangles into actual image.");
             this.cb_mergeannotations.UseVisualStyleBackColor = true;
+            this.cb_mergeannotations.CheckedChanged += new System.EventHandler(this.cb_mergeannotations_CheckedChanged);
             // 
             // tb_network_folder_filename
             // 
@@ -442,7 +460,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label5.Location = new System.Drawing.Point(11, 20);
+            this.label5.Location = new System.Drawing.Point(11, 21);
             this.label5.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(91, 15);
@@ -454,7 +472,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label6.Location = new System.Drawing.Point(162, 20);
+            this.label6.Location = new System.Drawing.Point(162, 21);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 5, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(50, 15);
@@ -493,6 +511,26 @@
             this.btTest.Text = "Test";
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(638, 21);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(180, 15);
+            this.label2.TabIndex = 48;
+            this.label2.Text = "Merge JPEG Save Quality (1-100):";
+            // 
+            // tb_jpeg_merge_quality
+            // 
+            this.tb_jpeg_merge_quality.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_jpeg_merge_quality.Location = new System.Drawing.Point(824, 17);
+            this.tb_jpeg_merge_quality.Name = "tb_jpeg_merge_quality";
+            this.tb_jpeg_merge_quality.Size = new System.Drawing.Size(62, 23);
+            this.tb_jpeg_merge_quality.TabIndex = 49;
+            this.toolTip1.SetToolTip(this.tb_jpeg_merge_quality, "The larger the number, the higher the image quality AND SIZE.   If you lower this" +
+        " number to\r\n50 or below, images will be smaller and sent to Telegram faster.");
             // 
             // Frm_LegacyActions
             // 
@@ -557,5 +595,8 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label12;
+        public System.Windows.Forms.CheckBox cb_queue_actions;
+        private System.Windows.Forms.Label label2;
+        public System.Windows.Forms.TextBox tb_jpeg_merge_quality;
     }
 }
