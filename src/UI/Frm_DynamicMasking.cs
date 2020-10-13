@@ -56,6 +56,13 @@ namespace AITool
                 num_percent_var.Text = num_percent_var.Value.ToString();
             }
         }
+        private void numMaskThreshold_Leave(object sender, EventArgs e)
+        {
+            if (numMaskThreshold.Text == "")
+            {
+                numMaskThreshold.Text = numMaskThreshold.Value.ToString();
+            }
+        }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
@@ -67,12 +74,12 @@ namespace AITool
         {
             using (Frm_DynamicMaskingAdvanced frm = new Frm_DynamicMaskingAdvanced())
             {
-                frm.cbEnableScaling.Checked = cam.maskManager.scaleConfig.isScaledObject;
-                frm.numSmallObjMax.Value = cam.maskManager.scaleConfig.smallObjectMaxPercent;
-                frm.numSmallObjPercent.Value = cam.maskManager.scaleConfig.smallObjectScalePercent;
-                frm.numMidObjMin.Value = cam.maskManager.scaleConfig.mediumObjectMinPercent;
-                frm.numMidObjMax.Value = cam.maskManager.scaleConfig.mediumObjectMaxPercent;
-                frm.numMidObjPercent.Value = cam.maskManager.scaleConfig.mediumObjectScalePercent;
+                frm.cbEnableScaling.Checked = cam.maskManager.ScaleConfig.IsScaledObject;
+                frm.numSmallObjMax.Value = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
+                frm.numSmallObjPercent.Value = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
+                frm.numMidObjMin.Value = cam.maskManager.ScaleConfig.MediumObjectMinPercent;
+                frm.numMidObjMax.Value = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
+                frm.numMidObjPercent.Value = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -82,13 +89,13 @@ namespace AITool
                     Int32.TryParse(frm.numMidObjMax.Text, out int midObjMax);
                     Int32.TryParse(frm.numMidObjPercent.Text, out int midObjPercent);
 
-                    cam.maskManager.scaleConfig.isScaledObject = frm.cbEnableScaling.Checked;
+                    cam.maskManager.ScaleConfig.IsScaledObject = frm.cbEnableScaling.Checked;
 
-                    cam.maskManager.scaleConfig.smallObjectMaxPercent = smallObjMax;
-                    cam.maskManager.scaleConfig.smallObjectScalePercent = smallObjPercent;
-                    cam.maskManager.scaleConfig.mediumObjectMinPercent = midObjMin;
-                    cam.maskManager.scaleConfig.mediumObjectMaxPercent = midObjMax;
-                    cam.maskManager.scaleConfig.mediumObjectScalePercent = midObjPercent;
+                    cam.maskManager.ScaleConfig.SmallObjectMaxPercent = smallObjMax;
+                    cam.maskManager.ScaleConfig.SmallObjectMatchPercent = smallObjPercent;
+                    cam.maskManager.ScaleConfig.MediumObjectMinPercent = midObjMin;
+                    cam.maskManager.ScaleConfig.MediumObjectMaxPercent = midObjMax;
+                    cam.maskManager.ScaleConfig.MediumObjectMatchPercent = midObjPercent;
 
                     AppSettings.Save();
                 }

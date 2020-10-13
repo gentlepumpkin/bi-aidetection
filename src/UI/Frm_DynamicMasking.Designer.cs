@@ -44,7 +44,7 @@
             this.label19 = new System.Windows.Forms.Label();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.label21 = new System.Windows.Forms.Label();
-            this.num_mask_threshold = new System.Windows.Forms.NumericUpDown();
+            this.numMaskThreshold = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.label23 = new System.Windows.Forms.Label();
@@ -60,7 +60,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_remove)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_percent_var)).BeginInit();
             this.flowLayoutPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.num_mask_threshold)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaskThreshold)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -213,7 +213,7 @@
             this.label20.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label20.AutoSize = true;
             this.label20.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label20.Location = new System.Drawing.Point(174, 14);
+            this.label20.Location = new System.Drawing.Point(175, 14);
             this.label20.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(317, 15);
@@ -282,7 +282,7 @@
             this.label19.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label19.Location = new System.Drawing.Point(174, 58);
+            this.label19.Location = new System.Drawing.Point(175, 58);
             this.label19.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(365, 15);
@@ -293,12 +293,12 @@
             // flowLayoutPanel2
             // 
             this.flowLayoutPanel2.Controls.Add(this.label21);
-            this.flowLayoutPanel2.Controls.Add(this.num_mask_threshold);
+            this.flowLayoutPanel2.Controls.Add(this.numMaskThreshold);
             this.flowLayoutPanel2.Controls.Add(this.label2);
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(173, 88);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(174, 88);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(603, 44);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(602, 44);
             this.flowLayoutPanel2.TabIndex = 15;
             // 
             // label21
@@ -313,30 +313,26 @@
             this.label21.TabIndex = 12;
             this.label21.Text = "minute(s) if object not visible in the last ";
             // 
-            // num_mask_threshold
+            // numMaskThreshold
             // 
-            this.num_mask_threshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_mask_threshold.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_mask_threshold.Location = new System.Drawing.Point(220, 10);
-            this.num_mask_threshold.Margin = new System.Windows.Forms.Padding(1, 10, 0, 4);
-            this.num_mask_threshold.Maximum = new decimal(new int[] {
+            this.numMaskThreshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.numMaskThreshold.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.numMaskThreshold.Location = new System.Drawing.Point(220, 10);
+            this.numMaskThreshold.Margin = new System.Windows.Forms.Padding(1, 10, 0, 4);
+            this.numMaskThreshold.Maximum = new decimal(new int[] {
             300,
             0,
             0,
             0});
-            this.num_mask_threshold.Minimum = new decimal(new int[] {
+            this.numMaskThreshold.Name = "numMaskThreshold";
+            this.numMaskThreshold.Size = new System.Drawing.Size(49, 23);
+            this.numMaskThreshold.TabIndex = 13;
+            this.numMaskThreshold.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.num_mask_threshold.Name = "num_mask_threshold";
-            this.num_mask_threshold.Size = new System.Drawing.Size(49, 23);
-            this.num_mask_threshold.TabIndex = 13;
-            this.num_mask_threshold.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.numMaskThreshold.Leave += new System.EventHandler(this.numMaskThreshold_Leave);
             // 
             // label2
             // 
@@ -354,10 +350,10 @@
             // 
             this.flowLayoutPanel1.Controls.Add(this.label23);
             this.flowLayoutPanel1.Controls.Add(this.btnAdvanced);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(174, 132);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(175, 132);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(1, 0, 5, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(597, 44);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(596, 44);
             this.flowLayoutPanel1.TabIndex = 14;
             // 
             // label23
@@ -456,7 +452,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.num_percent_var)).EndInit();
             this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.num_mask_threshold)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaskThreshold)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -490,7 +486,7 @@
         private System.Windows.Forms.Button btnAdvanced;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Label label21;
-        public System.Windows.Forms.NumericUpDown num_mask_threshold;
+        public System.Windows.Forms.NumericUpDown numMaskThreshold;
         private System.Windows.Forms.Label label2;
     }
 }

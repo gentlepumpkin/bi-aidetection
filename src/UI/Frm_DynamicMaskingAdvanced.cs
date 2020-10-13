@@ -56,11 +56,11 @@ namespace AITool
 
         private void numSmallObjMax_ValueChanged(object sender, EventArgs e)
         {
-            numMidObjMin.Minimum = numSmallObjMax.Value + 1;
+            numMidObjMin.Minimum = numSmallObjMax.Value;
            
             if(numMidObjMin.Value < numSmallObjMax.Value)
             {
-                numMidObjMin.Value = numSmallObjMax.Value + 1;
+                numMidObjMin.Value = numSmallObjMax.Value;
             }
 
             numMidObjMax.Minimum = numMidObjMin.Minimum + 1;

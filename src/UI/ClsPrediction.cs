@@ -45,8 +45,8 @@ namespace AITool
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
         public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
-        public int Dynamic_Threshold_Count { get; set; } = 0;
-        public int Image_PointsOutsideMask { get; set; } = 0;
+        public int DynamicThresholdCount { get; set; } = 0;
+        public int ImagePointsOutsideMask { get; set; } = 0;
 
         public float Confidence { get; set; } = 0;
         public int ymin { get; set; } = 0;
@@ -55,10 +55,7 @@ namespace AITool
         public int xmax { get; set; } = 0;
         public string Filename { get; set; } = "";
 
-        public ClsPrediction()
-        { 
-
-        }
+        public ClsPrediction(){}
 
         public ClsPrediction(ObjectType DefaultObjType, Camera cam, Object user, ClsImageQueueItem CurImg) 
         {
@@ -167,13 +164,13 @@ namespace AITool
                                                                                   this._curimg.Width, this._curimg.Height, this._cam.name, this._curimg.image_path);
 
                                 //check the dynamic or static masks
-                                if (this._cam.maskManager.masking_enabled)
+                                if (this._cam.maskManager.MaskingEnabled)
                                 {
                                     //creates history and masked lists for objects returned
                                     result = this._cam.maskManager.CreateDynamicMask(currentObject);
                                     this.DynMaskResult = result.Result;
                                     this.DynMaskType = result.MaskType;
-                                    this.Dynamic_Threshold_Count = result.Dynamic_Threshold_Count;
+                                    this.DynamicThresholdCount = result.Dynamic_Threshold_Count;
                                 }
 
                                 //check the external image mask IF the mask manager didnt flag anything
@@ -183,7 +180,7 @@ namespace AITool
                                     result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
                                     this.ImgMaskResult = result.Result;
                                     this.ImgMaskType = result.MaskType;
-                                    this.Image_PointsOutsideMask = result.Image_PointsOutsideMask;
+                                    this.ImagePointsOutsideMask = result.Image_PointsOutsideMask;
 
                                     if (!result.IsMasked)
                                     {

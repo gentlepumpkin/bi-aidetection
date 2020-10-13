@@ -1114,7 +1114,7 @@ namespace AITool
                                             }
 
                                             //mark the end of AI detection for the current image
-                                            cam.maskManager.lastDetectionDate = DateTime.Now;
+                                            cam.maskManager.LastDetectionDate = DateTime.Now;
 
                                             string PredictionsJSON = Global.GetJSONString(predictions);
 

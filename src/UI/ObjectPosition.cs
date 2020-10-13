@@ -7,64 +7,64 @@ namespace AITool
 {
     public class ObjectPosition:IEquatable<ObjectPosition>
     {
-        public string label { get; } = "";
-        public DateTime createDate { get; set; } = DateTime.MinValue;
+        public string Label { get; } = "";
+        public DateTime CreateDate { get; set; } = DateTime.MinValue;
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
 
-        public int counter { get; set; }
-        public double percentMatch { get; set; }
-        public Boolean isStatic { get; set; } = false;
-        public int xmin { get; }
-        public int ymin { get; }
-        public int xmax { get; }
-        public int ymax { get; }
+        public int Counter { get; set; }
+        public double PercentMatch { get; set; }
+        public Boolean IsStatic { get; set; } = false;
+        public int Xmin { get; }
+        public int Ymin { get; }
+        public int Xmax { get; }
+        public int Ymax { get; }
 
-        public long key { get; }
-        public int imageWidth { get; set; }
-        public int imageHeight { get; set; }
+        public long Key { get; }
+        public int ImageWidth { get; set; }
+        public int ImageHeight { get; set; }
 
-        private Rectangle objRectangle;
+        private Rectangle ObjRectangle;
 
-        public string cameraName { get; set; } = "";
-        public string imagePath { get; set; } = "";
+        public string CameraName { get; set; } = "";
+        public string ImagePath { get; set; } = "";
 
         //scaling of object based on size
-        public int scalePercent { get; set; } 
-        public double objectImagePercent { get; }
+        public int ScalePercent { get; set; } 
+        public double ObjectImagePercent { get; }
 
         private ObjectScale _scaleConfig;
-        public ObjectScale scaleConfig
+        public ObjectScale ScaleConfig
         {
             get => _scaleConfig;
             set
             {
                 _scaleConfig = value;
-                scalePercent = getImagePercentVariance();
+                ScalePercent = getImagePercentVariance();
             }
         }
 
-
         public ObjectPosition(int xmin, int ymin, int xmax, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
-            this.createDate = DateTime.Now;
+            this.CreateDate = DateTime.Now;
             this.LastSeenDate = DateTime.Now;
-            this.cameraName = cameraName;
-            this.imagePath = imagePath;
-            this.label = label;
-            this.xmin = xmin;
-            this.ymin = ymin;
-            this.xmax = xmax;
-            this.ymax = ymax;
-            objRectangle = Rectangle.FromLTRB(xmin, ymin, xmax, ymax);
+            this.CameraName = cameraName;
+            this.ImagePath = imagePath;
+            this.Label = label;
+            this.Xmin = xmin;
+            this.Ymin = ymin;
+            this.Xmax = xmax;
+            this.Ymax = ymax;
 
-            this.imageHeight = imageHeight;
-            this.imageWidth = imageWidth;
+            ObjRectangle = Rectangle.FromLTRB(xmin, ymin, xmax, ymax);
+
+            this.ImageHeight = imageHeight;
+            this.ImageWidth = imageWidth;
 
             //object percent of image area
-            objectImagePercent = (objRectangle.Width * objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
+            ObjectImagePercent = (ObjRectangle.Width * ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            key = ((xmin + 1) * (ymin + 1) + (objRectangle.Width * objRectangle.Height));
+            Key = ((xmin + 1) * (ymin + 1) + (ObjRectangle.Width * ObjRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -74,18 +74,18 @@ namespace AITool
         {
             int scalePercent = 0;
 
-            if (scaleConfig != null)
+            if (ScaleConfig != null)
             {
-                if (scaleConfig.isScaledObject)
+                if (ScaleConfig.IsScaledObject)
                 {
-                    if (objectImagePercent <= scaleConfig.smallObjectMaxPercent)
+                    if (ObjectImagePercent <= ScaleConfig.SmallObjectMaxPercent)
                     {
-                        scalePercent = scaleConfig.smallObjectScalePercent;
+                        scalePercent = ScaleConfig.SmallObjectMatchPercent;
                     }
-                    else if (objectImagePercent >= scaleConfig.mediumObjectMinPercent 
-                            &&  objectImagePercent <= scaleConfig.mediumObjectMaxPercent)
+                    else if (ObjectImagePercent >= ScaleConfig.MediumObjectMinPercent 
+                            &&  ObjectImagePercent <= ScaleConfig.MediumObjectMaxPercent)
                     {
-                        scalePercent = scaleConfig.mediumObjectScalePercent;
+                        scalePercent = ScaleConfig.MediumObjectMatchPercent;
                     }
                 }
             }
@@ -104,15 +104,16 @@ namespace AITool
 
             bool isMatch = false;
 
-            float percentageIntersect = AITOOL.getObjIntersectPercent(this.objRectangle, other.objRectangle);
+            float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
-            Global.Log("@@@@@@@ Match percent: " + percentageIntersect + "%" 
+            Global.Log("@@@@@@@ percent Intersection: " + percentageIntersect + "%" 
                 + "\n compare obj: " + other.ToString() 
                 + "\n master obj: "  + this.ToString()); 
 
-            double matchPercent = percentMatch - scalePercent;
+            double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
+            Global.Log("@@@@@ Configured percent Match = " + percentMatch);
 
-            if(percentageIntersect >= matchPercent)
+            if(percentageIntersect >= percentMatch)
             {
                 isMatch = true;
             }
@@ -123,10 +124,10 @@ namespace AITool
         public override int GetHashCode()
         {
             int hashCode = -853659638;
-            hashCode = hashCode * -1521134295 + xmin.GetHashCode();
-            hashCode = hashCode * -1521134295 + ymin.GetHashCode();
-            hashCode = hashCode * -1521134295 + xmax.GetHashCode();
-            hashCode = hashCode * -1521134295 + ymax.GetHashCode();
+            hashCode = hashCode * -1521134295 + Xmin.GetHashCode();
+            hashCode = hashCode * -1521134295 + Ymin.GetHashCode();
+            hashCode = hashCode * -1521134295 + Xmax.GetHashCode();
+            hashCode = hashCode * -1521134295 + Ymax.GetHashCode();
 
             return hashCode;
         }
@@ -143,12 +144,12 @@ namespace AITool
 
         public long getKey()
         {
-            return key;
+            return Key;
         }
 
         public override string ToString()
         {
-            string value = "key=" + getKey() + ", name=" + label + ", xmin=" + xmin + ", ymin=" + ymin + ", xmax=" + xmax + ", ymax=" + ymax + ", counter=" + counter + ", camera=" + cameraName + ", create date: " + createDate;
+            string value = "key=" + getKey() + ", name=" + Label + ", xmin=" + Xmin + ", ymin=" + Ymin + ", xmax=" + Xmax + ", ymax=" + Ymax + ", counter=" + Counter + ", camera=" + CameraName + ", create date: " + CreateDate + ", image path: " + ImagePath ;
 
             return value;
         }
