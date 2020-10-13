@@ -13,7 +13,6 @@ namespace AITool
              Detection
         }
 
-        [JsonIgnore]
         private bool _maskingEnabled = false;
         public bool MaskingEnabled
         {
@@ -32,8 +31,8 @@ namespace AITool
         public int MaskSaveMins { get; set; } = 2;
         public double PercentMatch { get; set; } = 85;                  //miniumn percentage match to be considered a match
         public int MaskRemoveThreshold { get; set; } = 1;
-        public List<ObjectPosition> LastPositionsHistory { get; set; } = new List<ObjectPosition>(); //list of last detected object positions during defined time period - history_save_mins
-        public List<ObjectPosition> MaskedPositions { get; set; } = new List<ObjectPosition>();      //stores dynamic masked object list (created in default constructor)
+        public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
+        public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
         
         private DateTime _lastDetectionDate;
         public DateTime LastDetectionDate {
@@ -46,7 +45,7 @@ namespace AITool
         }
 
         public string Objects = "";
-        public ObjectScale ScaleConfig { get; set; } = new ObjectScale();
+        public ObjectScale ScaleConfig { get; set; }
 
         [JsonIgnore]
         private object _maskLockObject = new object();
@@ -340,6 +339,9 @@ namespace AITool
 
     public class ObjectScale
     {
+        //empty default constructor required by Newtonsoft deserialization for new objects
+        public ObjectScale() {}
+
         public bool IsScaledObject { get; set; } = false;
         public int SmallObjectMaxPercent { get; set; } = 2;
         public int SmallObjectMatchPercent { get; set; } = 78;
