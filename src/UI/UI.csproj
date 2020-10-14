@@ -260,8 +260,8 @@
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="ClsTriggerActionQueue.cs" />
-    <Compile Include="ClsDetaiI.cs" />
-    <Compile Include="ClsDetailItm.cs" />
+    <Compile Include="ClsLogManager.cs" />
+    <Compile Include="ClsLogItm.cs" />
     <Compile Include="Frm_ObjectDetail.cs">
       <SubType>Form</SubType>
     </Compile>

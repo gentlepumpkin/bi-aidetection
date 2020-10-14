@@ -40,12 +40,12 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log("INFO: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
+                        Global.Log("debug: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
                     }
                 }
                 else
                 {
-                    Global.Log("INFO: Mask image file path was blank or NULL. Defaulting to last processed image");
+                    Global.Log("debug: Mask image file path was blank or NULL. Defaulting to last processed image");
 
                 }
 

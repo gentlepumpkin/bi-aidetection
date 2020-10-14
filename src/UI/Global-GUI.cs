@@ -668,23 +668,24 @@ endOfTry:
 			try
 			{
 
+				string png = "32.png";  //make empty string to avoid using the png version of the images
 
 				History hist = (History)row;
 				if (hist.Success)
 				{
-					RetKey = "success";
+					RetKey = "success" + png;
 				}
 				else if (hist.WasSkipped)
 				{
-					RetKey = "error";
+					RetKey = "error" + png;
 				}
-				else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
+				else if (!hist.Success && hist.Detections.IndexOf("false alert", StringComparison.OrdinalIgnoreCase) >= 0)
 				{
-					RetKey = "nothing";
+					RetKey = "nothing" + png;
 				}
 				else
 				{
-					RetKey = "detection";
+					RetKey = "detection" + png;
 				}
 
 
@@ -702,16 +703,16 @@ endOfTry:
 
 			try
 			{
-
+				string png = "32.png";  //make empty string to avoid using the png version of the images
 
 				History hist = (History)row;
 				if (hist.IsPerson)
 				{
-					RetKey = "person";
+					RetKey = "person" + png;
 				}
 				else
 				{
-					RetKey = "nothing";
+					RetKey = "";
 				}
 
 
@@ -730,65 +731,67 @@ endOfTry:
 			{
 				//"Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck"
 
+				string png = "32.png";  //make empty string to avoid using the png version of the images
+
 				History hist = (History)row;
 				if (hist.Success)
                 {
 					if (hist.IsPerson)
 					{
-						RetKey = "person";
+						RetKey = "person" + png;
 					}
 					else if (hist.IsAnimal)
 					{
-						if (hist.Detections.ToLower().Contains("bear"))
+						if (hist.Detections.IndexOf("bear", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "bear";
+							RetKey = "bear" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("dog"))
+						else if (hist.Detections.IndexOf("dog", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "dog";
+							RetKey = "dog" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("cat"))
+						else if (hist.Detections.IndexOf("cat", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "cat";
+							RetKey = "cat" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("bird"))
+						else if (hist.Detections.IndexOf("bird", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "bird";
+							RetKey = "bird" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("horse"))
+						else if (hist.Detections.IndexOf("horse", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "horse";
+							RetKey = "horse" + png;
 						}
 						else
                         {
-							RetKey = "alien";
+							RetKey = "alien" + png;
 						}
 
 
 					}
 					else if (hist.IsVehicle)
 					{
-						if (hist.Detections.ToLower().Contains("truck") || hist.Detections.ToLower().Contains("bus"))
+						if (hist.Detections.IndexOf("truck", StringComparison.OrdinalIgnoreCase) >= 0 || hist.Detections.IndexOf("bus", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "truck";
+							RetKey = "truck" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("car"))
+						else if (hist.Detections.IndexOf("car", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "car";
+							RetKey = "car" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("motorcycle"))
+						else if (hist.Detections.IndexOf("motorcycle", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "motorcycle";
+							RetKey = "motorcycle" + png;
 						}
-						else if (hist.Detections.ToLower().Contains("bicycle"))
+						else if (hist.Detections.IndexOf("bicycle", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
-							RetKey = "bicycle";
+							RetKey = "bicycle" + png;
 						}
 					}
 				}
 				else
 				{
-					RetKey = "nothing";
+					RetKey = "";
 				}
 
 

@@ -174,7 +174,7 @@ namespace AITool
                 }
                 else
                 {
-                    Global.Log($"Info: Camera not enabled '{this._cam.name}' ('{this.Label}')");
+                    Global.Log($"debug: Camera not enabled '{this._cam.name}' ('{this.Label}')");
                     this.Result = ResultType.CameraNotEnabled;
                 }
 
@@ -190,6 +190,14 @@ namespace AITool
         public override string ToString()
         {
             return $"{this.Label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, this.Confidence)}";
+        }
+        public string PositionString()
+        {
+            return $"{this.xmin},{this.ymin},{this.xmax},{this.ymax}";
+        }
+        public string ConfidenceString()
+        {
+            return $"{String.Format(AppSettings.Settings.DisplayPercentageFormat, this.Confidence)}";
         }
 
         private void GetObjectType()

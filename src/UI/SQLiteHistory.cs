@@ -244,7 +244,7 @@ namespace AITool
 
                     if (!ret)
                     {
-                        Global.Log($"Info: File already existed in dictionary: {hist.Filename}");
+                        Global.Log($"debug: File already existed in dictionary: {hist.Filename}");
                     }
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -259,7 +259,7 @@ namespace AITool
                     }
 
                     if (sw.ElapsedMilliseconds > 5000)
-                        Global.Log($"Info: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                        Global.Log($"debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
 
                 }
                 catch (Exception ex)
@@ -267,7 +267,7 @@ namespace AITool
 
                     if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
                     {
-                        Global.Log($"Info: File was already in the database: {hist.Filename}");
+                        Global.Log($"debug: File was already in the database: {hist.Filename}");
                     }
                     else
                     {
@@ -346,7 +346,7 @@ namespace AITool
                     //}
 
                     if (sw.ElapsedMilliseconds > 3000)
-                        Global.Log($"Info: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                        Global.Log($"debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
 
                 }
                 catch (Exception ex)
@@ -679,12 +679,15 @@ namespace AITool
                     int tooold = 0;
                     int cnt = 0;
                     int HistCount = this.HistoryDic.Count;
+                    int shownum = 0;
+                    if (HistCount > 0)
+                        shownum = HistCount / 10;
                     //we are allowed to do this with a ConcurrentDictionary...
                     foreach (History hist in this.HistoryDic.Values)
                     {
                         cnt++;
 
-                        if (cnt == 1 || cnt == HistCount || (HistCount > 0 && cnt % (HistCount / 10) > 0))
+                        if (cnt == 1 || cnt == HistCount || (cnt % shownum) > 0)
                         {
                             Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
                         }
@@ -760,7 +763,7 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log("Info: No missing files to clean from database?");
+                        Global.Log("debug: No missing files to clean from database?");
                     }
 
 
@@ -777,7 +780,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Global.Log("Error: " + ex.ToString());
             }
 
             return ret;

@@ -226,7 +226,7 @@ namespace AITool
             else if (msg.MessageType == MessageType.DatabaseInitialized)
             {
              
-                Log("Info: Database initialized.");
+                Log("debug: Database initialized.");
                 this.DatabaseInitialized.WriteFullFence(true);
                 await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
                 if (AppSettings.Settings.HistoryAutoRefresh)
@@ -263,7 +263,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Info: Not storing item in db - StoreMasked={StoreMasked}, StoreFalse={StoreFalse}: {hist.Detections}");
+                        Log($"debug: Not storing item in db - StoreMasked={StoreMasked}, StoreFalse={StoreFalse}: {hist.Detections}");
                     }
                 }
 
@@ -371,7 +371,7 @@ namespace AITool
         //save how many times an error happened
         public void IncrementErrorCounter(string text, string ModName)
         {
-            errors.Add(text, DetailType.Unknown, DateTime.Now, ModName);
+            errors.Add(text,"","", LogType.Unknown, DateTime.Now, ModName);
 
             try
             {
@@ -1341,7 +1341,7 @@ namespace AITool
             try
             {
                 if (semsw.ElapsedMilliseconds > 50)
-                    Log($"Info: Waited {semsw.ElapsedMilliseconds}ms while waiting for other threads to finish.");
+                    Log($"debug: Waited {semsw.ElapsedMilliseconds}ms while waiting for other threads to finish.");
 
                 //wait a bit for the list to be available
                 Stopwatch sw = Stopwatch.StartNew();
@@ -1353,7 +1353,7 @@ namespace AITool
                     else if (!displayed)
                     {
 
-                        Log("Info: Waiting for database to finish initializing...");
+                        Log("debug: Waiting for database to finish initializing...");
                         displayed = true;
                     }
                     await Task.Delay(50);
@@ -1361,7 +1361,7 @@ namespace AITool
                 } while (sw.ElapsedMilliseconds < 60000);
 
                 if (displayed)
-                    Log($"...Info: Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
+                    Log($"...debug: Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
 
                 //Dont update list unless we are on the tab and it is visible for performance reasons.
                 if (FilterChanged || folv_history.Items.Count == 0 || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
@@ -1409,7 +1409,7 @@ namespace AITool
                     }
                     else
                     {
-                        //Log("Info: No history file updates.");
+                        //Log("debug: No history file updates.");
                     }
 
                     if (this.Visible && !(this.WindowState == FormWindowState.Minimized))
@@ -1418,7 +1418,7 @@ namespace AITool
                 }
                 else
                 {
-                    //Log("Info: Not updating history, window not visible or history tab not selected.");
+                    //Log("debug: Not updating history, window not visible or history tab not selected.");
                 }
 
             }
@@ -2105,9 +2105,18 @@ namespace AITool
 
                                             icam.maskManager.HistorySaveMins = cam.maskManager.HistorySaveMins;
                                             icam.maskManager.HistoryThresholdCount = cam.maskManager.HistoryThresholdCount;
+                                            icam.maskManager.MaskRemoveThreshold = cam.maskManager.MaskRemoveThreshold;
                                             icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
+                                            icam.maskManager.MaskSaveMins = cam.maskManager.MaskSaveMins;
+
                                             icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
                                             icam.maskManager.Objects = cam.maskManager.Objects;
+
+                                            icam.maskManager.ScaleConfig.IsScaledObject = cam.maskManager.ScaleConfig.IsScaledObject;
+                                            icam.maskManager.ScaleConfig.MediumObjectMatchPercent = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
+                                            icam.maskManager.ScaleConfig.MediumObjectMaxPercent = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
+                                            icam.maskManager.ScaleConfig.SmallObjectMatchPercent = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
+                                            icam.maskManager.ScaleConfig.SmallObjectMaxPercent = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
                                         }
 
                                     }
@@ -3199,7 +3208,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Info: No predictions for image {hist.Filename}: Json='{hist.PredictionsJSON}'");
+                        Log($"debug: No predictions for image {hist.Filename}: Json='{hist.PredictionsJSON}'");
                     }
 
                 }

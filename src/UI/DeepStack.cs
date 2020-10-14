@@ -226,7 +226,7 @@ namespace AITool
                         }
                         else
                         {
-                            Global.Log("Info: DeepStack File not found " + exepth);
+                            Global.Log("debug: DeepStack File not found " + exepth);
                         }
                     }
 

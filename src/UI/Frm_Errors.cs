@@ -12,7 +12,7 @@ namespace AITool
 {
     public partial class Frm_Errors:Form
     {
-        public List<ClsDetailItm> errors = null;
+        public List<ClsLogItm> errors = null;
         public Frm_Errors()
         {
             InitializeComponent();
@@ -39,7 +39,7 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(folv_errors, typeof(ClsDetailItm), null, null, "Time", SortOrder.Descending);
+                Global_GUI.ConfigureFOLV(folv_errors, typeof(ClsLogItm), null, null, "Time", SortOrder.Descending);
 
                 Global_GUI.UpdateFOLV_add(folv_errors, errors);
 

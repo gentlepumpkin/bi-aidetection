@@ -65,7 +65,7 @@ namespace AITool
         public static MovingCalcs qcalc = new MovingCalcs(250);
         public static MovingCalcs qsizecalc = new MovingCalcs(250);
 
-        public static ClsDetail errors = new ClsDetail();
+        public static ClsLogManager errors = new ClsLogManager();
 
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
 
@@ -138,7 +138,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log("Error: Problem getting OS version info: " + Global.ExMsg(ex));
+                    Log("Error: Problem getting OS version: " + Global.ExMsg(ex));
                 }
 
 
@@ -1539,7 +1539,7 @@ namespace AITool
         }
 
 
-        public static string ReplaceParams(Camera cam, ClsImageQueueItem CurImg, string instr)
+        public static string ReplaceParams(Camera cam, History hist, ClsImageQueueItem CurImg, string instr)
         {
             string ret = instr;
 
@@ -1555,13 +1555,17 @@ namespace AITool
                     prefix = cam.prefix;
                 }
 
-                if (CurImg == null && cam != null)
-                {
-                    imgpath = cam.last_image_file;
-                }
-                else if (CurImg != null)
+                if (CurImg != null)
                 {
                     imgpath = CurImg.image_path;
+                }
+                else if (hist !=null)
+                {
+                    imgpath = hist.Filename;
+                }
+                else if (cam != null)
+                {
+                    imgpath = cam.last_image_file;
                 }
 
                 //handle environment variables too:
@@ -1581,7 +1585,38 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilenamenoext]", Path.GetFileNameWithoutExtension(imgpath)); //gives the image name of the image that caused the trigger
 
-                if (cam != null)
+                if (hist != null)
+                {
+                    List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+
+                    if (preds != null && preds.Count > 0)
+                    {
+                        string detections = "";
+                        string confidences = "";
+                        foreach (ClsPrediction pred in preds)
+                        {
+                            confidences += pred.ConfidenceString() + ",";
+                            detections += pred.ToString() + ",";
+                        }
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", hist.Detections); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", Uri.EscapeUriString(hist.Detections)); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].ToString()); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", preds[0].PositionString()); 
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", preds[0].ConfidenceString());
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections);
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", confidences);
+                    }
+                    else
+                    {
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "No Summary Found"); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "No Detection Found"); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", "No Position Found");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", "No Confidence Found");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "No Detections Found");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", "No Confidences Found");
+                    }
+                }
+                else if (cam != null)
                 {
                     if (cam.last_detections != null && cam.last_detections.Count > 0)
                     {

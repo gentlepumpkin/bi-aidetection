@@ -50,8 +50,8 @@ namespace AITool
                     Global.Log("------ TESTING MQTT --------");
 
 
-                    string topic = AITOOL.ReplaceParams(this.cam, null, tb_Topic.Text.Trim());
-                    string payload = AITOOL.ReplaceParams(this.cam, null, tb_Payload.Text.Trim());
+                    string topic = AITOOL.ReplaceParams(this.cam, null, null, tb_Topic.Text.Trim());
+                    string payload = AITOOL.ReplaceParams(this.cam, null, null, tb_Payload.Text.Trim());
 
                     List<string> topics = Global.Split(topic, ";|");
                     List<string> payloads = Global.Split(payload, ";|");

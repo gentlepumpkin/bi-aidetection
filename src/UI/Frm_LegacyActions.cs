@@ -130,7 +130,7 @@ namespace AITool
 
         private void label3_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, label3.Text));
+            MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, null, label3.Text));
         }
 
         private void cb_mergeannotations_CheckedChanged(object sender, EventArgs e)
