@@ -2763,11 +2763,11 @@ namespace AITool
             using (Frm_CustomMasking frm = new Frm_CustomMasking())
             {
                 Camera cam = AITOOL.GetCamera(cameraname);
-                frm.cam = cam;
+                frm.Cam = cam;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    cam.mask_brush_size = frm.brushSize;
+                    cam.mask_brush_size = frm.BrushSize;
                 }
             }
 

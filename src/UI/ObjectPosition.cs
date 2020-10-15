@@ -105,8 +105,6 @@ namespace AITool
             if (other == null)
                 return false;
 
-            bool isMatch = false;
-
             float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
             if (percentageIntersect > 0)
@@ -114,12 +112,7 @@ namespace AITool
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
 
-            if(percentageIntersect >= percentMatch)
-            {
-                isMatch = true;
-            }
-
-            return isMatch;
+            return percentageIntersect >= percentMatch;
         }
 
         public override int GetHashCode()
