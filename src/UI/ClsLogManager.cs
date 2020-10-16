@@ -300,10 +300,10 @@ namespace AITool
                 }
 
                 //clean out any whitespace
-                this.LastLogItm.Detail = this.LastLogItm.Detail.Replace("  ", " ").Replace("  ", " ");
+                this.LastLogItm.Detail = this.LastLogItm.Detail.TrimStart();
 
                 if (this._CurDepth.ReadFullFence() + Depth > 0)
-                    this.LastLogItm.Detail = new string(' ', (this._CurDepth.ReadFullFence() + Depth * 2)) + this.LastLogItm.Detail.TrimStart();
+                    this.LastLogItm.Detail = new string(' ', (this._CurDepth.ReadFullFence() + Depth * 2)) + this.LastLogItm.Detail;
 
                 this.LastLogItm.Depth = this._CurDepth.ReadFullFence() + Depth;
                 this.LastLogItm.Level = Level;

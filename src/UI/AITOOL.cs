@@ -1411,12 +1411,12 @@ namespace AITool
 
                 if (System.IO.File.Exists(foundfile))
                 {
-                    Log($"     ->Using found mask file {foundfile}...");
+                    Log($"Debug:     ->Using found mask file {foundfile}...");
                     fileType = Path.GetExtension(foundfile).ToLower();
                 }
                 else
                 {
-                    Log("     ->Camera has no mask, the object is OUTSIDE of the masked area.");
+                    Log("Debug:     ->Camera has no mask, the object is OUTSIDE of the masked area.");
                     ret.IsMasked = false;
                     ret.MaskType = MaskType.None;
                     ret.Result = MaskResult.NoMaskImageFile;
@@ -1474,7 +1474,7 @@ namespace AITool
                     {
                         if (ret.ImagePointsOutsideMask == 9)
                         {
-                            Log($"      ->ALL of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Debug:      ->ALL of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityOutsideMask;
@@ -1482,7 +1482,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"      ->Most of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Debug:      ->Most of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyOutsideMask;
@@ -1494,7 +1494,7 @@ namespace AITool
                     {
                         if (ret.ImagePointsOutsideMask == 0)
                         {
-                            Log($"      ->All of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Debug:      ->All of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyInsideMask;
@@ -1503,7 +1503,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"      ->Most of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Debug:      ->Most of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityInsideMask;

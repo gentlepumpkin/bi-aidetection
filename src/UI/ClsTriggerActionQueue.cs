@@ -246,16 +246,16 @@ namespace AITool
 
                     if (AQI.cam.Action_image_copy_enabled && AQI.Trigger)
                     {
-                        Log($"   Copying image to network folder...", this.CurSrv, AQI.cam.name);
+                        Log($"Debug:   Copying image to network folder...", this.CurSrv, AQI.cam.name);
                         string newimagepath = "";
                         if (!CopyImage(AQI, ref newimagepath))
                         {
                             ret = false;
-                            Log($"   -> Warning: Image could not be copied to network folder.");
+                            Log($"Warn:   -> Warning: Image could not be copied to network folder.");
                         }
                         else
                         {
-                            Log($"   -> Image copied to network folder.", this.CurSrv, AQI.cam.name);
+                            Log($"Debug:   -> Image copied to network folder.", this.CurSrv, AQI.cam.name);
                             //set the image path to the new path so all imagename variable works
                             AQI.CurImg = new ClsImageQueueItem(newimagepath, 1);
                         }
@@ -302,7 +302,7 @@ namespace AITool
                         {
                             run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString);
                             param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString);
-                            Log($"   Starting external app - Camera={AQI.cam.name} run='{run}', param='{param}'", this.CurSrv, AQI.cam.name);
+                            Log($"Debug:   Starting external app - Camera={AQI.cam.name} run='{run}', param='{param}'", this.CurSrv, AQI.cam.name);
                             Process.Start(run, param);
                         }
                         catch (Exception ex)
@@ -342,7 +342,7 @@ namespace AITool
                                         {
                                             if (detection.IndexOf(objname, StringComparison.OrdinalIgnoreCase) >= 0 || (objname == "*"))
                                             {
-                                                Log($"   Playing sound because '{objname}' was detected: {soundfile}...");
+                                                Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...");
                                                 SoundPlayer sp = new SoundPlayer(soundfile);
                                                 sp.Play();
                                                 played++;
@@ -352,7 +352,7 @@ namespace AITool
                                 }
                                 if (played == 0)
                                 {
-                                    Log($"No object matched sound to play or no detections.", this.CurSrv, AQI.cam.name);
+                                    Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam.name);
                                 }
                             }
 
@@ -405,11 +405,11 @@ namespace AITool
                             if (!await TelegramUpload(AQI))
                             {
                                 ret = false;
-                                Log($"   -> ERROR sending image to Telegram.", this.CurSrv, AQI.cam.name);
+                                Log($"Error:   -> ERROR sending image to Telegram.", this.CurSrv, AQI.cam.name);
                             }
                             else
                             {
-                                Log($"   -> Sent image to Telegram.", this.CurSrv, AQI.cam.name);
+                                Log($"Debug:   -> Sent image to Telegram.", this.CurSrv, AQI.cam.name);
                             }
 
                     }
@@ -418,7 +418,7 @@ namespace AITool
                     if (AQI.Trigger)
                     {
                         AQI.cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                        Log($"{AQI.cam.name} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam.name);
+                        Log($"Debug: {AQI.cam.name} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam.name);
                         Global.UpdateLabel($"{AQI.cam.name} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
                     }
 
@@ -463,7 +463,7 @@ namespace AITool
 
             try
             {
-                Log($"Merging image annotations: " + AQI.CurImg.image_path);
+                Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path);
 
                 if (System.IO.File.Exists(AQI.CurImg.image_path))
                 {
@@ -658,7 +658,7 @@ namespace AITool
                                 if (Success)
                                 {
                                     img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
-                                    Log($"Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}", this.CurSrv, AQI.cam.name);
+                                    Log($"Debug: Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}", this.CurSrv, AQI.cam.name);
                                 }
                                 else
                                 {
@@ -668,7 +668,7 @@ namespace AITool
                             }
                             else
                             {
-                                Log($"No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}", this.CurSrv, AQI.cam.name);
+                                Log($"Debug: No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}", this.CurSrv, AQI.cam.name);
 
                             }
 
@@ -717,7 +717,7 @@ namespace AITool
 
                 dest_path = System.IO.Path.Combine(netfld, filename);
 
-                Log($"  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam.name);
+                Log($"Debug:  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam.name);
 
                 if (!Directory.Exists(netfld))
                 {
@@ -756,7 +756,7 @@ namespace AITool
                     try
                     {
                         string content = await client.DownloadStringTaskAsync(url);
-                        Log($"   -> {type} URL called: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
+                        Log($"Debug:   -> {type} URL called: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
                     }
                     catch (Exception ex)
                     {
@@ -876,7 +876,7 @@ namespace AITool
                     AppSettings.Settings.send_errors = false;
                     Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name);
                     TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
-                    Log($"{CurSrv} -...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name);
+                    Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name);
                     AppSettings.Settings.send_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
@@ -895,7 +895,7 @@ namespace AITool
                 }
 
 
-                Log($"...Finished in {{yellow}}{sw.ElapsedMilliseconds}ms{{white}}", this.CurSrv, AQI.cam.name);
+                Log($"Debug: ...Finished in {sw.ElapsedMilliseconds}ms", this.CurSrv, AQI.cam.name);
 
             }
             else
