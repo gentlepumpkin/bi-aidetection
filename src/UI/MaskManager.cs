@@ -314,7 +314,7 @@ namespace AITool
                                 case RemoveEvent.Detection:
                                     if (minutes > 1 && !maskedObject.IsStatic)  //if not visiable and not marked as a static mask
                                     {
-                                        if (maskedObject.Counter == 0)
+                                        if (maskedObject.Counter == 0 && minutes >= MaskSaveMins)
                                         {
                                             Log($"Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object after detection: " + maskedObject.ToString());
                                             MaskedPositions.RemoveAt(x);
