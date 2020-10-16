@@ -43,20 +43,18 @@ namespace AITool
             }
         }
 
-        //empty default constructor used by JSON deserialization
-        public ObjectPosition() {}
 
-        public ObjectPosition(Object imageObject, int imageWidth, int imageHeight, string cameraName, string imagePath)
+        public ObjectPosition(int xmin, int xmax, int ymin, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
         {
             this.CreateDate = DateTime.Now;
             this.LastSeenDate = DateTime.Now;
             this.CameraName = cameraName;
             this.ImagePath = imagePath;
-            this.Label = imageObject.label;
-            this.Xmin = imageObject.x_min;
-            this.Ymin = imageObject.y_min;
-            this.Xmax = imageObject.x_max;
-            this.Ymax = imageObject.y_max;
+            this.Label = label;
+            this.Xmin = xmin;
+            this.Ymin = ymin;
+            this.Xmax = xmax;
+            this.Ymax = ymax;
 
             ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
 
