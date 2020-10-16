@@ -187,11 +187,11 @@ namespace AITool
                 this.Log($"---->ENTER {memberName}, Depth={this._CurDepth.ReadFullFence()}", "Trace-Enter", "Trace-Enter", "", 0, LogLevel.Trace, DateTime.Now, memberName);
 
         }
-        public void Exit([CallerMemberName()] string memberName = null)
+        public void Exit([CallerMemberName()] string memberName = null, long timems = 0)
         {
             this._CurDepth.AtomicDecrementAndGet();
             if (this.MinLevel == LogLevel.Trace)
-                this.Log($"----<EXIT {memberName}, Depth={this._CurDepth.ReadFullFence()}", "Trace-Exit", "Trace-Exit", "", 0, LogLevel.Trace, DateTime.Now, memberName);
+                this.Log($"----<EXIT {memberName}, Time={timems}ms, Depth={this._CurDepth.ReadFullFence()}", "Trace-Exit", "Trace-Exit", "", 0, LogLevel.Trace, DateTime.Now, memberName);
         }
         public ClsLogItm Log(string Detail, string AIServer = "", string Camera = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
         {

@@ -102,7 +102,7 @@ namespace AITool
         {
             if (other == null)
                 return false;
-
+            
             float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
             if (percentageIntersect > 0)

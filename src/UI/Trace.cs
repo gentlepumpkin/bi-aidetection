@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,9 +12,12 @@ namespace AITool
     {
         private bool disposedValue;
         private string _memberName = "";
+        private Stopwatch _sw;
         public Trace([CallerMemberName()] string memberName = null)
         {
+            
             this._memberName = memberName;
+            this._sw = Stopwatch.StartNew();
             if (AITOOL.LogMan != null)
                 AITOOL.LogMan.Enter(memberName);
         }
@@ -26,7 +30,7 @@ namespace AITool
                 {
                     // TODO: dispose managed state (managed objects)
                     if (AITOOL.LogMan != null)
-                        AITOOL.LogMan.Exit(this._memberName);
+                        AITOOL.LogMan.Exit(this._memberName, this._sw.ElapsedMilliseconds);
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
