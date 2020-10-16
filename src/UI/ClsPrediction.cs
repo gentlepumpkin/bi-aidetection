@@ -131,7 +131,8 @@ namespace AITool
                                     //check the dynamic or static masks
                                     if (this._cam.maskManager.MaskingEnabled)
                                     {
-                                        ObjectPosition currentObject = new ObjectPosition(_imageObject, _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
+                                        ObjectPosition currentObject = new ObjectPosition(this.xmin, this.xmax, this.ymin, this.ymax, this.Label,
+                                                                                          _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
                                         //creates history and masked lists for objects returned
                                         result = this._cam.maskManager.CreateDynamicMask(currentObject);
                                         this.DynMaskResult = result.Result;
