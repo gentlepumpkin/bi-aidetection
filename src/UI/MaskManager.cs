@@ -162,14 +162,14 @@ namespace AITool
                         }
                         if (!fnd)
                         {
-                            Log($"Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'");
+                            Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'");
                             returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
                             return returnInfo;
                         }
                     }
 
-                    Log("*** Starting new object mask processing ***");
-                    Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.CameraName);
+                    Log("Debug: *** Starting new object mask processing ***", "", currentObject.CameraName);
+                    Log("Debug: Current object detected: " + currentObject.ToString() + " on camera " + currentObject.CameraName, "", currentObject.CameraName);
 
                     currentObject.ScaleConfig = ScaleConfig;
                     currentObject.PercentMatch = PercentMatch;
@@ -186,7 +186,7 @@ namespace AITool
                         foundObject.ImagePath = currentObject.ImagePath;
                         foundObject.CameraName = currentObject.CameraName;
 
-                        Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.CameraName);
+                        Log("Debug: Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.CameraName, "", currentObject.CameraName);
 
                         if (foundObject.Counter < HistoryThresholdCount)
                         {
@@ -195,7 +195,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.CameraName);
+                            Log("Debug: History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.CameraName, "", currentObject.CameraName);
                             
                             LastPositionsHistory.RemoveAt(historyIndex);
                             foundObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
@@ -224,14 +224,14 @@ namespace AITool
                         maskedObject.ImagePath = currentObject.ImagePath;
                         maskedObject.CameraName = currentObject.CameraName;
 
-                        Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName);
+                        Log("Debug: Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
 
                         MaskType type = maskedObject.IsStatic ? MaskType.Static : MaskType.Dynamic;
                         returnInfo.SetResults(type, MaskResult.Found, maskedObject.Counter);
                     }
                     else
                     {
-                        Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.CameraName);
+                        Log("Debug: + New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.CameraName, "", currentObject.CameraName);
                         LastPositionsHistory.Add(currentObject);
                         returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject.Counter);
                     }
@@ -267,7 +267,7 @@ namespace AITool
                             //Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                             if (minutes >= HistorySaveMins)
                             {
-                                Log($"Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={HistorySaveMins})");
+                                Log($"Debug: Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={HistorySaveMins})", "", historyObject.CameraName);
                                 LastPositionsHistory.RemoveAt(x);
                             }
                         }
@@ -307,7 +307,7 @@ namespace AITool
                                 case RemoveEvent.Timer:
                                     if (minutes >= MaskSaveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Log($"Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object by timer thread: " + maskedObject.ToString());
+                                        Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         MaskedPositions.RemoveAt(x);
                                     }
                                     break;
@@ -316,7 +316,7 @@ namespace AITool
                                     {
                                         if (maskedObject.Counter == 0 && minutes >= MaskSaveMins)
                                         {
-                                            Log($"Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object after detection: " + maskedObject.ToString());
+                                            Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object after detection: " + maskedObject.ToString(),"", maskedObject.CameraName);
                                             MaskedPositions.RemoveAt(x);
                                         }
                                         else maskedObject.Counter--;

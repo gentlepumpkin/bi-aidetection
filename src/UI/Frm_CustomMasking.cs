@@ -409,7 +409,7 @@ namespace AITool
                 this.DialogResult = DialogResult.OK;
             }
             catch(Exception ex) {
-                Global.Log("Error: An error occured saving custom mask with file name: " + _maskfilename + ex.ToString());
+                Log("Error: An error occurred saving custom mask with file name: " + _maskfilename + ex.ToString());
             }
             finally
             {
