@@ -1,20 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Newtonsoft.Json;
 using System.Xml.XPath;
-using System.Security.AccessControl;
-using System.Diagnostics;
-using System.Threading;
-using SixLabors.ImageSharp;
-using System.Collections.ObjectModel;
-using System.Windows.Forms;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -45,6 +40,7 @@ namespace AITool
             public bool input_path_includesubfolders = false;
             public List<string> telegram_chatids = new List<string>();
             public bool log_everything = false;
+            public string LogLevel = "Info";
             public bool send_errors = true;
             public bool startwithwindows = false;
             public int close_instantly = -1;
@@ -100,6 +96,8 @@ namespace AITool
             public string mqtt_clientid = "AITool";
 
             public bool Autoscroll_log = false;
+            public bool log_mnu_Filter = true;
+            public bool log_mnu_Highlight = false;
 
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
@@ -153,12 +151,14 @@ namespace AITool
                             Settings.SettingsValid = true;
                             Ret = true;
                             AppSettings.LastSettingsJSON = CurSettingsJSON;
-                            //Global.Log($"Settings saved to {AppSettings.Settings.SettingsFileName}");
+                            //save a backup of settings to the registry since I've had a few times my raid array was going bad and I lost both backup and json files
+                            Global.SaveSetting("BackupSettingsJSON", CurSettingsJSON);
+                            Log($"Debug: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
                         }
                         else
                         {
                             Settings.SettingsValid = false;
-                            Global.Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
+                            Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
                         }
 
 
@@ -166,7 +166,7 @@ namespace AITool
                     else
                     {
                         //does not need saving
-                        //Global.Log("Settings have not changed, skipping save.");
+                        //Log("Settings have not changed, skipping save.");
                         Ret = true;
                         Settings.SettingsValid = true;
                     }
@@ -177,7 +177,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                Log("Error: Could not save settings: " + Global.ExMsg(ex));
             }
 
             if (!Ret)
@@ -187,7 +187,7 @@ namespace AITool
                     //Revert to backup copy if exists AND is not corrupt
                     if (IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))
                     {
-                        Global.Log("Error: Settings save failed, reverting to backup copy: " + AppSettings.Settings.SettingsFileName + ".bak");
+                        Log("Error: Settings save failed, reverting to backup copy: " + AppSettings.Settings.SettingsFileName + ".bak");
 
                         if (File.Exists(AppSettings.Settings.SettingsFileName))
                             File.Delete(AppSettings.Settings.SettingsFileName);
@@ -196,14 +196,14 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log("Error: Settings save failed, Backup copy is not found or is corrupt: " + AppSettings.Settings.SettingsFileName + ".bak");
+                        Log("Error: Settings save failed, Backup copy is not found or is corrupt: " + AppSettings.Settings.SettingsFileName + ".bak");
                     }
 
                 }
                 catch (Exception ex)
                 {
 
-                    Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                    Log("Error: Could not save settings: " + Global.ExMsg(ex));
                 }
             }
 
@@ -234,35 +234,35 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    Global.Log($"Error: Settings file does not look like JSON: {Filename}");
+                                    Log($"Error: Settings file does not look like JSON: {Filename}");
                                 }
                             }
                             else
                             {
-                                Global.Log("Error: Settings file contains null bytes, corrupt: " + Filename);
+                                Log("Error: Settings file contains null bytes, corrupt: " + Filename);
                             }
                         }
                         else
                         {
-                            Global.Log($"Error: Could not gain access to file for {SW.ElapsedMilliseconds}ms - {Filename}");
+                            Log($"Error: Could not gain access to file for {SW.ElapsedMilliseconds}ms - {Filename}");
                         }
 
                     }
                     else
                     {
-                        Global.Log($"Error: Settings file is too small at {fi.Length} bytes: {Filename}");
+                        Log($"Error: Settings file is too small at {fi.Length} bytes: {Filename}");
                     }
                 }
 
                 else
                 {
-                    Global.Log("Settings file does not exist yet: " + Filename);
+                    Log("Settings file does not exist yet: " + Filename);
                 }
             }
             catch (Exception ex)
             {
 
-                Global.Log($"Error: While validating settings file '{Filename}' got error '{ex.Message}'.");
+                Log($"Error: While validating settings file '{Filename}' got error '{ex.Message}'.");
             }
             return Ret;
         }
@@ -279,8 +279,12 @@ namespace AITool
                     Settings.SettingsValid = false;  //assume failure
                     bool Resave = false;
 
+                    //get backup json from registry
+                    
+                    AppSettings.LastSettingsJSON = Global.GetSetting("BackupSettingsJSON", "");
+
                     //read the old configuration file
-                    if (!IsFileValid(AppSettings.Settings.SettingsFileName) && !IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))
+                    if (!IsFileValid(AppSettings.Settings.SettingsFileName) && !IsFileValid(AppSettings.Settings.SettingsFileName + ".bak") && string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
                     {
                         //--------------------------------------------------------------------------------------------------------------------
                         //try to read in OLD aitool.exe.config or user.config files - they were
@@ -297,7 +301,7 @@ namespace AITool
                         //sort by date
                         filist = filist.OrderByDescending((d) => d.LastWriteTime).ToList();
 
-                        Global.Log("First time load, reading old config file: " + filist[0].FullName);
+                        Log("First time load, reading old config file: " + filist[0].FullName);
 
                         XDocument xmlfile = XDocument.Load(filist[0].FullName);
                         //<configuration>
@@ -341,22 +345,28 @@ namespace AITool
                     else if (IsFileValid(AppSettings.Settings.SettingsFileName))
                     {
                         //Load regular settings file
-                        Global.Log("Loading settings from " + AppSettings.Settings.SettingsFileName);
+                        Log("Loading settings from " + AppSettings.Settings.SettingsFileName);
                         Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
                     }
                     else if (IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))
                     {
                         //revert to backup if its good
-                        Global.Log("Error: Reverting to backup settings file: " + AppSettings.Settings.SettingsFileName + ".bak");
-                        Global.Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
+                        Log("Error: Reverting to backup settings file: " + AppSettings.Settings.SettingsFileName + ".bak");
+                        Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
                         Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName + ".bak");
                     }
+                    else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
+                    {
+                        //revert to REGISTRY backup if its good
+                        Log("Error: Reverting to REGISTRY backup settings...");
+                        Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
 
+                    }
                     else
                     {
 
                         //nothing valid
-                        Global.Log("Error: Settings file AND backup were missing or corrupt.");
+                        Log("Error: Settings file AND backup were missing or corrupt.");
 
                         if (File.Exists(AppSettings.Settings.SettingsFileName))
                             File.Delete(AppSettings.Settings.SettingsFileName);
@@ -374,7 +384,7 @@ namespace AITool
                             if (cam.maskManager == null)
                             {
                                 cam.maskManager = new MaskManager();
-                                Global.Log("Warning: Had to reset MaskManager for camera " + cam.name);
+                                Log("Warning: Had to reset MaskManager for camera " + cam.name);
                             }
 
                             //update threshold in all masks if changed during session
@@ -392,7 +402,7 @@ namespace AITool
 
                             if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
                             {
-                                Global.Log($"Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
+                                Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
 
                                 List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
                                 int deleted = 0;
@@ -406,9 +416,9 @@ namespace AITool
                                     }
                                 }
                                 if (errs == 0)
-                                    Global.Log($"...Deleted {deleted} out of {filist.Count} files");
+                                    Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
                                 else
-                                    Global.Log($"...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+                                    Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
 
 
 
@@ -420,7 +430,7 @@ namespace AITool
                         if (Settings.CameraList.Count == 0)
                         {
                             string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
-                            Global.Log("No cameras loaded in settings, trying to load old camera files from " + camerafolder);
+                            Log("No cameras loaded in settings, trying to load old camera files from " + camerafolder);
                             List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
                                                                                            //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
                                                                                            //I *think* this logic works?
@@ -434,7 +444,7 @@ namespace AITool
                                 bool fnd = false;
                                 foreach (Camera c in AppSettings.Settings.CameraList)
                                 {
-                                    if (c.name.ToLower() == Path.GetFileNameWithoutExtension(file.FullName).ToLower())
+                                    if (string.Equals(c.name, Path.GetFileNameWithoutExtension(file.FullName), StringComparison.OrdinalIgnoreCase))
                                     {
                                         fnd = true;
                                     }
@@ -452,18 +462,18 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    Global.Log("Skipped duplicate camera: " + file);
+                                    Log("Skipped duplicate camera: " + file);
                                 }
 
                             }
 
                             if (cnt > 0)
                             {
-                                Global.Log($"...Loaded {cnt} camera files.");
+                                Log($"...Loaded {cnt} camera files.");
                             }
                             else
                             {
-                                Global.Log($"...NO old camera txt files could be loaded.");
+                                Log($"...NO old camera txt files could be loaded.");
                             }
 
                             Resave = (cnt > 1);
@@ -478,7 +488,7 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log("Error: Could not load settings?");
+                        Log("Error: Could not load settings?");
                     }
 
                     if (Resave)
@@ -493,7 +503,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                Log("Error: Could not save settings: " + Global.ExMsg(ex));
             }
 
             return Ret;

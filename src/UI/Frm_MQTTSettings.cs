@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MQTTnet.Client.Publishing;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -47,7 +48,7 @@ namespace AITool
 
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
                 {
-                    Global.Log("------ TESTING MQTT --------");
+                    Log("------ TESTING MQTT --------");
 
 
                     string topic = AITOOL.ReplaceParams(this.cam, null, null, tb_Topic.Text.Trim());
@@ -65,7 +66,7 @@ namespace AITool
 
                     }
 
-                    Global.Log("------ DONE TESTING MQTT --------");
+                    Log("------ DONE TESTING MQTT --------");
 
                     if (pr != null && (pr.ReasonCode == MqttClientPublishReasonCode.Success))
                     {

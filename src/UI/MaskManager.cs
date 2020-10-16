@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Timers;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -141,6 +142,8 @@ namespace AITool
 
         public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             MaskResultInfo returnInfo = new MaskResultInfo();
 
             try
@@ -159,14 +162,14 @@ namespace AITool
                         }
                         if (!fnd)
                         {
-                            Global.Log($"Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'");
+                            Log($"Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'");
                             returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
                             return returnInfo;
                         }
                     }
 
-                    Global.Log("*** Starting new object mask processing ***");
-                    Global.Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.CameraName);
+                    Log("*** Starting new object mask processing ***");
+                    Log("Current object detected: " + currentObject.ToString() + " on camera " + currentObject.CameraName);
 
                     currentObject.ScaleConfig = ScaleConfig;
                     currentObject.PercentMatch = PercentMatch;
@@ -183,7 +186,7 @@ namespace AITool
                         foundObject.ImagePath = currentObject.ImagePath;
                         foundObject.CameraName = currentObject.CameraName;
 
-                        Global.Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.CameraName);
+                        Log("Found in last_positions_history: " + foundObject.ToString() + " for camera: " + currentObject.CameraName);
 
                         if (foundObject.Counter < HistoryThresholdCount)
                         {
@@ -192,7 +195,7 @@ namespace AITool
                         }
                         else
                         {
-                            Global.Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.CameraName);
+                            Log("History Threshold reached. Moving " + foundObject.ToString() + " to masked object list for camera: " + currentObject.CameraName);
                             
                             LastPositionsHistory.RemoveAt(historyIndex);
                             foundObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
@@ -221,14 +224,14 @@ namespace AITool
                         maskedObject.ImagePath = currentObject.ImagePath;
                         maskedObject.CameraName = currentObject.CameraName;
 
-                        Global.Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName);
+                        Log("Found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName);
 
                         MaskType type = maskedObject.IsStatic ? MaskType.Static : MaskType.Dynamic;
                         returnInfo.SetResults(type, MaskResult.Found, maskedObject.Counter);
                     }
                     else
                     {
-                        Global.Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.CameraName);
+                        Log("+ New object found: " + currentObject.ToString() + ". Adding to last_positions_history for camera: " + currentObject.CameraName);
                         LastPositionsHistory.Add(currentObject);
                         returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject.Counter);
                     }
@@ -236,7 +239,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {Global.ExMsg(ex)}");
                 returnInfo.Result = MaskResult.Error;
             }
 
@@ -246,6 +249,8 @@ namespace AITool
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
         private void CleanUpExpiredHistory()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             lock (_maskLockObject)
             {
                 try
@@ -259,28 +264,30 @@ namespace AITool
                             TimeSpan ts = DateTime.Now - historyObject.CreateDate;
                             double minutes = ts.TotalMinutes;
 
-                            //Global.Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
+                            //Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                             if (minutes >= HistorySaveMins)
                             {
-                                Global.Log($"Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={HistorySaveMins})");
+                                Log($"Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={HistorySaveMins})");
                                 LastPositionsHistory.RemoveAt(x);
                             }
                         }
                     }
                     else if (LastPositionsHistory == null)
                     {
-                        Global.Log("Error: historyList is null?");
+                        Log("Error: historyList is null?");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + Global.ExMsg(ex));
                 }
             }
         }
 
         public void CleanUpExpiredMasks(RemoveEvent trigger)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             lock (_maskLockObject)
             {
                 try
@@ -300,7 +307,7 @@ namespace AITool
                                 case RemoveEvent.Timer:
                                     if (minutes >= MaskSaveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Global.Log("Removing expired masked object by timer thread: " + maskedObject.ToString());
+                                        Log($"Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object by timer thread: " + maskedObject.ToString());
                                         MaskedPositions.RemoveAt(x);
                                     }
                                     break;
@@ -309,7 +316,7 @@ namespace AITool
                                     {
                                         if (maskedObject.Counter == 0)
                                         {
-                                            Global.Log("Removing expired masked object after detection: " + maskedObject.ToString());
+                                            Log($"Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object after detection: " + maskedObject.ToString());
                                             MaskedPositions.RemoveAt(x);
                                         }
                                         else maskedObject.Counter--;
@@ -320,12 +327,12 @@ namespace AITool
                     }
                     else if (MaskedPositions == null)
                     {
-                        Global.Log("Error: Maskedlist is null?");
+                        Log("Error: Maskedlist is null?");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + Global.ExMsg(ex));
                 }
             }
         }

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SQLite;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -34,7 +30,7 @@ namespace AITool
         public string Filename { get; set; } = "";
         public string Positions { get; set; } = "";
         public string PredictionsJSON { get; set; } = "";
-
+        public string AIServer { get; set; } = "";
 
         public History()
         {
@@ -64,7 +60,7 @@ namespace AITool
             }
             else
             {
-                Global.Log($"Error: Invalid bool in csv '{sp[5]}'");
+                Log($"Error: Invalid bool in csv '{sp[5]}'");
             }
 
             //seems we are trying pretty hard here to get this non standard date back in a real DateTime...
@@ -97,7 +93,7 @@ namespace AITool
                 }
                 else
                 {
-                    Global.Log($"Error: Invalid date in csv '{sp[1]}'");
+                    Log($"Error: Invalid date in csv '{sp[1]}'");
                 }
 
             }
@@ -108,7 +104,7 @@ namespace AITool
             return this;
 
         }
-        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions, bool Success, string PredictionsJSON)
+        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions, bool Success, string PredictionsJSON, string AIServer)
         {
             this.Filename = filename.Trim().ToLower();
             this.Date = date;
@@ -116,6 +112,7 @@ namespace AITool
             this.Detections = objects_and_confidence.Trim();
             this.Positions = object_positions.Trim();
             this.PredictionsJSON = PredictionsJSON;
+            this.AIServer = AIServer;
 
             this.Success = Success; //this.Detections.Contains("%") && !this.Detections.Contains(':');
 

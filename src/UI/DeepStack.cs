@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
+using static AITool.AITOOL;
 
 
 namespace AITool
@@ -67,6 +68,8 @@ namespace AITool
         }
         public bool GetDeepStackRun()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool Ret = false;
 
             //Note - deepstack.exe does NOT need to be running
@@ -83,7 +86,7 @@ namespace AITool
             {
                 this.IsInstalled = true;
                     this.HasError = false;
-                    Global.Log("DeepStack Desktop IS running from " + ServerProc.FileName);
+                    Log("DeepStack Desktop IS running from " + ServerProc.FileName);
 
                     this.IsStarted = true;
                     //C:\DeepStack\server\server.exe
@@ -91,7 +94,7 @@ namespace AITool
                     if (!this.ServerProc.FileName.ToLower().StartsWith(this.DeepStackFolder.ToLower()))
                     {
                         string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
-                        Global.Log("Deepstack running from non-default path: " + dspath);
+                        Log("Deepstack running from non-default path: " + dspath);
                         this.DeepStackFolder = dspath;
                         this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
                         this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
@@ -107,7 +110,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(face))
                         if (this.FaceAPIEnabled != Convert.ToBoolean(face))
                         {
-                            Global.Log($"...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
+                            Log($"...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
                             this.FaceAPIEnabled = Convert.ToBoolean(face);
                             this.NeedsSaving = true;
                         }
@@ -115,7 +118,7 @@ namespace AITool
                     string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
                     if (!string.IsNullOrEmpty(scene))
                         if (Convert.ToBoolean(scene) != this.SceneAPIEnabled) {
-                            Global.Log($"...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
+                            Log($"...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
                             this.SceneAPIEnabled = Convert.ToBoolean(scene);
                             this.NeedsSaving = true;
                         };
@@ -124,7 +127,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(detect))
                         if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
                         {
-                            Global.Log($"...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
+                            Log($"...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
                             this.DetectionAPIEnabled = Convert.ToBoolean(detect);
                             this.NeedsSaving = true;
                         }
@@ -133,7 +136,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(admin))
                         if (this.AdminKey != admin)
                         {
-                            Global.Log($"...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
+                            Log($"...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
                             this.AdminKey = admin;
                             this.NeedsSaving = true;
                         }
@@ -142,7 +145,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(api))
                         if (this.APIKey != api)
                         {
-                            Global.Log($"...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
+                            Log($"...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
                             this.APIKey = api;
                             this.NeedsSaving = true;
                         }
@@ -151,7 +154,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(port))
                         if (this.Port != port)
                         {
-                            Global.Log($"...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
+                            Log($"...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
                             this.Port = port;
                             this.NeedsSaving = true;
                         }
@@ -163,7 +166,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(port))
                         if (this.Mode != mode)
                         {
-                            Global.Log($"...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
+                            Log($"...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
                             this.Mode = mode;
                             this.NeedsSaving = true;
                         }
@@ -174,13 +177,13 @@ namespace AITool
             }
             else if (Global.ProcessValid(this.ServerProc) || Global.ProcessValid(this.PythonProc) || Global.ProcessValid(this.RedisProc))
             {
-                Global.Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
+                Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
                 this.HasError = true;
                 this.IsStarted = true;
             }
             else
             {
-                Global.Log("DeepStack Desktop NOT running.");
+                Log("DeepStack Desktop NOT running.");
                 this.IsStarted = false;
                 this.HasError = false;
             }
@@ -189,6 +192,8 @@ namespace AITool
         }
         public bool RefreshInfo()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool Ret = false;
             this.IsInstalled = false;
             RegistryKey key = null;
@@ -207,7 +212,7 @@ namespace AITool
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
                     if (!string.IsNullOrWhiteSpace(dspath))
                     {
-                        Global.Log("Deepstack Desktop install path found in Uninstall registry: " + dspath);
+                        Log("Deepstack Desktop install path found in Uninstall registry: " + dspath);
 
                         string exepth = Path.Combine(dspath, "DeepStack.exe");
                         if (File.Exists(exepth))
@@ -217,7 +222,7 @@ namespace AITool
                             this.DeepStackEXE = exepth;
                             if (dspath.ToLower() != this.DeepStackFolder.ToLower())
                             {
-                                Global.Log("Deepstack running from non-default path: " + dspath);
+                                Log("Deepstack running from non-default path: " + dspath);
                                 this.PythonEXE = Path.Combine(dspath, @"interpreter\python.exe");
                                 this.RedisEXE = Path.Combine(dspath, @"redis\redis-server.exe");
                                 this.ServerEXE = Path.Combine(dspath, @"server\server.exe");
@@ -226,7 +231,7 @@ namespace AITool
                         }
                         else
                         {
-                            Global.Log("debug: DeepStack File not found " + exepth);
+                            Log("debug: DeepStack File not found " + exepth);
                         }
                     }
 
@@ -239,12 +244,12 @@ namespace AITool
                     if (File.Exists(this.DeepStackEXE))
                     {
                         this.IsInstalled = true;
-                        Global.Log("DeepStack is installed: " + this.DeepStackEXE);
+                        Log("DeepStack is installed: " + this.DeepStackEXE);
                     }
                     else
                     {
                         this.IsInstalled = false;
-                        Global.Log("DeepStack NOT installed");
+                        Log("DeepStack NOT installed");
                     }
                 }
                 else
@@ -262,7 +267,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: While detecting DeepStack, got: " + Global.ExMsg(ex));
+                Log("Error: While detecting DeepStack, got: " + Global.ExMsg(ex));
             }
 
             if (key != null)
@@ -277,6 +282,8 @@ namespace AITool
         }
         private async Task<bool> Start()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool Ret = false;
             
             try
@@ -284,13 +291,13 @@ namespace AITool
 
                 if (!this.IsInstalled)
                 {
-                    Global.Log("Error: Cannot start because not installed.");
+                    Log("Error: Cannot start because not installed.");
                     this.IsStarted = false;
                     return Ret;
                 }
                 else
                 {
-                    Global.Log("Starting DeepStack...");
+                    Log("Starting DeepStack...");
                 }
 
                 Stopwatch SW = Stopwatch.StartNew();
@@ -309,7 +316,7 @@ namespace AITool
                 InitProc.OutputDataReceived += this.handleinitprocmsg;
                 InitProc.ErrorDataReceived += this.handleinitprocerror;
                 InitProc.Exited += (sender, e) => myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
-                Global.Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
+                Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
                 InitProc.Start();
                 InitProc.PriorityClass = ProcessPriorityClass.High;  //always run this as high priority since it will initialize faster
                 InitProc.BeginOutputReadLine();
@@ -329,7 +336,7 @@ namespace AITool
                 this.RedisProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
                 this.RedisProc.FileName = this.RedisEXE;
                 this.RedisProc.CommandLine = this.RedisEXE;
-                Global.Log($"Starting {this.RedisEXE}...");
+                Log($"Starting {this.RedisEXE}...");
                 this.RedisProc.process.Start();
                 if (AppSettings.Settings.deepstack_highpriority)
                 {
@@ -354,7 +361,7 @@ namespace AITool
                 this.ServerProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
                 this.ServerProc.FileName = this.ServerEXE;
                 this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
-                Global.Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
+                Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
                 this.ServerProc.process.Start();
                 if (AppSettings.Settings.deepstack_highpriority)
                 {
@@ -379,7 +386,7 @@ namespace AITool
                 this.PythonProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
                 this.PythonProc.FileName = this.PythonEXE;
                 this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
-                Global.Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
+                Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
                 this.PythonProc.process.Start();
                 if (AppSettings.Settings.deepstack_highpriority)
                 {
@@ -430,19 +437,19 @@ namespace AITool
 
                 if (cnt == 5)
                 {
-                    Global.Log("Started in " + SW.ElapsedMilliseconds + "ms");
+                    Log("Started in " + SW.ElapsedMilliseconds + "ms");
                 }
                 else if (cnt > 5)
                 {
                     this.HasError = true;
                     this.IsStarted = true;
-                    Global.Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
+                    Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
                 }
                 else if (cnt == 0)
                 {
                     this.HasError = true;
                     this.IsStarted = true;
-                    Global.Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
+                    Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
                 }
 
             }
@@ -450,7 +457,7 @@ namespace AITool
             {
                 this.IsStarted = false;
                 this.HasError = true;
-                Global.Log("Error: Cannot start: " + Global.ExMsg(ex));
+                Log("Error: Cannot start: " + Global.ExMsg(ex));
             }
 
             return Ret;
@@ -492,7 +499,7 @@ namespace AITool
                 this.IsStarted = false;
                 this.HasError = true;
             }
-            Global.Log(output, "");
+            Log(output, "");
 
         }
 
@@ -508,7 +515,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Redis-server.exe> ERROR: {line.Data}", "");
+                Log($"DeepStack>> ERROR: {line.Data}", "","", "REDIS-SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -526,7 +533,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Redis-server.exe> {line.Data}", "");
+                Log($"DeepStack>> {line.Data}", "","", "REDIS-SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -546,7 +553,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Init:python.exe> ERROR: {line.Data}", "");
+                Log($"DeepStack>> Init: ERROR: {line.Data}", "","PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -564,7 +571,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Init:python.exe> {line.Data}", "");
+                Log($"DeepStack>> Init: {line.Data}", "","","PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -584,7 +591,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Python.exe> ERROR: {line.Data}", "");
+                Log($"DeepStack>> ERROR: {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -602,7 +609,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Python.exe> {line.Data}", "");
+                Log($"DeepStack>> {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -622,7 +629,7 @@ namespace AITool
                     return;
                 }
 
-                Global.Log($"DeepStack>> Server.exe> ERROR: {line.Data}", "");
+                Log($"DeepStack>> ERROR: {line.Data}", "", "", "SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -656,7 +663,7 @@ namespace AITool
                 }
 
 
-                Global.Log($"DeepStack>> Server.exe> {line.Data}", "");
+                Log($"DeepStack>> {line.Data}", "", "", "SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -667,10 +674,12 @@ namespace AITool
         }
         public async Task<bool> StopAsync()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool Ret = false;
             bool err = false;
 
-            Global.Log("Stopping Deepstack...");
+            Log("Stopping Deepstack...");
             Stopwatch sw = Stopwatch.StartNew();
             //Try to get running processes in any case
             bool success = GetDeepStackRun();
@@ -688,7 +697,7 @@ namespace AITool
                     catch (Exception ex)
                     {
 
-                        Global.Log("Error: Could not stop DeepStack python.exe process: " + Global.ExMsg(ex));
+                        Log("Error: Could not stop DeepStack python.exe process: " + Global.ExMsg(ex));
                         err = true;
                     }
                 }
@@ -706,7 +715,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: Could not stop DeepStack redis-server.exe process: " + Global.ExMsg(ex));
+                Log("Error: Could not stop DeepStack redis-server.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
             try
@@ -716,7 +725,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
+                Log("Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
             try
@@ -726,7 +735,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: Could not stop DeepStack.exe process: " + Global.ExMsg(ex));
+                Log("Error: Could not stop DeepStack.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
 
@@ -740,12 +749,12 @@ namespace AITool
                 this.ServerProc = null;
                 this.DeepStackProc = null;
                 this.IsStarted = false;
-                Global.Log("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
+                Log("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
                 Ret = true;
             }
             else
             {
-                Global.Log("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
+                Log("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
             }
 
 

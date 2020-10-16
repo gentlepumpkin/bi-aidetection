@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -83,7 +84,7 @@ namespace AITool
             {
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
                 {
-                    Global.Log("----------------------- TESTING TRIGGERS ----------------------------");
+                    Log("----------------------- TESTING TRIGGERS ----------------------------");
 
                     if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections) && File.Exists(this.cam.last_image_file_with_detections))
                     {
@@ -94,7 +95,7 @@ namespace AITool
                         string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds}{ext}");
                         File.Copy(this.cam.last_image_file_with_detections, testfile, true);
                         string str = "Created test image file based on last detected object for the camera: " + testfile;
-                        Global.Log(str);
+                        Log(str);
                         MessageBox.Show(str, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
@@ -114,7 +115,7 @@ namespace AITool
 
                     }
 
-                    Global.Log("---------------------- DONE TESTING TRIGGERS -------------------------");
+                    Log("---------------------- DONE TESTING TRIGGERS -------------------------");
                 }
             }
             catch { }

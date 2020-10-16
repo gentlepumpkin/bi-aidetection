@@ -1,17 +1,14 @@
-﻿using System;
+﻿using SQLite;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using SQLite;
-//using Microsoft.Data.Sqlite;
+using static AITool.AITOOL;
+
 
 namespace AITool
 {
@@ -61,6 +58,7 @@ namespace AITool
         }
         private void Initialize()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
 
             try
             {
@@ -74,7 +72,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
             finally
             {
@@ -95,7 +93,7 @@ namespace AITool
                 {
                     if (hitm == null || hitm.hist == null || string.IsNullOrEmpty(hitm.hist.Filename))
                     {
-                        Global.Log("Error: hist should not be null?");
+                        Log("Error: hist should not be null?");
                     }
                     else
                     {
@@ -109,12 +107,12 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Global.Log($"Error: ({file})" + ex.ToString());
+                    Log($"Error: ({file})" + ex.ToString());
                 }
 
             }
             
-            Global.Log($"Error: Should not have left HistoryJobQueueLoop?");
+            Log($"Error: Should not have left HistoryJobQueueLoop?");
 
         }
 
@@ -130,7 +128,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
 
                 return false;
             }
@@ -153,12 +151,14 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
 
             }
         }
         private bool CreateConnection()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool ret = false;
 
             try
@@ -205,14 +205,14 @@ namespace AITool
 
                 sw.Stop();
 
-                Global.Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}");
+                Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None");
 
 
             }
             catch (Exception ex)
             {
 
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex), "None", "None");
             }
 
 
@@ -228,6 +228,8 @@ namespace AITool
 
         private bool InsertHistoryItem(History hist)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool ret = false;
             int iret = 0;
 
@@ -244,7 +246,7 @@ namespace AITool
 
                     if (!ret)
                     {
-                        Global.Log($"debug: File already existed in dictionary: {hist.Filename}");
+                        Log($"debug: File already existed in dictionary: {hist.Filename}", hist.AIServer, hist.Camera);
                     }
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -255,11 +257,11 @@ namespace AITool
 
                     if (iret != 1)
                     {
-                        Global.Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                        Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}", hist.AIServer, hist.Camera);
                     }
 
-                    if (sw.ElapsedMilliseconds > 5000)
-                        Global.Log($"debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                    if (sw.ElapsedMilliseconds > 3000)
+                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera);
 
                 }
                 catch (Exception ex)
@@ -267,11 +269,11 @@ namespace AITool
 
                     if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
                     {
-                        Global.Log($"debug: File was already in the database: {hist.Filename}");
+                        Log($"Debug: File was already in the database: {hist.Filename}", hist.AIServer, hist.Camera);
                     }
                     else
                     {
-                        Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex));
+                        Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex), hist.AIServer, hist.Camera);
                     }
                 }
 
@@ -305,7 +307,7 @@ namespace AITool
                 this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
 
                 if (hist == null)
-                    hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "");
+                    hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "","");
 
                 DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
 
@@ -315,6 +317,8 @@ namespace AITool
 
         private bool DeleteHistoryItem(History hist)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             bool ret = false;
             int dret = 0;
             lock (DBLock)
@@ -338,21 +342,21 @@ namespace AITool
 
                     //if (dret != 1)
                     //{
-                    //    Global.Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
+                    //    Log($"Error: When trying to delete database entry '{Filename}', RowsDeleted count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}");
                     //}
                     //else
                     //{
-                    //    Global.Log($"Removed {dret} database entry for '{Filename}'");
+                    //    Log($"Removed {dret} database entry for '{Filename}'");
                     //}
 
-                    if (sw.ElapsedMilliseconds > 3000)
-                        Global.Log($"debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}");
+                    if (sw.ElapsedMilliseconds > 2000)
+                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera);
 
                 }
                 catch (Exception ex)
                 {
 
-                    Global.Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex));
+                    Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex), hist.AIServer, hist.Camera);
                 }
 
                 if (ret || dret > 0)
@@ -374,6 +378,7 @@ namespace AITool
 
         public bool MigrateHistoryCSV(string Filename)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
 
             bool ret = false;
             lock (DBLock)
@@ -392,7 +397,7 @@ namespace AITool
                     {
                         Global.UpdateProgressBar("Migrating history.csv...", 1, 1);
 
-                        Global.Log("Migrating history list from cameras/history.csv ...");
+                        Log($"Migrating history list from {Filename} ...");
 
                         Stopwatch SW = Stopwatch.StartNew();
 
@@ -411,7 +416,7 @@ namespace AITool
                                 result.Add(line);
                             }
 
-                            Global.Log($"...Found {result.Count} lines.");
+                            Log($"...Found {result.Count} lines.");
 
                             List<string> itemsToDelete = new List<string>(); //stores all filenames of history.csv entries that need to be removed
 
@@ -454,19 +459,19 @@ namespace AITool
                             //this.DeletedCount.AtomicAddAndGet(removed);
 
                             //try to get a better feel how much time this function consumes - Vorlon
-                            Global.Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+                            Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
 
                         }
                         else
                         {
-                            Global.Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
 
                         }
 
                     }
                     else
                     {
-                        Global.Log($"Old history file does not exist, could not migrate: {Filename}");
+                        Log($"Old history file does not exist, could not migrate: {Filename}");
                     }
 
 
@@ -477,7 +482,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + Global.ExMsg(ex));
                 }
 
             }
@@ -557,6 +562,7 @@ namespace AITool
 
         public bool UpdateHistoryList(bool Clean)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
 
             bool ret = false;
 
@@ -637,13 +643,13 @@ namespace AITool
                         this.LastUpdateTime = DateTime.Now;
                     }
 
-                    Global.Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
+                    Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
 
                 }
                 catch (Exception ex)
                 {
 
-                    Global.Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + Global.ExMsg(ex));
                 }
 
             }
@@ -657,6 +663,7 @@ namespace AITool
 
         private async Task<bool> CleanHistoryList()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
 
             bool ret = false;
 
@@ -673,7 +680,7 @@ namespace AITool
                 //run the file exists check in another thread so we dont freeze the UI, but WAIT for it
                 await Task.Run(async () =>
                 {
-                    Global.Log("Removing missing files from in-memory database...");
+                    Log("Removing missing files from in-memory database...");
 
                     int missing = 0;
                     int tooold = 0;
@@ -706,14 +713,14 @@ namespace AITool
                             History rhist;
 
                             if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
-                                Global.Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
+                                Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
                         }
 
                     }
 
                     if (removed.Count > 0)
                     {
-                        Global.Log($"Removing {missing} files and {tooold} database entries that are older than {AppSettings.Settings.MaxHistoryAgeDays} days (MaxHistoryAgeDays) from file database...");
+                        Log($"Removing {missing} files and {tooold} database entries that are older than {AppSettings.Settings.MaxHistoryAgeDays} days (MaxHistoryAgeDays) from file database...");
                         //start another thread to finish cleaning the database so that the app gets the list faster...
                         //the db should be thread safe due to opening with fullmutex flag
                         Stopwatch swr = Stopwatch.StartNew();
@@ -745,32 +752,32 @@ namespace AITool
                                 if (rowsdeleted != 1)
                                 {
                                     failedcnt++;
-                                    Global.Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+                                    Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
                                 }
                             }
                             catch (Exception ex)
                             {
                                 failedcnt++;
-                                Global.Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
+                                Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
                             }
                             rcnt = rcnt + rowsdeleted;
                         }
 
                         //this.DeletedCount.AtomicAddAndGet(rcnt);
 
-                        Global.Log($"...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
+                        Log($"...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
 
                     }
                     else
                     {
-                        Global.Log("debug: No missing files to clean from database?");
+                        Log("debug: No missing files to clean from database?");
                     }
 
 
                 });
 
 
-                Global.Log($"...Cleaned {removed.Count} items in {sw.ElapsedMilliseconds}ms");
+                Log($"...Cleaned {removed.Count} items in {sw.ElapsedMilliseconds}ms");
 
 
                 ret = removed.Count > 0;
@@ -780,7 +787,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: " + ex.ToString());
+                Log("Error: " + ex.ToString());
             }
 
             return ret;

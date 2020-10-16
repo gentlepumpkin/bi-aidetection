@@ -91,5 +91,20 @@ namespace AITool
             {
             }
         }
+
+        private void createStaticMasksToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not implemented yet.");
+
+            //if (folv_ObjectDetail.SelectedObjects != null && folv_ObjectDetail.SelectedObjects.Count > 0)
+            //{
+            //    foreach (ClsPrediction CP in folv_ObjectDetail.SelectedObjects)
+            //    {
+            //        Object imageObject = new Object();
+            //        imageObject.
+            //        ObjectPosition OP = new ObjectPosition() 
+            //    }
+            //}
+        }
     }
 }

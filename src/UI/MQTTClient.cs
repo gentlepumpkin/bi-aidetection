@@ -14,6 +14,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Telegram.Bot.Types;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -27,6 +28,8 @@ namespace AITool
 
         public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             MqttClientPublishResult res = null;
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -196,7 +199,7 @@ namespace AITool
                                             {
                                                 excp = e.Exception.Message;
                                             }
-                                            Global.Log($"MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
+                                            Log($"MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
 
                                             //reconnect here if needed?
                                         });
@@ -204,30 +207,30 @@ namespace AITool
 
                                         mqttClient.UseApplicationMessageReceivedHandler(async e =>
                                         {
-                                            Global.Log($"MQTT: ### RECEIVED APPLICATION MESSAGE ###");
-                                            Global.Log($"MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                                            Global.Log($"MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
-                                            Global.Log($"MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                                            Global.Log($"MQTT: + Retain = {e.ApplicationMessage.Retain}");
-                                            Global.Log("");
+                                            Log($"MQTT: ### RECEIVED APPLICATION MESSAGE ###");
+                                            Log($"MQTT: + Topic = {e.ApplicationMessage.Topic}");
+                                            Log($"MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                                            Log($"MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                                            Log($"MQTT: + Retain = {e.ApplicationMessage.Retain}");
+                                            Log("");
 
                                         });
 
 
                                         mqttClient.UseConnectedHandler(async e =>
                                         {
-                                            Global.Log($"MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
+                                            Log($"MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
 
                                             // Subscribe to the topic
                                             await mqttClient.SubscribeAsync(topic, MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
                                             
                                             subscribed = true;
 
-                                            Global.Log($"MQTT: ### SUBSCRIBED to topic '{topic}'");
+                                            Log($"MQTT: ### SUBSCRIBED to topic '{topic}'");
                                         });
 
 
-                                        Global.Log($"MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
+                                        Log($"MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
 
 
                                         MqttClientAuthenticateResult cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
@@ -255,31 +258,31 @@ namespace AITool
 
                                             if (res.ReasonCode == MqttClientPublishReasonCode.Success)
                                             {
-                                                Global.Log($"MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                Log($"MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
                                             else
                                             {
-                                                Global.Log($"MQTT: Error sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                Log($"MQTT: Error sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
 
                                         }
                                         else if (cres != null)
                                         {
-                                            Global.Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
+                                            Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
                                         }
                                         else
                                         {
-                                            Global.Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
+                                            Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
                                         }
 
                                         if (mqttClient != null && mqttClient.IsConnected)
                                         {
                                             if (subscribed)
                                             {
-                                                Global.Log($"MQTT: Unsubscribing from topic '{topic}'");
+                                                Log($"MQTT: Unsubscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
-                                            Global.Log($"MQTT: Disconnecting from server.");
+                                            Log($"MQTT: Disconnecting from server.");
                                             await mqttClient.DisconnectAsync();
                                         }
 
@@ -289,7 +292,7 @@ namespace AITool
                                     catch (Exception ex)
                                     {
 
-                                        Global.Log($"MQTT: Unexpected Error: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
+                                        Log($"MQTT: Unexpected Error: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
                                     }
                                     finally
                                     {
@@ -297,10 +300,10 @@ namespace AITool
                                         {
                                             if (subscribed)
                                             {
-                                                Global.Log($"MQTT: Unsubscribing from topic '{topic}'");
+                                                Log($"MQTT: Unsubscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
-                                            Global.Log($"MQTT: Disconnecting from server.");
+                                            Log($"MQTT: Disconnecting from server.");
                                             await mqttClient.DisconnectAsync(); 
                                             mqttClient.Dispose();  //using should dispose anyway
                                         }

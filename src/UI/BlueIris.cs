@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -23,9 +24,11 @@ namespace AITool
 
         public void RefreshInfo()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             try
             {
-                Global.Log("Reading BlueIris settings from registry...");
+                Log("Reading BlueIris settings from registry...");
 
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey("Software\\Perspective Software\\Blue Iris\\clips\\folders"))
                 {
@@ -120,7 +123,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: Got error while reading BlueIris registry: " + Global.ExMsg(ex));
+                Log("Error: Got error while reading BlueIris registry: " + Global.ExMsg(ex));
                 this.IsValid = false;
             }
 }

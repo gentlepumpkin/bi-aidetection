@@ -11,24 +11,24 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
+using BrightIdeasSoftware;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
-
+using NLog;
 using static AITool.AITOOL;
 
 namespace AITool
 {
 
-    public partial class Shell:Form
+    public partial class Shell : Form
     {
         private ThreadSafe.Datetime LastListUpdate = new ThreadSafe.Datetime(DateTime.MinValue);
 
         private ThreadSafe.Boolean DatabaseInitialized = new ThreadSafe.Boolean(false);
 
         private ThreadSafe.Boolean IsListUpdating = new ThreadSafe.Boolean(false);
-
-        private ThreadSafe.Boolean DoneLoading = new ThreadSafe.Boolean(false);
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
         private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
@@ -39,6 +39,9 @@ namespace AITool
         //public static ConcurrentQueue<History> AddedHistoryItems = new ConcurrentQueue<History>();
         //public static ConcurrentQueue<History> DeletedHistoryItems = new ConcurrentQueue<History>();
 
+        //for searching log tab:
+        System.Timers.Timer tmr;
+        DateTime TimeSinceType = DateTime.MinValue;
 
         public Shell()
         {
@@ -50,8 +53,8 @@ namespace AITool
 
             //Initialize the rich text log window writer.   You can use any 'color' name in your log text
             //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
-            RTFLogger = new RichTextBoxEx(RTF_Log, true);
-            RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
+            //RTFLogger = new RichTextBoxEx(RTF_Log, true);
+            //RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
 
             this.Show();
 
@@ -61,21 +64,22 @@ namespace AITool
             //---------------------------------------------------------------------------
             //HISTORY TAB
 
-            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending,GridLines:false);
 
             folv_history.EmptyListMsg = "Initializing database";
+            cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
+            cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
+            cb_follow.Checked = AppSettings.Settings.HistoryFollow;
+            automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
+            storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
+            storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
+            showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
+            HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
-            Application.DoEvents();
+            //---------------------------------------------------------------------------
+            //INITIALIZE HISTORY DB, ETC
 
             AITOOL.InitializeBackend();
-
-            string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
-
-            //---------------------------------------------------------------------------------------------------------
-
-            this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
-
 
             //---------------------------------------------------------------------------
             //CAMERAS TAB
@@ -89,14 +93,7 @@ namespace AITool
 
             LoadCameras(); //load camera list
 
-
-            //load entries from history.csv into history ListView
-            //LoadFromCSV(); not neccessary because below, comboBox_filter_camera.SelectedIndex will call LoadFromCSV()
-
-            //splitContainer1.Panel2Collapsed = true; //collapse filter panel under left list
-            //comboBox_filter_camera.Items.Add("All Cameras"); //add "all cameras" entry in filter dropdown combobox
             comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
-
 
             //---------------------------------------------------------------------------
             //SETTINGS TAB
@@ -119,7 +116,7 @@ namespace AITool
             tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
             tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
-            cb_log.Checked = AppSettings.Settings.log_everything;
+            
             cb_send_errors.Checked = AppSettings.Settings.send_errors;
             cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
@@ -150,24 +147,117 @@ namespace AITool
             }
 
             //---------------------------------------------------------------------------
+            //LOG TAB
+
+            Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null,"Idx",SortOrder.Ascending,GridLines:false);
+
+            UpdateLogAddedRemoved();
+            LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
+            LogUpdateListTimer.Enabled = true;
+            LogUpdateListTimer.Start();
+            tmr = new System.Timers.Timer();
+            tmr.Interval = 300;
+            tmr.Elapsed += new System.Timers.ElapsedEventHandler(tmr_Elapsed);
+            ToolStripComboBoxSearch.Text = Global.GetSetting("SearchText", "");
+            mnu_Filter.Checked = AppSettings.Settings.log_mnu_Filter;
+            mnu_Highlight.Checked = AppSettings.Settings.log_mnu_Highlight;
+
+            if (string.Equals(AppSettings.Settings.LogLevel, "off", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_off.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "fatal", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_fatal.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "error", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_error.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "warn", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_warn.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "info", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_info.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "debug", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_debug.Checked = true;
+            }
+            else if (string.Equals(AppSettings.Settings.LogLevel, "trace", StringComparison.OrdinalIgnoreCase))
+            {
+                mnu_log_filter_trace.Checked = true;
+            }
+
+
+            //---------------------------------------------------------------------------
             // finish up
-            cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
-            cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
-            cb_follow.Checked = AppSettings.Settings.HistoryFollow;
-            automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
 
-            storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
-            storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
-            showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
+            string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
 
-            HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
+            //---------------------------------------------------------------------------------------------------------
 
-            this.DoneLoading.WriteFullFence(true);
+            this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
 
-            Log("APP START complete.");
+            IsLoading.WriteFullFence(false);
+
+            Log("{yellow}APP START complete.");
+
+            Application.DoEvents();
+
         }
 
+        private void tmr_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if ((DateTime.Now - this.TimeSinceType).Milliseconds >= 600)
+            {
+                Global_GUI.InvokeIFRequired(toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
+                {
+                    tmr.Stop();
+                    if (Global.IsRegexPatternValid(this.ToolStripComboBoxSearch.Text) || this.ToolStripComboBoxSearch.Text.Length == 0)
+                    {
+                        this.ToolStripComboBoxSearch.ForeColor = Color.Blue;
+                        if (this.ToolStripComboBoxSearch.FindStringExact(this.ToolStripComboBoxSearch.Text) == -1)
+                            this.ToolStripComboBoxSearch.Items.Add(this.ToolStripComboBoxSearch.Text);
+                        
+                        Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text,mnu_Filter.Checked);
+                    }
+                    else
+                    {
+                        this.ToolStripComboBoxSearch.ForeColor = Color.Red;
+                    }
+                });
+            }
+        }
 
+        async Task UpdateLogAddedRemoved()
+        {
+            if ((tabControl1.SelectedTab == tabControl1.TabPages["tabLog"]) &&
+                this.Visible &&
+                !(this.WindowState == FormWindowState.Minimized) &&
+                LogMan != null)
+            {
+
+                List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
+
+                if (removed.Count > 0)
+                    Global_GUI.UpdateFOLV_DeleteObjects(folv_log, removed.ToArray(), false);
+
+                List<ClsLogItm> added = LogMan.GetRecentlyAdded();
+
+                if (added.Count > 0)
+                    Global_GUI.UpdateFOLV_AddObjects(folv_log, added.ToArray(), AppSettings.Settings.Autoscroll_log, null);
+                
+                UpdateStats();
+            }
+            else
+            {
+
+            }
+        }
         async Task UpdateHistoryAddedRemoved()
         {
             //Log("===Enter");
@@ -179,12 +269,12 @@ namespace AITool
                 !(this.WindowState == FormWindowState.Minimized) &&
                 (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS &&
                 this.DatabaseInitialized.ReadFullFence() &&
-                this.DoneLoading.ReadFullFence() &&
+                !IsLoading.ReadFullFence() &&
                 await HistoryDB.HasUpdates())
             {
                 this.IsListUpdating.WriteFullFence(true);
 
-                //Global.Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
+                //Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
 
                 //UpdateToolstrip("Updating list...");
 
@@ -208,7 +298,7 @@ namespace AITool
             }
             else
             {
-                //Global.Log($"Debug: List not updated - Refresh={AppSettings.Settings.HistoryAutoRefresh}, Visible={tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)}, IsListUpdating={this.IsListUpdating.ReadFullFence()}, LastListUpdateMS={(DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds}");
+                //Log($"Debug: List not updated - Refresh={AppSettings.Settings.HistoryAutoRefresh}, Visible={tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)}, IsListUpdating={this.IsListUpdating.ReadFullFence()}, LastListUpdateMS={(DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds}");
             }
             //Log("===Exit");
 
@@ -225,7 +315,7 @@ namespace AITool
             }
             else if (msg.MessageType == MessageType.DatabaseInitialized)
             {
-             
+
                 Log("debug: Database initialized.");
                 this.DatabaseInitialized.WriteFullFence(true);
                 await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
@@ -269,7 +359,7 @@ namespace AITool
 
                 //UpdateHistoryAddedRemoved();
 
-                UpdateToolstrip();
+                UpdateStats();
             }
             else if (msg.MessageType == MessageType.DeleteHistoryItem)
             {
@@ -281,18 +371,16 @@ namespace AITool
 
                 //UpdateHistoryAddedRemoved();
 
-                UpdateToolstrip();
+                UpdateStats();
 
             }
             else if (msg.MessageType == MessageType.ImageAddedToQueue)
             {
-                UpdateQueueLabel();
-                UpdateToolstrip();
+                UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateStatus)
             {
-                UpdateQueueLabel();
-                UpdateToolstrip();
+                UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateProgressBar)
             {
@@ -304,17 +392,17 @@ namespace AITool
                 if (toolStripProgressBar1.Style != ProgressBarStyle.Continuous)
                     toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
 
-                UpdateToolstrip(msg.Description);
+                UpdateStats(msg.Description);
             }
             else if (msg.MessageType == MessageType.BeginProcessImage)
             {
                 BeginProcessImage(msg.Description);
-                UpdateToolstrip();
+                UpdateStats();
             }
             else if (msg.MessageType == MessageType.EndProcessImage)
             {
                 EndProcessImage(msg.Description);
-                UpdateToolstrip();
+                UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateLabel)
             {
@@ -355,7 +443,7 @@ namespace AITool
 
                 }
 
-                UpdateToolstrip();
+                UpdateStats();
             }
             else
             {
@@ -366,169 +454,129 @@ namespace AITool
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
-
-
-        //save how many times an error happened
-        public void IncrementErrorCounter(string text, string ModName)
-        {
-            errors.Add(text,"","", LogType.Unknown, DateTime.Now, ModName);
-
-            try
-            {
-                if (this.Visible)
-                {
-                    MethodInvoker LabelUpdate = delegate
-                    {
-                        lbl_errors.Show();
-                        lbl_errors.Text = $"{errors.Values.Count.ToString()} error(s) occurred. Click to open Log."; //update error counter label
-                        UpdateToolstrip();
-                    };
-                    //getting error here when called too early - had to check if Visible or not -Vorlon
-                    Invoke(LabelUpdate);
-
-                }
-
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
+        
         //add text to log
-        public async void Log(string text, [CallerMemberName] string memberName = null)
-        {
+        //public async void Log(string text, [CallerMemberName] string memberName = null)
+        //{
 
-            if (IsClosing.ReadFullFence())
-                return;
+        //    if (IsClosing.ReadFullFence())
+        //        return;
 
-            try
-            {
+        //    try
+        //    {
 
-                //get current date and time
+        //        //get current date and time
 
-                string time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss");
-                string rtftime = DateTime.Now.ToString("dHH:mm:ss");  //no need for date in log tab
-                string ModName = "";
-                if (memberName == ".ctor")
-                    memberName = "Constructor";
+        //        string time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss");
+        //        string rtftime = DateTime.Now.ToString("dHH:mm:ss");  //no need for date in log tab
+        //        string ModName = "";
+        //        if (memberName == ".ctor")
+        //            memberName = "Constructor";
 
-                if (AppSettings.Settings.log_everything == true || AppSettings.Settings.deepstack_debug)
-                {
-                    time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
-                    rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
-                    if (memberName != null && !string.IsNullOrEmpty(memberName))
-                        ModName = memberName.PadLeft(24) + "> ";
+        //        if (AppSettings.Settings.log_everything == true || AppSettings.Settings.deepstack_debug)
+        //        {
+        //            time = DateTime.Now.ToString("dd.MM.yyyy, HH:mm:ss.fff");
+        //            rtftime = DateTime.Now.ToString("HH:mm:ss.fff");
+        //            if (memberName != null && !string.IsNullOrEmpty(memberName))
+        //                ModName = memberName.PadLeft(24) + "> ";
 
-                    //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
+        //            //when the global logger reports back to the progress logger we cant use CallerMemberName, so extract the member name from text
 
-                    int gg = text.IndexOf(">> ");
+        //            int gg = text.IndexOf(">> ");
 
-                    if (gg > 0 && gg <= 24)
-                    {
-                        string modfromglobal = Global.GetWordBetween(text, "", ">> ");
-                        if (!string.IsNullOrEmpty(modfromglobal))
-                        {
-                            ModName = modfromglobal.PadLeft(24) + "> ";
-                            text = Global.GetWordBetween(text, ">> ", "");
-                        }
+        //            if (gg > 0 && gg <= 24)
+        //            {
+        //                string modfromglobal = Global.GetWordBetween(text, "", ">> ");
+        //                if (!string.IsNullOrEmpty(modfromglobal))
+        //                {
+        //                    ModName = modfromglobal.PadLeft(24) + "> ";
+        //                    text = Global.GetWordBetween(text, ">> ", "");
+        //                }
 
-                    }
-                }
+        //            }
+        //        }
 
-                //check for messages coming from deepstack processes and kill them if we didnt ask for debugging messages
-                if (!AppSettings.Settings.deepstack_debug)
-                {
-                    if (text.ToLower().Contains("redis-server.exe>") || text.ToLower().Contains("python.exe>"))
-                    {
-                        return;
-                    }
-                }
+        //        //check for messages coming from deepstack processes and kill them if we didnt ask for debugging messages
+        //        if (!AppSettings.Settings.deepstack_debug)
+        //        {
+        //            if (text.ToLower().Contains("redis-server.exe>") || text.ToLower().Contains("python.exe>"))
+        //            {
+        //                return;
+        //            }
+        //        }
 
-                //make the error and warning detection case insensitive:
-                bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1);
-                bool HasWarning = (text.IndexOf("warning:", StringComparison.InvariantCultureIgnoreCase) > -1);
-                bool HasInfo = (text.IndexOf("info:", StringComparison.InvariantCultureIgnoreCase) > -1);
-                bool HasDebug = (text.IndexOf("debug:", StringComparison.InvariantCultureIgnoreCase) > -1);
-                bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
+        //        //make the error and warning detection case insensitive:
+        //        bool HasError = (text.IndexOf("error", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("exception", StringComparison.InvariantCultureIgnoreCase) > -1);
+        //        bool HasWarning = (text.IndexOf("warning:", StringComparison.InvariantCultureIgnoreCase) > -1);
+        //        bool HasInfo = (text.IndexOf("info:", StringComparison.InvariantCultureIgnoreCase) > -1);
+        //        bool HasDebug = (text.IndexOf("debug:", StringComparison.InvariantCultureIgnoreCase) > -1);
+        //        bool IsDeepStackMsg = (memberName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (text.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1) || (ModName.IndexOf("deepstack", StringComparison.InvariantCultureIgnoreCase) > -1);
 
-                string RTFText = "";
+        //        string RTFText = "";
 
-                //set the color for RTF text window:
-                if (HasError)
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{red}}{text}";
-                }
-                else if (HasWarning)
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{mediumorchid}}{text}";
-                }
-                else if (IsDeepStackMsg)
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
-                }
-                else if (HasInfo)
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{yellow}}{text}";
-                }
-                else if (HasDebug)
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{text}";
-                }
-                else
-                {
-                    RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
-                }
+        //        //set the color for RTF text window:
+        //        if (HasError)
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{{red}}{text}";
+        //        }
+        //        else if (HasWarning)
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{{mediumorchid}}{text}";
+        //        }
+        //        else if (IsDeepStackMsg)
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{{lime}}{text}";
+        //        }
+        //        else if (HasInfo)
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{{yellow}}{text}";
+        //        }
+        //        else if (HasDebug)
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{text}";
+        //        }
+        //        else
+        //        {
+        //            RTFText = $"{{gray}}[{rtftime}]: {ModName}{{white}}{text}";
+        //        }
 
-                if (!AppSettings.AlreadyRunning)
-                {
-                    Global.SaveSetting("LastLogEntry", RTFText);
-                    Global.SaveSetting("LastShutdownState", $"checkpoint: GUI.Log: {DateTime.Now}");
-                }
+        //        if (!AppSettings.AlreadyRunning)
+        //        {
+        //            Global.SaveSetting("LastLogEntry", RTFText);
+        //            Global.SaveSetting("LastShutdownState", $"checkpoint: GUI.Log: {DateTime.Now}");
+        //        }
 
-                //get rid of any common color coding before logging to file or console
-                text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
+        //        //get rid of any common color coding before logging to file or console
+        //        text = text.Replace("{yellow}", "").Replace("{red}", "").Replace("{white}", "").Replace("{orange}", "").Replace("{lime}", "").Replace("{orange}", "mediumorchid");
 
-                //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
-                if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
-                {
-                    //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
-                    //text += "Enabling \'Log everything\' might give more information.";
-                    Console.WriteLine($"[{rtftime}]: {ModName}{text}");
+        //        //if log everything is disabled and the text is neither an ERROR, nor a WARNING: write only to console and ABORT
+        //        if (AppSettings.Settings.log_everything == false && !HasError && !HasWarning)
+        //        {
+        //            //Creates a lot of extra text in immediate window while debugging, disabling -Vorlon
+        //            //text += "Enabling \'Log everything\' might give more information.";
+        //            Console.WriteLine($"[{rtftime}]: {ModName}{text}");
 
-                    return;
-                }
-
-
-
-                RTFLogger.LogToRTF(RTFText);
-                LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
+        //            return;
+        //        }
 
 
-                if (AppSettings.Settings.send_errors == true && (HasError || HasWarning) && !text.ToLower().Contains("telegram"))
-                {
-                    //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
-                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, null, null, null, true, false, null, $"[{time}]: {text}") ;
 
-                }
+        //        RTFLogger.LogToRTF(RTFText);
+        //        LogWriter.WriteToLog($"[{time}]:  {ModName}{text}", HasError);
 
-                                //add log text to console
-                Console.WriteLine($"[{rtftime}]: {ModName}{text}");
 
-                //increment error counter
-                if (HasError || HasWarning)
-                {
-                    IncrementErrorCounter(text, ModName);
-                }
 
-            }
-            catch (Exception ex)
-            {
+        //                        //add log text to console
 
-                Console.WriteLine("Error: In LOG, got: " + ex.Message);
-            }
 
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //        Console.WriteLine("Error: In LOG, got: " + ex.Message);
+        //    }
+
+        //}
 
 
 
@@ -569,17 +617,10 @@ namespace AITool
         private void ShowErrors()
         {
 
-            using (Frm_Errors frm = new Frm_Errors())
-            {
-                frm.errors = errors.Values;
-
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    lbl_errors.Text = "";
-                    errors.Clear();
-                    UpdateToolstrip();
-                }
-            }
+            //filter the main log list for errors
+            chk_filterErrors.Checked = true;
+            tabControl1.SelectedTab = tabLog;
+            FilterLogErrors();
         }
 
         //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
@@ -630,14 +671,7 @@ namespace AITool
             {
                 //scroll to bottom, only when tab is active for better performance 
 
-                Global_GUI.InvokeIFRequired(this.RTF_Log, () =>
-                {
-                    if (Chk_AutoScroll.Checked)
-                    {
-                        this.RTF_Log.SelectionStart = this.RTF_Log.Text.Length;
-                        this.RTF_Log.ScrollToCaret();
-                    }
-                });
+                UpdateLogAddedRemoved();
             }
             Application.DoEvents();
 
@@ -1228,7 +1262,7 @@ namespace AITool
         // add new entry in left list
 
 
-        private void UpdateToolstrip(string Message = "")
+        private void UpdateStats(string Message = "")
         {
             try
             {
@@ -1271,7 +1305,7 @@ namespace AITool
 
                     toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued | {TriggerActionQueue.Count} Action Queued";
 
-                    toolStripStatusErrors.Text = $"| {errors.Values.Count} Errors";
+                    toolStripStatusErrors.Text = $"| {LogMan.ErrorCount} Errors";
 
                     if (!string.IsNullOrEmpty(Message))
                     {
@@ -1292,7 +1326,7 @@ namespace AITool
                     //}
 
 
-                    if (errors.Values.Count() > 0)
+                    if (LogMan.ErrorCount.ReadFullFence() > 0)
                     {
                         toolStripStatusErrors.ForeColor = Color.Red;
                     }
@@ -1302,6 +1336,25 @@ namespace AITool
                     }
 
                 });
+
+                MethodInvoker LabelUpdate = delegate
+                {
+                    lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
+                };
+            
+                Invoke(LabelUpdate);
+
+                LabelUpdate = delegate
+                {
+                    if (LogMan.ErrorCount.ReadFullFence() > 0)
+                        lbl_errors.Text = $"{LogMan.ErrorCount} error(s) occurred. Click to open Log."; //update error counter label
+                    else
+                        lbl_errors.Text = "";
+
+                };
+
+                //getting error here when called too early - had to check if Visible or not -Vorlon
+                Invoke(LabelUpdate);
 
             }
             catch (Exception ex)
@@ -1314,9 +1367,10 @@ namespace AITool
         private async Task LoadHistoryAsync(bool FilterChanged, bool Follow)
         {
 
-            //Log("---Enter");
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
 
-            if (!this.DoneLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
+
+            if (IsLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
             {
                 //Log("---Exit (still loading)");
                 return;
@@ -1369,7 +1423,7 @@ namespace AITool
 
 
                     if (this.Visible && !(this.WindowState == FormWindowState.Minimized))
-                        this.UpdateToolstrip("Updating History List...");
+                        this.UpdateStats("Updating History List...");
 
                     if (FilterChanged)
                         cw = new Global_GUI.CursorWait();
@@ -1390,11 +1444,11 @@ namespace AITool
                                 if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked || cb_filter_skipped.Checked)
                                 {
                                     //filter
-                                    folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter(delegate (object x)
-                                {
-                                    History hist = (History)x;
-                                    return checkListFilters(hist);
-                                });
+                                    folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
+                                    {
+                                        History hist = (History)x;
+                                        return checkListFilters(hist);
+                                    });
                                 }
                                 else
                                 {
@@ -1413,7 +1467,7 @@ namespace AITool
                     }
 
                     if (this.Visible && !(this.WindowState == FormWindowState.Minimized))
-                        this.UpdateToolstrip("Idle.");
+                        this.UpdateStats("Idle.");
 
                 }
                 else
@@ -1447,22 +1501,22 @@ namespace AITool
 
             if (!hist.Success && cb_filter_success.Checked)
                 ret = false;
-            
+
             if (hist.Success && cb_filter_nosuccess.Checked)
                 ret = false;
-            
+
             if (!hist.WasSkipped && cb_filter_skipped.Checked)
                 ret = false;
-            
+
             if (!hist.WasMasked && cb_filter_masked.Checked)
-                ret = false;  
-            
+                ret = false;
+
             if (!hist.IsPerson && cb_filter_person.Checked)
                 ret = false;
-            
+
             if (!hist.IsVehicle && cb_filter_vehicle.Checked)
                 ret = false;
-            
+
             if (!hist.IsAnimal && cb_filter_animal.Checked)
                 ret = false;
 
@@ -1492,7 +1546,7 @@ namespace AITool
             LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
             Invoke(LabelUpdate);
 
-            UpdateQueueLabel();
+            UpdateStats();
 
         }
 
@@ -1539,7 +1593,7 @@ namespace AITool
             Invoke(LabelUpdate);
 
 
-            UpdateQueueLabel();
+            UpdateStats();
 
         }
 
@@ -2056,11 +2110,11 @@ namespace AITool
                             {
                                 if (frm.checkedListBoxCameras.GetItemChecked(i))
                                 {
-                                    Camera icam = AITOOL.GetCamera(frm.checkedListBoxCameras.Items[i].ToString(),false);
+                                    Camera icam = AITOOL.GetCamera(frm.checkedListBoxCameras.Items[i].ToString(), false);
                                     if (icam != null)
                                     {
                                         ccnt++;
-                                        
+
                                         Log($"Updating camera '{cam.name}' with settings from '{icam.name}'...");
 
                                         if (frm.cb_apply_confidence_limits.Checked)
@@ -2239,7 +2293,6 @@ namespace AITool
             AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text, "|;,", true, true);
             AppSettings.Settings.telegram_token = tb_telegram_token.Text;
             AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(tb_telegram_cooldown.Text);
-            AppSettings.Settings.log_everything = cb_log.Checked;
             AppSettings.Settings.send_errors = cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
 
@@ -2622,10 +2675,6 @@ namespace AITool
             LoadDeepStackTab(false);
         }
 
-        private void btnStopscroll_Click(object sender, EventArgs e)
-        {
-            RTFLogger.AutoScroll.WriteFullFence(false);
-        }
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
@@ -2647,7 +2696,6 @@ namespace AITool
 
         private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
         {
-            RTFLogger.AutoScroll.WriteFullFence(Chk_AutoScroll.Checked);
             AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
         }
 
@@ -2739,19 +2787,8 @@ namespace AITool
         }
 
 
-        private void QueueLblTmr_Tick(object sender, EventArgs e)
-        {
-
-            UpdateQueueLabel();
-        }
-
-        private void UpdateQueueLabel()
-        {
-            MethodInvoker LabelUpdate = delegate { lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)"; };
-            Invoke(LabelUpdate);
 
 
-        }
 
         private void btnCustomMask_Click(object sender, EventArgs e)
         {
@@ -2887,11 +2924,11 @@ namespace AITool
                     cam.Action_mqtt_topic_cancel = frm.tb_MQTT_Topic_Cancel.Text.Trim();
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
-                    
+
                     cam.Action_image_merge_jpegquality = Convert.ToInt64(frm.tb_jpeg_merge_quality.Text);
 
                     cam.Action_queued = frm.cb_queue_actions.Checked;
-                    
+
                     AppSettings.Save();
 
                 }
@@ -3038,7 +3075,7 @@ namespace AITool
 
             UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
 
-            UpdateQueueLabel();
+            UpdateStats();
 
             AppSettings.Save();
 
@@ -3233,7 +3270,7 @@ namespace AITool
 
             if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
             {
-                Global.Log("----------------------- TESTING TRIGGERS ----------------------------");
+                Log("----------------------- TESTING TRIGGERS ----------------------------");
 
                 foreach (History hist in folv_history.SelectedObjects)
                 {
@@ -3246,18 +3283,18 @@ namespace AITool
                         string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds}{ext}");
                         File.Copy(hist.Filename, testfile, true);
                         string str = "Created test image file based on last detected object for the camera: " + testfile;
-                        Global.Log(str);
+                        Log(str);
                     }
                     else
                     {
-                        Global.Log("Error: File does not exist for testing: " + hist.Filename);
+                        Log("Error: File does not exist for testing: " + hist.Filename);
 
                     }
 
 
                 }
 
-                Global.Log("---------------------- DONE TESTING TRIGGERS -------------------------");
+                Log("---------------------- DONE TESTING TRIGGERS -------------------------");
 
             }
 
@@ -3361,11 +3398,305 @@ namespace AITool
         {
             CameraSave(true);
         }
+
+        private void LogUpdateListTimer_Tick(object sender, EventArgs e)
+        {
+            this.UpdateLogAddedRemoved();
+        }
+
+        private void Chk_AutoScroll_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
+        }
+
+        private void toolStrip2_TextChanged(object sender, EventArgs e)
+        {
+            if (!tmr.Enabled)
+            {
+                tmr.Enabled = true;
+                tmr.Start();
+            }
+            this.TimeSinceType = DateTime.Now;
+        }
+
+        private void Chk_AutoScroll_Click_1(object sender, EventArgs e)
+        {
+            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
+        }
+
+        private void chk_filterErrors_Click(object sender, EventArgs e)
+        {
+            FilterLogErrors();
+        }
+
+        private void FilterLogErrors()
+        {
+            Global_GUI.InvokeIFRequired(folv_log, () =>
+            {
+
+                if (chk_filterErrors.Checked)
+                {
+                    //filter
+                    using var cw = new Global_GUI.CursorWait();
+                    folv_log.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
+                    {
+                        ClsLogItm CLI = (ClsLogItm)x;
+                        return (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal);
+                    });
+                }
+                else
+                {
+                    Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text, mnu_Filter.Checked);
+                }
+
+            });
+        }
+
+        private void folv_log_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            FormatLogRow(sender, e);
+        }
+        private void FormatLogRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            //try
+            //{
+            //    ClsLogItm li = (ClsLogItm)e.Model;
+                
+            //    // If SPI IsNot Nothing Then
+            //    if (li.Level == LogLevel.Error)
+            //    {
+            //        e.Item.ForeColor = Color.Black;
+            //        e.Item.BackColor = Color.Red;
+            //    }
+            //    else if ()
+            //        e.Item.ForeColor = AppSettings.Settings.RectMaskedColor;
+            //    else if (OP.Result == ResultType.Error)
+            //    {
+            //    }
+            //    else
+            //        e.Item.ForeColor = AppSettings.Settings.RectIrrelevantColor;
+            //}
+
+
+
+            //catch (Exception ex)
+            //{
+            //}
+            //finally
+            //{
+            //}
+        }
+
+        private void folv_log_FormatCell(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
+        {
+            FormatCellLog(sender, e);
+        }
+
+        private void FormatCellLog(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
+        {
+            if (e.Column.Name == nameof(ClsLogItm.Detail))
+            {
+                ClsLogItm li = (ClsLogItm)e.Model;
+                if (li.Level == LogLevel.Error || li.Level == LogLevel.Fatal)
+                {
+                    e.SubItem.ForeColor = Color.White;
+                    e.SubItem.BackColor = Color.Red;
+                }
+                else if (li.Level == LogLevel.Warn)
+                {
+                    e.SubItem.ForeColor = Color.Red;
+                    e.SubItem.BackColor = ((FastObjectListView)sender).BackColor;
+                }
+                else if (li.Level == LogLevel.Trace || li.Level == LogLevel.Debug)
+                {
+                    e.SubItem.ForeColor = Color.Gray;
+                }
+                else if (!string.IsNullOrEmpty(li.Color))
+                {
+                    e.SubItem.ForeColor = Color.FromName(li.Color);
+                }
+                else
+                {
+                    e.SubItem.ForeColor = Color.White;
+                }
+            }
+            else
+            {
+                e.SubItem.ForeColor = Color.DarkGray;
+            }
+        }
+
+        private void mnu_highlight_CheckStateChanged(object sender, EventArgs e)
+        {
+            filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void filter_CheckStateChanged(object sender, EventArgs e)
+        {
+
+            ToolStripMenuItem currentItem = (ToolStripMenuItem)sender;
+            ToolStripDropDownButton parentItem = (ToolStripDropDownButton)currentItem.OwnerItem;
+            if (currentItem.Checked)
+            {
+                foreach (ToolStripMenuItem sibling in parentItem.DropDownItems)
+                {
+                    if (sibling != currentItem)
+                    {
+                        sibling.Checked = false;
+                    }
+                }
+
+                if (!mnu_Filter.Checked || !mnu_Highlight.Checked)
+                    mnu_Filter.Checked = true;
+
+                AppSettings.Settings.log_mnu_Filter = mnu_Filter.Checked;
+                AppSettings.Settings.log_mnu_Highlight = mnu_Highlight.Checked;
+
+                if (!IsLoading.ReadFullFence() && Global.IsRegexPatternValid(ToolStripComboBoxSearch.Text))
+                {
+                    bool Filter = false;
+                    if (mnu_Filter.Checked && !mnu_Highlight.Checked)
+                        Filter = true;
+                    else
+                        Filter = false;
+
+                    Global_GUI.FilterFOLV(folv_log, ToolStripComboBoxSearch.Text, Filter);
+
+                }
+            }
+
+        }
+
+        private void Log_Filter_CheckStateChanged(object sender, EventArgs e)
+        {
+
+            ToolStripMenuItem currentItem = (ToolStripMenuItem)sender;
+            ToolStripMenuItem parentItem = (ToolStripMenuItem)currentItem.OwnerItem;
+            if (currentItem.Checked)
+            {
+                //uncheck everything else
+                foreach (ToolStripMenuItem sibling in parentItem.DropDownItems)
+                {
+                    if (sibling != currentItem)
+                    {
+                        sibling.Checked = false;
+                    }
+                }
+
+                if (!IsLoading.ReadFullFence())
+                {
+                    AppSettings.Settings.LogLevel = currentItem.Text;
+
+                    LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays);
+                }
+
+                Log($"Logging level changed to '{currentItem.Text}'");
+            }
+
+        }
+        private void mnu_Filter_CheckStateChanged(object sender, EventArgs e)
+        {
+            filter_CheckStateChanged(sender, e);
+        }
+
+        private void ToolStripComboBoxSearch_Leave(object sender, EventArgs e)
+        {
+        }
+
+        private void ToolStripComboBoxSearch_TextChanged(object sender, EventArgs e)
+        {
+            if (IsLoading.ReadFullFence())
+                return;
+
+            if (!tmr.Enabled)
+            {
+                tmr.Enabled = true;
+                tmr.Start();
+            }
+
+            TimeSinceType = DateTime.Now;
+
+        }
+
+        private void mnu_Filter_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void openToolStripButton_Click(object sender, EventArgs e)
+        {
+            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            {
+                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
+                lbl_errors.Text = "";
+            }
+            else
+            {
+                MessageBox.Show("log missing");
+            }
+        }
+
+        private void mnu_log_filter_off_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void mnu_log_filter_off_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+        }
+
+        private void mnu_log_filter_fatal_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void mnu_log_filter_fatal_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void mnu_log_filter_error_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void mnu_log_filter_warn_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void mnu_log_filter_info_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void mnu_log_filter_debug_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void mnu_log_filter_trace_CheckStateChanged(object sender, EventArgs e)
+        {
+            this.Log_Filter_CheckStateChanged(sender, e);
+
+        }
+
+        private void clearRecentErrorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LogMan.ErrorCount.WriteFullFence(0);
+        }
     }
 
 
     //enhanced TableLayoutPanel loads faster
-    public partial class DBLayoutPanel:TableLayoutPanel
+    public partial class DBLayoutPanel : TableLayoutPanel
     {
         public DBLayoutPanel()
         {

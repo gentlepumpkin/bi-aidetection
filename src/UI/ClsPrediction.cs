@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
 using Telegram.Bot.Requests;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -67,7 +68,7 @@ namespace AITool
 
             if (imageObject == null || cam == null || string.IsNullOrWhiteSpace(imageObject.label))
             {
-                Global.Log("Error: Prediction or Camera was null?");
+                Log("Error: Prediction or Camera was null?", "", this._cam.name);
                 this.Result = ResultType.Error;
                 return;
             }
@@ -89,6 +90,8 @@ namespace AITool
 
         public void AnalyzePrediction()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+
             MaskResultInfo result = new MaskResultInfo();
 
             try
@@ -97,7 +100,7 @@ namespace AITool
                 {
                     if (!string.IsNullOrWhiteSpace(this._cam.triggering_objects_as_string))
                     {
-                        if (this._cam.triggering_objects_as_string.ToLower().Contains(this.Label.ToLower()))
+                        if (this._cam.triggering_objects_as_string.IndexOf(this.Label, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             // -> OBJECT IS RELEVANT
 
@@ -149,7 +152,7 @@ namespace AITool
                                 if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
                                 {
                                     this.Result = ResultType.Error;
-                                    Global.Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}");
+                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name);
                                 }
 
                             }
@@ -167,21 +170,21 @@ namespace AITool
                     }
                     else
                     {
-                        Global.Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')");
+                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name);
                         this.Result = ResultType.Error;
                     }
 
                 }
                 else
                 {
-                    Global.Log($"debug: Camera not enabled '{this._cam.name}' ('{this.Label}')");
+                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name);
                     this.Result = ResultType.CameraNotEnabled;
                 }
 
             }
             catch (Exception ex)
             {
-                Global.Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}");
+                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name);
                 this.Result = ResultType.Error;
             }
 

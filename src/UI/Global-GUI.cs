@@ -1,19 +1,15 @@
-﻿using System;
+﻿using BrightIdeasSoftware;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using BrightIdeasSoftware;
-using Microsoft.Win32;
+using static AITool.AITOOL;
 
 namespace AITool
 {
-	public static class Global_GUI
+    public static class Global_GUI
 	{
 
 		// ====================================================================
@@ -56,7 +52,7 @@ namespace AITool
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
@@ -107,7 +103,7 @@ namespace AITool
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
@@ -116,7 +112,7 @@ namespace AITool
 				}
 			});
 		}
-		public static void UpdateFOLV_AddObject(FastObjectListView olv, object obj, bool Follow = false)
+		public static void UpdateFOLV_AddObject(FastObjectListView olv, object obj, bool Follow = false, bool ResizeCols = false)
 		{
 
 			Global_GUI.InvokeIFRequired(olv, () =>
@@ -130,10 +126,19 @@ namespace AITool
 						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
 						olv.EnsureModelVisible(olv.SelectedObject);
 					}
+
+					//update column size only if did not restore folv state file or forced
+					if (olv.Tag == null || ResizeCols)
+					{
+						olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+						olv.Tag = "resizedcols";
+
+					}
+
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
@@ -141,7 +146,7 @@ namespace AITool
 				}
 			});
 		}
-		public static void UpdateFOLV_AddObjects(FastObjectListView olv, object[] objs, bool Follow)
+		public static void UpdateFOLV_AddObjects(FastObjectListView olv, object[] objs, bool Follow, object LastObject = null, bool ResizeCols = false)
 		{
 
 			Global_GUI.InvokeIFRequired(olv, () =>
@@ -152,19 +157,74 @@ namespace AITool
 
 					if (Follow)
 					{
-						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
-						olv.EnsureModelVisible(olv.SelectedObject);
+						if (LastObject == null)
+                        {
+							olv.SelectedIndex = olv.Items.Count - 1;
+							olv.EnsureModelVisible(olv.SelectedObject);
+						}
+						else
+                        {
+							olv.EnsureModelVisible(LastObject);
+						}
 					}
+
+					//update column size only if did not restore folv state file or forced
+					if (olv.Tag == null || ResizeCols)
+					{
+						olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+						olv.Tag = "resizedcols";
+
+					}
+
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
 
 				}
 			});
+		}
+
+		public static void FilterFOLV(FastObjectListView OLV, string FilterText, bool Filter)
+		{
+			using var cw = new Global_GUI.CursorWait();
+
+			try
+			{
+				if (!string.IsNullOrEmpty(FilterText))
+                {
+					if (Filter)
+					{
+						OLV.UseFiltering = true;
+					}
+					else
+					{
+						OLV.UseFiltering = false;
+					}
+					TextMatchFilter filter = TextMatchFilter.Regex(OLV, FilterText);
+					OLV.ModelFilter = filter;
+					HighlightTextRenderer renderererer = new HighlightTextRenderer(filter);
+					SolidBrush brush = renderererer.FillBrush as SolidBrush ?? new SolidBrush(Color.Transparent);
+					if (brush.Color != Color.LightSeaGreen)
+					{
+						brush.Color = System.Drawing.Color.FromArgb(200, Color.LightSeaGreen); //
+						renderererer.FillBrush = brush;
+					}
+					OLV.DefaultRenderer = renderererer;
+					Global.SaveSetting("SearchText", FilterText);
+
+				}
+				else
+                {
+					OLV.ModelFilter = null;
+                }
+				OLV.Refresh();
+				Application.DoEvents();
+			}
+			catch { }
 		}
 
 		public static void UpdateFOLV_DeleteObjects(FastObjectListView olv, object[] objs, bool Follow)
@@ -185,7 +245,7 @@ namespace AITool
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
@@ -204,7 +264,7 @@ namespace AITool
 				}
 				catch (Exception ex)
 				{
-					Global.Log("Error: " + Global.ExMsg(ex));
+					Log("Error: " + Global.ExMsg(ex));
 				}
 				finally
 				{
@@ -212,7 +272,16 @@ namespace AITool
 				}
 			});
 		}
-		public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList, string PrimarySortColumnName = "", SortOrder PrimarySortOrder = SortOrder.Ascending, string SecondarySortColumnName = "", SortOrder SecondarySortOrder = SortOrder.Ascending, List<string> FilterColumnList = null, Color Clr = new Color(), int RowHeight = 0, bool ShowGroups = false)
+		public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList, 
+			                             string PrimarySortColumnName = "", 
+										 SortOrder PrimarySortOrder = SortOrder.Ascending, 
+										 string SecondarySortColumnName = "", 
+										 SortOrder SecondarySortOrder = SortOrder.Ascending, 
+										 List<string> FilterColumnList = null, 
+										 Color Clr = new Color(), 
+										 int RowHeight = 0, 
+										 bool ShowGroups = false,
+										 bool GridLines = true)
 		{
 
 
@@ -223,15 +292,14 @@ namespace AITool
 				{
 
 					FOLV.AllowColumnReorder = true;
-					FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
 					FOLV.CopySelectionOnControlC = true;
 					FOLV.FullRowSelect = true;
-					FOLV.GridLines = true;
+					FOLV.GridLines = GridLines;
 					FOLV.HideSelection = false;
 					FOLV.IncludeColumnHeadersInCopy = true;
 					FOLV.OwnerDraw = true;
 					FOLV.SelectColumnsOnRightClick = true;
-					FOLV.SelectColumnsOnRightClickBehaviour = ObjectListView.ColumnSelectBehaviour.ModelDialog;
+					FOLV.SelectColumnsOnRightClickBehaviour = ObjectListView.ColumnSelectBehaviour.InlineMenu;
 					FOLV.SelectedColumnTint = Color.LawnGreen;
 					FOLV.ShowCommandMenuOnRightClick = true;
 					FOLV.ShowFilterMenuOnRightClick = true;
@@ -333,7 +401,7 @@ namespace AITool
 						cl.DataType = ei.PropertyType;
 						cl.AspectName = ei.Name;
 
-						if (ei.PropertyType.Name == "Int64" || ei.PropertyType.Name == "Int32" || ei.PropertyType.Name == "Timespan")
+						if (cl.Name == "Func" || ei.PropertyType.Name == "Int64" || ei.PropertyType.Name == "Int32" || ei.PropertyType.Name == "Timespan")
 						{
 							cl.TextAlign = HorizontalAlignment.Right;
 						}

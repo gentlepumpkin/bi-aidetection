@@ -20,6 +20,8 @@ using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
+using static AITool.AITOOL;
+
 
 namespace AITool
 {
@@ -72,6 +74,20 @@ namespace AITool
         }
 
         private static Nullable<bool> _isService = default(Boolean?);
+
+        public static bool IsRegexPatternValid(string pattern)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(pattern) && pattern.Length > 2)
+                {
+                    System.Text.RegularExpressions.Regex test = new System.Text.RegularExpressions.Regex(pattern);
+                    return true;
+                }
+            }
+            catch {}
+            return false;
+        }
 
         public static Version GetFrameworkVersion()
         {
@@ -195,7 +211,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                //Global.Log($"Error: {Global.ExMsg(ex)}");
+                //Log($"Error: {Global.ExMsg(ex)}");
             }
 
             return RetVal;
@@ -263,7 +279,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {Global.ExMsg(ex)}");
             }
             finally
             {
@@ -404,7 +420,7 @@ namespace AITool
 
         }
         private static bool warnedlog = false;
-        public static void Log(string Message, [CallerMemberName] string memberName = null)
+        public static void LogMessage(string Message, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
             {

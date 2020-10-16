@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -35,17 +36,17 @@ namespace AITool
                     lastfolder = Path.GetDirectoryName(contextMenuPosObj.ImagePath);
                     if (File.Exists(contextMenuPosObj.ImagePath))
                     {
-                        Global.Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.ImagePath})");
+                        Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.ImagePath})");
                         return contextMenuPosObj.ImagePath;
                     }
                     else
                     {
-                        Global.Log("debug: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
+                        Log("debug: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
                     }
                 }
                 else
                 {
-                    Global.Log("debug: Mask image file path was blank or NULL. Defaulting to last processed image");
+                    Log("debug: Mask image file path was blank or NULL. Defaulting to last processed image");
 
                 }
 
@@ -57,20 +58,20 @@ namespace AITool
                         lastfolder = Path.GetDirectoryName(cam.last_image_file_with_detections);
                         if (File.Exists(cam.last_image_file_with_detections))
                         {
-                            Global.Log($" (Found image from -last- detected object: {cam.last_image_file_with_detections})");
+                            Log($" (Found image from -last- detected object: {cam.last_image_file_with_detections})");
                             return cam.last_image_file_with_detections;
                         }
                         else
                         {
                             //extra debugging
-                            Global.Log(" >CAM.last_image_file_with_detections file no longer exists.");
+                            Log(" >CAM.last_image_file_with_detections file no longer exists.");
                         }
 
                     }
                     else
                     {
                         //extra debugging
-                        Global.Log($" >No CAM.last_image_file_with_detections for '{cam.name}'");
+                        Log($" >No CAM.last_image_file_with_detections for '{cam.name}'");
                     }
 
 
@@ -80,19 +81,19 @@ namespace AITool
                         lastfolder = Path.GetDirectoryName(cam.last_image_file);
                         if (File.Exists(cam.last_image_file))
                         {
-                            Global.Log($" (Found image from last processed image (no detections): {cam.last_image_file})");
+                            Log($" (Found image from last processed image (no detections): {cam.last_image_file})");
                             return cam.last_image_file;
                         }
                         else
                         {
                             //extra debugging
-                            Global.Log(" >CAM.last_image_file file no longer exists.");
+                            Log(" >CAM.last_image_file file no longer exists.");
                         }
                     }
                     else
                     {
                         //extra debugging
-                        Global.Log($" >No CAM.last_image_file for '{cam.name}'");
+                        Log($" >No CAM.last_image_file for '{cam.name}'");
                     }
 
                     if (string.IsNullOrEmpty(lastfolder))
@@ -103,7 +104,7 @@ namespace AITool
                 else
                 {
                     //extra debugging
-                    Global.Log(" >No CAM selected.");
+                    Log(" >No CAM selected.");
                 }
 
                 //FAIL, scan the camera folder for the most recent image file
@@ -117,13 +118,13 @@ namespace AITool
                         myFile = dirinfo.GetFiles($"{cam.prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
                         if (myFile != null)
                         {
-                            Global.Log($" (Found most recent image in camera folder for prefix '{cam.prefix}' (no detections): {myFile.FullName})");
+                            Log($" (Found most recent image in camera folder for prefix '{cam.prefix}' (no detections): {myFile.FullName})");
                             return myFile.FullName;
                         }
                         else
                         {
                             //extra debugging
-                            Global.Log($" >No files found starting with '{cam.prefix}' in {lastfolder}'");
+                            Log($" >No files found starting with '{cam.prefix}' in {lastfolder}'");
                         }
 
                     }
@@ -132,20 +133,20 @@ namespace AITool
                         myFile = dirinfo.GetFiles("*.jpg").OrderByDescending(f => f.LastWriteTime).First();
                         if (myFile != null)
                         {
-                            Global.Log($" (Found most recent image in camera folder (no detections): {myFile.FullName})");
+                            Log($" (Found most recent image in camera folder (no detections): {myFile.FullName})");
                             return myFile.FullName;
                         }
                         else
                         {
                             //extra debugging
-                            Global.Log($" >No files found in {lastfolder}'");
+                            Log($" >No files found in {lastfolder}'");
                         }
                     }
                 }
                 else
                 {
                     //extra debugging
-                    Global.Log($">Lastfolder not found or doesnt exist - '{lastfolder}'");
+                    Log($">Lastfolder not found or doesnt exist - '{lastfolder}'");
                 }
 
 
@@ -153,7 +154,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
             
             return "";
@@ -186,7 +187,7 @@ namespace AITool
                 if (this.cam.name.Trim().ToLower() == curcam.name.Trim().ToLower())
                 {
                     curidx = i;
-                    Global.Log($"Cam '{curcam.name}' is at index '{curidx}'");
+                    Log($"Cam '{curcam.name}' is at index '{curidx}'");
                 }
                 i++;
             }
@@ -283,7 +284,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
         }
 
@@ -323,7 +324,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
         }
 
@@ -366,7 +367,7 @@ namespace AITool
                     {
                         if (op != null)
                         {
-                            //Global.Log("Painting object");
+                            //Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
                             
                             int xmin = (int)(scale * op.Xmin + this.cam.XOffset) + absX;
@@ -407,7 +408,7 @@ namespace AITool
                         }
                         else
                         {
-                            //Global.Log("op is empty");
+                            //Log("op is empty");
                         }
                     }
                 }
@@ -416,17 +417,17 @@ namespace AITool
                     //debug a bit
                     if (CurObjPosLst.Count == 0)
                     {
-                        //Global.Log("Empty object list");
+                        //Log("Empty object list");
                     }
                     else if (e == null)
                     {
-                        //Global.Log("Not painting");
+                        //Log("Not painting");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Global.Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex));
             }
         }
        
@@ -508,13 +509,13 @@ namespace AITool
 
         private void createStaticMaskToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (contextMenuPosObj != null)
+
+            foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                contextMenuPosObj.IsStatic = true;
-                contextMenuPosObj.Counter = 0;
-                cam.maskManager.MaskedPositions.Add(contextMenuPosObj);
-                cam.maskManager.LastPositionsHistory.Remove(contextMenuPosObj);
-                contextMenuPosObj = null;
+                op.IsStatic = true;
+                op.Counter = 0;
+                cam.maskManager.MaskedPositions.Add(op);
+                cam.maskManager.LastPositionsHistory.Remove(op);
                 Refresh();
                 AppSettings.Save();
             }
@@ -530,10 +531,9 @@ namespace AITool
 
         private void removeMaskToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (contextMenuPosObj != null)
+            foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.MaskedPositions.Remove(contextMenuPosObj);
-                contextMenuPosObj = null;
+                cam.maskManager.MaskedPositions.Remove(op);
                 Refresh();
                 AppSettings.Save();
             }
@@ -580,11 +580,10 @@ namespace AITool
 
         private void createStaticMaskToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            if (contextMenuPosObj != null)
+            foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                contextMenuPosObj.IsStatic = true;
-                contextMenuPosObj.Counter = 0;
-                contextMenuPosObj = null;
+                op.IsStatic = true;
+                op.Counter = 0;
                 Refresh();
                 AppSettings.Save();
             }
@@ -673,14 +672,23 @@ namespace AITool
 
         private void createDynamicMaskTemporaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (contextMenuPosObj != null)
+            foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                contextMenuPosObj.IsStatic = false;
-                contextMenuPosObj.CreateDate = DateTime.Now;
+                op.IsStatic = false;
+                op.CreateDate = DateTime.Now;
                 //contextMenuPosObj.counter = 0;
-                cam.maskManager.MaskedPositions.Add(contextMenuPosObj);
-                cam.maskManager.LastPositionsHistory.Remove(contextMenuPosObj);
-                contextMenuPosObj = null;
+                cam.maskManager.MaskedPositions.Add(op);
+                cam.maskManager.LastPositionsHistory.Remove(op);
+                Refresh();
+                AppSettings.Save();
+            }
+        }
+
+        private void removeHistoryMaskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ObjectPosition op in this.CurObjPosLst)
+            {
+                cam.maskManager.LastPositionsHistory.Remove(op);
                 Refresh();
                 AppSettings.Save();
             }

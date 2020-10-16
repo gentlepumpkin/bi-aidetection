@@ -1,7 +1,7 @@
-using BrightIdeasSoftware;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -110,7 +110,7 @@ namespace AITool
             float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
             if (percentageIntersect > 0)
-                Global.Log("Percentage Intersection of object: " + percentageIntersect + "%");
+                Log("Percentage Intersection of object: " + percentageIntersect + "%");
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
 

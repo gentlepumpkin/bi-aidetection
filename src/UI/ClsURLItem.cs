@@ -20,6 +20,7 @@ namespace AITool
         public int Order { get; set; } = 0;
         public int CurOrder { get; set; } = 0;
         public int Count { get; set; } = 0;
+        public string CurSrv = "";
         public HttpClient HttpClient { get; set; }
         public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
@@ -40,6 +41,7 @@ namespace AITool
             {
                 this.Enabled.WriteFullFence(true);
                 this.url = url.Trim();
+
                 this.Type = type;
                 this.Order = Order;
                 this.Count = Count;
@@ -51,6 +53,9 @@ namespace AITool
                     if (!this.url.ToLower().Contains("/v1/vision/detection"))
                         this.url = this.url + "/v1/vision/detection";
                 }
+
+                Uri uri = new Uri(this.url);
+                this.CurSrv = uri.Host + ":" + uri.Port;
 
                 this.HttpClient = new HttpClient();
                 //set httpclient timeout:
