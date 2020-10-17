@@ -242,7 +242,7 @@ namespace AITool
             {
                 string imagePath = GetBestImage();
 
-                if (!string.IsNullOrEmpty(imagePath) && (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != imagePath.ToLower()))
+                if (!string.IsNullOrEmpty(imagePath) && (pictureBox1.Tag == null || !string.Equals(pictureBox1.Tag.ToString(), imagePath, StringComparison.OrdinalIgnoreCase)))
                 {
                     using (var img = new Bitmap(imagePath))
                     {
@@ -252,7 +252,7 @@ namespace AITool
                     pictureBox1.Tag = imagePath;
                     if (contextMenuPosObj != null && contextMenuPosObj.ImagePath != null)
                     {
-                        if (contextMenuPosObj.ImagePath.ToLower() != imagePath.ToLower())
+                        if (!string.Equals(contextMenuPosObj.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
                         {
                             lbl_lastfile.ForeColor = Color.DarkMagenta;
                             lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
@@ -292,7 +292,7 @@ namespace AITool
         {
             try
             {
-                if (pictureBox1.Tag == null || pictureBox1.Tag.ToString().ToLower() != this.cam.last_image_file.ToLower())
+                if (pictureBox1.Tag == null || !string.Equals(pictureBox1.Tag.ToString(), this.cam.last_image_file, StringComparison.OrdinalIgnoreCase))
                 {
                     if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)))
                     {
@@ -514,11 +514,10 @@ namespace AITool
             {
                 op.IsStatic = true;
                 op.Counter = 0;
-                cam.maskManager.MaskedPositions.Add(op);
-                cam.maskManager.LastPositionsHistory.Remove(op);
-                Refresh();
-                AppSettings.Save();
+                cam.maskManager.CreateDynamicMask(op,true);
             }
+            Refresh();
+            AppSettings.Save();
         }
 
         private void FOLV_Masks_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
@@ -534,9 +533,9 @@ namespace AITool
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
                 cam.maskManager.MaskedPositions.Remove(op);
-                Refresh();
-                AppSettings.Save();
             }
+            Refresh();
+            AppSettings.Save();
         }
 
         private void Frm_DynamicMaskDetails_FormClosing(object sender, FormClosingEventArgs e)
@@ -584,9 +583,9 @@ namespace AITool
             {
                 op.IsStatic = true;
                 op.Counter = 0;
-                Refresh();
-                AppSettings.Save();
             }
+            Refresh();
+            AppSettings.Save();
         }
 
         private void FOLV_MaskHistory_SelectedIndexChanged(object sender, EventArgs e)
@@ -674,14 +673,10 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                op.IsStatic = false;
-                op.CreateDate = DateTime.Now;
-                //contextMenuPosObj.counter = 0;
-                cam.maskManager.MaskedPositions.Add(op);
-                cam.maskManager.LastPositionsHistory.Remove(op);
-                Refresh();
-                AppSettings.Save();
+                cam.maskManager.CreateDynamicMask(op,false,true);
             }
+            Refresh();
+            AppSettings.Save();
         }
 
         private void removeHistoryMaskToolStripMenuItem_Click(object sender, EventArgs e)
@@ -689,9 +684,9 @@ namespace AITool
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
                 cam.maskManager.LastPositionsHistory.Remove(op);
-                Refresh();
-                AppSettings.Save();
             }
+            Refresh();
+            AppSettings.Save();
         }
     }
 }

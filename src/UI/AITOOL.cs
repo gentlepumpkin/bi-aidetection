@@ -90,7 +90,7 @@ namespace AITool
 
                 string exe = $"AITOOLS{srv}EXE";
 
-                LogMan = new ClsLogManager(!Global.IsService, exe, LogLevel.Info, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"),999,30);
+                LogMan = new ClsLogManager(!Global.IsService, exe, LogLevel.Info, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"),999,30, AppSettings.Settings.MaxGUILogItems);
 
                 //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
                 //is locked for any reason, it will wait in the queue until it can be written
@@ -110,7 +110,9 @@ namespace AITool
                 AppSettings.Load();
 
                 //reset log settings if different:
-                LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays);
+                LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays, AppSettings.Settings.MaxGUILogItems);
+
+                using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
                 //HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
                 //HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
@@ -129,8 +131,8 @@ namespace AITool
                     OSVersionExt.VersionInfo vi = OSVersion.GetOSVersion();
                     OSVersionExtension.OperatingSystem ov = OSVersion.GetOperatingSystem();
 
-                    Log($"   Installed NET Framework version '{Global.GetFrameworkVersion()}', Target version '{AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName}'");
-                    Log($"   Windows '{ov.ToString()}', version '{vi.Version.ToString()}' Release ID '{OSVersion.MajorVersion10Properties().ReleaseId}', 64Bit={OSVersion.Is64BitOperatingSystem}, Workstation={OSVersion.IsWorkstation}, Server={OSVersion.IsServer}, SERVICE={Global.IsService}");
+                    Log($"Debug:   Installed NET Framework version '{Global.GetFrameworkVersion()}', Target version '{AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName}'");
+                    Log($"Debug:   Windows '{ov.ToString()}', version '{vi.Version.ToString()}' Release ID '{OSVersion.MajorVersion10Properties().ReleaseId}', 64Bit={OSVersion.Is64BitOperatingSystem}, Workstation={OSVersion.IsWorkstation}, Server={OSVersion.IsServer}, SERVICE={Global.IsService}");
 
                 }
                 catch (Exception ex)
@@ -149,22 +151,22 @@ namespace AITool
                 }
                 if (Global.IsAdministrator())
                 {
-                    Log("*** Running as administrator ***");
+                    Log("Debug: *** Running as administrator ***");
                 }
                 else
                 {
-                    Log("Not running as administrator.");
+                    Log("Debug: Not running as administrator.");
                 }
 
-                if (AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\').ToLower() == Directory.GetCurrentDirectory().TrimEnd('\\').ToLower())
+                if (string.Equals(AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\'), Directory.GetCurrentDirectory().TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
                 {
-                    Log($"*** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
+                    Log($"Debug: *** Start in/current directory is the same as where the EXE is running from: {Directory.GetCurrentDirectory()} ***");
                 }
                 else
                 {
                     try
                     {
-                        Log($"*** Changing Start in/current directory from '{Directory.GetCurrentDirectory().TrimEnd('\\')}' to '{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}' ***");
+                        Log($"Debug: *** Changing Start in/current directory from '{Directory.GetCurrentDirectory().TrimEnd('\\')}' to '{AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')}' ***");
                         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
                     }
                     catch (Exception ex)
@@ -180,11 +182,11 @@ namespace AITool
                 BlueIrisInfo = new BlueIris();
                 if (BlueIrisInfo.IsValid)
                 {
-                    Log($"BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
+                    Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
                 }
                 else
                 {
-                    Log($"BlueIris not detected.");
+                    Log($"Debug: BlueIris not detected.");
                 }
 
 
@@ -236,7 +238,7 @@ namespace AITool
                     //Check to see if we need to get updated URL list
                     if (DeepStackURLList.Count == 0 || AIURLSettingsChanged.ReadFullFence())
                     {
-                        Log("Updating/Resetting AI URL list...");
+                        Log("Debug: Updating/Resetting AI URL list...");
                         List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
 
                         //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
@@ -250,7 +252,7 @@ namespace AITool
                             }
                             else
                             {
-                                Log($"---- (duplicate url configured - {ur})");
+                                Log($"Debug: ---- (duplicate url configured - {ur})");
                             }
                         }
 
@@ -269,15 +271,15 @@ namespace AITool
                                 //url.InUse.WriteFullFence(false);
                                 url.ErrCount.WriteFullFence(0);
                                 url.Enabled.WriteFullFence(true);
-                                Log($"----   #{url.Order}: Re-added known URL: {url}");
+                                Log($"Debug: ----   #{url.Order}: Re-added known URL: {url}");
                             }
                             else
                             {
                                 DeepStackURLList.Add(url);
-                                Log($"----   #{url.Order}: Added new URL: {url}");
+                                Log($"Debug: ----   #{url.Order}: Added new URL: {url}");
                             }
                         }
-                        Log($"...Found {DeepStackURLList.Count} AI URL's in settings.");
+                        Log($"Debug: ...Found {DeepStackURLList.Count} AI URL's in settings.");
 
                         AIURLSettingsChanged.WriteFullFence(false);
 
@@ -544,6 +546,8 @@ namespace AITool
         //EVENT: new image added to input_path -> START AI DETECTION
         private static async void OnCreatedAsync(object source, FileSystemEventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             lock (FileWatcherLockObject)
             {
                 try
@@ -566,7 +570,7 @@ namespace AITool
                                 if (qsize > AppSettings.Settings.MaxImageQueueSize)
                                 {
                                     Log("");
-                                    Log($"Error: Skipping image because queue is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                                    Log($"Error: Skipping image because queue ({qsize}) is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
                                 }
                                 else
                                 {
@@ -622,7 +626,7 @@ namespace AITool
 
         public static void UpdateWatchers(bool Reset)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
@@ -703,7 +707,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Skipping duplicate path for '{name}': '{path}'");
+                            Log($"Debug: Skipping duplicate path for '{name}': '{path}'");
                         }
 
                     }
@@ -719,7 +723,7 @@ namespace AITool
                     {
                         List<string> splt = Global.Split(item);
                         string name = splt[0];
-                        if (name.ToLower() == watcher1.Name.ToLower())
+                        if (string.Equals(name, watcher1.Name, StringComparison.OrdinalIgnoreCase))
                         {
                             fnd = true;
                             break;
@@ -750,13 +754,13 @@ namespace AITool
                                 if (watcher.Path != watcher.watcher.Path)
                                 {
                                     watcher.watcher.Path = watcher.Path;
-                                    Log($"Watcher '{watcher.Name}' changed from '{watcher.watcher.Path}' to '{watcher.Path}'.");
+                                    Log($"Debug: Watcher '{watcher.Name}' changed from '{watcher.watcher.Path}' to '{watcher.Path}'.");
                                 }
 
                                 if (watcher.IncludeSubdirectories != watcher.watcher.IncludeSubdirectories)
                                 {
                                     watcher.watcher.IncludeSubdirectories = watcher.IncludeSubdirectories;
-                                    Log($"Watcher '{watcher.Name}' IncludeSubdirectories changed from '{watcher.watcher.IncludeSubdirectories}' to '{watcher.IncludeSubdirectories}'.");
+                                    Log($"Debug: Watcher '{watcher.Name}' IncludeSubdirectories changed from '{watcher.watcher.IncludeSubdirectories}' to '{watcher.IncludeSubdirectories}'.");
                                 }
 
                                 if (watcher.watcher.EnableRaisingEvents != true)
@@ -764,13 +768,13 @@ namespace AITool
                                     enabledcnt++;
                                     watcher.watcher.EnableRaisingEvents = true;
                                     dupes.Add(watcher.Path.ToLower(), watcher.Path);
-                                    Log($"Watcher '{watcher.Name}' is now watching '{watcher.Path}'");
+                                    Log($"Debug: Watcher '{watcher.Name}' is now watching '{watcher.Path}'");
                                 }
 
                             }
                             else
                             {
-                                Log($"Watcher '{watcher.Name}' has a duplicate path, skipping '{watcher.Path}'");
+                                Log($"Debug: Watcher '{watcher.Name}' has a duplicate path, skipping '{watcher.Path}'");
                             }
                         }
                         else
@@ -781,7 +785,7 @@ namespace AITool
                             watcher.watcher.EnableRaisingEvents = false;
                             watcher.watcher.Dispose();
                             watcher.watcher = null;
-                            Log($"Watcher '{watcher.Name}' has an empty path, just disabled.");
+                            Log($"Debug: Watcher '{watcher.Name}' has an empty path, just disabled.");
                         }
 
                     }
@@ -799,17 +803,17 @@ namespace AITool
 
                 if (watchers.Count() == 0)
                 {
-                    Log("No FileSystemWatcher input folders defined yet.");
+                    Log("Debug: No FileSystemWatcher input folders defined yet.");
                 }
                 else
                 {
                     if (enabledcnt == 0)
                     {
-                        Log("No NEW FileSystemWatcher input folders found.");
+                        Log("Debug: No NEW FileSystemWatcher input folders found.");
                     }
                     else
                     {
-                        Log($"Enabled {enabledcnt} FileSystemWatchers.");
+                        Log($"Debug: Enabled {enabledcnt} FileSystemWatchers.");
                     }
                 }
 
@@ -824,7 +828,7 @@ namespace AITool
 
         public static FileSystemWatcher MyWatcherFatory(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             FileSystemWatcher watcher = null;
 
@@ -861,6 +865,8 @@ namespace AITool
 
         static bool IsValidImage(ClsImageQueueItem CurImg)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool ret = false;
 
             try
@@ -881,6 +887,7 @@ namespace AITool
                             {
                                 CurImg.Width = test.Width;
                                 CurImg.Height = test.Height;
+                                Log($"Debug: Image file is valid: {Path.GetFileName(CurImg.image_path)}");
                             }
                         }
                     }
@@ -912,7 +919,7 @@ namespace AITool
         //analyze image with AI
         public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem DeepStackURL)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
 
@@ -1074,7 +1081,7 @@ namespace AITool
                                                 {
                                                     objects.Add(pred.Label);
                                                     objects_confidence.Add(pred.Confidence);
-                                                    objects_position.Add($"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}");
+                                                    objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
                                                     clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
                                                 }
                                                 else
@@ -1082,7 +1089,7 @@ namespace AITool
                                                     clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
                                                     irrelevant_objects.Add(pred.Label);
                                                     irrelevant_objects_confidence.Add(pred.Confidence);
-                                                    string position = $"{pred.xmin},{pred.ymin},{pred.xmax},{pred.ymax}";
+                                                    string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
                                                     irrelevant_objects_position.Add(position);
                                                     
                                                     if (pred.Result == ResultType.NoConfidence)
@@ -1397,7 +1404,7 @@ namespace AITool
         }
         public static MaskResultInfo Outsidemask(string cameraname, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             //Log($"      Checking if object is outside privacy mask of {cameraname}:");
             //Log("         Loading mask file...");

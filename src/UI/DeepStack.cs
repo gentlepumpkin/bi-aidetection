@@ -68,7 +68,7 @@ namespace AITool
         }
         public bool GetDeepStackRun()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
 
@@ -86,7 +86,7 @@ namespace AITool
             {
                 this.IsInstalled = true;
                     this.HasError = false;
-                    Log("DeepStack Desktop IS running from " + ServerProc.FileName);
+                    Log("Debug: DeepStack Desktop IS running from " + ServerProc.FileName);
 
                     this.IsStarted = true;
                     //C:\DeepStack\server\server.exe
@@ -94,7 +94,7 @@ namespace AITool
                     if (!this.ServerProc.FileName.ToLower().StartsWith(this.DeepStackFolder.ToLower()))
                     {
                         string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
-                        Log("Deepstack running from non-default path: " + dspath);
+                        Log("Debug: Deepstack running from non-default path: " + dspath);
                         this.DeepStackFolder = dspath;
                         this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
                         this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
@@ -110,7 +110,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(face))
                         if (this.FaceAPIEnabled != Convert.ToBoolean(face))
                         {
-                            Log($"...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
+                            Log($"Debug: ...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
                             this.FaceAPIEnabled = Convert.ToBoolean(face);
                             this.NeedsSaving = true;
                         }
@@ -118,7 +118,7 @@ namespace AITool
                     string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
                     if (!string.IsNullOrEmpty(scene))
                         if (Convert.ToBoolean(scene) != this.SceneAPIEnabled) {
-                            Log($"...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
+                            Log($"Debug: ...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
                             this.SceneAPIEnabled = Convert.ToBoolean(scene);
                             this.NeedsSaving = true;
                         };
@@ -127,7 +127,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(detect))
                         if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
                         {
-                            Log($"...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
+                            Log($"Debug: ...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
                             this.DetectionAPIEnabled = Convert.ToBoolean(detect);
                             this.NeedsSaving = true;
                         }
@@ -136,7 +136,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(admin))
                         if (this.AdminKey != admin)
                         {
-                            Log($"...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
+                            Log($"Debug: ...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
                             this.AdminKey = admin;
                             this.NeedsSaving = true;
                         }
@@ -145,7 +145,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(api))
                         if (this.APIKey != api)
                         {
-                            Log($"...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
+                            Log($"Debug: ...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
                             this.APIKey = api;
                             this.NeedsSaving = true;
                         }
@@ -154,7 +154,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(port))
                         if (this.Port != port)
                         {
-                            Log($"...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
+                            Log($"Debug: ...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
                             this.Port = port;
                             this.NeedsSaving = true;
                         }
@@ -166,7 +166,7 @@ namespace AITool
                     if (!string.IsNullOrEmpty(port))
                         if (this.Mode != mode)
                         {
-                            Log($"...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
+                            Log($"Debug: ...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
                             this.Mode = mode;
                             this.NeedsSaving = true;
                         }
@@ -183,7 +183,7 @@ namespace AITool
             }
             else
             {
-                Log("DeepStack Desktop NOT running.");
+                Log("Debug: DeepStack Desktop NOT running.");
                 this.IsStarted = false;
                 this.HasError = false;
             }
@@ -192,7 +192,7 @@ namespace AITool
         }
         public bool RefreshInfo()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             this.IsInstalled = false;
@@ -212,7 +212,7 @@ namespace AITool
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
                     if (!string.IsNullOrWhiteSpace(dspath))
                     {
-                        Log("Deepstack Desktop install path found in Uninstall registry: " + dspath);
+                        Log("Debug: Deepstack Desktop install path found in Uninstall registry: " + dspath);
 
                         string exepth = Path.Combine(dspath, "DeepStack.exe");
                         if (File.Exists(exepth))
@@ -222,7 +222,7 @@ namespace AITool
                             this.DeepStackEXE = exepth;
                             if (dspath.ToLower() != this.DeepStackFolder.ToLower())
                             {
-                                Log("Deepstack running from non-default path: " + dspath);
+                                Log("Debug: Deepstack running from non-default path: " + dspath);
                                 this.PythonEXE = Path.Combine(dspath, @"interpreter\python.exe");
                                 this.RedisEXE = Path.Combine(dspath, @"redis\redis-server.exe");
                                 this.ServerEXE = Path.Combine(dspath, @"server\server.exe");
@@ -244,12 +244,12 @@ namespace AITool
                     if (File.Exists(this.DeepStackEXE))
                     {
                         this.IsInstalled = true;
-                        Log("DeepStack is installed: " + this.DeepStackEXE);
+                        Log("Debug: DeepStack is installed: " + this.DeepStackEXE);
                     }
                     else
                     {
                         this.IsInstalled = false;
-                        Log("DeepStack NOT installed");
+                        Log("Debug: DeepStack NOT installed");
                     }
                 }
                 else
@@ -282,7 +282,7 @@ namespace AITool
         }
         private async Task<bool> Start()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             
@@ -468,7 +468,7 @@ namespace AITool
         private void myProcess_Exited(object sender, System.EventArgs e, string Name)
         {
 
-            string output = "DeepStack>> Process exited: ";
+            string output = "Debug: DeepStack>> Process exited: ";
             if (sender != null)
             {
                 Process prc = (Process)sender;
@@ -476,7 +476,7 @@ namespace AITool
                 {
                     //if (!prc.HasExited)
                     //{
-                        output += $" Name='{Name}'";
+                        output += $"Debug: Name='{Name}'";
                     //}
                     string err = prc.ExitCode.ToString();
                     if (prc.ExitCode == 0)
@@ -533,7 +533,7 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> {line.Data}", "","", "REDIS-SERVER.EXE");
+                Log($"Debug: DeepStack>> {line.Data}", "","", "REDIS-SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -553,7 +553,7 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> Init: ERROR: {line.Data}", "","PYTHON.EXE");
+                Log($"Debug: DeepStack>> Init: ERROR: {line.Data}", "","PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -571,7 +571,7 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> Init: {line.Data}", "","","PYTHON.EXE");
+                Log($"Debug: DeepStack>> Init: {line.Data}", "","","PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -609,7 +609,7 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> {line.Data}", "", "", "PYTHON.EXE");
+                Log($"Debug: DeepStack>> {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception ex)
@@ -663,7 +663,7 @@ namespace AITool
                 }
 
 
-                Log($"DeepStack>> {line.Data}", "", "", "SERVER.EXE");
+                Log($"Debug: DeepStack>> {line.Data}", "", "", "SERVER.EXE");
 
             }
             catch (Exception ex)
@@ -674,7 +674,7 @@ namespace AITool
         }
         public async Task<bool> StopAsync()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             bool err = false;
@@ -725,7 +725,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
+                Log("Error: Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
                 err = true;
             }
             try
@@ -749,7 +749,7 @@ namespace AITool
                 this.ServerProc = null;
                 this.DeepStackProc = null;
                 this.IsStarted = false;
-                Log("Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
+                Log("Debug: Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
                 Ret = true;
             }
             else

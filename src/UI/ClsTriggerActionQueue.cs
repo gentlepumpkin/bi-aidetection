@@ -71,7 +71,7 @@ namespace AITool
 
         public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             this._url = ds_url;
@@ -138,7 +138,7 @@ namespace AITool
 
         public async Task<bool> RunTriggers(ClsTriggerActionQueueItem AQI)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
             
             bool res = false;
 
@@ -205,7 +205,7 @@ namespace AITool
         //trigger actions
         public async Task<bool> Trigger(ClsTriggerActionQueueItem AQI)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = true;
 
@@ -453,7 +453,7 @@ namespace AITool
         
         public async Task<string> MergeImageAnnotations(ClsTriggerActionQueueItem AQI)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             int countr = 0;
             string detections = "";
@@ -512,10 +512,10 @@ namespace AITool
                                             color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
                                         }
 
-                                        int xmin = pred.xmin + AQI.cam.XOffset;
-                                        int ymin = pred.ymin + AQI.cam.YOffset;
-                                        int xmax = pred.xmax;
-                                        int ymax = pred.ymax;
+                                        int xmin = pred.XMin + AQI.cam.XOffset;
+                                        int ymin = pred.YMin + AQI.cam.YOffset;
+                                        int xmax = pred.XMax;
+                                        int ymax = pred.YMax;
 
                                         System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 
@@ -732,6 +732,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
+                ret = false;
                 Log($"ERROR: Could not copy image {AQI.CurImg.image_path} to network path {dest_path}: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name);
             }
 
@@ -741,7 +742,7 @@ namespace AITool
         //call trigger urls
         public async Task<bool> CallTriggerURLs(List<string> trigger_urls, bool Trigger)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = true;
 
@@ -776,7 +777,7 @@ namespace AITool
         //send image to Telegram
         public async Task<bool> TelegramUpload(ClsTriggerActionQueueItem AQI)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             string lastchatid = "";
@@ -910,7 +911,7 @@ namespace AITool
         //send text to Telegram
         public async Task<bool> TelegramText(ClsTriggerActionQueueItem AQI)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             string lastchatid = "";

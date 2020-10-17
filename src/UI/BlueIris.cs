@@ -24,11 +24,11 @@ namespace AITool
 
         public void RefreshInfo()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
-                Log("Reading BlueIris settings from registry...");
+                Log("Debug: Reading BlueIris settings from registry...");
 
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey("Software\\Perspective Software\\Blue Iris\\clips\\folders"))
                 {
@@ -45,6 +45,7 @@ namespace AITool
                                     if (!string.IsNullOrWhiteSpace(path))
                                     {
                                         this.ClipPaths.Add(path.Trim());
+                                        Log("Debug: BlueIris clip path found: " + path);
                                     }
                                 }
 
@@ -72,6 +73,8 @@ namespace AITool
                                         if (!string.IsNullOrWhiteSpace(shortname))
                                         {
                                             this.Cameras.Add(shortname);
+                                            Log("Debug: BlueIris camera found: " + shortname);
+
                                         }
                                     }
                                 }
@@ -90,6 +93,8 @@ namespace AITool
                         if (!string.IsNullOrWhiteSpace(ap))
                         {
                             this.AppPath = ap;
+                            Log("Debug: BlueIris app path found: " + this.AppPath);
+
                         }
                     }
 
@@ -112,6 +117,8 @@ namespace AITool
                             {
                                 this.URL = "http://" + lanip.Trim() + ":" + port.Trim();
                             }
+                            Log("Debug: BlueIris url found: " + this.URL);
+
                         }
                     }
 

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Permissions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -45,6 +46,8 @@ namespace AITool
 
         public Shell()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             InitializeComponent();
 
 
@@ -235,23 +238,41 @@ namespace AITool
 
         async Task UpdateLogAddedRemoved()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            
             if ((tabControl1.SelectedTab == tabControl1.TabPages["tabLog"]) &&
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
                 LogMan != null)
             {
+                //run in another thread so gui doesnt freeze
+                await Task.Run(async () =>
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
 
-                List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
+                    List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
 
-                if (removed.Count > 0)
-                    Global_GUI.UpdateFOLV_DeleteObjects(folv_log, removed.ToArray(), false);
+                    if (removed.Count > 0)
+                        Global_GUI.UpdateFOLV_DeleteObjects(folv_log, removed.ToArray(), false);
 
-                List<ClsLogItm> added = LogMan.GetRecentlyAdded();
+                    List<ClsLogItm> added = LogMan.GetRecentlyAdded();
 
-                if (added.Count > 0)
-                    Global_GUI.UpdateFOLV_AddObjects(folv_log, added.ToArray(), AppSettings.Settings.Autoscroll_log, null);
-                
-                UpdateStats();
+                    if (added.Count > 0)
+                        Global_GUI.UpdateFOLV_AddObjects(folv_log, added.ToArray(), AppSettings.Settings.Autoscroll_log, null);
+
+                    if (sw.ElapsedMilliseconds > 1000 && sw.ElapsedMilliseconds < 10000)
+                    {
+                        Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    }
+                    else if (sw.ElapsedMilliseconds > 10000)
+                    {
+                        Log($"Warn: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    }
+
+                    UpdateStats();
+
+                });
+
             }
             else
             {
@@ -272,28 +293,33 @@ namespace AITool
                 !IsLoading.ReadFullFence() &&
                 await HistoryDB.HasUpdates())
             {
-                this.IsListUpdating.WriteFullFence(true);
+                // run in another thread so gui doesnt freeze
+                await Task.Run(async () =>
+                {
+                    this.IsListUpdating.WriteFullFence(true);
 
-                //Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
+                    //Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
 
-                //UpdateToolstrip("Updating list...");
+                    //UpdateToolstrip("Updating list...");
 
-                List<History> added = HistoryDB.GetRecentlyAdded();
+                    List<History> added = HistoryDB.GetRecentlyAdded();
 
-                if (added.Count > 0)
-                    Global_GUI.UpdateFOLV_AddObjects(folv_history, added.ToArray(), AppSettings.Settings.HistoryFollow);
+                    if (added.Count > 0)
+                        Global_GUI.UpdateFOLV_AddObjects(folv_history, added.ToArray(), AppSettings.Settings.HistoryFollow);
 
-                List<History> removed = HistoryDB.GetRecentlyDeleted();
+                    List<History> removed = HistoryDB.GetRecentlyDeleted();
 
-                if (removed.Count > 0)
-                    Global_GUI.UpdateFOLV_DeleteObjects(folv_history, removed.ToArray(), AppSettings.Settings.HistoryFollow);
+                    if (removed.Count > 0)
+                        Global_GUI.UpdateFOLV_DeleteObjects(folv_history, removed.ToArray(), AppSettings.Settings.HistoryFollow);
 
 
-                this.LastListUpdate.Write(DateTime.Now);
+                    this.LastListUpdate.Write(DateTime.Now);
 
-                this.IsListUpdating.WriteFullFence(false);
+                    this.IsListUpdating.WriteFullFence(false);
 
-                //UpdateToolstrip("");
+                    //UpdateToolstrip("");
+
+                });
 
             }
             else
@@ -1184,11 +1210,11 @@ namespace AITool
                         {
                             if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
                             {
-                                showObject(e, pred.xmin + XOffset, pred.ymin + YOffset, pred.xmax, pred.ymax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
                             }
                             else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
                             {
-                                showObject(e, pred.xmin + XOffset, pred.ymin + YOffset, pred.xmax, pred.ymax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
                             }
 
                         }
@@ -1303,7 +1329,7 @@ namespace AITool
 
                     toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed";
 
-                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued | {TriggerActionQueue.Count} Action Queued";
+                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average,0)}) | {TriggerActionQueue.Count} Action Queued";
 
                     toolStripStatusErrors.Text = $"| {LogMan.ErrorCount} Errors";
 
@@ -1367,7 +1393,7 @@ namespace AITool
         private async Task LoadHistoryAsync(bool FilterChanged, bool Follow)
         {
 
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
 
             if (IsLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
@@ -1430,7 +1456,7 @@ namespace AITool
 
                     if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
-                        Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToList(), FilterChanged, Follow);
+                        Global_GUI.UpdateFOLV_add(folv_history, HistoryDB.HistoryDic.Values.ToArray(), FilterChanged, Follow);
 
                         //reset any that snuck in while waiting since we just did a full list update
                         HistoryDB.GetRecentlyAdded();
@@ -1496,7 +1522,7 @@ namespace AITool
         //check if a filter applies on given string of history list entry 
         private bool checkListFilters(History hist)   //string cameraname, string success, string objects_and_confidence
         {
-
+            
             bool ret = true;
 
             if (!hist.Success && cb_filter_success.Checked)
@@ -1520,7 +1546,7 @@ namespace AITool
             if (!hist.IsAnimal && cb_filter_animal.Checked)
                 ret = false;
 
-            bool CameraValid = ((comboBox_filter_camera.Text.Trim() == "All Cameras") || hist.Camera.Trim().ToLower() == comboBox_filter_camera.Text.Trim().ToLower());
+            bool CameraValid = ((string.Equals(comboBox_filter_camera.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) || string.Equals(hist.Camera.Trim(), comboBox_filter_camera.Text.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (!CameraValid)
                 ret = false;
@@ -1651,6 +1677,7 @@ namespace AITool
         // load cameras to camera list
         public void LoadCameras()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
@@ -1659,6 +1686,10 @@ namespace AITool
                 string oldnamecameras = "";
                 if (list2.SelectedItems != null && list2.SelectedItems.Count > 0)
                     oldnamecameras = list2.SelectedItems[0].Text;
+
+                //if nothing was selected, then select the last saved camera:
+                if (string.IsNullOrEmpty(oldnamecameras))
+                    oldnamecameras = Global.GetSetting("LastSelectedCamera","");
 
                 string oldnamefilters = "";
                 if (comboBox_filter_camera.Items.Count > 0)
@@ -1691,15 +1722,15 @@ namespace AITool
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
                     comboBox1.Items.Add($"   {cam.name}");
                     comboBox_filter_camera.Items.Add($"   {cam.name}");
-                    if (oldnamecameras.Trim().ToLower() == cam.name.Trim().ToLower())
+                    if (string.Equals(oldnamecameras.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxcameras = i;
                     }
-                    if (oldnamefilters.Trim().ToLower() == cam.name.Trim().ToLower())
+                    if (string.Equals(oldnamefilters.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxfilters = i + 1;
                     }
-                    if (oldnamestats.Trim().ToLower() == cam.name.Trim().ToLower())
+                    if (string.Equals(oldnamestats.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxstats = i + 1;
                     }
@@ -1760,10 +1791,12 @@ namespace AITool
         //add camera
         private string AddCamera(Camera cam) //, int history_mins, int mask_create_counter, int mask_remove_counter, double percent_variance)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
             {
-                if (c.name.Trim().ToLower() == cam.name.Trim().ToLower())
+                if (string.Equals(c.name.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     MessageBox.Show($"ERROR: Camera name must be unique,{cam.name} already exists.");
                     return ($"ERROR: Camera name must be unique,{cam.name} already exists.");
@@ -1803,10 +1836,12 @@ namespace AITool
         //remove camera
         private void RemoveCamera(string name)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             Log($"Removing camera {name}...");
             if (list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
-                if (AppSettings.Settings.CameraList.Exists(x => x.name.ToLower() == name.ToLower())) //check if camera with specified name exists in list
+                if (AppSettings.Settings.CameraList.Exists(x => string.Equals(x.name, name, StringComparison.OrdinalIgnoreCase))) //check if camera with specified name exists in list
                 {
 
                     //find index of specified camera in list
@@ -1815,7 +1850,7 @@ namespace AITool
                     //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
                     for (int i = 0; i < AppSettings.Settings.CameraList.Count; i++)
                     {
-                        if (AppSettings.Settings.CameraList[i].name.ToLower().Equals(name.ToLower()))
+                        if (AppSettings.Settings.CameraList[i].name.Equals(name, StringComparison.OrdinalIgnoreCase))
                         {
                             index = i;
 
@@ -1863,7 +1898,7 @@ namespace AITool
                             //tbTriggerUrl.Text = "";
                             //cb_telegram.Checked = false;
                             //disable camera settings if there are no cameras setup yet
-                            tableLayoutPanel6.Enabled = false;
+                            //tableLayoutPanel6.Enabled = false;  //this stops us from being able to add a new camera
                         }
                     }
                     else
@@ -1879,12 +1914,15 @@ namespace AITool
         //display camera settings for selected camera
         private void DisplayCameraSettings()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             if (list2.SelectedItems.Count > 0)
             {
 
                 tableLayoutPanel6.Enabled = true;
 
                 tbName.Text = list2.SelectedItems[0].Text; //load name textbox from name in list2
+
 
                 //load remaining settings from Camera.cs object
 
@@ -1949,7 +1987,7 @@ namespace AITool
                 //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
                 for (int j = 0; j < cbarray.Length; j++)
                 {
-                    if (cam.triggering_objects_as_string.ToLower().Contains(cbstringarray[j].ToLower()))
+                    if (cam.triggering_objects_as_string.IndexOf(cbstringarray[j], StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         cbarray[j].Checked = true;
                     }
@@ -1972,6 +2010,11 @@ namespace AITool
         //event: camera list another item selected
         private void list2_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (list2.SelectedItems.Count > 0)
+            {
+                Global.SaveSetting("LastSelectedCamera", list2.SelectedItems[0].Text);
+            }
+
             DisplayCameraSettings(); //display new item's settings
         }
 
@@ -2008,6 +2051,8 @@ namespace AITool
 
         private void CameraSave(bool SaveTo)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             if (list2.Items.Count > 0)
             {
                 //check if name is empty
@@ -2018,7 +2063,7 @@ namespace AITool
                     return;
                 }
 
-                if (list2.SelectedItems[0].Text.Trim().ToLower() != tbName.Text.Trim().ToLower())
+                if (!string.Equals(list2.SelectedItems[0].Text.Trim(), tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     //camera renamed, make sure name doesnt exist
                     Camera CamCheck = AITOOL.GetCamera(tbName.Text, false);
@@ -2085,7 +2130,19 @@ namespace AITool
                 cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
                 cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                cam.name = tbName.Text.Trim();  //just in case we needed to rename it
+                if (cam.name != tbName.Text.Trim())
+                {
+                    string Oldmaskfile = GetMaskFile(cam.name);
+                    if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
+                    {
+                        string ext = Path.GetExtension(Oldmaskfile);
+                        string pth = Path.GetDirectoryName(Oldmaskfile);
+                        string NewMaskFile = Path.Combine(pth, tbName.Text.Trim() + ext);
+                        File.Move(Oldmaskfile, NewMaskFile);
+                    }
+                    cam.name = tbName.Text.Trim();  //just in case we needed to rename it
+                }
+
                 cam.prefix = tbPrefix.Text.Trim();
                 cam.enabled = cb_enabled.Checked;
                 cam.maskManager.MaskingEnabled = cb_masking_enabled.Checked;
@@ -2284,6 +2341,8 @@ namespace AITool
         //settings save button
         private void BtnSettingsSave_Click_1(object sender, EventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
             AppSettings.Settings.input_path = cmbInput.Text;
@@ -2377,6 +2436,8 @@ namespace AITool
         //ask before closing AI Tool to prevent accidentally closing
         private void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             IsClosing.WriteFullFence(true);
 
             if (AppSettings.Settings.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
@@ -2851,9 +2912,13 @@ namespace AITool
 
         private void btnActions_Click_1(object sender, EventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             using (Frm_LegacyActions frm = new Frm_LegacyActions())
             {
 
+                if (list2.SelectedItems.Count == 0)
+                    return;
 
                 Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
@@ -3029,7 +3094,7 @@ namespace AITool
                     e.Item.ForeColor = Color.Black;
                     e.Item.BackColor = Color.LightGray;
                 }
-                else if (!hist.Success && hist.Detections.ToLower().Contains("false alert"))
+                else if (!hist.Success && hist.Detections.IndexOf("false alert", StringComparison.OrdinalIgnoreCase) >= 0)
                     e.Item.ForeColor = Color.Gray;
                 else
                     e.Item.ForeColor = Color.Black;
@@ -3072,6 +3137,8 @@ namespace AITool
                     cam.stats_skipped_images_session = 0;
                 }
             }
+
+            LogMan.ErrorCount.WriteFullFence(0);
 
             UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
 
@@ -3588,10 +3655,10 @@ namespace AITool
                 {
                     AppSettings.Settings.LogLevel = currentItem.Text;
 
-                    LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays);
+                    LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays, AppSettings.Settings.MaxGUILogItems);
                 }
 
-                Log($"Logging level changed to '{currentItem.Text}'");
+                Log($"Debug: Logging level changed to '{currentItem.Text}'");
             }
 
         }

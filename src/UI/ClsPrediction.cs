@@ -50,10 +50,13 @@ namespace AITool
         public int ImagePointsOutsideMask { get; set; } = 0;
 
         public float Confidence { get; set; } = 0;
-        public int ymin { get; set; } = 0;
-        public int xmin { get; set; } = 0;
-        public int ymax { get; set; } = 0;
-        public int xmax { get; set; } = 0;
+        public int YMin { get; set; } = 0;
+        public int XMin { get; set; } = 0;
+        public int YMax { get; set; } = 0;
+        public int XMax { get; set; } = 0;
+        public string Camera { get; set; } = "";
+        public int ImageWidth { get; set; } = 0;
+        public int ImageHeight { get; set; } = 0;
         public string Filename { get; set; } = "";
         private Object _imageObject;
 
@@ -65,6 +68,9 @@ namespace AITool
             this._cam = cam;
             this._curimg = curImg;
             this._imageObject = imageObject;
+            this.Camera = cam.name;
+            this.ImageHeight = curImg.Height;
+            this.ImageWidth = curImg.Width;
 
             if (imageObject == null || cam == null || string.IsNullOrWhiteSpace(imageObject.label))
             {
@@ -75,10 +81,10 @@ namespace AITool
 
             //force first letter to always be capitalized 
             this.Label = Global.UpperFirst(imageObject.label);
-            this.xmax = imageObject.x_max;
-            this.ymax = imageObject.y_max;
-            this.xmin = imageObject.x_min;
-            this.ymin = imageObject.y_min;
+            this.XMax = imageObject.x_max;
+            this.YMax = imageObject.y_max;
+            this.XMin = imageObject.x_min;
+            this.YMin = imageObject.y_min;
             this.Confidence = imageObject.confidence * 100;  //store as whole number percent 
             this.Filename = curImg.image_path;
 
@@ -90,7 +96,7 @@ namespace AITool
 
         public void AnalyzePrediction()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             MaskResultInfo result = new MaskResultInfo();
 
@@ -110,7 +116,7 @@ namespace AITool
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                 //only if the object is outside of the masked area
-                                result = AITOOL.Outsidemask(this._cam.name, this.xmin, this.xmax, this.ymin, this.ymax, this._curimg.Width, this._curimg.Height);
+                                result = AITOOL.Outsidemask(this._cam.name, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
                                 this.ImgMaskResult = result.Result;
                                 this.ImgMaskType = result.MaskType;
                                 this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
@@ -134,7 +140,7 @@ namespace AITool
                                     //check the dynamic or static masks
                                     if (this._cam.maskManager.MaskingEnabled)
                                     {
-                                        ObjectPosition currentObject = new ObjectPosition(this.xmin, this.xmax, this.ymin, this.ymax, this.Label,
+                                        ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
                                                                                           _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
                                         //creates history and masked lists for objects returned
                                         result = this._cam.maskManager.CreateDynamicMask(currentObject);
@@ -197,7 +203,7 @@ namespace AITool
         }
         public string PositionString()
         {
-            return $"{this.xmin},{this.ymin},{this.xmax},{this.ymax}";
+            return $"{this.XMin},{this.YMin},{this.XMax},{this.YMax}";
         }
         public string ConfidenceString()
         {

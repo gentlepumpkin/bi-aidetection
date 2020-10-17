@@ -26,7 +26,7 @@ namespace AITool
         public ConcurrentBag<ClsLogItm> RecentlyDeleted { get; set; } = new ConcurrentBag<ClsLogItm>();
         public ThreadSafe.Integer ErrorCount { get; set; } = new ThreadSafe.Integer(0);
         public ClsLogItm LastLogItm = new ClsLogItm();
-        public int MaxItems { get; set; } = 10000;
+        public int MaxGUILogItems { get; set; } = 10000;
         private int _LastIDX = 0;
         private bool _Store;
         private ThreadSafe.Integer _CurDepth = new ThreadSafe.Integer(0);
@@ -44,16 +44,17 @@ namespace AITool
         AsyncTargetWrapper NLogAsyncWrapper = null;
 
 
-        public ClsLogManager(bool Store, string DefaultSource, LogLevel MinLevel, string Filename, int MaxSize, int MaxAgeDays)
+        public ClsLogManager(bool Store, string DefaultSource, LogLevel MinLevel, string Filename, int MaxSize, int MaxAgeDays, int MaxGUILogItems)
         {
             this._Store = Store;  //we wont store log entries when running as a service, its only for the GUI
-            this.MaxItems = MaxItems;
             this._LastSource = DefaultSource;
-            this.UpdateNLog(MinLevel, Filename, MaxSize, MaxAgeDays);
+            this.UpdateNLog(MinLevel, Filename, MaxSize, MaxAgeDays, MaxGUILogItems);
         }
 
-        public async void UpdateNLog(LogLevel MinLevel, string Filename, long MaxSize, int MaxAgeDays)
+        public async void UpdateNLog(LogLevel MinLevel, string Filename, long MaxSize, int MaxAgeDays, int MaxGUILogItems)
         {
+
+            this.MaxGUILogItems = MaxGUILogItems;
 
             bool needsupdating = this.NLogFileWriter == null || this.NLogAsyncWrapper == null || MinLevel != this.MinLevel || Filename != this._Filename || MaxSize != this._MaxSize || MaxAgeDays != this._MaxAgeDays;
 
@@ -183,6 +184,10 @@ namespace AITool
         public void Enter([CallerMemberName()] string memberName = null)
         {
             this._CurDepth.AtomicIncrementAndGet();
+            
+            if (this._CurDepth.ReadFullFence() > 10)
+                this._CurDepth.WriteFullFence(10);  //just in case something weird is going on
+
             if (this.MinLevel == LogLevel.Trace)
                 this.Log($"---->ENTER {memberName}, Depth={this._CurDepth.ReadFullFence()}", "Trace-Enter", "Trace-Enter", "", 0, LogLevel.Trace, DateTime.Now, memberName);
 
@@ -190,6 +195,9 @@ namespace AITool
         public void Exit([CallerMemberName()] string memberName = null, long timems = 0)
         {
             this._CurDepth.AtomicDecrementAndGet();
+            if (this._CurDepth.ReadFullFence() < 0)
+                this._CurDepth.WriteFullFence(0);
+
             if (this.MinLevel == LogLevel.Trace)
                 this.Log($"----<EXIT {memberName}, Time={timems}ms, Depth={this._CurDepth.ReadFullFence()}", "Trace-Exit", "Trace-Exit", "", 0, LogLevel.Trace, DateTime.Now, memberName);
         }
@@ -219,7 +227,7 @@ namespace AITool
                 }
 
                 if (AIServer == null || string.IsNullOrWhiteSpace(AIServer))
-                    this.LastLogItm.Camera = this._LastCamera;
+                    this.LastLogItm.AIServer = this._LastAIServer;
                 else
                 {
                     this.LastLogItm.AIServer = AIServer;
@@ -300,7 +308,7 @@ namespace AITool
                 }
 
                 //clean out any whitespace
-                this.LastLogItm.Detail = this.LastLogItm.Detail.TrimStart();
+                //this.LastLogItm.Detail = this.LastLogItm.Detail.TrimStart();
 
                 if (this._CurDepth.ReadFullFence() + Depth > 0)
                     this.LastLogItm.Detail = new string(' ', (this._CurDepth.ReadFullFence() + Depth * 2)) + this.LastLogItm.Detail;
@@ -316,7 +324,7 @@ namespace AITool
                         this.Values.Add(this.LastLogItm);
                         this.RecentlyAdded.Add(this.LastLogItm);
                         //keep the log list size down
-                        if (Values.Count > this.MaxItems)
+                        if (Values.Count > this.MaxGUILogItems)
                         {
                             this.RecentlyDeleted.Add(Values[0]);
                             Values.RemoveAt(0);
@@ -411,7 +419,7 @@ namespace AITool
                                                 this.Values.Add(this.LastLogItm);
                                                 this.RecentlyAdded.Add(this.LastLogItm);
                                                 //keep the log list size down
-                                                if (Values.Count > this.MaxItems)
+                                                if (Values.Count > this.MaxGUILogItems)
                                                 {
                                                     this.RecentlyDeleted.Add(Values[0]);
                                                     Values.RemoveAt(0);

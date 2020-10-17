@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -41,7 +37,7 @@ namespace AITool
             {
                 Global_GUI.ConfigureFOLV(folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV_add(folv_ObjectDetail, PredictionObjectDetail);
+                Global_GUI.UpdateFOLV_add(folv_ObjectDetail, PredictionObjectDetail.ToArray());
 
             }
             catch (Exception)
@@ -94,17 +90,25 @@ namespace AITool
 
         private void createStaticMasksToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not implemented yet.");
 
-            //if (folv_ObjectDetail.SelectedObjects != null && folv_ObjectDetail.SelectedObjects.Count > 0)
-            //{
-            //    foreach (ClsPrediction CP in folv_ObjectDetail.SelectedObjects)
-            //    {
-            //        Object imageObject = new Object();
-            //        imageObject.
-            //        ObjectPosition OP = new ObjectPosition() 
-            //    }
-            //}
+            int cnt = 0;
+            if (folv_ObjectDetail.SelectedObjects != null && folv_ObjectDetail.SelectedObjects.Count > 0)
+            {
+                foreach (ClsPrediction CP in folv_ObjectDetail.SelectedObjects)
+                {
+                    if (string.IsNullOrEmpty(CP.Camera))
+                        Log("Error: Can only add newer history prediction items that include cameraname, imagewidth, imageheight.");
+                    else
+                    {
+                        ObjectPosition OP = new ObjectPosition(CP.XMin, CP.XMax, CP.YMin, CP.YMax, CP.Label, CP.ImageHeight, CP.ImageWidth, CP.Camera, CP.Filename);
+                        Camera cam = GetCamera(CP.Camera);
+                        cam.maskManager.CreateDynamicMask(OP, true);
+                        cnt++;
+                    }
+
+                }
+            }
+            Log($"Added/updated {cnt} masks.");
         }
     }
 }

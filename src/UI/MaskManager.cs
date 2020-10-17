@@ -140,9 +140,9 @@ namespace AITool
             }
         }
 
-        public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject)
+        public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject, bool forceStatic = false, bool forceDynamic = false)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             MaskResultInfo returnInfo = new MaskResultInfo();
 
@@ -173,6 +173,71 @@ namespace AITool
 
                     currentObject.ScaleConfig = ScaleConfig;
                     currentObject.PercentMatch = PercentMatch;
+
+                    //====================================================================
+                    //This is so we can add a static mask from History > Prediction Details 
+                    //and perhaps use it for adding new static on mask details screen right
+                    //click since we are threadsafe in here
+                    //====================================================================
+                    if (forceStatic || forceDynamic)  
+                    {
+                        int idx = MaskedPositions.IndexOf(currentObject);
+
+                        if (idx > -1)
+                        {
+                            
+                            ObjectPosition maskedObject = (ObjectPosition)MaskedPositions[idx];
+
+                            //Update last image that has same detection, and camera name found for existing mask
+                            maskedObject.ImagePath = currentObject.ImagePath;
+                            maskedObject.CameraName = currentObject.CameraName;
+
+                            if (forceStatic && maskedObject.IsStatic)
+                            {
+                                Log("Debug: Did not add new static mask because it was already found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                            }
+                            else if (forceStatic && !maskedObject.IsStatic)
+                            {
+                                maskedObject.IsStatic = true;
+                                Log("Debug: Forced conversion of existing Dynamic mask to Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                            }
+                            else if (forceDynamic && maskedObject.IsStatic)
+                            {
+                                Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                            }
+                            else if (forceDynamic && !maskedObject.IsStatic)
+                            {
+                                Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                            }
+                            returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject.Counter);
+                        }
+                        else if (forceStatic)
+                        {
+                            Log("Debug: + Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
+                            //check to see if it is in the history list and remove:
+                            if (LastPositionsHistory.Contains(currentObject))
+                                LastPositionsHistory.Remove(currentObject);
+                            currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
+                            currentObject.IsStatic = true;
+                            MaskedPositions.Add(currentObject);
+                            returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+                        }
+                        else if (forceDynamic)
+                        {
+                            Log("Debug: + Forced addition of new Dynamic mask (and removed from history): " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
+                            //check to see if it is in the history list and remove:
+                            if (LastPositionsHistory.Contains(currentObject))
+                                LastPositionsHistory.Remove(currentObject);
+
+                            currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
+                            currentObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                            currentObject.IsStatic = false;
+                            MaskedPositions.Add(currentObject);
+                            returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+                        }
+
+                        return returnInfo;
+                    }
 
                     int historyIndex = LastPositionsHistory.IndexOf(currentObject);
 
@@ -249,7 +314,7 @@ namespace AITool
         //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
         private void CleanUpExpiredHistory()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             lock (_maskLockObject)
             {
@@ -286,7 +351,7 @@ namespace AITool
 
         public void CleanUpExpiredMasks(RemoveEvent trigger)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             lock (_maskLockObject)
             {
@@ -355,6 +420,11 @@ namespace AITool
         public int MediumObjectMinPercent { get; set; } = 2;
         public int MediumObjectMaxPercent { get; set; } = 5;
         public int MediumObjectMatchPercent { get; set; } = 82;
+
+        public override string ToString()
+        {
+            return $"Scaled={IsScaledObject}, SOMX%={SmallObjectMaxPercent}, SOMT%={SmallObjectMatchPercent}, MOMN%={MediumObjectMinPercent}, MOMX%={MediumObjectMaxPercent}, MOMT%={MediumObjectMatchPercent}";
+        }
     }
 
 }

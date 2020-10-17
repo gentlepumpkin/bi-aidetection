@@ -40,7 +40,7 @@ namespace AITool
             public bool input_path_includesubfolders = false;
             public List<string> telegram_chatids = new List<string>();
             public bool log_everything = false;
-            public string LogLevel = "Info";
+            public string LogLevel = "Debug";
             public bool send_errors = true;
             public bool startwithwindows = false;
             public int close_instantly = -1;
@@ -98,7 +98,7 @@ namespace AITool
             public bool Autoscroll_log = false;
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;
-
+            public int MaxGUILogItems = 5000;
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
             public int TimeBetweenListRefreshsMS = 5000;
@@ -114,6 +114,8 @@ namespace AITool
 
         public static bool Save()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            
             bool Ret = false;
             try
             {
@@ -211,6 +213,8 @@ namespace AITool
         }
         public static bool IsFileValid(string Filename)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool Ret = false;
             try
             {
@@ -269,6 +273,8 @@ namespace AITool
 
         public static bool Load()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool Ret = false;
             try
             {

@@ -58,7 +58,7 @@ namespace AITool
         }
         private void Initialize()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
@@ -157,7 +157,7 @@ namespace AITool
         }
         private bool CreateConnection()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
 
@@ -165,7 +165,7 @@ namespace AITool
             {
                 Stopwatch sw = Stopwatch.StartNew();
 
-                Global.UpdateProgressBar("Initializing history database...", 1, 1);
+                Global.UpdateProgressBar("Debug: Initializing history database...", 1, 1);
 
                 this.HistoryDic.Clear();
                 this.RecentlyDeleted = new ConcurrentBag<History>();
@@ -205,7 +205,7 @@ namespace AITool
 
                 sw.Stop();
 
-                Log($"Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None");
+                Log($"Debug: Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None");
 
 
             }
@@ -228,7 +228,7 @@ namespace AITool
 
         private bool InsertHistoryItem(History hist)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             int iret = 0;
@@ -317,7 +317,7 @@ namespace AITool
 
         private bool DeleteHistoryItem(History hist)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             int dret = 0;
@@ -378,7 +378,7 @@ namespace AITool
 
         public bool MigrateHistoryCSV(string Filename)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
             lock (DBLock)
@@ -397,7 +397,7 @@ namespace AITool
                     {
                         Global.UpdateProgressBar("Migrating history.csv...", 1, 1);
 
-                        Log($"Migrating history list from {Filename} ...");
+                        Log($"Debug: Migrating history list from {Filename} ...");
 
                         Stopwatch SW = Stopwatch.StartNew();
 
@@ -459,7 +459,7 @@ namespace AITool
                             //this.DeletedCount.AtomicAddAndGet(removed);
 
                             //try to get a better feel how much time this function consumes - Vorlon
-                            Log($"...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+                            Log($"Debug: ...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
 
                         }
                         else
@@ -471,7 +471,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Old history file does not exist, could not migrate: {Filename}");
+                        Log($"Debug: Old history file does not exist, could not migrate: {Filename}");
                     }
 
 
@@ -497,6 +497,8 @@ namespace AITool
 
         public List<History> GetRecentlyDeleted()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             List<History> ret = new List<History>();
             while (!this.RecentlyDeleted.IsEmpty)
             {
@@ -508,6 +510,8 @@ namespace AITool
         }
         public List<History> GetRecentlyAdded()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             List<History> ret = new List<History>();
             while (!this.RecentlyAdded.IsEmpty)
             {
@@ -520,6 +524,7 @@ namespace AITool
 
         public async Task<bool> HasUpdates()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
@@ -562,7 +567,7 @@ namespace AITool
 
         public bool UpdateHistoryList(bool Clean)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
 
@@ -643,7 +648,7 @@ namespace AITool
                         this.LastUpdateTime = DateTime.Now;
                     }
 
-                    Log($"Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
+                    Log($"Debug: Update History Database: Added={added}, removed={removed}, total={this.HistoryDic.Count}, StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count} in {sw.ElapsedMilliseconds}ms");
 
                 }
                 catch (Exception ex)
@@ -663,7 +668,7 @@ namespace AITool
 
         private async Task<bool> CleanHistoryList()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
 
@@ -680,104 +685,113 @@ namespace AITool
                 //run the file exists check in another thread so we dont freeze the UI, but WAIT for it
                 await Task.Run(async () =>
                 {
-                    Log("Removing missing files from in-memory database...");
+                    Log("Debug: Removing missing files from in-memory database...");
 
-                    int missing = 0;
-                    int tooold = 0;
-                    int cnt = 0;
-                    int HistCount = this.HistoryDic.Count;
-                    int shownum = 0;
-                    if (HistCount > 0)
-                        shownum = HistCount / 10;
-                    //we are allowed to do this with a ConcurrentDictionary...
-                    foreach (History hist in this.HistoryDic.Values)
+                    try
                     {
-                        cnt++;
-
-                        if (cnt == 1 || cnt == HistCount || (cnt % shownum) > 0)
-                        {
-                            Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
-                        }
-
-                        bool IsTooOld = (DateTime.Now - hist.Date).TotalDays >= AppSettings.Settings.MaxHistoryAgeDays;
-
-                        if (IsTooOld || !File.Exists(hist.Filename))
-                        {
-                            if (IsTooOld)
-                                tooold++;
-                            else
-                                missing++;
-
-                            removed.Add(hist);
-
-                            History rhist;
-
-                            if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
-                                Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
-                        }
-
-                    }
-
-                    if (removed.Count > 0)
-                    {
-                        Log($"Removing {missing} files and {tooold} database entries that are older than {AppSettings.Settings.MaxHistoryAgeDays} days (MaxHistoryAgeDays) from file database...");
-                        //start another thread to finish cleaning the database so that the app gets the list faster...
-                        //the db should be thread safe due to opening with fullmutex flag
-                        Stopwatch swr = Stopwatch.StartNew();
-                        int rcnt = 0;
-                        int failedcnt = 0;
-                        cnt = 0;
-                        foreach (History hist in removed)
+                        int missing = 0;
+                        int tooold = 0;
+                        int cnt = 0;
+                        int HistCount = this.HistoryDic.Count;
+                        int shownum = 0;
+                        if (HistCount > 0)
+                            shownum = HistCount / 10;
+                        //we are allowed to do this with a ConcurrentDictionary...
+                        foreach (History hist in this.HistoryDic.Values)
                         {
                             cnt++;
+
+                            if (cnt == 1 || cnt == HistCount || (shownum > 0 && cnt % shownum > 0))
+                            {
+                                Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
+                            }
+
+                            bool IsTooOld = (DateTime.Now - hist.Date).TotalDays >= AppSettings.Settings.MaxHistoryAgeDays;
+
+                            if (IsTooOld || !File.Exists(hist.Filename))
+                            {
+                                if (IsTooOld)
+                                    tooold++;
+                                else
+                                    missing++;
+
+                                removed.Add(hist);
+
+                                History rhist;
+
+                                if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
+                                    Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
+                            }
+
+                        }
+
+                        if (removed.Count > 0)
+                        {
+                            Log($"Debug: Removing {missing} files and {tooold} database entries that are older than {AppSettings.Settings.MaxHistoryAgeDays} days (MaxHistoryAgeDays) from file database...");
+                            //start another thread to finish cleaning the database so that the app gets the list faster...
+                            //the db should be thread safe due to opening with fullmutex flag
+                            Stopwatch swr = Stopwatch.StartNew();
+                            int rcnt = 0;
+                            int failedcnt = 0;
+                            cnt = 0;
                             int rnum = 0;
                             if (removed.Count > 0)
                                 rnum = (removed.Count / 10);
-
-                            if (cnt == 1 || cnt == removed.Count || (cnt % rnum > 0))
+                            foreach (History hist in removed)
                             {
-                                Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
-                            }
+                                cnt++;
 
-                            int rowsdeleted = 0;
+                                if (cnt == 1 || cnt == removed.Count || (rnum > 0 && cnt % rnum > 0))
+                                {
+                                    Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
+                                }
 
-                            try
-                            {
-                                Stopwatch dsw = Stopwatch.StartNew();
+                                int rowsdeleted = 0;
 
-                                rowsdeleted = this.sqlite_conn.Delete(hist);
+                                try
+                                {
+                                    Stopwatch dsw = Stopwatch.StartNew();
 
-                                this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
+                                    rowsdeleted = this.sqlite_conn.Delete(hist);
 
-                                if (rowsdeleted != 1)
+                                    this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
+
+                                    if (rowsdeleted != 1)
+                                    {
+                                        failedcnt++;
+                                        Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+                                    }
+                                }
+                                catch (Exception ex)
                                 {
                                     failedcnt++;
-                                    Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+                                    Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
                                 }
+                                rcnt = rcnt + rowsdeleted;
                             }
-                            catch (Exception ex)
-                            {
-                                failedcnt++;
-                                Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
-                            }
-                            rcnt = rcnt + rowsdeleted;
+
+                            //this.DeletedCount.AtomicAddAndGet(rcnt);
+
+                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
+
+                        }
+                        else
+                        {
+                            Log("debug: No missing files to clean from database?");
                         }
 
-                        //this.DeletedCount.AtomicAddAndGet(rcnt);
-
-                        Log($"...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
-
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Log("debug: No missing files to clean from database?");
+
+                        Log("Error: " + ex.ToString());
                     }
 
 
                 });
 
 
-                Log($"...Cleaned {removed.Count} items in {sw.ElapsedMilliseconds}ms");
+                Log($"Debug: ...Cleaned {removed.Count} items in {sw.ElapsedMilliseconds}ms");
 
 
                 ret = removed.Count > 0;

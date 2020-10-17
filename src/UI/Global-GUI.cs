@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using static AITool.AITOOL;
@@ -62,11 +63,14 @@ namespace AITool
 
 			});
 		}
-		public static void UpdateFOLV_add(FastObjectListView olv, ICollection Collection, bool ResizeCols = false, bool Follow = false)
+		public static void UpdateFOLV_add(FastObjectListView olv, object[] objs, bool ResizeCols = false, bool Follow = false)
 		{
 
 			Global_GUI.InvokeIFRequired(olv, () =>
 			{
+
+				if (objs.Count() == 0)
+					return;
 
 				try
 				{
@@ -77,13 +81,13 @@ namespace AITool
 
 					olv.Freeze();
 
-					olv.UpdateObjects(Collection);
+					olv.UpdateObjects(objs);
 
 					if (olv.Items.Count > 0)
 					{
 						if (Follow)
 						{
-							olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+							olv.SelectedObject = objs.Last();  //olv.Items.Count - 1;
 							olv.EnsureModelVisible(olv.SelectedObject);
 						}
 
@@ -123,7 +127,7 @@ namespace AITool
 
 					if (Follow)
 					{
-						olv.SelectedIndex = 0;  //olv.Items.Count - 1;
+						olv.SelectedObject = obj;  //olv.Items.Count - 1;
 						olv.EnsureModelVisible(olv.SelectedObject);
 					}
 
@@ -159,7 +163,7 @@ namespace AITool
 					{
 						if (LastObject == null)
                         {
-							olv.SelectedIndex = olv.Items.Count - 1;
+							olv.SelectedObject = objs.Last();
 							olv.EnsureModelVisible(olv.SelectedObject);
 						}
 						else

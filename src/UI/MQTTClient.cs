@@ -28,7 +28,7 @@ namespace AITool
 
         public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is left.
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             MqttClientPublishResult res = null;
             Stopwatch sw = Stopwatch.StartNew();
