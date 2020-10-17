@@ -34,7 +34,7 @@ namespace AITool
         public int MaskRemoveThreshold { get; set; } = 1;
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
-        
+
         private DateTime _lastDetectionDate;
         public DateTime LastDetectionDate {
             get => _lastDetectionDate;
@@ -48,9 +48,7 @@ namespace AITool
         public string Objects = "";
         public ObjectScale ScaleConfig { get; set; }
 
-        [JsonIgnore]
         private object _maskLockObject = new object();
-        [JsonIgnore]
         private Timer _cleanMaskTimer = new Timer();
 
 
@@ -72,8 +70,6 @@ namespace AITool
             lock (_maskLockObject)
             {
                 //This will run on save/load settings
-
-                //lets store thresholdpercent as the same value the user sees in UI for easier troubleshooting in mask dialog
                 if (this.PercentMatch < 1)
                 {
                     this.PercentMatch = this.PercentMatch * 100;
@@ -84,7 +80,7 @@ namespace AITool
 
                 foreach (ObjectPosition op in this.LastPositionsHistory)
                 {
-                    //Update threshold since it could have been changed since mask created
+                    //Update PercentMatch since it could have been changed since mask created
                     op.PercentMatch = this.PercentMatch;
                     //update the camera name since it could have been renamed since the mask was created
                     op.CameraName = cam.name;
@@ -112,7 +108,7 @@ namespace AITool
 
                 foreach (ObjectPosition op in this.MaskedPositions)
                 {
-                    //Update threshold since it could have been changed since mask created
+                    //Update PercentMatch since it could have been changed since mask created
                     op.PercentMatch = this.PercentMatch;
                     //update the camera name since it could have been renamed since the mask was created
                     op.CameraName = cam.name;
@@ -319,7 +315,7 @@ namespace AITool
                                             Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, max={MaskSaveMins}) masked object after detection: " + maskedObject.ToString(),"", maskedObject.CameraName);
                                             MaskedPositions.RemoveAt(x);
                                         }
-                                        else maskedObject.Counter--;
+                                        else if(maskedObject.Counter > 0) maskedObject.Counter--;
                                     }
                                     break;
                             }
