@@ -23,7 +23,7 @@ namespace AITool
         public int ImageWidth { get; set; }
         public int ImageHeight { get; set; }
 
-        private Rectangle ObjRectangle;
+        private Rectangle _ObjRectangle;
 
         public string CameraName { get; set; } = "";
         public string ImagePath { get; set; } = "";
@@ -56,16 +56,16 @@ namespace AITool
             this.Xmax = xmax;
             this.Ymax = ymax;
 
-            ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
+            _ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
 
             this.ImageHeight = imageHeight;
             this.ImageWidth = imageWidth;
 
             //object percent of image area
-            ObjectImagePercent = (ObjRectangle.Width * ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
+            ObjectImagePercent = (_ObjRectangle.Width * _ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            Key = ((Xmin + 1) * (Ymin + 1) + (ObjRectangle.Width * ObjRectangle.Height));
+            Key = ((Xmin + 1) * (Ymin + 1) + (_ObjRectangle.Width * _ObjRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -103,7 +103,7 @@ namespace AITool
             if (other == null)
                 return false;
             
-            float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
+            float percentageIntersect = AITOOL.getObjIntersectPercent(this._ObjRectangle, other._ObjRectangle);
 
             if (percentageIntersect > 0)
                 Log("Debug: Percentage Intersection of object: " + percentageIntersect + "%");
