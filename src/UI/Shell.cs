@@ -61,13 +61,15 @@ namespace AITool
 
             this.Show();
 
+            using var cw = new Global_GUI.CursorWait(true);
+
             toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
             toolStripProgressBar1.MarqueeAnimationSpeed = 30;
 
             //---------------------------------------------------------------------------
             //HISTORY TAB
 
-            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending,GridLines:false);
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, "Date", SortOrder.Descending, GridLines: false);
 
             folv_history.EmptyListMsg = "Initializing database";
             cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
@@ -119,7 +121,7 @@ namespace AITool
             tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
             tb_telegram_token.Text = AppSettings.Settings.telegram_token;
             tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
-            
+
             cb_send_errors.Checked = AppSettings.Settings.send_errors;
             cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
@@ -152,9 +154,9 @@ namespace AITool
             //---------------------------------------------------------------------------
             //LOG TAB
 
-            Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null,"Idx",SortOrder.Ascending,GridLines:false);
+            Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null, GridLines: false);
 
-            UpdateLogAddedRemoved();
+            this.UpdateLogAddedRemoved(true);
             LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
             LogUpdateListTimer.Enabled = true;
             LogUpdateListTimer.Start();
@@ -225,8 +227,8 @@ namespace AITool
                         this.ToolStripComboBoxSearch.ForeColor = Color.Blue;
                         if (this.ToolStripComboBoxSearch.FindStringExact(this.ToolStripComboBoxSearch.Text) == -1)
                             this.ToolStripComboBoxSearch.Items.Add(this.ToolStripComboBoxSearch.Text);
-                        
-                        Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text,mnu_Filter.Checked);
+
+                        Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text, mnu_Filter.Checked);
                     }
                     else
                     {
@@ -236,10 +238,10 @@ namespace AITool
             }
         }
 
-        async Task UpdateLogAddedRemoved()
+        async Task UpdateLogAddedRemoved(bool Follow = false)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            
+
             if ((tabControl1.SelectedTab == tabControl1.TabPages["tabLog"]) &&
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
@@ -250,17 +252,26 @@ namespace AITool
                 {
                     Stopwatch sw = Stopwatch.StartNew();
 
+                    List<ClsLogItm> added = LogMan.GetRecentlyAdded();
                     List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
 
-                    if (removed.Count > 0)
-                        Global_GUI.UpdateFOLV_DeleteObjects(folv_log, removed.ToArray(), false);
+                    if (added.Count == 0 || added.Count > 2000)
+                    {
+                        //do it all in one update so it is faster:
+                        using var cw = new Global_GUI.CursorWait();
+                        Global_GUI.UpdateFOLV(folv_log, LogMan.Values.ToArray());
+                    }
+                    else
+                    {
+                        if (removed.Count > 0)
+                            Global_GUI.UpdateFOLV_DeleteObjects(folv_log, removed.ToArray(), false);
 
-                    List<ClsLogItm> added = LogMan.GetRecentlyAdded();
+                        if (added.Count > 0)
+                            Global_GUI.UpdateFOLV_AddObjects(folv_log, added.ToArray(), Follow || AppSettings.Settings.Autoscroll_log, null);
+                    }
 
-                    if (added.Count > 0)
-                        Global_GUI.UpdateFOLV_AddObjects(folv_log, added.ToArray(), AppSettings.Settings.Autoscroll_log, null);
 
-                    if (sw.ElapsedMilliseconds > 1000 && sw.ElapsedMilliseconds < 10000)
+                    if (sw.ElapsedMilliseconds > 5000 && sw.ElapsedMilliseconds < 10000)
                     {
                         Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
                     }
@@ -343,6 +354,9 @@ namespace AITool
             {
 
                 Log("debug: Database initialized.");
+                
+                folv_history.EmptyListMsg = "No History";
+
                 this.DatabaseInitialized.WriteFullFence(true);
                 await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
                 if (AppSettings.Settings.HistoryAutoRefresh)
@@ -480,7 +494,7 @@ namespace AITool
         //CORE
         //----------------------------------------------------------------------------------------------------------
 
-        
+
         //add text to log
         //public async void Log(string text, [CallerMemberName] string memberName = null)
         //{
@@ -697,7 +711,7 @@ namespace AITool
             {
                 //scroll to bottom, only when tab is active for better performance 
 
-                UpdateLogAddedRemoved();
+                this.UpdateLogAddedRemoved(true);
             }
             Application.DoEvents();
 
@@ -791,7 +805,7 @@ namespace AITool
             if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(comboBox1.Text))
                 return;
 
-            Log("Loading time line from cameras/history.csv ...");
+            Log("Debug: Loading time line from cameras/history.csv ...");
 
             //clear previous values
             timeline.Series[0].Points.Clear();
@@ -951,7 +965,7 @@ namespace AITool
                 return;
 
 
-            Log("Loading confidence-frequency chart from cameras/history.csv ...");
+            Log("Debug: Loading confidence-frequency chart from cameras/history.csv ...");
 
             //clear previous values
             chart_confidence.Series[0].Points.Clear();
@@ -964,9 +978,9 @@ namespace AITool
             {
                 List<History> result = HistoryDB.HistoryDic.Values.ToList();
 
-                if (comboBox1.Text.Trim().ToLower() != "All Cameras".ToLower()) //all cameras selected
+                if (!string.Equals(comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
                 {
-                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(comboBox1.Text.Trim().ToLower())).ToList();
+                    result = result.Where(hist => hist.Camera.StartsWith(comboBox1.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
                 //this array stores the Absolute frequencies of all possible confidence values (0%-100%)
@@ -1329,7 +1343,7 @@ namespace AITool
 
                     toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed";
 
-                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average,0)}) | {TriggerActionQueue.Count} Action Queued";
+                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Action Queued";
 
                     toolStripStatusErrors.Text = $"| {LogMan.ErrorCount} Errors";
 
@@ -1367,7 +1381,7 @@ namespace AITool
                 {
                     lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
                 };
-            
+
                 Invoke(LabelUpdate);
 
                 LabelUpdate = delegate
@@ -1522,7 +1536,7 @@ namespace AITool
         //check if a filter applies on given string of history list entry 
         private bool checkListFilters(History hist)   //string cameraname, string success, string objects_and_confidence
         {
-            
+
             bool ret = true;
 
             if (!hist.Success && cb_filter_success.Checked)
@@ -1689,7 +1703,7 @@ namespace AITool
 
                 //if nothing was selected, then select the last saved camera:
                 if (string.IsNullOrEmpty(oldnamecameras))
-                    oldnamecameras = Global.GetSetting("LastSelectedCamera","");
+                    oldnamecameras = Global.GetSetting("LastSelectedCamera", "");
 
                 string oldnamefilters = "";
                 if (comboBox_filter_camera.Items.Count > 0)
@@ -2438,9 +2452,11 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            Log("------Closing-------");
+
             IsClosing.WriteFullFence(true);
 
-            if (AppSettings.Settings.close_instantly <= 0) //if it's eigther enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+            if (AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
             {
                 using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                 {
@@ -3163,6 +3179,7 @@ namespace AITool
 
             await UpdateHistoryAddedRemoved();
 
+            UpdateStats();
         }
 
         private void folv_history_SelectedIndexChanged(object sender, EventArgs e)
@@ -3519,44 +3536,175 @@ namespace AITool
             });
         }
 
+        private async Task<bool> FilterHistItem(History hist)
+        {
+            bool ret = false;
+
+            try
+            {
+                using var cw = new Global_GUI.CursorWait();
+
+                //first search directly through log files (the history entry may not be from todays log)
+                string justfile = Path.GetFileName(hist.Filename);
+
+                List<ClsLogItm> found = new List<ClsLogItm>();
+
+                //AITool.[2020-10-19].log
+                //AITool.[2020-10-19.1].log.zip
+                List<FileInfo> files = Global.GetFiles(Path.GetDirectoryName(AppSettings.Settings.LogFileName), "AITOOL.[*].LOG|AITOOL.[*].LOG.ZIP", SearchOption.TopDirectoryOnly);
+
+                //sort by date so newest files are searched first
+                files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
+
+                string imagemaskkey = "";
+                string matchedmaskkey = "";
+
+                foreach (var fi in files)
+                {
+                    //AITool.[2020-10-19.1].log.zip
+                    //        ------------
+                    string date = Global.GetWordBetween(fi.FullName, "[", "]");
+                    //AITool.[2020-10-19.1].log.zip
+                    //        ----------
+                    date = Global.GetWordBetween(date, "", ".");
+
+                    if (string.IsNullOrEmpty(date))
+                    {
+                        Log("Error: Date in filename is unexpected: " + fi.FullName);
+                        continue;
+                    }
+                    
+                    DateTime DATE = DateTime.MinValue;
+
+                    if (Global.GetDateStrict(date, ref DATE, "yyyy-MM-dd"))
+                    {
+                        if (DATE.ToString("yyyy-MM-dd") == hist.Date.ToString("yyyy-MM-dd"))
+                        {
+                            //load into memory
+                            Log($"Debug: Searching {fi.Name}...");
+                            List<ClsLogItm> curlist = await LogMan.LoadLogFile(LogMan.GetCurrentLogFileName(), false, false);
+
+                            DateTime FirstSeen = DateTime.MinValue;
+
+                            int fnd = 0;
+
+                            foreach (var CLI in curlist)
+                            {
+                                if (CLI.Detail.IndexOf(justfile, StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    if (FirstSeen == DateTime.MinValue)
+                                        FirstSeen = CLI.Date;
+                                    fnd++;
+
+                                    if (!found.Contains(CLI))
+                                        found.Add(CLI);
+
+                                    // Current object detected: key=2249882, name=Person, xmin=1789,
+                                    if (CLI.Detail.IndexOf("Current object detected:", StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        imagemaskkey = "key=" + Global.GetWordBetween(CLI.Detail, "key=", ",| ");
+                                        Log("Debug: " + imagemaskkey);
+                                    }
+                                    //   Found 'Person' (Key=191457) in last_positions_history: key=198932, name=Person, xmin=1108
+                                    else if (CLI.Detail.IndexOf("last_positions_history: key=", StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        matchedmaskkey = "key=" + Global.GetWordBetween(CLI.Detail, "history: key=", ",| ");
+                                        Log("Debug: " + matchedmaskkey);
+                                    }
+                                }
+                                else if (CLI.Detail.Contains(imagemaskkey) && ((CLI.Date - FirstSeen).TotalMinutes <= 20 || CLI.Func.StartsWith("CleanUpExpired")))
+                                {
+                                    fnd++;
+                                    if (!found.Contains(CLI))
+                                        found.Add(CLI);
+                                }
+                                else if (CLI.Detail.Contains(matchedmaskkey) && ((CLI.Date - FirstSeen).TotalMinutes <= 20 || CLI.Func.StartsWith("CleanUpExpired")))
+                                {
+                                    fnd++;
+                                    if (!found.Contains(CLI))
+                                        found.Add(CLI);
+                                }
+                                else if (string.Equals(CLI.Image, justfile, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    fnd++;
+                                    if (!found.Contains(CLI))
+                                        found.Add(CLI);
+                                }
+                            }
+
+                            Log($"Debug: ...Found {fnd} new matches for a total of {found.Count} in {fi.Name}...");
+                        }
+                    }
+                    else
+                    {
+                        Log($"Error: Could not parse date '{date}' in filename, Hist.Date='{hist.Date.ToString("yyyy-MM-dd")}': " + fi.FullName);
+                    }
+
+                }
+
+                Log($"Found {found.Count} total matched lines for image '{justfile}'.");
+
+                if (found.Count > 0)
+                {
+                    toolStripButtonPauseLog.Checked = true; //pause
+                    LogMan.Clear();
+                    LogMan.AddRange(found);
+                    String search = justfile;
+                    if (!string.IsNullOrEmpty(imagemaskkey))
+                        search += "|" + imagemaskkey;
+                    if (!string.IsNullOrEmpty(matchedmaskkey))
+                        search += "|" + matchedmaskkey;
+                    tabControl1.SelectedTab = tabLog;
+                    ToolStripComboBoxSearch.Text = search;  //this should trigger textchanged and filer in a second.
+                }
+                else
+                {
+                    MessageBox.Show($"Could not find matching log entries for '{justfile}'?  You may need to enable DEBUG logging mode.");
+                }
+
+                ret = true;
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+
+            return ret;
+        }
+
         private void folv_log_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            FormatLogRow(sender, e);
+            if (e.Model != null)
+                FormatLogRow(sender, e);
         }
         private void FormatLogRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            //try
-            //{
-            //    ClsLogItm li = (ClsLogItm)e.Model;
-                
-            //    // If SPI IsNot Nothing Then
-            //    if (li.Level == LogLevel.Error)
-            //    {
-            //        e.Item.ForeColor = Color.Black;
-            //        e.Item.BackColor = Color.Red;
-            //    }
-            //    else if ()
-            //        e.Item.ForeColor = AppSettings.Settings.RectMaskedColor;
-            //    else if (OP.Result == ResultType.Error)
-            //    {
-            //    }
-            //    else
-            //        e.Item.ForeColor = AppSettings.Settings.RectIrrelevantColor;
-            //}
+            try
+            {
+                ClsLogItm li = (ClsLogItm)e.Model;
+
+                // If SPI IsNot Nothing Then
+                if (li.FromFile)
+                {
+                    e.Item.BackColor = Color.Black;
+                }
+            }
 
 
 
-            //catch (Exception ex)
-            //{
-            //}
-            //finally
-            //{
-            //}
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+            }
         }
 
         private void folv_log_FormatCell(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
         {
-            FormatCellLog(sender, e);
+            if (e.Model != null)
+                FormatCellLog(sender, e);
         }
 
         private void FormatCellLog(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
@@ -3758,6 +3906,81 @@ namespace AITool
         private void clearRecentErrorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LogMan.ErrorCount.WriteFullFence(0);
+        }
+
+        private async void locateInLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            {
+                History hist = (History)folv_history.SelectedObjects[0];
+                await FilterHistItem(hist);
+
+            }
+        }
+
+        private void toolStripButtonPauseLog_Click(object sender, EventArgs e)
+        {
+            StartPauseLog();
+        }
+
+        private void StartPauseLog()
+        {
+            if (!toolStripButtonPauseLog.Checked)
+            {
+                LogUpdateListTimer.Enabled = true;
+                LogUpdateListTimer.Start();
+                Log("Started auto log refresh");
+            }
+            else
+            {
+                LogUpdateListTimer.Stop();
+                LogUpdateListTimer.Enabled = false;
+                Log("Stopped auto log refresh");
+            }
+        }
+
+        private async void toolStripButtonReload_ClickAsync(object sender, EventArgs e)
+        {
+            using var cw = new Global_GUI.CursorWait();
+            LogMan.Clear();
+            folv_log.ClearObjects();
+            folv_log.ModelFilter = null;
+            await LogMan.LoadLogFile(LogMan.GetCurrentLogFileName(), true, false);
+            Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {LogMan.GetCurrentLogFileName()}.");
+            this.UpdateLogAddedRemoved(true);
+            toolStripButtonPauseLog.Checked = false;
+        }
+
+        private void toolStripComboBoxFiles_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripComboBoxFiles_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void LoadLogFilesCombo()
+        {
+
+            try
+            {
+
+                Global.GetFiles(Path.GetDirectoryName(AppSettings.Settings.LogFileName), "*.zip");
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+
+        }
+
+        private void ToolStripComboBoxSearch_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

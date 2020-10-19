@@ -14,6 +14,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -53,7 +54,7 @@ namespace AITool
 
                 // If we have not already determined whether or not the application
                 // is running as a service...
-                if (! _isService.HasValue)
+                if (!_isService.HasValue)
                 {
 
                     // Get details of the host assembly.
@@ -85,7 +86,7 @@ namespace AITool
                     return true;
                 }
             }
-            catch {}
+            catch { }
             return false;
         }
 
@@ -368,7 +369,7 @@ namespace AITool
                 return;
             }
 
-            ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName,CurVal,MaxVal);
+            ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName, CurVal, MaxVal);
 
             progress.Report(msg);
 
@@ -442,7 +443,7 @@ namespace AITool
             //this is for logging in non-gui classes.  Reports back to real logger
             //progress needs to be subscribed to in main gui
             string mn = "";
-            if (memberName !=null && !string.IsNullOrEmpty(memberName))
+            if (memberName != null && !string.IsNullOrEmpty(memberName))
             {
                 mn = $"{memberName}>> ";
             }
@@ -461,72 +462,72 @@ namespace AITool
         //public static extern int RtlNtStatusToDosError(int status);
 
         /// <summary>
-    /// Flags used by <see cref="WinError.FormatMessage"/> method.
-    /// </summary>
-    [Flags]
-    public enum FormatMessageFlags:uint
-    {
-        /// <summary>
-        /// The function allocates a buffer large enough to hold the formatted message, and places a pointer to the
-        /// allocated buffer at the address specified by <c>lpBuffer</c>. The <c>lpBuffer</c> parameter is a pointer
-        /// to an <c>LPTSTR</c>. The <c>nSize</c> parameter specifies the minimum number of <c>TCHARs</c> to allocate
-        /// for an output message buffer. The caller should use the <c>LocalFree</c> function to free the buffer when
-        /// it is no longer needed.
-        /// If the length of the formatted message exceeds 128K bytes, then <c>FormatMessage</c> will fail and a
-        /// subsequent call to <c>GetLastError</c> will return <c>ERROR_MORE_DATA</c>.
-        /// This value is not available for use when compiling Windows Store apps.
+        /// Flags used by <see cref="WinError.FormatMessage"/> method.
         /// </summary>
-        FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100,
+        [Flags]
+        public enum FormatMessageFlags : uint
+        {
+            /// <summary>
+            /// The function allocates a buffer large enough to hold the formatted message, and places a pointer to the
+            /// allocated buffer at the address specified by <c>lpBuffer</c>. The <c>lpBuffer</c> parameter is a pointer
+            /// to an <c>LPTSTR</c>. The <c>nSize</c> parameter specifies the minimum number of <c>TCHARs</c> to allocate
+            /// for an output message buffer. The caller should use the <c>LocalFree</c> function to free the buffer when
+            /// it is no longer needed.
+            /// If the length of the formatted message exceeds 128K bytes, then <c>FormatMessage</c> will fail and a
+            /// subsequent call to <c>GetLastError</c> will return <c>ERROR_MORE_DATA</c>.
+            /// This value is not available for use when compiling Windows Store apps.
+            /// </summary>
+            FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100,
 
-        /// <summary>
-        /// Insert sequences in the message definition are to be ignored and passed through to the output buffer
-        /// unchanged. This flag is useful for fetching a message for later formatting. If this flag is set, the
-        /// <c>Arguments</c> parameter is ignored.
-        /// </summary>
-        FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200,
+            /// <summary>
+            /// Insert sequences in the message definition are to be ignored and passed through to the output buffer
+            /// unchanged. This flag is useful for fetching a message for later formatting. If this flag is set, the
+            /// <c>Arguments</c> parameter is ignored.
+            /// </summary>
+            FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200,
 
-        /// <summary>
-        /// The <c>lpSource</c> parameter is a pointer to a null-terminated string that contains a message definition.
-        /// The message definition may contain insert sequences, just as the message text in a message table resource
-        /// may. This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/> or
-        /// <see cref="FORMAT_MESSAGE_FROM_SYSTEM"/>.
-        /// </summary>
-        FORMAT_MESSAGE_FROM_STRING = 0x00000400,
+            /// <summary>
+            /// The <c>lpSource</c> parameter is a pointer to a null-terminated string that contains a message definition.
+            /// The message definition may contain insert sequences, just as the message text in a message table resource
+            /// may. This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/> or
+            /// <see cref="FORMAT_MESSAGE_FROM_SYSTEM"/>.
+            /// </summary>
+            FORMAT_MESSAGE_FROM_STRING = 0x00000400,
 
-        /// <summary>
-        /// The <c>lpSource</c> parameter is a module handle containing the message-table resource(s) to search. If
-        /// this <c>lpSource</c> handle is <c>null</c>, the current process's application image file will be searched.
-        /// This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
-        /// If the module has no message table resource, the function fails with <c>ERROR_RESOURCE_TYPE_NOT_FOUND</c>.
-        /// </summary>
-        FORMAT_MESSAGE_FROM_HMODULE = 0x00000800,
+            /// <summary>
+            /// The <c>lpSource</c> parameter is a module handle containing the message-table resource(s) to search. If
+            /// this <c>lpSource</c> handle is <c>null</c>, the current process's application image file will be searched.
+            /// This flag cannot be used with <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
+            /// If the module has no message table resource, the function fails with <c>ERROR_RESOURCE_TYPE_NOT_FOUND</c>.
+            /// </summary>
+            FORMAT_MESSAGE_FROM_HMODULE = 0x00000800,
 
-        /// <summary>
-        /// The function should search the system message-table resource(s) for the requested message. If this flag is
-        /// specified with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/>, the function searches the system message table
-        /// if the message is not found in the module specified by <c>lpSource</c>. This flag cannot be used with
-        /// <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
-        /// If this flag is specified, an application can pass the result of the <c>GetLastError</c> function to
-        /// retrieve the message text for a system-defined error.
-        /// </summary>
-        FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000,
+            /// <summary>
+            /// The function should search the system message-table resource(s) for the requested message. If this flag is
+            /// specified with <see cref="FORMAT_MESSAGE_FROM_HMODULE"/>, the function searches the system message table
+            /// if the message is not found in the module specified by <c>lpSource</c>. This flag cannot be used with
+            /// <see cref="FORMAT_MESSAGE_FROM_STRING"/>.
+            /// If this flag is specified, an application can pass the result of the <c>GetLastError</c> function to
+            /// retrieve the message text for a system-defined error.
+            /// </summary>
+            FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000,
 
-        /// <summary>
-        /// The Arguments parameter is not a <c>va_list</c> structure, but is a pointer to an array of values that
-        /// represent the arguments. This flag cannot be used with 64-bit integer values. If you are using a 64-bit
-        /// integer, you must use the <c>va_list</c> structure.
-        /// </summary>
-        FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000
-    }
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            /// <summary>
+            /// The Arguments parameter is not a <c>va_list</c> structure, but is a pointer to an array of values that
+            /// represent the arguments. This flag cannot be used with 64-bit integer values. If you are using a 64-bit
+            /// integer, you must use the <c>va_list</c> structure.
+            /// </summary>
+            FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000
+        }
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern uint FormatMessage(
-            FormatMessageFlags dwFlags,
-            IntPtr lpSource,
-            uint dwMessageId,
-            uint dwLanguageId,
-            StringBuilder lpBuffer,
-            uint nSize,
-            IntPtr arguments);
+                FormatMessageFlags dwFlags,
+                IntPtr lpSource,
+                uint dwMessageId,
+                uint dwLanguageId,
+                StringBuilder lpBuffer,
+                uint nSize,
+                IntPtr arguments);
         //[DllImport("Kernel32.dll", SetLastError = true)]
         //static extern uint FormatMessage(uint dwFlags, IntPtr lpSource, uint dwMessageId, uint dwLanguageId, ref IntPtr lpBuffer, uint nSize, IntPtr pArguments);
         //[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
@@ -534,8 +535,8 @@ namespace AITool
         public static string FormatMessageFromHRESULT(int errorcode)
         {
             const int nCapacity = 1024; // max error length
-            //const uint FORMAT_MSG_FROM_SYS = 0x01000;
-            
+                                        //const uint FORMAT_MSG_FROM_SYS = 0x01000;
+
             //const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100;
             //const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
             //const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
@@ -575,7 +576,7 @@ namespace AITool
             //{
             //    sRet = Marshal.PtrToStringAnsi(lpMsgBuf).TrimEnd(' ', '.', '\r', '\n');
             //}
-                    
+
             //string sDefMsg = defSb.ToString().TrimEnd(' ', '.', '\r', '\n');
             ////nothing left to do:
             //return sDefMsg;
@@ -589,10 +590,10 @@ namespace AITool
         public static async Task<bool> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             //run the function in another thread
-            return await Task.Run(() => WaitForFileAccess(filename,rights,share,WaitMS,RetryDelayMS));
+            return await Task.Run(() => WaitForFileAccess(filename, rights, share, WaitMS, RetryDelayMS));
         }
 
-        public static async Task<bool> WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public static bool WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             bool Success = false;
             try
@@ -642,7 +643,8 @@ namespace AITool
 
                         }
 
-                        await Task.Delay(RetryDelayMS);
+                        Thread.Sleep(RetryDelayMS);
+                        //await Task.Delay(RetryDelayMS);
                     }
                     SW.Stop();
 
@@ -668,7 +670,7 @@ namespace AITool
 
         }
 
-        
+
 
         public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true)
         {
@@ -890,7 +892,7 @@ namespace AITool
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
 
-                Ret = JsonConvert.SerializeObject(objectToWrite,Formatting.Indented,jset);
+                Ret = JsonConvert.SerializeObject(objectToWrite, Formatting.Indented, jset);
                 if (jset.Error == null)
                 {
 
@@ -940,7 +942,7 @@ namespace AITool
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
 
-                Ret = JsonConvert.DeserializeObject<T>(fileContents,jset);
+                Ret = JsonConvert.DeserializeObject<T>(fileContents, jset);
             }
             catch (Exception ex)
             {
@@ -1181,11 +1183,18 @@ namespace AITool
             DateFormatList.Add(new ClsDateFormat { Fmt = "d-MMM-yyyy HH:mm:ss.fff" });
 
         }
-        public static bool GetDateStrict(string InpDate, ref DateTime OutDate)
+        public static bool GetDateStrict(string InpDate, ref DateTime OutDate, string format = "")
         {
             bool Ret = false;
             try
             {
+                if (!string.IsNullOrEmpty(format))
+                {
+                    Ret = DateTime.TryParseExact(InpDate, format, null, System.Globalization.DateTimeStyles.None, out OutDate); //New CultureInfo("en-US")
+                    if (Ret)
+                        return Ret;
+                }
+
                 if (DateFormatList.Count == 0)
                 {
                     CreateFormatList();
@@ -1267,7 +1276,7 @@ namespace AITool
 
         public static bool ProcessValid(ClsProcess prc)
         {
-            
+
             if (prc != null && prc.process != null)
             {
                 try
@@ -1276,11 +1285,11 @@ namespace AITool
                     {
                         //if (!string.IsNullOrEmpty(prc.CommandLine) || !string.IsNullOrEmpty(prc.process.StartInfo.Arguments))
                         //{
-                            return true;
+                        return true;
                         //}
                     }
                 }
-                catch {}
+                catch { }
             }
             return false;
         }
@@ -1360,7 +1369,7 @@ namespace AITool
                 string pname = Path.GetFileNameWithoutExtension(processname);
 
                 Process[] aProc = Process.GetProcessesByName(pname);
-                
+
                 ProcessDetail PD = null;
 
                 if (aProc.Length > 0)
@@ -1386,7 +1395,7 @@ namespace AITool
                             //    Ret.CommandLine = PD.CommandLine;  //.Replace((char)34,"");
                             //}
                         }
-                        catch 
+                        catch
                         {
                             Ret = null;
                         }
@@ -1411,7 +1420,7 @@ namespace AITool
 
                 }
             }
-            catch 
+            catch
             {
                 Ret = null;
             }
@@ -1530,9 +1539,9 @@ namespace AITool
 
         public static string GetWMIPropertyFromProcess(Int32 PID, string PropName)
         {
-            
+
             // THIS IS SLOW AS FUCK
-            
+
             // .net PROCESS object cannot seem to get the command line from processes that we did not start
             // resort to using WMI
             //https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process
@@ -1626,9 +1635,9 @@ namespace AITool
             }
         }
 
-            
 
-       
+
+
 
         public static string GetXValue(XElement XE, string Name, string AttributeName = "")
         {
@@ -1837,7 +1846,7 @@ namespace AITool
         // Flags used for opening a file handle (e.g. in a call to CreateFile), that determine the
         // requested permission level.
         [Flags]
-        public enum FileAccessFlags:uint
+        public enum FileAccessFlags : uint
         {
             GENERIC_WRITE = 0x40000000,
             GENERIC_READ = 0x80000000
@@ -1845,7 +1854,7 @@ namespace AITool
 
         // Value used for CreateFile to determine how to behave in the presence (or absence) of a
         // file with the requested name.  Used only for CreateFile.
-        public enum FileCreationDisposition:uint
+        public enum FileCreationDisposition : uint
         {
             CREATE_NEW = 1,
             CREATE_ALWAYS = 2,
@@ -1857,7 +1866,7 @@ namespace AITool
         // Flags that determine what level of sharing this application requests on the target file.
         // Used only for CreateFile.
         [Flags]
-        public enum FileShareFlags:uint
+        public enum FileShareFlags : uint
         {
             EXCLUSIVE_ACCESS = 0x0,
             SHARE_READ = 0x1,
@@ -1868,7 +1877,7 @@ namespace AITool
         // Flags that control caching and other behavior of the underlying file object.  Used only for
         // CreateFile.
         [Flags]
-        public enum FileFlagsAndAttributes:uint
+        public enum FileFlagsAndAttributes : uint
         {
             NORMAL = 0x80,
             OPEN_REPARSE_POINT = 0x200000,
@@ -1881,7 +1890,7 @@ namespace AITool
         // The target architecture of a given executable image.  The various values correspond to the
         // magic numbers defined by the PE Executable Image File Format.
         // http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
-        public enum MachineType:ushort
+        public enum MachineType : ushort
         {
             UNKNOWN = 0x0,
             X64 = 0x8664,
@@ -1891,7 +1900,7 @@ namespace AITool
 
         // A flag indicating the format of the path string that Windows returns from a call to
         // QueryFullProcessImageName().
-        public enum ProcessQueryImageNameMode:uint
+        public enum ProcessQueryImageNameMode : uint
         {
             WIN32_FORMAT = 0,
             NATIVE_SYSTEM_FORMAT = 1
@@ -1900,7 +1909,7 @@ namespace AITool
         // Flags indicating the level of permission requested when opening a handle to an external
         // process.  Used by OpenProcess().
         [Flags]
-        public enum ProcessAccessFlags:uint
+        public enum ProcessAccessFlags : uint
         {
             NONE = 0x0,
             ALL = 0x001F0FFF,
@@ -1911,20 +1920,20 @@ namespace AITool
         }
 
         // Defines return value codes used by various Win32 System APIs.
-        public enum NTSTATUS:int
+        public enum NTSTATUS : int
         {
             SUCCESS = 0,
         }
 
         // Determines the amount of information requested (and hence the type of structure returned)
         // by a call to NtQueryInformationProcess.
-        public enum PROCESSINFOCLASS:int
+        public enum PROCESSINFOCLASS : int
         {
             PROCESS_BASIC_INFORMATION = 0
         };
 
         [Flags]
-        public enum SHGFI:uint
+        public enum SHGFI : uint
         {
             Icon = 0x000000100,
             DisplayName = 0x000000200,
@@ -2102,9 +2111,9 @@ namespace AITool
                                                   uint cbFileInfo,
                                                   uint uFlags);
     }
-    internal class ProcessDetail:IDisposable
+    internal class ProcessDetail : IDisposable
     {
-       
+
 
         public ProcessDetail(int pid)
         {
@@ -2456,7 +2465,7 @@ namespace AITool
 
                 if (this.sampleAccumulator > 0)  //divide by 0?
                     this.Average = this.sampleAccumulator / samples.Count;
-                
+
                 if (this.Min == 0)
                 {
                     this.Min = newSample;

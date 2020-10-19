@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -106,7 +107,7 @@ namespace AITool
             float percentageIntersect = AITOOL.getObjIntersectPercent(this.ObjRectangle, other.ObjRectangle);
 
             if (percentageIntersect > 0)
-                Log("Debug: Percentage Intersection of object: " + percentageIntersect + "%");
+                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}","",other.CameraName);
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
 
@@ -141,7 +142,7 @@ namespace AITool
 
         public override string ToString()
         {
-            string value = "key=" + getKey() + ", name=" + Label + ", xmin=" + Xmin + ", ymin=" + Ymin + ", xmax=" + Xmax + ", ymax=" + Ymax + ", counter=" + Counter + ", camera=" + CameraName + ", create date: " + CreateDate + ", imagePath: " + ImagePath ;
+            string value = $"key={getKey()}, name={Label}, xmin={Xmin}, ymin={Ymin}, xmax={Xmax}, ymax={Ymax}, IsStatic={this.IsStatic}, counter={Counter}, camera={CameraName}, create date: {CreateDate}, imageName: {Path.GetFileName(ImagePath)}";
 
             return value;
         }

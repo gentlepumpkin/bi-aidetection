@@ -159,7 +159,7 @@ namespace AITool
                                 if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
                                 {
                                     this.Result = ResultType.Error;
-                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name);
+                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name, _curimg.image_path);
                                 }
 
                             }
@@ -177,21 +177,21 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name);
+                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, _curimg.image_path);
                         this.Result = ResultType.Error;
                     }
 
                 }
                 else
                 {
-                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name);
+                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, _curimg.image_path);
                     this.Result = ResultType.CameraNotEnabled;
                 }
 
             }
             catch (Exception ex)
             {
-                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name);
+                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name, _curimg.image_path);
                 this.Result = ResultType.Error;
             }
 

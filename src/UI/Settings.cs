@@ -62,7 +62,7 @@ namespace AITool
             public int retry_delay = 10;
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
-            public long MaxLogFileSize = ((1024 * 2024) * 5);  //5mb in bytes
+            public long MaxLogFileSize = ((1024 * 1024) * 10);  //10mb in bytes
             public int MaxImageQueueSize = 100;
             public int MaxActionQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
@@ -98,7 +98,7 @@ namespace AITool
             public bool Autoscroll_log = false;
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;
-            public int MaxGUILogItems = 5000;
+            public int MaxGUILogItems = 3000; //makes to slow to work with if too high
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
             public int TimeBetweenListRefreshsMS = 5000;
@@ -225,8 +225,8 @@ namespace AITool
                     if (fi.Length > 800)
                     {
                         //try to prevent multiple threads from erroring out writing the json file...
-                        Task<bool> Success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.ReadWrite, 5000);
-                        if (Success.Result)
+                        bool Success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.ReadWrite, 5000);
+                        if (Success)
                         {
                             //check its contents, 0 bytes indicate corruption
                             string contents = File.ReadAllText(Filename);
@@ -351,7 +351,7 @@ namespace AITool
                     else if (IsFileValid(AppSettings.Settings.SettingsFileName))
                     {
                         //Load regular settings file
-                        Log("Loading settings from " + AppSettings.Settings.SettingsFileName);
+                        Log("Debug: Loading settings from " + AppSettings.Settings.SettingsFileName);
                         Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
                     }
                     else if (IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))

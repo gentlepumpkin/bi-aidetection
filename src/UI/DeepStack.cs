@@ -313,8 +313,8 @@ namespace AITool
                 InitProc.StartInfo.RedirectStandardOutput = true;
                 InitProc.StartInfo.RedirectStandardError = true;
                 InitProc.EnableRaisingEvents = true;
-                InitProc.OutputDataReceived += this.handleinitprocmsg;
-                InitProc.ErrorDataReceived += this.handleinitprocerror;
+                InitProc.OutputDataReceived += this.DSHandleInitProcMSG;
+                InitProc.ErrorDataReceived += this.DSHandleInitProcERROR;
                 InitProc.Exited += (sender, e) => myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
                 Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
                 InitProc.Start();
@@ -331,8 +331,8 @@ namespace AITool
                 this.RedisProc.process.StartInfo.RedirectStandardOutput = true;
                 this.RedisProc.process.StartInfo.RedirectStandardError = true;
                 this.RedisProc.process.EnableRaisingEvents = true;
-                this.RedisProc.process.OutputDataReceived += this.handleredisprocmsg;
-                this.RedisProc.process.ErrorDataReceived += this.handleredisprocerror;
+                this.RedisProc.process.OutputDataReceived += this.DSHandleRedisProcMSG;
+                this.RedisProc.process.ErrorDataReceived += this.DSHandleRedisProcERROR;
                 this.RedisProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
                 this.RedisProc.FileName = this.RedisEXE;
                 this.RedisProc.CommandLine = this.RedisEXE;
@@ -356,8 +356,8 @@ namespace AITool
                 this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
                 this.ServerProc.process.StartInfo.RedirectStandardError = true;
                 this.ServerProc.process.EnableRaisingEvents = true;
-                this.ServerProc.process.OutputDataReceived += this.handleserverprocmsg;
-                this.ServerProc.process.ErrorDataReceived += this.handleserverprocerror;
+                this.ServerProc.process.OutputDataReceived += this.DSHandleServerProcMSG;
+                this.ServerProc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
                 this.ServerProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
                 this.ServerProc.FileName = this.ServerEXE;
                 this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
@@ -381,8 +381,8 @@ namespace AITool
                 this.PythonProc.process.EnableRaisingEvents = true;
                 this.PythonProc.process.StartInfo.RedirectStandardOutput = true;
                 this.PythonProc.process.StartInfo.RedirectStandardError = true;
-                this.PythonProc.process.OutputDataReceived += this.handlepythonprocmsg;
-                this.PythonProc.process.ErrorDataReceived += this.handlepythonprocerror;
+                this.PythonProc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
+                this.PythonProc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
                 this.PythonProc.process.Exited += (sender, e) => myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
                 this.PythonProc.FileName = this.PythonEXE;
                 this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
@@ -505,7 +505,7 @@ namespace AITool
 
 
 
-        private void handleredisprocerror(object sender, DataReceivedEventArgs line)
+        private void DSHandleRedisProcERROR(object sender, DataReceivedEventArgs line)
         {
 
             try
@@ -524,7 +524,7 @@ namespace AITool
                 throw;
             }
         }
-        private void handleredisprocmsg(object sender, DataReceivedEventArgs line)
+        private void DSHandleRedisProcMSG(object sender, DataReceivedEventArgs line)
         {
             try
             {
@@ -543,7 +543,7 @@ namespace AITool
             }
         }
 
-        private void handleinitprocerror(object sender, DataReceivedEventArgs line)
+        private void DSHandleInitProcERROR(object sender, DataReceivedEventArgs line)
         {
 
             try
@@ -562,7 +562,7 @@ namespace AITool
                 throw;
             }
         }
-        private void handleinitprocmsg(object sender, DataReceivedEventArgs line)
+        private void DSHandleInitProcMSG(object sender, DataReceivedEventArgs line)
         {
             try
             {
@@ -581,7 +581,7 @@ namespace AITool
             }
         }
 
-        private void handlepythonprocerror(object sender, DataReceivedEventArgs line)
+        private void DSHandlePythonProcERROR(object sender, DataReceivedEventArgs line)
         {
 
             try
@@ -600,7 +600,7 @@ namespace AITool
                 throw;
             }
         }
-        private void handlepythonprocmsg(object sender, DataReceivedEventArgs line)
+        private void DSHandlePythonProcMSG(object sender, DataReceivedEventArgs line)
         {
             try
             {
@@ -619,7 +619,7 @@ namespace AITool
             }
         }
 
-        private void handleserverprocerror(object sender, DataReceivedEventArgs line)
+        private void DSHandleServerProcERROR(object sender, DataReceivedEventArgs line)
         {
             
             try
@@ -638,7 +638,7 @@ namespace AITool
                 throw;
             }
         }
-        private void handleserverprocmsg(object sender, DataReceivedEventArgs line)
+        private void DSHandleServerProcMSG(object sender, DataReceivedEventArgs line)
         {
             try
             {
@@ -648,16 +648,16 @@ namespace AITool
                 }
 
                 //Console.WriteLine(Message);
-                if (line.Data.ToLower().Contains("visit localhost to activate deepstack"))
+                if (line.Data.IndexOf("visit localhost to activate deepstack", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     this.IsActivated = false;
                 }
-                else if (line.Data.ToLower().Contains("deepstack is active"))
+                else if (line.Data.IndexOf("deepstack is active", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     this.IsActivated = true;
                 }
 
-                if (line.Data.ToLower().Contains("vision/detection"))
+                if (line.Data.IndexOf("vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     this.VisionDetectionRunning = true;
                 }

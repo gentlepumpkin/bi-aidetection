@@ -36,9 +36,9 @@ namespace AITool
     //Trace 	For trace debugging; begin method X, end method X
 
 
-    public class ClsLogItm
+    public class ClsLogItm : IEquatable<ClsLogItm>
     {
-        public ClsLogItm(LogLevel level, DateTime time, string source, string func, string aiserver, string camera, string detail, int idx, int depth, string color, int threadid)
+        public ClsLogItm(LogLevel level, DateTime time, string source, string func, string aiserver, string camera, string image, string detail, int idx, int depth, string color, int threadid)
         {
             // "Date|Level|Source|Func|AIServer|Camera|Detail|Idx|Depth|Color|threadid"
             this.Level = level;
@@ -47,6 +47,7 @@ namespace AITool
             this.Func = func;
             this.AIServer = aiserver;
             this.Camera = camera;
+            this.Image = image;
             this.Detail = detail;
             this.Idx = idx;
             this.Depth = depth;
@@ -64,39 +65,76 @@ namespace AITool
 
             if (LogEntry.StartsWith("["))  //old log format, ignore
                 return;
+
             List<string> splt = Global.Split(LogEntry,"|",false,false);
-            // "Date|Level|Source|Func|AIServer|Camera|Detail|Idx|Depth|Color|ThreadID"
-            //  0    1     2      3    4        5      6      7   8     9     10
+            // "Date|Level|Source|Func|AIServer|Camera|Image|Detail|Idx|Depth|Color|ThreadID"
+            //  0    1     2      3    4        5      6     7      8   9     10    11
 
-            if (splt.Count != 11)
-                return;
-
-            try
+            if (splt.Count == 12)
             {
-                DateTime tdate = DateTime.MinValue;
-                if (DateTime.TryParse(splt[0], out tdate))
-                    this.Date = tdate;
+                try
+                {
+                    DateTime tdate = DateTime.MinValue;
+                    if (DateTime.TryParse(splt[0], out tdate))
+                        this.Date = tdate;
 
-                if (splt[1].ToLower() == "level")  //this must be a NEW header written part way down the file?
+                    if (splt[1].ToLower() == "level")  //this must be a NEW header written part way down the file?
+                        return;
+
+                    this.Level = LogLevel.FromString(splt[1]);
+                    this.Source = splt[2];
+                    this.Func = splt[3];
+                    this.AIServer = splt[4];
+                    this.Camera = splt[5];
+                    this.Image = splt[6];
+                    this.Detail = splt[7];
+                    this.Idx = Convert.ToInt32(splt[8]);
+                    this.Depth = Convert.ToInt32(splt[9]);
+                    this.Color = splt[10];
+                    this.ThreadID = Convert.ToInt32(splt[11]);
+
+                }
+                catch
+                {
+                    this.Level = LogLevel.Off;
                     return;
-
-                this.Level = LogLevel.FromString(splt[1]);
-                this.Source = splt[2];
-                this.Func = splt[3];
-                this.AIServer = splt[4];
-                this.Camera = splt[5];
-                this.Detail = splt[6];
-                this.Idx = Convert.ToInt32(splt[7]);
-                this.Depth = Convert.ToInt32(splt[8]);
-                this.Color = splt[9];
-                this.ThreadID = Convert.ToInt32(splt[10]);
+                }
 
             }
-            catch
+            else if (splt.Count == 11)
             {
-                this.Level = LogLevel.Off;
-                return;
+                try
+                {
+                    DateTime tdate = DateTime.MinValue;
+                    if (DateTime.TryParse(splt[0], out tdate))
+                        this.Date = tdate;
+
+                    if (splt[1].ToLower() == "level")  //this must be a NEW header written part way down the file?
+                        return;
+                    this.Level = LogLevel.FromString(splt[1]);
+                    this.Source = splt[2];
+                    this.Func = splt[3];
+                    this.AIServer = splt[4];
+                    this.Camera = splt[5];
+                    this.Detail = splt[6];
+                    this.Idx = Convert.ToInt32(splt[7]);
+                    this.Depth = Convert.ToInt32(splt[8]);
+                    this.Color = splt[9];
+                    this.ThreadID = Convert.ToInt32(splt[10]);
+
+                }
+                catch
+                {
+                    this.Level = LogLevel.Off;
+                    return;
+                }
+
             }
+            else
+            {
+                return;
+            }    
+
         }
 
         public DateTime Date { get; set; } = DateTime.MinValue;
@@ -106,18 +144,20 @@ namespace AITool
         public string Source { get; set; } = "";
         public string AIServer { get; set; } = "";
         public string Camera { get; set; } = "";
+        public string Image { get; set; } = "";
         public int Idx { get; set; } = 0;
         public int Depth { get; set; } = 0;
         public string Color { get; set; } = "";
         public int ThreadID { get; set; } = 0;
         public bool FromFile { get; set; } = false;
+        public string Filename { get; set; } = "";
         //public bool Displayed = false;
         public override string ToString()
         {
             //This is mainly meant for log output
             // "Date|Level|Source|Func|AIServer|Camera|Detail|Idx|Depth|Color"
 
-            string str = $"{this.Date.ToString("yyyy-MM-dd HH:mm:ss.ffffff")}|{this.Level.ToString()}|{this.Source}|{this.Func}|{this.AIServer}|{this.Camera}|{this.Detail}|{this.Idx}|{this.Depth}|{this.Color}|{this.ThreadID}";
+            string str = $"{this.Date.ToString("yyyy-MM-dd HH:mm:ss.ffffff")}|{this.Level.ToString()}|{this.Source}|{this.Func}|{this.AIServer}|{this.Camera}|{this.Image}|{this.Detail}|{this.Idx}|{this.Depth}|{this.Color}|{this.ThreadID}";
             return str;
         }
         public string ToDetailString()
@@ -126,6 +166,29 @@ namespace AITool
             string str = this.Level.ToString().ToUpper() + "> " + this.Detail.Trim();
             //Displayed = true;
             return str;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ClsLogItm);
+        }
+
+        public bool Equals(ClsLogItm other)
+        {
+            return other != null &&
+                   Date == other.Date &&
+                   Idx == other.Idx &&
+                   ThreadID == other.ThreadID;
+        }
+
+        public static bool operator ==(ClsLogItm left, ClsLogItm right)
+        {
+            return EqualityComparer<ClsLogItm>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ClsLogItm left, ClsLogItm right)
+        {
+            return !(left == right);
         }
     }
 }

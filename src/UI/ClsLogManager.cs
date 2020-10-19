@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
@@ -19,15 +20,18 @@ namespace AITool
 {
 
     //this is for UI logging only, not file logging directly
-    public class ClsLogManager:IDisposable
+    public class ClsLogManager : IDisposable
     {
+        public bool Enabled { get; set; } = true;
         public List<ClsLogItm> Values { get; set; } = new List<ClsLogItm>();
-        public ConcurrentBag<ClsLogItm> RecentlyAdded { get; set; } = new ConcurrentBag<ClsLogItm>();
-        public ConcurrentBag<ClsLogItm> RecentlyDeleted { get; set; } = new ConcurrentBag<ClsLogItm>();
+        public ConcurrentQueue<ClsLogItm> RecentlyAdded { get; set; } = new ConcurrentQueue<ClsLogItm>();
+        public ConcurrentQueue<ClsLogItm> RecentlyDeleted { get; set; } = new ConcurrentQueue<ClsLogItm>();
         public ThreadSafe.Integer ErrorCount { get; set; } = new ThreadSafe.Integer(0);
         public ClsLogItm LastLogItm = new ClsLogItm();
         public int MaxGUILogItems { get; set; } = 10000;
-        private int _LastIDX = 0;
+        public long LastLoadTimeMS { get; set; } = 0;
+
+        private ThreadSafe.Integer _LastIDX { get; set; } = new ThreadSafe.Integer(0);
         private bool _Store;
         private ThreadSafe.Integer _CurDepth = new ThreadSafe.Integer(0);
         private object _LockObj = new object();
@@ -36,9 +40,10 @@ namespace AITool
         private string _Filename = "";
         private long _MaxSize = 0;
         private int _MaxAgeDays = 0;
-        private string _LastSource = "";
-        private string _LastCamera = "";
-        private string _LastAIServer = "";
+        private string _LastSource = "None";
+        private string _LastCamera = "None";
+        private string _LastAIServer = "None";
+        private string _LastImage = "None";
 
         private NLog.Logger NLogFileWriter = null;
         AsyncTargetWrapper NLogAsyncWrapper = null;
@@ -51,71 +56,133 @@ namespace AITool
             this.UpdateNLog(MinLevel, Filename, MaxSize, MaxAgeDays, MaxGUILogItems);
         }
 
+        public string GetCurrentLogFileName()
+        {
+            string fileName = null;
+
+            if (LogManager.Configuration != null && LogManager.Configuration.ConfiguredNamedTargets.Count != 0)
+            {
+                Target target = LogManager.Configuration.FindTargetByName("NLogAsyncWrapper");
+                if (target == null)
+                {
+                    throw new Exception("Could not find target named: " + "NLogAsyncWrapper");
+                }
+
+                FileTarget fileTarget = null;
+                WrapperTargetBase wrapperTarget = target as WrapperTargetBase;
+
+                // Unwrap the target if necessary.
+                if (wrapperTarget == null)
+                {
+                    fileTarget = target as FileTarget;
+                }
+                else
+                {
+                    fileTarget = wrapperTarget.WrappedTarget as FileTarget;
+                }
+
+                if (fileTarget == null)
+                {
+                    throw new Exception("Could not get a FileTarget from " + target.GetType());
+                }
+
+                var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
+                fileName = fileTarget.FileName.Render(logEventInfo);
+            }
+            else
+            {
+                throw new Exception("LogManager contains no Configuration or there are no named targets");
+            }
+
+            this._Filename = fileName; //refresh
+
+            return fileName;
+        }
+
         public async void UpdateNLog(LogLevel MinLevel, string Filename, long MaxSize, int MaxAgeDays, int MaxGUILogItems)
         {
 
-            this.MaxGUILogItems = MaxGUILogItems;
-
-            bool needsupdating = this.NLogFileWriter == null || this.NLogAsyncWrapper == null || MinLevel != this.MinLevel || Filename != this._Filename || MaxSize != this._MaxSize || MaxAgeDays != this._MaxAgeDays;
-
-            if (!needsupdating)
-                return;
-
-            if (this.NLogAsyncWrapper == null)
-                this.NLogAsyncWrapper = new AsyncTargetWrapper();
-
-            //if we change the logging level only, I dont want to re-initialize everything else...
-
-            bool onlylevel = this.NLogFileWriter != null && this.NLogAsyncWrapper != null && MinLevel != this.MinLevel && Filename == this._Filename && MaxSize == this._MaxSize && MaxAgeDays == this._MaxAgeDays;
-
-            if (onlylevel)
+            try
             {
-                this.MinLevel = MinLevel;
-                foreach (var rule in LogManager.Configuration.LoggingRules)
+                this.MaxGUILogItems = MaxGUILogItems;
+
+                bool needsupdating = this.NLogFileWriter == null || this.NLogAsyncWrapper == null || MinLevel != this.MinLevel || Filename != this._Filename || MaxSize != this._MaxSize || MaxAgeDays != this._MaxAgeDays;
+
+                if (!needsupdating)
+                    return;
+
+                //if we change the logging level only, I dont want to re-initialize everything else...
+
+                bool onlylevel = this.NLogFileWriter != null && this.NLogAsyncWrapper != null && MinLevel != this.MinLevel && Filename == this._Filename && MaxSize == this._MaxSize && MaxAgeDays == this._MaxAgeDays;
+
+                if (onlylevel)
                 {
-                    rule.EnableLoggingForLevel(this.MinLevel);
+                    this.MinLevel = MinLevel;
+                    foreach (var rule in LogManager.Configuration.LoggingRules)
+                    {
+                        rule.EnableLoggingForLevel(this.MinLevel);
+                    }
+
+                    //Call to update existing Loggers created with GetLogger() or 
+                    //GetCurrentClassLogger()
+                    LogManager.ReconfigExistingLoggers();
+
+                    this._Filename = GetCurrentLogFileName();
+
+                    return;
                 }
 
-                //Call to update existing Loggers created with GetLogger() or 
-                //GetCurrentClassLogger()
-                LogManager.ReconfigExistingLoggers();
-                return;
+                if (this.NLogAsyncWrapper == null)
+                    this.NLogAsyncWrapper = new AsyncTargetWrapper();
+
+                this.MinLevel = MinLevel;
+                this._MaxAgeDays = MaxAgeDays;
+                this._MaxSize = MaxSize;
+
+                // Targets where to log to: File and Console
+                var FileTarget = new NLog.Targets.FileTarget("logfile"); // { FileName = AppSettings.Settings.LogFileName };
+                string dir = Path.GetDirectoryName(Filename);
+                string justfile = Path.GetFileNameWithoutExtension(Filename);
+                //${basedir}/${shortdate}.log
+
+                FileTarget.FileName = dir + "\\" + justfile + ".[${shortdate}].log";
+
+                FileTarget.ArchiveAboveSize = MaxSize;
+                FileTarget.ArchiveEvery = NLog.Targets.FileArchivePeriod.Day;
+                FileTarget.MaxArchiveDays = MaxAgeDays;
+                FileTarget.ArchiveNumbering = NLog.Targets.ArchiveNumberingMode.DateAndSequence;
+                FileTarget.ArchiveOldFileOnStartup = false;
+                FileTarget.ArchiveDateFormat = "yyyy-MM-dd";
+                FileTarget.ArchiveFileName = dir + "\\" + justfile + ".[{#}].log.zip";
+
+
+                FileTarget.KeepFileOpen = false;
+                FileTarget.CreateDirs = true;
+                FileTarget.Header = "Date|Level|Source|Func|AIServer|Camera|Image|Detail|Idx|Depth|Color|ThreadID";
+                FileTarget.EnableArchiveFileCompression = true;
+                FileTarget.Layout = "${message}";  //nothing fancy we are doing it ourselves
+
+                this.NLogAsyncWrapper.WrappedTarget = FileTarget;
+                this.NLogAsyncWrapper.QueueLimit = 100;
+                this.NLogAsyncWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Discard;
+                this.NLogAsyncWrapper.Name = "NLogAsyncWrapper";
+
+                // Rules for mapping loggers to targets            
+                NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(this.NLogAsyncWrapper, this.MinLevel);
+                NLog.LogManager.AutoShutdown = true;
+
+                this.NLogFileWriter = NLog.LogManager.GetCurrentClassLogger();
+
+                GetCurrentLogFileName();
+
+                //load the current log file into memory
+                await this.LoadLogFile(this._Filename, true, true);
+
             }
-
-            this.MinLevel = MinLevel;
-            this._Filename = Filename;
-            this._MaxAgeDays = MaxAgeDays;
-            this._MaxSize = MaxSize;
-
-            // Targets where to log to: File and Console
-            var FileTarget = new NLog.Targets.FileTarget("logfile"); // { FileName = AppSettings.Settings.LogFileName };
-
-            FileTarget.FileName = Filename;
-            FileTarget.ArchiveAboveSize = MaxSize;
-            FileTarget.ArchiveEvery = NLog.Targets.FileArchivePeriod.Day;
-            FileTarget.MaxArchiveDays = MaxAgeDays;
-            FileTarget.ArchiveNumbering = NLog.Targets.ArchiveNumberingMode.Date;
-            FileTarget.ArchiveOldFileOnStartup = true;
-            FileTarget.KeepFileOpen = false;
-            FileTarget.CreateDirs = true;
-            FileTarget.Header = "Date|Level|Source|Func|AIServer|Camera|Detail|Idx|Depth|Color|ThreadID";
-            FileTarget.EnableArchiveFileCompression = true;
-            FileTarget.Layout = "${message}";  //nothing fancy we are doing it ourselves
-
-            this.NLogAsyncWrapper.WrappedTarget = FileTarget;
-            this.NLogAsyncWrapper.QueueLimit = 100;
-            this.NLogAsyncWrapper.OverflowAction = AsyncTargetWrapperOverflowAction.Discard;
-            this.NLogAsyncWrapper.Name = "NLogAsyncWrapper";
-            
-            // Rules for mapping loggers to targets            
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(this.NLogAsyncWrapper, this.MinLevel);
-            NLog.LogManager.AutoShutdown = true;
-
-            this.NLogFileWriter = NLog.LogManager.GetCurrentClassLogger();
-
-            //load the current log file if it exists...
-            //if (this.Values.Count == 0)
-            //    await this.LoadLogFile(Filename, true);
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + Global.ExMsg(ex));
+            }
 
         }
 
@@ -124,7 +191,7 @@ namespace AITool
             List<ClsLogItm> ret = new List<ClsLogItm>();
             while (!this.RecentlyDeleted.IsEmpty)
             {
-                if (this.RecentlyDeleted.TryTake(out ClsLogItm CLI))
+                if (this.RecentlyDeleted.TryDequeue(out ClsLogItm CLI))
                     ret.Add(CLI);
             }
             return ret;
@@ -134,7 +201,7 @@ namespace AITool
             List<ClsLogItm> ret = new List<ClsLogItm>();
             while (!this.RecentlyAdded.IsEmpty)
             {
-                if (this.RecentlyAdded.TryTake(out ClsLogItm CLI))
+                if (this.RecentlyAdded.TryDequeue(out ClsLogItm CLI))
                     ret.Add(CLI);
             }
             return ret;
@@ -145,21 +212,26 @@ namespace AITool
             {
                 this.Values.Clear();
                 this.LastLogItm = new ClsLogItm();
-                this._LastIDX = 0;
+                this._LastIDX.WriteFullFence(0);
+                this._LastAIServer = "";
+                this._LastCamera = "";
+                this._LastImage = "";
+                this.RecentlyAdded = new ConcurrentQueue<ClsLogItm>();
+                this.RecentlyDeleted = new ConcurrentQueue<ClsLogItm>();
                 this.ErrorCount.WriteFullFence(0);
+                this._Filename = GetCurrentLogFileName();
+
             }
         }
-               
+
 
         public void Add(ClsLogItm CDI)
         {
             lock (this._LockObj)
             {
-                this._LastIDX += 1;
+                this._LastIDX.WriteFullFence(CDI.Idx);
                 this.LastLogItm = CDI;
-                CDI.Idx = this._LastIDX;
-                if (this._Store)
-                    this.Values.Add(this.LastLogItm);
+                this.Values.Add(this.LastLogItm);
             }
         }
 
@@ -169,14 +241,9 @@ namespace AITool
             {
                 foreach (ClsLogItm CDI in CDIList)
                 {
-                    if (!this.Values.Contains(CDI))
-                    {
-                        this._LastIDX += 1;
-                        this.LastLogItm = CDI;
-                        CDI.Idx = this._LastIDX;
-                        if (this._Store)
-                            this.Values.Add(this.LastLogItm);
-                    }
+                    this._LastIDX.WriteFullFence(CDI.Idx);
+                    this.LastLogItm = CDI;
+                    this.Values.Add(this.LastLogItm);
                 }
             }
         }
@@ -184,12 +251,12 @@ namespace AITool
         public void Enter([CallerMemberName()] string memberName = null)
         {
             this._CurDepth.AtomicIncrementAndGet();
-            
+
             if (this._CurDepth.ReadFullFence() > 10)
                 this._CurDepth.WriteFullFence(10);  //just in case something weird is going on
 
             if (this.MinLevel == LogLevel.Trace)
-                this.Log($"---->ENTER {memberName}, Depth={this._CurDepth.ReadFullFence()}", "Trace-Enter", "Trace-Enter", "", 0, LogLevel.Trace, DateTime.Now, memberName);
+                this.Log($"---->ENTER {memberName}, Depth={this._CurDepth.ReadFullFence()}", "Trace-Enter", "Trace-Enter", "", "", 0, LogLevel.Trace, DateTime.Now, memberName);
 
         }
         public void Exit([CallerMemberName()] string memberName = null, long timems = 0)
@@ -199,17 +266,20 @@ namespace AITool
                 this._CurDepth.WriteFullFence(0);
 
             if (this.MinLevel == LogLevel.Trace)
-                this.Log($"----<EXIT {memberName}, Time={timems}ms, Depth={this._CurDepth.ReadFullFence()}", "Trace-Exit", "Trace-Exit", "", 0, LogLevel.Trace, DateTime.Now, memberName);
+                this.Log($"----<EXIT {memberName}, Time={timems}ms, Depth={this._CurDepth.ReadFullFence()}", "Trace-Exit", "Trace-Exit", "", "", 0, LogLevel.Trace, DateTime.Now, memberName);
         }
-        public ClsLogItm Log(string Detail, string AIServer = "", string Camera = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
+        public ClsLogItm Log(string Detail, string AIServer = "", string Camera = "", string Image = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
         {
+            if (!this.Enabled)
+                return null;
 
             lock (this._LockObj)
             {
-                this._LastIDX += 1;
+                this._LastIDX.AtomicIncrementAndGet();
                 this.LastLogItm = new ClsLogItm();
                 this.LastLogItm.Detail = Detail;
-                
+                this.LastLogItm.Filename = Path.GetFileName(this._Filename);
+
                 this.LastLogItm.ThreadID = Thread.CurrentThread.ManagedThreadId;
 
                 if (Source == null || string.IsNullOrWhiteSpace(Source))
@@ -235,6 +305,13 @@ namespace AITool
                         this._LastAIServer = AIServer;
                 }
 
+                if (Image == null || string.IsNullOrWhiteSpace(Image))
+                    this.LastLogItm.Image = this._LastImage;
+                else
+                {
+                    this.LastLogItm.Image = Path.GetFileName(Image);
+                }
+
                 if (Time.HasValue)
                     this.LastLogItm.Date = Time.Value;
                 else
@@ -243,8 +320,14 @@ namespace AITool
                 if (memberName == ".ctor")
                     memberName = "Constructor";
 
-                this.LastLogItm.Func = memberName.Replace("AITool.","");
-                
+                this.LastLogItm.Func = memberName.Replace("AITool.", "");
+
+                //deepstack messages spam us...
+                bool DeepstackDebug = !string.Equals(this.LastLogItm.Func, "handleredisprocmsg", StringComparison.OrdinalIgnoreCase) || string.Equals(this.LastLogItm.Func, "handleredisprocmsg", StringComparison.OrdinalIgnoreCase) && AppSettings.Settings.deepstack_debug;
+
+                if (!DeepstackDebug)
+                    return this.LastLogItm;
+
                 if (Level == null)
                 {
                     if (this.LastLogItm.Detail.IndexOf("fatal:", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -266,8 +349,8 @@ namespace AITool
                 }
 
                 bool HasError = false;
-                
-                    //remove tags
+
+                //remove tags
                 if (Level == LogLevel.Error)
                 {
                     this.ErrorCount.AtomicIncrementAndGet();
@@ -304,7 +387,7 @@ namespace AITool
                 {
                     this.LastLogItm.Color = Global.GetWordBetween(this.LastLogItm.Detail, "{", "}");
                     //strip out the color definition
-                    this.LastLogItm.Detail = Global.ReplaceCaseInsensitive(this.LastLogItm.Detail,"{"+ this.LastLogItm.Color + "}","");
+                    this.LastLogItm.Detail = Global.ReplaceCaseInsensitive(this.LastLogItm.Detail, "{" + this.LastLogItm.Color + "}", "");
                 }
 
                 //clean out any whitespace
@@ -315,28 +398,29 @@ namespace AITool
 
                 this.LastLogItm.Depth = this._CurDepth.ReadFullFence() + Depth;
                 this.LastLogItm.Level = Level;
-                this.LastLogItm.Idx = _LastIDX;
+                this.LastLogItm.Idx = _LastIDX.ReadFullFence();
+
 
                 if (this._Store)
                 {
                     if (Level >= this.MinLevel)
                     {
                         this.Values.Add(this.LastLogItm);
-                        this.RecentlyAdded.Add(this.LastLogItm);
+                        this.RecentlyAdded.Enqueue(this.LastLogItm);
                         //keep the log list size down
                         if (Values.Count > this.MaxGUILogItems)
                         {
-                            this.RecentlyDeleted.Add(Values[0]);
+                            this.RecentlyDeleted.Enqueue(Values[0]);
                             Values.RemoveAt(0);
                         }
                     }
                 }
 
                 this.NLogFileWriter.Log(Level, this.LastLogItm.ToString());
-                
+
                 if (Debugger.IsAttached)
                     Console.WriteLine(this.LastLogItm.ToDetailString());
-                
+
                 string itm = this.LastLogItm.ToString();
                 if (AppSettings.Settings.send_errors == true && (HasError) && AppSettings.Settings.telegram_chatids.Count > 0 && AITOOL.TriggerActionQueue != null && !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) && !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
@@ -347,7 +431,7 @@ namespace AITool
 
                 if (HasError)
                     NLog.LogManager.Flush();
-                
+
             }
 
             return this.LastLogItm;
@@ -358,103 +442,165 @@ namespace AITool
                 this.Values = this.Values.OrderBy(c => c.Date).ThenBy(c => c.Idx).ToList();
         }
 
-        public async Task<List<ClsLogItm>> LoadLogFile(string Filename, bool Import)
+        public async Task<List<ClsLogItm>> LoadLogFile(string Filename, bool Import, bool LimitEntries)
         {
             List<ClsLogItm> ret = new List<ClsLogItm>();
+
+            if (Import)
+                this.Enabled = false;  //disable while we import
+
+            string ExtractZipPath = "";
+            string file = Path.GetFileName(Filename);
+
+            Stopwatch sw = Stopwatch.StartNew();
+
             if (File.Exists(Filename))
             {
-                bool success = await Global.WaitForFileAccessAsync(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
-                if (success)
-                {
-                    int Invalid = 0;
-                    bool OldFile = false;
-                    using (StreamReader sr = new StreamReader(Filename))
-                    {
-                        int cnt = 0;
-                        while (!sr.EndOfStream)
-                        {
-                            cnt++;
-                            if (cnt > 1)
-                            {
-                                string line = await sr.ReadLineAsync();
 
-                                if (!OldFile && line.TrimStart().StartsWith("["))  //old log format, ignore
+                Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1);
+
+                //run in another thread so gui doesnt freeze
+                await Task.Run(async () =>
+                {
+                    bool success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
+                    if (success)
+                    {
+                        //if its a zip file, extract that puppy...
+                        string NewFilename = "";
+
+                        if (Filename.EndsWith("zip", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ExtractZipPath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "_" + file);
+                            if (!Directory.Exists(ExtractZipPath))
+                                Directory.CreateDirectory(ExtractZipPath);
+
+                            //just extract the first file in the archive
+                            using (ZipArchive archive = ZipFile.OpenRead(Filename))
+                            {
+                                foreach (ZipArchiveEntry entry in archive.Entries)
                                 {
-                                    OldFile = true;
-                                    this._LastIDX = 0;
+                                    string destinationPath = Path.GetFullPath(Path.Combine(ExtractZipPath, entry.FullName));
+                                    entry.ExtractToFile(destinationPath, true);
+                                    NewFilename = destinationPath;
                                     break;
                                 }
+                            }
 
-                                if (!Import)
+                        }
+                        else
+                        {
+                            NewFilename = Filename;
+                        }
+
+                        lock (this._LockObj)
+                        {
+                            string file = Path.GetFileName(NewFilename);
+                            int Invalid = 0;
+                            bool OldFile = false;
+                            using (StreamReader sr = new StreamReader(NewFilename))
+                            {
+                                int cnt = 0;
+                                while (!sr.EndOfStream)
                                 {
-                                    ClsLogItm CLI = new ClsLogItm(line);
-                                    if (CLI.Level != LogLevel.Off)  //off indicates invalid - for example the old log format
+                                    cnt++;
+                                    if (cnt > 1)
                                     {
-                                        CLI.FromFile = true;
-                                        ret.Add(CLI);
-                                    }
-                                    else
-                                    {
-                                        Invalid++;
-                                        if (Invalid > 10)
+                                        string line = sr.ReadLine();
+
+                                        if (!OldFile && line.TrimStart().StartsWith("["))  //old log format, ignore
                                         {
-                                            ret.Clear();
-                                            this._LastIDX = 0;
+                                            OldFile = true;
+                                            this._LastIDX.WriteFullFence(0);
                                             break;
                                         }
-                                    }
-                                }
-                                else
-                                {
-                                    //load into current log manager
-                                    if (this._Store)
-                                    {
-                                        ClsLogItm CLI = new ClsLogItm(line);
-                                        if (CLI.Level != LogLevel.Off)  //off indicates invalid - for example the old log format
+
+                                        if (!Import)
                                         {
-                                            this.LastLogItm = CLI;
-                                            if (this.LastLogItm.Level >= this.MinLevel)
+                                            //just spit out a list of log lines
+                                            ClsLogItm CLI = new ClsLogItm(line);
+                                            if (CLI.Level != LogLevel.Off)  //off indicates invalid - for example the old log format
                                             {
                                                 CLI.FromFile = true;
-                                                this.Values.Add(this.LastLogItm);
-                                                this.RecentlyAdded.Add(this.LastLogItm);
-                                                //keep the log list size down
-                                                if (Values.Count > this.MaxGUILogItems)
+                                                CLI.Filename = file;
+                                                ret.Add(CLI);
+                                            }
+                                            else
+                                            {
+                                                Invalid++;
+                                                if (Invalid > 10)
                                                 {
-                                                    this.RecentlyDeleted.Add(Values[0]);
-                                                    Values.RemoveAt(0);
+                                                    ret.Clear();
+                                                    break;
                                                 }
                                             }
-
                                         }
                                         else
                                         {
-                                            Invalid++;
-                                            if (Invalid > 10)
+                                            //load into current log manager
+                                            if (this._Store)
                                             {
-                                                ret.Clear();
-                                                this._LastIDX = 0;
-                                                break;
+                                                ClsLogItm CLI = new ClsLogItm(line);
+                                                if (CLI.Level != LogLevel.Off)  //off indicates invalid - for example the old log format
+                                                {
+                                                    this.LastLogItm = CLI;
+                                                    if (this.LastLogItm.Level >= this.MinLevel)
+                                                    {
+                                                        CLI.FromFile = true;
+                                                        CLI.Filename = file;
+                                                        this.Values.Add(this.LastLogItm);
+                                                        this.RecentlyAdded.Enqueue(this.LastLogItm);
+                                                        //keep the log list size down
+                                                        if (LimitEntries && Values.Count > this.MaxGUILogItems)
+                                                        {
+                                                            this.RecentlyDeleted.Enqueue(Values[0]);
+                                                            Values.RemoveAt(0);
+                                                        }
+                                                    }
+
+                                                }
+                                                else
+                                                {
+                                                    Invalid++;
+                                                    if (Invalid > 10)
+                                                    {
+                                                        ret.Clear();
+                                                        this._LastIDX.WriteFullFence(0);
+                                                        break;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
+
+                            }
+
+                            if (OldFile)
+                            {
+                                //rename it to keep it out of our way next time
+                                try
+                                {
+                                    File.Move(NewFilename, NewFilename + ".OLDLOGFORMAT");
+                                }
+                                catch { }
                             }
                         }
+                    }
 
-                    }
-                    
-                    if (OldFile)
-                    {
-                        //rename it to keep it out of our way next time
-                        try
-                        {
-                            File.Move(Filename,Filename+".OLDLOGFORMAT");
-                        }
-                        catch { }
-                    }
-                }
+
+                });
+
             }
+
+            if (Import)
+                this.Enabled = true;  //enable after we import
+
+            if (Directory.Exists(ExtractZipPath))
+                Directory.Delete(ExtractZipPath,false);
+
+            Global.UpdateProgressBar($"", 0, 1);
+
+            this.LastLoadTimeMS = sw.ElapsedMilliseconds;
 
             return ret;
         }

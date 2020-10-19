@@ -29,6 +29,7 @@ namespace AITool
 
         public string Filename { get; } = "";
         public bool ReadOnly { get; } = false;
+        public bool IsNew { get; } = false;
         public ConcurrentDictionary<string, History> HistoryDic { get; } = new ConcurrentDictionary<string, History>();
         public DateTime InitializeTime { get; } = DateTime.Now;
         public DateTime LastUpdateTime { get; set; } = DateTime.MinValue;
@@ -52,6 +53,7 @@ namespace AITool
 
             this.Filename = Filename;
             this.ReadOnly = ReadOnly;
+            this.IsNew = !File.Exists(Filename);
 
             Task.Run(Initialize);
 
@@ -128,7 +130,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + Global.ExMsg(ex),"None","None","None");
 
                 return false;
             }
@@ -205,14 +207,14 @@ namespace AITool
 
                 sw.Stop();
 
-                Log($"Debug: Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None");
+                Log($"Debug: Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None", "None");
 
 
             }
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex), "None", "None");
+                Log("Error: " + Global.ExMsg(ex), "None", "None", "None");
             }
 
 
@@ -246,7 +248,7 @@ namespace AITool
 
                     if (!ret)
                     {
-                        Log($"debug: File already existed in dictionary: {hist.Filename}", hist.AIServer, hist.Camera);
+                        Log($"debug: File already existed in dictionary: {hist.Filename}", hist.AIServer, hist.Camera, hist.Filename);
                     }
 
                     Stopwatch sw = Stopwatch.StartNew();
@@ -257,11 +259,11 @@ namespace AITool
 
                     if (iret != 1)
                     {
-                        Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}", hist.AIServer, hist.Camera);
+                        Log($"Error: When trying to insert database entry, RowsAdded count was {ret} but we expected 1. StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}", hist.AIServer, hist.Camera, hist.Filename);
                     }
 
                     if (sw.ElapsedMilliseconds > 3000)
-                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera);
+                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
@@ -269,11 +271,11 @@ namespace AITool
 
                     if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
                     {
-                        Log($"Debug: File was already in the database: {hist.Filename}", hist.AIServer, hist.Camera);
+                        Log($"Debug: File was already in the database: {hist.Filename}", hist.AIServer, hist.Camera, hist.Filename);
                     }
                     else
                     {
-                        Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex), hist.AIServer, hist.Camera);
+                        Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex), hist.AIServer, hist.Camera, hist.Filename);
                     }
                 }
 
@@ -350,13 +352,13 @@ namespace AITool
                     //}
 
                     if (sw.ElapsedMilliseconds > 2000)
-                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera);
+                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
                 {
 
-                    Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex), hist.AIServer, hist.Camera);
+                    Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex), hist.AIServer, hist.Camera, hist.Filename);
                 }
 
                 if (ret || dret > 0)
@@ -406,9 +408,9 @@ namespace AITool
 
                         List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-                        Task<bool> tsk = Global.WaitForFileAccess(Filename);
+                        bool Success = Global.WaitForFileAccess(Filename);
 
-                        if (tsk.Result)
+                        if (Success)
                         {
                             //load all lines except the first line into List (the first line is the table heading and not an alert entry)
                             foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))

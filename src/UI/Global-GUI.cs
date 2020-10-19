@@ -212,11 +212,8 @@ namespace AITool
 					OLV.ModelFilter = filter;
 					HighlightTextRenderer renderererer = new HighlightTextRenderer(filter);
 					SolidBrush brush = renderererer.FillBrush as SolidBrush ?? new SolidBrush(Color.Transparent);
-					if (brush.Color != Color.LightSeaGreen)
-					{
-						brush.Color = System.Drawing.Color.FromArgb(200, Color.LightSeaGreen); //
-						renderererer.FillBrush = brush;
-					}
+					brush.Color = System.Drawing.Color.FromArgb(100, Color.LightSeaGreen); //
+					renderererer.FillBrush = brush;
 					OLV.DefaultRenderer = renderererer;
 					Global.SaveSetting("SearchText", FilterText);
 

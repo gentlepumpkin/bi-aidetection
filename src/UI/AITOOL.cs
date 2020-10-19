@@ -69,10 +69,10 @@ namespace AITool
         public static string srv = "";
 
         //just an alias to make things easier
-        public static void Log(string Detail, string AIServer = "", string Camera = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
+        public static void Log(string Detail, string AIServer = "", string Camera = "", string Image = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
         {
             if (LogMan != null)
-                LogMan.Log(Detail, AIServer, Camera, Source, Depth, Level, Time, memberName);
+                LogMan.Log(Detail, AIServer, Camera, Image, Source, Depth, Level, Time, memberName);
             else
                 Console.WriteLine($"Error: Wrote to log before initialized? '{Detail}'");
         }
@@ -90,7 +90,9 @@ namespace AITool
 
                 string exe = $"AITOOLS{srv}EXE";
 
-                LogMan = new ClsLogManager(!Global.IsService, exe, LogLevel.Info, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"),999,30, AppSettings.Settings.MaxGUILogItems);
+                //initialize logging as early as we can...
+                int TempDefSize = ((1024 * 1024) * 20); //20mb
+                LogMan = new ClsLogManager(!Global.IsService, exe, LogLevel.Info, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"),TempDefSize,120, AppSettings.Settings.MaxGUILogItems);
 
                 //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
                 //is locked for any reason, it will wait in the queue until it can be written
@@ -421,7 +423,7 @@ namespace AITool
                                 //skip the image if its been in the queue too long
                                 if ((DateTime.Now - CurImg.TimeAdded).TotalMinutes >= AppSettings.Settings.MaxImageQueueTimeMinutes)
                                 {
-                                    Log($"...Taking image OUT OF QUEUE because it has been in there over 'MaxImageQueueTimeMinutes'. (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, ImageProcessQueue.Count={ImageProcessQueue.Count}: '{CurImg.image_path}'","None",cam.name);
+                                    Log($"...Taking image OUT OF QUEUE because it has been in there over 'MaxImageQueueTimeMinutes'. (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, ImageProcessQueue.Count={ImageProcessQueue.Count}: '{CurImg.image_path}'","None",cam.name, CurImg.image_path);
                                     continue;
                                 }
 
@@ -434,7 +436,7 @@ namespace AITool
 
                                 double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name);
+                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
 
                                 Interlocked.Increment(ref TskCnt);
 
@@ -473,7 +475,7 @@ namespace AITool
                                         if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
                                         {
                                             //put back in queue to be processed by another deepstack server
-                                            Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam.name);
+                                            Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam.name, CurImg.image_path);
                                             ImageProcessQueue.Enqueue(CurImg);
                                         }
                                         else
@@ -481,7 +483,7 @@ namespace AITool
                                             cam.stats_skipped_images++;
                                             cam.stats_skipped_images_session++;
 
-                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam.name);
+                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam.name, CurImg.image_path);
                                             Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false,"",url.CurSrv));
 
                                         }
@@ -570,12 +572,12 @@ namespace AITool
                                 if (qsize > AppSettings.Settings.MaxImageQueueSize)
                                 {
                                     Log("");
-                                    Log($"Error: Skipping image because queue ({qsize}) is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath);
+                                    Log($"Error: Skipping image because queue ({qsize}) is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + e.FullPath, "", cam.name, e.FullPath);
                                 }
                                 else
                                 {
                                     Log("Debug: ");
-                                    Log($"Debug: ====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath);
+                                    Log($"Debug: ====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + e.FullPath, "", cam.name, e.FullPath);
                                     ClsImageQueueItem CurImg = new ClsImageQueueItem(e.FullPath, qsize);
                                     detection_dictionary.TryAdd(e.FullPath.ToLower(), CurImg);
                                     ImageProcessQueue.Enqueue(CurImg);
@@ -586,12 +588,12 @@ namespace AITool
                             }
                             else
                             {
-                                Log($"Error: Skipping image because camera '{cam.name}' is DISABLED " + e.FullPath);
+                                Log($"Error: Skipping image because camera '{cam.name}' is DISABLED " + e.FullPath, "", cam.name, e.FullPath);
                             }
                         }
                         else
                         {
-                            Log("Error: Skipping image because no camera found for new image " + e.FullPath);
+                            Log("Error: Skipping image because no camera found for new image " + e.FullPath, "", cam.name, e.FullPath);
                         }
 
 
@@ -949,7 +951,7 @@ namespace AITool
             {
                 try
                 {
-                    Log($"Debug: Starting analysis of {CurImg.image_path}...", CurSrv, cam.name);
+                    Log($"Debug: Starting analysis of {CurImg.image_path}...", CurSrv, cam.name, CurImg.image_path);
 
                     // Wait up to 30 seconds to gain access to the file that was just created.This should
                     //prevent the need to retry in the detection routine
@@ -981,7 +983,7 @@ namespace AITool
                                     //I'm not sure if we need both httpclient.timeout and CancellationTokenSource timeout...
                                     using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(AppSettings.Settings.AIDetectionTimeoutSeconds)))
                                     {
-                                        Log($"Debug: (1/6) Uploading a {FileSize} byte image to DeepQuestAI Server at {DeepStackURL}", CurSrv, cam.name);
+                                        Log($"Debug: (1/6) Uploading a {FileSize} byte image to DeepQuestAI Server at {DeepStackURL}", CurSrv, cam.name, CurImg.image_path);
 
                                         swposttime = Stopwatch.StartNew();
 
@@ -998,7 +1000,7 @@ namespace AITool
                                                 error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
                                                 DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                                 DeepStackURL.ResultMessage = error;
-                                                Log(error, CurSrv, cam.name);
+                                                Log(error, CurSrv, cam.name, CurImg.image_path);
                                             }
                                         }
                                     }
@@ -1013,8 +1015,8 @@ namespace AITool
                         {
                             string cleanjsonString = Global.CleanString(jsonString);
 
-                            Log($"Debug: (2/6) Posted in {swposttime.ElapsedMilliseconds}ms, Received a {jsonString.Length} byte response.", CurSrv, cam.name);
-                            Log($"Debug: (3/6) Processing results...", CurSrv, cam.name);
+                            Log($"Debug: (2/6) Posted in {swposttime.ElapsedMilliseconds}ms, Received a {jsonString.Length} byte response.", CurSrv, cam.name, CurImg.image_path);
+                            Log($"Debug: (3/6) Processing results...", CurSrv, cam.name, CurImg.image_path);
 
                             Response response = null;
 
@@ -1028,7 +1030,7 @@ namespace AITool
                                 error = $"ERROR: Deserialization of 'Response' from DeepStack failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
                                 DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                 DeepStackURL.ResultMessage = error;
-                                Log(error, CurSrv, cam.name);
+                                Log(error, CurSrv, cam.name, CurImg.image_path);
                             }
 
                             List<ClsPrediction> predictions = new List<ClsPrediction>();
@@ -1056,7 +1058,7 @@ namespace AITool
                                         error = $"ERROR: Failure response from DeepStack. JSON: '{cleanjsonString}'";
                                         DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                         DeepStackURL.ResultMessage = error;
-                                        Log(error, CurSrv, cam.name);
+                                        Log(error, CurSrv, cam.name, CurImg.image_path);
                                     }
                                     else
                                     {
@@ -1066,7 +1068,7 @@ namespace AITool
                                         if (response.predictions.Count() > 0)
                                         {
                                             //print every detected object with the according confidence-level
-                                            Log($"Debug:    Detected objects:", CurSrv, cam.name);
+                                            Log($"Debug:    Detected objects:", CurSrv, cam.name, CurImg.image_path);
 
                                             foreach (Object user in response.predictions)
                                             {
@@ -1113,9 +1115,9 @@ namespace AITool
                                                 }
 
                                                 if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name);
+                                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name, CurImg.image_path);
                                                 else
-                                                    Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name);
+                                                    Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name, CurImg.image_path);
 
                                             }
 
@@ -1156,16 +1158,16 @@ namespace AITool
 
                                                 objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
-                                                Log($"Debug: The summary:" + cam.last_detections_summary, CurSrv, cam.name);
+                                                Log($"Debug: The summary:" + cam.last_detections_summary, CurSrv, cam.name, CurImg.image_path);
 
-                                                Log($"Debug: (5/6) Performing alert actions:", CurSrv, cam.name);
+                                                Log($"Debug: (5/6) Performing alert actions:", CurSrv, cam.name, CurImg.image_path);
 
                                                 hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, DeepStackURL.CurSrv);
                                                 
                                                 await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                                 cam.IncrementAlerts(); //stats update
-                                                Log($"Debug: (6/6) SUCCESS.", CurSrv, cam.name);
+                                                Log($"Debug: (6/6) SUCCESS.", CurSrv, cam.name, CurImg.image_path);
 
                                                 //add to history list
                                                 //Log($"Debug: Adding detection to history list.", CurSrv, cam.name);
@@ -1212,16 +1214,16 @@ namespace AITool
                                                     text = text.Remove(text.Length - 2);
                                                 }
 
-                                                Log($"Debug: {text}, so it's an irrelevant alert.", CurSrv, cam.name);
+                                                Log($"Debug: {text}, so it's an irrelevant alert.", CurSrv, cam.name, CurImg.image_path);
 
-                                                Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name);
+                                                Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
 
                                                 hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, DeepStackURL.CurSrv);
 
                                                 await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
                                                 cam.IncrementIrrelevantAlerts(); //stats update
-                                                Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", CurSrv, cam.name);
+                                                Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", CurSrv, cam.name, CurImg.image_path);
 
                                                 //add to history list
                                                 Global.CreateHistoryItem(hist);
@@ -1229,18 +1231,18 @@ namespace AITool
                                         }
                                         else
                                         {
-                                            Log($"Debug:      ((NO DETECTED OBJECTS))", CurSrv, cam.name);
+                                            Log($"Debug:      ((NO DETECTED OBJECTS))", CurSrv, cam.name, CurImg.image_path);
                                             // FALSE ALERT
 
                                             cam.IncrementFalseAlerts(); //stats update
 
-                                            Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name);
+                                            Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
 
                                             hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", DeepStackURL.CurSrv);
 
                                             await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
 
-                                            Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name);
+                                            Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name, CurImg.image_path);
 
                                             //add to history list
                                             Global.CreateHistoryItem(hist);
@@ -1254,7 +1256,7 @@ namespace AITool
                                     error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
                                     DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                     DeepStackURL.ResultMessage = error;
-                                    Log(error, CurSrv, cam.name);
+                                    Log(error, CurSrv, cam.name, CurImg.image_path);
                                 }
 
 
@@ -1266,7 +1268,7 @@ namespace AITool
                                 error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
                                 DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                 DeepStackURL.ResultMessage = error;
-                                Log(error, CurSrv, cam.name);
+                                Log(error, CurSrv, cam.name, CurImg.image_path);
                             }
 
                         }
@@ -1275,7 +1277,7 @@ namespace AITool
                             error = $"ERROR: Empty string returned from HTTP post.";
                             DeepStackURL.ErrCount.AtomicIncrementAndGet();
                             DeepStackURL.ResultMessage = error;
-                            Log(error, CurSrv, cam.name);
+                            Log(error, CurSrv, cam.name, CurImg.image_path);
                         }
 
 
@@ -1287,7 +1289,7 @@ namespace AITool
                         error = $"Error: Could not gain access to {CurImg.image_path} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = error;
-                        Log(error, CurSrv, cam.name);
+                        Log(error, CurSrv, cam.name, CurImg.image_path);
                     }
 
 
@@ -1304,7 +1306,7 @@ namespace AITool
                     error = $"ERROR: {Global.ExMsg(ex)}";
                     DeepStackURL.ErrCount.AtomicIncrementAndGet();
                     DeepStackURL.ResultMessage = error;
-                    Log(error, CurSrv, cam.name);
+                    Log(error, CurSrv, cam.name, CurImg.image_path);
                 }
 
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
@@ -1334,18 +1336,18 @@ namespace AITool
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
 
-                Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", CurSrv, cam.name);
-                Log($"Debug:DeepStack (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={DeepStackURL.dscalc.Count}, Min={DeepStackURL.dscalc.Min}ms, Max={DeepStackURL.dscalc.Max}ms, Avg={DeepStackURL.dscalc.Average.ToString("#####")}ms)", CurSrv, cam.name);
-                Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", CurSrv, cam.name);
-                Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", CurSrv, cam.name);
-                Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", CurSrv, cam.name);
+                Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:DeepStack (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={DeepStackURL.dscalc.Count}, Min={DeepStackURL.dscalc.Min}ms, Max={DeepStackURL.dscalc.Max}ms, Avg={DeepStackURL.dscalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", CurSrv, cam.name, CurImg.image_path);
 
             }
             else
             {
                 cam.stats_skipped_images++;
                 cam.stats_skipped_images_session++;
-                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", CurSrv, cam.name);
+                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", CurSrv, cam.name, CurImg.image_path);
                 Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes.", "", false,"", DeepStackURL.CurSrv));
             }
 

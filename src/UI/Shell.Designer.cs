@@ -101,6 +101,7 @@ namespace AITool
             this.detailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dynamicMaskDetailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.locateInLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
@@ -215,7 +216,19 @@ namespace AITool
             this.Btn_Start = new System.Windows.Forms.Button();
             this.Btn_Stop = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
-            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.folv_log = new BrightIdeasSoftware.FastObjectListView();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.HistoryImageList = new System.Windows.Forms.ImageList(this.components);
+            this.HistoryUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
+            this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.ToolStripComboBoxSearch = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
@@ -238,19 +251,13 @@ namespace AITool
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.openToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.folv_log = new BrightIdeasSoftware.FastObjectListView();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.HistoryImageList = new System.Windows.Forms.ImageList(this.components);
-            this.HistoryUpdateListTimer = new System.Windows.Forms.Timer(this.components);
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabelHistoryItems = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusErrors = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
-            this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonReload = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonPauseLog = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -300,10 +307,10 @@ namespace AITool
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.tabLog.SuspendLayout();
-            this.toolStrip2.SuspendLayout();
             this.groupBox7.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.folv_log)).BeginInit();
             this.statusStrip1.SuspendLayout();
+            this.toolStrip2.SuspendLayout();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -1051,9 +1058,10 @@ namespace AITool
             this.testDetectionAgainToolStripMenuItem,
             this.detailsToolStripMenuItem,
             this.refreshToolStripMenuItem,
-            this.dynamicMaskDetailsToolStripMenuItem});
+            this.dynamicMaskDetailsToolStripMenuItem,
+            this.locateInLogToolStripMenuItem});
             this.contextMenuStripHistory.Name = "contextMenuStripHistory";
-            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 92);
+            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 114);
             // 
             // testDetectionAgainToolStripMenuItem
             // 
@@ -1083,6 +1091,13 @@ namespace AITool
             this.dynamicMaskDetailsToolStripMenuItem.Text = "Dynamic Mask Details";
             this.dynamicMaskDetailsToolStripMenuItem.Click += new System.EventHandler(this.dynamicMaskDetailsToolStripMenuItem_Click);
             // 
+            // locateInLogToolStripMenuItem
+            // 
+            this.locateInLogToolStripMenuItem.Name = "locateInLogToolStripMenuItem";
+            this.locateInLogToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.locateInLogToolStripMenuItem.Text = "Locate in log";
+            this.locateInLogToolStripMenuItem.Click += new System.EventHandler(this.locateInLogToolStripMenuItem_Click);
+            // 
             // lbl_objects
             // 
             this.lbl_objects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -1093,7 +1108,7 @@ namespace AITool
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(736, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(770, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1106,7 +1121,7 @@ namespace AITool
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(733, 379);
+            this.pictureBox1.Size = new System.Drawing.Size(767, 379);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2253,7 +2268,7 @@ namespace AITool
             this.dbLayoutPanel3.ColumnCount = 3;
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 84.57375F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15.42625F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 205F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 222F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_errors, 0, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_enabletelegram, 1, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_disabletelegram, 2, 0);
@@ -2278,7 +2293,7 @@ namespace AITool
             // btn_enabletelegram
             // 
             this.btn_enabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_enabletelegram.Location = new System.Drawing.Point(565, 21);
+            this.btn_enabletelegram.Location = new System.Drawing.Point(549, 21);
             this.btn_enabletelegram.Name = "btn_enabletelegram";
             this.btn_enabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_enabletelegram.TabIndex = 13;
@@ -2290,7 +2305,7 @@ namespace AITool
             // btn_disabletelegram
             // 
             this.btn_disabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_disabletelegram.Location = new System.Drawing.Point(718, 21);
+            this.btn_disabletelegram.Location = new System.Drawing.Point(709, 21);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_disabletelegram.TabIndex = 13;
@@ -2610,25 +2625,155 @@ namespace AITool
             this.tabLog.UseVisualStyleBackColor = true;
             this.tabLog.Click += new System.EventHandler(this.tabLog_Click);
             // 
-            // toolStrip2
+            // groupBox7
             // 
-            this.toolStrip2.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLabel1,
-            this.ToolStripComboBoxSearch,
-            this.toolStripDropDownButton1,
-            this.toolStripSeparator3,
-            this.toolStripSeparator,
-            this.toolStripDropDownButtonSettings,
-            this.toolStripSeparator4,
-            this.toolStripSeparator2,
-            this.openToolStripButton});
-            this.toolStrip2.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(1027, 31);
-            this.toolStrip2.TabIndex = 6;
-            this.toolStrip2.Text = "toolStrip2";
-            this.toolStrip2.TextChanged += new System.EventHandler(this.toolStrip2_TextChanged);
+            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox7.Controls.Add(this.folv_log);
+            this.groupBox7.Location = new System.Drawing.Point(5, 36);
+            this.groupBox7.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox7.Size = new System.Drawing.Size(1015, 412);
+            this.groupBox7.TabIndex = 5;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "Log";
+            // 
+            // folv_log
+            // 
+            this.folv_log.BackColor = System.Drawing.Color.Navy;
+            this.folv_log.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.folv_log.ForeColor = System.Drawing.Color.White;
+            this.folv_log.HideSelection = false;
+            this.folv_log.Location = new System.Drawing.Point(2, 15);
+            this.folv_log.Name = "folv_log";
+            this.folv_log.ShowGroups = false;
+            this.folv_log.Size = new System.Drawing.Size(1011, 395);
+            this.folv_log.TabIndex = 0;
+            this.folv_log.UseCompatibleStateImageBehavior = false;
+            this.folv_log.View = System.Windows.Forms.View.Details;
+            this.folv_log.VirtualMode = true;
+            this.folv_log.FormatCell += new System.EventHandler<BrightIdeasSoftware.FormatCellEventArgs>(this.folv_log_FormatCell);
+            this.folv_log.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.folv_log_FormatRow);
+            // 
+            // HistoryImageList
+            // 
+            this.HistoryImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("HistoryImageList.ImageStream")));
+            this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.HistoryImageList.Images.SetKeyName(0, "error16");
+            this.HistoryImageList.Images.SetKeyName(1, "person16");
+            this.HistoryImageList.Images.SetKeyName(2, "nothing16");
+            this.HistoryImageList.Images.SetKeyName(3, "detection16");
+            this.HistoryImageList.Images.SetKeyName(4, "success16");
+            this.HistoryImageList.Images.SetKeyName(5, "bear16");
+            this.HistoryImageList.Images.SetKeyName(6, "cat16");
+            this.HistoryImageList.Images.SetKeyName(7, "dog16");
+            this.HistoryImageList.Images.SetKeyName(8, "horse16");
+            this.HistoryImageList.Images.SetKeyName(9, "bird16");
+            this.HistoryImageList.Images.SetKeyName(10, "alien16");
+            this.HistoryImageList.Images.SetKeyName(11, "cow16");
+            this.HistoryImageList.Images.SetKeyName(12, "car16");
+            this.HistoryImageList.Images.SetKeyName(13, "truck16");
+            this.HistoryImageList.Images.SetKeyName(14, "motorcycle16");
+            this.HistoryImageList.Images.SetKeyName(15, "bicycle32.png");
+            this.HistoryImageList.Images.SetKeyName(16, "airplane.png");
+            this.HistoryImageList.Images.SetKeyName(17, "bear.png");
+            this.HistoryImageList.Images.SetKeyName(18, "bicycle.png");
+            this.HistoryImageList.Images.SetKeyName(19, "bird.png");
+            this.HistoryImageList.Images.SetKeyName(20, "boat.png");
+            this.HistoryImageList.Images.SetKeyName(21, "bus.png");
+            this.HistoryImageList.Images.SetKeyName(22, "car.png");
+            this.HistoryImageList.Images.SetKeyName(23, "cat.png");
+            this.HistoryImageList.Images.SetKeyName(24, "cow.png");
+            this.HistoryImageList.Images.SetKeyName(25, "dog.png");
+            this.HistoryImageList.Images.SetKeyName(26, "horse.png");
+            this.HistoryImageList.Images.SetKeyName(27, "motorcycle.png");
+            this.HistoryImageList.Images.SetKeyName(28, "person.png");
+            this.HistoryImageList.Images.SetKeyName(29, "sheep.png");
+            this.HistoryImageList.Images.SetKeyName(30, "truck.png");
+            this.HistoryImageList.Images.SetKeyName(31, "error32.png");
+            this.HistoryImageList.Images.SetKeyName(32, "person32.png");
+            this.HistoryImageList.Images.SetKeyName(33, "nothing32.png");
+            this.HistoryImageList.Images.SetKeyName(34, "success32.png");
+            this.HistoryImageList.Images.SetKeyName(35, "detection32.png");
+            this.HistoryImageList.Images.SetKeyName(36, "bear32.png");
+            this.HistoryImageList.Images.SetKeyName(37, "cat32.png");
+            this.HistoryImageList.Images.SetKeyName(38, "dog32.png");
+            this.HistoryImageList.Images.SetKeyName(39, "horse32.png");
+            this.HistoryImageList.Images.SetKeyName(40, "bird32.png");
+            this.HistoryImageList.Images.SetKeyName(41, "alien32.png");
+            this.HistoryImageList.Images.SetKeyName(42, "cow32.png");
+            this.HistoryImageList.Images.SetKeyName(43, "car32.png");
+            this.HistoryImageList.Images.SetKeyName(44, "truck32.png");
+            this.HistoryImageList.Images.SetKeyName(45, "motorcycle32.png");
+            // 
+            // HistoryUpdateListTimer
+            // 
+            this.HistoryUpdateListTimer.Interval = 3000;
+            this.HistoryUpdateListTimer.Tick += new System.EventHandler(this.HistoryUpdateListTimer_Tick);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(28, 28);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabelHistoryItems,
+            this.toolStripStatusErrors,
+            this.toolStripStatusLabel1,
+            this.toolStripStatusLabel2,
+            this.toolStripStatusLabelInfo,
+            this.toolStripProgressBar1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 488);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 8, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(1035, 33);
+            this.statusStrip1.TabIndex = 5;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelHistoryItems
+            // 
+            this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
+            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(86, 28);
+            this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
+            // 
+            // toolStripStatusErrors
+            // 
+            this.toolStripStatusErrors.Name = "toolStripStatusErrors";
+            this.toolStripStatusErrors.Size = new System.Drawing.Size(10, 28);
+            this.toolStripStatusErrors.Text = ".";
+            this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(10, 28);
+            this.toolStripStatusLabel1.Text = ".";
+            // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(784, 28);
+            this.toolStripStatusLabel2.Spring = true;
+            // 
+            // toolStripStatusLabelInfo
+            // 
+            this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 9.857143F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
+            this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
+            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(34, 28);
+            this.toolStripStatusLabelInfo.Text = "Idle";
+            // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 27);
+            // 
+            // LogUpdateListTimer
+            // 
+            this.LogUpdateListTimer.Interval = 2000;
+            this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
             // 
             // toolStripLabel1
             // 
@@ -2641,9 +2786,10 @@ namespace AITool
             this.ToolStripComboBoxSearch.BackColor = System.Drawing.SystemColors.Info;
             this.ToolStripComboBoxSearch.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.ToolStripComboBoxSearch.Name = "ToolStripComboBoxSearch";
-            this.ToolStripComboBoxSearch.Size = new System.Drawing.Size(250, 31);
+            this.ToolStripComboBoxSearch.Size = new System.Drawing.Size(200, 31);
             this.ToolStripComboBoxSearch.ToolTipText = "The search can be normal text OR a valid \'RegEx\' statement";
             this.ToolStripComboBoxSearch.Leave += new System.EventHandler(this.ToolStripComboBoxSearch_Leave);
+            this.ToolStripComboBoxSearch.Click += new System.EventHandler(this.ToolStripComboBoxSearch_Click);
             this.ToolStripComboBoxSearch.TextChanged += new System.EventHandler(this.ToolStripComboBoxSearch_TextChanged);
             // 
             // toolStripDropDownButton1
@@ -2824,155 +2970,73 @@ namespace AITool
             this.openToolStripButton.ToolTipText = "Open Log File";
             this.openToolStripButton.Click += new System.EventHandler(this.openToolStripButton_Click);
             // 
-            // groupBox7
+            // toolStripSeparator7
             // 
-            this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox7.Controls.Add(this.folv_log);
-            this.groupBox7.Location = new System.Drawing.Point(5, 36);
-            this.groupBox7.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox7.Size = new System.Drawing.Size(1015, 412);
-            this.groupBox7.TabIndex = 5;
-            this.groupBox7.TabStop = false;
-            this.groupBox7.Text = "Log";
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 31);
             // 
-            // folv_log
+            // toolStripButtonReload
             // 
-            this.folv_log.BackColor = System.Drawing.Color.Navy;
-            this.folv_log.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.folv_log.ForeColor = System.Drawing.Color.White;
-            this.folv_log.HideSelection = false;
-            this.folv_log.Location = new System.Drawing.Point(2, 15);
-            this.folv_log.Name = "folv_log";
-            this.folv_log.ShowGroups = false;
-            this.folv_log.Size = new System.Drawing.Size(1011, 395);
-            this.folv_log.TabIndex = 0;
-            this.folv_log.UseCompatibleStateImageBehavior = false;
-            this.folv_log.View = System.Windows.Forms.View.Details;
-            this.folv_log.VirtualMode = true;
-            this.folv_log.FormatCell += new System.EventHandler<BrightIdeasSoftware.FormatCellEventArgs>(this.folv_log_FormatCell);
-            this.folv_log.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.folv_log_FormatRow);
+            this.toolStripButtonReload.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonReload.Image")));
+            this.toolStripButtonReload.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonReload.Name = "toolStripButtonReload";
+            this.toolStripButtonReload.Size = new System.Drawing.Size(71, 28);
+            this.toolStripButtonReload.Text = "Reload";
+            this.toolStripButtonReload.ToolTipText = "Reloads the entire current log file from file without limiting the max number of " +
+    "lines.  This may make the list slower until you restart the app.";
+            this.toolStripButtonReload.Click += new System.EventHandler(this.toolStripButtonReload_ClickAsync);
             // 
-            // HistoryImageList
+            // toolStripSeparator5
             // 
-            this.HistoryImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("HistoryImageList.ImageStream")));
-            this.HistoryImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.HistoryImageList.Images.SetKeyName(0, "error16");
-            this.HistoryImageList.Images.SetKeyName(1, "person16");
-            this.HistoryImageList.Images.SetKeyName(2, "nothing16");
-            this.HistoryImageList.Images.SetKeyName(3, "detection16");
-            this.HistoryImageList.Images.SetKeyName(4, "success16");
-            this.HistoryImageList.Images.SetKeyName(5, "bear16");
-            this.HistoryImageList.Images.SetKeyName(6, "cat16");
-            this.HistoryImageList.Images.SetKeyName(7, "dog16");
-            this.HistoryImageList.Images.SetKeyName(8, "horse16");
-            this.HistoryImageList.Images.SetKeyName(9, "bird16");
-            this.HistoryImageList.Images.SetKeyName(10, "alien16");
-            this.HistoryImageList.Images.SetKeyName(11, "cow16");
-            this.HistoryImageList.Images.SetKeyName(12, "car16");
-            this.HistoryImageList.Images.SetKeyName(13, "truck16");
-            this.HistoryImageList.Images.SetKeyName(14, "motorcycle16");
-            this.HistoryImageList.Images.SetKeyName(15, "bicycle32.png");
-            this.HistoryImageList.Images.SetKeyName(16, "airplane.png");
-            this.HistoryImageList.Images.SetKeyName(17, "bear.png");
-            this.HistoryImageList.Images.SetKeyName(18, "bicycle.png");
-            this.HistoryImageList.Images.SetKeyName(19, "bird.png");
-            this.HistoryImageList.Images.SetKeyName(20, "boat.png");
-            this.HistoryImageList.Images.SetKeyName(21, "bus.png");
-            this.HistoryImageList.Images.SetKeyName(22, "car.png");
-            this.HistoryImageList.Images.SetKeyName(23, "cat.png");
-            this.HistoryImageList.Images.SetKeyName(24, "cow.png");
-            this.HistoryImageList.Images.SetKeyName(25, "dog.png");
-            this.HistoryImageList.Images.SetKeyName(26, "horse.png");
-            this.HistoryImageList.Images.SetKeyName(27, "motorcycle.png");
-            this.HistoryImageList.Images.SetKeyName(28, "person.png");
-            this.HistoryImageList.Images.SetKeyName(29, "sheep.png");
-            this.HistoryImageList.Images.SetKeyName(30, "truck.png");
-            this.HistoryImageList.Images.SetKeyName(31, "error32.png");
-            this.HistoryImageList.Images.SetKeyName(32, "person32.png");
-            this.HistoryImageList.Images.SetKeyName(33, "nothing32.png");
-            this.HistoryImageList.Images.SetKeyName(34, "success32.png");
-            this.HistoryImageList.Images.SetKeyName(35, "detection32.png");
-            this.HistoryImageList.Images.SetKeyName(36, "bear32.png");
-            this.HistoryImageList.Images.SetKeyName(37, "cat32.png");
-            this.HistoryImageList.Images.SetKeyName(38, "dog32.png");
-            this.HistoryImageList.Images.SetKeyName(39, "horse32.png");
-            this.HistoryImageList.Images.SetKeyName(40, "bird32.png");
-            this.HistoryImageList.Images.SetKeyName(41, "alien32.png");
-            this.HistoryImageList.Images.SetKeyName(42, "cow32.png");
-            this.HistoryImageList.Images.SetKeyName(43, "car32.png");
-            this.HistoryImageList.Images.SetKeyName(44, "truck32.png");
-            this.HistoryImageList.Images.SetKeyName(45, "motorcycle32.png");
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 31);
             // 
-            // HistoryUpdateListTimer
+            // toolStripButtonPauseLog
             // 
-            this.HistoryUpdateListTimer.Interval = 3000;
-            this.HistoryUpdateListTimer.Tick += new System.EventHandler(this.HistoryUpdateListTimer_Tick);
+            this.toolStripButtonPauseLog.CheckOnClick = true;
+            this.toolStripButtonPauseLog.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonPauseLog.Image")));
+            this.toolStripButtonPauseLog.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonPauseLog.Name = "toolStripButtonPauseLog";
+            this.toolStripButtonPauseLog.Size = new System.Drawing.Size(66, 28);
+            this.toolStripButtonPauseLog.Text = "Pause";
+            this.toolStripButtonPauseLog.ToolTipText = "Pause log tab auto refresh";
+            this.toolStripButtonPauseLog.Click += new System.EventHandler(this.toolStripButtonPauseLog_Click);
             // 
-            // statusStrip1
+            // toolStripSeparator6
             // 
-            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(28, 28);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabelHistoryItems,
-            this.toolStripStatusErrors,
-            this.toolStripStatusLabel1,
-            this.toolStripStatusLabel2,
-            this.toolStripStatusLabelInfo,
-            this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 488);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 8, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1035, 33);
-            this.statusStrip1.TabIndex = 5;
-            this.statusStrip1.Text = "statusStrip1";
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(6, 31);
             // 
-            // toolStripStatusLabelHistoryItems
+            // toolStripSeparator8
             // 
-            this.toolStripStatusLabelHistoryItems.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.toolStripStatusLabelHistoryItems.Name = "toolStripStatusLabelHistoryItems";
-            this.toolStripStatusLabelHistoryItems.Size = new System.Drawing.Size(86, 28);
-            this.toolStripStatusLabelHistoryItems.Text = "0 History Items";
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 31);
             // 
-            // toolStripStatusErrors
+            // toolStrip2
             // 
-            this.toolStripStatusErrors.Name = "toolStripStatusErrors";
-            this.toolStripStatusErrors.Size = new System.Drawing.Size(10, 28);
-            this.toolStripStatusErrors.Text = ".";
-            this.toolStripStatusErrors.Click += new System.EventHandler(this.toolStripStatusErrors_Click);
-            // 
-            // toolStripStatusLabel1
-            // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(10, 28);
-            this.toolStripStatusLabel1.Text = ".";
-            // 
-            // toolStripStatusLabel2
-            // 
-            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            this.toolStripStatusLabel2.Size = new System.Drawing.Size(784, 28);
-            this.toolStripStatusLabel2.Spring = true;
-            // 
-            // toolStripStatusLabelInfo
-            // 
-            this.toolStripStatusLabelInfo.Font = new System.Drawing.Font("Segoe UI", 9.857143F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.toolStripStatusLabelInfo.ForeColor = System.Drawing.Color.DarkOrange;
-            this.toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
-            this.toolStripStatusLabelInfo.Size = new System.Drawing.Size(34, 28);
-            this.toolStripStatusLabelInfo.Text = "Idle";
-            // 
-            // toolStripProgressBar1
-            // 
-            this.toolStripProgressBar1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 27);
-            // 
-            // LogUpdateListTimer
-            // 
-            this.LogUpdateListTimer.Interval = 2000;
-            this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
+            this.toolStrip2.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.ToolStripComboBoxSearch,
+            this.toolStripDropDownButton1,
+            this.toolStripSeparator3,
+            this.toolStripSeparator,
+            this.toolStripDropDownButtonSettings,
+            this.toolStripSeparator4,
+            this.toolStripSeparator2,
+            this.openToolStripButton,
+            this.toolStripSeparator7,
+            this.toolStripButtonReload,
+            this.toolStripSeparator5,
+            this.toolStripButtonPauseLog,
+            this.toolStripSeparator6,
+            this.toolStripSeparator8});
+            this.toolStrip2.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip2.Name = "toolStrip2";
+            this.toolStrip2.Size = new System.Drawing.Size(1027, 31);
+            this.toolStrip2.TabIndex = 6;
+            this.toolStrip2.Text = "toolStrip2";
+            this.toolStrip2.TextChanged += new System.EventHandler(this.toolStrip2_TextChanged);
             // 
             // Shell
             // 
@@ -3063,12 +3127,12 @@ namespace AITool
             this.groupBox3.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
-            this.toolStrip2.ResumeLayout(false);
-            this.toolStrip2.PerformLayout();
             this.groupBox7.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.folv_log)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.toolStrip2.ResumeLayout(false);
+            this.toolStrip2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -3257,29 +3321,36 @@ namespace AITool
         private System.Windows.Forms.Button btnSaveTo;
         private BrightIdeasSoftware.FastObjectListView folv_log;
         private System.Windows.Forms.Timer LogUpdateListTimer;
+        private System.Windows.Forms.ToolStripMenuItem locateInLogToolStripMenuItem;
         private System.Windows.Forms.ToolStrip toolStrip2;
-        private System.Windows.Forms.ToolStripButton openToolStripButton;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox ToolStripComboBoxSearch;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem mnu_Filter;
         private System.Windows.Forms.ToolStripMenuItem mnu_Highlight;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonSettings;
         private System.Windows.Forms.ToolStripMenuItem Chk_AutoScroll;
         private System.Windows.Forms.ToolStripMenuItem chk_filterErrors;
+        private System.Windows.Forms.ToolStripMenuItem clearRecentErrorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLogLevel;
+        private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_off;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_fatal;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_error;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_warn;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_info;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_debug;
         private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_trace;
-        private System.Windows.Forms.ToolStripMenuItem mnu_log_filter_off;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem clearRecentErrorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton openToolStripButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripButton toolStripButtonReload;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripButton toolStripButtonPauseLog;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
     }
 }
 
