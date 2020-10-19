@@ -2232,7 +2232,6 @@ namespace AITool
                                             icam.maskManager.HistoryThresholdCount = cam.maskManager.HistoryThresholdCount;
                                             icam.maskManager.MaskRemoveThreshold = cam.maskManager.MaskRemoveThreshold;
                                             icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
-                                            icam.maskManager.MaskSaveMins = cam.maskManager.MaskSaveMins;
 
                                             icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
                                             icam.maskManager.Objects = cam.maskManager.Objects;

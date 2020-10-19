@@ -26,12 +26,11 @@ namespace AITool
             }
         }
 
-        public int MaskRemoveMins { get; set; } = 5;                    //counter for how long to keep masked objects. Each time not seen -1 from counter. If seen +1 counter until default max reached.
+        public int MaskRemoveMins { get; set; } = 5;                    //how many minutes to keep masked objects that are not visible 
         public int HistorySaveMins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
-        public int MaskSaveMins { get; set; } = 2;
         public double PercentMatch { get; set; } = 85;                  //miniumn percentage match to be considered a match
-        public int MaskRemoveThreshold { get; set; } = 1;
+        public int MaskRemoveThreshold { get; set; } = 2;               //number of times object is NOT seen before being removed by the cleanup timer 
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
 
@@ -82,8 +81,10 @@ namespace AITool
                 {
                     //Update PercentMatch since it could have been changed since mask created
                     op.PercentMatch = this.PercentMatch;
+
                     //update the camera name since it could have been renamed since the mask was created
                     op.CameraName = cam.name;
+
                     //update last seen date if hasnt been set
                     if (op.LastSeenDate == DateTime.MinValue)
                     {
@@ -110,8 +111,10 @@ namespace AITool
                 {
                     //Update PercentMatch since it could have been changed since mask created
                     op.PercentMatch = this.PercentMatch;
+
                     //update the camera name since it could have been renamed since the mask was created
                     op.CameraName = cam.name;
+
                     //update last seen date if hasnt been set
                     if (op.LastSeenDate == DateTime.MinValue)
                     {
@@ -122,6 +125,7 @@ namespace AITool
                     {
                         //first, set to empty string rather than null to fix bug I saw
                         op.ImagePath = "";
+
                         //next, fill with most recent image with detections
                         if (!string.IsNullOrEmpty(cam.last_image_file_with_detections))
                         {
@@ -170,69 +174,9 @@ namespace AITool
                     currentObject.ScaleConfig = ScaleConfig;
                     currentObject.PercentMatch = PercentMatch;
 
-                    //====================================================================
-                    //This is so we can add a static mask from History > Prediction Details 
-                    //and perhaps use it for adding new static on mask details screen right
-                    //click since we are threadsafe in here
-                    //====================================================================
-                    if (forceStatic || forceDynamic)  
+                    if (forceStatic || forceDynamic)
                     {
-                        int idx = MaskedPositions.IndexOf(currentObject);
-
-                        if (idx > -1)
-                        {
-                            
-                            ObjectPosition maskedObject = (ObjectPosition)MaskedPositions[idx];
-
-                            //Update last image that has same detection, and camera name found for existing mask
-                            maskedObject.ImagePath = currentObject.ImagePath;
-                            maskedObject.CameraName = currentObject.CameraName;
-
-                            if (forceStatic && maskedObject.IsStatic)
-                            {
-                                Log("Debug: Did not add new static mask because it was already found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            }
-                            else if (forceStatic && !maskedObject.IsStatic)
-                            {
-                                maskedObject.IsStatic = true;
-                                Log("Debug: Forced conversion of existing Dynamic mask to Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            }
-                            else if (forceDynamic && maskedObject.IsStatic)
-                            {
-                                Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            }
-                            else if (forceDynamic && !maskedObject.IsStatic)
-                            {
-                                Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            }
-                            returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject.Counter);
-                        }
-                        else if (forceStatic)
-                        {
-                            Log("Debug: + Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            //check to see if it is in the history list and remove:
-                            if (LastPositionsHistory.Contains(currentObject))
-                                LastPositionsHistory.Remove(currentObject);
-                            currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
-                            currentObject.IsStatic = true;
-                            MaskedPositions.Add(currentObject);
-                            returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
-                        }
-                        else if (forceDynamic)
-                        {
-                            Log("Debug: + Forced addition of new Dynamic mask (and removed from history): " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
-                            //check to see if it is in the history list and remove:
-                            if (LastPositionsHistory.Contains(currentObject))
-                                LastPositionsHistory.Remove(currentObject);
-
-                            currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
-                            currentObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
-                            currentObject.IsStatic = false;
-                            MaskedPositions.Add(currentObject);
-                            returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
-                        }
-
-                        return returnInfo;
+                        return forceMaskCreation(forceStatic, forceDynamic, currentObject);
                     }
 
                     int historyIndex = LastPositionsHistory.IndexOf(currentObject);
@@ -307,7 +251,73 @@ namespace AITool
             return returnInfo;
         }
 
-        //remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
+        /*=======================================================================
+        * This is so we can add a static mask from History > Prediction Details  
+        * and perhaps use it for adding new static on mask details screen right  
+        * click since we are threadsafe in here
+        ========================================================================*/
+        private MaskResultInfo forceMaskCreation(bool forceStatic, bool forceDynamic, ObjectPosition currentObject)
+        {
+            MaskResultInfo returnInfo = new MaskResultInfo();
+
+            int idx = MaskedPositions.IndexOf(currentObject);
+
+            if (idx > -1)
+            {
+                ObjectPosition maskedObject = (ObjectPosition)MaskedPositions[idx];
+
+                //Update last image that has same detection, and camera name found for existing mask
+                maskedObject.ImagePath = currentObject.ImagePath;
+                maskedObject.CameraName = currentObject.CameraName;
+
+                if (forceStatic && maskedObject.IsStatic)
+                {
+                    Log("Debug: Did not add new static mask because it was already found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                }
+                else if (forceStatic && !maskedObject.IsStatic)
+                {
+                    maskedObject.IsStatic = true;
+                    Log("Debug: Forced conversion of existing Dynamic mask to Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                }
+                else if (forceDynamic && maskedObject.IsStatic)
+                {
+                    Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                }
+                else if (forceDynamic && !maskedObject.IsStatic)
+                {
+                    Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                }
+                returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject.Counter);
+            }
+            else if (forceStatic)
+            {
+                Log("Debug: + Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
+                //check to see if it is in the history list and remove:
+                if (LastPositionsHistory.Contains(currentObject))
+                    LastPositionsHistory.Remove(currentObject);
+                currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
+                currentObject.IsStatic = true;
+                MaskedPositions.Add(currentObject);
+                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+            }
+            else if (forceDynamic)
+            {
+                Log("Debug: + Forced addition of new Dynamic mask (and removed from history): " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
+                //check to see if it is in the history list and remove:
+                if (LastPositionsHistory.Contains(currentObject))
+                    LastPositionsHistory.Remove(currentObject);
+
+                currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
+                currentObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                currentObject.IsStatic = false;
+                MaskedPositions.Add(currentObject);
+                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+            }
+
+            return returnInfo;
+        }
+
+        //Remove objects from history if they have not been detected in defined time (history_save_mins) and found counter < history_threshold_count
         private void CleanUpExpiredHistory()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -366,7 +376,7 @@ namespace AITool
                             switch (trigger)
                             {
                                 case RemoveEvent.Timer:
-                                    if (minutes >= MaskSaveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
+                                    if (minutes >= MaskRemoveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
                                         Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={MaskSaveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         MaskedPositions.RemoveAt(x);
@@ -375,7 +385,7 @@ namespace AITool
                                 case RemoveEvent.Detection:
                                     if (minutes > 1 && !maskedObject.IsStatic)  //if not visiable and not marked as a static mask
                                     {
-                                        if (maskedObject.Counter == 0 && minutes >= MaskSaveMins)
+                                        if (maskedObject.Counter == 0 && minutes >= MaskRemoveMins)
                                         {
                                             Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, MaskSaveMins={MaskSaveMins}) masked object after detection: " + maskedObject.ToString(),"", maskedObject.CameraName);
                                             MaskedPositions.RemoveAt(x);
