@@ -378,7 +378,7 @@ namespace AITool
                                 case RemoveEvent.Timer:
                                     if (minutes >= MaskRemoveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={MaskSaveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         MaskedPositions.RemoveAt(x);
                                     }
                                     break;
@@ -387,7 +387,7 @@ namespace AITool
                                     {
                                         if (maskedObject.Counter == 0 && minutes >= MaskRemoveMins)
                                         {
-                                            Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, MaskSaveMins={MaskSaveMins}) masked object after detection: " + maskedObject.ToString(),"", maskedObject.CameraName);
+                                            Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, MaskSaveMins={MaskRemoveMins}) masked object after detection: " + maskedObject.ToString(),"", maskedObject.CameraName);
                                             MaskedPositions.RemoveAt(x);
                                         }
                                         else if(maskedObject.Counter > 0) maskedObject.Counter--;
