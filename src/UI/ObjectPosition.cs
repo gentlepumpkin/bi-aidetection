@@ -107,7 +107,7 @@ namespace AITool
             float percentageIntersect = AITOOL.getObjIntersectPercent(this._ObjRectangle, other._ObjRectangle);
 
             if (percentageIntersect > 0)
-                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}","",other.CameraName);
+                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current: '{this.Label}' key={this.Key}, Tested: '{other.Label}' key={other.Key}","",other.CameraName,other.ImagePath);
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
 

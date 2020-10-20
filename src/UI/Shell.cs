@@ -354,7 +354,7 @@ namespace AITool
             {
 
                 Log("debug: Database initialized.");
-                
+
                 folv_history.EmptyListMsg = "No History";
 
                 this.DatabaseInitialized.WriteFullFence(true);
@@ -710,8 +710,10 @@ namespace AITool
             else if (tabControl1.SelectedTab == tabControl1.TabPages["tabLog"])
             {
                 //scroll to bottom, only when tab is active for better performance 
-
-                this.UpdateLogAddedRemoved(true);
+                if (!toolStripButtonPauseLog.Checked)
+                {
+                    this.UpdateLogAddedRemoved(true);
+                }
             }
             Application.DoEvents();
 
@@ -3541,7 +3543,12 @@ namespace AITool
 
             try
             {
+
+                toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
+
                 using var cw = new Global_GUI.CursorWait();
+
+                Stopwatch sw = new Stopwatch();
 
                 //first search directly through log files (the history entry may not be from todays log)
                 string justfile = Path.GetFileName(hist.Filename);
@@ -3572,7 +3579,7 @@ namespace AITool
                         Log("Error: Date in filename is unexpected: " + fi.FullName);
                         continue;
                     }
-                    
+
                     DateTime DATE = DateTime.MinValue;
 
                     if (Global.GetDateStrict(date, ref DATE, "yyyy-MM-dd"))
@@ -3581,14 +3588,22 @@ namespace AITool
                         {
                             //load into memory
                             Log($"Debug: Searching {fi.Name}...");
+
+                            Global.UpdateProgressBar($"Searching {fi.Name}...", 1, 1);
+
                             List<ClsLogItm> curlist = await LogMan.LoadLogFile(LogMan.GetCurrentLogFileName(), false, false);
+
+                            Global.UpdateProgressBar($"Searching {fi.Name}...", 1, curlist.Count);
 
                             DateTime FirstSeen = DateTime.MinValue;
 
                             int fnd = 0;
-
+                            int cnt = 0;
                             foreach (var CLI in curlist)
                             {
+                                cnt++;
+                                Global.UpdateProgressBar($"Searching {fi.Name}...", cnt, curlist.Count);
+
                                 if (CLI.Detail.IndexOf(justfile, StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
                                     if (FirstSeen == DateTime.MinValue)
@@ -3641,11 +3656,10 @@ namespace AITool
 
                 }
 
-                Log($"Found {found.Count} total matched lines for image '{justfile}'.");
+                Log($"Found {found.Count} total matched lines in {sw.ElapsedMilliseconds}ms for image '{justfile}'.");
 
                 if (found.Count > 0)
                 {
-                    toolStripButtonPauseLog.Checked = true; //pause
                     LogMan.Clear();
                     LogMan.AddRange(found);
                     String search = justfile;
@@ -3658,6 +3672,7 @@ namespace AITool
                 }
                 else
                 {
+                    toolStripButtonPauseLog.Checked = false; //start
                     MessageBox.Show($"Could not find matching log entries for '{justfile}'?  You may need to enable DEBUG logging mode.");
                 }
 
@@ -3667,6 +3682,10 @@ namespace AITool
             {
 
                 Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                Global.UpdateProgressBar($"", 0, 1);
             }
 
             return ret;
@@ -3979,6 +3998,40 @@ namespace AITool
 
         private void ToolStripComboBoxSearch_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private async void toolStripButtonLoad_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+
+                string LastFile = Global.GetSetting("LastLoadedLogFile", LogMan.GetCurrentLogFileName());
+
+                ofd.InitialDirectory = Path.GetDirectoryName(LastFile);
+                ofd.Title = "Browse for AITOOL Log Files";
+                ofd.CheckFileExists = true;
+                ofd.CheckPathExists = true;
+                ofd.DefaultExt = "log";
+                ofd.Filter = "LOG Files (AITOOL.[*.log;AITOOL.[*.zip)|AITOOL.[*.log;AITOOL.[*.zip";
+                ofd.FilterIndex = 1;
+                ofd.RestoreDirectory = true;
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    using var cw = new Global_GUI.CursorWait();
+                    toolStripButtonPauseLog.Checked = true;
+                    Global.SaveSetting("LastLoadedLogFile", ofd.FileName);
+                    LogMan.Clear();
+                    folv_log.ClearObjects();
+                    folv_log.ModelFilter = null;
+                    await LogMan.LoadLogFile(ofd.FileName, true, false);
+                    Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {ofd.FileName}.");
+                    this.UpdateLogAddedRemoved(true);
+                }
+
+
+            }
 
         }
     }

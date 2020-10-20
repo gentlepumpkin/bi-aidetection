@@ -270,28 +270,32 @@ namespace AITool
                 maskedObject.ImagePath = currentObject.ImagePath;
                 maskedObject.CameraName = currentObject.CameraName;
 
+                //always remove from history if found in masked positions
+                if (LastPositionsHistory.Contains(currentObject))
+                    LastPositionsHistory.Remove(currentObject);
+
                 if (forceStatic && maskedObject.IsStatic)
                 {
-                    Log("Debug: Did not add new static mask because it was already found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                    Log("Did not add new static mask because it was already found in masked_positions " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 }
                 else if (forceStatic && !maskedObject.IsStatic)
                 {
                     maskedObject.IsStatic = true;
-                    Log("Debug: Forced conversion of existing Dynamic mask to Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                    Log("Forced conversion of existing Dynamic mask to Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 }
                 else if (forceDynamic && maskedObject.IsStatic)
                 {
-                    Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                    Log("Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 }
                 else if (forceDynamic && !maskedObject.IsStatic)
                 {
-                    Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
+                    Log("Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 }
                 returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject.Counter);
             }
             else if (forceStatic)
             {
-                Log("Debug: + Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
+                Log("+ Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 //check to see if it is in the history list and remove:
                 if (LastPositionsHistory.Contains(currentObject))
                     LastPositionsHistory.Remove(currentObject);
