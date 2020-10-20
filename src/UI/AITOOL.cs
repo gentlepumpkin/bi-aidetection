@@ -1790,7 +1790,7 @@ namespace AITool
 
         }
 
-        public static float getObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
+        public static float GetObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
         {
 
             Rectangle objIntersect = Rectangle.Intersect(masterRectangle, compareRectangle);
