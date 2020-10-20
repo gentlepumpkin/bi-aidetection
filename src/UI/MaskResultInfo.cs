@@ -38,7 +38,7 @@ namespace AITool
         public MaskResult Result = MaskResult.Unknown;
         public int ImagePointsOutsideMask = 0;
         public int DynamicThresholdCount = 0;
-        public float PercentMatch = 0f;
+        public float PercentMatch = 0;
 
         public void SetResults(MaskType type, MaskResult result)
         {
