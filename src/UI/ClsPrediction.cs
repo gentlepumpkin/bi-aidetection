@@ -44,11 +44,12 @@ namespace AITool
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
+        public float PercentMatch { get; set; } = 0;
         public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
         public int DynamicThresholdCount { get; set; } = 0;
         public int ImagePointsOutsideMask { get; set; } = 0;
-
+        
         public float Confidence { get; set; } = 0;
         public int YMin { get; set; } = 0;
         public int XMin { get; set; } = 0;
@@ -147,6 +148,8 @@ namespace AITool
                                         this.DynMaskResult = result.Result;
                                         this.DynMaskType = result.MaskType;
                                         this.DynamicThresholdCount = result.DynamicThresholdCount;
+                                        this.PercentMatch = result.PercentMatch;
+
                                         //there is a dynamic or static mask
                                         if (result.MaskType == MaskType.Dynamic)
                                             this.Result = ResultType.DynamicMasked;

@@ -196,7 +196,7 @@ namespace AITool
                         if (foundObject.Counter < HistoryThresholdCount)
                         {
                             foundObject.Counter++;
-                            returnInfo.SetResults(MaskType.History, MaskResult.ThresholdNotMet, foundObject.Counter);
+                            returnInfo.SetResults(MaskType.History, MaskResult.ThresholdNotMet, foundObject);
                         }
                         else
                         {
@@ -205,8 +205,9 @@ namespace AITool
                             LastPositionsHistory.RemoveAt(historyIndex);
                             foundObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
                             foundObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                            foundObject.LastPercentMatch = 0;
                             MaskedPositions.Add(foundObject);
-                            returnInfo.SetResults(MaskType.Dynamic, MaskResult.NewDynamicCreated, foundObject.Counter);
+                            returnInfo.SetResults(MaskType.Dynamic, MaskResult.NewDynamicCreated, foundObject);
                         }
                         return returnInfo;
                     }
@@ -232,13 +233,13 @@ namespace AITool
                         Log($"Debug: Found '{currentObject.Label}' (Key={currentObject.Key}) in masked_positions {maskedObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
 
                         MaskType type = maskedObject.IsStatic ? MaskType.Static : MaskType.Dynamic;
-                        returnInfo.SetResults(type, MaskResult.Found, maskedObject.Counter);
+                        returnInfo.SetResults(type, MaskResult.Found, maskedObject);
                     }
                     else
                     {
                         Log($"Debug: + New object found: {currentObject.ToString()}. Adding to last_positions_history.", "", currentObject.CameraName, currentObject.ImagePath);
                         LastPositionsHistory.Add(currentObject);
-                        returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject.Counter);
+                        returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject);
                     }
                 }
             }
@@ -287,7 +288,7 @@ namespace AITool
                 {
                     Log("Debug: Did not add new Dynamic mask because it was already Static " + maskedObject.ToString() + " for camera " + currentObject.CameraName, "", currentObject.CameraName);
                 }
-                returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject.Counter);
+                returnInfo.SetResults(MaskType.Static, MaskResult.Found, maskedObject);
             }
             else if (forceStatic)
             {
@@ -298,7 +299,7 @@ namespace AITool
                 currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
                 currentObject.IsStatic = true;
                 MaskedPositions.Add(currentObject);
-                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject);
             }
             else if (forceDynamic)
             {
@@ -311,7 +312,7 @@ namespace AITool
                 currentObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
                 currentObject.IsStatic = false;
                 MaskedPositions.Add(currentObject);
-                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject.Counter);
+                returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject);
             }
 
             return returnInfo;
