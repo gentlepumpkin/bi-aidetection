@@ -11,21 +11,18 @@ namespace AITool
         public string Label { get; } = "";
         public DateTime CreateDate { get; set; } = DateTime.MinValue;
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
-
         public int Counter { get; set; }
         public double PercentMatch { get; set; }
+        public float LastPercentMatch { get; set; }
         public Boolean IsStatic { get; set; } = false;
         public int Xmin { get; }
         public int Ymin { get; }
         public int Xmax { get; }
         public int Ymax { get; }
-
         public long Key { get; }
         public int ImageWidth { get; set; }
         public int ImageHeight { get; set; }
-
-        private Rectangle _ObjRectangle;
-
+        private Rectangle _objRectangle;
         public string CameraName { get; set; } = "";
         public string ImagePath { get; set; } = "";
 
@@ -57,16 +54,16 @@ namespace AITool
             this.Xmax = xmax;
             this.Ymax = ymax;
 
-            _ObjRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
+            _objRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
 
             this.ImageHeight = imageHeight;
             this.ImageWidth = imageWidth;
 
             //object percent of image area
-            ObjectImagePercent = (_ObjRectangle.Width * _ObjRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
+            ObjectImagePercent = (_objRectangle.Width * _objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            Key = ((Xmin + 1) * (Ymin + 1) + (_ObjRectangle.Width * _ObjRectangle.Height));
+            Key = ((Xmin + 1) * (Ymin + 1) + (_objRectangle.Width * _objRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -104,10 +101,14 @@ namespace AITool
             if (other == null)
                 return false;
             
-            float percentageIntersect = AITOOL.getObjIntersectPercent(this._ObjRectangle, other._ObjRectangle);
+            float percentageIntersect = AITOOL.GetObjIntersectPercent(this._objRectangle, other._objRectangle);
 
-            if (percentageIntersect > 0)
-                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current: '{this.Label}' key={this.Key}, Tested: '{other.Label}' key={other.Key}","",other.CameraName,other.ImagePath);
+            if (percentageIntersect > other.LastPercentMatch)
+            {
+                this.LastPercentMatch = percentageIntersect;   //parent object highest match for this detection cycle
+                other.LastPercentMatch = percentageIntersect;  //current object highest match
+                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName,other.ImagePath);
+            }
 
             double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
 
