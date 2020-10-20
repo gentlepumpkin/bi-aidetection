@@ -596,7 +596,7 @@ namespace AITool
                 this.Enabled = true;  //enable after we import
 
             if (Directory.Exists(ExtractZipPath))
-                Directory.Delete(ExtractZipPath,false);
+                Directory.Delete(ExtractZipPath,true);
 
             Global.UpdateProgressBar($"", 0, 1);
 
