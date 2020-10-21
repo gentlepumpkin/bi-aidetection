@@ -995,6 +995,25 @@ namespace AITool
                                             {
                                                 jsonString = await output.Content.ReadAsStringAsync();
                                             }
+                                            else if (output.StatusCode.ToString() == "400")
+                                            {
+                                                //TODO: Stop accepting 400 response when they give a better response.
+                                                Log($"Debug:{{purple}}      Deepstack returned HttpResponse '400'.  For the new beta versions (10/21) this can mean 'no detections' OR it can mean the image is bad.  For now we will assume 'No detections'  TODO: Stop accepting 400 response when they give a better response.", CurSrv, cam.name, CurImg.image_path);
+
+                                                cam.IncrementFalseAlerts(); //stats update
+
+                                                Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
+
+                                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", DeepStackURL.CurSrv);
+
+                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
+
+                                                Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name, CurImg.image_path);
+
+                                                //add to history list
+                                                Global.CreateHistoryItem(hist);
+
+                                            }
                                             else
                                             {
                                                 error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
