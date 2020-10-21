@@ -1013,6 +1013,8 @@ namespace AITool
                                                 //add to history list
                                                 Global.CreateHistoryItem(hist);
 
+                                                goto exitfunction;  //uggg, just a quick fix
+
                                             }
                                             else
                                             {
@@ -1327,7 +1329,7 @@ namespace AITool
                     DeepStackURL.ResultMessage = error;
                     Log(error, CurSrv, cam.name, CurImg.image_path);
                 }
-
+            exitfunction:
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true)
                 {
                     //upload the alert image which could not be analyzed to Telegram
