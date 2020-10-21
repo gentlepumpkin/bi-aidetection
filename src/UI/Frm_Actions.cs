@@ -5,7 +5,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_Actions:Form
+    public partial class Frm_Actions : Form
     {
         public List<CameraTriggerAction> actions = new List<CameraTriggerAction>();
         public Frm_Actions()
@@ -17,8 +17,8 @@ namespace AITool
         {
             try
             {
-                Global_GUI.ConfigureFOLV(FOLV_Actions, typeof(CameraTriggerAction), null, null);
-                Global_GUI.UpdateFOLV(FOLV_Actions, actions, true);
+                Global_GUI.ConfigureFOLV(ref FOLV_Actions, typeof(CameraTriggerAction), null, null);
+                Global_GUI.UpdateFOLV(ref FOLV_Actions, actions, true);
 
                 Global_GUI.RestoreWindowState(this);
 

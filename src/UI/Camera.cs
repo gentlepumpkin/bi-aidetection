@@ -50,6 +50,7 @@ namespace AITool
         public bool trigger_url_cancels = false;
         public bool telegram_enabled = false;
         public string telegram_caption = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
+        public string telegram_triggering_objects = ""; 
         public bool enabled = true;
         public double cooldown_time = 0;
         public int threshold_lower = 0;
@@ -70,7 +71,7 @@ namespace AITool
         public string Action_RunProgramString = "";
         public string Action_RunProgramArgsString = "";
         public bool Action_PlaySounds = false;
-        public string Action_Sounds = "";
+        public string Action_Sounds = @"person ; C:\example\YOYO.WAV | bird ; C:\example\TWEET.WAV";
 
         public bool Action_mqtt_enabled = false;
         public string Action_mqtt_topic = "ai/[camera]/motion";

@@ -670,9 +670,41 @@ namespace AITool
 
         }
 
+        public static bool IsInList(List<string> FindStrList, string SearchList, string Separators = ",;|")
+        {
+            if (string.IsNullOrWhiteSpace(SearchList))
+                return true;  //If there is no searchlist, always return true
 
+            return IsInList(FindStrList, Global.Split(SearchList, Separators, true, true, true));
+        }
+        public static bool IsInList(string FindStr, List<string> SearchList, string Separators = ",;|")
+        {
+            if (SearchList.Count == 0)
+                return true;  //If there is no searchlist, always return true
 
-        public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true)
+            return IsInList(Global.Split(FindStr, Separators,true, true, true), SearchList);
+        }
+        public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|")
+        {
+            if (string.IsNullOrWhiteSpace(SearchList))
+                return true;  //If there is no searchlist, always return true
+
+            return IsInList(Global.Split(FindStr, Separators,true, true, true), Global.Split(SearchList, Separators,true, true, true));
+        }
+        private static bool IsInList(List<string> FindStrsList, List<string> SearchList)
+        {
+            foreach (string findstr in FindStrsList)
+            {
+                foreach (string searchstr in SearchList)
+                {
+                    if (findstr == searchstr || searchstr == "*")
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true, bool ToLower = false)
         {
             List<string> Ret = new List<string>();
             if (!string.IsNullOrWhiteSpace(InList))
@@ -683,30 +715,26 @@ namespace AITool
                     SSO = StringSplitOptions.RemoveEmptyEntries;
 
                 string[] splt = InList.Split(Separators.ToCharArray(), SSO);
-                foreach (string str in splt)
+                for (int i = 0; i < splt.Count(); i++)
                 {
-                    if (RemoveEmpty && !string.IsNullOrWhiteSpace(str))
+                    if (ToLower)
+                        splt[i] = splt[i].ToLower();
+
+                    if (RemoveEmpty && !string.IsNullOrWhiteSpace(splt[i]))
                     {
                         if (TrimStr)
-                        {
-                            Ret.Add(str.Trim());
-                        }
+                            Ret.Add(splt[i].Trim());
                         else
-                        {
-                            Ret.Add(str);
-                        }
+                            Ret.Add(splt[i]);
                     }
                     else if (!RemoveEmpty)
                     {
                         if (TrimStr)
-                        {
-                            Ret.Add(str.Trim());
-                        }
+                            Ret.Add(splt[i].Trim());
                         else
-                        {
-                            Ret.Add(str);
-                        }
+                            Ret.Add(splt[i]);
                     }
+
                 }
             }
             return Ret;

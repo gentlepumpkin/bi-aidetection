@@ -173,10 +173,11 @@ namespace AITool
 
                 this.NLogFileWriter = NLog.LogManager.GetCurrentClassLogger();
 
-                GetCurrentLogFileName();
+                if (this.Values.Count == 0)
+                    GetCurrentLogFileName();
 
                 //load the current log file into memory
-                await this.LoadLogFile(this._Filename, true, true);
+                await this.LoadLogFile(this._Filename, true, false);
 
             }
             catch (Exception ex)
@@ -210,6 +211,7 @@ namespace AITool
         {
             lock (this._LockObj)
             {
+                NLog.LogManager.Flush();
                 this.Values.Clear();
                 this.LastLogItm = new ClsLogItm();
                 this._LastIDX.WriteFullFence(0);
@@ -277,7 +279,7 @@ namespace AITool
             {
                 this._LastIDX.AtomicIncrementAndGet();
                 this.LastLogItm = new ClsLogItm();
-                this.LastLogItm.Detail = Detail;
+                this.LastLogItm.Detail = Detail.Replace("|",";");
                 this.LastLogItm.Filename = Path.GetFileName(this._Filename);
 
                 this.LastLogItm.ThreadID = Thread.CurrentThread.ManagedThreadId;
@@ -460,8 +462,8 @@ namespace AITool
                 Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1);
 
                 //run in another thread so gui doesnt freeze
-                await Task.Run(async () =>
-                {
+                //await Task.Run(() =>
+                //{
                     bool success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
                     if (success)
                     {
@@ -494,7 +496,7 @@ namespace AITool
 
                         lock (this._LockObj)
                         {
-                            string file = Path.GetFileName(NewFilename);
+                            file = Path.GetFileName(NewFilename);
                             int Invalid = 0;
                             bool OldFile = false;
                             using (StreamReader sr = new StreamReader(NewFilename))
@@ -588,7 +590,7 @@ namespace AITool
                     }
 
 
-                });
+                //});
 
             }
 
@@ -605,7 +607,7 @@ namespace AITool
             return ret;
         }
 
-        public async void Dispose()
+        public void Dispose()
         {
             NLog.LogManager.Flush();
             ((IDisposable)NLogAsyncWrapper).Dispose();

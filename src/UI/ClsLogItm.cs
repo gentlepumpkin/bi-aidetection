@@ -66,6 +66,9 @@ namespace AITool
             if (LogEntry.StartsWith("["))  //old log format, ignore
                 return;
 
+            //some log entries have a | which they shouldnt
+            LogEntry = LogEntry.Replace("|Create|", ";Create;");
+
             List<string> splt = Global.Split(LogEntry,"|",false,false);
             // "Date|Level|Source|Func|AIServer|Camera|Image|Detail|Idx|Depth|Color|ThreadID"
             //  0    1     2      3    4        5      6     7      8   9     10    11

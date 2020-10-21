@@ -6,7 +6,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_ObjectDetail:Form
+    public partial class Frm_ObjectDetail : Form
     {
         public List<ClsPrediction> PredictionObjectDetail = null;
         public Frm_ObjectDetail()
@@ -35,9 +35,9 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(folv_ObjectDetail, typeof(ClsPrediction), null, null);
+                Global_GUI.ConfigureFOLV(ref folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV_add(folv_ObjectDetail, PredictionObjectDetail.ToArray());
+                Global_GUI.UpdateFOLV(ref folv_ObjectDetail, PredictionObjectDetail);
 
             }
             catch (Exception)

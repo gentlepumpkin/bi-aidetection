@@ -23,7 +23,7 @@ namespace AITool
             this.hist = hist;
         }
     }
-    public class SQLiteHistory:IDisposable
+    public class SQLiteHistory : IDisposable
     {
         private bool disposedValue;
 
@@ -35,8 +35,8 @@ namespace AITool
         public DateTime LastUpdateTime { get; set; } = DateTime.MinValue;
         public ThreadSafe.Boolean HasInitialized { get; set; } = new ThreadSafe.Boolean(false);
         private SQLiteConnection sqlite_conn { get; set; } = null;
-        public ConcurrentBag<History> RecentlyAdded { get; set; } = new ConcurrentBag<History>();
-        public ConcurrentBag<History> RecentlyDeleted { get; set; } = new ConcurrentBag<History>();
+        public ConcurrentQueue<History> RecentlyAdded { get; set; } = new ConcurrentQueue<History>();
+        public ConcurrentQueue<History> RecentlyDeleted { get; set; } = new ConcurrentQueue<History>();
         public ThreadSafe.Integer AddedCount { get; set; } = new ThreadSafe.Integer(0);
         public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
         //private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
@@ -90,7 +90,7 @@ namespace AITool
 
             foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
             {
-                string file = ""; 
+                string file = "";
                 try
                 {
                     if (hitm == null || hitm.hist == null || string.IsNullOrEmpty(hitm.hist.Filename))
@@ -113,7 +113,7 @@ namespace AITool
                 }
 
             }
-            
+
             Log($"Error: Should not have left HistoryJobQueueLoop?");
 
         }
@@ -130,7 +130,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex),"None","None","None");
+                Log("Error: " + Global.ExMsg(ex), "None", "None", "None");
 
                 return false;
             }
@@ -170,8 +170,8 @@ namespace AITool
                 Global.UpdateProgressBar("Debug: Initializing history database...", 1, 1);
 
                 this.HistoryDic.Clear();
-                this.RecentlyDeleted = new ConcurrentBag<History>();
-                this.RecentlyAdded = new ConcurrentBag<History>();
+                this.RecentlyDeleted = new ConcurrentQueue<History>();
+                this.RecentlyAdded = new ConcurrentQueue<History>();
 
                 //https://www.sqlite.org/threadsafe.html
                 SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
@@ -180,12 +180,12 @@ namespace AITool
                 if (this.ReadOnly)
                 {
                     flags = flags | SQLiteOpenFlags.ReadOnly;
-                    sflags += "|ReadOnly";
+                    sflags += ";ReadOnly";
                 }
                 else
                 {
                     flags = flags | SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite;
-                    sflags += "|Create|ReadWrite";
+                    sflags += ";Create;ReadWrite";
                 }
 
                 if (this.IsSQLiteDBConnected())
@@ -281,7 +281,7 @@ namespace AITool
 
                 if (ret || iret > 0)
                 {
-                    this.RecentlyAdded.Add(hist);
+                    this.RecentlyAdded.Enqueue(hist);
                     this.AddedCount.AtomicIncrementAndGet();
                     this.LastUpdateTime = DateTime.Now;
                 }
@@ -304,16 +304,16 @@ namespace AITool
         }
         public bool DeleteHistoryQueue(string Filename)
         {
-                //simply add to the queue
-                History hist;
-                this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
+            //simply add to the queue
+            History hist;
+            this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
 
-                if (hist == null)
-                    hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "","");
+            if (hist == null)
+                hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "", "");
 
-                DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
+            DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
 
-                return this.DBQueueHistory.TryAdd(ditm);
+            return this.DBQueueHistory.TryAdd(ditm);
 
         }
 
@@ -365,7 +365,7 @@ namespace AITool
                 {
                     this.DeletedCount.AtomicIncrementAndGet();
                     this.LastUpdateTime = DateTime.Now;
-                    this.RecentlyDeleted.Add(hist);
+                    this.RecentlyDeleted.Enqueue(hist);
                 }
 
                 //Semaphore_Updating.Release();
@@ -505,11 +505,19 @@ namespace AITool
             while (!this.RecentlyDeleted.IsEmpty)
             {
                 History hist;
-                if (this.RecentlyDeleted.TryTake(out hist))
+                if (this.RecentlyDeleted.TryDequeue(out hist))
                     ret.Add(hist);
             }
             return ret;
         }
+        public List<History> GetAllValues()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            //because the dictionary doesnt give a proper sorted list
+            return this.HistoryDic.Values.OrderBy(c => c.Date).ToList();
+        }
+
         public List<History> GetRecentlyAdded()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -518,7 +526,7 @@ namespace AITool
             while (!this.RecentlyAdded.IsEmpty)
             {
                 History hist;
-                if (this.RecentlyAdded.TryTake(out hist))
+                if (this.RecentlyAdded.TryDequeue(out hist))
                     ret.Add(hist);
             }
             return ret;

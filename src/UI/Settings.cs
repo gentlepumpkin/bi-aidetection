@@ -32,7 +32,7 @@ namespace AITool
             public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             [JsonIgnore]
             public string HistoryDBFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3");
-
+            public bool SettingsPortable = true;  //portable means the settings stay under EXE folder, otherwise they get dropped in %appdata%
             public string telegram_token = "";
             public double telegram_cooldown_minutes = 0.0833333;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
             public int Telegram_RetryAfterFailSeconds = 300;  //default to 5 minutes if telegram exception
@@ -271,6 +271,40 @@ namespace AITool
             return Ret;
         }
 
+        public static void UpdateSettingsLocation()
+        {
+            try
+            {
+                //original:
+                //public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON");
+                string origfolder = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(@"\".ToCharArray());
+                string oldfolder = Path.GetDirectoryName(Settings.SettingsFileName);
+                string newfolder = "";
+                
+                if (!Settings.SettingsPortable)
+                {
+                    //Set to appdata folder
+                    newfolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AITOOL", "_Settings");
+                }
+                else
+                {
+                    //set to aitool subfolder
+                    newfolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location), "_Settings");
+                }
+
+                if (!oldfolder.Equals(newfolder,StringComparison.OrdinalIgnoreCase))
+                {
+                    Log($"Debug: Changing settings folder from {oldfolder} to {newfolder}...");
+                }
+                
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+
+        }
         public static bool Load()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -278,15 +312,16 @@ namespace AITool
             bool Ret = false;
             try
             {
-
                 //multiple threads may be trying to save at the same time
                 lock (ThreadLock)
                 {
                     Settings.SettingsValid = false;  //assume failure
                     bool Resave = false;
 
+                    UpdateSettingsLocation();  //save to \settings folder or appdata\settings
+
                     //get backup json from registry
-                    
+
                     AppSettings.LastSettingsJSON = Global.GetSetting("BackupSettingsJSON", "");
 
                     //read the old configuration file
@@ -384,6 +419,9 @@ namespace AITool
 
                     if (Settings != null)
                     {
+
+                        UpdateSettingsLocation();  //save to \settings folder or appdata\settings
+
                         //Ive had a case where MaskManager was null/corrupt to double check:
                         foreach (Camera cam in Settings.CameraList)
                         {

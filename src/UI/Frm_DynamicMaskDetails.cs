@@ -13,7 +13,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_DynamicMaskDetails:Form
+    public partial class Frm_DynamicMaskDetails : Form
     {
 
         public Camera cam;
@@ -156,11 +156,11 @@ namespace AITool
 
                 Log("Error: " + Global.ExMsg(ex));
             }
-            
+
             return "";
 
         }
-               
+
 
         public Frm_DynamicMaskDetails()
         {
@@ -171,8 +171,8 @@ namespace AITool
         {
             loading = true;
 
-            Global_GUI.ConfigureFOLV(FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
-            Global_GUI.ConfigureFOLV(FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
 
             Global_GUI.RestoreWindowState(this);
 
@@ -228,8 +228,8 @@ namespace AITool
                 masked = cam.maskManager.MaskedPositions;
             }
 
-            Global_GUI.UpdateFOLV(FOLV_MaskHistory, hist, true);
-            Global_GUI.UpdateFOLV(FOLV_Masks, masked, true);
+            Global_GUI.UpdateFOLV(ref FOLV_MaskHistory, hist, true);
+            Global_GUI.UpdateFOLV(ref FOLV_Masks, masked, true);
             this.CurObjPosLst.Clear();
             ShowMaskImage();
             ShowImageMask(null);
@@ -369,7 +369,7 @@ namespace AITool
                         {
                             //Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                            
+
                             int xmin = (int)(scale * op.Xmin + this.cam.XOffset) + absX;
                             int xmax = (int)(scale * op.Xmax) + absX;
                             int ymin = (int)(scale * op.Ymin + this.cam.YOffset) + absY;
@@ -398,7 +398,7 @@ namespace AITool
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
                             string display = $"{op.Label}";
-                            
+
                             if (showkey)
                                 display += $" ({op.Key})";
 
@@ -430,7 +430,7 @@ namespace AITool
                 Log("Error: " + Global.ExMsg(ex));
             }
         }
-       
+
         private void FOLV_MaskHistory_SelectionChanged(object sender, EventArgs e)
         {
             this.CurObjPosLst.Clear();
@@ -453,7 +453,7 @@ namespace AITool
         private void FOLV_Masks_SelectionChanged(object sender, EventArgs e)
         {
             this.CurObjPosLst.Clear();
-            
+
             if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
             {
                 contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObjects[0];
@@ -514,7 +514,7 @@ namespace AITool
             {
                 op.IsStatic = true;
                 op.Counter = 0;
-                cam.maskManager.CreateDynamicMask(op,true);
+                cam.maskManager.CreateDynamicMask(op, true);
             }
             Refresh();
             AppSettings.Save();
@@ -548,7 +548,7 @@ namespace AITool
             FormatRow(sender, e);
         }
 
-        private async void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        private void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
             try
             {
@@ -561,7 +561,7 @@ namespace AITool
                     e.Item.ForeColor = Color.Black;
             }
 
-            
+
 
             catch (Exception ex)
             {
@@ -595,7 +595,7 @@ namespace AITool
 
         private void comboBox_filter_camera_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
 
         }
 
@@ -673,7 +673,7 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.CreateDynamicMask(op,false,true);
+                cam.maskManager.CreateDynamicMask(op, false, true);
             }
             Refresh();
             AppSettings.Save();

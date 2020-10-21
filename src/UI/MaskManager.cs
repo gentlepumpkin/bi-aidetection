@@ -150,22 +150,12 @@ namespace AITool
             {
                 lock (_maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
-                    List<string> objects = Global.Split(this.Objects, "|;,");
 
-                    if (objects.Count > 0)
+                    if (!Global.IsInList(currentObject.Label, this.Objects))
                     {
-                        bool fnd = false;
-                        foreach (string objname in objects)
-                        {
-                            if (currentObject.Label.Trim().ToLower() == objname.ToLower())
-                                fnd = true;
-                        }
-                        if (!fnd)
-                        {
-                            Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
-                            returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
-                            return returnInfo;
-                        }
+                        Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
+                        returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
+                        return returnInfo;
                     }
 
                     Log("Debug: *** Starting new object mask processing ***", "", currentObject.CameraName, currentObject.ImagePath);
