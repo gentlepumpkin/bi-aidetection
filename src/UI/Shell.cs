@@ -3060,9 +3060,13 @@ namespace AITool
 
         private void folv_history_SelectionChanged(object sender, EventArgs e)
         {
+
+            if (IsClosing.ReadFullFence())
+                return;
+
             try
             {
-                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0 && folv_history.SelectedObjects[0] != null)
                 {
                     History hist = (History)folv_history.SelectedObjects[0];
 
@@ -4093,6 +4097,12 @@ namespace AITool
 
                 toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
 
+                folv_log.ClearObjects();
+                folv_log.ModelFilter = null;
+                folv_log.EmptyListMsg = "Searching...";
+
+                StartPauseLog();
+
                 using var cw = new Global_GUI.CursorWait();
 
                 Stopwatch sw = new Stopwatch();
@@ -4144,8 +4154,6 @@ namespace AITool
 
                 if (found.Count > 0)
                 {
-                    folv_log.ClearObjects();
-                    folv_log.ModelFilter = null;
                     LogMan.Clear();
                     LogMan.AddRange(found);
                     UpdateLogAddedRemoved(false);
@@ -4153,6 +4161,7 @@ namespace AITool
                 else
                 {
                     toolStripButtonPauseLog.Checked = false; //start
+                    StartPauseLog();
                     MessageBox.Show($"Could not find any error log entries in {files.Count} files.");
                 }
 
