@@ -35,9 +35,9 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(ref folv_ObjectDetail, typeof(ClsPrediction), null, null);
+                Global_GUI.ConfigureFOLV(folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV(ref folv_ObjectDetail, PredictionObjectDetail);
+                Global_GUI.UpdateFOLV(folv_ObjectDetail, PredictionObjectDetail);
 
             }
             catch (Exception)

@@ -995,10 +995,10 @@ namespace AITool
                                             {
                                                 jsonString = await output.Content.ReadAsStringAsync();
                                             }
-                                            else if (output.StatusCode.ToString() == "400")
+                                            else if (output.StatusCode == System.Net.HttpStatusCode.BadRequest)  //400
                                             {
                                                 //TODO: Stop accepting 400 response when they give a better response.
-                                                Log($"Debug:{{purple}}      Deepstack returned HttpResponse '400'.  For the new beta versions (10/21) this can mean 'no detections' OR it can mean the image is bad.  For now we will assume 'No detections'  TODO: Stop accepting 400 response when they give a better response.", CurSrv, cam.name, CurImg.image_path);
+                                                Log($"Debug:{{purple}}      Deepstack returned HttpResponse 'BadRequest' (400).  For the new beta versions (10/21) this can mean 'no detections' OR it can mean the image is bad.  For now we will assume 'No detections'  TODO: Stop accepting 400 response when they give a better response.", CurSrv, cam.name, CurImg.image_path);
 
                                                 cam.IncrementFalseAlerts(); //stats update
 
@@ -1018,7 +1018,7 @@ namespace AITool
                                             }
                                             else
                                             {
-                                                error = $"ERROR: Got http status code '{Convert.ToInt32(output.StatusCode)}' in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
+                                                error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
                                                 DeepStackURL.ErrCount.AtomicIncrementAndGet();
                                                 DeepStackURL.ResultMessage = error;
                                                 Log(error, CurSrv, cam.name, CurImg.image_path);

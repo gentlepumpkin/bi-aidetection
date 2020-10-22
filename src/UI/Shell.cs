@@ -70,9 +70,15 @@ namespace AITool
             //---------------------------------------------------------------------------
             //HISTORY TAB
 
-            Global_GUI.ConfigureFOLV(ref folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, GridLines: false);
-
+            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, GridLines: false);
             folv_history.EmptyListMsg = "Initializing database";
+
+
+            //---------------------------------------------------------------------------
+            //INITIALIZE HISTORY DB, ETC
+
+            AITOOL.InitializeBackend();
+
             cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
             cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
             cb_follow.Checked = AppSettings.Settings.HistoryFollow;
@@ -81,11 +87,6 @@ namespace AITool
             storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
             showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
             HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
-
-            //---------------------------------------------------------------------------
-            //INITIALIZE HISTORY DB, ETC
-
-            AITOOL.InitializeBackend();
 
             //---------------------------------------------------------------------------
             //CAMERAS TAB
@@ -155,7 +156,7 @@ namespace AITool
             //---------------------------------------------------------------------------
             //LOG TAB
 
-            Global_GUI.ConfigureFOLV(ref folv_log, typeof(ClsLogItm), null, null, GridLines: false);
+            Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null, GridLines: false);
 
             this.UpdateLogAddedRemoved(true);
             LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
@@ -242,7 +243,7 @@ namespace AITool
                         if (this.ToolStripComboBoxSearch.FindStringExact(this.ToolStripComboBoxSearch.Text) == -1)
                             this.ToolStripComboBoxSearch.Items.Add(this.ToolStripComboBoxSearch.Text);
 
-                        Global_GUI.FilterFOLV(ref folv_log, this.ToolStripComboBoxSearch.Text, mnu_Filter.Checked);
+                        Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text, mnu_Filter.Checked);
                     }
                     else
                     {
@@ -279,7 +280,7 @@ namespace AITool
                 {
                     //do it all in one update so it is faster:
                     using var cw = new Global_GUI.CursorWait();
-                    Global_GUI.UpdateFOLV(ref folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
+                    Global_GUI.UpdateFOLV(folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
                 }
                 else
                 {
@@ -287,7 +288,7 @@ namespace AITool
                         folv_log.RemoveObjects(removed);
 
                     if (added.Count > 0)
-                        Global_GUI.UpdateFOLV(ref folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
+                        Global_GUI.UpdateFOLV(folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
                 }
 
 
@@ -343,7 +344,7 @@ namespace AITool
                         folv_history.RemoveObjects(removed);
 
                     if (added.Count > 0)
-                        Global_GUI.UpdateFOLV(ref folv_history, added, AppSettings.Settings.HistoryFollow);
+                        Global_GUI.UpdateFOLV(folv_history, added, AppSettings.Settings.HistoryFollow);
 
 
                     this.LastListUpdate.Write(DateTime.Now);
@@ -1501,7 +1502,7 @@ namespace AITool
 
                     if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
-                        Global_GUI.UpdateFOLV(ref folv_history, HistoryDB.GetAllValues(), Follow || AppSettings.Settings.HistoryFollow);
+                        Global_GUI.UpdateFOLV(folv_history, HistoryDB.GetAllValues(), Follow || AppSettings.Settings.HistoryFollow);
 
                         //reset any that snuck in while waiting since we just did a full list update
                         HistoryDB.GetRecentlyAdded();
@@ -3839,7 +3840,7 @@ namespace AITool
                     else
                         Filter = false;
 
-                    Global_GUI.FilterFOLV(ref folv_log, ToolStripComboBoxSearch.Text, Filter);
+                    Global_GUI.FilterFOLV(folv_log, ToolStripComboBoxSearch.Text, Filter);
 
                 }
             }

@@ -171,8 +171,8 @@ namespace AITool
         {
             loading = true;
 
-            Global_GUI.ConfigureFOLV(ref FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
-            Global_GUI.ConfigureFOLV(ref FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
 
             Global_GUI.RestoreWindowState(this);
 
@@ -228,8 +228,8 @@ namespace AITool
                 masked = cam.maskManager.MaskedPositions;
             }
 
-            Global_GUI.UpdateFOLV(ref FOLV_MaskHistory, hist, true);
-            Global_GUI.UpdateFOLV(ref FOLV_Masks, masked, true);
+            Global_GUI.UpdateFOLV(FOLV_MaskHistory, hist, FullRefresh: true);
+            Global_GUI.UpdateFOLV(FOLV_Masks, masked, FullRefresh: true);
             this.CurObjPosLst.Clear();
             ShowMaskImage();
             ShowImageMask(null);
@@ -532,7 +532,7 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.MaskedPositions.Remove(op);
+                cam.maskManager.RemoveActiveMask(op);
             }
             Refresh();
             AppSettings.Save();
@@ -683,7 +683,8 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.LastPositionsHistory.Remove(op);
+                cam.maskManager.RemoveHistoryMask(op);
+
             }
             Refresh();
             AppSettings.Save();

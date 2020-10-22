@@ -39,9 +39,9 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(ref folv_errors, typeof(ClsLogItm), null, null, "Time", SortOrder.Descending);
+                Global_GUI.ConfigureFOLV(folv_errors, typeof(ClsLogItm), null, null, "Time", SortOrder.Descending);
 
-                Global_GUI.UpdateFOLV(ref folv_errors, errors);
+                Global_GUI.UpdateFOLV(folv_errors, errors);
 
             }
             catch (Exception)

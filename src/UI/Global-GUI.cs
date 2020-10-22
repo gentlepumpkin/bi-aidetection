@@ -22,7 +22,7 @@ namespace AITool
         // ====================================================================
 
 
-        public static void UpdateFOLV(ref FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, [CallerMemberName()] string memberName = null)
+        public static void UpdateFOLV(FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, [CallerMemberName()] string memberName = null)
         {
 
             if (objs.Count == 0)
@@ -84,7 +84,7 @@ namespace AITool
 
         }
 
-        public static void FilterFOLV(ref FastObjectListView OLV, string FilterText, bool Filter)
+        public static void FilterFOLV(FastObjectListView OLV, string FilterText, bool Filter)
         {
             using var cw = new Global_GUI.CursorWait();
 
@@ -120,7 +120,7 @@ namespace AITool
             catch { }
         }
 
-        public static void ConfigureFOLV(ref FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList,
+        public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList,
                                          string PrimarySortColumnName = "",
                                          SortOrder PrimarySortOrder = SortOrder.Ascending,
                                          string SecondarySortColumnName = "",
@@ -297,7 +297,7 @@ namespace AITool
                 }
 
                 //restore column state if it exists
-                FOLVRestoreState(ref FOLV);
+                FOLVRestoreState(FOLV);
 
                 //OLV.RebuildColumns()
                 FOLV.Refresh();
@@ -333,7 +333,7 @@ namespace AITool
             public ArrayList ColumnWidths = new ArrayList();
         }
 
-        public static bool FOLVRestoreState(ref FastObjectListView FOLV)
+        public static bool FOLVRestoreState(FastObjectListView FOLV)
         {
             bool Ret = false;
 
@@ -396,7 +396,7 @@ namespace AITool
             return Ret;
         }
 
-        public static bool FOLVSaveState(ref FastObjectListView FOLV)
+        public static bool FOLVSaveState(FastObjectListView FOLV)
         {
             bool ret = false;
 
@@ -629,7 +629,7 @@ namespace AITool
                         else if (ctl is FastObjectListView)
                         {
                             FastObjectListView folv = (FastObjectListView)ctl;
-                            FOLVSaveState(ref folv);
+                            FOLVSaveState(folv);
                         }
 
                     }
