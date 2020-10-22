@@ -86,6 +86,15 @@ namespace AITool
             storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
             storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
             showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
+            cb_filter_animal.Checked = AppSettings.Settings.HistoryFilterAnimals;
+            cb_filter_masked.Checked = AppSettings.Settings.HistoryFilterMasked;
+            cb_filter_nosuccess.Checked = AppSettings.Settings.HistoryFilterNoSuccess;
+            cb_filter_person.Checked = AppSettings.Settings.HistoryFilterPeople;
+            cb_filter_skipped.Checked = AppSettings.Settings.HistoryFilterSkipped;
+            cb_filter_success.Checked = AppSettings.Settings.HistoryFilterRelevant;
+            cb_filter_vehicle.Checked = AppSettings.Settings.HistoryFilterVehicles;
+
+
             HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
             //---------------------------------------------------------------------------
@@ -158,7 +167,7 @@ namespace AITool
 
             Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null, GridLines: false);
 
-            this.UpdateLogAddedRemoved(true);
+            this.UpdateLogAddedRemovedAsync(true);
             LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
             if (toolStripButtonPauseLog.Checked)
@@ -253,7 +262,7 @@ namespace AITool
             }
         }
 
-        private void UpdateLogAddedRemoved(bool Follow = false)
+        private async Task UpdateLogAddedRemovedAsync(bool Follow = false)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -280,7 +289,11 @@ namespace AITool
                 {
                     //do it all in one update so it is faster:
                     using var cw = new Global_GUI.CursorWait();
-                    Global_GUI.UpdateFOLV(folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
+                    // run in another thread so gui doesnt freeze
+                    await Task.Run(() =>
+                    {
+                        Global_GUI.UpdateFOLV(folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
+                    });
                 }
                 else
                 {
@@ -317,7 +330,7 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
             //Log("===Enter");
-            //this should be a quicker list update
+            //this should be a quicker full list update
             if (AppSettings.Settings.HistoryAutoRefresh &&
                 !this.IsHistoryListUpdating.ReadFullFence() &&
                 tabControl1.SelectedIndex == 2 &&
@@ -742,7 +755,7 @@ namespace AITool
                 //scroll to bottom, only when tab is active for better performance 
                 if (!toolStripButtonPauseLog.Checked)
                 {
-                    this.UpdateLogAddedRemoved(true);
+                    await this.UpdateLogAddedRemovedAsync(true);
                 }
             }
             Application.DoEvents();
@@ -1229,6 +1242,9 @@ namespace AITool
                 //Log("Loading object rectangles...");
                 History hist = (History)folv_history.SelectedObjects[0];
 
+                if (hist == null)
+                    return;
+
                 string positions = hist.Positions;
                 string detections = hist.Detections;
 
@@ -1400,11 +1416,13 @@ namespace AITool
 
                     if (LogMan.ErrorCount.ReadFullFence() > 0)
                     {
-                        toolStripStatusErrors.ForeColor = Color.Red;
+                        toolStripStatusErrors.ForeColor = Color.Black;
+                        toolStripStatusErrors.BackColor = Color.Red;
                     }
                     else
                     {
                         toolStripStatusErrors.ForeColor = toolStripStatusLabelHistoryItems.GetCurrentParent().ForeColor;
+                        toolStripStatusErrors.BackColor = toolStripStatusLabelHistoryItems.GetCurrentParent().BackColor;
                     }
 
                 });
@@ -1453,7 +1471,7 @@ namespace AITool
 
             if (this.IsHistoryListUpdating.ReadFullFence())
             {
-                Log("---Exit (already updating)");
+                Log("Debug: ---Exit (already updating)");
                 return;
             }
 
@@ -1502,7 +1520,11 @@ namespace AITool
 
                     if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
-                        Global_GUI.UpdateFOLV(folv_history, HistoryDB.GetAllValues(), Follow || AppSettings.Settings.HistoryFollow);
+                        // run in another thread so gui doesnt freeze
+                        await Task.Run(() =>
+                        {
+                            Global_GUI.UpdateFOLV(folv_history, HistoryDB.GetAllValues(), Follow || AppSettings.Settings.HistoryFollow, FullRefresh: true);
+                        });
 
                         //reset any that snuck in while waiting since we just did a full list update
                         HistoryDB.GetRecentlyAdded();
@@ -3066,9 +3088,12 @@ namespace AITool
 
             try
             {
-                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0 && folv_history.SelectedObjects[0] != null)
+                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
                 {
                     History hist = (History)folv_history.SelectedObjects[0];
+
+                    if (hist == null)
+                        return;
 
                     if (!String.IsNullOrEmpty(hist.Filename) && hist.Filename.Contains("\\") && File.Exists(hist.Filename))
                     {
@@ -3518,9 +3543,9 @@ namespace AITool
             CameraSave(true);
         }
 
-        private void LogUpdateListTimer_Tick(object sender, EventArgs e)
+        private async void LogUpdateListTimer_Tick(object sender, EventArgs e)
         {
-            this.UpdateLogAddedRemoved();
+            await this.UpdateLogAddedRemovedAsync();
         }
 
         private void Chk_AutoScroll_Click(object sender, EventArgs e)
@@ -3540,31 +3565,31 @@ namespace AITool
             FilterLogErrors();
         }
 
-        private void FilterLogErrors()
+        private async void FilterLogErrors()
         {
             if (IsLoading.ReadFullFence())
                 return;
 
-            Global_GUI.InvokeIFRequired(folv_log, () =>
-            {
 
-                if (chk_filterErrors.Checked)
+            if (chk_filterErrors.Checked)
+            {
+                //filter
+                Global_GUI.InvokeIFRequired(folv_log, () =>
                 {
-                    //filter
                     using var cw = new Global_GUI.CursorWait();
                     folv_log.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
                     {
                         ClsLogItm CLI = (ClsLogItm)x;
                         return (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal);
                     });
-                }
-                else
-                {
-                    folv_log.ModelFilter = null;
-                    UpdateLogAddedRemoved(true);
-                }
+                });
+            }
+            else
+            {
+                folv_log.ModelFilter = null;
+                await UpdateLogAddedRemovedAsync(true);
+            }
 
-            });
         }
 
         private async Task<bool> FilterHistItem(History hist)
@@ -3617,10 +3642,10 @@ namespace AITool
 
                     if (Global.GetDateStrict(date, ref DATE, "yyyy-MM-dd"))
                     {
-                        if (DATE.ToString("yyyy-MM-dd") == hist.Date.ToString("yyyy-MM-dd"))
+                        if (DATE.ToString("yyyy-MM-dd") == hist.Date.ToString("yyyy-MM-dd") || fi.LastWriteTime.ToString("yyyy-MM-dd") == hist.Date.ToString("yyyy-MM-dd") || fi.CreationTime.ToString("yyyy-MM-dd") == hist.Date.ToString("yyyy-MM-dd"))
                         {
                             //load into memory
-                            Log($"Debug: Searching {fi.Name}...");
+                            Log($"Debug: Searching log file (namedate='{DATE.ToString("yyyy-MM-dd")}',moddate='{fi.LastWriteTime.ToString("yyyy-MM-dd")}',createdate='{fi.CreationTime.ToString("yyyy-MM-dd")}'): {fi.Name}...");
 
                             Global.UpdateProgressBar($"Searching {fi.Name}...", 1, 1);
 
@@ -3720,7 +3745,7 @@ namespace AITool
                 else
                 {
                     toolStripButtonPauseLog.Checked = false; //start
-                    MessageBox.Show($"Could not find matching log entries for '{justfile}'?  You may need to enable DEBUG logging mode.");
+                    MessageBox.Show($"Could not find matching log entries for '{justfile}'?  See log for details. Note this function only works well if the DEBUG logging mode has been enabled.");
                 }
 
                 ret = true;
@@ -4020,12 +4045,13 @@ namespace AITool
 
             using var cw = new Global_GUI.CursorWait();
             chk_filterErrors.Checked = false;
+            chk_filterErrorsAll.Checked = false;
             LogMan.Clear();
             folv_log.ClearObjects();
             folv_log.ModelFilter = null;
             await LogMan.LoadLogFile(LogMan.GetCurrentLogFileName(), true, false);
             Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {LogMan.GetCurrentLogFileName()}.");
-            this.UpdateLogAddedRemoved(true);
+            await this.UpdateLogAddedRemovedAsync(true);
             toolStripButtonPauseLog.Checked = false;
 
         }
@@ -4068,7 +4094,7 @@ namespace AITool
                     folv_log.ModelFilter = null;
                     await LogMan.LoadLogFile(ofd.FileName, true, false);
                     Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {ofd.FileName}.");
-                    this.UpdateLogAddedRemoved(true);
+                    this.UpdateLogAddedRemovedAsync(true);
                 }
 
 
@@ -4156,7 +4182,7 @@ namespace AITool
                 {
                     LogMan.Clear();
                     LogMan.AddRange(found);
-                    UpdateLogAddedRemoved(false);
+                    UpdateLogAddedRemovedAsync(false);
                 }
                 else
                 {

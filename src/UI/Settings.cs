@@ -72,8 +72,8 @@ namespace AITool
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
             public int HTTPClientTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
-            //public int MaxDeepStackProcessTimeSeconds = 120;
-            
+                                                        //public int MaxDeepStackProcessTimeSeconds = 120;
+
             public int RectRelevantColorAlpha = 150;    //255=solid, 127 half transparent
             public int RectIrrelevantColorAlpha = 150;
             public int RectMaskedColorAlpha = 150;
@@ -98,7 +98,7 @@ namespace AITool
             public bool Autoscroll_log = false;
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;
-            public int MaxGUILogItems = 3000; //makes to slow to work with if too high
+            public int MaxGUILogItems = 5000; //makes to slow to work with if too high
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
             public int TimeBetweenListRefreshsMS = 5000;
@@ -110,12 +110,20 @@ namespace AITool
             public bool HistoryStoreFalseAlerts = true;
             public bool HistoryStoreMaskedAlerts = true;
 
+            public bool HistoryFilterRelevant = false;
+            public bool HistoryFilterNoSuccess = false;
+            public bool HistoryFilterPeople = false;
+            public bool HistoryFilterAnimals = false;
+            public bool HistoryFilterVehicles = false;
+            public bool HistoryFilterSkipped = false;
+            public bool HistoryFilterMasked = false;
+
         }
 
         public static bool Save()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            
+
             bool Ret = false;
             try
             {
@@ -136,7 +144,10 @@ namespace AITool
                         {
                             //file corrupt or doesnt exist
                             if (File.Exists(AppSettings.Settings.SettingsFileName))
+                            {
+                                Log("Error: Deleting corrupt settings file before resave: " + AppSettings.Settings.SettingsFileName);
                                 File.Delete(AppSettings.Settings.SettingsFileName);
+                            }
                         }
 
                         //update threshold in all masks if changed during session
@@ -238,12 +249,12 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    Log($"Error: Settings file does not look like JSON: {Filename}");
+                                    Log($"Error: Settings file does not look like JSON (size={fi.Length} bytes): {Filename}");
                                 }
                             }
                             else
                             {
-                                Log("Error: Settings file contains null bytes, corrupt: " + Filename);
+                                Log("Error: Settings file contains null bytes, corrupt: (size={fi.Length} bytes)" + Filename);
                             }
                         }
                         else
@@ -280,7 +291,7 @@ namespace AITool
                 string origfolder = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(@"\".ToCharArray());
                 string oldfolder = Path.GetDirectoryName(Settings.SettingsFileName);
                 string newfolder = "";
-                
+
                 if (!Settings.SettingsPortable)
                 {
                     //Set to appdata folder
@@ -292,11 +303,11 @@ namespace AITool
                     newfolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location), "_Settings");
                 }
 
-                if (!oldfolder.Equals(newfolder,StringComparison.OrdinalIgnoreCase))
+                if (!oldfolder.Equals(newfolder, StringComparison.OrdinalIgnoreCase))
                 {
                     Log($"Debug: Changing settings folder from {oldfolder} to {newfolder}...");
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -438,7 +449,7 @@ namespace AITool
                             if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
                             {
                                 cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                                cam.trigger_url_cancels = false;  
+                                cam.trigger_url_cancels = false;
                             }
 
                             cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();

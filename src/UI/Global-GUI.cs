@@ -28,59 +28,63 @@ namespace AITool
             if (objs.Count == 0)
                 return;
 
-            try
+            Global_GUI.InvokeIFRequired(olv, () =>
             {
-                int oldcnt = olv.Items.Count;
 
-                if (oldcnt == 0)
+                try
                 {
-                    olv.EmptyListMsg = "Loading...";
-                }
+                    int oldcnt = olv.Items.Count;
 
-                //Debug.Print($"{DateTime.Now} - {memberName} > UpdateFOLV: {objs.Count} items, Follow={Follow}");
-
-                olv.Freeze();
-
-                if (FullRefresh || olv.Items.Count == 0)  //full refresh of new objects
-                    olv.SetObjects(objs, true);
-                else
-                    olv.AddObjects(objs);  //minimize list changes
-
-                if (olv.Items.Count > 0)
-                {
-                    if (Follow)
+                    if (oldcnt == 0)
                     {
-                        olv.SelectedObject = objs[objs.Count - 1];  //olv.Items.Count - 1;
-                        olv.EnsureModelVisible(olv.SelectedObject);
+                        olv.EmptyListMsg = "Loading...";
                     }
 
-                    //update column size only if did not restore folv state file or forced
-                    if (olv.Tag == null)
+                    //Debug.Print($"{DateTime.Now} - {memberName} > UpdateFOLV: {objs.Count} items, Follow={Follow}");
+
+                    olv.Freeze();  //accessed from another thread
+
+                    if (FullRefresh || olv.Items.Count == 0)  //full refresh of new objects
+                        olv.SetObjects(objs, true);
+                    else
+                        olv.AddObjects(objs);  //minimize list changes
+
+                    if (olv.Items.Count > 0)
                     {
-                        olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-                        olv.Tag = "resizedcols";
+                        if (Follow)
+                        {
+                            olv.SelectedObject = objs[objs.Count - 1];  //olv.Items.Count - 1;
+                            olv.EnsureModelVisible(olv.SelectedObject);
+                        }
+
+                        //update column size only if did not restore folv state file or forced
+                        if (olv.Tag == null)
+                        {
+                            olv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+                            olv.Tag = "resizedcols";
+                        }
+                        else if (ResizeColsStyle != ColumnHeaderAutoResizeStyle.None)
+                        {
+                            olv.AutoResizeColumns(ResizeColsStyle);
+                            olv.Tag = "resizedcols";
+                        }
                     }
-                    else if (ResizeColsStyle != ColumnHeaderAutoResizeStyle.None)
+                    else
                     {
-                        olv.AutoResizeColumns(ResizeColsStyle);
-                        olv.Tag = "resizedcols";
+                        olv.EmptyListMsg = "Empty";
                     }
+
                 }
-                else
+                catch (Exception ex)
                 {
-                    olv.EmptyListMsg = "Empty";
+                    Log("Error: " + Global.ExMsg(ex));
+                }
+                finally
+                {
+                    olv.Unfreeze();
                 }
 
-
-            }
-            catch (Exception ex)
-            {
-                Log("Error: " + Global.ExMsg(ex));
-            }
-            finally
-            {
-                olv.Unfreeze();
-            }
+            });
 
         }
 

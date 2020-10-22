@@ -279,7 +279,7 @@ namespace AITool
             {
                 this._LastIDX.AtomicIncrementAndGet();
                 this.LastLogItm = new ClsLogItm();
-                this.LastLogItm.Detail = Detail.Replace("|",";");
+                this.LastLogItm.Detail = Detail.Replace("|", ";");
                 this.LastLogItm.Filename = Path.GetFileName(this._Filename);
 
                 this.LastLogItm.ThreadID = Thread.CurrentThread.ManagedThreadId;
@@ -462,8 +462,8 @@ namespace AITool
                 Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1);
 
                 //run in another thread so gui doesnt freeze
-                //await Task.Run(() =>
-                //{
+                await Task.Run(() =>
+                {
                     bool success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
                     if (success)
                     {
@@ -590,7 +590,7 @@ namespace AITool
                     }
 
 
-                //});
+                });
 
             }
 
@@ -598,7 +598,7 @@ namespace AITool
                 this.Enabled = true;  //enable after we import
 
             if (Directory.Exists(ExtractZipPath))
-                Directory.Delete(ExtractZipPath,true);
+                Directory.Delete(ExtractZipPath, true);
 
             Global.UpdateProgressBar($"", 0, 1);
 

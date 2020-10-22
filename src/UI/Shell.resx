@@ -1898,9 +1898,6 @@
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1000, 17</value>
   </metadata>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1000, 17</value>
-  </metadata>
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1938,6 +1935,11 @@
         sIg4cUJC1lGu+7/AxuZfxfG+indKrmUAAAAASUVORK5CYII=
 </value>
   </data>
+  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
+in mind that Deepstack will often miss animals at night completly so you wont be able 
+to review footage from night before.</value>
+  </data>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1972,11 +1974,6 @@
         A/8QLiccbDv2OI/rC2ceaHzVhijXZZacktJCqtnfFCZHcHz8kefVl1OW8/6ZPV7J8Ee0pKGxcZ4znd7Q
         0DC/d+/eX5Sv/xf7BJ4IP6I471/u79cr2ho4NRHoa+EvaUFBfwIh7NErm8l5rgAAAABJRU5ErkJggg==
 </value>
-  </data>
-  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
-in mind that Deepstack will often miss animals at night completly so you wont be able 
-to review footage from night before.</value>
   </data>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -2040,9 +2037,6 @@ to review footage from night before.</value>
   <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1519, 17</value>
   </metadata>
-  <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1519, 17</value>
-  </metadata>
   <data name="toolStripDropDownButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -2099,18 +2093,18 @@ to review footage from night before.</value>
     <value>
         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
-        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
+        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
         SUVORK5CYII=
 </value>
   </data>
@@ -2157,14 +2151,14 @@ to review footage from night before.</value>
         YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wjI9u/l+zM/7M9Lf7Hulv9/8DH8/8wA9PfTF7BdUA1
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wZI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
         3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
         JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
         taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
         CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
         5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAADAmZKz
-        zujMdwAAAABJRU5ErkJggg==
+        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAACcDpKk
+        LPuNSQAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -2173,19 +2167,16 @@ to review footage from night before.</value>
         YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wDI9u/l+zM/7M9Lf7Hulv9/8DH8/8QA9PfTF7BdUA1
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wpI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
         3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
         JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
         taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
         CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
         5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAAC7w5Kx
-        eiiAJgAAAABJRU5ErkJggg==
+        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAACZmZKj
+        E2T24QAAAABJRU5ErkJggg==
 </value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>160, 17</value>
-  </metadata>
   <metadata name="HistoryImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>305, 17</value>
   </metadata>
@@ -2194,7 +2185,7 @@ to review footage from night before.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAASgBBQEoAQUBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAAYABBQGAAQUBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/
