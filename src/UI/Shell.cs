@@ -1,5 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using BrightIdeasSoftware;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using Newtonsoft.Json; //deserialize DeepquestAI response
+using NLog;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,16 +11,10 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.Permissions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-using BrightIdeasSoftware;
-using Microsoft.WindowsAPICodePack.Dialogs;
-using Newtonsoft.Json; //deserialize DeepquestAI response
-using NLog;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -31,6 +28,7 @@ namespace AITool
 
         private ThreadSafe.Boolean IsHistoryListUpdating = new ThreadSafe.Boolean(false);
         private ThreadSafe.Boolean IsLogListUpdating = new ThreadSafe.Boolean(false);
+        private ThreadSafe.Boolean IsStatsUpdating = new ThreadSafe.Boolean(false);
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
         private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
@@ -45,196 +43,229 @@ namespace AITool
         System.Timers.Timer tmr;
         DateTime TimeSinceType = DateTime.MinValue;
 
+        FrmSplash SplashScreen = null;
+
+        Stopwatch StartupSW = null;
+
+        private bool AllowShowDisplay = false;
+
         public Shell()
         {
+            this.StartupSW = Stopwatch.StartNew();
+
+            this.InitializeComponent();
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            InitializeComponent();
+            //this is to log and status messages from other classes...
+            Global.progress = new Progress<ClsMessage>(this.EventMessage);
+
+            this.SplashScreen = new FrmSplash();
+            this.SplashScreen.Show();
+
+            HideForm();
+
+            Application.DoEvents();
+            Debug.Print("Init tid=" + Thread.CurrentThread.ManagedThreadId);
+
+        }
 
 
-            //this is to log messages from other classes to the RTF in Shell form, and to log file...
-            Global.progress = new Progress<ClsMessage>(EventMessage);
+        private async void Shell_Load(object sender, EventArgs e)
+        {
 
-            //Initialize the rich text log window writer.   You can use any 'color' name in your log text
-            //for example {red}Error!{white}.  Note if you use $ for the string, you have use two brackets like this: {{red}}
-            //RTFLogger = new RichTextBoxEx(RTF_Log, true);
-            //RTFLogger.AutoScroll.WriteFullFence(AppSettings.Settings.Autoscroll_log);
-
-            this.Show();
+            Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 
             using var cw = new Global_GUI.CursorWait(true);
 
-            toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
-            toolStripProgressBar1.MarqueeAnimationSpeed = 30;
-
             //---------------------------------------------------------------------------
-            //HISTORY TAB
+            //INITIALIZE HISTORY DB, load settings, ETC
 
-            Global_GUI.ConfigureFOLV(folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), HistoryImageList, GridLines: false);
-            folv_history.EmptyListMsg = "Initializing database";
+            Stopwatch sw = Stopwatch.StartNew();
 
+            await AITOOL.InitializeBackend();
 
-            //---------------------------------------------------------------------------
-            //INITIALIZE HISTORY DB, ETC
+            Log($"Debug: Back end initialization completed in {sw.ElapsedMilliseconds}ms.");
 
-            AITOOL.InitializeBackend();
+            //since async stuff continues on another thread, we have to do this:
 
-            cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
-            cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
-            cb_follow.Checked = AppSettings.Settings.HistoryFollow;
-            automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
-            storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
-            storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
-            showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
-            cb_filter_animal.Checked = AppSettings.Settings.HistoryFilterAnimals;
-            cb_filter_masked.Checked = AppSettings.Settings.HistoryFilterMasked;
-            cb_filter_nosuccess.Checked = AppSettings.Settings.HistoryFilterNoSuccess;
-            cb_filter_person.Checked = AppSettings.Settings.HistoryFilterPeople;
-            cb_filter_skipped.Checked = AppSettings.Settings.HistoryFilterSkipped;
-            cb_filter_success.Checked = AppSettings.Settings.HistoryFilterRelevant;
-            cb_filter_vehicle.Checked = AppSettings.Settings.HistoryFilterVehicles;
-
-
-            HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
-
-            //---------------------------------------------------------------------------
-            //CAMERAS TAB
-
-            //left list column setup
-            list2.Columns.Add("Camera");
-
-            //set left list column width segmentation (because of some bug -4 is necessary to achieve the correct width)
-            list2.Columns[0].Width = list2.Width - 4;
-            list2.FullRowSelect = true; //make all columns clickable
-
-            LoadCameras(); //load camera list
-
-            comboBox_filter_camera.SelectedIndex = comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
-
-            //---------------------------------------------------------------------------
-            //SETTINGS TAB
-
-            //fill settings tab with stored settings 
-
-            cmbInput.Text = AppSettings.Settings.input_path;
-            cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
-            cmbInput.Items.Clear();
-            foreach (string pth in BlueIrisInfo.ClipPaths)
+            Global_GUI.InvokeIFRequired(this, () =>
             {
-                cmbInput.Items.Add(pth);
+                //---------------------------------------------------------------------------
+                //HISTORY TAB
+                Global_GUI.ConfigureFOLV(this.folv_history, typeof(History), new Font("Segoe UI", (float)9.75, FontStyle.Regular), this.HistoryImageList, GridLines: false);
+                //this.folv_history.EmptyListMsg = "Initializing database";
+                this.cb_showMask.Checked = AppSettings.Settings.HistoryShowMask;
+                this.cb_showObjects.Checked = AppSettings.Settings.HistoryShowObjects;
+                this.cb_follow.Checked = AppSettings.Settings.HistoryFollow;
+                this.automaticallyRefreshToolStripMenuItem.Checked = AppSettings.Settings.HistoryAutoRefresh;
+                this.storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
+                this.storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
+                this.showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
+                this.cb_filter_animal.Checked = AppSettings.Settings.HistoryFilterAnimals;
+                this.cb_filter_masked.Checked = AppSettings.Settings.HistoryFilterMasked;
+                this.cb_filter_nosuccess.Checked = AppSettings.Settings.HistoryFilterNoSuccess;
+                this.cb_filter_person.Checked = AppSettings.Settings.HistoryFilterPeople;
+                this.cb_filter_skipped.Checked = AppSettings.Settings.HistoryFilterSkipped;
+                this.cb_filter_success.Checked = AppSettings.Settings.HistoryFilterRelevant;
+                this.cb_filter_vehicle.Checked = AppSettings.Settings.HistoryFilterVehicles;
+                this.HistoryUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
-            }
+                //---------------------------------------------------------------------------
+                //CAMERAS TAB
 
-            tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
-            cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
-            Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
+                //left list column setup
+                this.list2.Columns.Add("Camera");
 
-            tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
-            tb_telegram_token.Text = AppSettings.Settings.telegram_token;
-            tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
+                //set left list column width segmentation (because of some bug -4 is necessary to achieve the correct width)
+                this.list2.Columns[0].Width = this.list2.Width - 4;
+                this.list2.FullRowSelect = true; //make all columns clickable
 
-            cb_send_errors.Checked = AppSettings.Settings.send_errors;
-            cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
+                this.LoadCameras(); //load camera list
 
-            //---------------------------------------------------------------------------
-            //STATS TAB
-            comboBox1.Items.Add("All Cameras"); //add all cameras stats entry
-            comboBox1.SelectedIndex = comboBox1.FindStringExact("All Cameras"); //select all cameras entry
+                this.comboBox_filter_camera.SelectedIndex = this.comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
 
+                //---------------------------------------------------------------------------
+                //SETTINGS TAB
 
-            //---------------------------------------------------------------------------
-            //Deepstack server TAB
+                //fill settings tab with stored settings 
 
-
-            if (!DeepStackServerControl.IsInstalled)
-            {
-                //remove deepstack tab if not installed
-                Log("Removing DeepStack tab since it not installed as a Windows app (No docker support yet)");
-                tabControl1.TabPages.Remove(tabControl1.TabPages["tabDeepStack"]);
-            }
-            else
-            {
-                if (DeepStackServerControl.NeedsSaving)
+                this.cmbInput.Text = AppSettings.Settings.input_path;
+                this.cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
+                this.cmbInput.Items.Clear();
+                foreach (string pth in BlueIrisInfo.ClipPaths)
                 {
-                    //this may happen if the already running instance has a different port, etc, so we update the config
-                    SaveDeepStackTab();
+                    this.cmbInput.Items.Add(pth);
+
                 }
-                LoadDeepStackTab(true);
-            }
 
-            //---------------------------------------------------------------------------
-            //LOG TAB
+                this.tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
+                this.cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
 
-            Global_GUI.ConfigureFOLV(folv_log, typeof(ClsLogItm), null, null, GridLines: false);
+                Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 
-            this.UpdateLogAddedRemovedAsync(true);
-            LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
+                this.Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
 
-            if (toolStripButtonPauseLog.Checked)
-            {
-                LogUpdateListTimer.Enabled = false;
-                LogUpdateListTimer.Stop();
-            }
-            else
-            {
-                LogUpdateListTimer.Enabled = true;
-                LogUpdateListTimer.Start();
-            }
+                this.tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
+                this.tb_telegram_token.Text = AppSettings.Settings.telegram_token;
+                this.tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
 
-            tmr = new System.Timers.Timer();
-            tmr.Interval = 300;
-            tmr.Elapsed += new System.Timers.ElapsedEventHandler(tmr_Elapsed);
-            tmr.Stop();
+                this.cb_send_errors.Checked = AppSettings.Settings.send_errors;
+                this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
-            ToolStripComboBoxSearch.Text = Global.GetSetting("SearchText", "");
-            mnu_Filter.Checked = AppSettings.Settings.log_mnu_Filter;
-            mnu_Highlight.Checked = AppSettings.Settings.log_mnu_Highlight;
-
-            if (string.Equals(AppSettings.Settings.LogLevel, "off", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_off.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "fatal", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_fatal.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "error", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_error.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "warn", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_warn.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "info", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_info.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "debug", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_debug.Checked = true;
-            }
-            else if (string.Equals(AppSettings.Settings.LogLevel, "trace", StringComparison.OrdinalIgnoreCase))
-            {
-                mnu_log_filter_trace.Checked = true;
-            }
+                //---------------------------------------------------------------------------
+                //STATS TAB
+                this.comboBox1.Items.Add("All Cameras"); //add all cameras stats entry
+                this.comboBox1.SelectedIndex = this.comboBox1.FindStringExact("All Cameras"); //select all cameras entry
 
 
-            //---------------------------------------------------------------------------
-            // finish up
+                //---------------------------------------------------------------------------
+                //Deepstack server TAB
 
-            string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
 
-            //---------------------------------------------------------------------------------------------------------
+                if (!DeepStackServerControl.IsInstalled)
+                {
+                    //remove deepstack tab if not installed
+                    Log("Removing DeepStack tab since it not installed as a Windows app (No docker support yet)");
+                    this.tabControl1.TabPages.Remove(this.tabControl1.TabPages["tabDeepStack"]);
+                }
+                else
+                {
+                    if (DeepStackServerControl.NeedsSaving)
+                    {
+                        //this may happen if the already running instance has a different port, etc, so we update the config
+                        this.SaveDeepStackTab();
+                    }
+                    this.LoadDeepStackTab(true);
+                }
 
-            this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
+                //---------------------------------------------------------------------------
+                //LOG TAB
 
-            IsLoading.WriteFullFence(false);
+                Global_GUI.ConfigureFOLV(this.folv_log, typeof(ClsLogItm), null, null, GridLines: false);
 
-            Log("{yellow}APP START complete.");
+                this.UpdateLogAddedRemovedAsync(true);
+                this.LogUpdateListTimer.Interval = AppSettings.Settings.TimeBetweenListRefreshsMS;
 
-            Application.DoEvents();
+                if (this.toolStripButtonPauseLog.Checked)
+                {
+                    this.LogUpdateListTimer.Enabled = false;
+                    this.LogUpdateListTimer.Stop();
+                }
+                else
+                {
+                    this.LogUpdateListTimer.Enabled = true;
+                    this.LogUpdateListTimer.Start();
+                }
+
+                this.UpdateLogAddedRemovedAsync(true);
+
+                this.tmr = new System.Timers.Timer();
+                this.tmr.Interval = 300;
+                this.tmr.Elapsed += new System.Timers.ElapsedEventHandler(this.tmr_Elapsed);
+                this.tmr.Stop();
+
+                this.ToolStripComboBoxSearch.Text = Global.GetSetting("SearchText", "");
+                this.mnu_Filter.Checked = AppSettings.Settings.log_mnu_Filter;
+                this.mnu_Highlight.Checked = AppSettings.Settings.log_mnu_Highlight;
+
+                if (string.Equals(AppSettings.Settings.LogLevel, "off", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_off.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "fatal", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_fatal.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "error", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_error.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "warn", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_warn.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "info", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_info.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "debug", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_debug.Checked = true;
+                }
+                else if (string.Equals(AppSettings.Settings.LogLevel, "trace", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.mnu_log_filter_trace.Checked = true;
+                }
+
+
+                //---------------------------------------------------------------------------
+                // finish up
+
+                string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                this.lbl_version.Text = $"Version {AssemVer} built on {Global.RetrieveLinkerTimestamp()}";
+
+                //---------------------------------------------------------------------------------------------------------
+
+                IsLoading.WriteFullFence(false);
+
+                Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
+
+                Log($"{{yellow}}APP START complete.  Initialized in {this.StartupSW.Elapsed.TotalSeconds.ToString("##0.0")} seconds ({this.StartupSW.ElapsedMilliseconds}ms)");
+
+                this.SplashScreen.Close();
+                this.SplashScreen = null;
+
+                Global_GUI.RestoreWindowState(this);
+
+                if (Environment.CommandLine.IndexOf("/min", StringComparison.OrdinalIgnoreCase) == -1)
+                {
+                    ShowForm();
+                }
+
+                Application.DoEvents();
+
+            });
 
         }
 
@@ -242,17 +273,17 @@ namespace AITool
         {
             if ((DateTime.Now - this.TimeSinceType).Milliseconds >= 600)
             {
-                Global_GUI.InvokeIFRequired(toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
+                Global_GUI.InvokeIFRequired(this.toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
                 {
-                    tmr.Stop();
-                    tmr.Enabled = false;
+                    this.tmr.Stop();
+                    this.tmr.Enabled = false;
                     if (Global.IsRegexPatternValid(this.ToolStripComboBoxSearch.Text) || this.ToolStripComboBoxSearch.Text.Length == 0)
                     {
                         this.ToolStripComboBoxSearch.ForeColor = Color.Blue;
                         if (this.ToolStripComboBoxSearch.FindStringExact(this.ToolStripComboBoxSearch.Text) == -1)
                             this.ToolStripComboBoxSearch.Items.Add(this.ToolStripComboBoxSearch.Text);
 
-                        Global_GUI.FilterFOLV(folv_log, this.ToolStripComboBoxSearch.Text, mnu_Filter.Checked);
+                        Global_GUI.FilterFOLV(this.folv_log, this.ToolStripComboBoxSearch.Text, this.mnu_Filter.Checked);
                     }
                     else
                     {
@@ -262,15 +293,16 @@ namespace AITool
             }
         }
 
-        private async Task UpdateLogAddedRemovedAsync(bool Follow = false)
+        private async Task UpdateLogAddedRemovedAsync(bool Follow = false, bool Force = false)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             if (IsLoading.ReadFullFence())
                 return;
 
-            if (!this.IsLogListUpdating.ReadFullFence() &&
-                (tabControl1.SelectedTab == tabControl1.TabPages["tabLog"]) &&
+            if (!this.IsLogListUpdating.ReadFullFence() && Force ||
+                !this.IsLogListUpdating.ReadFullFence() &&
+                (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabLog"]) &&
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
                 LogMan != null)
@@ -282,39 +314,42 @@ namespace AITool
 
                 this.IsLogListUpdating.WriteFullFence(true);
 
+                if (this.folv_log.Items.Count == 0)
+                    this.folv_log.EmptyListMsg = "Loading log...";
+
                 List<ClsLogItm> added = LogMan.GetRecentlyAdded();
                 List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
 
-                if (added.Count > 2000 || folv_log.Items.Count == 0)
+                if (added.Count > 2000 || this.folv_log.Items.Count == 0)
                 {
                     //do it all in one update so it is faster:
                     using var cw = new Global_GUI.CursorWait();
                     // run in another thread so gui doesnt freeze
                     await Task.Run(() =>
                     {
-                        Global_GUI.UpdateFOLV(folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
+                        Global_GUI.UpdateFOLV(this.folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
                     });
                 }
                 else
                 {
                     if (removed.Count > 0)
-                        folv_log.RemoveObjects(removed);
+                        this.folv_log.RemoveObjects(removed);
 
                     if (added.Count > 0)
-                        Global_GUI.UpdateFOLV(folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
+                        Global_GUI.UpdateFOLV(this.folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
                 }
 
 
                 if (sw.ElapsedMilliseconds > 5000 && sw.ElapsedMilliseconds < 10000)
                 {
-                    Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
                 }
                 else if (sw.ElapsedMilliseconds > 10000)
                 {
-                    Log($"Warn: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    Log($"Warn: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
                 }
 
-                UpdateStats();
+                this.UpdateStats();
 
                 //});
 
@@ -333,7 +368,7 @@ namespace AITool
             //this should be a quicker full list update
             if (AppSettings.Settings.HistoryAutoRefresh &&
                 !this.IsHistoryListUpdating.ReadFullFence() &&
-                tabControl1.SelectedIndex == 2 &&
+                this.tabControl1.SelectedIndex == 2 &&
                 this.Visible &&
                 !(this.WindowState == FormWindowState.Minimized) &&
                 (DateTime.Now - this.LastListUpdate.Read()).TotalMilliseconds >= AppSettings.Settings.TimeBetweenListRefreshsMS &&
@@ -354,11 +389,41 @@ namespace AITool
                     List<History> removed = HistoryDB.GetRecentlyDeleted();
 
                     if (removed.Count > 0)
-                        folv_history.RemoveObjects(removed);
+                        this.folv_history.RemoveObjects(removed);
 
                     if (added.Count > 0)
-                        Global_GUI.UpdateFOLV(folv_history, added, AppSettings.Settings.HistoryFollow);
+                    {
+                        //find the last item that is unfiltered:
+                        History lasthist = null;
+                        for (int i = added.Count - 1; i >= 0; i--)
+                        {
+                            if (this.checkListFilters(added[i]))
+                            {
+                                lasthist = added[i];
+                                break;
+                            }
+                        }
 
+                        Global_GUI.UpdateFOLV(this.folv_history, added, AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist);
+
+                    }
+
+                    if (AppSettings.Settings.HistoryFollow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
+                    {
+                        if (this.folv_history.IsFiltering)
+                        {
+                            //use the last filtered object as the selected object
+                            this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
+                        }
+                        else if (!this.folv_history.IsFiltering)
+                        {
+                            this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
+                        }
+
+                        if (this.folv_history.SelectedObject != null)
+                            this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
+
+                    }
 
                     this.LastListUpdate.Write(DateTime.Now);
 
@@ -378,9 +443,27 @@ namespace AITool
 
         }
 
+        private void HistoryStartStop()
+        {
+            if (AppSettings.Settings.HistoryAutoRefresh)
+            {
+                this.HistoryUpdateListTimer.Enabled = true;
+                this.HistoryUpdateListTimer.Start();
+                Log("Debug: History update timer started.");
+            }
+            else
+            {
+                this.HistoryUpdateListTimer.Enabled = false;
+                this.HistoryUpdateListTimer.Stop();
+                Log("Debug: History update timer stopped.");
+            }
+        }
 
         async void EventMessage(ClsMessage msg)
         {
+            if (IsClosing.ReadFullFence())
+                return;
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             //output messages from the deepstack, blueiris, etc class to the text log window and log file
@@ -393,20 +476,11 @@ namespace AITool
 
                 Log("debug: Database initialized.");
 
-                folv_history.EmptyListMsg = "No History";
+                this.folv_history.EmptyListMsg = "No History";
 
                 this.DatabaseInitialized.WriteFullFence(true);
-                await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
-                if (AppSettings.Settings.HistoryAutoRefresh)
-                {
-                    HistoryUpdateListTimer.Enabled = true;
-                    HistoryUpdateListTimer.Start();
-                }
-                else
-                {
-                    HistoryUpdateListTimer.Enabled = false;
-                    HistoryUpdateListTimer.Stop();
-                }
+                await this.LoadHistoryAsync(true, true);
+                this.HistoryStartStop();
 
             }
             else if (msg.MessageType == MessageType.CreateHistoryItem)
@@ -414,6 +488,8 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
+
                 History hist = JsonConvert.DeserializeObject<History>(msg.JSONPayload, jset);
 
 
@@ -437,7 +513,7 @@ namespace AITool
 
                 //UpdateHistoryAddedRemoved();
 
-                UpdateStats();
+                this.UpdateStats();
             }
             else if (msg.MessageType == MessageType.DeleteHistoryItem)
             {
@@ -449,43 +525,31 @@ namespace AITool
 
                 //UpdateHistoryAddedRemoved();
 
-                UpdateStats();
+                this.UpdateStats();
 
             }
             else if (msg.MessageType == MessageType.ImageAddedToQueue)
             {
-                UpdateStats();
+                this.UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateStatus)
             {
-                UpdateStats();
+                this.UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateProgressBar)
             {
-                if (toolStripProgressBar1.Maximum != msg.MaxVal)
-                    toolStripProgressBar1.Maximum = msg.MaxVal;
 
-                if (msg.CurVal >= toolStripProgressBar1.Minimum && msg.CurVal <= toolStripProgressBar1.Maximum)
-                    toolStripProgressBar1.Value = msg.CurVal;
-                else if (msg.CurVal < toolStripProgressBar1.Minimum)
-                    toolStripProgressBar1.Value = toolStripProgressBar1.Minimum;
-                else if (msg.CurVal > toolStripProgressBar1.Maximum)
-                    toolStripProgressBar1.Value = toolStripProgressBar1.Maximum;
+                this.UpdateProgressBar(msg.Description, msg.CurVal, msg.MinVal, msg.MaxVal);
 
-                if (toolStripProgressBar1.Style != ProgressBarStyle.Continuous)
-                    toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
-
-                UpdateStats(msg.Description);
             }
             else if (msg.MessageType == MessageType.BeginProcessImage)
             {
-                BeginProcessImage(msg.Description);
-                UpdateStats();
+                this.BeginProcessImage(msg.Description);
             }
             else if (msg.MessageType == MessageType.EndProcessImage)
             {
-                EndProcessImage(msg.Description);
-                UpdateStats();
+                this.EndProcessImage(msg.Description);
+                this.UpdateStats();
             }
             else if (msg.MessageType == MessageType.UpdateLabel)
             {
@@ -514,7 +578,7 @@ namespace AITool
                                 lbl.Text = msg.Description;
                             };
                             //getting error here when called too early - had to check if Visible or not -Vorlon
-                            Invoke(LabelUpdate);
+                            this.Invoke(LabelUpdate);
 
                         }
                     }
@@ -526,13 +590,122 @@ namespace AITool
 
                 }
 
-                UpdateStats();
+                this.UpdateStats();
             }
             else
             {
                 Log($"Error: Unhandled message type '{msg.MessageType}'");
             }
         }
+
+        private void UpdateProgressBar(string Message, int CurVal = -1, int MinVal = -1, int MaxVal = -1)
+        {
+
+            if (IsClosing.ReadFullFence())
+                return;
+
+            if (this.SplashScreen != null)
+            {
+                Global_GUI.InvokeIFRequired(this.SplashScreen.progressBar, () =>
+                {
+
+                    if (MaxVal != -1 && this.SplashScreen.progressBar.Maximum != MaxVal)
+                        this.SplashScreen.progressBar.Maximum = MaxVal;
+
+                    if (MinVal != -1 && this.SplashScreen.progressBar.Minimum != MinVal)
+                        this.SplashScreen.progressBar.Minimum = MinVal;
+
+                    if (this.SplashScreen.progressBar.Style != ProgressBarStyle.Continuous)
+                        this.SplashScreen.progressBar.Style = ProgressBarStyle.Continuous;
+
+                    if (CurVal == 1 && MinVal == 1 && MaxVal == 1)
+                    {
+                        this.SplashScreen.progressBar.Maximum = 2;
+                        this.SplashScreen.progressBar.Value = this.SplashScreen.progressBar.Maximum;
+
+                    }
+                    else
+                    {
+
+                        if (CurVal > -1)
+                        {
+                            if (CurVal >= this.SplashScreen.progressBar.Minimum && CurVal <= this.SplashScreen.progressBar.Maximum)
+                                this.SplashScreen.progressBar.Value = CurVal;
+                            if (CurVal < this.SplashScreen.progressBar.Minimum)
+                                this.SplashScreen.progressBar.Value = this.SplashScreen.progressBar.Minimum;
+                            if (CurVal > this.SplashScreen.progressBar.Maximum)
+                                this.SplashScreen.progressBar.Value = this.SplashScreen.progressBar.Maximum;
+                        }
+                    }
+
+                    string msg = Global.ReplaceCaseInsensitive(Message, "debug:", "").Trim();
+                    if (msg != this.SplashScreen.lbl_status.Text)
+                    {
+                        this.SplashScreen.lbl_status.Text = msg;
+                        //SplashScreen.Refresh();
+                    }
+
+                    //SplashScreen.progressBar.Refresh();
+                    //Application.DoEvents();  //causes all sorts of issues
+
+                });
+
+            }
+            else
+            {
+                Global_GUI.InvokeIFRequired(this.toolStripProgressBar1.GetCurrentParent(), () =>
+                {
+
+                    if (MaxVal != -1 && this.toolStripProgressBar1.Maximum != MaxVal)
+                        this.toolStripProgressBar1.Maximum = MaxVal;
+
+                    if (MinVal != -1 && this.toolStripProgressBar1.Minimum != MinVal)
+                        this.toolStripProgressBar1.Minimum = MinVal;
+
+                    if (this.toolStripProgressBar1.Style != ProgressBarStyle.Continuous)
+                        this.toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
+
+                    if (CurVal == 1 && MinVal == 1 && MaxVal == 1)
+                    {
+                        this.toolStripProgressBar1.Maximum = 2;
+                        this.toolStripProgressBar1.Value = this.toolStripProgressBar1.Maximum;
+
+                    }
+                    else
+                    {
+
+                        if (CurVal > -1)
+                        {
+                            if (CurVal >= this.toolStripProgressBar1.Minimum && CurVal <= this.toolStripProgressBar1.Maximum)
+                                this.toolStripProgressBar1.Value = CurVal;
+                            if (CurVal < this.toolStripProgressBar1.Minimum)
+                                this.toolStripProgressBar1.Value = this.toolStripProgressBar1.Minimum;
+                            if (CurVal > this.toolStripProgressBar1.Maximum)
+                                this.toolStripProgressBar1.Value = this.toolStripProgressBar1.Maximum;
+                        }
+                    }
+
+                    if (this.toolStripProgressBar1.Value > 0 && !this.Visible)
+                    {
+                        this.Visible = true;
+                    }
+                    else if (this.toolStripProgressBar1.Value == 0 && this.Visible)
+                    {
+                        this.Visible = false;
+                    }
+
+                    this.toolStripProgressBar1.GetCurrentParent().Refresh();
+                    //Application.DoEvents();  //causes all sorts of issues
+
+                });
+
+
+                this.UpdateStats(Message);
+
+            }
+
+        }
+
         //----------------------------------------------------------------------------------------------------------
         //CORE
         //----------------------------------------------------------------------------------------------------------
@@ -670,30 +843,81 @@ namespace AITool
         //minimize to tray
         private void Form1_Resize(object sender, EventArgs e)
         {
+
+            if (IsLoading.ReadFullFence())
+                return;
+
+            if (IsClosing.ReadFullFence())
+                return;
+
             if (this.WindowState == FormWindowState.Minimized)
             {
-                this.Hide();
-                notifyIcon.Visible = true;
+                HideForm();
             }
             else
             {
-                ResizeListViews();
+                this.ResizeListViews();
+                //Log($"Debug: Form_Resize. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, tryicon={this.notifyIcon.Visible}");
             }
         }
 
         //open from tray
-        private async void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            this.Show();
-            this.WindowState = FormWindowState.Normal;
-            notifyIcon.Visible = false;
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
+            ShowForm();
         }
 
+        //protected override void SetVisibleCore(bool value)
+        //{
+        //    base.SetVisibleCore(AllowShowDisplay ? value : AllowShowDisplay);
+        //}
+
+        private async void ShowForm()
+        {
+
+            if (IsClosing.ReadFullFence())
+                return;
+
+            try
+            {
+                //this.AllowShowDisplay = true;
+                this.Opacity = 100;
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+                this.ShowInTaskbar = true;
+                this.notifyIcon.Visible = false;
+                this.LoadHistoryAsync(true, true);
+                this.UpdateLogAddedRemovedAsync(true, true);
+                //Log($"Debug: Showing app. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, trayicon={this.notifyIcon.Visible}");
+                this.Activate();
+                Application.DoEvents();
+
+            }
+            catch { }
+        }
+
+        private async void HideForm()
+        {
+
+            if (IsClosing.ReadFullFence())
+                return;
+
+            try
+            {
+                this.Hide();
+                this.Opacity = 0;
+                this.notifyIcon.Visible = true;
+                //Log($"Debug: Hiding app. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, trayicon={this.notifyIcon.Visible}");
+                Application.DoEvents();
+
+            }
+            catch { }
+
+        }
         //open Log when clicking or error message
         private void lbl_errors_Click(object sender, EventArgs e)
         {
-            ShowErrors();
+            this.ShowErrors();
 
         }
 
@@ -701,26 +925,26 @@ namespace AITool
         {
 
             //filter the main log list for errors
-            chk_filterErrors.Checked = true;
-            tabControl1.SelectedTab = tabLog;
-            FilterLogErrors();
+            this.chk_filterErrors.Checked = true;
+            this.tabControl1.SelectedTab = this.tabLog;
+            this.FilterLogErrors();
         }
 
         //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
         private void ResizeListViews()
         {
             //suspend layout of most complex tablelayout elements (gives a few milliseconds)
-            tableLayoutPanel7.SuspendLayout();
-            tableLayoutPanel8.SuspendLayout();
+            this.tableLayoutPanel7.SuspendLayout();
+            this.tableLayoutPanel8.SuspendLayout();
             //tableLayoutPanel9.SuspendLayout();
 
 
-            if (list2.Columns.Count > 0)
-                list2.Columns[0].Width = list2.Width - 4; //resize camera list column
+            if (this.list2.Columns.Count > 0)
+                this.list2.Columns[0].Width = this.list2.Width - 4; //resize camera list column
 
             //resume layout again
-            tableLayoutPanel7.ResumeLayout();
-            tableLayoutPanel8.ResumeLayout();
+            this.tableLayoutPanel7.ResumeLayout();
+            this.tableLayoutPanel8.ResumeLayout();
             //tableLayoutPanel9.ResumeLayout();
         }
 
@@ -730,35 +954,35 @@ namespace AITool
         //event: mouse click on tab control
         private void tabControl1_MouseDown(object sender, MouseEventArgs e)
         {
-            ResizeListViews();
+            this.ResizeListViews();
         }
 
         //event: another tab selected (Only load certain things in tabs if they are actually open)
         private async void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Application.DoEvents();
+            //Application.DoEvents();
 
-            if (tabControl1.SelectedIndex == 1)
+            if (this.tabControl1.SelectedIndex == 1)
             {
-                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+                this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
             }
-            else if (tabControl1.SelectedIndex == 2)
+            else if (this.tabControl1.SelectedIndex == 2)
             {
-                await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow);
+                await this.LoadHistoryAsync(true, true);
             }
-            else if (tabControl1.SelectedTab == tabControl1.TabPages["tabDeepStack"])
+            else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
             {
-                LoadDeepStackTab(true);
+                this.LoadDeepStackTab(true);
             }
-            else if (tabControl1.SelectedTab == tabControl1.TabPages["tabLog"])
+            else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabLog"])
             {
                 //scroll to bottom, only when tab is active for better performance 
-                if (!toolStripButtonPauseLog.Checked)
+                if (!this.toolStripButtonPauseLog.Checked)
                 {
-                    await this.UpdateLogAddedRemovedAsync(true);
+                    await this.UpdateLogAddedRemovedAsync(true, true);
                 }
             }
-            Application.DoEvents();
+            //Application.DoEvents();
 
         }
 
@@ -777,7 +1001,7 @@ namespace AITool
         public void UpdatePieChart()
         {
 
-            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(comboBox1.Text))
+            if (this.tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(this.comboBox1.Text))
                 return;
 
             int alerts = 0;
@@ -785,7 +1009,7 @@ namespace AITool
             int falsealerts = 0;
             int skipped = 0;
 
-            if (comboBox1.Text == "All Cameras")
+            if (this.comboBox1.Text == "All Cameras")
             {
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
@@ -798,7 +1022,7 @@ namespace AITool
             else
             {
 
-                Camera cam = AITOOL.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
+                Camera cam = AITOOL.GetCamera(this.comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
                 if (cam != null)
                 {
                     alerts = cam.stats_alerts;
@@ -812,32 +1036,32 @@ namespace AITool
                     irrelevantalerts = 0;
                     falsealerts = 0;
                     skipped = 0;
-                    Log($"Error: Could not match combobox dropdown '{comboBox1.Text}' to a known camera name?");
+                    Log($"Error: Could not match combobox dropdown '{this.comboBox1.Text}' to a known camera name?");
                 }
             }
 
-            chart1.Series[0].Points.Clear();
+            this.chart1.Series[0].Points.Clear();
 
-            chart1.Series[0].LegendText = "#VALY"; //"#VALY #VALX"
-            chart1.Series[0]["PieLabelStyle"] = "Disabled";
+            this.chart1.Series[0].LegendText = "#VALY"; //"#VALY #VALX"
+            this.chart1.Series[0]["PieLabelStyle"] = "Disabled";
 
             int index = -1;
 
             //show Alerts label
-            index = chart1.Series[0].Points.AddXY("Alerts", alerts);
-            chart1.Series[0].Points[index].Color = System.Drawing.Color.Green;
+            index = this.chart1.Series[0].Points.AddXY("Alerts", alerts);
+            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Green;
 
             //show irrelevant Alerts label
-            index = chart1.Series[0].Points.AddXY("irrelevant Alerts", irrelevantalerts);
-            chart1.Series[0].Points[index].Color = System.Drawing.Color.Orange;
+            index = this.chart1.Series[0].Points.AddXY("irrelevant Alerts", irrelevantalerts);
+            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Orange;
 
             //show false Alerts label
-            index = chart1.Series[0].Points.AddXY("false Alerts", falsealerts);
-            chart1.Series[0].Points[index].Color = System.Drawing.Color.OrangeRed;
+            index = this.chart1.Series[0].Points.AddXY("false Alerts", falsealerts);
+            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.OrangeRed;
 
             //show skipped label
-            index = chart1.Series[0].Points.AddXY("Skipped Images", skipped);
-            chart1.Series[0].Points[index].Color = System.Drawing.Color.Purple;
+            index = this.chart1.Series[0].Points.AddXY("Skipped Images", skipped);
+            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Purple;
 
 
 
@@ -847,17 +1071,17 @@ namespace AITool
         public void UpdateTimeline()
         {
 
-            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(comboBox1.Text))
+            if (this.tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(this.comboBox1.Text))
                 return;
 
             Log("Debug: Loading time line from cameras/history.csv ...");
 
             //clear previous values
-            timeline.Series[0].Points.Clear();
-            timeline.Series[1].Points.Clear();
-            timeline.Series[2].Points.Clear();
-            timeline.Series[3].Points.Clear();
-            timeline.Series[4].Points.Clear();
+            this.timeline.Series[0].Points.Clear();
+            this.timeline.Series[1].Points.Clear();
+            this.timeline.Series[2].Points.Clear();
+            this.timeline.Series[3].Points.Clear();
+            this.timeline.Series[4].Points.Clear();
 
             Stopwatch SW = Stopwatch.StartNew();
 
@@ -865,9 +1089,9 @@ namespace AITool
             {
                 List<History> result = HistoryDB.GetAllValues();
 
-                if (!string.Equals(comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
+                if (!string.Equals(this.comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
                 {
-                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(comboBox1.Text.Trim().ToLower())).ToList();
+                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(this.comboBox1.Text.Trim().ToLower())).ToList();
                 }
 
                 //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
@@ -927,66 +1151,66 @@ namespace AITool
                 * So the first point is at -0.25 and has the value of the last visible point and the 
                 * last point is at 24.25 and has the value of the first visible point. */
 
-                timeline.Series[0].Points.AddXY(-0.25, all[47]); // beginning point with value of last visible point
+                this.timeline.Series[0].Points.AddXY(-0.25, all[47]); // beginning point with value of last visible point
 
                 //and now add all visible points 
                 double x = 0.25;
                 foreach (int halfhour in all)
                 {
-                    int index = timeline.Series[0].Points.AddXY(x, halfhour);
+                    int index = this.timeline.Series[0].Points.AddXY(x, halfhour);
                     x = x + 0.5;
                 }
 
-                timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
+                this.timeline.Series[0].Points.AddXY(24.25, all[0]); // finally add last point with value of first visible point
 
                 //add to graph "falses":
 
-                timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
-                                                                    //and now add all visible points 
+                this.timeline.Series[1].Points.AddXY(-0.25, falses[47]); // beginning point with value of last visible point
+                                                                         //and now add all visible points 
                 x = 0.25;
                 foreach (int halfhour in falses)
                 {
-                    int index = timeline.Series[1].Points.AddXY(x, halfhour);
+                    int index = this.timeline.Series[1].Points.AddXY(x, halfhour);
                     x = x + 0.5;
                 }
-                timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
+                this.timeline.Series[1].Points.AddXY(24.25, falses[0]); // finally add last point with value of first visible point
 
                 //add to graph "irrelevant":
 
-                timeline.Series[2].Points.AddXY(-0.25, irrelevant[47]); // beginning point with value of last visible point
-                                                                        //and now add all visible points 
+                this.timeline.Series[2].Points.AddXY(-0.25, irrelevant[47]); // beginning point with value of last visible point
+                                                                             //and now add all visible points 
                 x = 0.25;
                 foreach (int halfhour in irrelevant)
                 {
-                    int index = timeline.Series[2].Points.AddXY(x, halfhour);
+                    int index = this.timeline.Series[2].Points.AddXY(x, halfhour);
                     x = x + 0.5;
                 }
-                timeline.Series[2].Points.AddXY(24.25, irrelevant[0]); // finally add last point with value of first visible point
+                this.timeline.Series[2].Points.AddXY(24.25, irrelevant[0]); // finally add last point with value of first visible point
 
                 //add to graph "relevant":
 
-                timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
-                                                                      //and now add all visible points 
+                this.timeline.Series[3].Points.AddXY(-0.25, relevant[47]); // beginning point with value of last visible point
+                                                                           //and now add all visible points 
                 x = 0.25;
                 foreach (int halfhour in relevant)
                 {
-                    int index = timeline.Series[3].Points.AddXY(x, halfhour);
+                    int index = this.timeline.Series[3].Points.AddXY(x, halfhour);
                     x = x + 0.5;
                 }
-                timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
+                this.timeline.Series[3].Points.AddXY(24.25, relevant[0]); // finally add last point with value of first visible point
 
 
                 //add to graph "skipped":
 
-                timeline.Series[4].Points.AddXY(-0.25, skipped[47]); // beginning point with value of last visible point
-                                                                     //and now add all visible points 
+                this.timeline.Series[4].Points.AddXY(-0.25, skipped[47]); // beginning point with value of last visible point
+                                                                          //and now add all visible points 
                 x = 0.25;
                 foreach (int halfhour in skipped)
                 {
-                    int index = timeline.Series[4].Points.AddXY(x, halfhour);
+                    int index = this.timeline.Series[4].Points.AddXY(x, halfhour);
                     x = x + 0.5;
                 }
-                timeline.Series[4].Points.AddXY(24.25, skipped[0]); // finally add last point with value of first visible point
+                this.timeline.Series[4].Points.AddXY(24.25, skipped[0]); // finally add last point with value of first visible point
 
 
 
@@ -1006,15 +1230,15 @@ namespace AITool
         public void UpdateConfidenceChart()
         {
 
-            if (tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(comboBox1.Text))
+            if (this.tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(this.comboBox1.Text))
                 return;
 
 
             Log("Debug: Loading confidence-frequency chart from cameras/history.csv ...");
 
             //clear previous values
-            chart_confidence.Series[0].Points.Clear();
-            chart_confidence.Series[1].Points.Clear();
+            this.chart_confidence.Series[0].Points.Clear();
+            this.chart_confidence.Series[1].Points.Clear();
 
 
             Stopwatch SW = Stopwatch.StartNew();
@@ -1023,9 +1247,9 @@ namespace AITool
             {
                 List<History> result = HistoryDB.GetAllValues();
 
-                if (!string.Equals(comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
+                if (!string.Equals(this.comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
                 {
-                    result = result.Where(hist => hist.Camera.StartsWith(comboBox1.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+                    result = result.Where(hist => hist.Camera.StartsWith(this.comboBox1.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
                 //this array stores the Absolute frequencies of all possible confidence values (0%-100%)
@@ -1083,7 +1307,7 @@ namespace AITool
                 int i = 0;
                 foreach (int y_value in green_values)
                 {
-                    chart_confidence.Series[1].Points.AddXY(i, y_value);
+                    this.chart_confidence.Series[1].Points.AddXY(i, y_value);
                     i++;
                 }
 
@@ -1091,7 +1315,7 @@ namespace AITool
                 i = 0;
                 foreach (int y_value in orange_values)
                 {
-                    chart_confidence.Series[0].Points.AddXY(i, y_value);
+                    this.chart_confidence.Series[0].Points.AddXY(i, y_value);
                     i++;
                 }
 
@@ -1110,13 +1334,13 @@ namespace AITool
 
         private void showHideMask()
         {
-            if (cb_showMask.Checked == true) //show overlay
+            if (this.cb_showMask.Checked == true) //show overlay
             {
                 //Log("Show mask toggled.");
 
-                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+                if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
                 {
-                    History hist = (History)folv_history.SelectedObjects[0];
+                    History hist = (History)this.folv_history.SelectedObjects[0];
 
                     string imagefile = AITOOL.GetMaskFile(hist.Camera);
 
@@ -1124,12 +1348,12 @@ namespace AITool
                     {
                         using (var img = new Bitmap(imagefile))
                         {
-                            pictureBox1.Image = new Bitmap(img); //load mask as overlay
+                            this.pictureBox1.Image = new Bitmap(img); //load mask as overlay
                         }
                     }
                     else
                     {
-                        pictureBox1.Image = null; //if file does not exist, empty mask overlay (from possible overlays of previous images)
+                        this.pictureBox1.Image = null; //if file does not exist, empty mask overlay (from possible overlays of previous images)
                     }
 
                 }
@@ -1137,7 +1361,7 @@ namespace AITool
             }
             else //if showmask toggle-button is not checked, hide the mask overlay
             {
-                pictureBox1.Image = null;
+                this.pictureBox1.Image = null;
             }
 
         }
@@ -1147,7 +1371,7 @@ namespace AITool
         {
             try
             {
-                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0 && (pictureBox1 != null) && (pictureBox1.BackgroundImage != null))
+                if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0 && (this.pictureBox1 != null) && (this.pictureBox1.BackgroundImage != null))
                 {
 
                     System.Drawing.Color color = new System.Drawing.Color();
@@ -1170,10 +1394,10 @@ namespace AITool
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
-                    float imgWidth = pictureBox1.BackgroundImage.Width;
-                    float imgHeight = pictureBox1.BackgroundImage.Height;
-                    float boxWidth = pictureBox1.Width;
-                    float boxHeight = pictureBox1.Height;
+                    float imgWidth = this.pictureBox1.BackgroundImage.Width;
+                    float imgHeight = this.pictureBox1.BackgroundImage.Height;
+                    float boxWidth = this.pictureBox1.Width;
+                    float boxHeight = this.pictureBox1.Height;
 
                     //these variables store the padding between image border and picturebox border
                     int absX = 0;
@@ -1237,10 +1461,10 @@ namespace AITool
         //TODO: refactor detections
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            if (AppSettings.Settings.HistoryShowObjects && folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0) //if checkbox button is enabled
+            if (AppSettings.Settings.HistoryShowObjects && this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0) //if checkbox button is enabled
             {
                 //Log("Loading object rectangles...");
-                History hist = (History)folv_history.SelectedObjects[0];
+                History hist = (History)this.folv_history.SelectedObjects[0];
 
                 if (hist == null)
                     return;
@@ -1272,11 +1496,11 @@ namespace AITool
                         {
                             if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
                             {
-                                showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
                             }
                             else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
                             {
-                                showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
                             }
 
                         }
@@ -1330,7 +1554,7 @@ namespace AITool
                             Int32.TryParse(positionsplt[3], out int ymax);
 
 
-                            showObject(e, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i], result); //call rectangle drawing method, calls appropriate detection text
+                            this.showObject(e, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i], result); //call rectangle drawing method, calls appropriate detection text
 
                         }
 
@@ -1356,8 +1580,10 @@ namespace AITool
             {
 
 
-                if (!this.Visible || (this.WindowState == FormWindowState.Minimized))
+                if (!this.Visible || (this.WindowState == FormWindowState.Minimized) || this.IsStatsUpdating.ReadFullFence() || IsClosing.ReadFullFence())
                     return;  //save a tree
+
+                this.IsStatsUpdating.WriteFullFence(true);
 
                 int alerts = 0;
                 int irrelevantalerts = 0;
@@ -1373,7 +1599,7 @@ namespace AITool
                     newskipped += cam.stats_skipped_images_session;
                 }
 
-                Global_GUI.InvokeIFRequired(toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
+                Global_GUI.InvokeIFRequired(this.toolStripStatusLabelHistoryItems.GetCurrentParent(), () =>
                 {
 
                     double hpm = 0;
@@ -1389,23 +1615,23 @@ namespace AITool
                     if (HistoryDB != null && HistoryDB.AddedCount.ReadFullFence() > 0)
                         hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
-                    toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed";
+                    this.toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed |";
 
-                    toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Action Queued";
+                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Action Queued";
 
-                    toolStripStatusErrors.Text = $"| {LogMan.ErrorCount} Errors";
+                    this.toolStripStatusErrors.Text = $"{LogMan.ErrorCount} Errors";
 
                     if (!string.IsNullOrEmpty(Message))
                     {
-                        toolStripStatusLabelInfo.Text = Message;
+                        this.toolStripStatusLabelInfo.Text = Message;
                     }
-                    else if (ImageProcessQueue.Count > 0 && toolStripProgressBar1.Value == 0)
+                    else if (ImageProcessQueue.Count > 0 && this.toolStripProgressBar1.Value == 0)
                     {
-                        toolStripStatusLabelInfo.Text = "Working...";
+                        this.toolStripStatusLabelInfo.Text = "Working...";
                     }
-                    else if (toolStripProgressBar1.Value == 0)
+                    else if (this.toolStripProgressBar1.Value == 0)
                     {
-                        toolStripStatusLabelInfo.Text = "Idle.";
+                        this.toolStripStatusLabelInfo.Text = "Idle.";
                     }
 
                     //if (toolStripProgressBar1.Style == ProgressBarStyle.Marquee && toolStripStatusLabelInfo.Text == "Idle.")
@@ -1416,41 +1642,50 @@ namespace AITool
 
                     if (LogMan.ErrorCount.ReadFullFence() > 0)
                     {
-                        toolStripStatusErrors.ForeColor = Color.Black;
-                        toolStripStatusErrors.BackColor = Color.Red;
+                        this.toolStripStatusErrors.ForeColor = Color.Black;
+                        this.toolStripStatusErrors.BackColor = Color.Red;
                     }
                     else
                     {
-                        toolStripStatusErrors.ForeColor = toolStripStatusLabelHistoryItems.GetCurrentParent().ForeColor;
-                        toolStripStatusErrors.BackColor = toolStripStatusLabelHistoryItems.GetCurrentParent().BackColor;
+                        this.toolStripStatusErrors.ForeColor = this.toolStripStatusLabelHistoryItems.GetCurrentParent().ForeColor;
+                        this.toolStripStatusErrors.BackColor = this.toolStripStatusLabelHistoryItems.GetCurrentParent().BackColor;
                     }
+
+                    this.toolStripStatusErrors.GetCurrentParent().Refresh();
 
                 });
 
                 MethodInvoker LabelUpdate = delegate
                 {
-                    lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
+                    this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
                 };
 
-                Invoke(LabelUpdate);
+                this.Invoke(LabelUpdate);
 
                 LabelUpdate = delegate
                 {
                     if (LogMan.ErrorCount.ReadFullFence() > 0)
-                        lbl_errors.Text = $"{LogMan.ErrorCount} error(s) occurred. Click to open Log."; //update error counter label
+                        this.lbl_errors.Text = $"{LogMan.ErrorCount} error(s) occurred. Click to open Log."; //update error counter label
                     else
-                        lbl_errors.Text = "";
+                        this.lbl_errors.Text = "";
 
                 };
 
                 //getting error here when called too early - had to check if Visible or not -Vorlon
-                Invoke(LabelUpdate);
+                this.Invoke(LabelUpdate);
+
+
+                //Application.DoEvents();
 
             }
             catch (Exception ex)
             {
 
                 Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                this.IsStatsUpdating.WriteFullFence(false);
             }
         }
         //load stored entries in history CSV into history ListView
@@ -1460,11 +1695,11 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
 
-            if (IsLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
-            {
-                //Log("---Exit (still loading)");
-                return;
-            }
+            //if (IsLoading.ReadFullFence())  //when you set checkboxes during init, it may trigger the event to load the history
+            //{
+            //    //Log("---Exit (still loading)");
+            //    return;
+            //}
 
             //make sure only one thread updating at a time
             //await Semaphore_List_Updating.WaitAsync();
@@ -1492,7 +1727,7 @@ namespace AITool
                 bool displayed = false;
                 do
                 {
-                    if (HistoryDB != null && HistoryDB.HistoryDic != null && folv_history != null && this.DatabaseInitialized.ReadFullFence())
+                    if (HistoryDB != null && HistoryDB.HistoryDic != null && this.folv_history != null && this.DatabaseInitialized.ReadFullFence())
                         break;
                     else if (!displayed)
                     {
@@ -1500,7 +1735,7 @@ namespace AITool
                         Log("debug: Waiting for database to finish initializing...");
                         displayed = true;
                     }
-                    await Task.Delay(50);
+                    await Task.Delay(100);
 
                 } while (sw.ElapsedMilliseconds < 60000);
 
@@ -1508,7 +1743,7 @@ namespace AITool
                     Log($"...debug: Waited {sw.ElapsedMilliseconds}ms for the database to finish initializing/cleaning.");
 
                 //Dont update list unless we are on the tab and it is visible for performance reasons.
-                if (FilterChanged || folv_history.Items.Count == 0 || (tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
+                if (FilterChanged || this.folv_history.Items.Count == 0 || (this.tabControl1.SelectedIndex == 2 && this.Visible && !(this.WindowState == FormWindowState.Minimized)))
                 {
 
 
@@ -1520,10 +1755,22 @@ namespace AITool
 
                     if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
+
+                        List<History> histlist = HistoryDB.GetAllValues();
+                        //find the last item that is unfiltered:
+                        History lasthist = null;
+                        for (int i = histlist.Count - 1; i >= 0; i--)
+                        {
+                            if (this.checkListFilters(histlist[i]))
+                            {
+                                lasthist = histlist[i];
+                                break;
+                            }
+                        }
                         // run in another thread so gui doesnt freeze
                         await Task.Run(() =>
                         {
-                            Global_GUI.UpdateFOLV(folv_history, HistoryDB.GetAllValues(), Follow || AppSettings.Settings.HistoryFollow, FullRefresh: true);
+                            Global_GUI.UpdateFOLV(this.folv_history, histlist, Follow || AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist, FullRefresh: true);
                         });
 
                         //reset any that snuck in while waiting since we just did a full list update
@@ -1532,24 +1779,41 @@ namespace AITool
 
                         if (FilterChanged)
                         {
-                            Global_GUI.InvokeIFRequired(folv_history, () =>
-                            {
-
-                                if (comboBox_filter_camera.Text != "All Cameras" || cb_filter_animal.Checked || cb_filter_nosuccess.Checked || cb_filter_person.Checked || cb_filter_success.Checked || cb_filter_vehicle.Checked || cb_filter_skipped.Checked)
+                            Global_GUI.InvokeIFRequired(this.folv_history, () =>
                                 {
-                                    //filter
-                                    folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
+
+                                    if (this.comboBox_filter_camera.Text != "All Cameras" || this.cb_filter_animal.Checked || this.cb_filter_nosuccess.Checked || this.cb_filter_person.Checked || this.cb_filter_success.Checked || this.cb_filter_vehicle.Checked || this.cb_filter_skipped.Checked)
+                                    {
+                                        //filter
+                                        this.folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
                                     {
                                         History hist = (History)x;
-                                        return checkListFilters(hist);
+                                        return this.checkListFilters(hist);
                                     });
-                                }
-                                else
-                                {
-                                    folv_history.ModelFilter = null;
-                                }
+                                    }
+                                    else
+                                    {
+                                        this.folv_history.ModelFilter = null;
+                                    }
 
-                            });
+                                });
+
+                        }
+
+                        if (Follow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
+                        {
+                            if (this.folv_history.IsFiltering)
+                            {
+                                //use the last filtered object as the selected object
+                                this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
+                            }
+                            else if (!this.folv_history.IsFiltering)
+                            {
+                                this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
+                            }
+
+                            if (this.folv_history.SelectedObject != null)
+                                this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
 
                         }
 
@@ -1593,28 +1857,28 @@ namespace AITool
 
             bool ret = true;
 
-            if (!hist.Success && cb_filter_success.Checked)
+            if (!hist.Success && this.cb_filter_success.Checked)
                 ret = false;
 
-            if (hist.Success && cb_filter_nosuccess.Checked)
+            if (hist.Success && this.cb_filter_nosuccess.Checked)
                 ret = false;
 
-            if (!hist.WasSkipped && cb_filter_skipped.Checked)
+            if (!hist.WasSkipped && this.cb_filter_skipped.Checked)
                 ret = false;
 
-            if (!hist.WasMasked && cb_filter_masked.Checked)
+            if (!hist.WasMasked && this.cb_filter_masked.Checked)
                 ret = false;
 
-            if (!hist.IsPerson && cb_filter_person.Checked)
+            if (!hist.IsPerson && this.cb_filter_person.Checked)
                 ret = false;
 
-            if (!hist.IsVehicle && cb_filter_vehicle.Checked)
+            if (!hist.IsVehicle && this.cb_filter_vehicle.Checked)
                 ret = false;
 
-            if (!hist.IsAnimal && cb_filter_animal.Checked)
+            if (!hist.IsAnimal && this.cb_filter_animal.Checked)
                 ret = false;
 
-            bool CameraValid = ((string.Equals(comboBox_filter_camera.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) || string.Equals(hist.Camera.Trim(), comboBox_filter_camera.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+            bool CameraValid = ((string.Equals(this.comboBox_filter_camera.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) || string.Equals(hist.Camera.Trim(), this.comboBox_filter_camera.Text.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (!CameraValid)
                 ret = false;
@@ -1633,14 +1897,14 @@ namespace AITool
 
             string filename = Path.GetFileName(image_path);
 
-            MethodInvoker LabelUpdate = delegate { label2.Text = $"Accessing {filename}..."; };
-            Invoke(LabelUpdate);
+            MethodInvoker LabelUpdate = delegate { this.label2.Text = $"Accessing {filename}..."; };
+            this.Invoke(LabelUpdate);
 
             //output "Processing Image" to Overview Tab
-            LabelUpdate = delegate { label2.Text = $"Processing {filename}..."; };
-            Invoke(LabelUpdate);
+            LabelUpdate = delegate { this.label2.Text = $"Processing {filename}..."; };
+            this.Invoke(LabelUpdate);
 
-            UpdateStats();
+            this.UpdateStats();
 
         }
 
@@ -1651,27 +1915,27 @@ namespace AITool
 
 
             //output Running on Overview Tab
-            MethodInvoker LabelUpdate = delegate { label2.Text = "Running"; };
-            Invoke(LabelUpdate);
+            MethodInvoker LabelUpdate = delegate { this.label2.Text = "Running"; };
+            this.Invoke(LabelUpdate);
 
             //only update charts if stats tab is open
 
             LabelUpdate = delegate
             {
 
-                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+                this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
             };
-            Invoke(LabelUpdate);
+            this.Invoke(LabelUpdate);
 
             //load updated camera stats info in camera tab if a camera is selected
             LabelUpdate = delegate
             {
-                if (list2.SelectedItems.Count > 0)
+                if (this.list2.SelectedItems.Count > 0)
                 {
                     //load only stats from Camera.cs object
 
                     //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                    Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                    Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
 
                     //load cameras stats
                     string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
@@ -1679,15 +1943,15 @@ namespace AITool
                     {
                         stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
                     }
-                    lbl_camstats.Text = stats;
+                    this.lbl_camstats.Text = stats;
                 }
 
 
             };
-            Invoke(LabelUpdate);
+            this.Invoke(LabelUpdate);
 
 
-            UpdateStats();
+            this.UpdateStats();
 
         }
 
@@ -1698,18 +1962,18 @@ namespace AITool
         //event: show mask button clicked
         private void cb_showMask_CheckedChanged(object sender, EventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                showHideMask();
+                this.showHideMask();
             }
         }
 
         //event: show objects button clicked
         private void cb_showObjects_MouseUp(object sender, MouseEventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                pictureBox1.Refresh();
+                this.pictureBox1.Refresh();
             }
 
         }
@@ -1752,26 +2016,26 @@ namespace AITool
 
                 //start by getting last selected camera if any
                 string oldnamecameras = "";
-                if (list2.SelectedItems != null && list2.SelectedItems.Count > 0)
-                    oldnamecameras = list2.SelectedItems[0].Text;
+                if (this.list2.SelectedItems != null && this.list2.SelectedItems.Count > 0)
+                    oldnamecameras = this.list2.SelectedItems[0].Text;
 
                 //if nothing was selected, then select the last saved camera:
                 if (string.IsNullOrEmpty(oldnamecameras))
                     oldnamecameras = Global.GetSetting("LastSelectedCamera", "");
 
                 string oldnamefilters = "";
-                if (comboBox_filter_camera.Items.Count > 0)
-                    oldnamefilters = comboBox_filter_camera.Text;
+                if (this.comboBox_filter_camera.Items.Count > 0)
+                    oldnamefilters = this.comboBox_filter_camera.Text;
 
                 string oldnamestats = "";
-                if (comboBox1.Items.Count > 0)
-                    oldnamestats = comboBox1.Text;
+                if (this.comboBox1.Items.Count > 0)
+                    oldnamestats = this.comboBox1.Text;
 
-                list2.Items.Clear();
-                comboBox1.Items.Clear();
-                comboBox1.Items.Add("All Cameras");
-                comboBox_filter_camera.Items.Clear();
-                comboBox_filter_camera.Items.Add("All Cameras");
+                this.list2.Items.Clear();
+                this.comboBox1.Items.Clear();
+                this.comboBox1.Items.Add("All Cameras");
+                this.comboBox_filter_camera.Items.Clear();
+                this.comboBox_filter_camera.Items.Add("All Cameras");
 
                 int i = 0;
                 int oldidxcameras = 0;
@@ -1786,10 +2050,10 @@ namespace AITool
                         item.ForeColor = System.Drawing.Color.Gray;
                     }
                     //item.Tag = file; //tag is not used anywhere I can see
-                    list2.Items.Add(item);
+                    this.list2.Items.Add(item);
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-                    comboBox1.Items.Add($"   {cam.name}");
-                    comboBox_filter_camera.Items.Add($"   {cam.name}");
+                    this.comboBox1.Items.Add($"   {cam.name}");
+                    this.comboBox_filter_camera.Items.Add($"   {cam.name}");
                     if (string.Equals(oldnamecameras.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxcameras = i;
@@ -1807,16 +2071,16 @@ namespace AITool
                 }
 
                 //select first camera, or last selected camera
-                if (list2.Items.Count > 0 && list2.Items.Count >= oldidxcameras)
+                if (this.list2.Items.Count > 0 && this.list2.Items.Count >= oldidxcameras)
                 {
-                    list2.Items[oldidxcameras].Selected = true;
+                    this.list2.Items[oldidxcameras].Selected = true;
                 }
 
-                if (comboBox_filter_camera.Items.Count > 0)
-                    comboBox_filter_camera.SelectedIndex = oldidxfilters;
+                if (this.comboBox_filter_camera.Items.Count > 0)
+                    this.comboBox_filter_camera.SelectedIndex = oldidxfilters;
 
-                if (comboBox1.Items.Count > 0)
-                    comboBox1.SelectedIndex = oldidxstats;
+                if (this.comboBox1.Items.Count > 0)
+                    this.comboBox1.SelectedIndex = oldidxstats;
 
 
             }
@@ -1894,7 +2158,7 @@ namespace AITool
 
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
-            LoadCameras();
+            this.LoadCameras();
 
             return ($"SUCCESS: {cam.name} created.");
         }
@@ -1907,7 +2171,7 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             Log($"Removing camera {name}...");
-            if (list2.Items.Count > 0) //if list is empty, nothing can be deleted
+            if (this.list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
                 if (AppSettings.Settings.CameraList.Exists(x => string.Equals(x.name, name, StringComparison.OrdinalIgnoreCase))) //check if camera with specified name exists in list
                 {
@@ -1939,26 +2203,26 @@ namespace AITool
                         AppSettings.Settings.CameraList.Remove(AppSettings.Settings.CameraList[AppSettings.Settings.CameraList.Count - 1]); //lastly, remove camera from list
 
                         //remove list2 entry
-                        var item = list2.FindItemWithText(name);
-                        list2.Items[list2.Items.IndexOf(item)].Remove();
+                        var item = this.list2.FindItemWithText(name);
+                        this.list2.Items[this.list2.Items.IndexOf(item)].Remove();
 
                         //remove camera from combobox on overview tab and from camera filter combobox in the History tab 
-                        comboBox1.Items.Remove($"   {name}");
-                        comboBox_filter_camera.Items.Remove($"   {name}");
+                        this.comboBox1.Items.Remove($"   {name}");
+                        this.comboBox_filter_camera.Items.Remove($"   {name}");
 
                         //select first camera
-                        if (list2.Items.Count > 0)
+                        if (this.list2.Items.Count > 0)
                         {
-                            list2.Items[0].Selected = true;
+                            this.list2.Items[0].Selected = true;
                         }
 
                         //if list2 is empty, clear settings fields (to prevent that values of a deleted camera are shown)
-                        if (list2.Items.Count == 0)
+                        if (this.list2.Items.Count == 0)
                         {
-                            tbName.Text = "";
-                            tbPrefix.Text = "";
-                            cb_enabled.Checked = false;
-                            CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
+                            this.tbName.Text = "";
+                            this.tbPrefix.Text = "";
+                            this.cb_enabled.Checked = false;
+                            CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
                             foreach (CheckBox c in cbarray)
                             {
                                 c.Checked = false;
@@ -1984,18 +2248,18 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (list2.SelectedItems.Count > 0)
+            if (this.list2.SelectedItems.Count > 0)
             {
 
-                tableLayoutPanel6.Enabled = true;
+                this.tableLayoutPanel6.Enabled = true;
 
-                tbName.Text = list2.SelectedItems[0].Text; //load name textbox from name in list2
+                this.tbName.Text = this.list2.SelectedItems[0].Text; //load name textbox from name in list2
 
 
                 //load remaining settings from Camera.cs object
 
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                Camera cam = AITOOL.GetCamera(tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
+                Camera cam = AITOOL.GetCamera(this.tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
 
                 //load cameras stats
 
@@ -2005,44 +2269,44 @@ namespace AITool
                 {
                     stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
                 }
-                lbl_camstats.Text = stats;
+                this.lbl_camstats.Text = stats;
 
                 //load if ai detection is active for the camera
                 if (cam.enabled == true)
                 {
-                    cb_enabled.Checked = true;
+                    this.cb_enabled.Checked = true;
                 }
                 else
                 {
-                    cb_enabled.Checked = false;
+                    this.cb_enabled.Checked = false;
                 }
-                tbPrefix.Text = cam.prefix; //load 'input file begins with'
-                lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg"; //prefix live preview
+                this.tbPrefix.Text = cam.prefix; //load 'input file begins with'
+                this.lbl_prefix.Text = this.tbPrefix.Text + ".××××××.jpg"; //prefix live preview
 
-                cmbcaminput.Text = cam.input_path;
-                cmbcaminput.Items.Clear();
+                this.cmbcaminput.Text = cam.input_path;
+                this.cmbcaminput.Items.Clear();
                 foreach (string pth in BlueIrisInfo.ClipPaths)
                 {
-                    cmbcaminput.Items.Add(pth);
+                    this.cmbcaminput.Items.Add(pth);
                     //try to automatically pick the path that starts with AI if not already set
                     //if ((pth.ToLower().Contains(tbName.Text.ToLower()) || pth.ToLower().Contains(tbPrefix.Text.ToLower())) && string.IsNullOrWhiteSpace(cmbcaminput.Text))
                     //{
                     //    cmbcaminput.Text = pth;
                     //}
                 }
-                cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
+                this.cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
 
-                tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
-                tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
+                this.tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
+                this.tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
-                cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
+                this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
 
 
 
                 //load triggering objects
                 //first create arrays with all checkboxes stored in
-                CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
+                CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
                 //create array with strings of the triggering_objects related to the checkboxes in the same order
                 string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
@@ -2070,7 +2334,7 @@ namespace AITool
         //input file begins with live preview
         private void tbPrefix_TextChanged(object sender, EventArgs e)
         {
-            lbl_prefix.Text = tbPrefix.Text + ".××××××.jpg";
+            this.lbl_prefix.Text = this.tbPrefix.Text + ".××××××.jpg";
         }
 
 
@@ -2078,12 +2342,12 @@ namespace AITool
         //event: camera list another item selected
         private void list2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (list2.SelectedItems.Count > 0)
+            if (this.list2.SelectedItems.Count > 0)
             {
-                Global.SaveSetting("LastSelectedCamera", list2.SelectedItems[0].Text);
+                Global.SaveSetting("LastSelectedCamera", this.list2.SelectedItems[0].Text);
             }
 
-            DisplayCameraSettings(); //display new item's settings
+            this.DisplayCameraSettings(); //display new item's settings
         }
 
         //event: camera add button
@@ -2097,7 +2361,7 @@ namespace AITool
                 {
                     Camera cam = new Camera(form.text);
 
-                    string camresult = AddCamera(cam);
+                    string camresult = this.AddCamera(cam);
 
                     // Old way...
                     //string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
@@ -2114,48 +2378,48 @@ namespace AITool
         private void btnCameraSave_Click_1(object sender, EventArgs e)
         {
 
-            CameraSave(false);
+            this.CameraSave(false);
         }
 
         private void CameraSave(bool SaveTo)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (list2.Items.Count > 0)
+            if (this.list2.Items.Count > 0)
             {
                 //check if name is empty
-                if (String.IsNullOrWhiteSpace(tbName.Text))
+                if (String.IsNullOrWhiteSpace(this.tbName.Text))
                 {
-                    DisplayCameraSettings(); //reset displayed settings
+                    this.DisplayCameraSettings(); //reset displayed settings
                     MessageBox.Show($"WARNING: Camera name may not be empty.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                if (!string.Equals(list2.SelectedItems[0].Text.Trim(), tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(this.list2.SelectedItems[0].Text.Trim(), this.tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     //camera renamed, make sure name doesnt exist
-                    Camera CamCheck = AITOOL.GetCamera(tbName.Text, false);
+                    Camera CamCheck = AITOOL.GetCamera(this.tbName.Text, false);
                     if (CamCheck != null)
                     {
                         //Its a dupe
-                        MessageBox.Show($"WARNING: Camera name must be unique, but new camera name '{tbName.Text}' already exists.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        DisplayCameraSettings(); //reset displayed settings
+                        MessageBox.Show($"WARNING: Camera name must be unique, but new camera name '{this.tbName.Text}' already exists.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.DisplayCameraSettings(); //reset displayed settings
                         return;
                     }
                     else
                     {
-                        Log($"SUCCESS: Camera {list2.SelectedItems[0].Text} was updated to {tbName.Text}.");
+                        Log($"SUCCESS: Camera {this.list2.SelectedItems[0].Text} was updated to {this.tbName.Text}.");
                     }
                 }
 
 
-                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text, false);
+                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text, false);
 
                 if (cam == null)
                 {
                     //should not happen, but...
-                    MessageBox.Show($"WARNING: Camera not found???  '{list2.SelectedItems[0].Text}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    DisplayCameraSettings(); //reset displayed settings
+                    MessageBox.Show($"WARNING: Camera not found???  '{this.list2.SelectedItems[0].Text}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.DisplayCameraSettings(); //reset displayed settings
                     return;
                 }
 
@@ -2175,7 +2439,7 @@ namespace AITool
                 //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
                 //hair dryer, toothbrush.
 
-                CheckBox[] cbarray = new CheckBox[] { cb_airplane, cb_bear, cb_bicycle, cb_bird, cb_boat, cb_bus, cb_car, cb_cat, cb_cow, cb_dog, cb_horse, cb_motorcycle, cb_person, cb_sheep, cb_truck };
+                CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
                 //create array with strings of the triggering_objects related to the checkboxes in the same order
                 string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
@@ -2190,32 +2454,32 @@ namespace AITool
                 }
 
                 //get lower and upper threshold values from textboxes
-                cam.threshold_lower = Convert.ToInt32(tb_threshold_lower.Text.Trim());
-                cam.threshold_upper = Convert.ToInt32(tb_threshold_upper.Text.Trim());
+                cam.threshold_lower = Convert.ToInt32(this.tb_threshold_lower.Text.Trim());
+                cam.threshold_upper = Convert.ToInt32(this.tb_threshold_upper.Text.Trim());
 
                 cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
                 cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
                 cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                if (cam.name != tbName.Text.Trim())
+                if (cam.name != this.tbName.Text.Trim())
                 {
                     string Oldmaskfile = GetMaskFile(cam.name);
                     if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
                     {
                         string ext = Path.GetExtension(Oldmaskfile);
                         string pth = Path.GetDirectoryName(Oldmaskfile);
-                        string NewMaskFile = Path.Combine(pth, tbName.Text.Trim() + ext);
+                        string NewMaskFile = Path.Combine(pth, this.tbName.Text.Trim() + ext);
                         File.Move(Oldmaskfile, NewMaskFile);
                     }
-                    cam.name = tbName.Text.Trim();  //just in case we needed to rename it
+                    cam.name = this.tbName.Text.Trim();  //just in case we needed to rename it
                 }
 
-                cam.prefix = tbPrefix.Text.Trim();
-                cam.enabled = cb_enabled.Checked;
-                cam.maskManager.MaskingEnabled = cb_masking_enabled.Checked;
-                cam.input_path = cmbcaminput.Text.Trim();
-                cam.input_path_includesubfolders = cb_monitorCamInputfolder.Checked;
+                cam.prefix = this.tbPrefix.Text.Trim();
+                cam.enabled = this.cb_enabled.Checked;
+                cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
+                cam.input_path = this.cmbcaminput.Text.Trim();
+                cam.input_path_includesubfolders = this.cb_monitorCamInputfolder.Checked;
 
                 int ccnt = 0;
 
@@ -2310,9 +2574,9 @@ namespace AITool
                     ccnt = 1;
                 }
 
-                LoadCameras();
+                this.LoadCameras();
 
-                AppSettings.Save();
+                AppSettings.SaveAsync();
 
                 UpdateWatchers(true);
 
@@ -2341,21 +2605,21 @@ namespace AITool
 
 
             }
-            DisplayCameraSettings();
+            this.DisplayCameraSettings();
 
         }
         //event: delete camera button
         private void btnCameraDel_Click(object sender, EventArgs e)
         {
-            if (list2.Items.Count > 0)
+            if (this.list2.Items.Count > 0)
             {
-                using (var form = new InputForm($"Delete camera {list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
+                using (var form = new InputForm($"Delete camera {this.list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
                 {
                     var result = form.ShowDialog();
                     if (result == DialogResult.OK)
                     {
                         //Log("about to del cam");
-                        RemoveCamera(list2.SelectedItems[0].Text);
+                        this.RemoveCamera(this.list2.SelectedItems[0].Text);
                     }
                 }
             }
@@ -2366,14 +2630,14 @@ namespace AITool
         {
             if (e.KeyCode == Keys.Delete)
             {
-                if (list2.Items.Count > 0)
+                if (this.list2.Items.Count > 0)
                 {
-                    using (var form = new InputForm($"Delete camera {list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
+                    using (var form = new InputForm($"Delete camera {this.list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
                     {
                         var result = form.ShowDialog();
                         if (result == DialogResult.OK)
                         {
-                            RemoveCamera(list2.SelectedItems[0].Text);
+                            this.RemoveCamera(this.list2.SelectedItems[0].Text);
                         }
                     }
                 }
@@ -2383,18 +2647,18 @@ namespace AITool
         //event: leaving empty lower confidence limit textbox
         private void tb_threshold_lower_Leave(object sender, EventArgs e)
         {
-            if (tb_threshold_lower.Text == "")
+            if (this.tb_threshold_lower.Text == "")
             {
-                tb_threshold_lower.Text = "0";
+                this.tb_threshold_lower.Text = "0";
             }
         }
 
         //event: leaving empty upper confidence limit textbox
         private void tb_threshold_upper_Leave(object sender, EventArgs e)
         {
-            if (tb_threshold_upper.Text == "")
+            if (this.tb_threshold_upper.Text == "")
             {
-                tb_threshold_upper.Text = "100";
+                this.tb_threshold_upper.Text = "100";
             }
         }
 
@@ -2406,28 +2670,28 @@ namespace AITool
 
 
         //settings save button
-        private void BtnSettingsSave_Click_1(object sender, EventArgs e)
+        private async void BtnSettingsSave_Click_1(object sender, EventArgs e)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
-            AppSettings.Settings.input_path = cmbInput.Text;
-            AppSettings.Settings.input_path_includesubfolders = cb_inputpathsubfolders.Checked;
-            AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
-            AppSettings.Settings.deepstack_urls_are_queued = cb_DeepStackURLsQueued.Checked;
-            AppSettings.Settings.telegram_chatids = Global.Split(tb_telegram_chatid.Text, "|;,", true, true);
-            AppSettings.Settings.telegram_token = tb_telegram_token.Text;
-            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(tb_telegram_cooldown.Text);
-            AppSettings.Settings.send_errors = cb_send_errors.Checked;
-            AppSettings.Settings.startwithwindows = cbStartWithWindows.Checked;
+            AppSettings.Settings.input_path = this.cmbInput.Text;
+            AppSettings.Settings.input_path_includesubfolders = this.cb_inputpathsubfolders.Checked;
+            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text;
+            AppSettings.Settings.deepstack_urls_are_queued = this.cb_DeepStackURLsQueued.Checked;
+            AppSettings.Settings.telegram_chatids = Global.Split(this.tb_telegram_chatid.Text, "|;,", true, true);
+            AppSettings.Settings.telegram_token = this.tb_telegram_token.Text;
+            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(this.tb_telegram_cooldown.Text);
+            AppSettings.Settings.send_errors = this.cb_send_errors.Checked;
+            AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
             //let the image loop (running in another thread) know to recheck ai server url settings.
             AIURLSettingsChanged.WriteFullFence(true);
 
-            if (AppSettings.Save())
+            if (await AppSettings.SaveAsync())
             {
                 Log("...Saved.");
             }
@@ -2472,15 +2736,15 @@ namespace AITool
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
-                if (!string.IsNullOrEmpty(cmbInput.Text))
+                if (!string.IsNullOrEmpty(this.cmbInput.Text))
                 {
-                    dialog.InitialDirectory = cmbInput.Text;
+                    dialog.InitialDirectory = this.cmbInput.Text;
 
                 }
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    cmbInput.Text = dialog.FileName;
+                    this.cmbInput.Text = dialog.FileName;
                 }
             }
         }
@@ -2488,15 +2752,7 @@ namespace AITool
         //open log button
         private void btn_open_log_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+            OpenLogFile();
 
         }
 
@@ -2505,52 +2761,54 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            Log("------Closing-------");
-
             IsClosing.WriteFullFence(true);
 
-            if (AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+            Log("------Closing-------");
+
+            try
             {
-                using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
+                if (AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
                 {
-                    var result = form.ShowDialog();
-                    if (AppSettings.Settings.close_instantly == -1)
+                    using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                     {
-                        //if it's the first time, ask if the confirmation dialog should ever appear again
-                        using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO, Never!", "YES"))
+                        var result = form.ShowDialog();
+                        if (AppSettings.Settings.close_instantly == -1)
                         {
-                            var result1 = form1.ShowDialog();
-                            if (result1 == DialogResult.Cancel)
+                            //if it's the first time, ask if the confirmation dialog should ever appear again
+                            using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO, Never!", "YES"))
                             {
-                                AppSettings.Settings.close_instantly = 0;
-                            }
-                            else
-                            {
-                                AppSettings.Settings.close_instantly = 1;
+                                var result1 = form1.ShowDialog();
+                                if (result1 == DialogResult.Cancel)
+                                {
+                                    AppSettings.Settings.close_instantly = 0;
+                                }
+                                else
+                                {
+                                    AppSettings.Settings.close_instantly = 1;
+                                }
                             }
                         }
+
+                        e.Cancel = (result == DialogResult.Cancel);
                     }
-
-                    e.Cancel = (result == DialogResult.Cancel);
                 }
+
+
+                Global_GUI.SaveWindowState(this);
+
+                AppSettings.SaveAsync();  //save settings in any case
+
+                if (!AppSettings.AlreadyRunning)
+                    Global.SaveSetting("LastShutdownState", "graceful shutdown");
+
             }
+            catch { }
 
-
-            Global_GUI.SaveWindowState(this);
-
-            AppSettings.Save();  //save settings in any case
-
-            if (!AppSettings.AlreadyRunning)
-                Global.SaveSetting("LastShutdownState", "graceful shutdown");
 
 
 
         }
 
-        private void Shell_Load(object sender, EventArgs e)
-        {
-            Global_GUI.RestoreWindowState(this);
-        }
         private void SaveDeepStackTab()
         {
 
@@ -2559,26 +2817,26 @@ namespace AITool
 
             DeepStackServerControl.GetDeepStackRun();
 
-            if (RB_Medium.Checked)
+            if (this.RB_Medium.Checked)
                 AppSettings.Settings.deepstack_mode = "Medium";
-            if (RB_Low.Checked)
+            if (this.RB_Low.Checked)
                 AppSettings.Settings.deepstack_mode = "Low";
-            if (RB_High.Checked)
+            if (this.RB_High.Checked)
                 AppSettings.Settings.deepstack_mode = "High";
 
-            AppSettings.Settings.deepstack_detectionapienabled = Chk_DetectionAPI.Checked;
-            AppSettings.Settings.deepstack_faceapienabled = Chk_FaceAPI.Checked;
-            AppSettings.Settings.deepstack_sceneapienabled = Chk_SceneAPI.Checked;
-            AppSettings.Settings.deepstack_autostart = Chk_AutoStart.Checked;
-            AppSettings.Settings.deepstack_debug = Chk_DSDebug.Checked;
-            AppSettings.Settings.deepstack_highpriority = chk_HighPriority.Checked;
-            AppSettings.Settings.deepstack_adminkey = Txt_AdminKey.Text.Trim();
-            AppSettings.Settings.deepstack_apikey = Txt_APIKey.Text.Trim();
-            AppSettings.Settings.deepstack_installfolder = Txt_DeepStackInstallFolder.Text.Trim();
-            AppSettings.Settings.deepstack_port = Txt_Port.Text.Trim();
+            AppSettings.Settings.deepstack_detectionapienabled = this.Chk_DetectionAPI.Checked;
+            AppSettings.Settings.deepstack_faceapienabled = this.Chk_FaceAPI.Checked;
+            AppSettings.Settings.deepstack_sceneapienabled = this.Chk_SceneAPI.Checked;
+            AppSettings.Settings.deepstack_autostart = this.Chk_AutoStart.Checked;
+            AppSettings.Settings.deepstack_debug = this.Chk_DSDebug.Checked;
+            AppSettings.Settings.deepstack_highpriority = this.chk_HighPriority.Checked;
+            AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
+            AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
+            AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
+            AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
 
 
-            AppSettings.Save();
+            AppSettings.SaveAsync();
 
 
             if (DeepStackServerControl.IsInstalled)
@@ -2589,36 +2847,36 @@ namespace AITool
 
                     if (DeepStackServerControl.IsActivated)
                     {
-                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
-                        Invoke(LabelUpdate);
+                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                        this.Invoke(LabelUpdate);
 
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = true;
                     }
                     else
                     {
-                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
-                        Invoke(LabelUpdate);
+                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
+                        this.Invoke(LabelUpdate);
 
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = true;
                     }
                 }
                 else
                 {
-                    MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
-                    Invoke(LabelUpdate);
+                    MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
+                    this.Invoke(LabelUpdate);
 
-                    Btn_Start.Enabled = true;
-                    Btn_Stop.Enabled = false;
+                    this.Btn_Start.Enabled = true;
+                    this.Btn_Stop.Enabled = false;
                 }
             }
             else
             {
-                Btn_Start.Enabled = false;
-                Btn_Stop.Enabled = false;
-                MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
-                Invoke(LabelUpdate);
+                this.Btn_Start.Enabled = false;
+                this.Btn_Stop.Enabled = false;
+                MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
+                this.Invoke(LabelUpdate);
 
 
             }
@@ -2647,30 +2905,30 @@ namespace AITool
                 DeepStackServerControl.GetDeepStackRun();
 
                 if (string.Equals(DeepStackServerControl.Mode, "medium", StringComparison.OrdinalIgnoreCase))
-                    RB_Medium.Checked = true;
+                    this.RB_Medium.Checked = true;
                 if (string.Equals(DeepStackServerControl.Mode, "low", StringComparison.OrdinalIgnoreCase))
-                    RB_Low.Checked = true;
+                    this.RB_Low.Checked = true;
                 if (string.Equals(DeepStackServerControl.Mode, "high", StringComparison.OrdinalIgnoreCase))
-                    RB_High.Checked = true;
+                    this.RB_High.Checked = true;
 
-                Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
-                Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
-                Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
+                this.Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
+                this.Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
+                this.Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
 
                 //have seen a few cases nothing is checked but it is required
-                if (!Chk_DetectionAPI.Checked && !Chk_FaceAPI.Checked && !Chk_SceneAPI.Checked)
+                if (!this.Chk_DetectionAPI.Checked && !this.Chk_FaceAPI.Checked && !this.Chk_SceneAPI.Checked)
                 {
-                    Chk_DetectionAPI.Checked = true;
+                    this.Chk_DetectionAPI.Checked = true;
                     DeepStackServerControl.DetectionAPIEnabled = true;
                 }
 
-                Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
-                Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
-                chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
-                Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
-                Txt_APIKey.Text = DeepStackServerControl.APIKey;
-                Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
-                Txt_Port.Text = DeepStackServerControl.Port;
+                this.Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
+                this.Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
+                this.chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
+                this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
+                this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
+                this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
+                this.Txt_Port.Text = DeepStackServerControl.Port;
 
                 //if (prt != Txt_Port.Text)
                 //{
@@ -2692,83 +2950,83 @@ namespace AITool
                         if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
                         {
 
-                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
-                            Invoke(LabelUpdate);
+                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                            this.Invoke(LabelUpdate);
 
-                            Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = true;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
                         }
                         else if (!DeepStackServerControl.IsActivated)
                         {
-                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
-                            Invoke(LabelUpdate);
+                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
+                            this.Invoke(LabelUpdate);
 
-                            Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = true;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
                         }
                         else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
                         {
-                            MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*"; };
-                            Invoke(LabelUpdate);
+                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*"; };
+                            this.Invoke(LabelUpdate);
 
-                            Btn_Start.Enabled = false;
-                            Btn_Stop.Enabled = true;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
                         }
 
                     }
                     else if (DeepStackServerControl.HasError)
                     {
-                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                        Invoke(LabelUpdate);
+                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                        this.Invoke(LabelUpdate);
 
-                        Btn_Start.Enabled = false;
-                        Btn_Stop.Enabled = true;
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = true;
                     }
                     else
                     {
-                        MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
-                        Invoke(LabelUpdate);
+                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
+                        this.Invoke(LabelUpdate);
 
-                        Btn_Start.Enabled = true;
-                        Btn_Stop.Enabled = false;
-                        if (Chk_AutoStart.Checked && StartIfNeeded)
+                        this.Btn_Start.Enabled = true;
+                        this.Btn_Stop.Enabled = false;
+                        if (this.Chk_AutoStart.Checked && StartIfNeeded)
                         {
                             if (await DeepStackServerControl.StartAsync())
                             {
                                 if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                                 {
-                                    LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*RUNNING*"; };
-                                    Invoke(LabelUpdate);
-                                    Btn_Start.Enabled = false;
-                                    Btn_Stop.Enabled = true;
+                                    LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                                    this.Invoke(LabelUpdate);
+                                    this.Btn_Start.Enabled = false;
+                                    this.Btn_Stop.Enabled = true;
                                 }
                                 else if (DeepStackServerControl.HasError)
                                 {
-                                    LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                                    Invoke(LabelUpdate);
+                                    LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                                    this.Invoke(LabelUpdate);
 
-                                    Btn_Start.Enabled = false;
-                                    Btn_Stop.Enabled = true;
+                                    this.Btn_Start.Enabled = false;
+                                    this.Btn_Stop.Enabled = true;
                                 }
 
                             }
                             else
                             {
-                                LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                                Invoke(LabelUpdate);
+                                LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                                this.Invoke(LabelUpdate);
 
-                                Btn_Start.Enabled = false;
-                                Btn_Stop.Enabled = true;
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = true;
                             }
                         }
                     }
                 }
                 else
                 {
-                    Btn_Start.Enabled = false;
-                    Btn_Stop.Enabled = false;
-                    MethodInvoker LabelUpdate = delegate { Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
-                    Invoke(LabelUpdate);
+                    this.Btn_Start.Enabled = false;
+                    this.Btn_Stop.Enabled = false;
+                    MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
+                    this.Invoke(LabelUpdate);
 
 
                 }
@@ -2783,50 +3041,42 @@ namespace AITool
 
         private async void Btn_Start_Click(object sender, EventArgs e)
         {
-            Lbl_BlueStackRunning.Text = "STARTING...";
-            Btn_Start.Enabled = false;
-            Btn_Stop.Enabled = false;
-            SaveDeepStackTab();
+            this.Lbl_BlueStackRunning.Text = "STARTING...";
+            this.Btn_Start.Enabled = false;
+            this.Btn_Stop.Enabled = false;
+            this.SaveDeepStackTab();
             await DeepStackServerControl.StartAsync();
-            LoadDeepStackTab(true);
+            this.LoadDeepStackTab(true);
         }
 
         private void Btn_Save_Click(object sender, EventArgs e)
         {
-            SaveDeepStackTab();
+            this.SaveDeepStackTab();
         }
 
         private async void Btn_Stop_Click(object sender, EventArgs e)
         {
-            Lbl_BlueStackRunning.Text = "STOPPING...";
-            Btn_Start.Enabled = false;
-            Btn_Stop.Enabled = false;
+            this.Lbl_BlueStackRunning.Text = "STOPPING...";
+            this.Btn_Start.Enabled = false;
+            this.Btn_Stop.Enabled = false;
             await DeepStackServerControl.StopAsync();
-            LoadDeepStackTab(false);
+            this.LoadDeepStackTab(false);
         }
 
 
         private void btnViewLog_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+            OpenLogFile();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            ShowErrors();
+            this.ShowErrors();
         }
 
         private void Chk_AutoScroll_CheckedChanged(object sender, EventArgs e)
         {
-            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
+            AppSettings.Settings.Autoscroll_log = this.Chk_AutoScroll.Checked;
         }
 
         private void tableLayoutPanel7_Paint(object sender, PaintEventArgs e)
@@ -2838,15 +3088,15 @@ namespace AITool
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
-                if (!string.IsNullOrEmpty(cmbcaminput.Text))
+                if (!string.IsNullOrEmpty(this.cmbcaminput.Text))
                 {
-                    dialog.InitialDirectory = cmbcaminput.Text;
+                    dialog.InitialDirectory = this.cmbcaminput.Text;
 
                 }
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    cmbcaminput.Text = dialog.FileName;
+                    this.cmbcaminput.Text = dialog.FileName;
                 }
             }
         }
@@ -2856,7 +3106,7 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
                 frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.name;
 
@@ -2887,17 +3137,17 @@ namespace AITool
                     cam.maskManager.PercentMatch = variance;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
-                    cam.maskManager.MaskingEnabled = cb_masking_enabled.Checked;
+                    cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
                     cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
-                    AppSettings.Save();
+                    AppSettings.SaveAsync();
                 }
             }
         }
 
         private void btnDetails_Click(object sender, EventArgs e)
         {
-            ShowMaskDetailsDialog(list2.SelectedItems[0].Text);
+            this.ShowMaskDetailsDialog(this.list2.SelectedItems[0].Text);
         }
 
         private void ShowMaskDetailsDialog(string cameraname)
@@ -2910,7 +3160,7 @@ namespace AITool
 
                 frm.ShowDialog();
 
-                cb_masking_enabled.Checked = CurCam.maskManager.MaskingEnabled;
+                this.cb_masking_enabled.Checked = CurCam.maskManager.MaskingEnabled;
 
             }
 
@@ -2922,7 +3172,7 @@ namespace AITool
 
         private void btnCustomMask_Click(object sender, EventArgs e)
         {
-            ShowEditImageMaskDialog(list2.SelectedItems[0].Text);
+            this.ShowEditImageMaskDialog(this.list2.SelectedItems[0].Text);
         }
 
         private void ShowEditImageMaskDialog(string cameraname)
@@ -2986,10 +3236,10 @@ namespace AITool
             using (Frm_LegacyActions frm = new Frm_LegacyActions())
             {
 
-                if (list2.SelectedItems.Count == 0)
+                if (this.list2.SelectedItems.Count == 0)
                     return;
 
-                Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
 
                 frm.cam = cam;
 
@@ -3064,7 +3314,7 @@ namespace AITool
 
                     cam.Action_queued = frm.cb_queue_actions.Checked;
 
-                    AppSettings.Save();
+                    AppSettings.SaveAsync();
 
                 }
             }
@@ -3088,9 +3338,9 @@ namespace AITool
 
             try
             {
-                if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+                if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
                 {
-                    History hist = (History)folv_history.SelectedObjects[0];
+                    History hist = (History)this.folv_history.SelectedObjects[0];
 
                     if (hist == null)
                         return;
@@ -3099,39 +3349,39 @@ namespace AITool
                     {
                         using (var img = new Bitmap(hist.Filename))
                         {
-                            pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                            this.pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
                         }
-                        showHideMask();
-                        lbl_objects.Text = hist.Detections;
+                        this.showHideMask();
+                        this.lbl_objects.Text = hist.Detections;
                     }
                     else
                     {
                         Log("Removing missing file from database: " + hist.Filename);
                         HistoryDB.DeleteHistoryQueue(hist.Filename);
-                        lbl_objects.Text = "Image not found";
-                        pictureBox1.BackgroundImage = null;
+                        this.lbl_objects.Text = "Image not found";
+                        this.pictureBox1.BackgroundImage = null;
                     }
 
                     if (!string.IsNullOrEmpty(hist.PredictionsJSON))
                     {
-                        toolStripButtonDetails.Enabled = true;
+                        this.toolStripButtonDetails.Enabled = true;
                     }
                     else
                     {
-                        toolStripButtonDetails.Enabled = false;
+                        this.toolStripButtonDetails.Enabled = false;
                     }
 
-                    toolStripButtonEditImageMask.Enabled = true;
-                    toolStripButtonMaskDetails.Enabled = true;
+                    this.toolStripButtonEditImageMask.Enabled = true;
+                    this.toolStripButtonMaskDetails.Enabled = true;
 
                 }
                 else
                 {
-                    lbl_objects.Text = "No selection";
-                    pictureBox1.BackgroundImage = null;
-                    toolStripButtonDetails.Enabled = false;
-                    toolStripButtonEditImageMask.Enabled = false;
-                    toolStripButtonMaskDetails.Enabled = false;
+                    this.lbl_objects.Text = "No selection";
+                    this.pictureBox1.BackgroundImage = null;
+                    this.toolStripButtonDetails.Enabled = false;
+                    this.toolStripButtonEditImageMask.Enabled = false;
+                    this.toolStripButtonMaskDetails.Enabled = false;
                 }
 
             }
@@ -3147,7 +3397,7 @@ namespace AITool
 
         private void folv_history_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            FormatHistoryRow(sender, e);
+            this.FormatHistoryRow(sender, e);
         }
 
         private void FormatHistoryRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
@@ -3178,7 +3428,7 @@ namespace AITool
             }
 
 
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             // Log("Error: " & ExMsg(ex))
@@ -3190,7 +3440,7 @@ namespace AITool
         private void btn_resetstats_Click(object sender, EventArgs e)
         {
 
-            if (string.Equals(comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(this.comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase))
             {
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
@@ -3204,7 +3454,7 @@ namespace AITool
             else
             {
 
-                Camera cam = AITOOL.GetCamera(comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
+                Camera cam = AITOOL.GetCamera(this.comboBox1.Text);  //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.ToLower().Trim() == comboBox1.Text.ToLower().Trim());
                 if (cam != null)
                 {
                     cam.stats_alerts = 0;
@@ -3217,16 +3467,16 @@ namespace AITool
 
             LogMan.ErrorCount.WriteFullFence(0);
 
-            AppSettings.Save();
+            AppSettings.SaveAsync();
 
-            UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+            this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
 
-            UpdateStats();
+            this.UpdateStats();
         }
 
         private async void cb_filter_skipped_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void HistoryUpdateListTimer_Tick(object sender, EventArgs e)
@@ -3237,9 +3487,9 @@ namespace AITool
             if (!AppSettings.AlreadyRunning)
                 Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
 
-            await UpdateHistoryAddedRemoved();
+            await this.UpdateHistoryAddedRemoved();
 
-            UpdateStats();
+            this.UpdateStats();
         }
 
         private void folv_history_SelectedIndexChanged(object sender, EventArgs e)
@@ -3249,25 +3499,25 @@ namespace AITool
 
         private void toolStripStatusErrors_Click(object sender, EventArgs e)
         {
-            ShowErrors();
+            this.ShowErrors();
         }
 
         private async void cb_follow_CheckedChanged(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void comboBox_filter_camera_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 1)
+            if (this.tabControl1.SelectedIndex == 1)
             {
 
-                UpdatePieChart(); UpdateTimeline(); UpdateConfidenceChart();
+                this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
             }
         }
 
@@ -3282,95 +3532,108 @@ namespace AITool
 
         }
 
+        private void SaveFilters()
+        {
+            AppSettings.Settings.HistoryFilterAnimals = cb_filter_animal.Checked;
+            AppSettings.Settings.HistoryFilterMasked = cb_filter_masked.Checked;
+            AppSettings.Settings.HistoryFilterNoSuccess = cb_filter_nosuccess.Checked;
+            AppSettings.Settings.HistoryFilterPeople = cb_filter_person.Checked;
+            AppSettings.Settings.HistoryFilterSkipped = cb_filter_skipped.Checked;
+            AppSettings.Settings.HistoryFilterRelevant = cb_filter_success.Checked;
+            AppSettings.Settings.HistoryFilterVehicles = cb_filter_vehicle.Checked;
+
+            AppSettings.SaveAsync();
+        }
+
         private async void cb_filter_success_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void cb_filter_nosuccess_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            AppSettings.SaveAsync();
         }
 
         private async void cb_filter_person_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            AppSettings.SaveAsync();
         }
 
         private async void cb_filter_animal_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void cb_filter_vehicle_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void cb_filter_skipped_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void cb_filter_masked_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private async void comboBox_filter_camera_DropDownClosed(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            SaveFilters();
+            await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private void cb_showMask_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryShowMask = cb_showMask.Checked;
-            AppSettings.Save();
-            showHideMask();
+            AppSettings.Settings.HistoryShowMask = this.cb_showMask.Checked;
+            AppSettings.SaveAsync();
+            this.showHideMask();
         }
 
         private void cb_showObjects_CheckedChanged(object sender, EventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                pictureBox1.Refresh();
+                this.pictureBox1.Refresh();
             }
         }
 
         private void automaticallyRefreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (automaticallyRefreshToolStripMenuItem.Checked)
-            {
-                HistoryUpdateListTimer.Enabled = true;
-                HistoryUpdateListTimer.Start();
-            }
-            else
-            {
-                HistoryUpdateListTimer.Enabled = false;
-                HistoryUpdateListTimer.Stop();
-            }
-
-            AppSettings.Settings.HistoryAutoRefresh = automaticallyRefreshToolStripMenuItem.Checked;
-            AppSettings.Save();
+            AppSettings.Settings.HistoryAutoRefresh = this.automaticallyRefreshToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
+            this.HistoryStartStop();
 
         }
 
         private void cb_showObjects_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryShowObjects = cb_showObjects.Checked;
-            AppSettings.Save();
-            pictureBox1.Refresh();
+            AppSettings.Settings.HistoryShowObjects = this.cb_showObjects.Checked;
+            AppSettings.SaveAsync();
+            this.pictureBox1.Refresh();
         }
 
         private void cb_follow_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryFollow = cb_follow.Checked;
-            AppSettings.Save();
+            AppSettings.Settings.HistoryFollow = this.cb_follow.Checked;
+            AppSettings.SaveAsync();
         }
 
         private void toolStripButtonDetails_Click(object sender, EventArgs e)
         {
-            ViewPredictionDetails();
+            this.ViewPredictionDetails();
         }
 
         private void ViewPredictionDetails()
@@ -3379,7 +3642,7 @@ namespace AITool
             {
                 List<ClsPrediction> allpredictions = new List<ClsPrediction>();
 
-                foreach (History hist in folv_history.SelectedObjects)
+                foreach (History hist in this.folv_history.SelectedObjects)
                 {
                     List<ClsPrediction> predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
 
@@ -3412,11 +3675,11 @@ namespace AITool
         {
 
 
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
                 Log("----------------------- TESTING TRIGGERS ----------------------------");
 
-                foreach (History hist in folv_history.SelectedObjects)
+                foreach (History hist in this.folv_history.SelectedObjects)
                 {
                     if (!string.IsNullOrEmpty(hist.Filename) && File.Exists(hist.Filename))
                     {
@@ -3446,26 +3709,26 @@ namespace AITool
 
         private void detailsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ViewPredictionDetails();
+            this.ViewPredictionDetails();
         }
 
         private async void refreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await LoadHistoryAsync(false, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
+            await this.LoadHistoryAsync(false, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
         }
 
         private void folv_history_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            ViewPredictionDetails();
+            this.ViewPredictionDetails();
         }
 
         private void toolStripButtonMaskDetails_Click(object sender, EventArgs e)
         {
 
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                History hist = (History)folv_history.SelectedObjects[0];
-                ShowMaskDetailsDialog(hist.Camera);
+                History hist = (History)this.folv_history.SelectedObjects[0];
+                this.ShowMaskDetailsDialog(hist.Camera);
 
             }
 
@@ -3473,20 +3736,20 @@ namespace AITool
 
         private void dynamicMaskDetailsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                History hist = (History)folv_history.SelectedObjects[0];
-                ShowMaskDetailsDialog(hist.Camera);
+                History hist = (History)this.folv_history.SelectedObjects[0];
+                this.ShowMaskDetailsDialog(hist.Camera);
 
             }
         }
 
         private void toolStripButtonEditImageMask_Click(object sender, EventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                History hist = (History)folv_history.SelectedObjects[0];
-                ShowEditImageMaskDialog(hist.Camera);
+                History hist = (History)this.folv_history.SelectedObjects[0];
+                this.ShowEditImageMaskDialog(hist.Camera);
 
             }
         }
@@ -3501,7 +3764,7 @@ namespace AITool
                     Log($"Enabled Telegram on camera '{cam.name}'.");
                 }
             }
-            AppSettings.Save();
+            AppSettings.SaveAsync();
         }
 
         private void btn_disabletelegram_Click(object sender, EventArgs e)
@@ -3514,33 +3777,33 @@ namespace AITool
                     Log($"Disabled Telegram on camera '{cam.name}'.");
                 }
             }
-            AppSettings.Save();
+            AppSettings.SaveAsync();
         }
 
         private void storeFalseAlertsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryStoreFalseAlerts = storeFalseAlertsToolStripMenuItem.Checked;
-            AppSettings.Save();
+            AppSettings.Settings.HistoryStoreFalseAlerts = this.storeFalseAlertsToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
         }
 
         private void storeMaskedAlertsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryStoreMaskedAlerts = storeMaskedAlertsToolStripMenuItem.Checked;
-            AppSettings.Save();
+            AppSettings.Settings.HistoryStoreMaskedAlerts = this.storeMaskedAlertsToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
 
         }
 
         private void showOnlyRelevantObjectsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.HistoryOnlyDisplayRelevantObjects = showOnlyRelevantObjectsToolStripMenuItem.Checked;
-            AppSettings.Save();
-            pictureBox1.Refresh();
+            AppSettings.Settings.HistoryOnlyDisplayRelevantObjects = this.showOnlyRelevantObjectsToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
+            this.pictureBox1.Refresh();
 
         }
 
         private void btnSaveTo_Click(object sender, EventArgs e)
         {
-            CameraSave(true);
+            this.CameraSave(true);
         }
 
         private async void LogUpdateListTimer_Tick(object sender, EventArgs e)
@@ -3550,19 +3813,19 @@ namespace AITool
 
         private void Chk_AutoScroll_Click(object sender, EventArgs e)
         {
-            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
+            AppSettings.Settings.Autoscroll_log = this.Chk_AutoScroll.Checked;
         }
 
 
 
         private void Chk_AutoScroll_Click_1(object sender, EventArgs e)
         {
-            AppSettings.Settings.Autoscroll_log = Chk_AutoScroll.Checked;
+            AppSettings.Settings.Autoscroll_log = this.Chk_AutoScroll.Checked;
         }
 
         private void chk_filterErrors_Click(object sender, EventArgs e)
         {
-            FilterLogErrors();
+            this.FilterLogErrors();
         }
 
         private async void FilterLogErrors()
@@ -3571,13 +3834,13 @@ namespace AITool
                 return;
 
 
-            if (chk_filterErrors.Checked)
+            if (this.chk_filterErrors.Checked)
             {
                 //filter
-                Global_GUI.InvokeIFRequired(folv_log, () =>
+                Global_GUI.InvokeIFRequired(this.folv_log, () =>
                 {
                     using var cw = new Global_GUI.CursorWait();
-                    folv_log.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
+                    this.folv_log.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
                     {
                         ClsLogItm CLI = (ClsLogItm)x;
                         return (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal);
@@ -3586,8 +3849,8 @@ namespace AITool
             }
             else
             {
-                folv_log.ModelFilter = null;
-                await UpdateLogAddedRemovedAsync(true);
+                this.folv_log.ModelFilter = null;
+                await this.UpdateLogAddedRemovedAsync(true);
             }
 
         }
@@ -3602,7 +3865,7 @@ namespace AITool
             try
             {
 
-                toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
+                this.toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
 
                 using var cw = new Global_GUI.CursorWait();
 
@@ -3647,11 +3910,11 @@ namespace AITool
                             //load into memory
                             Log($"Debug: Searching log file (namedate='{DATE.ToString("yyyy-MM-dd")}',moddate='{fi.LastWriteTime.ToString("yyyy-MM-dd")}',createdate='{fi.CreationTime.ToString("yyyy-MM-dd")}'): {fi.Name}...");
 
-                            Global.UpdateProgressBar($"Searching {fi.Name}...", 1, 1);
+                            this.UpdateProgressBar($"Searching {fi.Name}...", 1, 1, 1);
 
-                            List<ClsLogItm> curlist = await LogMan.LoadLogFile(fi.Name, false, false);
+                            List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.Name, false, false);
 
-                            Global.UpdateProgressBar($"Searching {fi.Name}...", 1, curlist.Count);
+                            this.UpdateProgressBar($"Searching {fi.Name}...", 1, 1, curlist.Count);
 
                             DateTime FirstSeen = DateTime.MinValue;
 
@@ -3660,7 +3923,7 @@ namespace AITool
                             foreach (var CLI in curlist)
                             {
                                 cnt++;
-                                Global.UpdateProgressBar($"Searching {fi.Name}...", cnt, curlist.Count);
+                                this.UpdateProgressBar($"Searching {fi.Name}...", cnt, 1, curlist.Count);
 
                                 if (CLI.Detail.IndexOf(justfile, StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
@@ -3739,12 +4002,12 @@ namespace AITool
                         search += "|" + imagemaskkey;
                     if (!string.IsNullOrEmpty(matchedmaskkey))
                         search += "|" + matchedmaskkey;
-                    tabControl1.SelectedTab = tabLog;
-                    ToolStripComboBoxSearch.Text = search;  //this should trigger textchanged and filer in a second.
+                    this.tabControl1.SelectedTab = this.tabLog;
+                    this.ToolStripComboBoxSearch.Text = search;  //this should trigger textchanged and filer in a second.
                 }
                 else
                 {
-                    toolStripButtonPauseLog.Checked = false; //start
+                    this.toolStripButtonPauseLog.Checked = false; //start
                     MessageBox.Show($"Could not find matching log entries for '{justfile}'?  See log for details. Note this function only works well if the DEBUG logging mode has been enabled.");
                 }
 
@@ -3757,7 +4020,7 @@ namespace AITool
             }
             finally
             {
-                Global.UpdateProgressBar($"", 0, 1);
+                this.UpdateProgressBar($"", 0, 0, 0);
             }
 
             return ret;
@@ -3766,7 +4029,7 @@ namespace AITool
         private void folv_log_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
             if (e.Model != null)
-                FormatLogRow(sender, e);
+                this.FormatLogRow(sender, e);
         }
         private void FormatLogRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
@@ -3783,7 +4046,7 @@ namespace AITool
 
 
 
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             finally
@@ -3794,7 +4057,7 @@ namespace AITool
         private void folv_log_FormatCell(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
         {
             if (e.Model != null)
-                FormatCellLog(sender, e);
+                this.FormatCellLog(sender, e);
         }
 
         private void FormatCellLog(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
@@ -3833,7 +4096,7 @@ namespace AITool
 
         private void mnu_highlight_CheckStateChanged(object sender, EventArgs e)
         {
-            filter_CheckStateChanged(sender, e);
+            this.filter_CheckStateChanged(sender, e);
 
         }
 
@@ -3855,21 +4118,21 @@ namespace AITool
                     }
                 }
 
-                if (!mnu_Filter.Checked || !mnu_Highlight.Checked)
-                    mnu_Filter.Checked = true;
+                if (!this.mnu_Filter.Checked || !this.mnu_Highlight.Checked)
+                    this.mnu_Filter.Checked = true;
 
-                AppSettings.Settings.log_mnu_Filter = mnu_Filter.Checked;
-                AppSettings.Settings.log_mnu_Highlight = mnu_Highlight.Checked;
+                AppSettings.Settings.log_mnu_Filter = this.mnu_Filter.Checked;
+                AppSettings.Settings.log_mnu_Highlight = this.mnu_Highlight.Checked;
 
-                if (!IsLoading.ReadFullFence() && Global.IsRegexPatternValid(ToolStripComboBoxSearch.Text))
+                if (!IsLoading.ReadFullFence() && Global.IsRegexPatternValid(this.ToolStripComboBoxSearch.Text))
                 {
                     bool Filter = false;
-                    if (mnu_Filter.Checked && !mnu_Highlight.Checked)
+                    if (this.mnu_Filter.Checked && !this.mnu_Highlight.Checked)
                         Filter = true;
                     else
                         Filter = false;
 
-                    Global_GUI.FilterFOLV(folv_log, ToolStripComboBoxSearch.Text, Filter);
+                    Global_GUI.FilterFOLV(this.folv_log, this.ToolStripComboBoxSearch.Text, Filter);
 
                 }
             }
@@ -3908,7 +4171,7 @@ namespace AITool
         }
         private void mnu_Filter_CheckStateChanged(object sender, EventArgs e)
         {
-            filter_CheckStateChanged(sender, e);
+            this.filter_CheckStateChanged(sender, e);
         }
 
         private void ToolStripComboBoxSearch_Leave(object sender, EventArgs e)
@@ -3920,13 +4183,13 @@ namespace AITool
             if (IsLoading.ReadFullFence())
                 return;
 
-            if (!tmr.Enabled)
+            if (!this.tmr.Enabled)
             {
-                tmr.Enabled = true;
-                tmr.Start();
+                this.tmr.Enabled = true;
+                this.tmr.Start();
             }
 
-            TimeSinceType = DateTime.Now;
+            this.TimeSinceType = DateTime.Now;
 
         }
 
@@ -3937,10 +4200,15 @@ namespace AITool
 
         private void openToolStripButton_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            OpenLogFile();
+        }
+
+        private void OpenLogFile()
+        {
+            if (System.IO.File.Exists(LogMan.GetCurrentLogFileName()))
             {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-                lbl_errors.Text = "";
+                System.Diagnostics.Process.Start(LogMan.GetCurrentLogFileName());
+                this.lbl_errors.Text = "";
             }
             else
             {
@@ -4001,17 +4269,17 @@ namespace AITool
 
         private async void locateInLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (folv_history.SelectedObjects != null && folv_history.SelectedObjects.Count > 0)
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
             {
-                History hist = (History)folv_history.SelectedObjects[0];
-                await FilterHistItem(hist);
+                History hist = (History)this.folv_history.SelectedObjects[0];
+                await this.FilterHistItem(hist);
 
             }
         }
 
         private void toolStripButtonPauseLog_Click(object sender, EventArgs e)
         {
-            StartPauseLog();
+            this.StartPauseLog();
         }
 
         private void StartPauseLog()
@@ -4019,23 +4287,23 @@ namespace AITool
             if (IsLoading.ReadFullFence())
                 return;
 
-            if (!toolStripButtonPauseLog.Checked)
+            if (!this.toolStripButtonPauseLog.Checked)
             {
-                LogUpdateListTimer.Enabled = true;
-                LogUpdateListTimer.Start();
+                this.LogUpdateListTimer.Enabled = true;
+                this.LogUpdateListTimer.Start();
                 Log("Started auto log refresh");
             }
             else
             {
-                LogUpdateListTimer.Stop();
-                LogUpdateListTimer.Enabled = false;
+                this.LogUpdateListTimer.Stop();
+                this.LogUpdateListTimer.Enabled = false;
                 Log("Stopped auto log refresh");
             }
         }
 
         private async void toolStripButtonReload_ClickAsync(object sender, EventArgs e)
         {
-            ReloadLog();
+            this.ReloadLog();
         }
 
         private async void ReloadLog()
@@ -4044,15 +4312,15 @@ namespace AITool
                 return;
 
             using var cw = new Global_GUI.CursorWait();
-            chk_filterErrors.Checked = false;
-            chk_filterErrorsAll.Checked = false;
+            this.chk_filterErrors.Checked = false;
+            this.chk_filterErrorsAll.Checked = false;
             LogMan.Clear();
-            folv_log.ClearObjects();
-            folv_log.ModelFilter = null;
-            await LogMan.LoadLogFile(LogMan.GetCurrentLogFileName(), true, false);
+            this.folv_log.ClearObjects();
+            this.folv_log.ModelFilter = null;
+            await LogMan.LoadLogFileAsync(LogMan.GetCurrentLogFileName(), true, false);
             Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {LogMan.GetCurrentLogFileName()}.");
             await this.UpdateLogAddedRemovedAsync(true);
-            toolStripButtonPauseLog.Checked = false;
+            this.toolStripButtonPauseLog.Checked = false;
 
         }
 
@@ -4086,13 +4354,13 @@ namespace AITool
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     using var cw = new Global_GUI.CursorWait();
-                    toolStripButtonPauseLog.Checked = true;
-                    chk_filterErrors.Checked = false;
+                    this.toolStripButtonPauseLog.Checked = true;
+                    this.chk_filterErrors.Checked = false;
                     Global.SaveSetting("LastLoadedLogFile", ofd.FileName);
                     LogMan.Clear();
-                    folv_log.ClearObjects();
-                    folv_log.ModelFilter = null;
-                    await LogMan.LoadLogFile(ofd.FileName, true, false);
+                    this.folv_log.ClearObjects();
+                    this.folv_log.ModelFilter = null;
+                    await LogMan.LoadLogFileAsync(ofd.FileName, true, false);
                     Log($"Loaded {LogMan.Values.Count} lines in {LogMan.LastLoadTimeMS}ms from {ofd.FileName}.");
                     this.UpdateLogAddedRemovedAsync(true);
                 }
@@ -4104,7 +4372,7 @@ namespace AITool
 
         private void chk_filterErrors_Click_1(object sender, EventArgs e)
         {
-            FilterLogErrors();
+            this.FilterLogErrors();
         }
 
         private async void chk_filterErrorsAll_Click(object sender, EventArgs e)
@@ -4112,22 +4380,22 @@ namespace AITool
             if (IsLoading.ReadFullFence())
                 return;
 
-            if (!chk_filterErrorsAll.Checked)
+            if (!this.chk_filterErrorsAll.Checked)
             {
-                ReloadLog();
+                this.ReloadLog();
                 return;
             }
 
             try
             {
 
-                toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
+                this.toolStripButtonPauseLog.Checked = true; //pause for a bit, and stay paused if results found
 
-                folv_log.ClearObjects();
-                folv_log.ModelFilter = null;
-                folv_log.EmptyListMsg = "Searching...";
+                this.folv_log.ClearObjects();
+                this.folv_log.ModelFilter = null;
+                this.folv_log.EmptyListMsg = "Searching...";
 
-                StartPauseLog();
+                this.StartPauseLog();
 
                 using var cw = new Global_GUI.CursorWait();
 
@@ -4137,42 +4405,53 @@ namespace AITool
 
                 //AITool.[2020-10-19].log
                 //AITool.[2020-10-19.1].log.zip
-                List<FileInfo> files = Global.GetFiles(Path.GetDirectoryName(AppSettings.Settings.LogFileName), "AITOOL.[*].LOG|AITOOL.[*].LOG.ZIP", SearchOption.TopDirectoryOnly);
+                List<FileInfo> files = Global.GetFiles(AppSettings.Settings.LogFileName, "AITOOL.[*].LOG|AITOOL.[*].LOG.ZIP", SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(-2), DateTime.Now.AddMinutes(1));
 
                 //sort by date so newest files are searched first
                 files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
 
+                int cur = 0;
                 foreach (var fi in files)
                 {
-                    //load into memory
-                    Log($"Debug: Searching {fi.Name}...");
-
-                    Global.UpdateProgressBar($"Searching {fi.Name}...", 1, 1);
-
-                    List<ClsLogItm> curlist = await LogMan.LoadLogFile(fi.Name, false, false);
-
-                    Global.UpdateProgressBar($"Searching {fi.Name}...", 1, curlist.Count);
-
-
-                    int fnd = 0;
-                    int cnt = 0;
-                    foreach (var CLI in curlist)
+                    try
                     {
-                        cnt++;
-                        Global.UpdateProgressBar($"Searching {fi.Name}...", cnt, curlist.Count);
 
-                        if (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal)
+                        cur++;
+
+
+                        //load into memory
+                        Log($"Debug: Searching back 2 days - {cur} of {files.Count}: {fi.Name}...");
+
+                        this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", 1, 1, 1);
+
+                        List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.Name, false, false);
+
+                        this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", 1, 1, curlist.Count);
+
+
+                        int fnd = 0;
+                        int cnt = 0;
+                        foreach (var CLI in curlist)
                         {
-                            if (!found.Contains(CLI))
+                            cnt++;
+                            this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", cnt, 1, curlist.Count);
+
+                            if (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal)
                             {
                                 fnd++;
                                 found.Add(CLI);
                             }
+
                         }
 
-                    }
+                        Log($"Debug: ...Found {fnd} of {curlist.Count} lines that had an error for a total of {found.Count} lines in {fi.Name}...");
 
-                    Log($"Debug: ...Found {fnd} of {curlist.Count} lines that had an error for a total of {found.Count} lines in {fi.Name}...");
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Log("Error: " + Global.ExMsg(ex));
+                    }
 
                 }
 
@@ -4182,13 +4461,14 @@ namespace AITool
                 {
                     LogMan.Clear();
                     LogMan.AddRange(found);
-                    UpdateLogAddedRemovedAsync(false);
+                    this.UpdateLogAddedRemovedAsync(false);
                 }
                 else
                 {
-                    toolStripButtonPauseLog.Checked = false; //start
-                    StartPauseLog();
                     MessageBox.Show($"Could not find any error log entries in {files.Count} files.");
+                    this.chk_filterErrorsAll.Checked = false;
+                    this.toolStripButtonPauseLog.Checked = false; //start
+                    this.StartPauseLog();
                 }
 
             }
@@ -4199,10 +4479,19 @@ namespace AITool
             }
             finally
             {
-                Global.UpdateProgressBar($"", 0, 1);
+                this.UpdateProgressBar($"", 0, 0, 0);
             }
         }
 
+        private async void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            //UpdateProgressBar("Testing", 1, 1, 1);
+            for (int i = 0; i < 10; i++)
+            {
+                this.UpdateProgressBar(i.ToString(), i, 0, 9);
+                await Task.Delay(250);
+            }
+        }
     }
 
 
@@ -4211,7 +4500,7 @@ namespace AITool
     {
         public DBLayoutPanel()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint |
               ControlStyles.OptimizedDoubleBuffer |
               ControlStyles.UserPaint, true);
         }
@@ -4219,7 +4508,7 @@ namespace AITool
         public DBLayoutPanel(IContainer container)
         {
             container.Add(this);
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint |
               ControlStyles.OptimizedDoubleBuffer |
               ControlStyles.UserPaint, true);
         }

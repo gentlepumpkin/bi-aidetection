@@ -1,8 +1,5 @@
 ﻿using OSVersionExt.Registry;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OSVersionExt.MajorVersion10
 {
@@ -27,13 +24,13 @@ namespace OSVersionExt.MajorVersion10
         /// Returns the Windows release ID.
         /// </summary>
         /// <remarks>returns the release id or null, if detection has failed.</remarks>
-        public string ReleaseId { get => _releaseId; }
+        public string ReleaseId { get => this._releaseId; }
 
         /// <summary>
         /// Gets the Update Build Revision of a Windows 10 system
         /// </summary>
         /// <remarks>returns null, if detection has failed.</remarks>
-        public string UBR { get => _UBR; }
+        public string UBR { get => this._UBR; }
 
         /// <summary>
         /// Create instance with custom registry provider.
@@ -45,7 +42,7 @@ namespace OSVersionExt.MajorVersion10
             if (registryProvider != null)
             {
                 this._registryProvider = registryProvider;
-                GetAllProperties();
+                this.GetAllProperties();
             }
             else
                 throw new ArgumentNullException();
@@ -54,7 +51,7 @@ namespace OSVersionExt.MajorVersion10
         public MajorVersion10Properties()
         {
             this._registryProvider = new RegistryProviderDefault();
-            GetAllProperties();
+            this.GetAllProperties();
         }
 
         private void GetAllProperties()
@@ -78,7 +75,7 @@ namespace OSVersionExt.MajorVersion10
         /// </summary>
         /// <returns></returns>
         /// <remarks>E.g, it returns 778 for Microsoft Windows [Version 10.0.18363.778] </remarks>
-        private string  GetUBR()
+        private string GetUBR()
         {
             return this._registryProvider.GetValue(registryCurrentVersionKeyName, UBRkeyName, UBRdefault)?.ToString();
         }

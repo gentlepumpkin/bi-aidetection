@@ -1,21 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AITool
 {
-    class Trace:IDisposable
+    class Trace : IDisposable
     {
         private bool disposedValue;
         private string _memberName = "";
         private Stopwatch _sw;
         public Trace([CallerMemberName()] string memberName = null)
         {
-            
+
             this._memberName = memberName;
             this._sw = Stopwatch.StartNew();
             if (AITOOL.LogMan != null)
@@ -24,7 +20,7 @@ namespace AITool
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!this.disposedValue)
             {
                 if (disposing)
                 {
@@ -35,7 +31,7 @@ namespace AITool
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null
-                disposedValue = true;
+                this.disposedValue = true;
             }
         }
 
@@ -49,7 +45,7 @@ namespace AITool
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

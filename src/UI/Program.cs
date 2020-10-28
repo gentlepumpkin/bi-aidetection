@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AITool
@@ -33,8 +30,12 @@ namespace AITool
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Shell());
-                
+            //Application.Run(new Shell());
+            Shell frmshell = new Shell();
+            //frmshell.WindowState = FormWindowState.Minimized;
+            //frmshell.ShowInTaskbar = false;
+            Application.Run(frmshell);
+
         }
     }
 }

@@ -6,7 +6,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public class ObjectPosition:IEquatable<ObjectPosition>
+    public class ObjectPosition : IEquatable<ObjectPosition>
     {
         public string Label { get; } = "";
         public DateTime CreateDate { get; set; } = DateTime.MinValue;
@@ -27,17 +27,17 @@ namespace AITool
         public string ImagePath { get; set; } = "";
 
         //scaling of object based on size
-        public int ScalePercent { get; set; } 
+        public int ScalePercent { get; set; }
         public double ObjectImagePercent { get; }
 
         private ObjectScale _scaleConfig;
         public ObjectScale ScaleConfig
         {
-            get => _scaleConfig;
+            get => this._scaleConfig;
             set
             {
-                _scaleConfig = value;
-                ScalePercent = getImagePercentVariance();
+                this._scaleConfig = value;
+                this.ScalePercent = this.getImagePercentVariance();
             }
         }
 
@@ -54,16 +54,16 @@ namespace AITool
             this.Xmax = xmax;
             this.Ymax = ymax;
 
-            _objRectangle = Rectangle.FromLTRB(Xmin, Ymin, Xmax, Ymax);
+            this._objRectangle = Rectangle.FromLTRB(this.Xmin, this.Ymin, this.Xmax, this.Ymax);
 
             this.ImageHeight = imageHeight;
             this.ImageWidth = imageWidth;
 
             //object percent of image area
-            ObjectImagePercent = (_objRectangle.Width * _objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
+            this.ObjectImagePercent = (this._objRectangle.Width * this._objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            Key = ((Xmin + 1) * (Ymin + 1) + (_objRectangle.Width * _objRectangle.Height));
+            this.Key = ((this.Xmin + 1) * (this.Ymin + 1) + (this._objRectangle.Width * this._objRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -73,18 +73,18 @@ namespace AITool
         {
             int scalePercent = 0;
 
-            if (ScaleConfig != null)
+            if (this.ScaleConfig != null)
             {
-                if (ScaleConfig.IsScaledObject)
+                if (this.ScaleConfig.IsScaledObject)
                 {
-                    if (ObjectImagePercent < ScaleConfig.SmallObjectMaxPercent)
+                    if (this.ObjectImagePercent < this.ScaleConfig.SmallObjectMaxPercent)
                     {
-                        scalePercent = ScaleConfig.SmallObjectMatchPercent;
+                        scalePercent = this.ScaleConfig.SmallObjectMatchPercent;
                     }
-                    else if (ObjectImagePercent >= ScaleConfig.MediumObjectMinPercent 
-                            &&  ObjectImagePercent <= ScaleConfig.MediumObjectMaxPercent)
+                    else if (this.ObjectImagePercent >= this.ScaleConfig.MediumObjectMinPercent
+                            && this.ObjectImagePercent <= this.ScaleConfig.MediumObjectMaxPercent)
                     {
-                        scalePercent = ScaleConfig.MediumObjectMatchPercent;
+                        scalePercent = this.ScaleConfig.MediumObjectMatchPercent;
                     }
                 }
             }
@@ -93,24 +93,24 @@ namespace AITool
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as ObjectPosition);
+            return this.Equals(obj as ObjectPosition);
         }
 
         public bool Equals(ObjectPosition other)
         {
             if (other == null)
                 return false;
-            
+
             float percentageIntersect = AITOOL.GetObjIntersectPercent(this._objRectangle, other._objRectangle);
 
             if (percentageIntersect > other.LastPercentMatch)
             {
                 this.LastPercentMatch = percentageIntersect;   //parent object highest match for this detection cycle
                 other.LastPercentMatch = percentageIntersect;  //current object highest match
-                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName,other.ImagePath);
+                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName, other.ImagePath);
             }
 
-            double percentMatch = ScalePercent == 0 ? PercentMatch : ScalePercent;
+            double percentMatch = this.ScalePercent == 0 ? this.PercentMatch : this.ScalePercent;
 
             return percentageIntersect >= percentMatch;
         }
@@ -118,10 +118,10 @@ namespace AITool
         public override int GetHashCode()
         {
             int hashCode = -853659638;
-            hashCode = hashCode * -1521134295 + Xmin.GetHashCode();
-            hashCode = hashCode * -1521134295 + Ymin.GetHashCode();
-            hashCode = hashCode * -1521134295 + Xmax.GetHashCode();
-            hashCode = hashCode * -1521134295 + Ymax.GetHashCode();
+            hashCode = hashCode * -1521134295 + this.Xmin.GetHashCode();
+            hashCode = hashCode * -1521134295 + this.Ymin.GetHashCode();
+            hashCode = hashCode * -1521134295 + this.Xmax.GetHashCode();
+            hashCode = hashCode * -1521134295 + this.Ymax.GetHashCode();
 
             return hashCode;
         }
@@ -138,12 +138,12 @@ namespace AITool
 
         public long getKey()
         {
-            return Key;
+            return this.Key;
         }
 
         public override string ToString()
         {
-            string value = $"key={getKey()}, name={Label}, xmin={Xmin}, ymin={Ymin}, xmax={Xmax}, ymax={Ymax}, IsStatic={this.IsStatic}, counter={Counter}, camera={CameraName}, create date: {CreateDate}, imageName: {Path.GetFileName(ImagePath)}";
+            string value = $"key={this.getKey()}, name={this.Label}, xmin={this.Xmin}, ymin={this.Ymin}, xmax={this.Xmax}, ymax={this.Ymax}, IsStatic={this.IsStatic}, counter={this.Counter}, camera={this.CameraName}, create date: {this.CreateDate}, imageName: {Path.GetFileName(this.ImagePath)}";
 
             return value;
         }

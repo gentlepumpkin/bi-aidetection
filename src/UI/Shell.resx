@@ -1901,7 +1901,7 @@
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
         VauoSaSxJGOFrE24QwaUBAJpIEAohJCaQZyUcjQUGHZgECBQczVADJjTBsxhLmNufMSYwxw2YI6YI8B3
         z/vyrlJEo25aYB/pJ7/v73qe97l+P9t8G+++fer3J0984PpXezc/V0efjz3PX4n18byWePlS2P3AKzcK
         ggOjvm4f+UdkXPQMTrrg5h/rcu7D8Pft3S+fsj3rzuzBbfefkZlZ9iMfz6Do4MBbxYL03GFFh2p6YGDQ
@@ -1943,7 +1943,7 @@ to review footage from night before.</value>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
         FVGzkOjcnPOGiyFkIsmIJmaCCBdzhkWZiBkSQzLRzGj4Uf6Ruci/WJFS6A+lpaUtlAKlUP4EBr57npfv
         Y2UK0zl3kpPv+9q+73POc55zvrdB/8aysrK+LisraywuKPi9AF5VVdUYExPzpfL167ezZ8/em5mdFb7R
         UeH3+wXt2LFjRcrXr99OnjzZ5B0ZEe6BATE4NCymn8yIhISESuXr/8bi4uLO19bWPrp48eL7ykdBeXl5
@@ -1978,7 +1978,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
         AkJfRVCSWaRNsKVVSkxqTIzVWiMpuIVw7H97G0q4RDP0JmAOHO49l1zOl+GHRKmCthZWSzJ1Kw3XdeMk
         SSDT1EndBKBG0Ry+H0g1dVI3A5jNPhdEHsLwC3Ecs5VyUWfv52XqXAEcTKcfsO0xHIfssJVyUWfv52Xq
         pG4GMJm8YTSy0Ol0oWkaWykXdfZ+XqbOFCAIXjEcPkg1daYAvv+Cfn8g1dSZArjuM0zzTqqpMwVASRIC
@@ -1990,7 +1990,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonMaskDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
         xizR1EwoTEtAGVsW6qZdcF0czQZ0TRqyNTGr0SEY4rQGU0PBuE5px6CrrLP0SddRupLy+kNbNh6rFBkl
         lSYN9Z3HLSlQDFvafsmXl3vfOfd859x77nusx8Xls69mh2bvif5238rHU+mFz35DGKD0aH5uQnSsOCcL
         T6cPTYe35dr0UmTTSlFtLSsTT6cPkx6iilAJkcfaI8RTqUc0Gt0QCoVejEQiZ8LBAAoHKUR5CeQd7X05
@@ -2016,7 +2016,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonEditImageMask.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
         YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
         0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
         bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
@@ -2040,7 +2040,7 @@ to review footage from night before.</value>
   <data name="toolStripDropDownButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKmSURBVDhPjZLhT1JhFIfZ2tRWW39EXxora6u2ci6Xa42y
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAKmSURBVDhPjZLhT1JhFIfZ2tRWW39EXxora6u2ci6Xa42y
         pATdypQkzCS/GBUg5q2FiKKGGHKpK1cCAa/KKgtn5dDCJiahpkwDthrQRA1yq9SJnOSOpV8snu18OOc9
         v2fvu72UzRw9mLEnKytPVitWfFQoHvsxZdsshhmDcjkWVDZqAtLqBmt+foko7XDGISazfHs8RqGgqHF3
         Yz2qVD7EPKHwEvj84X+WSqUPy2TKl2Kx4hQpkEgU9wYHRiEWVrZo4U5VHcjq1YDjhvVeA9dKK0DAF4NE
@@ -2058,7 +2058,7 @@ to review footage from night before.</value>
   <data name="toolStripDropDownButtonSettings.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKkSURBVDhPhZLJSxthGMaHXgsNLcWK/heCBy8i9aAoqIjH
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAKkSURBVDhPhZLJSxthGMaHXgsNLcWK/heCBy8i9aAoqIjH
         IvbQpCCpB0tED/Ui9JRqAhWXwwSTxloXkLqEQhtbjTVJ6xpjNetkJpnoZLEmsS5tn37fODR09YEXhne+
         37sz/1JjY2MNy7KHJpMpXVpaWqm4L9fg4OBNrVZ7TafTvUim0shks+js7LS0t7df7evru6U8+1Nms7mt
         u7v7+5DJJLLseCYmxhGNiUgkkzg7P8f09PSR2WIR6ZuBgYH7CvZTV55ZR3lOiCKZSsl2IEngIjzEeBz7
@@ -2076,7 +2076,7 @@ to review footage from night before.</value>
   <data name="openToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJHSURBVDhPxZBdSNNhFMb/F110ZZEVhVBgeeHNICiiuggp
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAJHSURBVDhPxZBdSNNhFMb/F110ZZEVhVBgeeHNICiiuggp
         olAUyyxI0oSaH1QYC3N+tKnp5ubm1JUua5uuqdNKMwr7kApFItTUkWZqVhSVYmao5Nevvy7UoYR3HXh4
         4XCe33nOKyy3lAY7l9RWMo0O/raWXxEyo5spVYTNvOGyfIRPfW+ptOkXqaPl6T83hcRmExSdgzAz3NVm
         YWyoYla/B+1M9JtxWLPpaH22JORIjI6gKAMB0jyEimIdo4OlbuaprwVMOOMovammpDADc34qppwUrmnl
@@ -2092,26 +2092,26 @@ to review footage from night before.</value>
   <data name="toolStripButtonLoad.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALlSURBVDhPddJJTBNRGAfwXk3EgwcxRjkYNJRF48UY48mT
-        W0AErSABQ1BcEFKRyiIZoLQsXexGMZCY6EljNEgLwkHa0uk+tLQUbOlCyxawNCRtAT3o5+MNBCU4ycvM
-        ZPL/ffO+9zE2L6Io+RCPfbhaUJ8yzOcc0fKrU7RctJrZxzTN7KNobd7x81de7Rm1WNzwRirtvFRTU5qE
-        gZYyRkaXKMtPcLN/Dw5nw+DAbRhUFYC6jwXqzywY6Efv6jvQ25MKRhN/VaPR/BoaGvIK2oiLGGgtP3C2
-        R5IZMdhYQFoKwGh8BEayAq0nYDJWgdVSDdQYBwP+wDtIJOJgtVIbspeiYgzUl+07pxBnRfWmG6Ajb4J+
-        9AEYRh+D0VAJFvNTsFEcGHPU0UDwPcTiMTCbzT8kEknJDsDPjOr02aDR5YJeVw6m7bCtBocdrhcYCIQ+
-        YABt46dCIbuLgYZ7SeeVgvQVjfYq+pADpP4hqvBv2DnZhIFg+CMC4hiQy+V//UE7c2Vk5DJotddRDyro
-        sL0Wh10o7PZyMTAz92lvQMZLi2g0V2BUnwdmSyUKP9+qTMCEhwtT/jYMhOb7II6auAfAjOh014A03gIr
-        xQa7sx7Gt8KTfj54ZjoxEF7sR0ACN3EXkB7RkzlgQMdIOTjgdO+Ev6Gwd1aEgdkl1f+AjAhpygUTVQT2
-        iTo67NsJ+xakGJhfHoDE2p4AGiRrPlgcJTA+1UiHgx1bYQkElxUYWIh8QcAaDSh3ASaKBTZXKbi8TXQ4
-        TFcOLikgtNKNgcXoMCTW1zGg3AY2RxnNwXeLoxDsU/fB7W8GT1hAV8bhVzC72gtzsdcYicWj6JjHNtAW
-        CjFQV8w41dWWHtQZ8oC0FoHZXgWUiwN2N5oDTyO4fGgOAi0wGeJhYNypWlepVDNolC9ggMhnHGx9lswV
-        thx3iIjUaSlxYlrKPekT89L8cn6aX8ZlBmTtzIASFZF1nA50dxNvhUIhiyCI/X8AEZSKF+CjwQsAAAAA
-        SUVORK5CYII=
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAALkSURBVDhPddJJTBNRGAfwXk3EgwcxRjkYNJRF48UY48mT
+        W0AErSABQ1BcEFKRyiIZoLQsXexGMZCY6EljNEgLwkGmpdO9tLQUbOlCyxawNCRtAT3o5+MNBCU4ycvM
+        ZPL/ffO+9zE2L6Io+RCPfbhaUJ8yzOcc0fCrUzRctJrZx8hm9lG0Nu/4+Suv9oxaLG54I5V2XqqpKU3C
+        QEsZI6NLlOUniOzfg8PZMDhwGwZVBaDuY4H6MwsG+tG7+g709qSCwchfJUny19DQkFfQRlzEQGv5gbM9
+        ksyI3soCylwABsMjMFAVaD0Bo6EKLOZqsI1xMOAPvINEIg4Wi21D9lJUjIH6sn3nFOKsqM54A7TUTdCN
+        PgD96GMw6CvBbHoKVhsHxhx1NBB8D7F4DEwm0w+JRFKyA/Azo1pdNpDaXNBpy8G4HbbW4LDD9QIDgdAH
+        DKBt/FQoZHcx0HAv6bxSkL5Caq6iDzlA6R6iCv+GnZNNGAiGPyIgjgG5XP7XH7QzV0ZGLoNGcx31oIIO
+        22tx2IXCbi8XAzNzn/YGZLy0CElegVFdHpjMlSj8fKsyARMeLkz52zAQmu+DOGriHgAzotVeA8pwCyw2
+        Ntid9TC+FZ7088Ez04mB8GI/AhK4ibuA9IiOygE9OkabgwNO9074Gwp7Z0UYmF1S/Q/IiFDGXDDaisA+
+        UUeHfTth34IUA/PLA5BY2xNAg2TJB7OjBManGulwsGMrLIHgsgIDC5EvCFijAeUuwGhjgdVVCi5vEx0O
+        05WDSwoIrXRjYDE6DIn1dQwot4HNUUZz8N3sKAT71H1w+5vBExbQlXH4Fcyu9sJc7DVGYvEoOuaxDbSF
+        QgzUFTNOdbWlB7X6PKAsRWCyV4HNxQG7G82BpxFcPjQHgRaYDPEwMO5UratUqhk0yhcwQOQzDrY+S+YK
+        W447RETqtJQ4MS3lnvSJeWl+OT/NL+MyA7J2ZkCJisg6Tge6u4m3QqGQRRDE/j8CkIoTcELL4AAAAABJ
+        RU5ErkJggg==
 </value>
   </data>
   <data name="toolStripButtonReload.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM9SURBVDhPbVNbTFRXFN33/ZgZBq/ceQAVLYaHcxOljTHK
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAM9SURBVDhPbVNbTFRXFN33/ZgZBq/ceQAVLYaHcxOljTHK
         h5CoafHODDQjFifjoFIlbZmBCqYoMtEo+qMkWKOtj2BAFE2wAjVqQqKxj/Sn1fjVxK9+mtikLXbItJ3V
         M8PENK0r2R9nn7XW2Xufc+h/aKZKCtEgH+UflB0o+3Xt0bW/m53m9yx/nIK0ssAieofKKUzLCyuGFPGM
         sN+ddKd3Xt2J/vv9GPlhBGcfn8XQwyHsub4H7oQ7zUQHGW+z1qn9JrfJz1+J+Qj3sD61PjMwN4DBR4Ov
@@ -2131,7 +2131,7 @@ to review footage from night before.</value>
   <data name="toolStripButtonPauseLog.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVDhPY0CAEE4W5TIrHs36AB7N0gBW1XwDBoZ6Nohc
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAJrSURBVDhPY0CAEE4W5TIrHs36AB7N0gBW1XwDBoZ6Nohc
         sji/VrUTv3pVMK92vQ+7YaEKUJAZIgcBzCK6pbbaATMPWiUtfWKZuOiRlv+0DQxqORpAQ3iEDJriNEJm
         XdAIm/1EM2zeXVnnCVMYFCvFoXpBoJ5NwKA1yiZtxYsJO+4e699x57hpxPzbPGrlNgxa9UJSlm2tusmr
         P07bdfds45prh5XcJx0UValWhmoGAaABek1xOjHzXzu2HVvt0HJklVbgnHs8KrX2DCq5opLmLd168fM/
@@ -2148,33 +2148,48 @@ to review footage from night before.</value>
   <data name="chk_filterErrors.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wZI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wqI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
         3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
         JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
         taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
         CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
         5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAACcDpKk
-        LPuNSQAAAABJRU5ErkJggg==
+        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABySZKT
+        JMls8AAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wpI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wKI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
         3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
         JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
         taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
         CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
         5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAACZmZKj
-        E2T24QAAAABJRU5ErkJggg==
+        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABv1JKS
+        T9gnDwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="toolStripButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
+        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
+        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
+        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
+        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
+        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
+        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
+        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
+        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
 </value>
   </data>
   <metadata name="HistoryImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -2185,7 +2200,7 @@ to review footage from night before.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAAYABBQGAAQUBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAAQgBBgEIAQYBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/

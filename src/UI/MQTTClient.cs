@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet;
+﻿using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
-using MQTTnet.Formatter;
-using MQTTnet.Protocol;
-using Newtonsoft.Json;
-using Telegram.Bot.Types;
+using System;
+using System.Diagnostics;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using static AITool.AITOOL;
 
 namespace AITool
 {
     public class MQTTClient
     {
-    
+
         public MQTTClient()
         {
 
@@ -223,7 +217,7 @@ namespace AITool
 
                                             // Subscribe to the topic
                                             await mqttClient.SubscribeAsync(topic, MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
-                                            
+
                                             subscribed = true;
 
                                             Log($"MQTT: ### SUBSCRIBED to topic '{topic}'");
@@ -304,7 +298,7 @@ namespace AITool
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
                                             Log($"MQTT: Disconnecting from server.");
-                                            await mqttClient.DisconnectAsync(); 
+                                            await mqttClient.DisconnectAsync();
                                             mqttClient.Dispose();  //using should dispose anyway
                                         }
                                     }
@@ -314,7 +308,7 @@ namespace AITool
 
 
             return res;
-            
+
 
         }
 

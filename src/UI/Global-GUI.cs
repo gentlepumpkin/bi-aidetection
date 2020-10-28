@@ -2,13 +2,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using System.Linq;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -22,7 +21,7 @@ namespace AITool
         // ====================================================================
 
 
-        public static void UpdateFOLV(FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, [CallerMemberName()] string memberName = null)
+        public static void UpdateFOLV(FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, bool UseSelected = false, object SelectObject = null, [CallerMemberName()] string memberName = null)
         {
 
             if (objs.Count == 0)
@@ -53,8 +52,26 @@ namespace AITool
                     {
                         if (Follow)
                         {
-                            olv.SelectedObject = objs[objs.Count - 1];  //olv.Items.Count - 1;
-                            olv.EnsureModelVisible(olv.SelectedObject);
+                            if (SelectObject != null && UseSelected)
+                            {
+                                //use the given object as selected
+                                olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
+                            }
+                            else if (SelectObject == null && UseSelected && olv.IsFiltering && olv.GetItemCount() > 0)
+                            {
+                                //use the last filtered object as the selected object
+                                olv.SelectedObject = olv.FilteredObjects.Cast<object>().Last();
+                            }
+                            else if (!olv.IsFiltering)
+                            {
+                                //just use the last object given to us
+                                olv.SelectedObject = objs[objs.Count - 1];  //olv.Items.Count - 1;
+                            }
+
+
+                            if (olv.SelectedObject != null)
+                                olv.EnsureModelVisible(olv.SelectedObject);
+
                         }
 
                         //update column size only if did not restore folv state file or forced
@@ -119,7 +136,7 @@ namespace AITool
                     OLV.ModelFilter = null;
                 }
                 OLV.Refresh();
-                Application.DoEvents();
+                //Application.DoEvents();
             }
             catch { }
         }
@@ -308,7 +325,7 @@ namespace AITool
                 FOLV.BuildList();
                 FOLV.RebuildColumns();
 
-                Application.DoEvents();
+                //Application.DoEvents();
 
             }
             catch (Exception ex)
@@ -756,7 +773,7 @@ namespace AITool
 
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -878,7 +895,7 @@ namespace AITool
                 {
                     System.Windows.Forms.Application.UseWaitCursor = true;
                 }
-                System.Windows.Forms.Application.DoEvents();
+                //System.Windows.Forms.Application.DoEvents();
             }
 
             public void Dispose()

@@ -13,7 +13,6 @@ using System.Linq;
 using System.Media;
 using System.Net;
 using System.Security.AccessControl;
-using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -66,7 +65,7 @@ namespace AITool
         public MovingCalcs TotalTimeCalc { get; set; } = new MovingCalcs(250);
         public ClsTriggerActionQueue()
         {
-            Task.Run(TriggerActionJobQueueLoop);
+            Task.Run(this.TriggerActionJobQueueLoop);
         }
 
         public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
@@ -81,7 +80,7 @@ namespace AITool
             }
             if (CurImg != null)
             {
-                ImgPath = CurImg.image_path;
+                this.ImgPath = CurImg.image_path;
             }
 
             ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, hist, Trigger, Text, !Wait);
@@ -93,7 +92,7 @@ namespace AITool
             {
                 if (Wait)  //not queued
                 {
-                    ret = await RunTriggers(AQI);
+                    ret = await this.RunTriggers(AQI);
                 }
                 else
                 {
@@ -101,7 +100,7 @@ namespace AITool
                     {
                         if (!this.TriggerActionQueue.TryAdd(AQI))
                         {
-                            Log($"Error: Action '{AQI.TType}' could not be added? {ImgPath}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                            Log($"Error: Action '{AQI.TType}' could not be added? {this.ImgPath}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                         }
                         else
                         {
@@ -115,7 +114,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Error: Action '{AQI.TType}' could not be added because queue size is {TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {ImgPath}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        Log($"Error: Action '{AQI.TType}' could not be added because queue size is {this.TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {this.ImgPath}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     }
 
                 }
@@ -128,11 +127,11 @@ namespace AITool
         {
 
             //this runs forever and blocks if nothing is in the queue
-            foreach (ClsTriggerActionQueueItem AQI in TriggerActionQueue.GetConsumingEnumerable())
+            foreach (ClsTriggerActionQueueItem AQI in this.TriggerActionQueue.GetConsumingEnumerable())
             {
                 try
                 {
-                    await RunTriggers(AQI);
+                    await this.RunTriggers(AQI);
                     await Task.Delay(250); //very short wait between trigger events
                 }
                 catch (Exception ex)
@@ -150,7 +149,7 @@ namespace AITool
         public async Task<bool> RunTriggers(ClsTriggerActionQueueItem AQI)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            
+
             bool res = false;
 
             try
@@ -170,20 +169,20 @@ namespace AITool
                 if (AQI.TType == TriggerType.TelegramText)
                 {
                     if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
-                        res = await TelegramText(AQI);
+                        res = await this.TelegramText(AQI);
                     else
                         WasSkipped = true;
                 }
                 else if (AQI.TType == TriggerType.TelegramImageUpload)
                 {
                     if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
-                        res = await TelegramUpload(AQI);
+                        res = await this.TelegramUpload(AQI);
                     else
                         WasSkipped = true;
                 }
                 else
                 {
-                    res = await Trigger(AQI);
+                    res = await this.Trigger(AQI);
                 }
 
                 this.Count.WriteFullFence(this.TriggerActionQueue.Count);
@@ -245,8 +244,8 @@ namespace AITool
 
                     if (AQI.cam.Action_image_merge_detections && AQI.Trigger)
                     {
-                        tmpfile = await MergeImageAnnotations(AQI);
-                        
+                        tmpfile = await this.MergeImageAnnotations(AQI);
+
                         if (!string.Equals(AQI.CurImg.image_path, tmpfile, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
                             AQI.CurImg = new ClsImageQueueItem(tmpfile, 1);
                     }
@@ -255,7 +254,7 @@ namespace AITool
                     {
                         Log($"Debug:   Copying image to network folder...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                         string newimagepath = "";
-                        if (!CopyImage(AQI, ref newimagepath))
+                        if (!this.CopyImage(AQI, ref newimagepath))
                         {
                             ret = false;
                             Log($"Warn:   -> Warning: Image could not be copied to network folder.", AQI.CurImg.image_path);
@@ -282,7 +281,7 @@ namespace AITool
 
                         }
 
-                        bool result = await CallTriggerURLs(urls, AQI.Trigger);
+                        bool result = await this.CallTriggerURLs(urls, AQI.Trigger);
                     }
                     else if (!AQI.Trigger && AQI.cam.cancel_urls.Count() > 0)
                     {
@@ -296,7 +295,7 @@ namespace AITool
 
                         }
 
-                        bool result = await CallTriggerURLs(urls, AQI.Trigger);
+                        bool result = await this.CallTriggerURLs(urls, AQI.Trigger);
 
                     }
 
@@ -407,7 +406,7 @@ namespace AITool
                     if (AQI.cam.telegram_enabled && AQI.Trigger)
                     {
 
-                        if (!await TelegramUpload(AQI))
+                        if (!await this.TelegramUpload(AQI))
                         {
                             ret = false;
                             Log($"Error:   -> ERROR sending image to Telegram.", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
@@ -455,7 +454,7 @@ namespace AITool
 
         }
 
-        
+
         public async Task<string> MergeImageAnnotations(ClsTriggerActionQueueItem AQI)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -468,7 +467,7 @@ namespace AITool
 
             try
             {
-                Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path,"","", AQI.CurImg.image_path);
+                Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path, "", "", AQI.CurImg.image_path);
 
                 if (System.IO.File.Exists(AQI.CurImg.image_path))
                 {
@@ -633,7 +632,7 @@ namespace AITool
 
                                 GraphicsState gs = g.Save();
 
-                                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+                                ImageCodecInfo jpgEncoder = this.GetEncoder(ImageFormat.Jpeg);
 
                                 // Create an Encoder object based on the GUID  
                                 // for the Quality parameter category.  
@@ -648,7 +647,8 @@ namespace AITool
                                 EncoderParameter myEncoderParameter = new EncoderParameter(myEncoder, AQI.cam.Action_image_merge_jpegquality);  //100=least compression, largest file size, best quality
                                 myEncoderParameters.Param[0] = myEncoderParameter;
 
-                                bool Success = true;
+                                Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
+                                result.Success = true; //assume true
 
                                 if (AQI.cam.Action_image_merge_detections_makecopy)
                                     OutputImageFile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(AQI.CurImg.image_path));
@@ -657,10 +657,10 @@ namespace AITool
 
                                 if (System.IO.File.Exists(OutputImageFile))
                                 {
-                                    Success = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
+                                    result = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
                                 }
 
-                                if (Success)
+                                if (result.Success)
                                 {
                                     img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
                                     Log($"Debug: Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
@@ -824,9 +824,9 @@ namespace AITool
                         }
                     }
 
-                    if (TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= TelegramRetryTime.Read())
+                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - last_telegram_trigger_time.Read()).TotalMinutes, 4);
+                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalMinutes, 4);
                         if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
                         {
                             //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
@@ -852,8 +852,8 @@ namespace AITool
                                 ret = true;
                             }
 
-                            last_telegram_trigger_time.Write(DateTime.Now);
-                            TelegramRetryTime.Write(DateTime.MinValue);
+                            this.last_telegram_trigger_time.Write(DateTime.Now);
+                            this.TelegramRetryTime.Write(DateTime.MinValue);
 
                             if (AQI.IsQueued)
                             {
@@ -873,7 +873,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Debug:   Waiting {Math.Round((TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        Log($"Debug:   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     }
 
 
@@ -883,8 +883,8 @@ namespace AITool
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
                     Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                    TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     AppSettings.Settings.send_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
@@ -906,8 +906,8 @@ namespace AITool
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
                     Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                    TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
-                    Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
+                    Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     AppSettings.Settings.send_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
@@ -958,10 +958,10 @@ namespace AITool
                     }
 
                     string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
-                    
-                    if (TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= TelegramRetryTime.Read())
+
+                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - last_telegram_trigger_time.Read()).TotalMinutes, 4);
+                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalMinutes, 4);
                         if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
                         {
                             TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
@@ -971,8 +971,8 @@ namespace AITool
                                 Message msg = await bot.SendTextMessageAsync(chatid, Caption);
 
                             }
-                            last_telegram_trigger_time.Write(DateTime.Now);
-                            TelegramRetryTime.Write(DateTime.MinValue);
+                            this.last_telegram_trigger_time.Write(DateTime.Now);
+                            this.TelegramRetryTime.Write(DateTime.MinValue);
 
                             if (AQI.IsQueued)
                             {
@@ -993,7 +993,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"   Waiting {Math.Round((TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        Log($"   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     }
 
 
@@ -1004,8 +1004,8 @@ namespace AITool
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
                     Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                    TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     AppSettings.Settings.send_errors = se;
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
 
@@ -1015,8 +1015,8 @@ namespace AITool
                     bool se = AppSettings.Settings.send_errors;
                     AppSettings.Settings.send_errors = false;
                     Log($"ERROR: Could not upload image '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                    TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
-                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
+                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                     AppSettings.Settings.send_errors = se;
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
                 }

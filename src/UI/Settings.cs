@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.AccessControl;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -25,13 +25,14 @@ namespace AITool
         public class ClsSettings
         {
             [JsonIgnore]
-            public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON");
+            public string SettingsFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON");
             [JsonIgnore]
-            public string LogFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
+            public string LogFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
             [JsonIgnore]
-            public string HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
+            public string HistoryFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             [JsonIgnore]
-            public string HistoryDBFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3");
+            public string HistoryDBFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3");
+
             public bool SettingsPortable = true;  //portable means the settings stay under EXE folder, otherwise they get dropped in %appdata%
             public string telegram_token = "";
             public double telegram_cooldown_minutes = 0.0833333;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
@@ -95,16 +96,16 @@ namespace AITool
             public string mqtt_password = "password";
             public string mqtt_clientid = "AITool";
 
-            public bool Autoscroll_log = false;
+            public bool Autoscroll_log = true;
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;
             public int MaxGUILogItems = 5000; //makes to slow to work with if too high
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
             public int TimeBetweenListRefreshsMS = 5000;
-            public bool HistoryShowMask = false;
+            public bool HistoryShowMask = true;
             public bool HistoryShowObjects = true;
-            public bool HistoryOnlyDisplayRelevantObjects = true;
+            public bool HistoryOnlyDisplayRelevantObjects = false;
             public bool HistoryFollow = true;
             public bool HistoryAutoRefresh = true;
             public bool HistoryStoreFalseAlerts = true;
@@ -120,71 +121,72 @@ namespace AITool
 
         }
 
-        public static bool Save()
+        static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+
+        public static async Task<bool> SaveAsync()
         {
+
+            await semaphoreSlim.WaitAsync();
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             try
             {
-                //multiple threads may be trying to save at the same time
-                lock (ThreadLock)
+                //if (!Global.IsClassEqual(AppSettings.LastSettingsJSON, AppSettings.Settings))
+                //{
+                //keep a backup file in case of corruption
+                if (await IsFileValidAsync(AppSettings.Settings.SettingsFileName))
                 {
-                    if (!Global.IsClassEqual(AppSettings.LastSettingsJSON, AppSettings.Settings))
-                    {
-                        //keep a backup file in case of corruption
-                        if (IsFileValid(AppSettings.Settings.SettingsFileName))
-                        {
-                            if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
-                                File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
-                            if (File.Exists(AppSettings.Settings.SettingsFileName))
-                                File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
-                        }
-                        else
-                        {
-                            //file corrupt or doesnt exist
-                            if (File.Exists(AppSettings.Settings.SettingsFileName))
-                            {
-                                Log("Error: Deleting corrupt settings file before resave: " + AppSettings.Settings.SettingsFileName);
-                                File.Delete(AppSettings.Settings.SettingsFileName);
-                            }
-                        }
-
-                        //update threshold in all masks if changed during session
-                        foreach (Camera cam in AppSettings.Settings.CameraList)
-                        {
-                            cam.maskManager.Update(cam);
-                        }
-
-                        Settings.SettingsValid = true;
-                        String CurSettingsJSON = Global.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
-
-                        if (!string.IsNullOrEmpty(CurSettingsJSON) && IsFileValid(AppSettings.Settings.SettingsFileName))
-                        {
-                            Settings.SettingsValid = true;
-                            Ret = true;
-                            AppSettings.LastSettingsJSON = CurSettingsJSON;
-                            //save a backup of settings to the registry since I've had a few times my raid array was going bad and I lost both backup and json files
-                            Global.SaveSetting("BackupSettingsJSON", CurSettingsJSON);
-                            Log($"Debug: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
-                        }
-                        else
-                        {
-                            Settings.SettingsValid = false;
-                            Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
-                        }
-
-
-                    }
-                    else
-                    {
-                        //does not need saving
-                        //Log("Settings have not changed, skipping save.");
-                        Ret = true;
-                        Settings.SettingsValid = true;
-                    }
-
+                    if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
+                        File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
+                    if (File.Exists(AppSettings.Settings.SettingsFileName))
+                        File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
                 }
+                else
+                {
+                    //file corrupt or doesnt exist
+                    if (File.Exists(AppSettings.Settings.SettingsFileName))
+                    {
+                        Log("Error: Deleting corrupt settings file before resave: " + AppSettings.Settings.SettingsFileName);
+                        File.Delete(AppSettings.Settings.SettingsFileName);
+                    }
+                }
+
+                //update threshold in all masks if changed during session
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    cam.maskManager.Update(cam);
+                }
+
+                Settings.SettingsValid = true;
+                String CurSettingsJSON = Global.WriteToJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName, Settings);
+
+                if (!string.IsNullOrEmpty(CurSettingsJSON) && await IsFileValidAsync(AppSettings.Settings.SettingsFileName))
+                {
+                    Settings.SettingsValid = true;
+                    Ret = true;
+                    AppSettings.LastSettingsJSON = CurSettingsJSON;
+                    //save a backup of settings to the registry since I've had a few times my raid array was going bad and I lost both backup and json files
+                    Global.SaveSetting("BackupSettingsJSON", CurSettingsJSON);
+                    Log($"Debug: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
+                }
+                else
+                {
+                    Settings.SettingsValid = false;
+                    Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
+                }
+
+
+                //}
+                //else
+                //{
+                //    //does not need saving
+                //    //Log("Settings have not changed, skipping save.");
+                //    Ret = true;
+                //    Settings.SettingsValid = true;
+                //}
+
 
             }
             catch (Exception ex)
@@ -198,7 +200,7 @@ namespace AITool
                 try
                 {
                     //Revert to backup copy if exists AND is not corrupt
-                    if (IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))
+                    if (await IsFileValidAsync(AppSettings.Settings.SettingsFileName + ".bak"))
                     {
                         Log("Error: Settings save failed, reverting to backup copy: " + AppSettings.Settings.SettingsFileName + ".bak");
 
@@ -220,9 +222,17 @@ namespace AITool
                 }
             }
 
+            semaphoreSlim.Release();
+
             return Ret;
         }
-        public static bool IsFileValid(string Filename)
+
+        public static async Task<bool> IsFileValidAsync(string Filename)
+        {
+            return await Task.Run(() => IsFileValidInternal(Filename));
+        }
+
+        private static bool IsFileValidInternal(string Filename)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -231,13 +241,12 @@ namespace AITool
             {
                 if (File.Exists(Filename))
                 {
-                    Stopwatch SW = Stopwatch.StartNew();
                     FileInfo fi = new FileInfo(Filename);
                     if (fi.Length > 800)
                     {
                         //try to prevent multiple threads from erroring out writing the json file...
-                        bool Success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.ReadWrite, 5000);
-                        if (Success)
+                        Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.ReadWrite, 5000);
+                        if (result.Success)
                         {
                             //check its contents, 0 bytes indicate corruption
                             string contents = File.ReadAllText(Filename);
@@ -259,7 +268,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Error: Could not gain access to file for {SW.ElapsedMilliseconds}ms - {Filename}");
+                            Log($"Error: Could not gain access to file for {result.TimeMS}ms - {Filename}");
                         }
 
                     }
@@ -288,25 +297,102 @@ namespace AITool
             {
                 //original:
                 //public string SettingsFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON");
-                string origfolder = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(@"\".ToCharArray());
-                string oldfolder = Path.GetDirectoryName(Settings.SettingsFileName);
-                string newfolder = "";
+                //public string LogFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
+                //public string HistoryDBFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3");
+
+                string OrigFolder = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(@"\".ToCharArray());
+                string OldFolder = !string.IsNullOrEmpty(Settings.SettingsFileName) ? Path.GetDirectoryName(Settings.SettingsFileName) : OrigFolder;
+                string OldSettingsFile = Settings.SettingsFileName;
+
+                string OrigSettingsFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON";
+                string OrigLogFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG";
+                string OrigHistoryDBFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3";
+
+                //Just always look in original location for legacy import
+                Settings.HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
+
+                string NewFolder = "";
+                string OrigSettingsFile = "";
+                string NewSettingsFile = "";
+                string NewLogFile = "";
+                string NewHistoryFile = "";
 
                 if (!Settings.SettingsPortable)
                 {
                     //Set to appdata folder
-                    newfolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AITOOL", "_Settings");
+                    NewFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AITOOL", "_Settings");
                 }
                 else
                 {
                     //set to aitool subfolder
-                    newfolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location), "_Settings");
+                    NewFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "_Settings");
                 }
 
-                if (!oldfolder.Equals(newfolder, StringComparison.OrdinalIgnoreCase))
+
+                bool NewDirExists = Directory.Exists(NewFolder);
+
+                if (!NewDirExists)
+                    Directory.CreateDirectory(NewFolder);
+
+                OrigSettingsFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AITOOL.Settings.JSON");
+                OldSettingsFile = Path.Combine(OldFolder, OrigSettingsFilename);
+                NewSettingsFile = Path.Combine(NewFolder, OrigSettingsFilename);
+
+                NewLogFile = Path.Combine(NewFolder, "Logs", OrigLogFilename);
+                NewHistoryFile = Path.Combine(NewFolder, OrigHistoryDBFilename);
+
+                bool OrigSettingsFileExists = File.Exists(OrigSettingsFile);
+                bool OldSettingsFileExists = File.Exists(OldSettingsFile);
+                bool NewSettingFileExists = File.Exists(NewSettingsFile);
+                bool ChangedLocation = !OldFolder.Equals(NewFolder, StringComparison.OrdinalIgnoreCase) || !NewSettingFileExists;
+
+                Settings.SettingsFileName = NewSettingsFile;
+                Settings.LogFileName = NewLogFile;
+                Settings.HistoryDBFileName = NewHistoryFile;
+
+                string OldCamFolder = Path.GetDirectoryName(Settings.HistoryFileName);
+                string OldCamFolderWarn = Path.Combine(OldCamFolder, "_THIS_FOLDER_NOT_USED");
+                if (Directory.Exists(OldCamFolder) && !File.Exists(OldCamFolderWarn))
+                    File.WriteAllText(OldCamFolderWarn, "6, 28, 496, 8128 oh and 42");
+
+                if (ChangedLocation)
                 {
-                    Log($"Debug: Changing settings folder from {oldfolder} to {newfolder}...");
+
+                    //make sure log folder exists
+
+                    if (OldSettingsFileExists)
+                    {
+                        //this is only for when changing from portable and back... assume everything in \_settings subfolder and \_settings\Logs
+                        Log($"Debug: Moving settings folder from old '{OldFolder}' to '{NewFolder}'...");
+
+                        //Get from old camera folder first
+                        Global.MoveFiles(Settings.HistoryFileName, NewFolder, "*.BMP|*.PNG", true);
+                        Global.MoveFiles(OldFolder, NewFolder, "*.BMP|*.PNG", true);
+                        Global.MoveFiles(OldFolder + "\\Logs", Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
+                        Global.MoveFiles(OldFolder, Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
+                        Global.MoveFiles(OldFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK", true);
+                    }
+                    else if (OrigSettingsFileExists)
+                    {
+                        Log($"Debug: Moving settings folder from original '{OrigFolder}' to '{NewFolder}'...");
+                        Global.MoveFiles(Settings.HistoryFileName, NewFolder, "*.BMP|*.PNG", true);
+                        Global.MoveFiles(OrigFolder, NewFolder, "*.BMP|*.PNG", true);
+                        Global.MoveFiles(OrigFolder, Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
+                        Global.MoveFiles(OrigFolder + "\\Logs", Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
+                        Global.MoveFiles(OrigFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK", true);
+                    }
+                    else
+                    {
+                        Log($"Debug: Using settings folder '{NewFolder}'.");
+                    }
+
                 }
+                else
+                {
+                    Log("Debug: Settings folder did not change.");
+                }
+
+
 
             }
             catch (Exception ex)
@@ -316,243 +402,247 @@ namespace AITool
             }
 
         }
-        public static bool Load()
+        public static async Task<bool> LoadAsync()
         {
+            await semaphoreSlim.WaitAsync();
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             try
             {
-                //multiple threads may be trying to save at the same time
-                lock (ThreadLock)
+                //////multiple threads may be trying to save at the same time
+                ////lock (ThreadLock)
+                //{
+                Settings.SettingsValid = false;  //assume failure
+                bool Resave = false;
+
+                UpdateSettingsLocation();  //save to \settings folder or appdata\settings
+
+                //get backup json from registry
+
+                AppSettings.LastSettingsJSON = Global.GetSetting("BackupSettingsJSON", "");
+
+                bool IsSettingsFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName);
+                bool IsSettingsBakFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName + ".bak");
+                //read the old configuration file
+                if (!IsSettingsFileValid && !IsSettingsBakFileValid && string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
                 {
-                    Settings.SettingsValid = false;  //assume failure
-                    bool Resave = false;
+                    //--------------------------------------------------------------------------------------------------------------------
+                    //try to read in OLD aitool.exe.config or user.config files - they were
+                    //unreliable because of strict versioning, etc
+                    //
+                    // NO NEED to add NEW settings to this area
+                    //--------------------------------------------------------------------------------------------------------------------
+
+                    List<FileInfo> filist = new List<FileInfo>();
+                    FileInfo fi = new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(Assembly.GetEntryAssembly().Location) + ".config"));
+                    if (fi.Exists)
+                        filist.Add(fi);
+                    filist.AddRange(Global.GetFiles(Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "WindowsFormsApp2"), "user.config"));
+                    //sort by date
+                    filist = filist.OrderByDescending((d) => d.LastWriteTime).ToList();
+
+                    Log("First time load, reading old config file: " + filist[0].FullName);
+
+                    XDocument xmlfile = XDocument.Load(filist[0].FullName);
+                    //<configuration>
+                    //    <userSettings>
+                    //        <WindowsFormsApp2.Properties.Settings>
+                    //            <setting name="telegram_token" serializeAs="String">
+                    //                <value />
+                    //            </setting>
+                    //            <setting name="telegram_chatid" serializeAs="String">
+                    //                <value />
+                    //            </setting>
+                    //            <setting name="input_path" serializeAs="String">
+                    //                <value>D:\BlueIrisStorage\AIInput</value>
+                    //            </setting>
+
+                    IEnumerable<XElement> els = xmlfile.XPathSelectElements("/configuration/userSettings/WindowsFormsApp2.Properties.Settings/setting");
+                    if (els == null || els.Count() == 0)
+                        els = xmlfile.XPathSelectElements("/configuration/applicationSettings/WindowsFormsApp2.Properties.Settings/setting");
+
+                    int cnt = 0;
+                    foreach (XElement el in els)
+                    {
+                        string val = el.Value;
+                        if (!string.IsNullOrEmpty(val))
+                        {
+                            if (el.ToString().Contains("telegram_token")) { Settings.telegram_token = val; cnt += 1; }
+                            if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = Global.Split(val, ","); cnt += 1; }
+                            if (el.ToString().Contains("input_path")) { Settings.input_path = val; cnt += 1; }
+                            if (el.ToString().Contains("deepstack_url")) { Settings.deepstack_url = val; cnt += 1; }
+                            if (el.ToString().Contains("log_everything")) { Settings.log_everything = Convert.ToBoolean(val); cnt += 1; }
+                            if (el.ToString().Contains("send_errors")) { Settings.send_errors = Convert.ToBoolean(val); cnt += 1; }
+                            if (el.ToString().Contains("close_instantly")) { Settings.close_instantly = Convert.ToInt32(val); cnt += 1; }
+
+                        }
+                    }
+
+                    Resave = (cnt > 0);
+                    Settings.SettingsValid = true;
+
+                }
+                else if (IsSettingsFileValid)
+                {
+                    //Load regular settings file
+                    Log("Debug: Loading settings from " + AppSettings.Settings.SettingsFileName);
+                    Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
+                }
+                else if (IsSettingsBakFileValid)
+                {
+                    //revert to backup if its good
+                    Log("Error: Reverting to backup settings file: " + AppSettings.Settings.SettingsFileName + ".bak");
+                    Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
+                    Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName + ".bak");
+                }
+                else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
+                {
+                    //revert to REGISTRY backup if its good
+                    Log("Error: Reverting to REGISTRY backup settings...");
+                    Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
+
+                }
+                else
+                {
+
+                    //nothing valid
+                    Log("Error: Settings file AND backup were missing or corrupt.");
+
+                    if (File.Exists(AppSettings.Settings.SettingsFileName))
+                        File.Delete(AppSettings.Settings.SettingsFileName);
+
+                    if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
+                        File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
+
+                }
+
+                if (Settings != null)
+                {
 
                     UpdateSettingsLocation();  //save to \settings folder or appdata\settings
 
-                    //get backup json from registry
-
-                    AppSettings.LastSettingsJSON = Global.GetSetting("BackupSettingsJSON", "");
-
-                    //read the old configuration file
-                    if (!IsFileValid(AppSettings.Settings.SettingsFileName) && !IsFileValid(AppSettings.Settings.SettingsFileName + ".bak") && string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
+                    //Ive had a case where MaskManager was null/corrupt to double check:
+                    foreach (Camera cam in Settings.CameraList)
                     {
-                        //--------------------------------------------------------------------------------------------------------------------
-                        //try to read in OLD aitool.exe.config or user.config files - they were
-                        //unreliable because of strict versioning, etc
-                        //
-                        // NO NEED to add NEW settings to this area
-                        //--------------------------------------------------------------------------------------------------------------------
+                        if (cam.maskManager == null)
+                        {
+                            cam.maskManager = new MaskManager();
+                            Log("Warning: Had to reset MaskManager for camera " + cam.name);
+                        }
 
-                        List<FileInfo> filist = new List<FileInfo>();
-                        FileInfo fi = new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(Assembly.GetEntryAssembly().Location) + ".config"));
-                        if (fi.Exists)
-                            filist.Add(fi);
-                        filist.AddRange(Global.GetFiles(Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "WindowsFormsApp2"), "user.config"));
-                        //sort by date
-                        filist = filist.OrderByDescending((d) => d.LastWriteTime).ToList();
+                        //update threshold in all masks if changed during session
+                        cam.maskManager.Update(cam);
 
-                        Log("First time load, reading old config file: " + filist[0].FullName);
+                        ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
+                        if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
+                        {
+                            cam.cancel_urls_as_string = cam.trigger_urls_as_string;
+                            cam.trigger_url_cancels = false;
+                        }
 
-                        XDocument xmlfile = XDocument.Load(filist[0].FullName);
-                        //<configuration>
-                        //    <userSettings>
-                        //        <WindowsFormsApp2.Properties.Settings>
-                        //            <setting name="telegram_token" serializeAs="String">
-                        //                <value />
-                        //            </setting>
-                        //            <setting name="telegram_chatid" serializeAs="String">
-                        //                <value />
-                        //            </setting>
-                        //            <setting name="input_path" serializeAs="String">
-                        //                <value>D:\BlueIrisStorage\AIInput</value>
-                        //            </setting>
+                        cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
+                        cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                        IEnumerable<XElement> els = xmlfile.XPathSelectElements("/configuration/userSettings/WindowsFormsApp2.Properties.Settings/setting");
-                        if (els == null || els.Count() == 0)
-                            els = xmlfile.XPathSelectElements("/configuration/applicationSettings/WindowsFormsApp2.Properties.Settings/setting");
+                        if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
+                        {
+                            Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
 
+                            List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
+                            int deleted = 0;
+                            int errs = 0;
+                            foreach (FileInfo fi in filist)
+                            {
+                                if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
+                                {
+                                    try { fi.Delete(); deleted++; }
+                                    catch { errs++; }
+                                }
+                            }
+                            if (errs == 0)
+                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+                            else
+                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+
+
+                        }
+
+                    }
+
+                    //load cameras the old way if needed
+                    if (Settings.CameraList.Count == 0)
+                    {
+                        string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
+                        Log("No cameras loaded in settings, trying to load old camera files from " + camerafolder);
+                        List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
+                                                                                       //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
+                                                                                       //I *think* this logic works?
+                        files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
+                        //create a camera object for every camera settings file
                         int cnt = 0;
-                        foreach (XElement el in els)
+                        foreach (FileInfo file in files)
                         {
-                            string val = el.Value;
-                            if (!string.IsNullOrEmpty(val))
+
+                            //check if camera with specified name or its prefix already exists. If yes, then abort.
+                            bool fnd = false;
+                            foreach (Camera c in AppSettings.Settings.CameraList)
                             {
-                                if (el.ToString().Contains("telegram_token")) { Settings.telegram_token = val; cnt += 1; }
-                                if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = Global.Split(val, ","); cnt += 1; }
-                                if (el.ToString().Contains("input_path")) { Settings.input_path = val; cnt += 1; }
-                                if (el.ToString().Contains("deepstack_url")) { Settings.deepstack_url = val; cnt += 1; }
-                                if (el.ToString().Contains("log_everything")) { Settings.log_everything = Convert.ToBoolean(val); cnt += 1; }
-                                if (el.ToString().Contains("send_errors")) { Settings.send_errors = Convert.ToBoolean(val); cnt += 1; }
-                                if (el.ToString().Contains("close_instantly")) { Settings.close_instantly = Convert.ToInt32(val); cnt += 1; }
-
-                            }
-                        }
-
-                        Resave = (cnt > 0);
-                        Settings.SettingsValid = true;
-
-                    }
-                    else if (IsFileValid(AppSettings.Settings.SettingsFileName))
-                    {
-                        //Load regular settings file
-                        Log("Debug: Loading settings from " + AppSettings.Settings.SettingsFileName);
-                        Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
-                    }
-                    else if (IsFileValid(AppSettings.Settings.SettingsFileName + ".bak"))
-                    {
-                        //revert to backup if its good
-                        Log("Error: Reverting to backup settings file: " + AppSettings.Settings.SettingsFileName + ".bak");
-                        Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
-                        Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName + ".bak");
-                    }
-                    else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
-                    {
-                        //revert to REGISTRY backup if its good
-                        Log("Error: Reverting to REGISTRY backup settings...");
-                        Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
-
-                    }
-                    else
-                    {
-
-                        //nothing valid
-                        Log("Error: Settings file AND backup were missing or corrupt.");
-
-                        if (File.Exists(AppSettings.Settings.SettingsFileName))
-                            File.Delete(AppSettings.Settings.SettingsFileName);
-
-                        if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
-                            File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
-
-                    }
-
-                    if (Settings != null)
-                    {
-
-                        UpdateSettingsLocation();  //save to \settings folder or appdata\settings
-
-                        //Ive had a case where MaskManager was null/corrupt to double check:
-                        foreach (Camera cam in Settings.CameraList)
-                        {
-                            if (cam.maskManager == null)
-                            {
-                                cam.maskManager = new MaskManager();
-                                Log("Warning: Had to reset MaskManager for camera " + cam.name);
-                            }
-
-                            //update threshold in all masks if changed during session
-                            cam.maskManager.Update(cam);
-
-                            ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
-                            if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
-                            {
-                                cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                                cam.trigger_url_cancels = false;
-                            }
-
-                            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
-                            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
-
-                            if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
-                            {
-                                Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
-
-                                List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
-                                int deleted = 0;
-                                int errs = 0;
-                                foreach (FileInfo fi in filist)
+                                if (string.Equals(c.name, Path.GetFileNameWithoutExtension(file.FullName), StringComparison.OrdinalIgnoreCase))
                                 {
-                                    if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
-                                    {
-                                        try { fi.Delete(); deleted++; }
-                                        catch { errs++; }
-                                    }
+                                    fnd = true;
                                 }
-                                if (errs == 0)
-                                    Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
-                                else
-                                    Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
-
-
-
+                                else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
+                                {
+                                    fnd = true;
+                                }
                             }
-
-                        }
-
-                        //load cameras the old way if needed
-                        if (Settings.CameraList.Count == 0)
-                        {
-                            string camerafolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras");
-                            Log("No cameras loaded in settings, trying to load old camera files from " + camerafolder);
-                            List<FileInfo> files = Global.GetFiles(camerafolder, "*.txt"); //load all settings files in a string array
-                                                                                           //Sort so more recent files are processed first - to make sure any dupes that are skipped are older
-                                                                                           //I *think* this logic works?
-                            files = files.OrderByDescending((d) => d.LastWriteTime).ToList();
-                            //create a camera object for every camera settings file
-                            int cnt = 0;
-                            foreach (FileInfo file in files)
+                            if (!fnd)
                             {
-
-                                //check if camera with specified name or its prefix already exists. If yes, then abort.
-                                bool fnd = false;
-                                foreach (Camera c in AppSettings.Settings.CameraList)
-                                {
-                                    if (string.Equals(c.name, Path.GetFileNameWithoutExtension(file.FullName), StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        fnd = true;
-                                    }
-                                    else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
-                                    {
-                                        fnd = true;
-                                    }
-                                }
-                                if (!fnd)
-                                {
-                                    cnt++;
-                                    Camera cam = new Camera(); //create new camera object
-                                    cam.ReadConfig(file.FullName); //read camera's config from file
-                                    AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
-                                }
-                                else
-                                {
-                                    Log("Skipped duplicate camera: " + file);
-                                }
-
-                            }
-
-                            if (cnt > 0)
-                            {
-                                Log($"...Loaded {cnt} camera files.");
+                                cnt++;
+                                Camera cam = new Camera(); //create new camera object
+                                cam.ReadConfig(file.FullName); //read camera's config from file
+                                AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
                             }
                             else
                             {
-                                Log($"...NO old camera txt files could be loaded.");
+                                Log("Skipped duplicate camera: " + file);
                             }
-
-                            Resave = (cnt > 1);
 
                         }
 
-                        //sort the camera list:
-                        AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
+                        if (cnt > 0)
+                        {
+                            Log($"...Loaded {cnt} camera files.");
+                        }
+                        else
+                        {
+                            Log($"...NO old camera txt files could be loaded.");
+                        }
 
+                        Resave = (cnt > 1);
 
-                        Ret = true;
-                    }
-                    else
-                    {
-                        Log("Error: Could not load settings?");
-                    }
-
-                    if (Resave)
-                    {
-                        //we imported old settings, save them
-                        Save();
                     }
 
+                    //sort the camera list:
+                    AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
+
+
+                    Ret = true;
                 }
+                else
+                {
+                    Log("Error: Could not load settings?");
+                }
+
+                if (Resave)
+                {
+                    //we imported old settings, save them
+                    SaveAsync();
+                }
+
+                //}
 
             }
             catch (Exception ex)
@@ -560,6 +650,11 @@ namespace AITool
 
                 Log("Error: Could not save settings: " + Global.ExMsg(ex));
             }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+
 
             return Ret;
         }

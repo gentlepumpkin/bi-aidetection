@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AITool
@@ -14,76 +7,75 @@ namespace AITool
     {
         public Frm_DynamicMaskingAdvanced()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void numSmallObjMax_Leave(object sender, EventArgs e)
         {
-            if (numSmallObjMax.Text == "")
+            if (this.numSmallObjMax.Text == "")
             {
-                numSmallObjMax.Text = numSmallObjMax.Value.ToString();
+                this.numSmallObjMax.Text = this.numSmallObjMax.Value.ToString();
             }
         }
 
         private void numSmallObjPercent_Leave(object sender, EventArgs e)
         {
-            if (numSmallObjPercent.Text == "")
+            if (this.numSmallObjPercent.Text == "")
             {
-                numSmallObjPercent.Text = numSmallObjPercent.Value.ToString();
+                this.numSmallObjPercent.Text = this.numSmallObjPercent.Value.ToString();
             }
         }
 
         private void numMidObjMax_Leave(object sender, EventArgs e)
         {
-            if (numMidObjMax.Text == "")
+            if (this.numMidObjMax.Text == "")
             {
-                numMidObjMax.Text = numMidObjMax.Value.ToString();
+                this.numMidObjMax.Text = this.numMidObjMax.Value.ToString();
             }
         }
 
         private void numMidObjPercent_Leave(object sender, EventArgs e)
         {
-            if (numMidObjPercent.Text == "")
+            if (this.numMidObjPercent.Text == "")
             {
-                numMidObjPercent.Text = numMidObjPercent.Value.ToString();
+                this.numMidObjPercent.Text = this.numMidObjPercent.Value.ToString();
             }
         }
 
         private void Frm_DynamicMaskingAdvanced_Load(object sender, EventArgs e)
         {
-            CenterToParent();
+            this.CenterToParent();
         }
 
         private void numSmallObjMax_ValueChanged(object sender, EventArgs e)
         {
-            numMidObjMin.Minimum = numSmallObjMax.Value;
-           
-            if(numMidObjMin.Value < numSmallObjMax.Value)
+            this.numMidObjMin.Minimum = this.numSmallObjMax.Value;
+
+            if (this.numMidObjMin.Value < this.numSmallObjMax.Value)
             {
-                numMidObjMin.Value = numSmallObjMax.Value;
+                this.numMidObjMin.Value = this.numSmallObjMax.Value;
             }
 
-            numMidObjMax.Minimum = numMidObjMin.Minimum + 1;
+            this.numMidObjMax.Minimum = this.numMidObjMin.Minimum + 1;
         }
 
         private void numMidObjMin_ValueChanged(object sender, EventArgs e)
         {
-            if (numMidObjMin.Value == numMidObjMax.Value)
+            if (this.numMidObjMin.Value == this.numMidObjMax.Value)
             {
-                if (numMidObjMin.Value > numMidObjMin.Minimum)
+                if (this.numMidObjMin.Value > this.numMidObjMin.Minimum)
                 {
-                    numMidObjMin.Value = numMidObjMin.Value - 1;
+                    this.numMidObjMin.Value = this.numMidObjMin.Value - 1;
                 }
             }
         }
 
         private void numMidObjMin_Leave(object sender, EventArgs e)
         {
-            if (numMidObjMin.Text == "")
+            if (this.numMidObjMin.Text == "")
             {
-                numMidObjMin.Text = numMidObjMin.Value.ToString();
+                this.numMidObjMin.Text = this.numMidObjMin.Value.ToString();
             }
         }
     }
 }
-    

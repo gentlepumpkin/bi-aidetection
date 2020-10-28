@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -19,51 +15,51 @@ namespace AITool
 
         public void SendMessage(MessageType MT, string Descript = "", object Payload = null, [CallerMemberName] string memberName = null)
         {
-            if (progress == null)
+            if (this.progress == null)
                 return;
 
             ClsMessage msg = new ClsMessage(MT, Descript, Payload, memberName);
 
-            progress.Report(msg);
+            this.progress.Report(msg);
 
         }
 
         public void DeleteHistoryItem(string filename, [CallerMemberName] string memberName = null)
         {
-            if (progress == null)
+            if (this.progress == null)
                 return;
 
             ClsMessage msg = new ClsMessage(MessageType.DeleteHistoryItem, filename, null, memberName);
 
-            progress.Report(msg);
+            this.progress.Report(msg);
 
         }
 
         public void CreateHistoryItem(History hist, [CallerMemberName] string memberName = null)
         {
-            if (progress == null)
+            if (this.progress == null)
                 return;
 
             ClsMessage msg = new ClsMessage(MessageType.CreateHistoryItem, "", hist, memberName);
 
-            progress.Report(msg);
+            this.progress.Report(msg);
 
         }
 
         public void UpdateLabel(string Message, string LabelControlName, [CallerMemberName] string memberName = null)
         {
-            if (progress == null)
+            if (this.progress == null)
                 return;
 
             ClsMessage msg = new ClsMessage(MessageType.UpdateLabel, Message, LabelControlName, memberName);
 
-            progress.Report(msg);
+            this.progress.Report(msg);
 
         }
 
         public void Log(string Message, [CallerMemberName] string memberName = null)
         {
-            if (progress == null)
+            if (this.progress == null)
                 return;
 
             ClsMessage msg = new ClsMessage(MessageType.LogEntry, "", null, memberName);
@@ -81,7 +77,7 @@ namespace AITool
             Global.SaveSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
 
 
-            progress.Report(msg);
+            this.progress.Report(msg);
 
         }
 

@@ -1,7 +1,7 @@
 ﻿using OSVersionExt;
 using OSVersionExt.Environment;
-using OSVersionExt.Win32API;
 using OSVersionExt.MajorVersion10;
+using OSVersionExt.Win32API;
 using System;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -45,7 +45,7 @@ namespace OSVersionExtension
 
             _win32ApiProvider = _win32ApiProviderDefault;
             _environmentProvider = _environmentProviderDefault;
-            Initialize();            
+            Initialize();
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace OSVersionExtension
         /// </summary>
         public static void SetWin32ApiProviderDefault()
         {
-            _win32ApiProvider = _win32ApiProviderDefault;            
+            _win32ApiProvider = _win32ApiProviderDefault;
             Initialize();
         }
 

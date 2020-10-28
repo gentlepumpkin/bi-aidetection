@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace AITool
 {
@@ -34,16 +29,18 @@ namespace AITool
         private string memberName = "";
         private int curval = 0;
         private int maxval = 0;
-        public string Description { get => description; set => description = value; }
-        public string JSONPayload { get => jsonpayload; set => jsonpayload = value; }
-        public MessageType MessageType { get => messageType; set => messageType = value; }
-        public DateTime MessageCreateDate { get => messageCreateDate; set => messageCreateDate = value; }
-        public string MemberName { get => memberName; set => memberName = value; }
-        public int CurVal { get => curval; set => curval = value; }
-        public int MaxVal { get => maxval; set => maxval = value; }
+        private int minval = 0;
+        public string Description { get => this.description; set => this.description = value; }
+        public string JSONPayload { get => this.jsonpayload; set => this.jsonpayload = value; }
+        public MessageType MessageType { get => this.messageType; set => this.messageType = value; }
+        public DateTime MessageCreateDate { get => this.messageCreateDate; set => this.messageCreateDate = value; }
+        public string MemberName { get => this.memberName; set => this.memberName = value; }
+        public int CurVal { get => this.curval; set => this.curval = value; }
+        public int MaxVal { get => this.maxval; set => this.maxval = value; }
+        public int MinVal { get => this.minval; set => this.minval = value; }
 
         //pass a class object or string in payloadobject, gets converted to json string
-        public ClsMessage(MessageType MT = MessageType.LogEntry, string Descript = "", object PayloadObject = null, string MemberName = "", int CurVal = 0, int MaxVal = 0)
+        public ClsMessage(MessageType MT = MessageType.LogEntry, string Descript = "", object PayloadObject = null, string MemberName = "", int CurVal = -1, int MinVal = -1, int MaxVal = -1)
         {
             this.description = Descript;
             this.messageType = MT;
@@ -51,13 +48,13 @@ namespace AITool
             this.messageCreateDate = DateTime.Now;
             this.curval = CurVal;
             this.maxval = MaxVal;
-                
+            this.minval = MinVal;
 
-            if (PayloadObject !=null)
+            if (PayloadObject != null)
             {
                 this.jsonpayload = Global.GetJSONString(PayloadObject);
             }
         }
     }
-        
+
 }

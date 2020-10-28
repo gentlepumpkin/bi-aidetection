@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AITool
 {
-    public partial class Frm_DynamicMasking:Form
+    public partial class Frm_DynamicMasking : Form
     {
         public Camera cam;
 
         public Frm_DynamicMasking()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void Frm_DynamicMasking_Load(object sender, EventArgs e)
@@ -27,40 +20,40 @@ namespace AITool
 
         private void num_history_mins_Leave(object sender, EventArgs e)
         {
-            if (num_history_mins.Text == "")
+            if (this.num_history_mins.Text == "")
             {
-                num_history_mins.Text = num_history_mins.Value.ToString();
+                this.num_history_mins.Text = this.num_history_mins.Value.ToString();
             }
         }
 
         private void num_mask_create_Leave(object sender, EventArgs e)
         {
-            if (num_mask_create.Text == "")
+            if (this.num_mask_create.Text == "")
             {
-                num_mask_create.Text = num_mask_create.Value.ToString();
+                this.num_mask_create.Text = this.num_mask_create.Value.ToString();
             }
         }
 
         private void num_mask_remove_Leave(object sender, EventArgs e)
         {
-            if (num_mask_remove.Text == "")
+            if (this.num_mask_remove.Text == "")
             {
-                num_mask_remove.Text = num_mask_remove.Value.ToString();
+                this.num_mask_remove.Text = this.num_mask_remove.Value.ToString();
             }
         }
 
         private void num_percent_var_Leave(object sender, EventArgs e)
         {
-            if (num_percent_var.Text == "")
+            if (this.num_percent_var.Text == "")
             {
-                num_percent_var.Text = num_percent_var.Value.ToString();
+                this.num_percent_var.Text = this.num_percent_var.Value.ToString();
             }
         }
         private void numMaskThreshold_Leave(object sender, EventArgs e)
         {
-            if (numMaskThreshold.Text == "")
+            if (this.numMaskThreshold.Text == "")
             {
-                numMaskThreshold.Text = numMaskThreshold.Value.ToString();
+                this.numMaskThreshold.Text = this.numMaskThreshold.Value.ToString();
             }
         }
 
@@ -74,12 +67,12 @@ namespace AITool
         {
             using (Frm_DynamicMaskingAdvanced frm = new Frm_DynamicMaskingAdvanced())
             {
-                frm.cbEnableScaling.Checked = cam.maskManager.ScaleConfig.IsScaledObject;
-                frm.numSmallObjMax.Value = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
-                frm.numSmallObjPercent.Value = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
-                frm.numMidObjMin.Value = cam.maskManager.ScaleConfig.MediumObjectMinPercent;
-                frm.numMidObjMax.Value = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
-                frm.numMidObjPercent.Value = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
+                frm.cbEnableScaling.Checked = this.cam.maskManager.ScaleConfig.IsScaledObject;
+                frm.numSmallObjMax.Value = this.cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
+                frm.numSmallObjPercent.Value = this.cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
+                frm.numMidObjMin.Value = this.cam.maskManager.ScaleConfig.MediumObjectMinPercent;
+                frm.numMidObjMax.Value = this.cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
+                frm.numMidObjPercent.Value = this.cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -89,15 +82,15 @@ namespace AITool
                     Int32.TryParse(frm.numMidObjMax.Text, out int midObjMax);
                     Int32.TryParse(frm.numMidObjPercent.Text, out int midObjPercent);
 
-                    cam.maskManager.ScaleConfig.IsScaledObject = frm.cbEnableScaling.Checked;
+                    this.cam.maskManager.ScaleConfig.IsScaledObject = frm.cbEnableScaling.Checked;
 
-                    cam.maskManager.ScaleConfig.SmallObjectMaxPercent = smallObjMax;
-                    cam.maskManager.ScaleConfig.SmallObjectMatchPercent = smallObjPercent;
-                    cam.maskManager.ScaleConfig.MediumObjectMinPercent = midObjMin;
-                    cam.maskManager.ScaleConfig.MediumObjectMaxPercent = midObjMax;
-                    cam.maskManager.ScaleConfig.MediumObjectMatchPercent = midObjPercent;
+                    this.cam.maskManager.ScaleConfig.SmallObjectMaxPercent = smallObjMax;
+                    this.cam.maskManager.ScaleConfig.SmallObjectMatchPercent = smallObjPercent;
+                    this.cam.maskManager.ScaleConfig.MediumObjectMinPercent = midObjMin;
+                    this.cam.maskManager.ScaleConfig.MediumObjectMaxPercent = midObjMax;
+                    this.cam.maskManager.ScaleConfig.MediumObjectMatchPercent = midObjPercent;
 
-                    AppSettings.Save();
+                    AppSettings.SaveAsync();
                 }
             }
 

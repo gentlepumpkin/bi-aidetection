@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,25 +27,25 @@ namespace NamedPipeWrapper.Threading
 
         public Worker(TaskScheduler callbackThread)
         {
-            _callbackThread = callbackThread;
+            this._callbackThread = callbackThread;
         }
 
         public void DoWork(Action action)
         {
-            new Task(DoWorkImpl, action, CancellationToken.None, TaskCreationOptions.LongRunning).Start();
+            new Task(this.DoWorkImpl, action, CancellationToken.None, TaskCreationOptions.LongRunning).Start();
         }
 
         private void DoWorkImpl(object oAction)
         {
-            var action = (Action) oAction;
+            var action = (Action)oAction;
             try
             {
                 action();
-                Callback(Succeed);
+                this.Callback(this.Succeed);
             }
             catch (Exception e)
             {
-                Callback(() => Fail(e));
+                this.Callback(() => this.Fail(e));
             }
         }
 
@@ -66,7 +63,7 @@ namespace NamedPipeWrapper.Threading
 
         private void Callback(Action action)
         {
-            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, _callbackThread);
+            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, this._callbackThread);
         }
     }
 

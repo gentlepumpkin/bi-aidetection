@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace NamedPipeWrapper.IO
 {
@@ -46,7 +43,7 @@ namespace NamedPipeWrapper.IO
         /// </returns>
         public bool IsConnected
         {
-            get { return BaseStream.IsConnected && _reader.IsConnected; }
+            get { return this.BaseStream.IsConnected && this._reader.IsConnected; }
         }
 
         /// <summary>
@@ -57,7 +54,7 @@ namespace NamedPipeWrapper.IO
         /// </returns>
         public bool CanRead
         {
-            get { return BaseStream.CanRead; }
+            get { return this.BaseStream.CanRead; }
         }
 
         /// <summary>
@@ -68,7 +65,7 @@ namespace NamedPipeWrapper.IO
         /// </returns>
         public bool CanWrite
         {
-            get { return BaseStream.CanWrite; }
+            get { return this.BaseStream.CanWrite; }
         }
 
         private readonly PipeStreamReader<TRead> _reader;
@@ -80,9 +77,9 @@ namespace NamedPipeWrapper.IO
         /// <param name="stream">Stream to read from and write to</param>
         public PipeStreamWrapper(PipeStream stream)
         {
-            BaseStream = stream;
-            _reader = new PipeStreamReader<TRead>(BaseStream);
-            _writer = new PipeStreamWriter<TWrite>(BaseStream);
+            this.BaseStream = stream;
+            this._reader = new PipeStreamReader<TRead>(this.BaseStream);
+            this._writer = new PipeStreamWriter<TWrite>(this.BaseStream);
         }
 
         /// <summary>
@@ -93,7 +90,7 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="SerializationException">An object in the graph of type parameter <typeparamref name="TRead"/> is not marked as serializable.</exception>
         public TRead ReadObject()
         {
-            return _reader.ReadObject();
+            return this._reader.ReadObject();
         }
 
         /// <summary>
@@ -103,7 +100,7 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="SerializationException">An object in the graph of type parameter <typeparamref name="TRead"/> is not marked as serializable.</exception>
         public void WriteObject(TWrite obj)
         {
-            _writer.WriteObject(obj);
+            this._writer.WriteObject(obj);
         }
 
         /// <summary>
@@ -114,7 +111,7 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="IOException">The pipe is broken or another I/O error occurred.</exception>
         public void WaitForPipeDrain()
         {
-            _writer.WaitForPipeDrain();
+            this._writer.WaitForPipeDrain();
         }
 
         /// <summary>
@@ -122,7 +119,7 @@ namespace NamedPipeWrapper.IO
         /// </summary>
         public void Close()
         {
-            BaseStream.Close();
+            this.BaseStream.Close();
         }
     }
 }

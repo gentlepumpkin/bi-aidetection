@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace AITool
 {
@@ -67,16 +64,16 @@ namespace AITool
 
             public Datetime(DateTime value)
             {
-                _value = value.ToBinary();
+                this._value = value.ToBinary();
             }
 
             public void Write(DateTime value)
             {
-                Interlocked.Exchange(ref _value, value.ToBinary());
+                Interlocked.Exchange(ref this._value, value.ToBinary());
             }
             public DateTime Read()
             {
-                long lastvalue = Interlocked.CompareExchange(ref _value, 0, 0);
+                long lastvalue = Interlocked.CompareExchange(ref this._value, 0, 0);
                 return DateTime.FromBinary(lastvalue);
 
             }
@@ -88,24 +85,24 @@ namespace AITool
 
             public Integer(int value)
             {
-                _value = value;
+                this._value = value;
             }
 
             public int ReadUnfenced()
             {
-                return _value;
+                return this._value;
             }
 
             public int ReadAcquireFence()
             {
-                var value = _value;
+                var value = this._value;
                 Thread.MemoryBarrier();
                 return value;
             }
 
             public int ReadFullFence()
             {
-                var value = _value;
+                var value = this._value;
                 Thread.MemoryBarrier();
                 return value;
             }
@@ -113,70 +110,70 @@ namespace AITool
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public int ReadCompilerOnlyFence()
             {
-                return _value;
+                return this._value;
             }
 
             public void WriteReleaseFence(int newValue)
             {
-                _value = newValue;
+                this._value = newValue;
                 Thread.MemoryBarrier();
             }
 
             public void WriteFullFence(int newValue)
             {
-                _value = newValue;
+                this._value = newValue;
                 Thread.MemoryBarrier();
             }
 
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public void WriteCompilerOnlyFence(int newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public void WriteUnfenced(int newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public bool AtomicCompareExchange(int newValue, int comparand)
             {
-                return Interlocked.CompareExchange(ref _value, newValue, comparand) == comparand;
+                return Interlocked.CompareExchange(ref this._value, newValue, comparand) == comparand;
             }
 
             public int AtomicExchange(int newValue)
             {
-                return Interlocked.Exchange(ref _value, newValue);
+                return Interlocked.Exchange(ref this._value, newValue);
             }
 
             public int AtomicAddAndGet(int delta)
             {
-                return Interlocked.Add(ref _value, delta);
+                return Interlocked.Add(ref this._value, delta);
             }
 
             public int AtomicIncrementAndGet()
             {
-                return Interlocked.Increment(ref _value);
+                return Interlocked.Increment(ref this._value);
             }
 
             public int AtomicDecrementAndGet()
             {
-                return Interlocked.Decrement(ref _value);
+                return Interlocked.Decrement(ref this._value);
             }
 
             public int Maximum(int newValue)
             {
-                return ThreadSafe.Maximum(ref _value, newValue);
+                return ThreadSafe.Maximum(ref this._value, newValue);
             }
 
             public int Minimum(int newValue)
             {
-                return ThreadSafe.Minimum(ref _value, newValue);
+                return ThreadSafe.Minimum(ref this._value, newValue);
             }
 
             public override string ToString()
             {
-                var value = ReadFullFence();
+                var value = this.ReadFullFence();
                 return value.ToString();
             }
         }
@@ -187,17 +184,17 @@ namespace AITool
 
             public Long(long value)
             {
-                _value = value;
+                this._value = value;
             }
 
             public long ReadUnfenced()
             {
-                return _value;
+                return this._value;
             }
 
             public long ReadAcquireFence()
             {
-                var value = _value;
+                var value = this._value;
                 Thread.MemoryBarrier();
                 return value;
             }
@@ -205,76 +202,76 @@ namespace AITool
             public long ReadFullFence()
             {
                 Thread.MemoryBarrier();
-                return _value;
+                return this._value;
             }
 
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public long ReadCompilerOnlyFence()
             {
-                return _value;
+                return this._value;
             }
 
             public void WriteReleaseFence(long newValue)
             {
                 Thread.MemoryBarrier();
-                _value = newValue;
+                this._value = newValue;
             }
 
             public void WriteFullFence(long newValue)
             {
                 Thread.MemoryBarrier();
-                _value = newValue;
+                this._value = newValue;
             }
 
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public void WriteCompilerOnlyFence(long newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public void WriteUnfenced(long newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public bool AtomicCompareExchange(long newValue, long comparand)
             {
-                return Interlocked.CompareExchange(ref _value, newValue, comparand) == comparand;
+                return Interlocked.CompareExchange(ref this._value, newValue, comparand) == comparand;
             }
 
             public long AtomicExchange(long newValue)
             {
-                return Interlocked.Exchange(ref _value, newValue);
+                return Interlocked.Exchange(ref this._value, newValue);
             }
 
             public long AtomicAddAndGet(long delta)
             {
-                return Interlocked.Add(ref _value, delta);
+                return Interlocked.Add(ref this._value, delta);
             }
 
             public long AtomicIncrementAndGet()
             {
-                return Interlocked.Increment(ref _value);
+                return Interlocked.Increment(ref this._value);
             }
 
             public long AtomicDecrementAndGet()
             {
-                return Interlocked.Decrement(ref _value);
+                return Interlocked.Decrement(ref this._value);
             }
 
             public long Maximum(long newValue)
             {
-                return ThreadSafe.Maximum(ref _value, newValue);
+                return ThreadSafe.Maximum(ref this._value, newValue);
             }
 
             public long Minimum(long newValue)
             {
-                return ThreadSafe.Minimum(ref _value, newValue);
+                return ThreadSafe.Minimum(ref this._value, newValue);
             }
 
             public override string ToString()
             {
-                var value = ReadFullFence();
+                var value = this.ReadFullFence();
                 return value.ToString();
             }
         }
@@ -287,24 +284,24 @@ namespace AITool
 
             public Boolean(bool value)
             {
-                _value = value ? True : False;
+                this._value = value ? True : False;
             }
 
             public bool ReadUnfenced()
             {
-                return ToBool(_value);
+                return ToBool(this._value);
             }
 
             public bool ReadAcquireFence()
             {
-                var value = ToBool(_value);
+                var value = ToBool(this._value);
                 Thread.MemoryBarrier();
                 return value;
             }
 
             public bool ReadFullFence()
             {
-                var value = ToBool(_value);
+                var value = ToBool(this._value);
                 Thread.MemoryBarrier();
                 return value;
             }
@@ -312,32 +309,32 @@ namespace AITool
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public bool ReadCompilerOnlyFence()
             {
-                return ToBool(_value);
+                return ToBool(this._value);
             }
 
             public void WriteReleaseFence(bool newValue)
             {
                 var newValueInt = ToInt(newValue);
                 Thread.MemoryBarrier();
-                _value = newValueInt;
+                this._value = newValueInt;
             }
 
             public void WriteFullFence(bool newValue)
             {
                 var newValueInt = ToInt(newValue);
                 Thread.MemoryBarrier();
-                _value = newValueInt;
+                this._value = newValueInt;
             }
 
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public void WriteCompilerOnlyFence(bool newValue)
             {
-                _value = ToInt(newValue);
+                this._value = ToInt(newValue);
             }
 
             public void WriteUnfenced(bool newValue)
             {
-                _value = ToInt(newValue);
+                this._value = ToInt(newValue);
             }
 
             public bool AtomicCompareExchange(bool newValue, bool comparand)
@@ -345,19 +342,19 @@ namespace AITool
                 var newValueInt = ToInt(newValue);
                 var comparandInt = ToInt(comparand);
 
-                return Interlocked.CompareExchange(ref _value, newValueInt, comparandInt) == comparandInt;
+                return Interlocked.CompareExchange(ref this._value, newValueInt, comparandInt) == comparandInt;
             }
 
             public bool AtomicExchange(bool newValue)
             {
                 var newValueInt = ToInt(newValue);
-                var originalValue = Interlocked.Exchange(ref _value, newValueInt);
+                var originalValue = Interlocked.Exchange(ref this._value, newValueInt);
                 return ToBool(originalValue);
             }
 
             public override string ToString()
             {
-                var value = ReadFullFence();
+                var value = this.ReadFullFence();
                 return value.ToString();
             }
 
@@ -381,35 +378,35 @@ namespace AITool
                 var newValueInt = ToInt(newValue);
                 var comparandInt = ToInt(comparand);
 
-                return Interlocked.CompareExchange(ref _value, newValueInt, comparandInt) == comparandInt;
+                return Interlocked.CompareExchange(ref this._value, newValueInt, comparandInt) == comparandInt;
             }
         }
 
         public class AtomicReference<T>
-            where T : class 
+            where T : class
         {
             private T _value;
 
             public AtomicReference(T value)
             {
-                _value = value;
+                this._value = value;
             }
 
             public T ReadUnfenced()
             {
-                return _value;
+                return this._value;
             }
 
             public T ReadAcquireFence()
             {
-                var value = _value;
+                var value = this._value;
                 Thread.MemoryBarrier();
                 return value;
             }
 
             public T ReadFullFence()
             {
-                var value = _value;
+                var value = this._value;
                 Thread.MemoryBarrier();
                 return value;
             }
@@ -417,46 +414,46 @@ namespace AITool
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public T ReadCompilerOnlyFence()
             {
-                return _value;
+                return this._value;
             }
 
             public void WriteReleaseFence(T newValue)
             {
-                _value = newValue;
+                this._value = newValue;
                 Thread.MemoryBarrier();
             }
 
             public void WriteFullFence(T newValue)
             {
-                _value = newValue;
+                this._value = newValue;
                 Thread.MemoryBarrier();
             }
 
             [MethodImpl(MethodImplOptions.NoOptimization)]
             public void WriteCompilerOnlyFence(T newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public void WriteUnfenced(T newValue)
             {
-                _value = newValue;
+                this._value = newValue;
             }
 
             public bool AtomicCompareExchange(T newValue, T comparand)
             {
-                return Interlocked.CompareExchange(ref _value, newValue, comparand) == comparand;
+                return Interlocked.CompareExchange(ref this._value, newValue, comparand) == comparand;
             }
 
             public T AtomicExchange(T newValue)
             {
-                return Interlocked.Exchange(ref _value, newValue);
+                return Interlocked.Exchange(ref this._value, newValue);
             }
 
             public bool CompareAndSet(T comparand, T newValue)
             {
-                return Interlocked.CompareExchange(ref _value, newValue, comparand) == comparand;
-            } 
+                return Interlocked.CompareExchange(ref this._value, newValue, comparand) == comparand;
+            }
         }
     }
 }

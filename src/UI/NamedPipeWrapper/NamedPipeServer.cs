@@ -75,8 +75,8 @@ namespace NamedPipeWrapper
         /// <param name="pipeName">Name of the pipe to listen on</param>
         public Server(string pipeName, PipeSecurity pipeSecurity)
         {
-            _pipeName = pipeName;
-            _pipeSecurity = pipeSecurity;
+            this._pipeName = pipeName;
+            this._pipeSecurity = pipeSecurity;
         }
 
         /// <summary>
@@ -85,10 +85,10 @@ namespace NamedPipeWrapper
         /// </summary>
         public void Start()
         {
-            _shouldKeepRunning = true;
+            this._shouldKeepRunning = true;
             var worker = new Worker();
-            worker.Error += OnError;
-            worker.DoWork(ListenSync);
+            worker.Error += this.OnError;
+            worker.DoWork(this.ListenSync);
         }
 
         /// <summary>
@@ -98,9 +98,9 @@ namespace NamedPipeWrapper
         /// <param name="message"></param>
         public void PushMessage(TWrite message)
         {
-            lock (_connections)
+            lock (this._connections)
             {
-                foreach (var client in _connections)
+                foreach (var client in this._connections)
                 {
                     client.PushMessage(message);
                 }
@@ -114,9 +114,9 @@ namespace NamedPipeWrapper
         /// <param name="clientName"></param>
         public void PushMessage(TWrite message, string clientName)
         {
-            lock (_connections)
+            lock (this._connections)
             {
-                foreach (var client in _connections)
+                foreach (var client in this._connections)
                 {
                     if (client.Name == clientName)
                         client.PushMessage(message);
@@ -129,11 +129,11 @@ namespace NamedPipeWrapper
         /// </summary>
         public void Stop()
         {
-            _shouldKeepRunning = false;
+            this._shouldKeepRunning = false;
 
-            lock (_connections)
+            lock (this._connections)
             {
-                foreach (var client in _connections.ToArray())
+                foreach (var client in this._connections.ToArray())
                 {
                     client.Close();
                 }
@@ -142,7 +142,7 @@ namespace NamedPipeWrapper
             // If background thread is still listening for a client to connect,
             // initiate a dummy connection that will allow the thread to exit.
             //dummy connection will use the local server name.
-            var dummyClient = new NamedPipeClient<TRead, TWrite>(_pipeName, ".");
+            var dummyClient = new NamedPipeClient<TRead, TWrite>(this._pipeName, ".");
             dummyClient.Start();
             dummyClient.WaitForConnection(TimeSpan.FromSeconds(2));
             dummyClient.Stop();
@@ -153,12 +153,12 @@ namespace NamedPipeWrapper
 
         private void ListenSync()
         {
-            _isRunning = true;
-            while (_shouldKeepRunning)
+            this._isRunning = true;
+            while (this._shouldKeepRunning)
             {
-                WaitForConnection(_pipeName, _pipeSecurity);
+                this.WaitForConnection(this._pipeName, this._pipeSecurity);
             }
-            _isRunning = false;
+            this._isRunning = false;
         }
 
         private void WaitForConnection(string pipeName, PipeSecurity pipeSecurity)
@@ -167,7 +167,7 @@ namespace NamedPipeWrapper
             NamedPipeServerStream dataPipe = null;
             NamedPipeConnection<TRead, TWrite> connection = null;
 
-            var connectionPipeName = GetNextConnectionPipeName(pipeName);
+            var connectionPipeName = this.GetNextConnectionPipeName(pipeName);
 
             try
             {
@@ -184,17 +184,17 @@ namespace NamedPipeWrapper
 
                 // Add the client's connection to the list of connections
                 connection = ConnectionFactory.CreateConnection<TRead, TWrite>(dataPipe);
-                connection.ReceiveMessage += ClientOnReceiveMessage;
-                connection.Disconnected += ClientOnDisconnected;
-                connection.Error += ConnectionOnError;
+                connection.ReceiveMessage += this.ClientOnReceiveMessage;
+                connection.Disconnected += this.ClientOnDisconnected;
+                connection.Error += this.ConnectionOnError;
                 connection.Open();
 
-                lock (_connections)
+                lock (this._connections)
                 {
-                    _connections.Add(connection);
+                    this._connections.Add(connection);
                 }
 
-                ClientOnConnected(connection);
+                this.ClientOnConnected(connection);
             }
             // Catch the IOException that is raised if the pipe is broken or disconnected.
             catch (Exception e)
@@ -204,7 +204,7 @@ namespace NamedPipeWrapper
                 Cleanup(handshakePipe);
                 Cleanup(dataPipe);
 
-                ClientOnDisconnected(connection);
+                this.ClientOnDisconnected(connection);
             }
         }
 
@@ -225,9 +225,9 @@ namespace NamedPipeWrapper
             if (connection == null)
                 return;
 
-            lock (_connections)
+            lock (this._connections)
             {
-                _connections.Remove(connection);
+                this._connections.Remove(connection);
             }
 
             if (ClientDisconnected != null)
@@ -239,7 +239,7 @@ namespace NamedPipeWrapper
         /// </summary>
         private void ConnectionOnError(NamedPipeConnection<TRead, TWrite> connection, Exception exception)
         {
-            OnError(exception);
+            this.OnError(exception);
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace NamedPipeWrapper
 
         private string GetNextConnectionPipeName(string pipeName)
         {
-            return string.Format("{0}_{1}", pipeName, ++_nextPipeId);
+            return string.Format("{0}_{1}", pipeName, ++this._nextPipeId);
         }
 
         private static void Cleanup(NamedPipeServerStream pipe)

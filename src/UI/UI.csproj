@@ -76,6 +76,9 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>AITool.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="M2Mqtt.Net, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\M2Mqtt.4.3.0.0\lib\net45\M2Mqtt.Net.dll</HintPath>
@@ -262,6 +265,12 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="FrmSplash.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmSplash.Designer.cs">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+    </Compile>
     <Compile Include="Trace.cs" />
     <Compile Include="ClsTriggerActionQueue.cs" />
     <Compile Include="ClsLogManager.cs" />
@@ -383,6 +392,9 @@
     <Compile Include="SQLite\SQLiteAsync.cs" />
     <Compile Include="ThreadSafe.cs" />
     <Compile Include="util.cs" />
+    <EmbeddedResource Include="FrmSplash.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Frm_CustomMasking.resx">
       <DependentUpon>Frm_CustomMasking.cs</DependentUpon>
     </EmbeddedResource>

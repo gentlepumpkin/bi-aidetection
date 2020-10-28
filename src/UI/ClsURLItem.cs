@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -27,7 +22,7 @@ namespace AITool
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public MovingCalcs dscalc { get; set; } = new MovingCalcs(250);   //store deepstack time calc in the url
         public long DeepStackTimeMS { get; set; } = 0;
-        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0); 
+        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
 
         public string ResultMessage { get; set; } = "";
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Other;

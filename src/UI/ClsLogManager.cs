@@ -1,12 +1,9 @@
 ﻿using NLog;
-using NLog.Common;
-using NLog.Layouts;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -30,7 +27,7 @@ namespace AITool
         public ClsLogItm LastLogItm = new ClsLogItm();
         public int MaxGUILogItems { get; set; } = 10000;
         public long LastLoadTimeMS { get; set; } = 0;
-
+        //public List<string> LastLoadMessages = new List<string>();
         private ThreadSafe.Integer _LastIDX { get; set; } = new ThreadSafe.Integer(0);
         private bool _Store;
         private ThreadSafe.Integer _CurDepth = new ThreadSafe.Integer(0);
@@ -49,11 +46,11 @@ namespace AITool
         AsyncTargetWrapper NLogAsyncWrapper = null;
 
 
-        public ClsLogManager(bool Store, string DefaultSource, LogLevel MinLevel, string Filename, int MaxSize, int MaxAgeDays, int MaxGUILogItems)
+        public ClsLogManager(bool Store, string DefaultSource)
         {
             this._Store = Store;  //we wont store log entries when running as a service, its only for the GUI
             this._LastSource = DefaultSource;
-            this.UpdateNLog(MinLevel, Filename, MaxSize, MaxAgeDays, MaxGUILogItems);
+            //this.UpdateNLog(MinLevel, Filename, MaxSize, MaxAgeDays, MaxGUILogItems);
         }
 
         public string GetCurrentLogFileName()
@@ -99,7 +96,7 @@ namespace AITool
             return fileName;
         }
 
-        public async void UpdateNLog(LogLevel MinLevel, string Filename, long MaxSize, int MaxAgeDays, int MaxGUILogItems)
+        public async Task UpdateNLog(LogLevel MinLevel, string Filename, long MaxSize, int MaxAgeDays, int MaxGUILogItems)
         {
 
             try
@@ -127,7 +124,7 @@ namespace AITool
                     //GetCurrentClassLogger()
                     LogManager.ReconfigExistingLoggers();
 
-                    this._Filename = GetCurrentLogFileName();
+                    this._Filename = this.GetCurrentLogFileName();
 
                     return;
                 }
@@ -173,11 +170,14 @@ namespace AITool
 
                 this.NLogFileWriter = NLog.LogManager.GetCurrentClassLogger();
 
+                //this.NLogAsyncWrapper.EventQueueGrow
+                //this.NLogAsyncWrapper.LogEventDropped
+
                 if (this.Values.Count == 0)
-                    GetCurrentLogFileName();
+                    this.GetCurrentLogFileName();
 
                 //load the current log file into memory
-                await this.LoadLogFile(this._Filename, true, false);
+                await this.LoadLogFileAsync(this._Filename, true, false);
 
             }
             catch (Exception ex)
@@ -221,7 +221,7 @@ namespace AITool
                 this.RecentlyAdded = new ConcurrentQueue<ClsLogItm>();
                 this.RecentlyDeleted = new ConcurrentQueue<ClsLogItm>();
                 this.ErrorCount.WriteFullFence(0);
-                this._Filename = GetCurrentLogFileName();
+                this._Filename = this.GetCurrentLogFileName();
 
             }
         }
@@ -400,7 +400,7 @@ namespace AITool
 
                 this.LastLogItm.Depth = this._CurDepth.ReadFullFence() + Depth;
                 this.LastLogItm.Level = Level;
-                this.LastLogItm.Idx = _LastIDX.ReadFullFence();
+                this.LastLogItm.Idx = this._LastIDX.ReadFullFence();
 
 
                 if (this._Store)
@@ -410,10 +410,10 @@ namespace AITool
                         this.Values.Add(this.LastLogItm);
                         this.RecentlyAdded.Enqueue(this.LastLogItm);
                         //keep the log list size down
-                        if (Values.Count > this.MaxGUILogItems)
+                        if (this.Values.Count > this.MaxGUILogItems)
                         {
-                            this.RecentlyDeleted.Enqueue(Values[0]);
-                            Values.RemoveAt(0);
+                            this.RecentlyDeleted.Enqueue(this.Values[0]);
+                            this.Values.RemoveAt(0);
                         }
                     }
                 }
@@ -444,9 +444,16 @@ namespace AITool
                 this.Values = this.Values.OrderBy(c => c.Date).ThenBy(c => c.Idx).ToList();
         }
 
-        public async Task<List<ClsLogItm>> LoadLogFile(string Filename, bool Import, bool LimitEntries)
+        public async Task<List<ClsLogItm>> LoadLogFileAsync(string Filename, bool Import, bool LimitEntries)
+        {
+            return await Task.Run(() => this.LoadLogFile(Filename, Import, LimitEntries));
+        }
+
+        private List<ClsLogItm> LoadLogFile(string Filename, bool Import, bool LimitEntries)
         {
             List<ClsLogItm> ret = new List<ClsLogItm>();
+
+            //this.LastLoadMessages.Clear();
 
             if (Import)
                 this.Enabled = false;  //disable while we import
@@ -459,13 +466,12 @@ namespace AITool
             if (File.Exists(Filename))
             {
 
-                Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1);
-
-                //run in another thread so gui doesnt freeze
-                await Task.Run(() =>
+                try
                 {
-                    bool success = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
-                    if (success)
+                    Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1, 1);
+
+                    Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
+                    if (result.Success)
                     {
                         //if its a zip file, extract that puppy...
                         string NewFilename = "";
@@ -529,10 +535,15 @@ namespace AITool
                                             else
                                             {
                                                 Invalid++;
-                                                if (Invalid > 10)
+                                                if (Invalid > 50)
                                                 {
+                                                    this.Log($"Error: Too many invalid lines ({Invalid}) stopping load.");
                                                     ret.Clear();
                                                     break;
+                                                }
+                                                else
+                                                {
+                                                    this.Log($"Debug: {Invalid} line(s) in log file '{line}'");
                                                 }
                                             }
                                         }
@@ -552,10 +563,10 @@ namespace AITool
                                                         this.Values.Add(this.LastLogItm);
                                                         this.RecentlyAdded.Enqueue(this.LastLogItm);
                                                         //keep the log list size down
-                                                        if (LimitEntries && Values.Count > this.MaxGUILogItems)
+                                                        if (LimitEntries && this.Values.Count > this.MaxGUILogItems)
                                                         {
-                                                            this.RecentlyDeleted.Enqueue(Values[0]);
-                                                            Values.RemoveAt(0);
+                                                            this.RecentlyDeleted.Enqueue(this.Values[0]);
+                                                            this.Values.RemoveAt(0);
                                                         }
                                                     }
 
@@ -563,12 +574,18 @@ namespace AITool
                                                 else
                                                 {
                                                     Invalid++;
-                                                    if (Invalid > 10)
+                                                    if (Invalid > 50)
                                                     {
+                                                        this.Log($"Error: Too many invalid lines ({Invalid}) stopping load.");
                                                         ret.Clear();
                                                         this._LastIDX.WriteFullFence(0);
                                                         break;
                                                     }
+                                                    else
+                                                    {
+                                                        this.Log($"Debug: {Invalid} line(s) in log file '{line}'");
+                                                    }
+
                                                 }
                                             }
                                         }
@@ -582,25 +599,40 @@ namespace AITool
                                 //rename it to keep it out of our way next time
                                 try
                                 {
+                                    this.Log($"Debug: File was in the old log format, renaming to OLDLOGFORMAT. {NewFilename}");
                                     File.Move(NewFilename, NewFilename + ".OLDLOGFORMAT");
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    this.Log($"Error: While renaming log to OLDLOGFORMAT, got: {ex.Message}");
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        this.Log($"Error: Gave up waiting for exclusive file access after {result.TimeMS}ms with {result.ErrRetryCnt} retries for {Filename}");
+                    }
+
+                    if (Directory.Exists(ExtractZipPath))
+                        Directory.Delete(ExtractZipPath, true);
 
 
-                });
+
+                }
+                catch (Exception ex)
+                {
+
+                    this.Log($"Error: {Global.ExMsg(ex)}");
+                }
+
 
             }
 
             if (Import)
                 this.Enabled = true;  //enable after we import
 
-            if (Directory.Exists(ExtractZipPath))
-                Directory.Delete(ExtractZipPath, true);
-
-            Global.UpdateProgressBar($"", 0, 1);
+            Global.UpdateProgressBar($"", 0, 0, 0);
 
             this.LastLoadTimeMS = sw.ElapsedMilliseconds;
 
@@ -610,7 +642,7 @@ namespace AITool
         public void Dispose()
         {
             NLog.LogManager.Flush();
-            ((IDisposable)NLogAsyncWrapper).Dispose();
+            ((IDisposable)this.NLogAsyncWrapper).Dispose();
         }
     }
 

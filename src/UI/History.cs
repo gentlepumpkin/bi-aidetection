@@ -45,7 +45,7 @@ namespace AITool
 
 
             string[] sp = CSVLine.Split('|');
-            
+
             this.Camera = sp[2].Trim();
             this.Detections = sp[3];
             this.Filename = sp[0].Trim().ToLower();
@@ -54,7 +54,7 @@ namespace AITool
             bool suc = false;
             //20.09.20, 11:51:24
 
-            if (bool.TryParse(sp[5],out suc))
+            if (bool.TryParse(sp[5], out suc))
             {
                 this.Success = suc;
             }
@@ -117,7 +117,7 @@ namespace AITool
             this.Success = Success; //this.Detections.Contains("%") && !this.Detections.Contains(':');
 
             this.GetObjects();
-            
+
             return this;
         }
         private void GetObjects()
@@ -135,7 +135,7 @@ namespace AITool
             //toilet,   tv,   laptop,   mouse,   remote,   keyboard,   cell phone,   microwave,
             //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
             //hair dryer, toothbrush.
-            
+
 
             this.IsPerson = tmp.Contains("person");
 

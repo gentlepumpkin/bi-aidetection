@@ -5,9 +5,6 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using static AITool.AITOOL;
 
@@ -31,17 +28,17 @@ namespace AITool
             {
                 string lastfolder = "";
 
-                if (contextMenuPosObj != null && !string.IsNullOrEmpty(contextMenuPosObj.ImagePath))
+                if (this.contextMenuPosObj != null && !string.IsNullOrEmpty(this.contextMenuPosObj.ImagePath))
                 {
-                    lastfolder = Path.GetDirectoryName(contextMenuPosObj.ImagePath);
-                    if (File.Exists(contextMenuPosObj.ImagePath))
+                    lastfolder = Path.GetDirectoryName(this.contextMenuPosObj.ImagePath);
+                    if (File.Exists(this.contextMenuPosObj.ImagePath))
                     {
-                        Log($" (Found image from ACTUAL detected object: {contextMenuPosObj.ImagePath})");
-                        return contextMenuPosObj.ImagePath;
+                        Log($" (Found image from ACTUAL detected object: {this.contextMenuPosObj.ImagePath})");
+                        return this.contextMenuPosObj.ImagePath;
                     }
                     else
                     {
-                        Log("debug: Mask image file not found at location: " + contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
+                        Log("debug: Mask image file not found at location: " + this.contextMenuPosObj.ImagePath + ". Defaulting to last processed image");
                     }
                 }
                 else
@@ -51,15 +48,15 @@ namespace AITool
                 }
 
                 //See if we have an image stored that had ANY detections and use it
-                if (cam != null)
+                if (this.cam != null)
                 {
-                    if (!string.IsNullOrEmpty(cam.last_image_file_with_detections))
+                    if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections))
                     {
-                        lastfolder = Path.GetDirectoryName(cam.last_image_file_with_detections);
-                        if (File.Exists(cam.last_image_file_with_detections))
+                        lastfolder = Path.GetDirectoryName(this.cam.last_image_file_with_detections);
+                        if (File.Exists(this.cam.last_image_file_with_detections))
                         {
-                            Log($" (Found image from -last- detected object: {cam.last_image_file_with_detections})");
-                            return cam.last_image_file_with_detections;
+                            Log($" (Found image from -last- detected object: {this.cam.last_image_file_with_detections})");
+                            return this.cam.last_image_file_with_detections;
                         }
                         else
                         {
@@ -71,18 +68,18 @@ namespace AITool
                     else
                     {
                         //extra debugging
-                        Log($" >No CAM.last_image_file_with_detections for '{cam.name}'");
+                        Log($" >No CAM.last_image_file_with_detections for '{this.cam.name}'");
                     }
 
 
                     //Just take the last image processed by the camera even if no detections
-                    if (!string.IsNullOrEmpty(cam.last_image_file))
+                    if (!string.IsNullOrEmpty(this.cam.last_image_file))
                     {
-                        lastfolder = Path.GetDirectoryName(cam.last_image_file);
-                        if (File.Exists(cam.last_image_file))
+                        lastfolder = Path.GetDirectoryName(this.cam.last_image_file);
+                        if (File.Exists(this.cam.last_image_file))
                         {
-                            Log($" (Found image from last processed image (no detections): {cam.last_image_file})");
-                            return cam.last_image_file;
+                            Log($" (Found image from last processed image (no detections): {this.cam.last_image_file})");
+                            return this.cam.last_image_file;
                         }
                         else
                         {
@@ -93,12 +90,12 @@ namespace AITool
                     else
                     {
                         //extra debugging
-                        Log($" >No CAM.last_image_file for '{cam.name}'");
+                        Log($" >No CAM.last_image_file for '{this.cam.name}'");
                     }
 
                     if (string.IsNullOrEmpty(lastfolder))
                     {
-                        lastfolder = cam.input_path;
+                        lastfolder = this.cam.input_path;
                     }
                 }
                 else
@@ -113,18 +110,18 @@ namespace AITool
                     //I expect this may take a few seconds if folder is huge
                     DirectoryInfo dirinfo = new DirectoryInfo(lastfolder);
                     FileInfo myFile;
-                    if (cam != null && !string.IsNullOrEmpty(cam.prefix))
+                    if (this.cam != null && !string.IsNullOrEmpty(this.cam.prefix))
                     {
-                        myFile = dirinfo.GetFiles($"{cam.prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
+                        myFile = dirinfo.GetFiles($"{this.cam.prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
                         if (myFile != null)
                         {
-                            Log($" (Found most recent image in camera folder for prefix '{cam.prefix}' (no detections): {myFile.FullName})");
+                            Log($" (Found most recent image in camera folder for prefix '{this.cam.prefix}' (no detections): {myFile.FullName})");
                             return myFile.FullName;
                         }
                         else
                         {
                             //extra debugging
-                            Log($" >No files found starting with '{cam.prefix}' in {lastfolder}'");
+                            Log($" >No files found starting with '{this.cam.prefix}' in {lastfolder}'");
                         }
 
                     }
@@ -164,26 +161,26 @@ namespace AITool
 
         public Frm_DynamicMaskDetails()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void Frm_DynamicMaskDetails_Load(object sender, EventArgs e)
         {
-            loading = true;
+            this.loading = true;
 
-            Global_GUI.ConfigureFOLV(FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
-            Global_GUI.ConfigureFOLV(FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(this.FOLV_MaskHistory, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
+            Global_GUI.ConfigureFOLV(this.FOLV_Masks, typeof(ObjectPosition), null, null, "createDate", SortOrder.Descending);
 
             Global_GUI.RestoreWindowState(this);
 
-            comboBox_filter_camera.Items.Clear();
-            comboBox_filter_camera.Items.Add("All Cameras");
+            this.comboBox_filter_camera.Items.Clear();
+            this.comboBox_filter_camera.Items.Add("All Cameras");
 
             int i = 1;
             int curidx = 1;
             foreach (Camera curcam in AppSettings.Settings.CameraList)
             {
-                comboBox_filter_camera.Items.Add($"   {curcam.name}");
+                this.comboBox_filter_camera.Items.Add($"   {curcam.name}");
                 if (this.cam.name.Trim().ToLower() == curcam.name.Trim().ToLower())
                 {
                     curidx = i;
@@ -192,12 +189,12 @@ namespace AITool
                 i++;
             }
 
-            comboBox_filter_camera.SelectedIndex = curidx;
+            this.comboBox_filter_camera.SelectedIndex = curidx;
 
 
-            Refresh();
+            this.Refresh();
 
-            loading = false;
+            this.loading = false;
 
 
         }
@@ -206,15 +203,15 @@ namespace AITool
         {
 
             //in case of disabled cameras:
-            if (comboBox_filter_camera.Text != "All Cameras" && comboBox_filter_camera.Text.Trim().ToLower().Trim() != this.cam.name.Trim().ToLower())
+            if (this.comboBox_filter_camera.Text != "All Cameras" && this.comboBox_filter_camera.Text.Trim().ToLower().Trim() != this.cam.name.Trim().ToLower())
             {
-                this.cam = AITOOL.GetCamera(comboBox_filter_camera.Text);
+                this.cam = AITOOL.GetCamera(this.comboBox_filter_camera.Text);
             }
 
             List<ObjectPosition> hist = new List<ObjectPosition>();
             List<ObjectPosition> masked = new List<ObjectPosition>();
 
-            if (comboBox_filter_camera.Text == "All Cameras")
+            if (this.comboBox_filter_camera.Text == "All Cameras")
             {
                 foreach (Camera curcam in AppSettings.Settings.CameraList)
                 {
@@ -224,15 +221,15 @@ namespace AITool
             }
             else
             {
-                hist = cam.maskManager.LastPositionsHistory;
-                masked = cam.maskManager.MaskedPositions;
+                hist = this.cam.maskManager.LastPositionsHistory;
+                masked = this.cam.maskManager.MaskedPositions;
             }
 
-            Global_GUI.UpdateFOLV(FOLV_MaskHistory, hist, FullRefresh: true);
-            Global_GUI.UpdateFOLV(FOLV_Masks, masked, FullRefresh: true);
+            Global_GUI.UpdateFOLV(this.FOLV_MaskHistory, hist, FullRefresh: true);
+            Global_GUI.UpdateFOLV(this.FOLV_Masks, masked, FullRefresh: true);
             this.CurObjPosLst.Clear();
-            ShowMaskImage();
-            ShowImageMask(null);
+            this.ShowMaskImage();
+            this.ShowImageMask(null);
         }
 
 
@@ -240,46 +237,46 @@ namespace AITool
         {
             try
             {
-                string imagePath = GetBestImage();
+                string imagePath = this.GetBestImage();
 
-                if (!string.IsNullOrEmpty(imagePath) && (pictureBox1.Tag == null || !string.Equals(pictureBox1.Tag.ToString(), imagePath, StringComparison.OrdinalIgnoreCase)))
+                if (!string.IsNullOrEmpty(imagePath) && (this.pictureBox1.Tag == null || !string.Equals(this.pictureBox1.Tag.ToString(), imagePath, StringComparison.OrdinalIgnoreCase)))
                 {
                     using (var img = new Bitmap(imagePath))
                     {
-                        pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                        this.pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
                     }
 
-                    pictureBox1.Tag = imagePath;
-                    if (contextMenuPosObj != null && contextMenuPosObj.ImagePath != null)
+                    this.pictureBox1.Tag = imagePath;
+                    if (this.contextMenuPosObj != null && this.contextMenuPosObj.ImagePath != null)
                     {
-                        if (!string.Equals(contextMenuPosObj.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(this.contextMenuPosObj.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
                         {
-                            lbl_lastfile.ForeColor = Color.DarkMagenta;
-                            lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
+                            this.lbl_lastfile.ForeColor = Color.DarkMagenta;
+                            this.lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
                         }
                         else
                         {
-                            lbl_lastfile.ForeColor = SystemColors.ControlText;
-                            lbl_lastfile.Text = "Mask image: " + imagePath;
+                            this.lbl_lastfile.ForeColor = SystemColors.ControlText;
+                            this.lbl_lastfile.Text = "Mask image: " + imagePath;
                         }
 
                     }
                     else
                     {
-                        lbl_lastfile.ForeColor = Color.DarkMagenta;
-                        lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
+                        this.lbl_lastfile.ForeColor = Color.DarkMagenta;
+                        this.lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
                     }
 
                 }
                 else if (string.IsNullOrEmpty(imagePath))
                 {
-                    pictureBox1.BackgroundImage = null;
-                    lbl_lastfile.Text = "No image to display";
-                    pictureBox1.Tag = "";
+                    this.pictureBox1.BackgroundImage = null;
+                    this.lbl_lastfile.Text = "No image to display";
+                    this.pictureBox1.Tag = "";
 
                 }
 
-                pictureBox1.Refresh();
+                this.pictureBox1.Refresh();
 
             }
             catch (Exception ex)
@@ -292,7 +289,7 @@ namespace AITool
         {
             try
             {
-                if (pictureBox1.Tag == null || !string.Equals(pictureBox1.Tag.ToString(), this.cam.last_image_file, StringComparison.OrdinalIgnoreCase))
+                if (this.pictureBox1.Tag == null || !string.Equals(this.pictureBox1.Tag.ToString(), this.cam.last_image_file, StringComparison.OrdinalIgnoreCase))
                 {
                     if ((!string.IsNullOrWhiteSpace(this.cam.last_image_file)))
                     {
@@ -300,26 +297,26 @@ namespace AITool
                         {
                             using (var img = new Bitmap(this.cam.last_image_file))
                             {
-                                pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                                this.pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
                             }
 
-                            lbl_lastfile.Text = "Last image: " + this.cam.last_image_file;
-                            pictureBox1.Tag = this.cam.last_image_file;
+                            this.lbl_lastfile.Text = "Last image: " + this.cam.last_image_file;
+                            this.pictureBox1.Tag = this.cam.last_image_file;
                         }
                         else
                         {
-                            lbl_lastfile.Text = "Last image doesn't exist: " + this.cam.last_image_file;
-                            pictureBox1.BackgroundImage = null;
+                            this.lbl_lastfile.Text = "Last image doesn't exist: " + this.cam.last_image_file;
+                            this.pictureBox1.BackgroundImage = null;
                         }
                     }
                     else
                     {
-                        lbl_lastfile.Text = "No image to show for this camera yet (Must have processed an image within the current session)";
-                        pictureBox1.BackgroundImage = null;
+                        this.lbl_lastfile.Text = "No image to show for this camera yet (Must have processed an image within the current session)";
+                        this.pictureBox1.BackgroundImage = null;
                     }
                 }
 
-                pictureBox1.Refresh();
+                this.pictureBox1.Refresh();
 
             }
             catch (Exception ex)
@@ -332,15 +329,15 @@ namespace AITool
         {
             try
             {
-                if (CurObjPosLst.Count > 0 && e != null && pictureBox1 != null && pictureBox1.BackgroundImage != null)
+                if (this.CurObjPosLst.Count > 0 && e != null && this.pictureBox1 != null && this.pictureBox1.BackgroundImage != null)
                 {
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
-                    float imgWidth = pictureBox1.BackgroundImage.Width;
-                    float imgHeight = pictureBox1.BackgroundImage.Height;
-                    float boxWidth = pictureBox1.Width;
-                    float boxHeight = pictureBox1.Height;
+                    float imgWidth = this.pictureBox1.BackgroundImage.Width;
+                    float imgHeight = this.pictureBox1.BackgroundImage.Height;
+                    float boxWidth = this.pictureBox1.Width;
+                    float boxHeight = this.pictureBox1.Height;
 
                     //these variables store the padding between image border and picturebox border
                     int absX = 0;
@@ -361,9 +358,9 @@ namespace AITool
                         absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
-                    bool showkey = CurObjPosLst.Count() > 1;
+                    bool showkey = this.CurObjPosLst.Count() > 1;
 
-                    foreach (ObjectPosition op in CurObjPosLst)
+                    foreach (ObjectPosition op in this.CurObjPosLst)
                     {
                         if (op != null)
                         {
@@ -414,15 +411,8 @@ namespace AITool
                 }
                 else
                 {
-                    //debug a bit
-                    if (CurObjPosLst.Count == 0)
-                    {
-                        //Log("Empty object list");
-                    }
-                    else if (e == null)
-                    {
-                        //Log("Not painting");
-                    }
+                    this.pictureBox1 = null;
+                    this.pictureBox1.BackgroundImage = null;
                 }
             }
             catch (Exception ex)
@@ -435,43 +425,43 @@ namespace AITool
         {
             this.CurObjPosLst.Clear();
 
-            if (FOLV_MaskHistory.SelectedObjects != null && FOLV_MaskHistory.SelectedObjects.Count > 0)
+            if (this.FOLV_MaskHistory.SelectedObjects != null && this.FOLV_MaskHistory.SelectedObjects.Count > 0)
             {
-                contextMenuPosObj = (ObjectPosition)FOLV_MaskHistory.SelectedObjects[0];
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
+                this.contextMenuPosObj = (ObjectPosition)this.FOLV_MaskHistory.SelectedObjects[0];
+                this.cam = AITOOL.GetCamera(this.contextMenuPosObj.CameraName);
 
-                ShowMaskImage();
+                this.ShowMaskImage();
 
-                foreach (object obj in FOLV_MaskHistory.SelectedObjects)
+                foreach (object obj in this.FOLV_MaskHistory.SelectedObjects)
                 {
-                    CurObjPosLst.Add((ObjectPosition)obj);
+                    this.CurObjPosLst.Add((ObjectPosition)obj);
                 }
             }
-            pictureBox1.Refresh();
+            this.pictureBox1.Refresh();
         }
 
         private void FOLV_Masks_SelectionChanged(object sender, EventArgs e)
         {
             this.CurObjPosLst.Clear();
 
-            if (FOLV_Masks.SelectedObjects != null && FOLV_Masks.SelectedObjects.Count > 0)
+            if (this.FOLV_Masks.SelectedObjects != null && this.FOLV_Masks.SelectedObjects.Count > 0)
             {
-                contextMenuPosObj = (ObjectPosition)FOLV_Masks.SelectedObjects[0];
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
+                this.contextMenuPosObj = (ObjectPosition)this.FOLV_Masks.SelectedObjects[0];
+                this.cam = AITOOL.GetCamera(this.contextMenuPosObj.CameraName);
 
-                ShowMaskImage();
+                this.ShowMaskImage();
 
-                foreach (object obj in FOLV_Masks.SelectedObjects)
+                foreach (object obj in this.FOLV_Masks.SelectedObjects)
                 {
-                    CurObjPosLst.Add((ObjectPosition)obj);
+                    this.CurObjPosLst.Add((ObjectPosition)obj);
                 }
             }
-            pictureBox1.Refresh();
+            this.pictureBox1.Refresh();
         }
 
         private void label3_Click(object sender, EventArgs e)
         {
-            Refresh();
+            this.Refresh();
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -481,29 +471,29 @@ namespace AITool
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            ShowImageMask(e);
+            this.ShowImageMask(e);
         }
 
         private void lblClearMasks_Click(object sender, EventArgs e)
         {
-            cam.maskManager.MaskedPositions.Clear();
-            Refresh();
-            AppSettings.Save();
+            this.cam.maskManager.MaskedPositions.Clear();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void lblClearHistory_Click(object sender, EventArgs e)
         {
-            cam.maskManager.LastPositionsHistory.Clear();
-            Refresh();
-            AppSettings.Save();
+            this.cam.maskManager.LastPositionsHistory.Clear();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void FOLV_MaskHistory_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
         {
             if (e.Model != null)
             {
-                contextMenuPosObj = (ObjectPosition)e.Model;
-                this.cam = AITOOL.GetCamera(contextMenuPosObj.CameraName);
+                this.contextMenuPosObj = (ObjectPosition)e.Model;
+                this.cam = AITOOL.GetCamera(this.contextMenuPosObj.CameraName);
             }
         }
 
@@ -514,17 +504,17 @@ namespace AITool
             {
                 op.IsStatic = true;
                 op.Counter = 0;
-                cam.maskManager.CreateDynamicMask(op, true);
+                this.cam.maskManager.CreateDynamicMask(op, true);
             }
-            Refresh();
-            AppSettings.Save();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void FOLV_Masks_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
         {
             if (e.Model != null)
             {
-                contextMenuPosObj = (ObjectPosition)e.Model;
+                this.contextMenuPosObj = (ObjectPosition)e.Model;
             }
         }
 
@@ -532,10 +522,10 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.RemoveActiveMask(op);
+                this.cam.maskManager.RemoveActiveMask(op);
             }
-            Refresh();
-            AppSettings.Save();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void Frm_DynamicMaskDetails_FormClosing(object sender, FormClosingEventArgs e)
@@ -545,7 +535,7 @@ namespace AITool
 
         private void FOLV_MaskHistory_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            FormatRow(sender, e);
+            this.FormatRow(sender, e);
         }
 
         private void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
@@ -563,7 +553,7 @@ namespace AITool
 
 
 
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             // Log("Error: " & ExMsg(ex))
@@ -574,7 +564,7 @@ namespace AITool
 
         private void FOLV_Masks_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            FormatRow(sender, e);
+            this.FormatRow(sender, e);
         }
 
         private void createStaticMaskToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -584,8 +574,8 @@ namespace AITool
                 op.IsStatic = true;
                 op.Counter = 0;
             }
-            Refresh();
-            AppSettings.Save();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void FOLV_MaskHistory_SelectedIndexChanged(object sender, EventArgs e)
@@ -602,14 +592,14 @@ namespace AITool
         private void comboBox_filter_camera_SelectionChangeCommitted(object sender, EventArgs e)
         {
             //I think this event only triggers when user picks something NOT when items are initially added to combobox
-            if (!(comboBox_filter_camera.Text == "All Cameras"))
+            if (!(this.comboBox_filter_camera.Text == "All Cameras"))
             {
-                BtnDynamicMaskingSettings.Enabled = true;
-                this.cam = AITOOL.GetCamera(comboBox_filter_camera.Text);
+                this.BtnDynamicMaskingSettings.Enabled = true;
+                this.cam = AITOOL.GetCamera(this.comboBox_filter_camera.Text);
             }
             else
             {
-                BtnDynamicMaskingSettings.Enabled = false;
+                this.BtnDynamicMaskingSettings.Enabled = false;
             }
 
             this.Refresh();
@@ -619,23 +609,23 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-                frm.cam = cam;
-                frm.Text = "Dynamic Masking Settings - " + cam.name;
+                frm.cam = this.cam;
+                frm.Text = "Dynamic Masking Settings - " + this.cam.name;
 
                 //Camera cam = AITOOL.GetCamera(list2.SelectedItems[0].Text);
 
                 //Merge ClassObject's code
-                frm.num_history_mins.Value = cam.maskManager.HistorySaveMins;//load minutes to retain history objects that have yet to become masks
-                frm.num_mask_create.Value = cam.maskManager.HistoryThresholdCount; // load mask create counter
-                frm.num_mask_remove.Value = cam.maskManager.MaskRemoveMins; //load mask remove counter
-                frm.numMaskThreshold.Value = cam.maskManager.MaskRemoveThreshold;
+                frm.num_history_mins.Value = this.cam.maskManager.HistorySaveMins;//load minutes to retain history objects that have yet to become masks
+                frm.num_mask_create.Value = this.cam.maskManager.HistoryThresholdCount; // load mask create counter
+                frm.num_mask_remove.Value = this.cam.maskManager.MaskRemoveMins; //load mask remove counter
+                frm.numMaskThreshold.Value = this.cam.maskManager.MaskRemoveThreshold;
 
                 //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
-                frm.num_percent_var.Value = (decimal)cam.maskManager.PercentMatch;
+                frm.num_percent_var.Value = (decimal)this.cam.maskManager.PercentMatch;
 
-                frm.cb_enabled.Checked = cam.maskManager.MaskingEnabled;
+                frm.cb_enabled.Checked = this.cam.maskManager.MaskingEnabled;
 
-                frm.tb_objects.Text = cam.maskManager.Objects;
+                frm.tb_objects.Text = this.cam.maskManager.Objects;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
@@ -649,16 +639,16 @@ namespace AITool
                     ////convert to percent
                     //Double percent_variance = (double)variance / 100;
 
-                    cam.maskManager.HistorySaveMins = history_mins;
-                    cam.maskManager.HistoryThresholdCount = mask_create_counter;
-                    cam.maskManager.MaskRemoveMins = mask_remove_mins;
-                    cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
-                    cam.maskManager.PercentMatch = percent_match;
-                    cam.maskManager.Objects = frm.tb_objects.Text.Trim();
+                    this.cam.maskManager.HistorySaveMins = history_mins;
+                    this.cam.maskManager.HistoryThresholdCount = mask_create_counter;
+                    this.cam.maskManager.MaskRemoveMins = mask_remove_mins;
+                    this.cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
+                    this.cam.maskManager.PercentMatch = percent_match;
+                    this.cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
-                    cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
+                    this.cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
 
-                    AppSettings.Save();
+                    AppSettings.SaveAsync();
 
                 }
             }
@@ -673,21 +663,21 @@ namespace AITool
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.CreateDynamicMask(op, false, true);
+                this.cam.maskManager.CreateDynamicMask(op, false, true);
             }
-            Refresh();
-            AppSettings.Save();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
 
         private void removeHistoryMaskToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (ObjectPosition op in this.CurObjPosLst)
             {
-                cam.maskManager.RemoveHistoryMask(op);
+                this.cam.maskManager.RemoveHistoryMask(op);
 
             }
-            Refresh();
-            AppSettings.Save();
+            this.Refresh();
+            AppSettings.SaveAsync();
         }
     }
 }

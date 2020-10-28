@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -6,7 +10,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net.Configuration;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -18,9 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using Microsoft.Win32;
-using Microsoft.Win32.SafeHandles;
-using Newtonsoft.Json;
 using static AITool.AITOOL;
 
 
@@ -35,6 +35,8 @@ namespace AITool
     {
         public static IProgress<ClsMessage> progress = null;
 
+        //this may speed up json serialization
+        public static DefaultContractResolver JSONContractResolver = null;
 
         /// <summary>
         ///     ''' Gets a value indicating whether the application is a windows service.
@@ -88,6 +90,59 @@ namespace AITool
             }
             catch { }
             return false;
+        }
+
+        public static void MoveFiles(string FromFolder, string ToFolder, string FileSpec, bool OnlyIfNewer)
+        {
+            //Let us pass a filename so we can be lazy
+            if (Path.HasExtension(FromFolder))
+                FromFolder = Path.GetDirectoryName(FromFolder);
+
+            if (Path.HasExtension(ToFolder))
+                ToFolder = Path.GetDirectoryName(ToFolder);
+
+            List<FileInfo> files = GetFiles(FromFolder, FileSpec, SearchOption.TopDirectoryOnly);
+
+            int cnt = 0;
+
+            if (files.Count > 0)
+            {
+                if (!Directory.Exists(ToFolder))
+                    Directory.CreateDirectory(ToFolder);
+
+            }
+
+            foreach (FileInfo fi in files)
+            {
+                string newfile = Path.Combine(ToFolder, fi.Name);
+                try
+                {
+                    bool move = true;
+                    FileInfo nfi = new FileInfo(newfile);
+                    if (nfi.Exists)
+                    {
+                        if (fi.LastWriteTime < nfi.LastWriteTime)
+                        {
+                            //just delete the older file rather than moving it
+                            move = false;
+                            fi.Delete();
+                        }
+                    }
+
+                    if (move)
+                        fi.MoveTo(newfile);
+
+                    cnt++;
+                }
+                catch (Exception ex)
+                {
+
+                    Log($"Error: Could not move {fi.FullName} to {newfile}: {Global.ExMsg(ex)}");
+                }
+            }
+
+            Log($"Debug: Moved {cnt} '{FileSpec}' files from {FromFolder} to {ToFolder}.");
+
         }
 
         public static Version GetFrameworkVersion()
@@ -210,7 +265,7 @@ namespace AITool
 
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Log($"Error: {Global.ExMsg(ex)}");
             }
@@ -352,7 +407,7 @@ namespace AITool
             progress.Report(msg);
 
         }
-        public static void UpdateProgressBar(string label, int CurVal, int MaxVal, [CallerMemberName] string memberName = null)
+        public static void UpdateProgressBar(string label, int CurVal = -1, int MinVal = -1, int MaxVal = -1, [CallerMemberName] string memberName = null)
         {
             if (progress == null)
             {
@@ -369,7 +424,7 @@ namespace AITool
                 return;
             }
 
-            ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName, CurVal, MaxVal);
+            ClsMessage msg = new ClsMessage(MessageType.UpdateProgressBar, label, null, memberName, CurVal, MinVal, MaxVal);
 
             progress.Report(msg);
 
@@ -551,7 +606,7 @@ namespace AITool
                 | FormatMessageFlags.FORMAT_MESSAGE_ARGUMENT_ARRAY;
 
             var buffer = new StringBuilder(nCapacity);
-            uint result = FormatMessage(Flags, IntPtr.Zero, (uint)errorcode, 0, buffer, (uint)nCapacity, IntPtr.Zero);
+            uint result = FormatMessage(Flags, IntPtr.Zero, (uint)errorcode, 0, buffer, nCapacity, IntPtr.Zero);
             string ret = "";
             if (result != 0)
             {
@@ -587,15 +642,24 @@ namespace AITool
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<bool> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
         {
             //run the function in another thread
             return await Task.Run(() => WaitForFileAccess(filename, rights, share, WaitMS, RetryDelayMS));
         }
 
-        public static bool WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public class WaitFileAccessResult
         {
-            bool Success = false;
+            public bool Success = false;
+            public long TimeMS = 0;
+            public int ErrRetryCnt = 0;
+            public string ResultString = "";
+
+        }
+
+        public static WaitFileAccessResult WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        {
+            WaitFileAccessResult ret = new WaitFileAccessResult();
             try
             {
                 //lets give it an initial tiny wait
@@ -603,11 +667,10 @@ namespace AITool
 
                 if (File.Exists(filename))
                 {
-                    int errs = 0;
                     Stopwatch SW = new Stopwatch();
                     SW.Start();
 
-                    while ((errs < 2000) && (SW.ElapsedMilliseconds < WaitMS))
+                    while ((ret.ErrRetryCnt < 2000) && (SW.ElapsedMilliseconds < WaitMS))
                     {
                         if (new FileInfo(filename).Length > 0)
                         {
@@ -617,7 +680,7 @@ namespace AITool
                                 if (fileHandle.IsInvalid)
                                 {
                                     int LastErr = Marshal.GetLastWin32Error();
-                                    errs += 1;
+                                    ret.ErrRetryCnt += 1;
 
                                     if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                     {
@@ -629,7 +692,7 @@ namespace AITool
                                 }
                                 else
                                 {
-                                    Success = true;
+                                    ret.Success = true;
                                     break;
                                 }
 
@@ -648,9 +711,12 @@ namespace AITool
                     }
                     SW.Stop();
 
-                    if (errs > 0)
+                    ret.TimeMS = SW.ElapsedMilliseconds;
+
+                    if (!ret.Success || ret.ErrRetryCnt > 3)
                     {
-                        //Log($"WaitForFileAccess lock time: {SW.ElapsedMilliseconds}ms, {errs} retries with {retrydelayms}ms retry delay.");
+                        ret.ResultString = $"Debug: lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay.";
+                        Log(ret.ResultString);
                     }
 
                 }
@@ -662,11 +728,12 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"WaitForFileAccess Error: {filename}: {Global.ExMsg(ex)}");
+                ret.ResultString = $"Error: {filename}: {Global.ExMsg(ex)}";
+                Log(ret.ResultString);
             }
 
 
-            return Success;
+            return ret;
 
         }
 
@@ -682,14 +749,14 @@ namespace AITool
             if (SearchList.Count == 0)
                 return true;  //If there is no searchlist, always return true
 
-            return IsInList(Global.Split(FindStr, Separators,true, true, true), SearchList);
+            return IsInList(Global.Split(FindStr, Separators, true, true, true), SearchList);
         }
         public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|")
         {
             if (string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
 
-            return IsInList(Global.Split(FindStr, Separators,true, true, true), Global.Split(SearchList, Separators,true, true, true));
+            return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
         }
         private static bool IsInList(List<string> FindStrsList, List<string> SearchList)
         {
@@ -776,7 +843,7 @@ namespace AITool
                 }
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -820,7 +887,7 @@ namespace AITool
                     ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}:{Frames[Frames.Count() - 1].GetFileColumnNumber()}";
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return ExtraInfo;
@@ -835,7 +902,7 @@ namespace AITool
                 {
 
                     string AppName = Path.GetFileNameWithoutExtension(Application.ExecutablePath);
-                    string AppCmd = Application.ExecutablePath; //+ " /min";
+                    string AppCmd = Application.ExecutablePath + " /min";
                     bool Enabled = false;
                     object CurVal = RK.GetValue(AppName, null);
 
@@ -847,7 +914,7 @@ namespace AITool
                     }
                     else
                     {
-                        if (CurVal.ToString().ToLower() == AppCmd.ToLower())
+                        if (string.Equals(CurVal.ToString(), AppCmd, StringComparison.OrdinalIgnoreCase))
                         {
                             Log("Application is already set to start with Windows: HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
                             Enabled = true;
@@ -919,6 +986,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
 
                 Ret = JsonConvert.SerializeObject(objectToWrite, Formatting.Indented, jset);
                 if (jset.Error == null)
@@ -969,6 +1037,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
 
                 Ret = JsonConvert.DeserializeObject<T>(fileContents, jset);
             }
@@ -995,6 +1064,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
 
                 string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
                 if (jset.Error == null)
@@ -1033,6 +1103,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
 
                 string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
                 if (jset.Error == null)
@@ -1070,6 +1141,7 @@ namespace AITool
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
                 jset.TypeNameHandling = TypeNameHandling.All;
                 jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.ContractResolver = Global.JSONContractResolver;
 
                 Ret = JsonConvert.DeserializeObject<T>(JSONString, jset);
             }
@@ -1169,7 +1241,7 @@ namespace AITool
             public long Cnt = 0;
             public override string ToString()
             {
-                return $"Cnt='{Cnt}', Fmt='{Fmt}'";
+                return $"Cnt='{this.Cnt}', Fmt='{this.Fmt}'";
             }
         }
 
@@ -1271,7 +1343,7 @@ namespace AITool
 
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Ret = false;
             }
@@ -1296,7 +1368,7 @@ namespace AITool
                 else
                     return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -1554,7 +1626,7 @@ namespace AITool
             }
             // Return ""
 
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             finally
@@ -1709,57 +1781,75 @@ namespace AITool
                     //M.Log($"Error: No elements found While getting '{Name}'.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //M.Log($"Error: While getting '{Name}', got error '{ex.Message}'.");
             }
             return Ret;
         }
 
-        public static List<System.IO.FileInfo> GetFiles(string CurDirectory, string FileName = "*", System.IO.SearchOption SearchOptions = System.IO.SearchOption.AllDirectories, DateTime? LastWriteTime = null)
+        public static List<System.IO.FileInfo> GetFiles(string CurDirectory, string FileName = "*", System.IO.SearchOption SearchOptions = System.IO.SearchOption.AllDirectories, DateTime? MinLastWriteTime = null, DateTime? MaxLastWriteTime = null)
         {
 
             List<System.IO.FileInfo> files = new List<System.IO.FileInfo>();
             try
             {
                 //If Directory.Exists(CurDirectory) Then
-                List<string> Folders = CurDirectory.Split(";|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
-                List<string> Names = FileName.Split(";|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
-                bool HasDate = LastWriteTime.HasValue;
-                foreach (string fldr in Folders)
+                List<string> Folders = Global.Split(CurDirectory, ";|");
+                List<string> Names = Global.Split(FileName, ";|");
+                bool HasDate = MinLastWriteTime.HasValue;
+                foreach (string fld in Folders)
                 {
+                    string fldr = fld;
+
+                    //so we can be lazy and pass filenames...
+                    if (Path.HasExtension(fldr))
+                        fldr = Path.GetDirectoryName(fldr);
+
                     if (Directory.Exists(fldr))
                     {
                         DirectoryInfo DirInfo = new DirectoryInfo(fldr);
                         foreach (string nam in Names)
                         {
                             //M.DbgLog($"Getting '{nam}' files from folder '{fldr}'...");
-                            if (!string.IsNullOrWhiteSpace(nam))
+                            try
                             {
-                                try
+                                foreach (FileInfo fi in DirInfo.EnumerateFiles(nam, SearchOptions))
                                 {
-                                    foreach (FileInfo fi in DirInfo.EnumerateFiles(nam, SearchOptions))
+                                    if (HasDate)
                                     {
-                                        if (HasDate)
+                                        if (MaxLastWriteTime.HasValue)
                                         {
-                                            if (fi.LastWriteTime == LastWriteTime.Value)
+                                            if (fi.LastWriteTime >= MinLastWriteTime.Value && fi.LastWriteTime <= MaxLastWriteTime)
+                                            {
+                                                files.Add(fi);
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            if (fi.LastWriteTime == MinLastWriteTime.Value)
                                             {
                                                 files.Add(fi);
                                             }
                                         }
-                                        else
-                                        {
-                                            files.Add(fi);
-                                        }
+                                    }
+                                    else
+                                    {
+                                        files.Add(fi);
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
-                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
                             }
                         }
 
+                    }
+                    else
+                    {
+                        Log($"Debug: Directory doesn't exist: '{fldr}' - ({FileName})");
                     }
                 }
                 //files.AddRange(IO.Directory.GetFiles(CurDirectory, nam, SearchOptions).Select(Function(p) New IO.FileInfo(p)).ToList)
@@ -2006,9 +2096,9 @@ namespace AITool
             // A pointer to the buffer containing the string data.
             private IntPtr buffer;
 
-            public ushort Length { get { return length; } }
-            public ushort MaximumLength { get { return maximumLength; } }
-            public IntPtr Buffer { get { return buffer; } }
+            public ushort Length { get { return this.length; } }
+            public ushort MaximumLength { get { return this.maximumLength; } }
+            public IntPtr Buffer { get { return this.buffer; } }
         }
 
         // Win32 RTL_USER_PROCESS_PARAMETERS structure.
@@ -2020,8 +2110,8 @@ namespace AITool
             [FieldOffset(64)]
             private UNICODE_STRING commandLine;
 
-            public UNICODE_STRING ImagePathName { get { return imagePathName; } }
-            public UNICODE_STRING CommandLine { get { return commandLine; } }
+            public UNICODE_STRING ImagePathName { get { return this.imagePathName; } }
+            public UNICODE_STRING CommandLine { get { return this.commandLine; } }
         };
 
         // Win32 PEB structure.  Represents the process environment block of a process.
@@ -2037,10 +2127,10 @@ namespace AITool
             [FieldOffset(468)]
             private uint sessionId;
 
-            public bool IsBeingDebugged { get { return isBeingDebugged; } }
-            public IntPtr Ldr { get { return ldr; } }
-            public IntPtr ProcessParameters { get { return processParameters; } }
-            public uint SessionId { get { return sessionId; } }
+            public bool IsBeingDebugged { get { return this.isBeingDebugged; } }
+            public IntPtr Ldr { get { return this.ldr; } }
+            public IntPtr ProcessParameters { get { return this.processParameters; } }
+            public uint SessionId { get { return this.sessionId; } }
         };
 
         // Win32 PROCESS_BASIC_INFORMATION.  Contains a pointer to the PEB, and various other
@@ -2053,8 +2143,8 @@ namespace AITool
             [FieldOffset(16)]
             private UIntPtr uniqueProcessId;
 
-            public IntPtr PebBaseAddress { get { return pebBaseAddress; } }
-            public UIntPtr UniqueProcessId { get { return uniqueProcessId; } }
+            public IntPtr PebBaseAddress { get { return this.pebBaseAddress; } }
+            public UIntPtr UniqueProcessId { get { return this.uniqueProcessId; } }
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -2064,11 +2154,11 @@ namespace AITool
             // a dummy constructor.
             public SHFILEINFO(bool dummy)
             {
-                hIcon = IntPtr.Zero;
-                iIcon = 0;
-                dwAttributes = 0;
-                szDisplayName = "";
-                szTypeName = "";
+                this.hIcon = IntPtr.Zero;
+                this.iIcon = 0;
+                this.dwAttributes = 0;
+                this.szDisplayName = "";
+                this.szTypeName = "";
             }
             public IntPtr hIcon;
             public int iIcon;
@@ -2156,7 +2246,7 @@ namespace AITool
             this.cachedCommandLine = null;
             this.processHandle = IntPtr.Zero;
 
-            OpenAndCacheProcessHandle();
+            this.OpenAndCacheProcessHandle();
         }
 
         // Returns the machine type (x86, x64, etc) of this process.  Uses lazy evaluation and caches
@@ -2165,13 +2255,13 @@ namespace AITool
         {
             get
             {
-                if (machineTypeIsLoaded)
-                    return machineType;
-                if (!CanQueryProcessInformation)
+                if (this.machineTypeIsLoaded)
+                    return this.machineType;
+                if (!this.CanQueryProcessInformation)
                     return LowLevelTypes.MachineType.UNKNOWN;
 
-                CacheMachineType();
-                return machineType;
+                this.CacheMachineType();
+                return this.machineType;
             }
         }
 
@@ -2179,12 +2269,12 @@ namespace AITool
         {
             get
             {
-                if (nativeProcessImagePath == null)
+                if (this.nativeProcessImagePath == null)
                 {
-                    nativeProcessImagePath = QueryProcessImageName(
+                    this.nativeProcessImagePath = this.QueryProcessImageName(
                         LowLevelTypes.ProcessQueryImageNameMode.NATIVE_SYSTEM_FORMAT);
                 }
-                return nativeProcessImagePath;
+                return this.nativeProcessImagePath;
             }
         }
 
@@ -2192,12 +2282,12 @@ namespace AITool
         {
             get
             {
-                if (win32ProcessImagePath == null)
+                if (this.win32ProcessImagePath == null)
                 {
-                    win32ProcessImagePath = QueryProcessImageName(
+                    this.win32ProcessImagePath = this.QueryProcessImageName(
                         LowLevelTypes.ProcessQueryImageNameMode.WIN32_FORMAT);
                 }
-                return win32ProcessImagePath;
+                return this.win32ProcessImagePath;
             }
         }
 
@@ -2226,13 +2316,13 @@ namespace AITool
         {
             get
             {
-                if (!CanReadPeb)
+                if (!this.CanReadPeb)
                     return ""; //throw new InvalidOperationException();
-                CacheProcessInformation();
-                CachePeb();
-                CacheProcessParams();
-                CacheCommandLine();
-                return cachedCommandLine;
+                this.CacheProcessInformation();
+                this.CachePeb();
+                this.CacheProcessParams();
+                this.CacheCommandLine();
+                return this.cachedCommandLine;
             }
         }
 
@@ -2246,13 +2336,13 @@ namespace AITool
                   | LowLevelTypes.ProcessAccessFlags.QUERY_INFORMATION;
 
                 // In order to read the PEB, we must have *both* of these flags.
-                if ((processHandleFlags & required_flags) != required_flags)
+                if ((this.processHandleFlags & required_flags) != required_flags)
                     return false;
 
                 // If we're on a 64-bit OS, in a 32-bit process, and the target process is not 32-bit,
                 // we can't read its PEB.
                 if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess
-                    && (MachineType != LowLevelTypes.MachineType.X86))
+                    && (this.MachineType != LowLevelTypes.MachineType.X86))
                     return false;
 
                 return true;
@@ -2270,7 +2360,7 @@ namespace AITool
                   | LowLevelTypes.ProcessAccessFlags.QUERY_INFORMATION;
 
                 // In order to query the process, we need *either* of these flags.
-                return (processHandleFlags & required_flags) != LowLevelTypes.ProcessAccessFlags.NONE;
+                return (this.processHandleFlags & required_flags) != LowLevelTypes.ProcessAccessFlags.NONE;
             }
         }
 
@@ -2279,7 +2369,7 @@ namespace AITool
             StringBuilder moduleBuffer = new StringBuilder(1024);
             int size = moduleBuffer.Capacity;
             NativeMethods.QueryFullProcessImageName(
-                processHandle,
+                this.processHandle,
                 mode,
                 moduleBuffer,
                 ref size);
@@ -2291,13 +2381,13 @@ namespace AITool
         // Loads the top-level structure of the process's information block and caches it.
         private void CacheProcessInformation()
         {
-            System.Diagnostics.Debug.Assert(CanReadPeb);
+            System.Diagnostics.Debug.Assert(this.CanReadPeb);
 
             // Fetch the process info and set the fields.
             LowLevelTypes.PROCESS_BASIC_INFORMATION temp = new LowLevelTypes.PROCESS_BASIC_INFORMATION();
             int size;
             LowLevelTypes.NTSTATUS status = NativeMethods.NtQueryInformationProcess(
-                processHandle,
+                this.processHandle,
                 LowLevelTypes.PROCESSINFOCLASS.PROCESS_BASIC_INFORMATION,
                 ref temp,
                 Utility.UnmanagedStructSize<LowLevelTypes.PROCESS_BASIC_INFORMATION>(),
@@ -2309,20 +2399,20 @@ namespace AITool
                 throw new Win32Exception(Convert.ToInt32(status));
             }
 
-            cachedProcessBasicInfo = temp;
+            this.cachedProcessBasicInfo = temp;
         }
 
         // Follows a pointer from the PROCESS_BASIC_INFORMATION structure in the target process's
         // address space to read the PEB.
         private void CachePeb()
         {
-            System.Diagnostics.Debug.Assert(CanReadPeb);
+            System.Diagnostics.Debug.Assert(this.CanReadPeb);
 
-            if (cachedPeb == null)
+            if (this.cachedPeb == null)
             {
-                cachedPeb = Utility.ReadUnmanagedStructFromProcess<LowLevelTypes.PEB>(
-                    processHandle,
-                    cachedProcessBasicInfo.Value.PebBaseAddress);
+                this.cachedPeb = Utility.ReadUnmanagedStructFromProcess<LowLevelTypes.PEB>(
+                    this.processHandle,
+                    this.cachedProcessBasicInfo.Value.PebBaseAddress);
             }
         }
 
@@ -2330,32 +2420,32 @@ namespace AITool
         // RTL_USER_PROCESS_PARAMETERS structure.
         private void CacheProcessParams()
         {
-            System.Diagnostics.Debug.Assert(CanReadPeb);
+            System.Diagnostics.Debug.Assert(this.CanReadPeb);
 
-            if (cachedProcessParams == null)
+            if (this.cachedProcessParams == null)
             {
-                cachedProcessParams =
+                this.cachedProcessParams =
                     Utility.ReadUnmanagedStructFromProcess<LowLevelTypes.RTL_USER_PROCESS_PARAMETERS>(
-                        processHandle, cachedPeb.Value.ProcessParameters);
+                        this.processHandle, this.cachedPeb.Value.ProcessParameters);
             }
         }
 
         private void CacheCommandLine()
         {
-            System.Diagnostics.Debug.Assert(CanReadPeb);
+            System.Diagnostics.Debug.Assert(this.CanReadPeb);
 
-            if (cachedCommandLine == null)
+            if (this.cachedCommandLine == null)
             {
-                cachedCommandLine = Utility.ReadStringUniFromProcess(
-                    processHandle,
-                    cachedProcessParams.Value.CommandLine.Buffer,
-                    cachedProcessParams.Value.CommandLine.Length / 2);
+                this.cachedCommandLine = Utility.ReadStringUniFromProcess(
+                    this.processHandle,
+                    this.cachedProcessParams.Value.CommandLine.Buffer,
+                    this.cachedProcessParams.Value.CommandLine.Length / 2);
             }
         }
 
         private void CacheMachineType()
         {
-            System.Diagnostics.Debug.Assert(CanQueryProcessInformation);
+            System.Diagnostics.Debug.Assert(this.CanQueryProcessInformation);
 
             // If our extension is running in a 32-bit process (which it is), then attempts to access
             // files in C:\windows\system (and a few other files) will redirect to C:\Windows\SysWOW64
@@ -2363,7 +2453,7 @@ namespace AITool
             // is to use a native system format path, of the form:
             //    \\?\GLOBALROOT\Device\HarddiskVolume0\Windows\System\foo.dat
             // NativeProcessImagePath gives us the full process image path in the desired format.
-            string path = NativeProcessImagePath;
+            string path = this.NativeProcessImagePath;
 
             // Open the PE File as a binary file, and parse just enough information to determine the
             // machine type.
@@ -2386,8 +2476,8 @@ namespace AITool
                     UInt32 peHead = br.ReadUInt32();
                     if (peHead != 0x00004550) // "PE\0\0", little-endian
                         throw new Exception("Can't find PE header");
-                    machineType = (LowLevelTypes.MachineType)br.ReadUInt16();
-                    machineTypeIsLoaded = true;
+                    this.machineType = (LowLevelTypes.MachineType)br.ReadUInt16();
+                    this.machineTypeIsLoaded = true;
                 }
             }
         }
@@ -2396,16 +2486,16 @@ namespace AITool
         {
             // Try to open a handle to the process with the highest level of privilege, but if we can't
             // do that then fallback to requesting access with a lower privilege level.
-            processHandleFlags = LowLevelTypes.ProcessAccessFlags.QUERY_INFORMATION
+            this.processHandleFlags = LowLevelTypes.ProcessAccessFlags.QUERY_INFORMATION
                                | LowLevelTypes.ProcessAccessFlags.VM_READ;
-            processHandle = NativeMethods.OpenProcess(processHandleFlags, false, processId);
-            if (processHandle == IntPtr.Zero)
+            this.processHandle = NativeMethods.OpenProcess(this.processHandleFlags, false, this.processId);
+            if (this.processHandle == IntPtr.Zero)
             {
-                processHandleFlags = LowLevelTypes.ProcessAccessFlags.QUERY_LIMITED_INFORMATION;
-                processHandle = NativeMethods.OpenProcess(processHandleFlags, false, processId);
-                if (processHandle == IntPtr.Zero)
+                this.processHandleFlags = LowLevelTypes.ProcessAccessFlags.QUERY_LIMITED_INFORMATION;
+                this.processHandle = NativeMethods.OpenProcess(this.processHandleFlags, false, this.processId);
+                if (this.processHandle == IntPtr.Zero)
                 {
-                    processHandleFlags = LowLevelTypes.ProcessAccessFlags.NONE;
+                    this.processHandleFlags = LowLevelTypes.ProcessAccessFlags.NONE;
                     throw new Win32Exception();
                 }
             }
@@ -2434,14 +2524,14 @@ namespace AITool
 
         ~ProcessDetail()
         {
-            Dispose();
+            this.Dispose();
         }
 
         public void Dispose()
         {
-            if (processHandle != IntPtr.Zero)
-                NativeMethods.CloseHandle(processHandle);
-            processHandle = IntPtr.Zero;
+            if (this.processHandle != IntPtr.Zero)
+                NativeMethods.CloseHandle(this.processHandle);
+            this.processHandle = IntPtr.Zero;
         }
     }
 
@@ -2465,15 +2555,15 @@ namespace AITool
 
         public void AddToCalc(double newSample)
         {
-            AddToCalc(Convert.ToDecimal(newSample));
+            this.AddToCalc(Convert.ToDecimal(newSample));
         }
         public void AddToCalc(int newSample)
         {
-            AddToCalc(Convert.ToDecimal(newSample));
+            this.AddToCalc(Convert.ToDecimal(newSample));
         }
         public void AddToCalc(long newSample)
         {
-            AddToCalc(Convert.ToDecimal(newSample));
+            this.AddToCalc(Convert.ToDecimal(newSample));
         }
         public void AddToCalc(Decimal newSample)
         {
@@ -2486,13 +2576,13 @@ namespace AITool
                 this.sampleAccumulator += newSample;
                 this.samples.Enqueue(newSample);
 
-                if (samples.Count > windowSize)
+                if (this.samples.Count > this.windowSize)
                 {
                     this.sampleAccumulator -= this.samples.Dequeue();
                 }
 
                 if (this.sampleAccumulator > 0)  //divide by 0?
-                    this.Average = this.sampleAccumulator / samples.Count;
+                    this.Average = this.sampleAccumulator / this.samples.Count;
 
                 if (this.Min == 0)
                 {

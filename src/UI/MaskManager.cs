@@ -17,12 +17,12 @@ namespace AITool
         private bool _maskingEnabled = false;
         public bool MaskingEnabled
         {
-            get => _maskingEnabled;
+            get => this._maskingEnabled;
             set
             {
-                _maskingEnabled = value;
-                if (_maskingEnabled) _cleanMaskTimer.Start();
-                else _cleanMaskTimer.Stop();
+                this._maskingEnabled = value;
+                if (this._maskingEnabled) this._cleanMaskTimer.Start();
+                else this._cleanMaskTimer.Stop();
             }
         }
 
@@ -37,11 +37,11 @@ namespace AITool
         private DateTime _lastDetectionDate;
         public DateTime LastDetectionDate
         {
-            get => _lastDetectionDate;
+            get => this._lastDetectionDate;
             set
             {
-                _lastDetectionDate = value;
-                CleanUpExpiredMasks(RemoveEvent.Detection);
+                this._lastDetectionDate = value;
+                this.CleanUpExpiredMasks(RemoveEvent.Detection);
             }
         }
 
@@ -56,18 +56,18 @@ namespace AITool
         [JsonConstructor]
         public MaskManager()
         {
-            LastPositionsHistory = new List<ObjectPosition>();
-            MaskedPositions = new List<ObjectPosition>();
-            ScaleConfig = new ObjectScale();
+            this.LastPositionsHistory = new List<ObjectPosition>();
+            this.MaskedPositions = new List<ObjectPosition>();
+            this.ScaleConfig = new ObjectScale();
 
             //register event handler to run clean history every minute
-            _cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanMaskEvent);
-            _cleanMaskTimer.Interval = 60000; // 1min = 60,000ms
+            this._cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.cleanMaskEvent);
+            this._cleanMaskTimer.Interval = 60000; // 1min = 60,000ms
         }
 
         public void Update(Camera cam)
         {
-            lock (_maskLockObject)
+            lock (this._maskLockObject)
             {
                 //This will run on save/load settings
                 if (this.PercentMatch < 1)
@@ -143,7 +143,7 @@ namespace AITool
 
         public void RemoveActiveMask(ObjectPosition op)
         {
-            lock (_maskLockObject)
+            lock (this._maskLockObject)
             {
                 try
                 {
@@ -164,7 +164,7 @@ namespace AITool
         }
         public void RemoveHistoryMask(ObjectPosition op)
         {
-            lock (_maskLockObject)
+            lock (this._maskLockObject)
             {
                 try
                 {
@@ -193,7 +193,7 @@ namespace AITool
 
             try
             {
-                lock (_maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
+                lock (this._maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
 
                     if (!Global.IsInList(currentObject.Label, this.Objects))
@@ -206,19 +206,19 @@ namespace AITool
                     Log("Debug: *** Starting new object mask processing ***", "", currentObject.CameraName, currentObject.ImagePath);
                     Log($"Debug: Current object detected: {currentObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
 
-                    currentObject.ScaleConfig = ScaleConfig;
-                    currentObject.PercentMatch = PercentMatch;
+                    currentObject.ScaleConfig = this.ScaleConfig;
+                    currentObject.PercentMatch = this.PercentMatch;
 
                     if (forceStatic || forceDynamic)
                     {
-                        return forceMaskCreation(forceStatic, forceDynamic, currentObject);
+                        return this.forceMaskCreation(forceStatic, forceDynamic, currentObject);
                     }
 
-                    int historyIndex = LastPositionsHistory.IndexOf(currentObject);
+                    int historyIndex = this.LastPositionsHistory.IndexOf(currentObject);
 
                     if (historyIndex > -1)
                     {
-                        ObjectPosition foundObject = LastPositionsHistory[historyIndex];
+                        ObjectPosition foundObject = this.LastPositionsHistory[historyIndex];
 
                         foundObject.LastSeenDate = DateTime.Now;
 
@@ -228,7 +228,7 @@ namespace AITool
 
                         Log($"Debug: Found '{currentObject.Label}' (Key={currentObject.Key}) in last_positions_history: {foundObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
 
-                        if (foundObject.Counter < HistoryThresholdCount)
+                        if (foundObject.Counter < this.HistoryThresholdCount)
                         {
                             foundObject.Counter++;
                             returnInfo.SetResults(MaskType.History, MaskResult.ThresholdNotMet, foundObject);
@@ -237,26 +237,26 @@ namespace AITool
                         {
                             Log($"Debug: History Threshold reached Moving {foundObject.ToString()} to masked object list", "", currentObject.CameraName, currentObject.ImagePath);
 
-                            LastPositionsHistory.RemoveAt(historyIndex);
+                            this.LastPositionsHistory.RemoveAt(historyIndex);
                             foundObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
-                            foundObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                            foundObject.Counter = this.MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
                             foundObject.LastPercentMatch = 0;
-                            MaskedPositions.Add(foundObject);
+                            this.MaskedPositions.Add(foundObject);
                             returnInfo.SetResults(MaskType.Dynamic, MaskResult.NewDynamicCreated, foundObject);
                         }
                         return returnInfo;
                     }
 
-                    int maskIndex = MaskedPositions.IndexOf(currentObject);
+                    int maskIndex = this.MaskedPositions.IndexOf(currentObject);
 
                     if (maskIndex > -1)
                     {
-                        ObjectPosition maskedObject = (ObjectPosition)MaskedPositions[maskIndex];
+                        ObjectPosition maskedObject = this.MaskedPositions[maskIndex];
 
                         maskedObject.LastSeenDate = DateTime.Now;
 
                         //increase threashold counter when object is visible
-                        if (maskedObject.Counter < MaskRemoveThreshold)
+                        if (maskedObject.Counter < this.MaskRemoveThreshold)
                         {
                             maskedObject.Counter++;
                         }
@@ -273,7 +273,7 @@ namespace AITool
                     else
                     {
                         Log($"Debug: + New object found: {currentObject.ToString()}. Adding to last_positions_history.", "", currentObject.CameraName, currentObject.ImagePath);
-                        LastPositionsHistory.Add(currentObject);
+                        this.LastPositionsHistory.Add(currentObject);
                         returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject);
                     }
                 }
@@ -296,19 +296,19 @@ namespace AITool
         {
             MaskResultInfo returnInfo = new MaskResultInfo();
 
-            int idx = MaskedPositions.IndexOf(currentObject);
+            int idx = this.MaskedPositions.IndexOf(currentObject);
 
             if (idx > -1)
             {
-                ObjectPosition maskedObject = (ObjectPosition)MaskedPositions[idx];
+                ObjectPosition maskedObject = this.MaskedPositions[idx];
 
                 //Update last image that has same detection, and camera name found for existing mask
                 maskedObject.ImagePath = currentObject.ImagePath;
                 maskedObject.CameraName = currentObject.CameraName;
 
                 //always remove from history if found in masked positions
-                if (LastPositionsHistory.Contains(currentObject))
-                    LastPositionsHistory.Remove(currentObject);
+                if (this.LastPositionsHistory.Contains(currentObject))
+                    this.LastPositionsHistory.Remove(currentObject);
 
                 if (forceStatic && maskedObject.IsStatic)
                 {
@@ -333,24 +333,24 @@ namespace AITool
             {
                 Log("+ Forced addition of new Static mask: " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName, currentObject.ImagePath);
                 //check to see if it is in the history list and remove:
-                if (LastPositionsHistory.Contains(currentObject))
-                    LastPositionsHistory.Remove(currentObject);
+                if (this.LastPositionsHistory.Contains(currentObject))
+                    this.LastPositionsHistory.Remove(currentObject);
                 currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
                 currentObject.IsStatic = true;
-                MaskedPositions.Add(currentObject);
+                this.MaskedPositions.Add(currentObject);
                 returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject);
             }
             else if (forceDynamic)
             {
                 Log("Debug: + Forced addition of new Dynamic mask (and removed from history): " + currentObject.ToString() + ". Adding to masked_positions for camera: " + currentObject.CameraName, "", currentObject.CameraName);
                 //check to see if it is in the history list and remove:
-                if (LastPositionsHistory.Contains(currentObject))
-                    LastPositionsHistory.Remove(currentObject);
+                if (this.LastPositionsHistory.Contains(currentObject))
+                    this.LastPositionsHistory.Remove(currentObject);
 
                 currentObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
-                currentObject.Counter = MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                currentObject.Counter = this.MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
                 currentObject.IsStatic = false;
-                MaskedPositions.Add(currentObject);
+                this.MaskedPositions.Add(currentObject);
                 returnInfo.SetResults(MaskType.Static, MaskResult.New, currentObject);
             }
 
@@ -362,28 +362,28 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            lock (_maskLockObject)
+            lock (this._maskLockObject)
             {
                 try
                 {
-                    if (LastPositionsHistory != null && LastPositionsHistory.Count > 0)
+                    if (this.LastPositionsHistory != null && this.LastPositionsHistory.Count > 0)
                     {
                         //scan backward through the list and remove by index. Not as easy to read but the faster for removals
-                        for (int x = LastPositionsHistory.Count - 1; x >= 0; x--)
+                        for (int x = this.LastPositionsHistory.Count - 1; x >= 0; x--)
                         {
-                            ObjectPosition historyObject = LastPositionsHistory[x];
+                            ObjectPosition historyObject = this.LastPositionsHistory[x];
                             TimeSpan ts = DateTime.Now - historyObject.CreateDate;
                             double minutes = ts.TotalMinutes;
 
                             //Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
-                            if (minutes >= HistorySaveMins)
+                            if (minutes >= this.HistorySaveMins)
                             {
-                                Log($"Debug: Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={HistorySaveMins})", "", historyObject.CameraName);
-                                LastPositionsHistory.RemoveAt(x);
+                                Log($"Debug: Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={this.HistorySaveMins})", "", historyObject.CameraName);
+                                this.LastPositionsHistory.RemoveAt(x);
                             }
                         }
                     }
-                    else if (LastPositionsHistory == null)
+                    else if (this.LastPositionsHistory == null)
                     {
                         Log("Error: historyList is null?");
                     }
@@ -399,36 +399,36 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            lock (_maskLockObject)
+            lock (this._maskLockObject)
             {
                 try
                 {
-                    if (MaskedPositions != null && MaskedPositions.Count > 0)
+                    if (this.MaskedPositions != null && this.MaskedPositions.Count > 0)
                     {
                         //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
-                        for (int x = MaskedPositions.Count - 1; x >= 0; x--)
+                        for (int x = this.MaskedPositions.Count - 1; x >= 0; x--)
                         {
-                            ObjectPosition maskedObject = MaskedPositions[x];
+                            ObjectPosition maskedObject = this.MaskedPositions[x];
 
-                            TimeSpan ts = LastDetectionDate - maskedObject.LastSeenDate;
+                            TimeSpan ts = this.LastDetectionDate - maskedObject.LastSeenDate;
                             double minutes = ts.TotalMinutes;
 
                             switch (trigger)
                             {
                                 case RemoveEvent.Timer:
-                                    if (minutes >= MaskRemoveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
+                                    if (minutes >= this.MaskRemoveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
-                                        MaskedPositions.RemoveAt(x);
+                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                        this.MaskedPositions.RemoveAt(x);
                                     }
                                     break;
                                 case RemoveEvent.Detection:
                                     if (minutes > 1 && !maskedObject.IsStatic)  //if not visiable and not marked as a static mask
                                     {
-                                        if (maskedObject.Counter == 0 && minutes >= MaskRemoveMins)
+                                        if (maskedObject.Counter == 0 && minutes >= this.MaskRemoveMins)
                                         {
-                                            Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, MaskSaveMins={MaskRemoveMins}) masked object after detection: " + maskedObject.ToString(), "", maskedObject.CameraName);
-                                            MaskedPositions.RemoveAt(x);
+                                            Log($"Debug: Removing expired ({minutes.ToString("####0.0")} mins, MaskSaveMins={this.MaskRemoveMins}) masked object after detection: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                            this.MaskedPositions.RemoveAt(x);
                                         }
                                         else if (maskedObject.Counter > 0) maskedObject.Counter--;
                                     }
@@ -436,7 +436,7 @@ namespace AITool
                             }
                         }
                     }
-                    else if (MaskedPositions == null)
+                    else if (this.MaskedPositions == null)
                     {
                         Log("Error: Maskedlist is null?");
                     }
@@ -450,8 +450,8 @@ namespace AITool
 
         private void cleanMaskEvent(object sender, EventArgs e)
         {
-            CleanUpExpiredHistory();
-            CleanUpExpiredMasks(RemoveEvent.Timer);
+            this.CleanUpExpiredHistory();
+            this.CleanUpExpiredMasks(RemoveEvent.Timer);
         }
     }
 
@@ -469,7 +469,7 @@ namespace AITool
 
         public override string ToString()
         {
-            return $"Scaled={IsScaledObject}, SOMX%={SmallObjectMaxPercent}, SOMT%={SmallObjectMatchPercent}, MOMN%={MediumObjectMinPercent}, MOMX%={MediumObjectMaxPercent}, MOMT%={MediumObjectMatchPercent}";
+            return $"Scaled={this.IsScaledObject}, SOMX%={this.SmallObjectMaxPercent}, SOMT%={this.SmallObjectMatchPercent}, MOMN%={this.MediumObjectMinPercent}, MOMX%={this.MediumObjectMaxPercent}, MOMT%={this.MediumObjectMatchPercent}";
         }
     }
 

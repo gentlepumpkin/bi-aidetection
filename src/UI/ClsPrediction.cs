@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.VisualStyles;
-using Telegram.Bot.Requests;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -49,7 +42,7 @@ namespace AITool
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
         public int DynamicThresholdCount { get; set; } = 0;
         public int ImagePointsOutsideMask { get; set; } = 0;
-        
+
         public float Confidence { get; set; } = 0;
         public int YMin { get; set; } = 0;
         public int XMin { get; set; } = 0;
@@ -61,9 +54,9 @@ namespace AITool
         public string Filename { get; set; } = "";
         private Object _imageObject;
 
-        public ClsPrediction(){}
+        public ClsPrediction() { }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, Object imageObject, ClsImageQueueItem curImg) 
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Object imageObject, ClsImageQueueItem curImg)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
@@ -93,7 +86,7 @@ namespace AITool
             this.AnalyzePrediction();
         }
 
-        
+
 
         public void AnalyzePrediction()
         {
@@ -112,7 +105,7 @@ namespace AITool
                             // -> OBJECT IS RELEVANT
 
                             //if confidence limits are satisfied
-                            if (this.Confidence >= this._cam.threshold_lower && this.Confidence  <= this._cam.threshold_upper)
+                            if (this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper)
                             {
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
@@ -142,7 +135,7 @@ namespace AITool
                                     if (this._cam.maskManager.MaskingEnabled)
                                     {
                                         ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
-                                                                                          _curimg.Width, _curimg.Height, _cam.name, _curimg.image_path);
+                                                                                          this._curimg.Width, this._curimg.Height, this._cam.name, this._curimg.image_path);
                                         //creates history and masked lists for objects returned
                                         result = this._cam.maskManager.CreateDynamicMask(currentObject);
                                         this.DynMaskResult = result.Result;
@@ -162,7 +155,7 @@ namespace AITool
                                 if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
                                 {
                                     this.Result = ResultType.Error;
-                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name, _curimg.image_path);
+                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name, this._curimg.image_path);
                                 }
 
                             }
@@ -180,21 +173,21 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, _curimg.image_path);
+                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, this._curimg.image_path);
                         this.Result = ResultType.Error;
                     }
 
                 }
                 else
                 {
-                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, _curimg.image_path);
+                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, this._curimg.image_path);
                     this.Result = ResultType.CameraNotEnabled;
                 }
 
             }
             catch (Exception ex)
             {
-                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name, _curimg.image_path);
+                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name, this._curimg.image_path);
                 this.Result = ResultType.Error;
             }
 

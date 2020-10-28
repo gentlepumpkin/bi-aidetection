@@ -55,21 +55,17 @@ namespace AITool
             this.ReadOnly = ReadOnly;
             this.IsNew = !File.Exists(Filename);
 
-            Task.Run(Initialize);
-
         }
-        private void Initialize()
+        public async Task Initialize()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             try
             {
-                UpdateHistoryList(true);
+                await this.UpdateHistoryListAsync(true);
 
                 if (this.HistoryDic.Count == 0)
                     this.MigrateHistoryCSV(AppSettings.Settings.HistoryFileName);
-
-                Task.Run(HistoryJobQueueLoop);
 
             }
             catch (Exception ex)
@@ -78,17 +74,18 @@ namespace AITool
             }
             finally
             {
+                Task.Run(this.HistoryJobQueueLoop);
                 this.HasInitialized.WriteFullFence(true);
                 Global.SendMessage(MessageType.DatabaseInitialized);
             }
 
         }
 
-        private async void HistoryJobQueueLoop()
+        private void HistoryJobQueueLoop()
         {
             //this runs forever and blocks if nothing is in the queue
 
-            foreach (DBQueueHistoryItem hitm in DBQueueHistory.GetConsumingEnumerable())
+            foreach (DBQueueHistoryItem hitm in this.DBQueueHistory.GetConsumingEnumerable())
             {
                 string file = "";
                 try
@@ -126,7 +123,7 @@ namespace AITool
 
             try
             {
-                return (sqlite_conn != null && !string.IsNullOrEmpty(sqlite_conn.DatabasePath));
+                return (this.sqlite_conn != null && !string.IsNullOrEmpty(this.sqlite_conn.DatabasePath));
             }
             catch (Exception ex)
             {
@@ -146,8 +143,8 @@ namespace AITool
             {
                 lock (DBLock)
                 {
-                    sqlite_conn.Close();
-                    sqlite_conn = null;
+                    this.sqlite_conn.Close();
+                    this.sqlite_conn = null;
                 }
 
             }
@@ -167,7 +164,7 @@ namespace AITool
             {
                 Stopwatch sw = Stopwatch.StartNew();
 
-                Global.UpdateProgressBar("Debug: Initializing history database...", 1, 1);
+                Global.UpdateProgressBar("Debug: Initializing history database...", 1, 1, 1);
 
                 this.HistoryDic.Clear();
                 this.RecentlyDeleted = new ConcurrentQueue<History>();
@@ -194,20 +191,25 @@ namespace AITool
                 }
 
                 //If the database file doesn't exist, the default behaviour is to create a new file
-                sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
+                this.sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
 
+                if (!this.ReadOnly)
+                {
+                    //backup once a day
+                    this.sqlite_conn.Backup(this.Filename + ".bak");
 
-                //make sure table exists:
-                CreateTableResult ctr = sqlite_conn.CreateTable<History>();
+                    //make sure table exists:
+                    CreateTableResult ctr = this.sqlite_conn.CreateTable<History>();
 
+                }
 
-                sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
-                sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
+                this.sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
+                this.sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
 
 
                 sw.Stop();
 
-                Log($"Debug: Created connection to SQLite db v{sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms - TableCreate='{ctr.ToString()}', Flags='{sflags}': {this.Filename}", "None", "None", "None");
+                Log($"Debug: Created connection to SQLite db v{this.sqlite_conn.LibVersionNumber} in {sw.ElapsedMilliseconds}ms, Flags='{sflags}': {this.Filename}", "None", "None", "None");
 
 
             }
@@ -263,13 +265,13 @@ namespace AITool
                     }
 
                     if (sw.ElapsedMilliseconds > 3000)
-                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={AddTimeCalc.Count}, Min={AddTimeCalc.Min}ms, Max={AddTimeCalc.Max}ms, Avg={AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera, hist.Filename);
+                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.AddTimeCalc.Count}, Min={this.AddTimeCalc.Min}ms, Max={this.AddTimeCalc.Max}ms, Avg={this.AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
                 {
 
-                    if (ex.Message.ToLower().Contains("UNIQUE constraint failed".ToLower()))
+                    if (ex.Message.IndexOf("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         Log($"Debug: File was already in the database: {hist.Filename}", hist.AIServer, hist.Camera, hist.Filename);
                     }
@@ -352,7 +354,7 @@ namespace AITool
                     //}
 
                     if (sw.ElapsedMilliseconds > 2000)
-                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {Filename}", hist.AIServer, hist.Camera, hist.Filename);
+                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
@@ -397,7 +399,7 @@ namespace AITool
 
                     if (System.IO.File.Exists(Filename))
                     {
-                        Global.UpdateProgressBar("Migrating history.csv...", 1, 1);
+                        Global.UpdateProgressBar("Migrating history.csv...", 1, 1, 1);
 
                         Log($"Debug: Migrating history list from {Filename} ...");
 
@@ -408,9 +410,9 @@ namespace AITool
 
                         List<string> result = new List<string>(); //List that later on will be containing all lines of the csv file
 
-                        bool Success = Global.WaitForFileAccess(Filename);
+                        Global.WaitFileAccessResult wresult = Global.WaitForFileAccess(Filename);
 
-                        if (Success)
+                        if (wresult.Success)
                         {
                             //load all lines except the first line into List (the first line is the table heading and not an alert entry)
                             foreach (string line in System.IO.File.ReadAllLines(Filename).Skip(1))
@@ -432,7 +434,7 @@ namespace AITool
 
                                 if (cnt == 1 || cnt == result.Count || (cnt % (result.Count / 10) > 0))
                                 {
-                                    Global.UpdateProgressBar("Migrating history.csv...", cnt, result.Count);
+                                    Global.UpdateProgressBar("Migrating history.csv...", cnt, 1, result.Count);
                                 }
 
                                 History hist = new History().CreateFromCSV(val);
@@ -466,7 +468,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Error: Could not gain access to history file for {SW.ElapsedMilliseconds}ms - {AppSettings.Settings.HistoryFileName}");
+                            Log($"Error: Could not gain access to history file for {wresult.TimeMS}ms with {wresult.ErrRetryCnt} retries - {AppSettings.Settings.HistoryFileName}");
 
                         }
 
@@ -489,7 +491,7 @@ namespace AITool
 
             }
 
-            Global.UpdateProgressBar("", 0, 1);
+            Global.UpdateProgressBar("", 0, 0, 0);
 
 
             return ret;
@@ -552,7 +554,7 @@ namespace AITool
                 else
                 {
                     //do a full update for now, later figure out best way to communicate updates from service to gui
-                    return await UpdateHistoryListAsync(false);
+                    return await this.UpdateHistoryListAsync(false);
                 }
 
             }
@@ -572,7 +574,7 @@ namespace AITool
 
         public async Task<bool> UpdateHistoryListAsync(bool Clean)
         {
-            return await Task.Run(() => UpdateHistoryList(Clean));
+            return await Task.Run(() => this.UpdateHistoryList(Clean));
         }
 
         public bool UpdateHistoryList(bool Clean)
@@ -585,14 +587,14 @@ namespace AITool
             {
                 try
                 {
-                    Global.UpdateProgressBar("Reading database...", 1, 1);
+                    Global.UpdateProgressBar("Reading database...", 1, 1, 1);
 
                     Stopwatch sw = Stopwatch.StartNew();
 
                     if (!this.IsSQLiteDBConnected())
                         this.CreateConnection();
 
-                    TableQuery<History> query = sqlite_conn.Table<History>();
+                    TableQuery<History> query = this.sqlite_conn.Table<History>();
                     List<History> CurList = query.ToList();
 
                     int added = 0;
@@ -603,13 +605,18 @@ namespace AITool
 
                     //lets try to keep the original objects in memory and not create them new
                     int cnt = 0;
+                    long LastMS = sw.ElapsedMilliseconds;
+                    int CurListCount = CurList.Count;
+                    int HalfList = CurListCount / 2;
+
                     foreach (History hist in CurList)
                     {
                         cnt++;
 
-                        if (cnt == 1 || cnt == CurList.Count || (cnt % (CurList.Count / 10) > 0))
+                        if (cnt == 1 || cnt == HalfList || cnt > (CurListCount - 5) || (sw.ElapsedMilliseconds - LastMS >= 500))
                         {
-                            Global.UpdateProgressBar("Reading database...", cnt, CurList.Count);
+                            Global.UpdateProgressBar("Reading database...", cnt, 1, CurList.Count);
+                            LastMS = sw.ElapsedMilliseconds;
                         }
 
                         if (!isnew)
@@ -669,7 +676,7 @@ namespace AITool
 
             }
 
-            Global.UpdateProgressBar("", 0, 1);
+            Global.UpdateProgressBar("", 0, 0, 0);
 
 
             return ret;
@@ -703,17 +710,17 @@ namespace AITool
                         int tooold = 0;
                         int cnt = 0;
                         int HistCount = this.HistoryDic.Count;
-                        int shownum = 0;
-                        if (HistCount > 0)
-                            shownum = HistCount / 10;
+                        long LastMS = sw.ElapsedMilliseconds;
+                        int HalfCount = HistCount / 2;
                         //we are allowed to do this with a ConcurrentDictionary...
                         foreach (History hist in this.HistoryDic.Values)
                         {
                             cnt++;
 
-                            if (cnt == 1 || cnt == HistCount || (shownum > 0 && cnt % shownum > 0))
+                            if (cnt == 1 || cnt == HalfCount || cnt > (HistCount - 5) || (sw.ElapsedMilliseconds - LastMS >= 500))
                             {
-                                Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, HistCount);
+                                Global.UpdateProgressBar("Cleaning database (1 of 2)...", cnt, 1, HistCount);
+                                LastMS = sw.ElapsedMilliseconds;
                             }
 
                             bool IsTooOld = (DateTime.Now - hist.Date).TotalDays >= AppSettings.Settings.MaxHistoryAgeDays;
@@ -744,16 +751,18 @@ namespace AITool
                             int rcnt = 0;
                             int failedcnt = 0;
                             cnt = 0;
-                            int rnum = 0;
-                            if (removed.Count > 0)
-                                rnum = (removed.Count / 10);
+                            LastMS = sw.ElapsedMilliseconds;
+                            int RemovedCount = removed.Count;
+                            int HalfRemoved = RemovedCount / 2;
+
                             foreach (History hist in removed)
                             {
                                 cnt++;
 
-                                if (cnt == 1 || cnt == removed.Count || (rnum > 0 && cnt % rnum > 0))
+                                if (cnt == 1 || cnt == HalfRemoved || cnt > (RemovedCount - 5) || (sw.ElapsedMilliseconds - LastMS >= 500))
                                 {
-                                    Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, removed.Count);
+                                    Global.UpdateProgressBar("Cleaning database (2 of 2)...", cnt, 1, removed.Count);
+                                    LastMS = sw.ElapsedMilliseconds;
                                 }
 
                                 int rowsdeleted = 0;
@@ -769,20 +778,20 @@ namespace AITool
                                     if (rowsdeleted != 1)
                                     {
                                         failedcnt++;
-                                        Log($"...Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+                                        Log($"Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     failedcnt++;
-                                    Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{Filename}' - " + Global.ExMsg(ex));
+                                    Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{this.Filename}' - " + Global.ExMsg(ex));
                                 }
                                 rcnt = rcnt + rowsdeleted;
                             }
 
                             //this.DeletedCount.AtomicAddAndGet(rcnt);
 
-                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={DeleteTimeCalc.Count}, Min={DeleteTimeCalc.Min}ms, Max={DeleteTimeCalc.Max}ms, Avg={DeleteTimeCalc.Average.ToString("#####")}ms)");
+                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Average.ToString("#####")}ms)");
 
                         }
                         else
@@ -813,6 +822,10 @@ namespace AITool
 
                 Log("Error: " + ex.ToString());
             }
+            finally
+            {
+                Global.UpdateProgressBar("", 0, 0, 0);
+            }
 
             return ret;
 
@@ -821,7 +834,7 @@ namespace AITool
 
         protected virtual async void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!this.disposedValue)
             {
                 if (disposing)
                 {
@@ -833,7 +846,7 @@ namespace AITool
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null
-                disposedValue = true;
+                this.disposedValue = true;
             }
         }
 
@@ -841,7 +854,7 @@ namespace AITool
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

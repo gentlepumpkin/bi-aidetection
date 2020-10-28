@@ -1,25 +1,19 @@
-﻿using System;
+﻿using MQTTnet.Client.Publishing;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using MQTTnet.Client.Publishing;
 using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_MQTTSettings:Form
+    public partial class Frm_MQTTSettings : Form
     {
 
         public Camera cam;
 
         public Frm_MQTTSettings()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -35,24 +29,24 @@ namespace AITool
 
         private async void btTest_ClickAsync(object sender, EventArgs e)
         {
-            btTest.Enabled = false;
-            btnSave.Enabled = false;
-            btnCancel.Enabled = false;
+            this.btTest.Enabled = false;
+            this.btnSave.Enabled = false;
+            this.btnCancel.Enabled = false;
 
             try
             {
-                AppSettings.Settings.mqtt_serverandport = tb_ServerPort.Text.Trim();
-                AppSettings.Settings.mqtt_password = tb_Password.Text.Trim();
-                AppSettings.Settings.mqtt_username = tb_Username.Text.Trim();
-                AppSettings.Settings.mqtt_UseTLS = cb_UseTLS.Checked;
+                AppSettings.Settings.mqtt_serverandport = this.tb_ServerPort.Text.Trim();
+                AppSettings.Settings.mqtt_password = this.tb_Password.Text.Trim();
+                AppSettings.Settings.mqtt_username = this.tb_Username.Text.Trim();
+                AppSettings.Settings.mqtt_UseTLS = this.cb_UseTLS.Checked;
 
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
                 {
                     Log("------ TESTING MQTT --------");
 
 
-                    string topic = AITOOL.ReplaceParams(this.cam, null, null, tb_Topic.Text.Trim());
-                    string payload = AITOOL.ReplaceParams(this.cam, null, null, tb_Payload.Text.Trim());
+                    string topic = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Topic.Text.Trim());
+                    string payload = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Payload.Text.Trim());
 
                     List<string> topics = Global.Split(topic, ";|");
                     List<string> payloads = Global.Split(payload, ";|");
@@ -62,7 +56,7 @@ namespace AITool
 
                     for (int i = 0; i < topics.Count; i++)
                     {
-                        pr = await mq.PublishAsync(topics[i], payloads[i], cam.Action_mqtt_retain_message);
+                        pr = await mq.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message);
 
                     }
 
@@ -91,9 +85,9 @@ namespace AITool
             }
             finally
             {
-                btTest.Enabled = true;
-                btnSave.Enabled = true;
-                btnCancel.Enabled = true;
+                this.btTest.Enabled = true;
+                this.btnSave.Enabled = true;
+                this.btnCancel.Enabled = true;
             }
 
         }

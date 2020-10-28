@@ -10,15 +10,15 @@ namespace AITool
         public List<CameraTriggerAction> actions = new List<CameraTriggerAction>();
         public Frm_Actions()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void Frm_Actions_Load(object sender, EventArgs e)
         {
             try
             {
-                Global_GUI.ConfigureFOLV(FOLV_Actions, typeof(CameraTriggerAction), null, null);
-                Global_GUI.UpdateFOLV(FOLV_Actions, actions, true);
+                Global_GUI.ConfigureFOLV(this.FOLV_Actions, typeof(CameraTriggerAction), null, null);
+                Global_GUI.UpdateFOLV(this.FOLV_Actions, this.actions, true);
 
                 Global_GUI.RestoreWindowState(this);
 

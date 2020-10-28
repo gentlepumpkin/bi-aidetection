@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Pipes;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading;
-using NamedPipeWrapper.IO;
+﻿using NamedPipeWrapper.IO;
 using NamedPipeWrapper.Threading;
+using System;
 using System.Collections.Concurrent;
+using System.IO.Pipes;
+using System.Runtime.Serialization;
+using System.Threading;
 
 namespace NamedPipeWrapper
 {
@@ -33,7 +30,7 @@ namespace NamedPipeWrapper
         /// <summary>
         /// Gets a value indicating whether the pipe is connected or not.
         /// </summary>
-        public bool IsConnected { get { return _streamWrapper.IsConnected; } }
+        public bool IsConnected { get { return this._streamWrapper.IsConnected; } }
 
         /// <summary>
         /// Invoked when the named pipe connection terminates.
@@ -62,9 +59,9 @@ namespace NamedPipeWrapper
 
         internal NamedPipeConnection(int id, string name, PipeStream serverStream)
         {
-            Id = id;
-            Name = name;
-            _streamWrapper = new PipeStreamWrapper<TRead, TWrite>(serverStream);
+            this.Id = id;
+            this.Name = name;
+            this._streamWrapper = new PipeStreamWrapper<TRead, TWrite>(serverStream);
         }
 
         /// <summary>
@@ -74,14 +71,14 @@ namespace NamedPipeWrapper
         public void Open()
         {
             var readWorker = new Worker();
-            readWorker.Succeeded += OnSucceeded;
-            readWorker.Error += OnError;
-            readWorker.DoWork(ReadPipe);
+            readWorker.Succeeded += this.OnSucceeded;
+            readWorker.Error += this.OnError;
+            readWorker.DoWork(this.ReadPipe);
 
             var writeWorker = new Worker();
-            writeWorker.Succeeded += OnSucceeded;
-            writeWorker.Error += OnError;
-            writeWorker.DoWork(WritePipe);
+            writeWorker.Succeeded += this.OnSucceeded;
+            writeWorker.Error += this.OnError;
+            writeWorker.DoWork(this.WritePipe);
         }
 
         /// <summary>
@@ -92,8 +89,8 @@ namespace NamedPipeWrapper
         /// <param name="message"></param>
         public void PushMessage(TWrite message)
         {
-            _writeQueue.Add(message);
-            _writeSignal.Set();
+            this._writeQueue.Add(message);
+            this._writeSignal.Set();
         }
 
         /// <summary>
@@ -101,7 +98,7 @@ namespace NamedPipeWrapper
         /// </summary>
         public void Close()
         {
-            CloseImpl();
+            this.CloseImpl();
         }
 
         /// <summary>
@@ -109,8 +106,8 @@ namespace NamedPipeWrapper
         /// </summary>
         private void CloseImpl()
         {
-            _streamWrapper.Close();
-            _writeSignal.Set();
+            this._streamWrapper.Close();
+            this._writeSignal.Set();
         }
 
         /// <summary>
@@ -119,10 +116,10 @@ namespace NamedPipeWrapper
         private void OnSucceeded()
         {
             // Only notify observers once
-            if (_notifiedSucceeded)
+            if (this._notifiedSucceeded)
                 return;
 
-            _notifiedSucceeded = true;
+            this._notifiedSucceeded = true;
 
             if (Disconnected != null)
                 Disconnected(this);
@@ -145,14 +142,14 @@ namespace NamedPipeWrapper
         private void ReadPipe()
         {
 
-            while (IsConnected && _streamWrapper.CanRead)
+            while (this.IsConnected && this._streamWrapper.CanRead)
             {
                 try
                 {
-                    var obj = _streamWrapper.ReadObject();
+                    var obj = this._streamWrapper.ReadObject();
                     if (obj == null)
                     {
-                        CloseImpl();
+                        this.CloseImpl();
                         return;
                     }
                     if (ReceiveMessage != null)
@@ -163,7 +160,7 @@ namespace NamedPipeWrapper
                     //we must igonre exception, otherwise, the namepipe wrapper will stop work.
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -172,25 +169,25 @@ namespace NamedPipeWrapper
         /// <exception cref="SerializationException">An object in the graph of type parameter <typeparamref name="TWrite"/> is not marked as serializable.</exception>
         private void WritePipe()
         {
-            
-                while (IsConnected && _streamWrapper.CanWrite)
+
+            while (this.IsConnected && this._streamWrapper.CanWrite)
+            {
+                try
                 {
-                    try
+                    //using blockcollection, we needn't use singal to wait for result.
+                    //_writeSignal.WaitOne();
+                    //while (_writeQueue.Count > 0)
                     {
-                        //using blockcollection, we needn't use singal to wait for result.
-                        //_writeSignal.WaitOne();
-                        //while (_writeQueue.Count > 0)
-                        {
-                            _streamWrapper.WriteObject(_writeQueue.Take());
-                            _streamWrapper.WaitForPipeDrain();
-                        }
+                        this._streamWrapper.WriteObject(this._writeQueue.Take());
+                        this._streamWrapper.WaitForPipeDrain();
                     }
-                    catch
-                    {
+                }
+                catch
+                {
                     //we must igonre exception, otherwise, the namepipe wrapper will stop work.
                 }
             }
-          
+
         }
     }
 

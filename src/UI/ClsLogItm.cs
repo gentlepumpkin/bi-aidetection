@@ -1,10 +1,6 @@
 ﻿using NLog;
-using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -21,7 +17,7 @@ namespace AITool
     //}
 
     //From NLOG - just trying to mimic this:
-    
+
     //Each log entry has a level. And each logger is configured to include or ignore certain levels. 
     //A common configuration is to specify the minimum level where that level and higher levels are 
     //included. For example, if the minimum level is Info, then Info, Warn, Error and Fatal are 
@@ -69,7 +65,7 @@ namespace AITool
             //some log entries have a | which they shouldnt
             LogEntry = LogEntry.Replace("|Create|", ";Create;");
 
-            List<string> splt = Global.Split(LogEntry,"|",false,false);
+            List<string> splt = Global.Split(LogEntry, "|", false, false);
             // "Date|Level|Source|Func|AIServer|Camera|Image|Detail|Idx|Depth|Color|ThreadID"
             //  0    1     2      3    4        5      6     7      8   9     10    11
 
@@ -81,7 +77,7 @@ namespace AITool
                     if (DateTime.TryParse(splt[0], out tdate))
                         this.Date = tdate;
 
-                    if (splt[1].ToLower() == "level")  //this must be a NEW header written part way down the file?
+                    if (string.Equals(splt[1], "level", StringComparison.OrdinalIgnoreCase))  //this must be a NEW header written part way down the file?
                         return;
 
                     this.Level = LogLevel.FromString(splt[1]);
@@ -136,7 +132,7 @@ namespace AITool
             else
             {
                 return;
-            }    
+            }
 
         }
 
@@ -173,15 +169,28 @@ namespace AITool
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as ClsLogItm);
+            return this.Equals(obj as ClsLogItm);
         }
 
         public bool Equals(ClsLogItm other)
         {
             return other != null &&
-                   Date == other.Date &&
-                   Idx == other.Idx &&
-                   ThreadID == other.ThreadID;
+                   this.Date == other.Date &&
+                   this.Idx == other.Idx &&
+                   this.ThreadID == other.ThreadID;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 59;
+                // Suitable nullity checks etc, of course :)
+                hash = hash * 61 + this.Date.GetHashCode();
+                hash = hash * 61 + this.Idx.GetHashCode();
+                hash = hash * 61 + this.ThreadID.GetHashCode();
+                return hash;
+            }
         }
 
         public static bool operator ==(ClsLogItm left, ClsLogItm right)

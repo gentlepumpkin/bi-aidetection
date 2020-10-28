@@ -11,19 +11,12 @@ namespace AITool
         public List<ClsPrediction> PredictionObjectDetail = null;
         public Frm_ObjectDetail()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
-            {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
-            }
-            else
-            {
-                MessageBox.Show("log missing");
-            }
+
 
         }
 
@@ -35,9 +28,9 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(folv_ObjectDetail, typeof(ClsPrediction), null, null);
+                Global_GUI.ConfigureFOLV(this.folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV(folv_ObjectDetail, PredictionObjectDetail);
+                Global_GUI.UpdateFOLV(this.folv_ObjectDetail, this.PredictionObjectDetail);
 
             }
             catch (Exception)
@@ -55,7 +48,7 @@ namespace AITool
 
         private void folv_ObjectDetail_FormatRow(object sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
-            FormatRow(sender, e);
+            this.FormatRow(sender, e);
         }
 
         private async void FormatRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
@@ -80,7 +73,7 @@ namespace AITool
 
 
 
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             finally
@@ -92,9 +85,9 @@ namespace AITool
         {
 
             int cnt = 0;
-            if (folv_ObjectDetail.SelectedObjects != null && folv_ObjectDetail.SelectedObjects.Count > 0)
+            if (this.folv_ObjectDetail.SelectedObjects != null && this.folv_ObjectDetail.SelectedObjects.Count > 0)
             {
-                foreach (ClsPrediction CP in folv_ObjectDetail.SelectedObjects)
+                foreach (ClsPrediction CP in this.folv_ObjectDetail.SelectedObjects)
                 {
                     if (string.IsNullOrEmpty(CP.Camera))
                         Log("Error: Can only add newer history prediction items that include cameraname, imagewidth, imageheight.");

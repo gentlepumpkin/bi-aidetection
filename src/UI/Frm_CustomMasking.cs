@@ -9,11 +9,11 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_CustomMasking:Form
+    public partial class Frm_CustomMasking : Form
     {
         public Camera Cam { get; set; }
         private Bitmap _transparentLayer, _cameraLayer, _inProgessLayer;
-        private string _maskfilename {get;set;} = "";
+        private string _maskfilename { get; set; } = "";
         private const float DEFAULT_OPACITY = .5f;
         public int BrushSize { get; set; }
         private bool _drawing = false;
@@ -29,7 +29,7 @@ namespace AITool
 
         public Frm_CustomMasking()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void ShowImage()
@@ -37,29 +37,29 @@ namespace AITool
             try
             {
                 //first check for saved image in cameras folder. If doesn't exist load the last camera image.
-                if (pbMaskImage.Tag == null || pbMaskImage.Tag.ToString().ToLower() != this.Cam.last_image_file.ToLower())
+                if (this.pbMaskImage.Tag == null || this.pbMaskImage.Tag.ToString().ToLower() != this.Cam.last_image_file.ToLower())
                 {
-                    pbMaskImage.Tag = this.Cam.last_image_file;
+                    this.pbMaskImage.Tag = this.Cam.last_image_file;
 
                     if ((!string.IsNullOrWhiteSpace(this.Cam.last_image_file)) && (File.Exists(this.Cam.last_image_file)))
                     {
                         //lbl_imagefile.ForeColor = Color.Black;
 
-                        _cameraLayer = new Bitmap(this.Cam.last_image_file);
+                        this._cameraLayer = new Bitmap(this.Cam.last_image_file);
 
                         //merge layer if masks exist
                         if (File.Exists(this._maskfilename))
                         {
-                            using (Bitmap maskLayer = new Bitmap(this._maskfilename)) 
+                            using (Bitmap maskLayer = new Bitmap(this._maskfilename))
                             {
-                                pbMaskImage.Image = MergeBitmaps(_cameraLayer, maskLayer);
-                                _transparentLayer = new Bitmap(AdjustImageOpacity(maskLayer,2f)); // create new bitmap here to prevent file locks and increase to 100% opacity
+                                this.pbMaskImage.Image = this.MergeBitmaps(this._cameraLayer, maskLayer);
+                                this._transparentLayer = new Bitmap(this.AdjustImageOpacity(maskLayer, 2f)); // create new bitmap here to prevent file locks and increase to 100% opacity
                             }
                         }
                         else //if there are no masks
                         {
-                            pbMaskImage.Image = new Bitmap(_cameraLayer);
-                            _transparentLayer = new Bitmap(pbMaskImage.Image.Width, pbMaskImage.Image.Height, PixelFormat.Format32bppPArgb);
+                            this.pbMaskImage.Image = new Bitmap(this._cameraLayer);
+                            this._transparentLayer = new Bitmap(this.pbMaskImage.Image.Width, this.pbMaskImage.Image.Height, PixelFormat.Format32bppPArgb);
                         }
                     }
                     else
@@ -69,7 +69,7 @@ namespace AITool
                     }
                 }
 
-                pbMaskImage.Refresh();
+                this.pbMaskImage.Refresh();
 
             }
             catch (Exception ex)
@@ -93,7 +93,7 @@ namespace AITool
         private Point AdjustZoomMousePosition(Point point)
         {
             //return point;
-            if (point == null || point.IsEmpty || pbMaskImage.Image == null)
+            if (point == null || point.IsEmpty || this.pbMaskImage.Image == null)
             {
                 return point;
             }
@@ -102,10 +102,10 @@ namespace AITool
             int yScaled = point.Y;
 
             //get dimensions of picturebox and scaled image
-            float imgWidth = pbMaskImage.Image.Width;
-            float imgHeight = pbMaskImage.Image.Height;
-            float picboxWidth = pbMaskImage.Width;
-            float picboxHeight = pbMaskImage.Height;
+            float imgWidth = this.pbMaskImage.Image.Width;
+            float imgHeight = this.pbMaskImage.Image.Height;
+            float picboxWidth = this.pbMaskImage.Width;
+            float picboxHeight = this.pbMaskImage.Height;
 
             float picAspect = picboxWidth / (float)picboxHeight;
             float imgAspect = imgWidth / (float)imgHeight;
@@ -133,7 +133,7 @@ namespace AITool
                 yScaled = (int)((point.Y - dy) * imgWidth / picboxWidth);
             }
 
-                return new Point(xScaled, yScaled);
+            return new Point(xScaled, yScaled);
         }
 
         private Bitmap AdjustImageOpacity(Image image, float alphaLevel)
@@ -175,24 +175,24 @@ namespace AITool
 
         private Rectangle getRectangle()
         {
-            if (_startRectanglePoint != Point.Empty && _currentRectanglePoint != Point.Empty)
+            if (this._startRectanglePoint != Point.Empty && this._currentRectanglePoint != Point.Empty)
             {
                 return new Rectangle(
-                    Math.Min(_startRectanglePoint.X, _currentRectanglePoint.X),
-                    Math.Min(_startRectanglePoint.Y, _currentRectanglePoint.Y),
-                    Math.Abs(_startRectanglePoint.X - _currentRectanglePoint.X),
-                    Math.Abs(_startRectanglePoint.Y - _currentRectanglePoint.Y));
+                    Math.Min(this._startRectanglePoint.X, this._currentRectanglePoint.X),
+                    Math.Min(this._startRectanglePoint.Y, this._currentRectanglePoint.Y),
+                    Math.Abs(this._startRectanglePoint.X - this._currentRectanglePoint.X),
+                    Math.Abs(this._startRectanglePoint.Y - this._currentRectanglePoint.Y));
             }
- 
+
             else return new Rectangle();
         }
 
         private Rectangle getScaledRectangle()
         {
-            if (_startRectanglePoint != Point.Empty && _currentRectanglePoint != Point.Empty)
+            if (this._startRectanglePoint != Point.Empty && this._currentRectanglePoint != Point.Empty)
             {
-                Point scaledStart = AdjustZoomMousePosition(_startRectanglePoint);
-                Point scaleCurrent = AdjustZoomMousePosition(_currentRectanglePoint);
+                Point scaledStart = this.AdjustZoomMousePosition(this._startRectanglePoint);
+                Point scaleCurrent = this.AdjustZoomMousePosition(this._currentRectanglePoint);
 
                 return new Rectangle(
                     Math.Min(scaledStart.X, scaleCurrent.X),
@@ -209,15 +209,15 @@ namespace AITool
             Color color = Color.FromArgb(255, 255, 255, 70);
             SolidBrush fillBrush = new SolidBrush(color);
 
-            if (_drawing)
+            if (this._drawing)
             {
-                e.DrawRectangle(Pens.Yellow, getRectangle());
+                e.DrawRectangle(Pens.Yellow, this.getRectangle());
             }
-            else if(_startRectanglePoint.IsEmpty == false)
+            else if (this._startRectanglePoint.IsEmpty == false)
             {
-                using (Graphics g = Graphics.FromImage(_inProgessLayer))
+                using (Graphics g = Graphics.FromImage(this._inProgessLayer))
                 {
-                    g.FillRectangle(fillBrush, getScaledRectangle());
+                    g.FillRectangle(fillBrush, this.getScaledRectangle());
                 }
             }
         }
@@ -226,27 +226,27 @@ namespace AITool
         {
             Color color = Color.FromArgb(255, 255, 255, 70);
             //first draw the image for the picturebox. Used as a readonly background layer
-            using (Pen pen = new Pen(color, BrushSize))
+            using (Pen pen = new Pen(color, this.BrushSize))
             {
                 pen.MiterLimit = pen.Width / 2;
                 pen.LineJoin = LineJoin.Round;
                 pen.StartCap = LineCap.Round;
                 pen.EndCap = LineCap.Round;
 
-                if (_currentPoints.GetPoints().Count > 1)
+                if (this._currentPoints.GetPoints().Count > 1)
                 {
-                    using (Graphics g = Graphics.FromImage(pbMaskImage.Image))
+                    using (Graphics g = Graphics.FromImage(this.pbMaskImage.Image))
                     {
                         //first draw the mask on the picturebox. Used as a readonly background layer
                         g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.DrawLines(pen, _currentPoints.GetPoints().ToArray());
+                        g.DrawLines(pen, this._currentPoints.GetPoints().ToArray());
                     }
 
-                    using (Graphics g = Graphics.FromImage(_inProgessLayer))
+                    using (Graphics g = Graphics.FromImage(this._inProgessLayer))
                     {
                         //second draw the mask on a transparent layer. Used as a mask overlay on background defined above.
                         g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.DrawLines(pen, _currentPoints.GetPoints().ToArray());
+                        g.DrawLines(pen, this._currentPoints.GetPoints().ToArray());
                     }
                 }
             }
@@ -258,48 +258,48 @@ namespace AITool
         {
             Global_GUI.RestoreWindowState(this);
             this._maskfilename = AITOOL.GetMaskFile(this.Cam.name);
-            this.Text = "Custom Masking - " + this._maskfilename; 
+            this.Text = "Custom Masking - " + this._maskfilename;
 
             if (!File.Exists(this._maskfilename))
             {
-               this.Text += " (Missing)";
+                this.Text += " (Missing)";
             }
 
-            BrushSize = Cam.mask_brush_size;
-            numBrushSize.Value = Cam.mask_brush_size;
-            ShowImage();
+            this.BrushSize = this.Cam.mask_brush_size;
+            this.numBrushSize.Value = this.Cam.mask_brush_size;
+            this.ShowImage();
         }
 
         private void pbMaskImage_Paint(object sender, PaintEventArgs e)
         {
-            if (pbMaskImage.Image != null)
+            if (this.pbMaskImage.Image != null)
             {
-                if (_inProgessLayer == null)
+                if (this._inProgessLayer == null)
                 {
-                    _inProgessLayer = new Bitmap(_transparentLayer.Width, _transparentLayer.Height, PixelFormat.Format32bppPArgb);
+                    this._inProgessLayer = new Bitmap(this._transparentLayer.Width, this._transparentLayer.Height, PixelFormat.Format32bppPArgb);
                 }
 
-                if (rbRectangle.Checked)
+                if (this.rbRectangle.Checked)
                 {
-                    drawRectangle(e.Graphics);
+                    this.drawRectangle(e.Graphics);
                 }
-                else if(rbBrush.Checked)
+                else if (this.rbBrush.Checked)
                 {
-                    drawBrush(e.Graphics);
+                    this.drawBrush(e.Graphics);
                 }
             }
         }
 
         private void pbMaskImage_MouseDown(object sender, MouseEventArgs e)
         {
-            if (rbBrush.Checked)
+            if (this.rbBrush.Checked)
             {
-                _currentPoints = new PointHistory(AdjustZoomMousePosition(e.Location), BrushSize);
+                this._currentPoints = new PointHistory(this.AdjustZoomMousePosition(e.Location), this.BrushSize);
             }
-            else if (rbRectangle.Checked)
+            else if (this.rbRectangle.Checked)
             {
-                _currentRectanglePoint = _startRectanglePoint = e.Location;
-                _drawing = true;
+                this._currentRectanglePoint = this._startRectanglePoint = e.Location;
+                this._drawing = true;
             }
         }
 
@@ -307,78 +307,78 @@ namespace AITool
         {
             if (e.Button == MouseButtons.Left)
             {
-                _currentPoints.AddPoint(AdjustZoomMousePosition(e.Location));
-                _currentRectanglePoint = e.Location;
-                pbMaskImage.Invalidate();
+                this._currentPoints.AddPoint(this.AdjustZoomMousePosition(e.Location));
+                this._currentRectanglePoint = e.Location;
+                this.pbMaskImage.Invalidate();
             }
         }
 
         private void pbMaskImage_MouseUp(object sender, MouseEventArgs e)
         {
-            if (rbBrush.Checked)
+            if (this.rbBrush.Checked)
             {
-                if (_inProgessLayer != null)
+                if (this._inProgessLayer != null)
                 {
-                    _transparentLayer = MergeBitmaps(_transparentLayer, _inProgessLayer);
-                    pbMaskImage.Image = MergeBitmaps(_cameraLayer, AdjustImageOpacity(_transparentLayer, DEFAULT_OPACITY));
-                    _inProgessLayer = null;
+                    this._transparentLayer = this.MergeBitmaps(this._transparentLayer, this._inProgessLayer);
+                    this.pbMaskImage.Image = this.MergeBitmaps(this._cameraLayer, this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY));
+                    this._inProgessLayer = null;
                 }
 
-                if (_currentPoints.GetPoints().Count > 1)
+                if (this._currentPoints.GetPoints().Count > 1)
                 {
-                    _allPointLists.Add(_currentPoints);
-                    _currentPoints = new PointHistory();
+                    this._allPointLists.Add(this._currentPoints);
+                    this._currentPoints = new PointHistory();
                 }
             }
-            else if (rbRectangle.Checked && e.Button == MouseButtons.Left)
+            else if (this.rbRectangle.Checked && e.Button == MouseButtons.Left)
             {
-                _drawing = false;
+                this._drawing = false;
 
-                if (_inProgessLayer != null)
+                if (this._inProgessLayer != null)
                 {
-                    pbMaskImage.Refresh(); // call paint to draw inprogress rectangle to image
-                    _transparentLayer = MergeBitmaps(_transparentLayer, _inProgessLayer);
-                    pbMaskImage.Image = MergeBitmaps(_cameraLayer, AdjustImageOpacity(_transparentLayer, DEFAULT_OPACITY));
+                    this.pbMaskImage.Refresh(); // call paint to draw inprogress rectangle to image
+                    this._transparentLayer = this.MergeBitmaps(this._transparentLayer, this._inProgessLayer);
+                    this.pbMaskImage.Image = this.MergeBitmaps(this._cameraLayer, this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY));
 
                     //reset rectangle positions and in progress layer
-                    _startRectanglePoint = Point.Empty;      
-                    _currentRectanglePoint = Point.Empty;    
-                    _inProgessLayer = null;
+                    this._startRectanglePoint = Point.Empty;
+                    this._currentRectanglePoint = Point.Empty;
+                    this._inProgessLayer = null;
                 }
             }
         }
 
         private void numBrushSize_Leave(object sender, EventArgs e)
         {
-            if (numBrushSize.Text == "")
+            if (this.numBrushSize.Text == "")
             {
-                numBrushSize.Text = numBrushSize.Value.ToString();
+                this.numBrushSize.Text = this.numBrushSize.Value.ToString();
             }
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            _allPointLists.Clear();
-            
-            pbMaskImage.Tag = null;
+            this._allPointLists.Clear();
+
+            this.pbMaskImage.Tag = null;
 
             //if mask exists, delete it
             if (File.Exists(this._maskfilename))
             {
                 File.Delete(this._maskfilename);
             }
-            
-            ShowImage();
+
+            this.ShowImage();
         }
 
         private void numBrushSize_ValueChanged(object sender, EventArgs e)
         {
-            BrushSize = (int) numBrushSize.Value;
+            this.BrushSize = (int)this.numBrushSize.Value;
         }
 
         private void numBrushSize_KeyUp(object sender, KeyEventArgs e)
         {
-            BrushSize = (int)numBrushSize.Value;
+            this.BrushSize = (int)this.numBrushSize.Value;
         }
 
         private void pbMaskImage_Click(object sender, EventArgs e)
@@ -400,16 +400,17 @@ namespace AITool
         {
             try
             {
-                if (_transparentLayer != null)
+                if (this._transparentLayer != null)
                 {
                     //save masks at 50% opacity 
-                    AdjustImageOpacity(_transparentLayer, DEFAULT_OPACITY).Save(this._maskfilename);
+                    this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY).Save(this._maskfilename);
                 }
 
                 this.DialogResult = DialogResult.OK;
             }
-            catch(Exception ex) {
-                Log("Error: An error occurred saving custom mask with file name: " + _maskfilename + ex.ToString());
+            catch (Exception ex)
+            {
+                Log("Error: An error occurred saving custom mask with file name: " + this._maskfilename + ex.ToString());
             }
             finally
             {
@@ -422,11 +423,11 @@ namespace AITool
         {
             private List<Point> _points = new List<Point>();
             public int BrushSize { get; set; }
-         
+
             public PointHistory()
             {
-                _points = new List<Point>();
-                BrushSize = 40; 
+                this._points = new List<Point>();
+                this.BrushSize = 40;
             }
 
             public PointHistory(Point point, int brushSize)
@@ -442,12 +443,12 @@ namespace AITool
 
             public List<Point> GetPoints()
             {
-                return _points;
+                return this._points;
             }
 
             public void ClearPoints()
             {
-                _points.Clear();
+                this._points.Clear();
             }
         }
     }

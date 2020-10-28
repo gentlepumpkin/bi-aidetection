@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -34,8 +32,8 @@ namespace NamedPipeWrapper.IO
         /// <param name="stream">Pipe to read from</param>
         public PipeStreamReader(PipeStream stream)
         {
-            BaseStream = stream;
-            IsConnected = stream.IsConnected;
+            this.BaseStream = stream;
+            this.IsConnected = stream.IsConnected;
         }
 
         #region Private stream readers
@@ -48,12 +46,12 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="IOException">Any I/O error occurred.</exception>
         private int ReadLength()
         {
-            const int lensize = sizeof (int);
+            const int lensize = sizeof(int);
             var lenbuf = new byte[lensize];
-            var bytesRead = BaseStream.Read(lenbuf, 0, lensize);
+            var bytesRead = this.BaseStream.Read(lenbuf, 0, lensize);
             if (bytesRead == 0)
             {
-                IsConnected = false;
+                this.IsConnected = false;
                 return 0;
             }
             if (bytesRead != lensize)
@@ -65,10 +63,10 @@ namespace NamedPipeWrapper.IO
         private T ReadObject(int len)
         {
             var data = new byte[len];
-            BaseStream.Read(data, 0, len);
+            this.BaseStream.Read(data, 0, len);
             using (var memoryStream = new MemoryStream(data))
             {
-                return (T) _binaryFormatter.Deserialize(memoryStream);
+                return (T)this._binaryFormatter.Deserialize(memoryStream);
             }
         }
 
@@ -82,8 +80,8 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="SerializationException">An object in the graph of type parameter <typeparamref name="T"/> is not marked as serializable.</exception>
         public T ReadObject()
         {
-            var len = ReadLength();
-            return len == 0 ? default(T) : ReadObject(len);
+            var len = this.ReadLength();
+            return len == 0 ? default(T) : this.ReadObject(len);
         }
     }
 }

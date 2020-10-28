@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -19,7 +14,7 @@ namespace AITool
         public long FileLockMS { get; set; }
         public long CurQueueSize { get; set; }
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
-        public ThreadSafe.Integer RetryCount { get; set; } = new ThreadSafe.Integer(0); 
+        public ThreadSafe.Integer RetryCount { get; set; } = new ThreadSafe.Integer(0);
         public string ResultMessage { get; set; }
         public int Width { get; set; } = 0;
         public int Height { get; set; } = 0;

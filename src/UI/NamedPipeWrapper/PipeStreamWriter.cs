@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -29,7 +27,7 @@ namespace NamedPipeWrapper.IO
         /// <param name="stream">Pipe to write to</param>
         public PipeStreamWriter(PipeStream stream)
         {
-            BaseStream = stream;
+            this.BaseStream = stream;
         }
 
         #region Private stream writers
@@ -41,7 +39,7 @@ namespace NamedPipeWrapper.IO
             {
                 using (var memoryStream = new MemoryStream())
                 {
-                    _binaryFormatter.Serialize(memoryStream, obj);
+                    this._binaryFormatter.Serialize(memoryStream, obj);
                     return memoryStream.ToArray();
                 }
             }
@@ -55,17 +53,17 @@ namespace NamedPipeWrapper.IO
         private void WriteLength(int len)
         {
             var lenbuf = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(len));
-            BaseStream.Write(lenbuf, 0, lenbuf.Length);
+            this.BaseStream.Write(lenbuf, 0, lenbuf.Length);
         }
 
         private void WriteObject(byte[] data)
         {
-            BaseStream.Write(data, 0, data.Length);
+            this.BaseStream.Write(data, 0, data.Length);
         }
 
         private void Flush()
         {
-            BaseStream.Flush();
+            this.BaseStream.Flush();
         }
 
         #endregion
@@ -77,10 +75,10 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="SerializationException">An object in the graph of type parameter <typeparamref name="T"/> is not marked as serializable.</exception>
         public void WriteObject(T obj)
         {
-            var data = Serialize(obj);
-            WriteLength(data.Length);
-            WriteObject(data);
-            Flush();
+            var data = this.Serialize(obj);
+            this.WriteLength(data.Length);
+            this.WriteObject(data);
+            this.Flush();
         }
 
         /// <summary>
@@ -91,7 +89,7 @@ namespace NamedPipeWrapper.IO
         /// <exception cref="IOException">The pipe is broken or another I/O error occurred.</exception>
         public void WaitForPipeDrain()
         {
-            BaseStream.WaitForPipeDrain();
+            this.BaseStream.WaitForPipeDrain();
         }
     }
 }

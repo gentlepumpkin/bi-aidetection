@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AITool
+﻿namespace AITool
 {
     public enum MaskType
     {
@@ -42,27 +36,28 @@ namespace AITool
 
         public void SetResults(MaskType type, MaskResult result)
         {
-            switch(type) {
+            switch (type)
+            {
                 case MaskType.Dynamic:
                 case MaskType.Static:
-                    IsMasked = true;
+                    this.IsMasked = true;
                     break;
                 case MaskType.Unknown:
                 case MaskType.History:
-                    IsMasked = false;
+                    this.IsMasked = false;
                     break;
             }
 
-            MaskType = type;
-            Result = result;
+            this.MaskType = type;
+            this.Result = result;
         }
 
         public void SetResults(MaskType type, MaskResult result, ObjectPosition op)
         {
-            DynamicThresholdCount = op.Counter;
-            PercentMatch = op.LastPercentMatch;
+            this.DynamicThresholdCount = op.Counter;
+            this.PercentMatch = op.LastPercentMatch;
 
-            SetResults(type, result);
+            this.SetResults(type, result);
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using OSVersionExtension;
 using System;
@@ -48,6 +49,8 @@ namespace AITool
 
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
 
+        public static ConcurrentQueue<ClsLogItm> TmpHistQueue = new ConcurrentQueue<ClsLogItm>();  //For before the logger gets fully initialized
+
         //The sqlite db connection
         public static SQLiteHistory HistoryDB = null;
         public static ClsTriggerActionQueue TriggerActionQueue = null;
@@ -68,20 +71,16 @@ namespace AITool
         public static ThreadSafe.Boolean IsLoading = new ThreadSafe.Boolean(true);
         public static string srv = "";
 
-        //just an alias to make things easier
-        public static void Log(string Detail, string AIServer = "", string Camera = "", string Image = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
-        {
-            if (LogMan != null)
-                LogMan.Log(Detail, AIServer, Camera, Image, Source, Depth, Level, Time, memberName);
-            else
-                Console.WriteLine($"Error: Wrote to log before initialized? '{Detail}'");
-        }
-
-        public static void InitializeBackend()
+        public static async Task InitializeBackend()
         {
 
             try
             {
+                using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+                Global.JSONContractResolver = new DefaultContractResolver();
+                Global.JSONContractResolver.NamingStrategy = new CamelCaseNamingStrategy();
+
                 //initialize log manager with basic settings so we can start getting output if needed
                 if (Global.IsService)
                     srv = ".SERVICE.";
@@ -90,31 +89,17 @@ namespace AITool
 
                 string exe = $"AITOOLS{srv}EXE";
 
-                //initialize logging as early as we can...
+                //initialize logging as early as we can...  Write to the temp folder since we dont know the log location yet
                 int TempDefSize = ((1024 * 1024) * 20); //20mb
-                LogMan = new ClsLogManager(!Global.IsService, exe, LogLevel.Info, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"), TempDefSize, 120, AppSettings.Settings.MaxGUILogItems);
+                LogMan = new ClsLogManager(!Global.IsService, exe);
 
-                //initialize the log and history file writers - log entries will be queued for fast file logging performance AND if the file
-                //is locked for any reason, it will wait in the queue until it can be written
-                //The logwriter will also rotate out log files (each day, rename as log_date.txt) and delete files older than 60 days
-                //LogWriter = new LogFileWriter(AppSettings.Settings.LogFileName);
-                //HistoryWriter = new LogFileWriter(AppSettings.Settings.HistoryFileName);
-
-                //if log file does not exist, create it - this used to be in LOG function but doesnt need to be checked everytime log written to
-                //if (!System.IO.File.Exists(AppSettings.Settings.LogFileName))
-                //{
-                //    //the logwriter auto creates the file if needed
-                //    LogWriter.WriteToLog("Log format: [dd.MM.yyyy, HH:mm:ss]: Log text.", true);
-                //
-                //}
+                await LogMan.UpdateNLog(LogLevel.Debug, Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"), TempDefSize, 120, AppSettings.Settings.MaxGUILogItems);
 
                 //load settings
-                AppSettings.Load();
+                await AppSettings.LoadAsync();
 
                 //reset log settings if different:
-                LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays, AppSettings.Settings.MaxGUILogItems);
-
-                using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+                await LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays, AppSettings.Settings.MaxGUILogItems);
 
                 //HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
                 //HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
@@ -199,6 +184,9 @@ namespace AITool
 
                 //Load the database, and migrate any old csv lines if needed
                 HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName, AppSettings.AlreadyRunning);
+
+                await HistoryDB.Initialize();
+
                 TriggerActionQueue = new ClsTriggerActionQueue();
 
 
@@ -221,6 +209,29 @@ namespace AITool
             }
 
         }
+        //just an alias to make things easier
+        public static void Log(string Detail, string AIServer = "", string Camera = "", string Image = "", string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
+        {
+            if (LogMan != null && LogMan.Enabled)
+            {
+                //flush any entries from before logman initialized
+                while (!TmpHistQueue.IsEmpty)
+                {
+                    ClsLogItm cli;
+                    if (TmpHistQueue.TryDequeue(out cli))
+                        LogMan.Log(cli.Detail, cli.AIServer, cli.Camera, cli.Image, cli.Source, cli.Depth, cli.Level, cli.Date, cli.Func);
+                }
+
+                LogMan.Log(Detail, AIServer, Camera, Image, Source, Depth, Level, Time, memberName);
+            }
+            else
+            {
+                TmpHistQueue.Enqueue(new ClsLogItm(null, DateTime.Now, Source, memberName, AIServer, Camera, Image, Detail, 0, Depth, "", 0));
+                //Console.WriteLine($"Error: Wrote to log before initialized? '{Detail}'");
+            }
+        }
+
+
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
@@ -620,7 +631,7 @@ namespace AITool
             Global.DeleteHistoryItem(e.FullPath);
         }
 
-        private static void OnError(object sender, ErrorEventArgs e)
+        private static void OnError(object sender, System.IO.ErrorEventArgs e)
         {
             Log("Error: File watcher error: " + e.GetException().Message);
             UpdateWatchers(true);
@@ -923,8 +934,6 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            bool ret = false;
-
             //Only set error when there IS an error...
             string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
 
@@ -957,13 +966,13 @@ namespace AITool
                     //prevent the need to retry in the detection routine
                     sw.Restart();
 
-                    bool success = await Global.WaitForFileAccessAsync(CurImg.image_path, FileSystemRights.Read, FileShare.Read, 30000, 20);
+                    Global.WaitFileAccessResult result = await Global.WaitForFileAccessAsync(CurImg.image_path, FileSystemRights.Read, FileShare.Read, 30000, 20);
 
                     sw.Stop();
 
                     CurImg.FileLockMS = sw.ElapsedMilliseconds;
 
-                    if (success)
+                    if (result.Success)
                     {
 
                         string jsonString = "";
@@ -995,27 +1004,19 @@ namespace AITool
                                             {
                                                 jsonString = await output.Content.ReadAsStringAsync();
                                             }
-                                            else if (output.StatusCode == System.Net.HttpStatusCode.BadRequest)  //400
-                                            {
-                                                //TODO: Stop accepting 400 response when they give a better response.
-                                                Log($"Debug:{{purple}}      Deepstack returned HttpResponse 'BadRequest' (400).  For the new beta versions (10/21) this can mean 'no detections' OR it can mean the image is bad.  For now we will assume 'No detections'  TODO: Stop accepting 400 response when they give a better response.", CurSrv, cam.name, CurImg.image_path);
-
-                                                cam.IncrementFalseAlerts(); //stats update
-
-                                                Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
-
-                                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", DeepStackURL.CurSrv);
-
-                                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
-
-                                                Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name, CurImg.image_path);
-
-                                                //add to history list
-                                                Global.CreateHistoryItem(hist);
-
-                                                goto exitfunction;  //uggg, just a quick fix
-
-                                            }
+                                            //else if (output.StatusCode == System.Net.HttpStatusCode.BadRequest)  //400
+                                            //{
+                                            //    //TODO: Stop accepting 400 response when they give a better response.
+                                            //    Log($"Debug:{{purple}}      Deepstack returned HttpResponse 'BadRequest' (400).  For the new beta versions (10/21) this can mean 'no detections' OR it can mean the image is bad.  For now we will assume 'No detections'  TODO: Stop accepting 400 response when they give a better response.", CurSrv, cam.name, CurImg.image_path);
+                                            //    cam.IncrementFalseAlerts(); //stats update
+                                            //    Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
+                                            //    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", DeepStackURL.CurSrv);
+                                            //    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, DeepStackURL, ""); //make TRIGGER
+                                            //    Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name, CurImg.image_path);
+                                            //    //add to history list
+                                            //    Global.CreateHistoryItem(hist);
+                                            //    goto exitfunction;  //uggg, just a quick fix
+                                            //}
                                             else
                                             {
                                                 error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
@@ -1307,7 +1308,7 @@ namespace AITool
                     else
                     {
                         //could not access the file for 30 seconds??   Or unexpected error
-                        error = $"Error: Could not gain access to {CurImg.image_path} for {{yellow}}{sw.Elapsed.TotalSeconds}{{red}} seconds, giving up.";
+                        error = $"Error: Could not gain access to {CurImg.image_path} for {result.TimeMS}ms, with {result.ErrRetryCnt} retries, giving up.";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = error;
                         Log(error, CurSrv, cam.name, CurImg.image_path);
@@ -1385,14 +1386,17 @@ namespace AITool
             string ret = "";
             try
             {
+
+                //we are not using cameras folder any longer
+
                 List<string> files = new List<string>();
 
                 //this is for future support of storing all settings files in one folder such as AppData, or simply \SETTINGS
                 files.Add(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cameraname}.bmp"));
                 files.Add(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cameraname}.png"));
                 //original cameras folder
-                files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.bmp"));
-                files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.png"));
+                //files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.bmp"));
+                //files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.png"));
 
                 foreach (string fil in files)
                 {
@@ -1404,15 +1408,7 @@ namespace AITool
                 }
                 if (string.IsNullOrEmpty(ret))
                 {
-                    //let it be a default file that doesnt exist:
-                    if (Directory.Exists(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "cameras")))
-                    {
-                        ret = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.bmp");
-                    }
-                    else
-                    {
-                        ret = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cameraname}.bmp");
-                    }
+                    ret = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cameraname}.bmp");
                 }
 
 

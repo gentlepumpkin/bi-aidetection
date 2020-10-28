@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AITool
@@ -15,14 +9,15 @@ namespace AITool
         public List<ClsLogItm> errors = null;
         public Frm_Errors()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists(AppSettings.Settings.LogFileName))
+            if (System.IO.File.Exists(AITOOL.LogMan.GetCurrentLogFileName()))
             {
-                System.Diagnostics.Process.Start(AppSettings.Settings.LogFileName);
+                System.Diagnostics.Process.Start(AITOOL.LogMan.GetCurrentLogFileName());
+                //this.lbl_errors.Text = "";
             }
             else
             {
@@ -39,9 +34,9 @@ namespace AITool
 
             try
             {
-                Global_GUI.ConfigureFOLV(folv_errors, typeof(ClsLogItm), null, null, "Time", SortOrder.Descending);
+                Global_GUI.ConfigureFOLV(this.folv_errors, typeof(ClsLogItm), null, null, "Time", SortOrder.Descending);
 
-                Global_GUI.UpdateFOLV(folv_errors, errors);
+                Global_GUI.UpdateFOLV(this.folv_errors, this.errors);
 
             }
             catch (Exception)
