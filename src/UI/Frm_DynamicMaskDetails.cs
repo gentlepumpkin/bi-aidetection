@@ -203,7 +203,7 @@ namespace AITool
         {
 
             //in case of disabled cameras:
-            if (this.comboBox_filter_camera.Text != "All Cameras" && this.comboBox_filter_camera.Text.Trim().ToLower().Trim() != this.cam.name.Trim().ToLower())
+            if (!string.Equals(this.comboBox_filter_camera.Text, "All Cameras", StringComparison.OrdinalIgnoreCase) && this.comboBox_filter_camera.Text.ToLower().Trim() != this.cam.name.ToLower().Trim())
             {
                 this.cam = AITOOL.GetCamera(this.comboBox_filter_camera.Text);
             }
@@ -411,8 +411,8 @@ namespace AITool
                 }
                 else
                 {
-                    this.pictureBox1 = null;
-                    this.pictureBox1.BackgroundImage = null;
+                    //this.pictureBox1 = null;
+                    //this.pictureBox1.BackgroundImage = null;
                 }
             }
             catch (Exception ex)
@@ -456,6 +456,7 @@ namespace AITool
                     this.CurObjPosLst.Add((ObjectPosition)obj);
                 }
             }
+
             this.pictureBox1.Refresh();
         }
 

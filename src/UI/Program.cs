@@ -30,11 +30,11 @@ namespace AITool
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Shell());
-            Shell frmshell = new Shell();
+            Application.Run(new Shell());
+            //Shell frmshell = new Shell();
             //frmshell.WindowState = FormWindowState.Minimized;
             //frmshell.ShowInTaskbar = false;
-            Application.Run(frmshell);
+            //pplication.Run(frmshell);
 
         }
     }

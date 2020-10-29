@@ -314,42 +314,47 @@ namespace AITool
 
                 this.IsLogListUpdating.WriteFullFence(true);
 
-                if (this.folv_log.Items.Count == 0)
-                    this.folv_log.EmptyListMsg = "Loading log...";
-
-                List<ClsLogItm> added = LogMan.GetRecentlyAdded();
-                List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
-
-                if (added.Count > 2000 || this.folv_log.Items.Count == 0)
+                Global_GUI.InvokeIFRequired(this.folv_log, async () =>
                 {
-                    //do it all in one update so it is faster:
-                    using var cw = new Global_GUI.CursorWait();
-                    // run in another thread so gui doesnt freeze
-                    await Task.Run(() =>
+                    if (this.folv_log.Items.Count == 0)
+                        this.folv_log.EmptyListMsg = "Loading log...";
+
+                    List<ClsLogItm> added = LogMan.GetRecentlyAdded();
+                    List<ClsLogItm> removed = LogMan.GetRecentlyDeleted();
+
+                    if (added.Count > 2000 || this.folv_log.Items.Count == 0)
                     {
-                        Global_GUI.UpdateFOLV(this.folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
-                    });
-                }
-                else
-                {
-                    if (removed.Count > 0)
-                        this.folv_log.RemoveObjects(removed);
+                        //do it all in one update so it is faster:
+                        using var cw = new Global_GUI.CursorWait();
+                        // run in another thread so gui doesnt freeze
+                        await Task.Run(() =>
+                        {
+                            Global_GUI.UpdateFOLV(this.folv_log, LogMan.Values, (Follow || AppSettings.Settings.Autoscroll_log), FullRefresh: true);
+                        });
+                    }
+                    else
+                    {
+                        if (removed.Count > 0)
+                            this.folv_log.RemoveObjects(removed);
 
-                    if (added.Count > 0)
-                        Global_GUI.UpdateFOLV(this.folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
-                }
+                        if (added.Count > 0)
+                            Global_GUI.UpdateFOLV(this.folv_log, added, (Follow || AppSettings.Settings.Autoscroll_log));
+                    }
 
 
-                if (sw.ElapsedMilliseconds > 5000 && sw.ElapsedMilliseconds < 10000)
-                {
-                    Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
-                }
-                else if (sw.ElapsedMilliseconds > 10000)
-                {
-                    Log($"Warn: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
-                }
+                    if (sw.ElapsedMilliseconds > 5000 && sw.ElapsedMilliseconds < 10000)
+                    {
+                        Log($"Debug: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    }
+                    else if (sw.ElapsedMilliseconds > 10000)
+                    {
+                        Log($"Warn: ---- Log window update took {sw.ElapsedMilliseconds}ms to load. {added.Count} added, {removed.Count} removed, {this.folv_history.Items.Count} total. Consider lowering the '{nameof(AppSettings.Settings.MaxGUILogItems)}' setting in JSON file (Currently {AppSettings.Settings.MaxGUILogItems}) ");
+                    }
 
-                this.UpdateStats();
+                    this.UpdateStats();
+
+
+                });
 
                 //});
 
@@ -379,57 +384,63 @@ namespace AITool
                 // run in another thread so gui doesnt freeze
                 await Task.Run(() =>
                 {
+
                     this.IsHistoryListUpdating.WriteFullFence(true);
 
-                    //Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
-
-                    //UpdateToolstrip("Updating list...");
-
-                    List<History> added = HistoryDB.GetRecentlyAdded();
-                    List<History> removed = HistoryDB.GetRecentlyDeleted();
-
-                    if (removed.Count > 0)
-                        this.folv_history.RemoveObjects(removed);
-
-                    if (added.Count > 0)
+                    Global_GUI.InvokeIFRequired(this.folv_history, () =>
                     {
-                        //find the last item that is unfiltered:
-                        History lasthist = null;
-                        for (int i = added.Count - 1; i >= 0; i--)
+
+                        //Log($"Debug:  Updating list...({AddedHistoryItems.Count} added, {DeletedHistoryItems.Count} deleted)");
+
+                        //UpdateToolstrip("Updating list...");
+
+                        List<History> added = HistoryDB.GetRecentlyAdded();
+                        List<History> removed = HistoryDB.GetRecentlyDeleted();
+
+                        if (removed.Count > 0)
+                            this.folv_history.RemoveObjects(removed);
+
+                        if (added.Count > 0)
                         {
-                            if (this.checkListFilters(added[i]))
+                            //find the last item that is unfiltered:
+                            History lasthist = null;
+                            for (int i = added.Count - 1; i >= 0; i--)
                             {
-                                lasthist = added[i];
-                                break;
+                                if (this.checkListFilters(added[i]))
+                                {
+                                    lasthist = added[i];
+                                    break;
+                                }
                             }
+
+                            Global_GUI.UpdateFOLV(this.folv_history, added, AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist);
+
                         }
 
-                        Global_GUI.UpdateFOLV(this.folv_history, added, AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist);
-
-                    }
-
-                    if (AppSettings.Settings.HistoryFollow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
-                    {
-                        if (this.folv_history.IsFiltering)
+                        if (AppSettings.Settings.HistoryFollow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
                         {
-                            //use the last filtered object as the selected object
-                            this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
+                            if (this.folv_history.IsFiltering)
+                            {
+                                //use the last filtered object as the selected object
+                                this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
+                            }
+                            else if (!this.folv_history.IsFiltering)
+                            {
+                                this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
+                            }
+
+                            if (this.folv_history.SelectedObject != null)
+                                this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
+
                         }
-                        else if (!this.folv_history.IsFiltering)
-                        {
-                            this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
-                        }
 
-                        if (this.folv_history.SelectedObject != null)
-                            this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
+                        this.LastListUpdate.Write(DateTime.Now);
 
-                    }
+                        this.IsHistoryListUpdating.WriteFullFence(false);
 
-                    this.LastListUpdate.Write(DateTime.Now);
+                        //UpdateToolstrip("");
 
-                    this.IsHistoryListUpdating.WriteFullFence(false);
-
-                    //UpdateToolstrip("");
+                    });
 
                 });
 
@@ -1128,7 +1139,7 @@ namespace AITool
                         relevant[halfhour]++;
                     }
                     //if it was a false alert
-                    else if (hist.Detections.ToLower() == "false alert")
+                    else if (string.Equals(hist.Detections, "false alert", StringComparison.OrdinalIgnoreCase))
                     {
                         falses[halfhour]++;
                     }
@@ -1706,7 +1717,7 @@ namespace AITool
 
             if (this.IsHistoryListUpdating.ReadFullFence())
             {
-                Log("Debug: ---Exit (already updating)");
+                Log("Trace: ---Exit (already updating)");
                 return;
             }
 
@@ -1756,68 +1767,68 @@ namespace AITool
                     if (await HistoryDB.HasUpdates() || FilterChanged)
                     {
 
-                        List<History> histlist = HistoryDB.GetAllValues();
-                        //find the last item that is unfiltered:
-                        History lasthist = null;
-                        for (int i = histlist.Count - 1; i >= 0; i--)
+                        Global_GUI.InvokeIFRequired(this.folv_history, async () =>
                         {
-                            if (this.checkListFilters(histlist[i]))
+
+                            List<History> histlist = HistoryDB.GetAllValues();
+                            //find the last item that is unfiltered:
+                            History lasthist = null;
+                            for (int i = histlist.Count - 1; i >= 0; i--)
                             {
-                                lasthist = histlist[i];
-                                break;
-                            }
-                        }
-                        // run in another thread so gui doesnt freeze
-                        await Task.Run(() =>
-                        {
-                            Global_GUI.UpdateFOLV(this.folv_history, histlist, Follow || AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist, FullRefresh: true);
-                        });
-
-                        //reset any that snuck in while waiting since we just did a full list update
-                        HistoryDB.GetRecentlyAdded();
-                        HistoryDB.GetRecentlyDeleted();
-
-                        if (FilterChanged)
-                        {
-                            Global_GUI.InvokeIFRequired(this.folv_history, () =>
+                                if (this.checkListFilters(histlist[i]))
                                 {
+                                    lasthist = histlist[i];
+                                    break;
+                                }
+                            }
+                            // run in another thread so gui doesnt freeze
+                            await Task.Run(() =>
+                            {
+                                Global_GUI.UpdateFOLV(this.folv_history, histlist, Follow || AppSettings.Settings.HistoryFollow, UseSelected: true, SelectObject: lasthist, FullRefresh: true);
+                            });
 
-                                    if (this.comboBox_filter_camera.Text != "All Cameras" || this.cb_filter_animal.Checked || this.cb_filter_nosuccess.Checked || this.cb_filter_person.Checked || this.cb_filter_success.Checked || this.cb_filter_vehicle.Checked || this.cb_filter_skipped.Checked)
-                                    {
-                                        //filter
-                                        this.folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
-                                    {
-                                        History hist = (History)x;
-                                        return this.checkListFilters(hist);
-                                    });
-                                    }
-                                    else
-                                    {
-                                        this.folv_history.ModelFilter = null;
-                                    }
+                            //reset any that snuck in while waiting since we just did a full list update
+                            HistoryDB.GetRecentlyAdded();
+                            HistoryDB.GetRecentlyDeleted();
 
+                            if (FilterChanged)
+                            {
+
+                                if (this.comboBox_filter_camera.Text != "All Cameras" || this.cb_filter_animal.Checked || this.cb_filter_nosuccess.Checked || this.cb_filter_person.Checked || this.cb_filter_success.Checked || this.cb_filter_vehicle.Checked || this.cb_filter_skipped.Checked)
+                                {
+                                    //filter
+                                    this.folv_history.ModelFilter = new BrightIdeasSoftware.ModelFilter((object x) =>
+                                {
+                                    History hist = (History)x;
+                                    return this.checkListFilters(hist);
                                 });
+                                }
+                                else
+                                {
+                                    this.folv_history.ModelFilter = null;
+                                }
 
-                        }
 
-                        if (Follow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
-                        {
-                            if (this.folv_history.IsFiltering)
-                            {
-                                //use the last filtered object as the selected object
-                                this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
-                            }
-                            else if (!this.folv_history.IsFiltering)
-                            {
-                                this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
                             }
 
-                            if (this.folv_history.SelectedObject != null)
-                                this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
+                            if (Follow && this.folv_history.SelectedObject == null && this.folv_history.GetItemCount() > 0)
+                            {
+                                if (this.folv_history.IsFiltering)
+                                {
+                                    //use the last filtered object as the selected object
+                                    this.folv_history.SelectedObject = this.folv_history.FilteredObjects.Cast<object>().Last();
+                                }
+                                else if (!this.folv_history.IsFiltering)
+                                {
+                                    this.folv_history.SelectedObject = this.folv_history.Objects.Cast<object>().Last();
+                                }
 
-                        }
+                                if (this.folv_history.SelectedObject != null)
+                                    this.folv_history.EnsureModelVisible(this.folv_history.SelectedObject);
 
+                            }
 
+                        });
                     }
                     else
                     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -15,16 +16,16 @@ namespace AITool
 
     public enum ResultType
     {
-        Relevant,
-        UnwantedObject,
-        NoConfidence,
-        DynamicMasked,
-        StaticMasked,
-        ImageMasked,
-        NoMask,
-        CameraNotEnabled,
-        Error,
-        Unknown
+        Relevant = 1,
+        DynamicMasked = 2,
+        StaticMasked = 3,
+        ImageMasked = 4,
+        NoMask = 5,
+        NoConfidence = 6,
+        UnwantedObject = 7,
+        CameraNotEnabled = 8,
+        Error = 9,
+        Unknown = 10
     }
     public class ClsPrediction
     {
@@ -51,6 +52,7 @@ namespace AITool
         public string Camera { get; set; } = "";
         public int ImageWidth { get; set; } = 0;
         public int ImageHeight { get; set; } = 0;
+        public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
         private Object _imageObject;
 
@@ -209,6 +211,11 @@ namespace AITool
         private void GetObjectType()
         {
             string tmp = this.Label.Trim().ToLower();
+
+            List<string> pris = Global.Split(AppSettings.Settings.ObjectPriority, ",", ToLower: true);
+            this.ObjectPriority = pris.IndexOf(tmp);
+            if (this.ObjectPriority == -1)
+                this.ObjectPriority = 999;
 
             //person,   bicycle,   car,   motorcycle,   airplane,
             //bus,   train,   truck,   boat,   traffic light,   fire hydrant,   stop_sign,

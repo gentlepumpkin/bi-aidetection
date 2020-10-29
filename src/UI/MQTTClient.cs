@@ -193,7 +193,7 @@ namespace AITool
                                             {
                                                 excp = e.Exception.Message;
                                             }
-                                            Log($"MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
+                                            Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
 
                                             //reconnect here if needed?
                                         });
@@ -201,11 +201,11 @@ namespace AITool
 
                                         mqttClient.UseApplicationMessageReceivedHandler(async e =>
                                         {
-                                            Log($"MQTT: ### RECEIVED APPLICATION MESSAGE ###");
-                                            Log($"MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                                            Log($"MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
-                                            Log($"MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                                            Log($"MQTT: + Retain = {e.ApplicationMessage.Retain}");
+                                            Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
+                                            Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
+                                            Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                                            Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                                            Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                                             Log("");
 
                                         });
@@ -213,18 +213,18 @@ namespace AITool
 
                                         mqttClient.UseConnectedHandler(async e =>
                                         {
-                                            Log($"MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
+                                            Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
 
                                             // Subscribe to the topic
                                             await mqttClient.SubscribeAsync(topic, MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
 
                                             subscribed = true;
 
-                                            Log($"MQTT: ### SUBSCRIBED to topic '{topic}'");
+                                            Log($"Debug: MQTT: ### SUBSCRIBED to topic '{topic}'");
                                         });
 
 
-                                        Log($"MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
+                                        Log($"Debug: MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
 
 
                                         MqttClientAuthenticateResult cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
@@ -252,31 +252,31 @@ namespace AITool
 
                                             if (res.ReasonCode == MqttClientPublishReasonCode.Success)
                                             {
-                                                Log($"MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
                                             else
                                             {
-                                                Log($"MQTT: Error sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
 
                                         }
                                         else if (cres != null)
                                         {
-                                            Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
+                                            Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
                                         }
                                         else
                                         {
-                                            Log($"MQTT:  Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
+                                            Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
                                         }
 
                                         if (mqttClient != null && mqttClient.IsConnected)
                                         {
                                             if (subscribed)
                                             {
-                                                Log($"MQTT: Unsubscribing from topic '{topic}'");
+                                                Log($"Debug: MQTT: Unsubscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
-                                            Log($"MQTT: Disconnecting from server.");
+                                            Log($"Debug: MQTT: Disconnecting from server.");
                                             await mqttClient.DisconnectAsync();
                                         }
 
@@ -286,7 +286,7 @@ namespace AITool
                                     catch (Exception ex)
                                     {
 
-                                        Log($"MQTT: Unexpected Error: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
+                                        Log($"Error: MQTT: Unexpected Error: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
                                     }
                                     finally
                                     {
@@ -294,10 +294,10 @@ namespace AITool
                                         {
                                             if (subscribed)
                                             {
-                                                Log($"MQTT: Unsubscribing from topic '{topic}'");
+                                                Log($"Debug: MQTT: Unsubscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
-                                            Log($"MQTT: Disconnecting from server.");
+                                            Log($"Debug: MQTT: Disconnecting from server.");
                                             await mqttClient.DisconnectAsync();
                                             mqttClient.Dispose();  //using should dispose anyway
                                         }

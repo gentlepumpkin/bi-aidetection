@@ -119,6 +119,8 @@ namespace AITool
             public bool HistoryFilterSkipped = false;
             public bool HistoryFilterMasked = false;
 
+            public string ObjectPriority = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+
         }
 
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);

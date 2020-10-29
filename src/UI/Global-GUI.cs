@@ -43,6 +43,12 @@ namespace AITool
 
                     olv.Freeze();  //accessed from another thread
 
+                    if (FullRefresh)
+                    {
+                        olv.ClearCachedInfo();
+                        olv.ClearObjects();
+                    }
+
                     if (FullRefresh || olv.Items.Count == 0)  //full refresh of new objects
                         olv.SetObjects(objs, true);
                     else
@@ -99,6 +105,8 @@ namespace AITool
                 finally
                 {
                     olv.Unfreeze();
+                    if (FullRefresh)
+                        olv.Refresh();
                 }
 
             });
@@ -730,7 +738,7 @@ namespace AITool
             // This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
             // See TextBoxLogger.Log for example
 
-            if (control != null && !control.IsDisposed && !control.Disposing)
+            if (control != null && !control.IsDisposed && !control.Disposing && control.IsHandleCreated && control.FindForm().IsHandleCreated)
             {
                 if (control.InvokeRequired)
                 {

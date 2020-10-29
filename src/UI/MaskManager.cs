@@ -147,14 +147,18 @@ namespace AITool
             {
                 try
                 {
+                    int fndcnt = 0;
                     //so the objectposition equals function doesnt kick in, remove it the old way
                     for (int i = this.MaskedPositions.Count - 1; i >= 0; i--)
                     {
                         if (this.MaskedPositions[i].GetHashCode() == op.GetHashCode() && this.MaskedPositions[i].CreateDate == op.CreateDate)
                         {
+                            fndcnt++;
+                            Log("Debug: removed active mask: " + this.MaskedPositions[i].ToString());
                             this.MaskedPositions.RemoveAt(i);
                         }
                     }
+                    Log($"Debug: Removed {fndcnt} active masks. {this.MaskedPositions.Count} left.");
                 }
                 catch (Exception ex)
                 {
@@ -168,14 +172,18 @@ namespace AITool
             {
                 try
                 {
+                    int fndcnt = 0;
                     //so the objectposition equals function doesnt kick in, remove it the old way
                     for (int i = this.LastPositionsHistory.Count - 1; i >= 0; i--)
                     {
                         if (this.LastPositionsHistory[i].GetHashCode() == op.GetHashCode() && this.LastPositionsHistory[i].CreateDate == op.CreateDate)
                         {
+                            fndcnt++;
+                            Log("Debug: removed history mask: " + this.LastPositionsHistory[i].ToString());
                             this.LastPositionsHistory.RemoveAt(i);
                         }
                     }
+                    Log($"Debug: Removed {fndcnt} history masks. {this.LastPositionsHistory.Count} left.");
                 }
                 catch (Exception ex)
                 {

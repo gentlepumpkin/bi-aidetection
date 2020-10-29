@@ -1146,6 +1146,9 @@ namespace AITool
                                             //mark the end of AI detection for the current image
                                             cam.maskManager.LastDetectionDate = DateTime.Now;
 
+                                            //sort predictions so most important are at the top
+                                            predictions = predictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
+
                                             string PredictionsJSON = Global.GetJSONString(predictions);
 
                                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
@@ -1172,10 +1175,19 @@ namespace AITool
                                                 //create text string objects and confidences
                                                 string objects_and_confidences = "";
                                                 string object_positions_as_string = "";
-                                                for (int i = 0; i < objects.Count; i++)
+                                                //for (int i = 0; i < objects.Count; i++)
+                                                //{
+                                                //    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
+                                                //    object_positions_as_string += $"{objects_position[i]};";
+                                                //}
+
+                                                foreach (ClsPrediction pred in predictions)
                                                 {
-                                                    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
-                                                    object_positions_as_string += $"{objects_position[i]};";
+                                                    if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                                        continue;
+
+                                                    objects_and_confidences += $"{pred.ToString()}; ";
+                                                    object_positions_as_string += $"{pred.PositionString()};";
                                                 }
 
                                                 objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
@@ -1204,11 +1216,22 @@ namespace AITool
                                                 //retrieve confidences and positions
                                                 string objects_and_confidences = "";
                                                 string object_positions_as_string = "";
-                                                for (int i = 0; i < irrelevant_objects.Count; i++)
+
+                                                //for (int i = 0; i < irrelevant_objects.Count; i++)
+                                                //{
+                                                //    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                                //    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                //}
+
+                                                foreach (ClsPrediction pred in predictions)
                                                 {
-                                                    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                                    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                                    //if (pred.Result != ResultType.Relevant)
+                                                    //{
+                                                    objects_and_confidences += $"{pred.ToString()}; ";
+                                                    object_positions_as_string += $"{pred.PositionString()};";
+                                                    //}
                                                 }
+
 
                                                 objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
@@ -1607,12 +1630,15 @@ namespace AITool
                         string confidences = "";
                         foreach (ClsPrediction pred in preds)
                         {
+                            if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                continue;
+
                             confidences += pred.ConfidenceString() + ",";
                             detections += pred.ToString() + ",";
                         }
                         ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", hist.Detections); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[summary]", Uri.EscapeUriString(hist.Detections)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].ToString()); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].Label); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", preds[0].PositionString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", preds[0].ConfidenceString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections);
