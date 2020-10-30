@@ -1898,6 +1898,15 @@
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1000, 17</value>
   </metadata>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
+  <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>1519, 17</value>
+  </metadata>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>1000, 17</value>
+  </metadata>
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1935,16 +1944,6 @@
         sIg4cUJC1lGu+7/AxuZfxfG+indKrmUAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, objects shown in the right-hand image display and to merging of annotations.
-
-If you enable this, the only way to see all the objects is to pick "Prediction Details".</value>
-  </data>
-  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
-in mind that Deepstack will often miss animals at night completly so you wont be able 
-to review footage from night before.</value>
-  </data>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1979,6 +1978,19 @@ to review footage from night before.</value>
         A/8QLiccbDv2OI/rC2ceaHzVhijXZZacktJCqtnfFCZHcHz8kefVl1OW8/6ZPV7J8Ee0pKGxcZ4znd7Q
         0DC/d+/eX5Sv/xf7BJ4IP6I471/u79cr2ho4NRHoa+EvaUFBfwIh7NErm8l5rgAAAABJRU5ErkJggg==
 </value>
+  </data>
+  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, 
+[summary]/[summarynonescaped] variables, objects shown in the right-hand image display and to 
+merging of annotations.
+
+If you enable this, the only way to see all the objects detected by DeepStack is to pick "Prediction Details"
+or have the log set to Debug and view it.</value>
+  </data>
+  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
+in mind that Deepstack will often miss animals at night completly so you wont be able 
+to review footage from night before.</value>
   </data>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -2035,9 +2047,6 @@ to review footage from night before.</value>
   </data>
   <metadata name="contextMenuStripHistory.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1105, 17</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>160, 17</value>
   </metadata>
   <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1519, 17</value>
@@ -2156,22 +2165,6 @@ to review footage from night before.</value>
         YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wKI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
-        3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
-        JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
-        taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
-        CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
-        5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABv1JKS
-        T9gnDwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
-        E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
-        W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
         qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wyI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
         3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
         JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
@@ -2180,6 +2173,22 @@ to review footage from night before.</value>
         5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
         GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABtX5KR
         7SpN8QAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
+        E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
+        W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wSI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
+        3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
+        JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
+        taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
+        CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
+        5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
+        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABq6pKQ
+        j8GmrQAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="toolStripButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -2197,6 +2206,9 @@ to review footage from night before.</value>
         TgDQASA1MVpwzwAAAABJRU5ErkJggg==
 </value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
   <metadata name="HistoryImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>305, 17</value>
   </metadata>
@@ -2205,7 +2217,7 @@ to review footage from night before.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAARABBgEQAQYBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAARgBBgEYAQYBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/

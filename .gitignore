@@ -264,3 +264,6 @@ __pycache__/
 /src/UI/OSVersionExt/.vshistory
 /src/UI/Properties/.vshistory/AssemblyInfo.cs
 /src/UI/SQLite/.vshistory
+/src/AITool.Service/.vshistory
+/src/.vshistory/bi-aidetection.sln
+/src/AITool.Service/Properties/.vshistory/AssemblyInfo.cs
