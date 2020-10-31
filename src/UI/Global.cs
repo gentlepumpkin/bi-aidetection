@@ -13,6 +13,7 @@ using System.Management;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
@@ -90,6 +91,63 @@ namespace AITool
             }
             catch { }
             return false;
+        }
+
+        static byte[] entropy = System.Text.Encoding.Unicode.GetBytes("sdsgtj;lrjwteojtkslkdjsl;dvlbmv.bmvlfu7r0tret-rereigjejgkgljg42");
+
+        //this is not truly secure, but better than storing plain text in the JSON file
+        public static string EncryptString(string input)
+        {
+            byte[] encryptedData = System.Security.Cryptography.ProtectedData.Protect(
+                System.Text.Encoding.Unicode.GetBytes(input),
+                entropy,
+                System.Security.Cryptography.DataProtectionScope.CurrentUser);
+            return Convert.ToBase64String(encryptedData);
+        }
+
+        public static string DecryptString(string encryptedData)
+        {
+            if (String.IsNullOrEmpty(encryptedData))
+                return "";
+
+            try
+            {
+                byte[] decryptedData = System.Security.Cryptography.ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedData),
+                    entropy,
+                    System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                return System.Text.Encoding.Unicode.GetString(decryptedData);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        public static SecureString ToSecureString(string input)
+        {
+            SecureString secure = new SecureString();
+            foreach (char c in input)
+            {
+                secure.AppendChar(c);
+            }
+            secure.MakeReadOnly();
+            return secure;
+        }
+
+        public static string ToInsecureString(SecureString input)
+        {
+            string returnValue = string.Empty;
+            IntPtr ptr = System.Runtime.InteropServices.Marshal.SecureStringToBSTR(input);
+            try
+            {
+                returnValue = System.Runtime.InteropServices.Marshal.PtrToStringBSTR(ptr);
+            }
+            finally
+            {
+                System.Runtime.InteropServices.Marshal.ZeroFreeBSTR(ptr);
+            }
+            return returnValue;
         }
 
         public static void MoveFiles(string FromFolder, string ToFolder, string FileSpec, bool OnlyIfNewer)

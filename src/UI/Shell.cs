@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -152,6 +153,9 @@ namespace AITool
 
                 this.cb_send_errors.Checked = AppSettings.Settings.send_errors;
                 this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
+
+                this.tb_username.Text = AppSettings.Settings.DefaultUserName;
+                this.tb_password.Text = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
 
                 //---------------------------------------------------------------------------
                 //STATS TAB
@@ -581,17 +585,17 @@ namespace AITool
 
                     if (lbl != null)
                     {
-                        if (this.Visible)
+                        Global_GUI.InvokeIFRequired(lbl, () =>
                         {
-                            MethodInvoker LabelUpdate = delegate
-                            {
-                                lbl.Show();
-                                lbl.Text = msg.Description;
-                            };
-                            //getting error here when called too early - had to check if Visible or not -Vorlon
-                            this.Invoke(LabelUpdate);
+                            lbl.Show();
+                            lbl.Text = msg.Description;
+                        });
 
-                        }
+                    }
+                    else
+                    {
+                        Log($"Error: Could not find label '{lblcontrolname}'?");
+
                     }
 
                 }
@@ -993,7 +997,7 @@ namespace AITool
                     await this.UpdateLogAddedRemovedAsync(true, true);
                 }
             }
-            //Application.DoEvents();
+            UpdateStats();
 
         }
 
@@ -1019,6 +1023,8 @@ namespace AITool
             int irrelevantalerts = 0;
             int falsealerts = 0;
             int skipped = 0;
+            Series ser = this.chart1.Series[0];
+
 
             if (this.comboBox1.Text == "All Cameras")
             {
@@ -1051,28 +1057,38 @@ namespace AITool
                 }
             }
 
-            this.chart1.Series[0].Points.Clear();
+            ser.Points.Clear();
+            ser.IsVisibleInLegend = true;
 
-            this.chart1.Series[0].LegendText = "#VALY"; //"#VALY #VALX"
-            this.chart1.Series[0]["PieLabelStyle"] = "Disabled";
+
+            ser.LegendText = "#LABEL"; //"#VALY"; //"#VALY #VALX"
+            //ser["PieLabelStyle"] = "Disabled";
 
             int index = -1;
 
             //show Alerts label
-            index = this.chart1.Series[0].Points.AddXY("Alerts", alerts);
-            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Green;
+            index = ser.Points.AddXY("Alerts", alerts);
+            ser.Points[index].Color = System.Drawing.Color.Green;
+            ser.Points[index].LegendText = $"{alerts.ToString("00000")} - Alerts";
+            ser.Points[index].Label = "Alerts";
 
             //show irrelevant Alerts label
-            index = this.chart1.Series[0].Points.AddXY("irrelevant Alerts", irrelevantalerts);
-            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Orange;
+            index = ser.Points.AddXY("Irrelevant Alerts", irrelevantalerts);
+            ser.Points[index].Color = System.Drawing.Color.Orange;
+            ser.Points[index].LegendText = $"{irrelevantalerts.ToString("00000")} - Irrelevant Alerts";
+            ser.Points[index].Label = "Irrelevant";
 
             //show false Alerts label
-            index = this.chart1.Series[0].Points.AddXY("false Alerts", falsealerts);
-            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.OrangeRed;
+            index = ser.Points.AddXY("False Alerts", falsealerts);
+            ser.Points[index].Color = System.Drawing.Color.OrangeRed;
+            ser.Points[index].LegendText = $"{falsealerts.ToString("00000")} - False Alerts";
+            ser.Points[index].Label = "False";
 
             //show skipped label
-            index = this.chart1.Series[0].Points.AddXY("Skipped Images", skipped);
-            this.chart1.Series[0].Points[index].Color = System.Drawing.Color.Purple;
+            index = ser.Points.AddXY("Skipped Images", skipped);
+            ser.Points[index].Color = System.Drawing.Color.Purple;
+            ser.Points[index].LegendText = $"{skipped.ToString("00000")} - Skipped Images";
+            ser.Points[index].Label = "Skipped";
 
 
 
@@ -1085,7 +1101,7 @@ namespace AITool
             if (this.tabControl1.SelectedIndex != 1 || !this.Visible || this.WindowState == FormWindowState.Minimized || string.IsNullOrEmpty(this.comboBox1.Text))
                 return;
 
-            Log("Debug: Loading time line from cameras/history.csv ...");
+            Log("Debug: Loading time line from history database ...");
 
             //clear previous values
             this.timeline.Series[0].Points.Clear();
@@ -1102,7 +1118,7 @@ namespace AITool
 
                 if (!string.Equals(this.comboBox1.Text.Trim(), "All Cameras", StringComparison.OrdinalIgnoreCase)) //all cameras selected
                 {
-                    result = result.Where(hist => hist.Camera.ToLower().StartsWith(this.comboBox1.Text.Trim().ToLower())).ToList();
+                    result = result.Where(hist => hist.Camera.StartsWith(this.comboBox1.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
                 //every int represents the number of ai calls in successive half hours (p.e. relevant[0] is 0:00-0:30 o'clock, relevant[1] is 0:30-1:00 o'clock) 
@@ -1121,7 +1137,7 @@ namespace AITool
                     //get minute
                     int minute = hist.Date.Minute;
 
-                    int halfhour; //stores the half hour in which the alert occured
+                    int halfhour; //stores the half hour in which the alert occurred
 
                     //add +1 to counter for corresponding half-hour
                     if (minute > 30) //if alert occurred after half o clock
@@ -1245,7 +1261,7 @@ namespace AITool
                 return;
 
 
-            Log("Debug: Loading confidence-frequency chart from cameras/history.csv ...");
+            Log("Debug: Loading confidence-frequency chart from history database ...");
 
             //clear previous values
             this.chart_confidence.Series[0].Points.Clear();
@@ -1666,27 +1682,21 @@ namespace AITool
 
                 });
 
-                MethodInvoker LabelUpdate = delegate
+                Global_GUI.InvokeIFRequired(this.lblQueue, () =>
                 {
                     this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
-                };
 
-                this.Invoke(LabelUpdate);
-
-                LabelUpdate = delegate
+                });
+                Global_GUI.InvokeIFRequired(this.lbl_errors, () =>
                 {
                     if (LogMan.ErrorCount.ReadFullFence() > 0)
                         this.lbl_errors.Text = $"{LogMan.ErrorCount} error(s) occurred. Click to open Log."; //update error counter label
                     else
                         this.lbl_errors.Text = "";
 
-                };
-
-                //getting error here when called too early - had to check if Visible or not -Vorlon
-                this.Invoke(LabelUpdate);
+                });
 
 
-                //Application.DoEvents();
 
             }
             catch (Exception ex)
@@ -2157,7 +2167,7 @@ namespace AITool
             if (BlueIrisInfo.IsValid && !String.IsNullOrWhiteSpace(BlueIrisInfo.URL))
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                cam.trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=ENTERUSERNAMEHERE&pw=ENTERPASSWORDHERE&flagalert=1&memo=[summary]";
+                cam.trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
             }
 
 
@@ -2696,6 +2706,9 @@ namespace AITool
             AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(this.tb_telegram_cooldown.Text);
             AppSettings.Settings.send_errors = this.cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
+
+            AppSettings.Settings.DefaultUserName = this.tb_username.Text;
+            AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text);
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
@@ -3923,7 +3936,7 @@ namespace AITool
 
                             this.UpdateProgressBar($"Searching {fi.Name}...", 1, 1, 1);
 
-                            List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.Name, false, false);
+                            List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.FullName, false, false);
 
                             this.UpdateProgressBar($"Searching {fi.Name}...", 1, 1, curlist.Count);
 
@@ -3934,7 +3947,7 @@ namespace AITool
                             foreach (var CLI in curlist)
                             {
                                 cnt++;
-                                this.UpdateProgressBar($"Searching {fi.Name}...", cnt, 1, curlist.Count);
+                                //this.UpdateProgressBar($"Searching {fi.Name}...", cnt, 1, curlist.Count);
 
                                 if (CLI.Detail.IndexOf(justfile, StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
@@ -4431,21 +4444,29 @@ namespace AITool
 
 
                         //load into memory
-                        Log($"Debug: Searching back 2 days - {cur} of {files.Count}: {fi.Name}...");
+                        Log($"Debug: Searching back 2 days - {cur} of {files.Count}: {fi.Name}...", "None", "None", "None");
 
                         this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", 1, 1, 1);
 
-                        List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.Name, false, false);
+                        List<ClsLogItm> curlist = await LogMan.LoadLogFileAsync(fi.FullName, false, false);
 
                         this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", 1, 1, curlist.Count);
 
 
                         int fnd = 0;
                         int cnt = 0;
+                        int CurListCount = curlist.Count;
+                        int HalfList = CurListCount / 2;
+                        long LastMS = sw.ElapsedMilliseconds;
                         foreach (var CLI in curlist)
                         {
                             cnt++;
-                            this.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", cnt, 1, curlist.Count);
+
+                            //if (cnt == 1 || cnt == HalfList || cnt > (CurListCount - 5) || (sw.ElapsedMilliseconds - LastMS >= 500))
+                            //{
+                            //    Global.UpdateProgressBar($"Searching {cur} of {files.Count}: {fi.Name}...", cnt, 1, CurListCount);
+                            //    LastMS = sw.ElapsedMilliseconds;
+                            //}
 
                             if (CLI.Level == LogLevel.Error || CLI.Level == LogLevel.Warn || CLI.Level == LogLevel.Fatal)
                             {

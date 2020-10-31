@@ -446,7 +446,7 @@ namespace AITool
 
         public async Task<List<ClsLogItm>> LoadLogFileAsync(string Filename, bool Import, bool LimitEntries)
         {
-            return await Task.Run(() => this.LoadLogFile(Filename, Import, LimitEntries));
+            return await Task.Run(async () => this.LoadLogFile(Filename, Import, LimitEntries));
         }
 
         private List<ClsLogItm> LoadLogFile(string Filename, bool Import, bool LimitEntries)

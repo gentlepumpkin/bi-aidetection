@@ -1620,6 +1620,10 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilenamenoext]", Path.GetFileNameWithoutExtension(imgpath)); //gives the image name of the image that caused the trigger
 
+                ret = Global.ReplaceCaseInsensitive(ret, "[username]", AppSettings.Settings.DefaultUserName); //gives the image name of the image that caused the trigger
+                ret = Global.ReplaceCaseInsensitive(ret, "[password]", Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted)); //gives the image name of the image that caused the trigger
+
+
                 if (hist != null)
                 {
                     List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);

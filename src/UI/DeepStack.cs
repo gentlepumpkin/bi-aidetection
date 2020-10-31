@@ -508,7 +508,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> ERROR: {line.Data}", "", "", "REDIS-SERVER.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> STDERR: {line.Data}", "", "", "REDIS-SERVER.EXE");
 
             }
             catch (Exception)
@@ -526,7 +527,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"Debug: DeepStack>> {line.Data}", "", "", "REDIS-SERVER.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> {line.Data}", "", "", "REDIS-SERVER.EXE");
 
             }
             catch (Exception)
@@ -546,7 +548,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"Debug: DeepStack>> Init: ERROR: {line.Data}", "", "PYTHON.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> Init: STDERR: {line.Data}", "", "PYTHON.EXE");
 
             }
             catch (Exception)
@@ -564,7 +567,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"Debug: DeepStack>> Init: {line.Data}", "", "", "PYTHON.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> Init: {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception)
@@ -584,7 +588,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> ERROR: {line.Data}", "", "", "PYTHON.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> STDERR: {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception)
@@ -602,7 +607,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"Debug: DeepStack>> {line.Data}", "", "", "PYTHON.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> {line.Data}", "", "", "PYTHON.EXE");
 
             }
             catch (Exception)
@@ -622,7 +628,8 @@ namespace AITool
                     return;
                 }
 
-                Log($"DeepStack>> ERROR: {line.Data}", "", "", "SERVER.EXE");
+                if (AppSettings.Settings.deepstack_debug)
+                    Log($"Debug: DeepStack>> STDERR: {line.Data}", "", "", "SERVER.EXE");
 
             }
             catch (Exception)
@@ -654,7 +661,6 @@ namespace AITool
                 {
                     this.VisionDetectionRunning = true;
                 }
-
 
                 Log($"Debug: DeepStack>> {line.Data}", "", "", "SERVER.EXE");
 

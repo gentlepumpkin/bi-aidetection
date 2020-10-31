@@ -37,7 +37,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.cb_queue_actions = new System.Windows.Forms.CheckBox();
             this.cb_mergeannotations = new System.Windows.Forms.CheckBox();
+            this.tb_telegram_triggering_objects = new System.Windows.Forms.TextBox();
             this.tb_network_folder_filename = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.tb_telegram_caption = new System.Windows.Forms.TextBox();
@@ -70,8 +72,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
-            this.label4 = new System.Windows.Forms.Label();
-            this.tb_telegram_triggering_objects = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -80,7 +80,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(834, 444);
+            this.btnCancel.Location = new System.Drawing.Point(834, 459);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -93,7 +93,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(756, 444);
+            this.btnSave.Location = new System.Drawing.Point(756, 459);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -144,11 +144,11 @@
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.tb_cooldown);
-            this.groupBox1.Location = new System.Drawing.Point(12, 59);
+            this.groupBox1.Location = new System.Drawing.Point(12, 72);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.groupBox1.Size = new System.Drawing.Size(892, 376);
+            this.groupBox1.Size = new System.Drawing.Size(892, 378);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             // 
@@ -195,6 +195,16 @@
             this.cb_mergeannotations.UseVisualStyleBackColor = true;
             this.cb_mergeannotations.CheckedChanged += new System.EventHandler(this.cb_mergeannotations_CheckedChanged);
             // 
+            // tb_telegram_triggering_objects
+            // 
+            this.tb_telegram_triggering_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_telegram_triggering_objects.Location = new System.Drawing.Point(553, 48);
+            this.tb_telegram_triggering_objects.Name = "tb_telegram_triggering_objects";
+            this.tb_telegram_triggering_objects.Size = new System.Drawing.Size(331, 23);
+            this.tb_telegram_triggering_objects.TabIndex = 45;
+            this.toolTip1.SetToolTip(this.tb_telegram_triggering_objects, "Leave blank for ALL or list objects you want telegrams to be\r\nsent for - \"Person," +
+        " VelociRabbit, etc\".  Not case sensitive.");
+            // 
             // tb_network_folder_filename
             // 
             this.tb_network_folder_filename.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -204,6 +214,16 @@
             this.tb_network_folder_filename.TabIndex = 45;
             this.toolTip1.SetToolTip(this.tb_network_folder_filename, "The filename to be created in the network folder NOT including file extension.  F" +
         "or example, [camera] would be saved as MYCAMERA.JPG");
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(497, 52);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(50, 15);
+            this.label4.TabIndex = 44;
+            this.label4.Text = "Objects:";
             // 
             // label15
             // 
@@ -520,7 +540,7 @@
             this.label3.ForeColor = System.Drawing.Color.Green;
             this.label3.Location = new System.Drawing.Point(12, 15);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(709, 40);
+            this.label3.Size = new System.Drawing.Size(885, 53);
             this.label3.TabIndex = 5;
             this.label3.Text = resources.GetString("label3.Text");
             this.label3.Click += new System.EventHandler(this.label3_Click);
@@ -528,7 +548,7 @@
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(679, 444);
+            this.btTest.Location = new System.Drawing.Point(679, 459);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 6;
@@ -536,32 +556,12 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
             // 
-            // label4
-            // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(497, 52);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(50, 15);
-            this.label4.TabIndex = 44;
-            this.label4.Text = "Objects:";
-            // 
-            // tb_telegram_triggering_objects
-            // 
-            this.tb_telegram_triggering_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_telegram_triggering_objects.Location = new System.Drawing.Point(553, 48);
-            this.tb_telegram_triggering_objects.Name = "tb_telegram_triggering_objects";
-            this.tb_telegram_triggering_objects.Size = new System.Drawing.Size(331, 23);
-            this.tb_telegram_triggering_objects.TabIndex = 45;
-            this.toolTip1.SetToolTip(this.tb_telegram_triggering_objects, "Leave blank for ALL or list objects you want telegrams to be\r\nsent for - \"Person," +
-        " VelociRabbit, etc\".  Not case sensitive.");
-            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(912, 482);
+            this.ClientSize = new System.Drawing.Size(912, 497);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);

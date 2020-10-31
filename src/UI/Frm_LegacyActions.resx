@@ -139,7 +139,7 @@ dog, cat, bird ; C:\WOOF.WAV
 * ; C:\DEFAULT.WAV</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImagePathEscaped], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences].   You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
+    <value>You may use the following case insensitive variables: [Camera], [Prefix], [ImagePath], [ImagePathEscaped], [ImageFilename], [ImageFilenameNoExt], [Summary], [SummaryNonEscaped], [Detection], [Detections], [Position], [Confidence], [Confidences], [Username], [Password].  You can also use Windows enviroment variables such as %USERPROFILE%, %APPDATA%, %TEMP%, etc.   Click here to see variable replacements.</value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>35</value>
