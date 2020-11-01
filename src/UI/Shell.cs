@@ -32,7 +32,7 @@ namespace AITool
         private ThreadSafe.Boolean IsStatsUpdating = new ThreadSafe.Boolean(false);
 
         //Dictionary<string, History> HistoryDic = new Dictionary<string, History>();
-        private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
+        //private ThreadSafe.Boolean FilterChanged = new ThreadSafe.Boolean(true);
 
         //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
         public static SemaphoreSlim Semaphore_List_Updating = new SemaphoreSlim(1, 1);
@@ -1642,9 +1642,9 @@ namespace AITool
                     if (HistoryDB != null && HistoryDB.AddedCount.ReadFullFence() > 0)
                         hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
-                    this.toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0.0")}/MIN) | {removed} removed |";
+                    this.toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0")}/MIN) | {removed} removed |";
 
-                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Action Queued";
+                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Actions Queued";
 
                     this.toolStripStatusErrors.Text = $"{LogMan.ErrorCount} Errors";
 

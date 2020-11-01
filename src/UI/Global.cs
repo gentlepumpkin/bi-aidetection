@@ -2602,9 +2602,23 @@ namespace AITool
         public Decimal Average { get; private set; }
         public Decimal Min { get; private set; }
         public Decimal Max { get; private set; }
-        public Decimal Count { get; private set; }
+        public int Count { get; private set; }
         public Decimal Current { get; private set; }
+        public DateTime TimeInitialized = DateTime.Now;
+        public double ItemsPerMinute()
+        {
+            if (this.Count == 0)
+                return 0;
 
+            return this.Count / (DateTime.Now - TimeInitialized).TotalMinutes;
+        }
+        public double ItemsPerSecond()
+        {
+            if (this.Count == 0)
+                return 0;
+
+            return this.Count / (DateTime.Now - TimeInitialized).TotalSeconds;
+        }
 
         public MovingCalcs(int windowSize)
         {
