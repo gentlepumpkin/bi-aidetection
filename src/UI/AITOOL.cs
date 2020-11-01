@@ -977,13 +977,13 @@ namespace AITool
                     if (result.Success)
                     {
 
+                        string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
+                        string file = Path.Combine(fldr, $"{cam.name}-Last.jpg");
                         //Create a copy of the current image for use in mask manager when the original image was deleted
-                        if ((DateTime.Now - LastImageBackupTime.Read()).TotalMinutes >= 60)
+                        if ((DateTime.Now - LastImageBackupTime.Read()).TotalMinutes >= 60 || !File.Exists(file))
                         {
-                            string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
                             if (!Directory.Exists(fldr))
                                 Directory.CreateDirectory(fldr);
-                            string file = Path.Combine(fldr, $"{cam.name}-Last.jpg");
                             File.Copy(CurImg.image_path, file, true);
                             LastImageBackupTime.Write(DateTime.Now);
                         }
