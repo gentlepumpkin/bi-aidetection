@@ -93,6 +93,17 @@ namespace AITool
                         Log($" >No CAM.last_image_file for '{this.cam.name}'");
                     }
 
+                    //try to use the LastCamImages version
+                    string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
+                    string file = Path.Combine(fldr, $"{cam.name}-Last.jpg");
+
+                    if (File.Exists(file))
+                    {
+                        Log($" (Found image from LastCamImages folder: ({file})");
+                        return file;
+                    }
+
+
                     if (string.IsNullOrEmpty(lastfolder))
                     {
                         lastfolder = this.cam.input_path;

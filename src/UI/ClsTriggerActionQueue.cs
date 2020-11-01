@@ -798,7 +798,14 @@ namespace AITool
                         AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
                     }
 
-                    string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+                    string Caption = "";
+
+                    if (!string.IsNullOrEmpty(AQI.Text))
+                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+                    else
+                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.telegram_caption);
+
+
 
                     //make sure it is a matching object
                     if (!string.IsNullOrEmpty(AQI.cam.telegram_triggering_objects))

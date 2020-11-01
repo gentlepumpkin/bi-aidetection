@@ -4,10 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using System.Linq;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -23,9 +23,6 @@ namespace AITool
 
         public static void UpdateFOLV(FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, bool UseSelected = false, object SelectObject = null, [CallerMemberName()] string memberName = null)
         {
-
-            if (objs.Count == 0)
-                return;
 
             Global_GUI.InvokeIFRequired(olv, () =>
             {
@@ -738,7 +735,7 @@ namespace AITool
             // This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
             // See TextBoxLogger.Log for example
 
-            if (control != null && !control.IsDisposed && !control.Disposing && control.IsHandleCreated && control.FindForm().IsHandleCreated)
+            if (control != null && !control.IsDisposed && !control.Disposing && control.IsHandleCreated && control.FindForm().IsHandleCreated && !IsClosing.ReadFullFence())
             {
                 if (control.InvokeRequired)
                 {

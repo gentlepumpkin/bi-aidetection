@@ -1918,12 +1918,7 @@ namespace AITool
 
             string filename = Path.GetFileName(image_path);
 
-            MethodInvoker LabelUpdate = delegate { this.label2.Text = $"Accessing {filename}..."; };
-            this.Invoke(LabelUpdate);
-
-            //output "Processing Image" to Overview Tab
-            LabelUpdate = delegate { this.label2.Text = $"Processing {filename}..."; };
-            this.Invoke(LabelUpdate);
+            Global_GUI.InvokeIFRequired(this.label2, () => { this.label2.Text = $"Processing {filename}..."; });
 
             this.UpdateStats();
 
@@ -1936,20 +1931,17 @@ namespace AITool
 
 
             //output Running on Overview Tab
-            MethodInvoker LabelUpdate = delegate { this.label2.Text = "Running"; };
-            this.Invoke(LabelUpdate);
+            Global_GUI.InvokeIFRequired(this.label2, () => { this.label2.Text = $"Running"; });
 
             //only update charts if stats tab is open
 
-            LabelUpdate = delegate
+            if (this.tabControl1.SelectedIndex == 1)
             {
+                Global_GUI.InvokeIFRequired(this, () => { this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart(); });
+            }
 
-                this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
-            };
-            this.Invoke(LabelUpdate);
-
-            //load updated camera stats info in camera tab if a camera is selected
-            LabelUpdate = delegate
+            //load updated cameara stats info in camera tab if a camera is selected
+            Global_GUI.InvokeIFRequired(this, () =>
             {
                 if (this.list2.SelectedItems.Count > 0)
                 {
@@ -1967,9 +1959,7 @@ namespace AITool
                     this.lbl_camstats.Text = stats;
                 }
 
-
-            };
-            this.Invoke(LabelUpdate);
+            });
 
 
             this.UpdateStats();

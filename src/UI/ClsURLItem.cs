@@ -6,6 +6,7 @@ namespace AITool
     public enum URLTypeEnum
     {
         DeepStack,
+        DOODS,
         Other
     }
     public class ClsURLItem
@@ -45,8 +46,16 @@ namespace AITool
                 {
                     if (!this.url.Contains("://"))
                         this.url = "http://" + this.url;
-                    if (!this.url.ToLower().Contains("/v1/vision/detection"))
+                    if (!(this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0))
                         this.url = this.url + "/v1/vision/detection";
+                }
+                else if (this.Type == URLTypeEnum.DOODS)
+                {
+                    if (!this.url.Contains("://"))
+                        this.url = "http://" + this.url;
+                    if (!(this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0))
+                        this.url = this.url + "/detect";
+
                 }
 
                 Uri uri = new Uri(this.url);

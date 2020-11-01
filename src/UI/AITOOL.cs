@@ -69,6 +69,8 @@ namespace AITool
 
         public static ThreadSafe.Boolean IsClosing = new ThreadSafe.Boolean(false);
         public static ThreadSafe.Boolean IsLoading = new ThreadSafe.Boolean(true);
+        public static ThreadSafe.Datetime LastImageBackupTime = new ThreadSafe.Datetime(DateTime.MinValue);
+
         public static string srv = "";
 
         public static async Task InitializeBackend()
@@ -974,6 +976,17 @@ namespace AITool
 
                     if (result.Success)
                     {
+
+                        //Create a copy of the current image for use in mask manager when the original image was deleted
+                        if ((DateTime.Now - LastImageBackupTime.Read()).TotalMinutes >= 60)
+                        {
+                            string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
+                            if (!Directory.Exists(fldr))
+                                Directory.CreateDirectory(fldr);
+                            string file = Path.Combine(fldr, $"{cam.name}-Last.jpg");
+                            File.Copy(CurImg.image_path, file, true);
+                            LastImageBackupTime.Write(DateTime.Now);
+                        }
 
                         string jsonString = "";
 
