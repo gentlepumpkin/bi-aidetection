@@ -5,6 +5,7 @@ using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace AITool
 
         }
 
-        public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain)
+        public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain, ClsImageQueueItem CurImg)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -56,9 +57,9 @@ namespace AITool
                                             portint = 1883;
                                         }
 
-                                        bool IsWebSocket = (AppSettings.Settings.mqtt_serverandport.ToLower().Contains("ws://") ||
-                                                            AppSettings.Settings.mqtt_serverandport.ToLower().Contains("/mqtt") ||
-                                                            AppSettings.Settings.mqtt_serverandport.ToLower().Contains("wss://"));
+                                        bool IsWebSocket = (AppSettings.Settings.mqtt_serverandport.IndexOf("ws://", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                                            AppSettings.Settings.mqtt_serverandport.IndexOf("/mqtt", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                                            AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
 
                                         bool UseTLS = (AppSettings.Settings.mqtt_UseTLS || portint == 8883 || AppSettings.Settings.mqtt_serverandport.ToLower().Contains("wss://"));
 
@@ -258,6 +259,32 @@ namespace AITool
                                             {
                                                 Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
+
+                                            if (CurImg != null)
+                                            {
+                                                using FileStream image_data = System.IO.File.OpenRead(CurImg.image_path);
+
+                                                ma = new MqttApplicationMessageBuilder()
+                                                                        .WithTopic(topic)
+                                                                        .WithPayload(image_data)
+                                                                        .WithAtLeastOnceQoS()
+                                                                        .WithRetainFlag(retain)
+                                                                        .Build();
+
+                                                res = await mqttClient.PublishAsync(ma, CancellationToken.None);
+
+
+                                                if (res.ReasonCode == MqttClientPublishReasonCode.Success)
+                                                {
+                                                    Log($"Debug: MQTT: ...Sent image in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                }
+                                                else
+                                                {
+                                                    Log($"Error: MQTT: sending image: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                }
+
+                                            }
+
 
                                         }
                                         else if (cres != null)

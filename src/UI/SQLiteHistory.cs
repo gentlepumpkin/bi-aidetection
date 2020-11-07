@@ -87,6 +87,9 @@ namespace AITool
 
             foreach (DBQueueHistoryItem hitm in this.DBQueueHistory.GetConsumingEnumerable())
             {
+                if (MasterCTS.IsCancellationRequested)
+                    break;
+
                 string file = "";
                 try
                 {
@@ -111,7 +114,7 @@ namespace AITool
 
             }
 
-            Log($"Error: Should not have left HistoryJobQueueLoop?");
+            Log($"Debug: HistoryJobQueueLoop canceled.");
 
         }
 
@@ -432,10 +435,10 @@ namespace AITool
                             {
                                 cnt++;
 
-                                if (cnt == 1 || cnt == result.Count || (cnt % (result.Count / 10) > 0))
-                                {
-                                    Global.UpdateProgressBar("Migrating history.csv...", cnt, 1, result.Count);
-                                }
+                                //if (cnt == 1 || cnt == result.Count || (cnt % (result.Count / 10) > 0))
+                                //{
+                                //    Global.UpdateProgressBar("Migrating history.csv...", cnt, 1, result.Count);
+                                //}
 
                                 History hist = new History().CreateFromCSV(val);
                                 if (File.Exists(hist.Filename))
@@ -463,7 +466,7 @@ namespace AITool
                             //this.DeletedCount.AtomicAddAndGet(removed);
 
                             //try to get a better feel how much time this function consumes - Vorlon
-                            Log($"Debug: ...Added {added} out of {result.Count} history items in {{yellow}}{SW.ElapsedMilliseconds}ms{{white}}, {this.HistoryDic.Count()} lines.");
+                            Log($"Debug: ...Added {added} out of {result.Count} history items ({removed} removed) in {SW.ElapsedMilliseconds}ms, {this.HistoryDic.Count()} lines.");
 
                         }
                         else

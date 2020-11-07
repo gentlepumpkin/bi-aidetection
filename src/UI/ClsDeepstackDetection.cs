@@ -1,6 +1,6 @@
 ﻿namespace AITool
 {
-    public class Object
+    public class ClsDeepstackDetection
     {
 
         public string label { get; set; }

@@ -7,7 +7,8 @@ namespace AITool
     {
         DeepStack,
         DOODS,
-        Other
+        Other,
+        Unknown
     }
     public class ClsURLItem
     {
@@ -26,12 +27,12 @@ namespace AITool
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
 
         public string ResultMessage { get; set; } = "";
-        public URLTypeEnum Type { get; set; } = URLTypeEnum.Other;
+        public URLTypeEnum Type { get; set; } = URLTypeEnum.Unknown;
         public override string ToString()
         {
             return this.url;
         }
-        public ClsURLItem(String url, int Order, int Count, URLTypeEnum type = URLTypeEnum.DeepStack)
+        public ClsURLItem(String url, int Order, int Count, URLTypeEnum type)
         {
             if (!string.IsNullOrWhiteSpace(url))
             {
@@ -42,20 +43,21 @@ namespace AITool
                 this.Order = Order;
                 this.Count = Count;
 
-                if (this.Type == URLTypeEnum.DeepStack)
+                if (!this.url.Contains("://"))
+                    this.url = "http://" + this.url;
+
+                if (this.Type == URLTypeEnum.DOODS || this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!this.url.Contains("://"))
-                        this.url = "http://" + this.url;
-                    if (!(this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0))
-                        this.url = this.url + "/v1/vision/detection";
-                }
-                else if (this.Type == URLTypeEnum.DOODS)
-                {
-                    if (!this.url.Contains("://"))
-                        this.url = "http://" + this.url;
+                    this.Type = URLTypeEnum.DOODS;
                     if (!(this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0))
                         this.url = this.url + "/detect";
 
+                }
+                else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    this.Type = URLTypeEnum.DeepStack;
+                    if (!(this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0))
+                        this.url = this.url + "/v1/vision/detection";
                 }
 
                 Uri uri = new Uri(this.url);

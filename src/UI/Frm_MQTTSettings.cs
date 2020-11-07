@@ -1,6 +1,7 @@
 ﻿using MQTTnet.Client.Publishing;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 using static AITool.AITOOL;
 
@@ -53,10 +54,24 @@ namespace AITool
 
                     MQTTClient mq = new MQTTClient();
                     MqttClientPublishResult pr = null;
+                    ClsImageQueueItem CurImg = null;
+
+                    if (this.cam.Action_mqtt_send_image)
+                    {
+                        if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections) && File.Exists(this.cam.last_image_file_with_detections))
+                        {
+                            CurImg = new ClsImageQueueItem(this.cam.last_image_file_with_detections, 0);
+                        }
+                        else if (!string.IsNullOrEmpty(this.cam.last_image_file) && File.Exists(this.cam.last_image_file))
+                        {
+                            CurImg = new ClsImageQueueItem(this.cam.last_image_file, 0);
+                        }
+
+                    }
 
                     for (int i = 0; i < topics.Count; i++)
                     {
-                        pr = await mq.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message);
+                        pr = await mq.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message, CurImg);
 
                     }
 

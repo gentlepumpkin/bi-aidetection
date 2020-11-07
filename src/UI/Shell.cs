@@ -1,4 +1,5 @@
 ﻿using BrightIdeasSoftware;
+using EasyAsyncCancel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json; //deserialize DeepquestAI response
 using NLog;
@@ -154,8 +155,10 @@ namespace AITool
                 this.cb_send_errors.Checked = AppSettings.Settings.send_errors;
                 this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
-                this.tb_username.Text = AppSettings.Settings.DefaultUserName;
+                this.tb_username.Text = AppSettings.Settings.DefaultUserName.Trim();
                 this.tb_password.Text = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
+
+                this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer.Trim();
 
                 //---------------------------------------------------------------------------
                 //STATS TAB
@@ -1643,8 +1646,11 @@ namespace AITool
                         hpm = HistoryDB.AddedCount.ReadFullFence() / (DateTime.Now - HistoryDB.InitializeTime).TotalMinutes;
 
                     this.toolStripStatusLabelHistoryItems.Text = $"{items} history items ({hpm.ToString("###0")}/MIN) | {removed} removed |";
+                    int TriggerActionQueueCount = 0;
+                    if (TriggerActionQueue != null)
+                        TriggerActionQueueCount = TriggerActionQueue.Count.ReadFullFence();
 
-                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueue.Count} Actions Queued";
+                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueueCount} Actions Queued";
 
                     this.toolStripStatusErrors.Text = $"{LogMan.ErrorCount} Errors";
 
@@ -2154,10 +2160,10 @@ namespace AITool
             }
 
 
-            if (BlueIrisInfo.IsValid && !String.IsNullOrWhiteSpace(BlueIrisInfo.URL))
+            if (BlueIrisInfo.Result == BlueIrisResult.Valid)
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                cam.trigger_urls_as_string = $"{BlueIrisInfo.URL}/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
+                cam.trigger_urls_as_string = $"[BlueIrisURL]/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
             }
 
 
@@ -2365,24 +2371,64 @@ namespace AITool
         private void btnCameraAdd_Click(object sender, EventArgs e)
         {
 
-            using (var form = new InputForm("Camera Name:", "New Camera", cbitems: BlueIrisInfo.Cameras))
+            using (Frm_CameraAdd frm = new Frm_CameraAdd())
             {
-                var result = form.ShowDialog();
-                if (result == DialogResult.OK)
+
+                //add only cameras not already installed
+                foreach (string camstr in BlueIrisInfo.Cameras)
                 {
-                    Camera cam = new Camera(form.text);
+                    if (GetCamera(camstr, false) == null)
+                        frm.checkedListBoxCameras.Items.Add(camstr, false);
 
-                    string camresult = this.AddCamera(cam);
+                }
 
-                    // Old way...
-                    //string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
-                    //                                 string _input_path, bool _input_path_includesubfolders,
-                    //                                 bool masking_enabled,
-                    //                                 bool trigger_cancels
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    int added = 0;
+                    List<string> cams = Global.Split(frm.tb_Cameras.Text, "\r\n|;,");
+                    foreach (var cs in cams)
+                    {
+                        if (GetCamera(cs, false) == null)
+                        {
+                            Camera cam = new Camera(cs);
+                            string camresult = this.AddCamera(cam);
+                            Log(camresult);
+                            if (camresult.StartsWith("success", StringComparison.OrdinalIgnoreCase))
+                            {
+                                added++;
+                            }
 
-                    MessageBox.Show(camresult);
+                        }
+                        else
+                        {
+                            Log($"Error: Camera already existed {cs}.");
+                        }
+
+                    }
+
+                    MessageBox.Show($"Added {added} out of {cams.Count()}.  See log for details.");
+
                 }
             }
+
+            //using (var form = new InputForm("Camera Name:", "New Camera", cbitems: BlueIrisInfo.Cameras))
+            //{
+            //    var result = form.ShowDialog();
+            //    if (result == DialogResult.OK)
+            //    {
+            //        Camera cam = new Camera(form.text);
+
+            //        string camresult = this.AddCamera(cam);
+
+            //        // Old way...
+            //        //string name, string prefix, string trigger_urls_as_string, string triggering_objects_as_string, bool telegram_enabled, bool enabled, double cooldown_time, int threshold_lower, int threshold_upper,
+            //        //                                 string _input_path, bool _input_path_includesubfolders,
+            //        //                                 bool masking_enabled,
+            //        //                                 bool trigger_cancels
+
+            //        MessageBox.Show(camresult);
+            //    }
+            //}
         }
 
         //event: save camera settings button
@@ -2687,18 +2733,20 @@ namespace AITool
 
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
-            AppSettings.Settings.input_path = this.cmbInput.Text;
+            AppSettings.Settings.input_path = this.cmbInput.Text.Trim();
             AppSettings.Settings.input_path_includesubfolders = this.cb_inputpathsubfolders.Checked;
-            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text;
+            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
             AppSettings.Settings.deepstack_urls_are_queued = this.cb_DeepStackURLsQueued.Checked;
             AppSettings.Settings.telegram_chatids = Global.Split(this.tb_telegram_chatid.Text, "|;,", true, true);
-            AppSettings.Settings.telegram_token = this.tb_telegram_token.Text;
-            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(this.tb_telegram_cooldown.Text);
+            AppSettings.Settings.telegram_token = this.tb_telegram_token.Text.Trim();
+            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(this.tb_telegram_cooldown.Text.Trim());
             AppSettings.Settings.send_errors = this.cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
 
-            AppSettings.Settings.DefaultUserName = this.tb_username.Text;
-            AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text);
+            AppSettings.Settings.DefaultUserName = this.tb_username.Text.Trim();
+            AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text.Trim());
+
+            AppSettings.Settings.BlueIrisServer = this.tb_BlueIrisServer.Text.Trim();
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
@@ -2725,6 +2773,17 @@ namespace AITool
             //update fswatcher to watch new input folder
             UpdateWatchers(true);
 
+            //Update blue iris info
+            await BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
+
+
+            this.cmbInput.Items.Clear();
+            foreach (string pth in BlueIrisInfo.ClipPaths)
+                this.cmbInput.Items.Add(pth);
+
+
+            if (BlueIrisInfo.Result != BlueIrisResult.Valid)
+                MessageBox.Show($"Error: Could not connect to BlueIris server: '{BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
 
             bool noneg = false;
             if (AppSettings.Settings.telegram_chatids.Count > 0)
@@ -2775,13 +2834,13 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            IsClosing.WriteFullFence(true);
+            Log($"------Closing------- CloseReason: {e.CloseReason}");
 
-            Log("------Closing-------");
+            IsClosing.WriteFullFence(true);
 
             try
             {
-                if (AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+                if (e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
                 {
                     using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                     {
@@ -2815,9 +2874,12 @@ namespace AITool
                 if (!AppSettings.AlreadyRunning)
                     Global.SaveSetting("LastShutdownState", "graceful shutdown");
 
+                MasterCTS.Cancel();
+
+
+
             }
             catch { }
-
 
 
 
@@ -3281,6 +3343,7 @@ namespace AITool
                 frm.tb_MQTT_Topic.Text = cam.Action_mqtt_topic;
                 frm.tb_MQTT_Payload_cancel.Text = cam.Action_mqtt_payload_cancel;
                 frm.tb_MQTT_Topic_Cancel.Text = cam.Action_mqtt_topic_cancel;
+                frm.cb_MQTT_SendImage.Checked = cam.Action_mqtt_send_image;
 
                 frm.cb_queue_actions.Checked = cam.Action_queued;
 
@@ -3321,6 +3384,7 @@ namespace AITool
                     cam.Action_mqtt_topic = frm.tb_MQTT_Topic.Text.Trim();
                     cam.Action_mqtt_payload_cancel = frm.tb_MQTT_Payload_cancel.Text.Trim();
                     cam.Action_mqtt_topic_cancel = frm.tb_MQTT_Topic_Cancel.Text.Trim();
+                    cam.Action_mqtt_send_image = frm.cb_MQTT_SendImage.Checked;
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 
@@ -4507,15 +4571,84 @@ namespace AITool
 
         private async void toolStripButton1_Click(object sender, EventArgs e)
         {
-            //UpdateProgressBar("Testing", 1, 1, 1);
-            for (int i = 0; i < 10; i++)
+            Debug.Print("About to run");
+            try
             {
-                this.UpdateProgressBar(i.ToString(), i, 0, 9);
-                await Task.Delay(250);
+                await Task.Run(() => longrunningtask()).CancelAfter(MasterCTS.Token, "my task canceled");
+                Debug.Print("After run");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.Print("Error: " + ex.ToString());
+            }
+            Debug.Print("Done.");
+
+        }
+
+
+        private void longrunningtask()
+        {
+            Debug.Print("Starting sleep...");
+            while (true)
+            {
+                Debug.Print(DateTime.Now + ": working");
+                Thread.Sleep(2000);
+            }
+            Debug.Print("After sleep");  //should never get here
+
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            Debug.Print("Canceling...");
+            MasterCTS.Cancel();
+            MasterCTS.Dispose();
+            MasterCTS = new CancellationTokenSource();
+            Debug.Print("Canceled.");
+        }
+
+        private void cb_person_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void manuallyAddImagesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+
+                string LastFile = Global.GetSetting("LastLoadedImageFile", "");
+
+                if (!string.IsNullOrEmpty(LastFile))
+                    ofd.InitialDirectory = Path.GetDirectoryName(LastFile);
+
+                ofd.Multiselect = true;
+                ofd.FileName = LastFile;
+                ofd.Title = "Browse for image files for AI to process";
+                ofd.CheckFileExists = true;
+                ofd.CheckPathExists = true;
+                ofd.DefaultExt = "jpg";
+                ofd.Filter = "Image Files (*.jpg)|*.jpg|All files (*.*)|*.*";
+                ofd.FilterIndex = 1;
+                ofd.RestoreDirectory = true;
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    // Read the files
+                    foreach (String file in ofd.FileNames)
+                    {
+                        Global.SaveSetting("LastLoadedImageFile", ofd.FileName);
+                        AddImageToQueue(ofd.FileName);
+                        //small delay
+                        await Task.Delay(AppSettings.Settings.file_access_delay);
+                    }
+                }
+
+
             }
         }
     }
-
 
     //enhanced TableLayoutPanel loads faster
     public partial class DBLayoutPanel : TableLayoutPanel

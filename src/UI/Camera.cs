@@ -68,6 +68,7 @@ namespace AITool
         public string Action_mqtt_topic_cancel = "ai/[camera]/motioncancel";
         public string Action_mqtt_payload_cancel = "cancel";
         public bool Action_mqtt_retain_message = false;
+        public bool Action_mqtt_send_image = false;
         public bool Action_queued = false;
 
         public MaskManager maskManager = new MaskManager();
@@ -104,7 +105,11 @@ namespace AITool
 
         public Camera(string Name = "")
         {
-            this.name = Name;
+            if (Name.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
+                this.name = Name.Substring(2).TrimStart(@"_-".ToCharArray()).Trim();  //if using dupe cam that may start with AICAMNAME or AI_CAMNAME
+            else
+                this.name = Name;
+
             this.prefix = Name;
         }
 

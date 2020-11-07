@@ -10,6 +10,10 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -79,6 +83,131 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+
+        public static string MappedDriveToUNCPath(string path)
+        {
+            if (!path.StartsWith(@"\\"))
+            {
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey("Network\\" + path[0]))
+                {
+                    if (key != null)
+                    {
+                        return key.GetValue("RemotePath").ToString() + path.Remove(0, 2).ToString();
+                    }
+                }
+            }
+            return path;
+        }
+
+        public class MappedDrive
+        {
+            public string DriveLetter = "";
+            public string Path = "";
+        }
+
+        public static async Task<string> GetBestRemotePathAsync(string RemoteLocalPath, string RemoteMachineNameOrIP)
+        {
+            //We are taking a path like C:\BlueIris\clips\blah read from a remote computer's registry
+            //and trying to convert it to an accessible path on the current computer.
+            string ret = RemoteLocalPath;
+
+            if (!RemoteLocalPath.StartsWith(@"\\"))
+            {
+                string ip = "";
+                string hostname = "";
+                //Make sure we have the IP address
+                IPAddress ipa = await GetIPAddressFromHostnameAsync(RemoteMachineNameOrIP);
+                ip = ipa.ToString();
+                hostname = await GetHostNameAsync(RemoteMachineNameOrIP);
+
+                //first look for a mapped drive letter:
+                string letter = RemoteLocalPath.Substring(0, 1);
+                List<MappedDrive> mapped = new List<MappedDrive>();
+                using RegistryKey key = Registry.CurrentUser.OpenSubKey("Network");
+                if (key != null)
+                {
+                    List<string> drives = key.GetSubKeyNames().ToList();
+                    foreach (string drv in drives)
+                    {
+                        using RegistryKey drvkey = key.OpenSubKey(drv);
+                        if (drvkey != null)
+                        {
+                            string remotepath = drvkey.GetValue("RemotePath").ToString();
+                            if (!string.IsNullOrEmpty(remotepath))
+                            {
+                                MappedDrive md = new MappedDrive();
+                                md.DriveLetter = drv;
+                                md.Path = remotepath;
+                                mapped.Add(md);
+                            }
+                        }
+                    }
+                }
+
+                //first pass, try to get any matches without waiting for remote server file exists check...
+                foreach (MappedDrive md in mapped)
+                {
+
+                }
+
+
+            }
+            return RemoteLocalPath;
+        }
+
+        public static string GetSharedPath(string BasePath, string SrcPath, bool OnlyPartial)
+        {
+            // Dim NetRootPth As String = "\\server\admlibrary\Software\AutoDesk\Test_CAD_State_Kit"
+            // Dim SrcPth As String     = "C:\Test\Test_CAD_State_Kit\C3D 2021\Utilities"
+            // Output=                     \\server\admlibrary\Software\AutoDesk\Test_CAD_State_Kit\C3D 2021\Utilities
+            string Ret = "";
+            try
+            {
+                // Dim com As String = FindCommonPath(pths)
+                string[] nps = BasePath.Trim().Split('\\');
+                string SharedPth = "";
+                bool Fnd = false;
+                foreach (string pp in nps)
+                {
+                    if (!OnlyPartial)
+                    {
+                        if (pp == "")
+                            SharedPth = SharedPth + @"\";
+                        else
+                            SharedPth = SharedPth + pp + @"\";
+                    }
+
+                    string[] rps = SrcPath.Trim().Split('\\');
+                    foreach (string rp in rps)
+                    {
+                        if (Fnd)
+                        {
+                            if (rp == "")
+                                SharedPth = SharedPth + @"\";
+                            else
+                                SharedPth = SharedPth + rp + @"\";
+                        }
+                        else if (pp != "" && string.Equals(pp, rp, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Fnd = true;
+                            if (OnlyPartial)
+                                SharedPth = SharedPth + rp + @"\";
+                        }
+                    }
+                    if (Fnd)
+                        break;
+                }
+                if (Fnd)
+                    Ret = SharedPth;
+            }
+            catch (Exception ex)
+            {
+                Ret = "";
+                Log("Error: " + ex.Message);
+            }
+            return Ret;
+        }
+
         public static bool IsRegexPatternValid(string pattern)
         {
             try
@@ -91,6 +220,197 @@ namespace AITool
             }
             catch { }
             return false;
+        }
+
+        public static async Task<string> GetHostNameAsync(string IPAddressOrHostName)
+        {
+            try
+            {
+                if (!IsValidIPAddress(IPAddressOrHostName))
+                    return IPAddressOrHostName;  //assume valid hostname if it doesnt look like an ip address
+
+                IPHostEntry entry = await Dns.GetHostEntryAsync(IPAddressOrHostName);
+                if (entry != null)
+                {
+                    return entry.HostName;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Error: " + ex.Message);
+            }
+
+            return IPAddressOrHostName;
+
+        }
+        public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddres = "")
+        {
+            IPAddress ret = default(IPAddress);
+            try
+            {
+                if (IsValidIPAddress(HostNameOrIPAddres))
+                    return GetIPAddressFromIPString(HostNameOrIPAddres);
+
+                IPHostEntry Host;
+                if (string.IsNullOrWhiteSpace(HostNameOrIPAddres))
+                    Host = await Dns.GetHostEntryAsync(Dns.GetHostName());
+                else
+                    Host = await Dns.GetHostEntryAsync(HostNameOrIPAddres);
+
+                foreach (IPAddress IP in Host.AddressList)
+                {
+                    if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        // just return the first one
+                        ret = IP;
+                        break;
+                    }
+                }
+                if (!IsValidIPAddress(ret))
+                {
+                    // fall back to ipv6
+                    foreach (IPAddress IP in Host.AddressList)
+                    {
+                        if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        {
+                            // just return the first one
+                            ret = IP;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: Hostname '{HostNameOrIPAddres}': {ExMsg(ex)}");
+            }
+
+            return ret;
+        }
+        public static IPAddress GetIPAddressFromIPString(string IP)
+        {
+            IPAddress ret = default(IPAddress);
+            if (!string.IsNullOrEmpty(IP))
+            {
+                IPAddress IPTst;
+                if (IPAddress.TryParse(IP, out IPTst) && !IPTst.Equals(IPAddress.None))
+                    return IPTst;
+            }
+            return ret;
+        }
+        public static bool IsValidIPAddress(string IP)
+        {
+            if (!string.IsNullOrEmpty(IP))
+            {
+                IPAddress IPTst;
+                if (IPAddress.TryParse(IP, out IPTst) && !IPTst.Equals(IPAddress.None))
+                    return true;
+            }
+            return false;
+        }
+        public static bool IsValidIPAddress(IPAddress IP)
+        {
+            if (IP != null && !IP.Equals(IPAddress.None))
+            {
+                IPAddress IPTst;
+                if (IPAddress.TryParse(IP.ToString(), out IPTst) && !IPTst.Equals(IPAddress.None))
+                    return true;
+            }
+            return false;
+        }
+
+        public class ClsPingOut
+        {
+            public bool Success = false;
+            public PingReply PingReply = null;
+            public long DNSResolveMS = 0;
+            public string PingError = "";
+            public int Hops = 0;
+            public int Retries = 0;
+            public long AvgTimeMS = 0;
+            public long MaxTimeMS = 0;
+            public long MinTimeMS = 0;
+            public long TotalTimeMS = 0;
+            public List<long> Pings = new List<long>();
+        }
+
+        public static async Task<ClsPingOut> IsConnected(string HostOrIPToPing = "www.google.com", int TimeoutMS = 2000, int RetryCount = 3, int DelayMS = 25)
+        {
+            ClsPingOut ret = new ClsPingOut();
+            Stopwatch SW = Stopwatch.StartNew();
+
+            try
+            {
+                IPAddress IP = null;
+
+                if (IsValidIPAddress(HostOrIPToPing))
+                    IP = GetIPAddressFromIPString(HostOrIPToPing);
+                else
+                    IP = await GetIPAddressFromHostnameAsync(HostOrIPToPing);
+
+                ret.DNSResolveMS = SW.ElapsedMilliseconds;
+
+                if (!IsValidIPAddress(IP))
+                    return ret;
+
+                Log($"Debug: Pinging {HostOrIPToPing} ({IP.ToString()}) With timeout:{TimeoutMS}ms And Ping Retry Count:{RetryCount}...");
+                for (int Tries = 1; Tries <= RetryCount; Tries++)
+                {
+                    ret.Retries = Tries;
+                    byte[] buffer = new byte[32];
+                    PingOptions pingOptions = new PingOptions(128, false);
+
+                    int TTLBefore = pingOptions.Ttl;
+                    try
+                    {
+                        using (Ping Myping = new Ping())
+                        {
+                            ret.PingReply = await Myping.SendPingAsync(IP, TimeoutMS, buffer, pingOptions);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ret.PingError = ex.GetBaseException().Message;
+                    }
+                    if (ret.PingReply != null)
+                    {
+                        ret.Success = (ret.PingReply.Status == IPStatus.Success);
+                        ret.PingError = ret.PingReply.Status.ToString();
+                        if (ret.PingReply.Options != null) //ipv6 returns null
+                            ret.Hops = TTLBefore - ret.PingReply.Options.Ttl;
+                        if (ret.Success)
+                        {
+                            ret.Pings.Add(ret.PingReply.RoundtripTime);
+                            break;
+                        }
+                    }
+
+                    // wait before next try
+                    await Task.Delay(DelayMS);
+                }
+            }
+            catch (Exception ex)
+            {
+                ret.PingError = $"{ExMsg(ex)} (Site={HostOrIPToPing} Timeout was {TimeoutMS}ms)";
+                Log($"Error: {ret.PingError}");
+            }
+            finally
+            {
+            }
+
+            if (ret.Pings.Count > 0)
+            {
+                ret.AvgTimeMS = System.Convert.ToInt64(ret.Pings.Average());
+                ret.MaxTimeMS = System.Convert.ToInt64(ret.Pings.Max());
+                ret.MinTimeMS = System.Convert.ToInt64(ret.Pings.Min());
+            }
+
+            SW.Stop();
+            ret.TotalTimeMS = SW.ElapsedMilliseconds;
+
+            Log($"Debug: ...Result={ret.Success}, {ret.TotalTimeMS}ms, {ret.PingError}");
+
+            return ret;
         }
 
         static byte[] entropy = System.Text.Encoding.Unicode.GetBytes("sdsgtj;lrjwteojtkslkdjsl;dvlbmv.bmvlfu7r0tret-rereigjejgkgljg42");
@@ -865,6 +1185,19 @@ namespace AITool
             return Ret;
         }
 
+        public static string ConvertToBase64(this Stream stream)
+        {
+            byte[] bytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                bytes = memoryStream.ToArray();
+            }
+
+            string base64 = Convert.ToBase64String(bytes);
+            return base64;
+        }
+
         public static string ExMsg(Exception MyEx2, [CallerMemberName] string MemberName = null)
         {
             //Gets the nested/inner exception if found, and also line and column of error - assuming PDB is in same folder
@@ -1021,10 +1354,51 @@ namespace AITool
             }
             else
             {
-                return inp.Replace("\0", ".").Replace("\r", ".").Replace("\n", ".");
+                return inp.Replace("\0", " ").Replace("\r", " ").Replace("\n", " ");
             }
         }
 
+
+        public static void SerializeJsonIntoStream(object value, Stream stream)
+        {
+            using (var sw = new StreamWriter(stream, new UTF8Encoding(false), 32768, true))
+            using (var jtw = new JsonTextWriter(sw) { Formatting = Formatting.None })
+            {
+                var js = new JsonSerializer();
+                js.Serialize(jtw, value);
+                jtw.Flush();
+            }
+        }
+
+        public static HttpContent CreateHttpContentString(object content)
+        {
+            HttpContent httpContent = null;
+
+            if (content != null)
+            {
+                var json = JsonConvert.SerializeObject(content);
+                httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+            }
+
+            return httpContent;
+        }
+
+        public static HttpContent CreateHttpContentStream(object content)
+        {
+            HttpContent httpContent = null;
+
+            if (content != null)
+            {
+                var ms = new MemoryStream();
+                SerializeJsonIntoStream(content, ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                httpContent = new StreamContent(ms);
+                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            }
+
+            return httpContent;
+        }
         /// <summary>
         /// Writes the given object instance to a Json file.
         /// <para>Object type must have a parameterless constructor.</para>

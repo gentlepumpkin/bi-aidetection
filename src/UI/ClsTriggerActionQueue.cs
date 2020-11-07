@@ -389,11 +389,14 @@ namespace AITool
                         List<string> topics = Global.Split(topic, ";|");
                         List<string> payloads = Global.Split(payload, ";|");
 
+                        ClsImageQueueItem ci = null;
+                        if (AQI.cam.Action_mqtt_send_image)
+                            ci = AQI.CurImg;
 
                         for (int i = 0; i < topics.Count; i++)
                         {
                             MQTTClient mq = new MQTTClient();
-                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message);
+                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message, AQI.CurImg);
                             if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                 ret = false;
 

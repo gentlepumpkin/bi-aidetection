@@ -54,21 +54,21 @@ namespace AITool
         public int ImageHeight { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
-        private Object _imageObject;
+        //private ClsDeepstackObject _imageObject;
 
         public ClsPrediction() { }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, Object imageObject, ClsImageQueueItem curImg)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDeepstackDetection AiDetectionObject, ClsImageQueueItem curImg)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._curimg = curImg;
-            this._imageObject = imageObject;
+            //this._imageObject = AiDetectionObject;
             this.Camera = cam.name;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
 
-            if (imageObject == null || cam == null || string.IsNullOrWhiteSpace(imageObject.label))
+            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.label))
             {
                 Log("Error: Prediction or Camera was null?", "", this._cam.name);
                 this.Result = ResultType.Error;
@@ -76,19 +76,45 @@ namespace AITool
             }
 
             //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(imageObject.label);
-            this.XMax = imageObject.x_max;
-            this.YMax = imageObject.y_max;
-            this.XMin = imageObject.x_min;
-            this.YMin = imageObject.y_min;
-            this.Confidence = imageObject.confidence * 100;  //store as whole number percent 
+            this.Label = Global.UpperFirst(AiDetectionObject.label);
+            this.XMax = AiDetectionObject.x_max;
+            this.YMax = AiDetectionObject.y_max;
+            this.XMin = AiDetectionObject.x_min;
+            this.YMin = AiDetectionObject.y_min;
+            this.Confidence = AiDetectionObject.confidence * 100;  //store as whole number percent 
             this.Filename = curImg.image_path;
 
             this.GetObjectType();
-            this.AnalyzePrediction();
         }
 
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDoodsDetection AiDetectionObject, ClsImageQueueItem curImg)
+        {
+            this._defaultObjType = defaultObjType;
+            this._cam = cam;
+            this._curimg = curImg;
+            //this._imageObject = AiDetectionObject;
+            this.Camera = cam.name;
+            this.ImageHeight = curImg.Height;
+            this.ImageWidth = curImg.Width;
 
+            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Label))
+            {
+                Log("Error: Prediction or Camera was null?", "", this._cam.name);
+                this.Result = ResultType.Error;
+                return;
+            }
+
+            //force first letter to always be capitalized 
+            this.Label = Global.UpperFirst(AiDetectionObject.Label);
+            this.XMax = Convert.ToInt32(AiDetectionObject.Right);
+            this.YMax = Convert.ToInt32(AiDetectionObject.Top);
+            this.XMin = Convert.ToInt32(AiDetectionObject.Left);
+            this.YMin = Convert.ToInt32(AiDetectionObject.Bottom);
+            this.Confidence = Convert.ToSingle(AiDetectionObject.Confidence);
+            this.Filename = curImg.image_path;
+
+            this.GetObjectType();
+        }
 
         public void AnalyzePrediction()
         {

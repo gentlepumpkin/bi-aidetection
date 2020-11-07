@@ -279,12 +279,22 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="ClsDoodsDetection.cs" />
+    <Compile Include="ClsDoodsRequest.cs" />
+    <Compile Include="ClsDoodsResponse.cs" />
     <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FrmSplash.Designer.cs">
       <DependentUpon>FrmSplash.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_CameraAdd.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_CameraAdd.Designer.cs">
+      <DependentUpon>Frm_CameraAdd.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TaskCancellationExtension.cs" />
     <Compile Include="Trace.cs" />
     <Compile Include="ClsTriggerActionQueue.cs" />
     <Compile Include="ClsLogManager.cs" />
@@ -366,7 +376,7 @@
     <Compile Include="NamedPipeWrapper\PipeStreamWrapper.cs" />
     <Compile Include="NamedPipeWrapper\PipeStreamWriter.cs" />
     <Compile Include="NamedPipeWrapper\Worker.cs" />
-    <Compile Include="Object.cs" />
+    <Compile Include="ClsDeepstackDetection.cs" />
     <Compile Include="OSVersionExt\EnvironmentProvider.cs" />
     <Compile Include="OSVersionExt\IEnvironment.cs" />
     <Compile Include="OSVersionExt\IRegistry.cs" />
@@ -378,7 +388,7 @@
     <Compile Include="OSVersionExt\VersionInfo.cs" />
     <Compile Include="OSVersionExt\Win32ApiEnums.cs" />
     <Compile Include="OSVersionExt\Win32ApiProvider.cs" />
-    <Compile Include="Response.cs" />
+    <Compile Include="ClsDeepStackResponse.cs" />
     <Compile Include="SQLiteHistory.cs" />
     <Compile Include="LogFileWriter.cs" />
     <Compile Include="MaskManager.cs" />
@@ -408,6 +418,9 @@
     <EmbeddedResource Include="FrmSplash.resx">
       <DependentUpon>FrmSplash.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Frm_CameraAdd.resx">
+      <DependentUpon>Frm_CameraAdd.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Frm_CustomMasking.resx">
       <DependentUpon>Frm_CustomMasking.cs</DependentUpon>
     </EmbeddedResource>
@@ -428,6 +441,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_LegacyActions.resx">
       <DependentUpon>Frm_LegacyActions.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_MQTTSettings.resx">
       <DependentUpon>Frm_MQTTSettings.cs</DependentUpon>

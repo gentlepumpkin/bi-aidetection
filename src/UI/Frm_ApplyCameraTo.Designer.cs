@@ -33,9 +33,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cb_apply_objects = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.cb_apply_confidence_limits = new System.Windows.Forms.CheckBox();
-            this.cb_apply_actions = new System.Windows.Forms.CheckBox();
             this.cb_apply_mask_settings = new System.Windows.Forms.CheckBox();
+            this.cb_apply_actions = new System.Windows.Forms.CheckBox();
+            this.cb_apply_confidence_limits = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -101,17 +101,17 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Settings to apply";
             // 
-            // cb_apply_confidence_limits
+            // cb_apply_mask_settings
             // 
-            this.cb_apply_confidence_limits.AutoSize = true;
-            this.cb_apply_confidence_limits.Checked = true;
-            this.cb_apply_confidence_limits.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cb_apply_confidence_limits.Location = new System.Drawing.Point(123, 19);
-            this.cb_apply_confidence_limits.Name = "cb_apply_confidence_limits";
-            this.cb_apply_confidence_limits.Size = new System.Drawing.Size(109, 17);
-            this.cb_apply_confidence_limits.TabIndex = 29;
-            this.cb_apply_confidence_limits.Text = "Confidence Limits";
-            this.cb_apply_confidence_limits.UseVisualStyleBackColor = true;
+            this.cb_apply_mask_settings.AutoSize = true;
+            this.cb_apply_mask_settings.Checked = true;
+            this.cb_apply_mask_settings.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cb_apply_mask_settings.Location = new System.Drawing.Point(123, 42);
+            this.cb_apply_mask_settings.Name = "cb_apply_mask_settings";
+            this.cb_apply_mask_settings.Size = new System.Drawing.Size(93, 17);
+            this.cb_apply_mask_settings.TabIndex = 29;
+            this.cb_apply_mask_settings.Text = "Mask Settings";
+            this.cb_apply_mask_settings.UseVisualStyleBackColor = true;
             // 
             // cb_apply_actions
             // 
@@ -125,17 +125,17 @@
             this.cb_apply_actions.Text = "Actions";
             this.cb_apply_actions.UseVisualStyleBackColor = true;
             // 
-            // cb_apply_mask_settings
+            // cb_apply_confidence_limits
             // 
-            this.cb_apply_mask_settings.AutoSize = true;
-            this.cb_apply_mask_settings.Checked = true;
-            this.cb_apply_mask_settings.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cb_apply_mask_settings.Location = new System.Drawing.Point(123, 42);
-            this.cb_apply_mask_settings.Name = "cb_apply_mask_settings";
-            this.cb_apply_mask_settings.Size = new System.Drawing.Size(93, 17);
-            this.cb_apply_mask_settings.TabIndex = 29;
-            this.cb_apply_mask_settings.Text = "Mask Settings";
-            this.cb_apply_mask_settings.UseVisualStyleBackColor = true;
+            this.cb_apply_confidence_limits.AutoSize = true;
+            this.cb_apply_confidence_limits.Checked = true;
+            this.cb_apply_confidence_limits.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cb_apply_confidence_limits.Location = new System.Drawing.Point(123, 19);
+            this.cb_apply_confidence_limits.Name = "cb_apply_confidence_limits";
+            this.cb_apply_confidence_limits.Size = new System.Drawing.Size(109, 17);
+            this.cb_apply_confidence_limits.TabIndex = 29;
+            this.cb_apply_confidence_limits.Text = "Confidence Limits";
+            this.cb_apply_confidence_limits.UseVisualStyleBackColor = true;
             // 
             // Frm_ApplyCameraTo
             // 
@@ -147,7 +147,9 @@
             this.Controls.Add(this.checkedListBoxCameras);
             this.Controls.Add(this.btnApply);
             this.Name = "Frm_ApplyCameraTo";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Apply to...";
+            this.TopMost = true;
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

@@ -2,11 +2,11 @@
 {
     //classes for AI analysis
 
-    public class Response
+    public class ClsDeepStackResponse
     {
 
         public bool success { get; set; }
-        public Object[] predictions { get; set; }
+        public ClsDeepstackDetection[] predictions { get; set; }
 
     }
 }

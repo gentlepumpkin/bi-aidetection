@@ -2042,6 +2042,9 @@ to review footage from night before.</value>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>160, 17</value>
   </metadata>
+  <data name="label19.Text" xml:space="preserve">
+    <value>This is the IP Address or name of the machine that has BlueIris installed on your network.  Use 127.0.0.1 for "this" machine.   Do not specify the port here.  You can use the [BlueIrisURL] and [BlueIrisServerIP] variables in Camera Actions.</value>
+  </data>
   <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1519, 17</value>
   </metadata>
@@ -2159,14 +2162,14 @@ to review footage from night before.</value>
         YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf3wCI9u/l+zM/7M9Lf7Hulv9/8DH838/A9PfTF7BdUA1
-        3BClaAAYwoFAHFomLvtkjZDQ//ccHP9rvX3+hxsb//9pbPJ/k6jo/2ViMjfk5OSipaWlQ6DaUAAojjl9
-        JCV/reLm/v+Bh+f/PTOz/0+iQ/9/s7D6v5mL63+7mtpXoBqQN7CnB1MGBuHjQNsL+fj+a4uI/N8lJPx/
-        taraf0Wg7VvY2P5f0dL6I8nAwAVVjhWwrxcUfNkBdL4mL+//bYyM/ycD2YJAA2eysv6/aWn5HKiGBaIU
-        CwAmFvMMQcGzU5mY/l9lYPh/EojvsrD83wU0aDUz8/92fYOzHBwcslDlmICfn7/ElYunUg7o5D6Q7UCD
-        5gM1zgIaZKik9N9RWLxVRETEC6ocAzDq6OjUAWl+N0aWPblATVlAQ5KBBpQCvRDBzbdBWFjYBGhAMkQ5
-        GgBK2AKjCJSJQIDZi4FxWhID431vZuarjgyMvUAxcCoUEBCwVVFRMQSx0QG2dA7ShE0cKsbAAABmAJKO
-        vroexAAAAABJRU5ErkJggg==
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf7yTke3fS3bm/9meFv9j3a3+f+Dj+b+fgelvJq/gOqAa
+        bohSNAAM4UAgDi0Tl32yRkjo/3sOjv+13j7/w42N//80Nvm/SVT0/zIxmRtycnLR0tLSIVBtKAAUx5w+
+        kpK/VnFz///Aw/P/npnZ/yfRof+/WVj938zF9b9dTe0rUA3IG9jTgykDg/BxoO2FfHz/tUVE/u8SEv6/
+        WlXtvyLQ9i1sbP+vaGn9kWRg4IIqxwrY1wsKvuwAOl+Tl/f/NkbG/5OBbEGggTNZWf/ftLR8DlTDAlGK
+        BQATi3mGoODZqUxM/68yMPw/CcR3WVj+7wIatJqZ+X+7vsFZDg4OWahyTMDPz1/iysVTKQd0ch/IdqBB
+        84EaZwENMlRS+u8oLN4qIiLiBVWOARh1dHTqgDS/GyPLnlygpiygIclAA0qBXojg5tsgLCxsAjQgGaIc
+        DQAlbIFRBMpEIMDsxcA4LYmB8b43M/NVRwbGXqAYOBUKCAjYqqioGILY6ABbOgdpwiYOFWNgAABUzZKH
+        +//zIQAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -2175,29 +2178,14 @@ to review footage from night before.</value>
         YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
-        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf7yfke3fS3bm/9meFv9j3a3+f+Dj+b+fgelvJq/gOqAa
+        qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf7yDke3fS3bm/9meFv9j3a3+f+Dj+b+fgelvJq/gOqAa
         bohSNAAM4UAgDi0Tl32yRkjo/3sOjv+13j7/w42N//80Nvm/SVT0/zIxmRtycnLR0tLSIVBtKAAUx5w+
         kpK/VnFz///Aw/P/npnZ/yfRof+/WVj938zF9b9dTe0rUA3IG9jTgykDg/BxoO2FfHz/tUVE/u8SEv6/
         WlXtvyLQ9i1sbP+vaGn9kWRg4IIqxwrY1wsKvuwAOl+Tl/f/NkbG/5OBbEGggTNZWf/ftLR8DlTDAlGK
         BQATi3mGoODZqUxM/68yMPw/CcR3WVj+7wIatJqZ+X+7vsFZDg4OWahyTMDPz1/iysVTKQd0ch/IdqBB
         84EaZwENMlRS+u8oLN4qIiLiBVWOARh1dHTqgDS/GyPLnlygpiygIclAA0qBXojg5tsgLCxsAjQgGaIc
-        DQAlbIFRBMpEIMDsxcA4LYmB8b43M/NVRwbGXqAYOBUKCAjYqqioGILY6ABbOgdpwiYOFWNgAABji5KN
-        GV9HRgAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="toolStripButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
+        DQAlbIFRBMpEIMDsxcA4LYmB8b43M/NVRwbGXqAYOBUKCAjYqqioGILY6ABbOgdpwiYOFWNgAABSWJKG
+        d5yJtAAAAABJRU5ErkJggg==
 </value>
   </data>
   <metadata name="HistoryImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -2208,7 +2196,7 @@ to review footage from night before.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAATABBgEwAQYBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAAWgBBgFoAQYBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/

@@ -21,7 +21,7 @@ namespace AITool
         public static string LastShutdownState = "";
         public static string LastLogEntry = "";
         private static string LastSettingsJSON = "";
-        private static Object ThreadLock = new Object();
+        private static ClsDeepstackDetection ThreadLock = new ClsDeepstackDetection();
         public class ClsSettings
         {
             [JsonIgnore]
@@ -105,7 +105,7 @@ namespace AITool
             public int TimeBetweenListRefreshsMS = 5000;
             public bool HistoryShowMask = true;
             public bool HistoryShowObjects = true;
-            public bool HistoryOnlyDisplayRelevantObjects = false;
+            public bool HistoryOnlyDisplayRelevantObjects = true;
             public bool HistoryFollow = true;
             public bool HistoryAutoRefresh = true;
             public bool HistoryStoreFalseAlerts = true;
@@ -123,6 +123,8 @@ namespace AITool
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
+
+            public string BlueIrisServer = "127.0.0.1";
 
         }
 
@@ -502,9 +504,9 @@ namespace AITool
                     Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
                     Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName + ".bak");
                 }
-                else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
+                else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON) && !File.Exists(AppSettings.Settings.SettingsFileName))
                 {
-                    //revert to REGISTRY backup if its good
+                    //revert to REGISTRY backup if its good AND the main settings file doesnt exist at all (so someone can delete the settings file to reset settings)
                     Log("Error: Reverting to REGISTRY backup settings...");
                     Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
 
