@@ -106,10 +106,36 @@ namespace AITool
 
             //force first letter to always be capitalized 
             this.Label = Global.UpperFirst(AiDetectionObject.Label);
-            this.XMax = Convert.ToInt32(AiDetectionObject.Right);
-            this.YMax = Convert.ToInt32(AiDetectionObject.Top);
-            this.XMin = Convert.ToInt32(AiDetectionObject.Left);
-            this.YMin = Convert.ToInt32(AiDetectionObject.Bottom);
+
+            //{
+            //         "top":0.09833781,
+            //         "left":0.62415826,
+            //         "bottom":0.14295554,
+            //         "right":0.7029755,
+            //         "label":"car",
+            //         "confidence":63.28125
+            //      }
+
+            // convert percentage values from doods to pixels
+
+            //System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+            //System.Drawing.Rectangle rect = new System.Drawing.Rectangle(x,    y,    width,       height);
+
+            //x,    y    = - coordinate of the UPPER LEFT corner of the rectangle
+            //xmin, ymin
+
+            double right = curImg.Width * AiDetectionObject.Right;
+            double left = curImg.Width * AiDetectionObject.Left;
+
+            double top = curImg.Height * AiDetectionObject.Top;
+            double bottom = curImg.Height * AiDetectionObject.Bottom;
+
+            this.XMin = Convert.ToInt32(left);
+            this.YMin = Convert.ToInt32(top);
+
+            this.XMax = Convert.ToInt32(right);
+            this.YMax = Convert.ToInt32(bottom);
+
             this.Confidence = Convert.ToSingle(AiDetectionObject.Confidence);
             this.Filename = curImg.image_path;
 

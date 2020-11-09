@@ -110,11 +110,12 @@ namespace AITool
             //We are taking a path like C:\BlueIris\clips\blah read from a remote computer's registry
             //and trying to convert it to an accessible path on the current computer.
             string ret = RemoteLocalPath;
+            string lastremotepathpart = Global.Split(RemoteLocalPath, @"\").Last();
+            string ip = "";
+            string hostname = "";
 
             if (!RemoteLocalPath.StartsWith(@"\\"))
             {
-                string ip = "";
-                string hostname = "";
                 //Make sure we have the IP address
                 IPAddress ipa = await GetIPAddressFromHostnameAsync(RemoteMachineNameOrIP);
                 ip = ipa.ToString();
@@ -133,32 +134,87 @@ namespace AITool
                         if (drvkey != null)
                         {
                             string remotepath = drvkey.GetValue("RemotePath").ToString();
-                            if (!string.IsNullOrEmpty(remotepath))
+                            if (!string.IsNullOrEmpty(remotepath) && remotepath.StartsWith(@"\\"))
                             {
-                                MappedDrive md = new MappedDrive();
-                                md.DriveLetter = drv;
-                                md.Path = remotepath;
-                                mapped.Add(md);
+                                string mappedserver = GetWordBetween(remotepath, @"\\", @"\");
+
+                                if (string.Equals(mappedserver, ip, StringComparison.OrdinalIgnoreCase) || string.Equals(mappedserver, hostname, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    MappedDrive md = new MappedDrive();
+                                    md.DriveLetter = drv;
+                                    md.Path = remotepath;
+                                    mapped.Add(md);
+                                }
                             }
                         }
                     }
                 }
 
-                //first pass, try to get any matches without waiting for remote server file exists check...
+                //first pass, try to get any matches where some of the UNC path matches...
+                //there would have to be a shared part of the path
+                //            C:\clips\myclippath
+                //\\server\share\clips\myclippath
                 foreach (MappedDrive md in mapped)
                 {
+                    string sharedpath = GetSharedPath(md.Path, RemoteLocalPath, false).TrimEnd(@"\".ToCharArray());
+                    if (!string.IsNullOrEmpty(sharedpath))
+                    {
+                        Log($"Debug: Found shared path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {sharedpath}");
+                        return sharedpath;
+                    }
+                }
 
+                List<string> spltpth = Global.Split(RemoteLocalPath, "\\");
+
+                //search for last two parts of the path UNDER each of the shares
+                string lastpath = spltpth[spltpth.Count - 1];
+                string nexttolast = "";
+
+                if (spltpth.Count - 2 > 0)
+                {
+                    nexttolast = spltpth[spltpth.Count - 2];
+                    string searchpath = $"{nexttolast}\\{lastpath}";
+                    foreach (MappedDrive md in mapped)
+                    {
+                        string checkpath = Path.Combine(md.Path, searchpath);
+                        if (Directory.Exists(checkpath))
+                        {
+                            Log($"Debug: Found remote path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
+                            return checkpath;
+                        }
+                    }
                 }
 
 
+                //            C:\clips\myclippath
+                //\\server\share\clips\myclippath
+
+                //C:\BlueIrisStorage\Alerts
+                //\\server\BlueIrisStorage
+
+                foreach (MappedDrive md in mapped)
+                {
+                    string checkpath = Path.Combine(md.Path, lastpath);
+                    if (Directory.Exists(checkpath))
+                    {
+                        Log($"Debug: Found remote path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
+                        return checkpath;
+                    }
+                }
+
+
+                ret = $"\\\\{RemoteMachineNameOrIP}\\{RemoteLocalPath.Replace(":", "$")}";
+                //resort to using admin shares (have to be enabled through group policy in newer versions of windows)
+                Log($"Debug: Found ADMIN share '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {ret}");
+
             }
-            return RemoteLocalPath;
+            return ret;
         }
 
         public static string GetSharedPath(string BasePath, string SrcPath, bool OnlyPartial)
         {
             // Dim NetRootPth As String = "\\server\admlibrary\Software\AutoDesk\Test_CAD_State_Kit"
-            // Dim SrcPth As String     = "C:\Test\Test_CAD_State_Kit\C3D 2021\Utilities"
+            // Dim SrcPth As String     = "                              C:\Test\Test_CAD_State_Kit\C3D 2021\Utilities"
             // Output=                     \\server\admlibrary\Software\AutoDesk\Test_CAD_State_Kit\C3D 2021\Utilities
             string Ret = "";
             try

@@ -37,16 +37,17 @@ namespace AITool
 
         }
 
-        public string UpdateRemotePath(string InPath)
+        public async Task<string> UpdateRemotePathAsync(string InPath)
         {
             if (this.IsLocalhost)
                 return InPath;
 
             //         d:\blueiris\clips\pathname
             //\\server\d$\blueiris\clips\pathname
-            return $"\\\\{this.ServerName}\\{InPath.Replace(":", "$")}";
-
+            //return $"\\\\{this.ServerName}\\{InPath.Replace(":", "$")}";
             //https://www.repairwin.com/enable-admin-shares-windows-10-8-7/
+
+            return await Global.GetBestRemotePathAsync(InPath, this.ServerName);
 
         }
 
@@ -104,7 +105,7 @@ namespace AITool
                         string ap = Convert.ToString(key.GetValue("AppPath4"));
                         if (!string.IsNullOrWhiteSpace(ap))
                         {
-                            this.AppPath = this.UpdateRemotePath(ap);
+                            this.AppPath = await this.UpdateRemotePathAsync(ap);
 
                             if (this.IsLocalhost)
                                 Log($"Debug: BlueIris app path found: {ap}");
@@ -180,7 +181,7 @@ namespace AITool
                                     string path = Convert.ToString(curkey.GetValue("path"));
                                     if (!string.IsNullOrWhiteSpace(path))
                                     {
-                                        string pth = this.UpdateRemotePath(path.Trim());
+                                        string pth = await this.UpdateRemotePathAsync(path.Trim());
                                         this.ClipPaths.Add(pth);
                                         if (this.IsLocalhost)
                                             Log($"Debug: BlueIris clip path found: {pth}");

@@ -76,6 +76,12 @@ namespace AITool
         private async void Shell_Load(object sender, EventArgs e)
         {
 
+            //ClsDoodsRequest cdr = new ClsDoodsRequest();
+
+            //cdr.Detect.MinPercentMatch = 50;
+
+            //string testjson = JsonConvert.SerializeObject(cdr);
+
             Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 
             using var cw = new Global_GUI.CursorWait(true);

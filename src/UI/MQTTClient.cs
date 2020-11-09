@@ -232,33 +232,8 @@ namespace AITool
 
                                         if (cres != null && cres.ResultCode == MqttClientConnectResultCode.Success)
                                         {
-                                            MqttApplicationMessage ma = new MqttApplicationMessageBuilder()
-                                                                    .WithTopic(topic)
-                                                                    .WithPayload(payload)
-                                                                    .WithAtLeastOnceQoS()
-                                                                    .WithRetainFlag(retain)
-                                                                    .Build();
 
-                                            res = await mqttClient.PublishAsync(ma, CancellationToken.None);
-
-                                            //Success = 0,
-                                            //        NoMatchingSubscribers = 0x10,
-                                            //        UnspecifiedError = 0x80,
-                                            //        ImplementationSpecificError = 0x83,
-                                            //        NotAuthorized = 0x87,
-                                            //        TopicNameInvalid = 0x90,
-                                            //        PacketIdentifierInUse = 0x91,
-                                            //        QuotaExceeded = 0x97,
-                                            //        PayloadFormatInvalid = 0x99
-
-                                            if (res.ReasonCode == MqttClientPublishReasonCode.Success)
-                                            {
-                                                Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
-                                            else
-                                            {
-                                                Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
+                                            MqttApplicationMessage ma;
 
                                             if (CurImg != null)
                                             {
@@ -266,6 +241,7 @@ namespace AITool
 
                                                 ma = new MqttApplicationMessageBuilder()
                                                                         .WithTopic(topic)
+                                                                        .WithPayload(payload)
                                                                         .WithPayload(image_data)
                                                                         .WithAtLeastOnceQoS()
                                                                         .WithRetainFlag(retain)
@@ -284,7 +260,39 @@ namespace AITool
                                                 }
 
                                             }
+                                            else
+                                            {
+                                                ma = new MqttApplicationMessageBuilder()
+                                                                        .WithTopic(topic)
+                                                                        .WithPayload(payload)
+                                                                        .WithAtLeastOnceQoS()
+                                                                        .WithRetainFlag(retain)
+                                                                        .Build();
 
+                                                res = await mqttClient.PublishAsync(ma, CancellationToken.None);
+
+                                                //Success = 0,
+                                                //        NoMatchingSubscribers = 0x10,
+                                                //        UnspecifiedError = 0x80,
+                                                //        ImplementationSpecificError = 0x83,
+                                                //        NotAuthorized = 0x87,
+                                                //        TopicNameInvalid = 0x90,
+                                                //        PacketIdentifierInUse = 0x91,
+                                                //        QuotaExceeded = 0x97,
+                                                //        PayloadFormatInvalid = 0x99
+
+                                                if (res.ReasonCode == MqttClientPublishReasonCode.Success)
+                                                {
+                                                    Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                }
+                                                else
+                                                {
+                                                    Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                                }
+
+
+
+                                            }
 
                                         }
                                         else if (cres != null)

@@ -1105,7 +1105,10 @@ namespace AITool
                 {
                     ClsDoodsRequest cdr = new ClsDoodsRequest();
 
-                    cdr.Detect.MinPercentageMatch = 0;  //cam.threshold_lower;
+                    cdr.Detect.MinPercentMatch = cam.threshold_lower;
+
+                    string testjson = JsonConvert.SerializeObject(cdr);
+
                     long FileSize = new FileInfo(CurImg.image_path).Length;
 
                     using (FileStream image_data = System.IO.File.OpenRead(CurImg.image_path))
@@ -1122,6 +1125,8 @@ namespace AITool
 
                         Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", CurSrv, cam.name, CurImg.image_path);
 
+
+                        //  Got http status code 'RequestEntityTooLarge' (413) in 42ms: Request Entity Too Large
                         swposttime.Restart();
 
                         using HttpResponseMessage output = await AiUrl.HttpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, MasterCTS.Token);
@@ -1206,6 +1211,7 @@ namespace AITool
                             AiUrl.ErrCount.AtomicIncrementAndGet();
                             AiUrl.ResultMessage = ret.Error;
                         }
+
                     }
 
 
@@ -1580,7 +1586,7 @@ namespace AITool
                 fcalc.AddToCalc(CurImg.FileLockMS);
 
                 Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
-                Log($"Debug:DeepStack (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.dscalc.Count}, Min={AiUrl.dscalc.Min}ms, Max={AiUrl.dscalc.Max}ms, Avg={AiUrl.dscalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:       AI (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.dscalc.Count}, Min={AiUrl.dscalc.Min}ms, Max={AiUrl.dscalc.Max}ms, Avg={AiUrl.dscalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
                 Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
                 Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
                 Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", CurSrv, cam.name, CurImg.image_path);

@@ -5,7 +5,7 @@ namespace AITool
     public class ClsDoodsDetection
     {
         [JsonProperty("top")]
-        public int Top { get; set; } = 0;
+        public double Top { get; set; } = 0;
 
         [JsonProperty("left")]
         public double Left { get; set; } = 0;
