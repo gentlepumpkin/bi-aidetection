@@ -204,7 +204,8 @@ namespace AITool
                                         {
                                             Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
                                             Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                                            Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                                            if (e.ApplicationMessage.Payload.Length < 64)
+                                                Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
                                             Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                                             Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                                             Log("");
