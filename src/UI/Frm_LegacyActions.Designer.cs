@@ -33,6 +33,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cb_MQTT_SendImage = new System.Windows.Forms.CheckBox();
             this.tb_jpeg_merge_quality = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cb_queue_actions = new System.Windows.Forms.CheckBox();
@@ -72,7 +73,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label3 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
-            this.cb_MQTT_SendImage = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -105,8 +105,8 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.BackColor = System.Drawing.SystemColors.Control;
             this.groupBox1.Controls.Add(this.cb_MQTT_SendImage);
@@ -153,6 +153,20 @@
             this.groupBox1.Size = new System.Drawing.Size(892, 378);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
+            // 
+            // cb_MQTT_SendImage
+            // 
+            this.cb_MQTT_SendImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cb_MQTT_SendImage.AutoSize = true;
+            this.cb_MQTT_SendImage.Location = new System.Drawing.Point(800, 168);
+            this.cb_MQTT_SendImage.Name = "cb_MQTT_SendImage";
+            this.cb_MQTT_SendImage.Size = new System.Drawing.Size(88, 19);
+            this.cb_MQTT_SendImage.TabIndex = 50;
+            this.cb_MQTT_SendImage.Text = "Send Image";
+            this.toolTip1.SetToolTip(this.cb_MQTT_SendImage, "If one of the topics has /image and the image checkbox is checked, then the actua" +
+        "l image with the detection will be sent.\r\n (use | to Separate multiple topics or" +
+        " payloads.)");
+            this.cb_MQTT_SendImage.UseVisualStyleBackColor = true;
             // 
             // tb_jpeg_merge_quality
             // 
@@ -248,7 +262,7 @@
             // 
             // tb_telegram_caption
             // 
-            this.tb_telegram_caption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_telegram_caption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_telegram_caption.Location = new System.Drawing.Point(263, 48);
             this.tb_telegram_caption.Name = "tb_telegram_caption";
@@ -316,7 +330,7 @@
             // 
             // tb_MQTT_Topic_Cancel
             // 
-            this.tb_MQTT_Topic_Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_MQTT_Topic_Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(263, 194);
             this.tb_MQTT_Topic_Cancel.Name = "tb_MQTT_Topic_Cancel";
@@ -335,7 +349,7 @@
             // 
             // tb_MQTT_Topic
             // 
-            this.tb_MQTT_Topic.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_MQTT_Topic.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_MQTT_Topic.Location = new System.Drawing.Point(263, 166);
             this.tb_MQTT_Topic.Name = "tb_MQTT_Topic";
@@ -364,7 +378,7 @@
             // 
             // tb_Sounds
             // 
-            this.tb_Sounds.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_Sounds.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_Sounds.Location = new System.Drawing.Point(263, 137);
             this.tb_Sounds.Name = "tb_Sounds";
@@ -393,7 +407,7 @@
             // 
             // tb_RunExternalProgram
             // 
-            this.tb_RunExternalProgram.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_RunExternalProgram.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_RunExternalProgram.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_RunExternalProgram.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
@@ -415,7 +429,7 @@
             // 
             // tb_network_folder
             // 
-            this.tb_network_folder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tb_network_folder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_network_folder.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_network_folder.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
@@ -439,7 +453,7 @@
             // 
             // tbCancelUrl
             // 
-            this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbCancelUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbCancelUrl.Location = new System.Drawing.Point(14, 308);
@@ -452,7 +466,7 @@
             // 
             // tbTriggerUrl
             // 
-            this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbTriggerUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbTriggerUrl.Location = new System.Drawing.Point(14, 227);
@@ -536,7 +550,7 @@
             // 
             // label3
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.Font = new System.Drawing.Font("Consolas", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Green;
@@ -557,17 +571,6 @@
             this.btTest.Text = "Test";
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
-            // 
-            // cb_MQTT_SendImage
-            // 
-            this.cb_MQTT_SendImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cb_MQTT_SendImage.AutoSize = true;
-            this.cb_MQTT_SendImage.Location = new System.Drawing.Point(800, 168);
-            this.cb_MQTT_SendImage.Name = "cb_MQTT_SendImage";
-            this.cb_MQTT_SendImage.Size = new System.Drawing.Size(88, 19);
-            this.cb_MQTT_SendImage.TabIndex = 50;
-            this.cb_MQTT_SendImage.Text = "Send Image";
-            this.cb_MQTT_SendImage.UseVisualStyleBackColor = true;
             // 
             // Frm_LegacyActions
             // 

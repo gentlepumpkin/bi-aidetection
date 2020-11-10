@@ -56,21 +56,29 @@ namespace AITool
                     MqttClientPublishResult pr = null;
                     ClsImageQueueItem CurImg = null;
 
-                    if (this.cam.Action_mqtt_send_image)
-                    {
-                        if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections) && File.Exists(this.cam.last_image_file_with_detections))
-                        {
-                            CurImg = new ClsImageQueueItem(this.cam.last_image_file_with_detections, 0);
-                        }
-                        else if (!string.IsNullOrEmpty(this.cam.last_image_file) && File.Exists(this.cam.last_image_file))
-                        {
-                            CurImg = new ClsImageQueueItem(this.cam.last_image_file, 0);
-                        }
-
-                    }
 
                     for (int i = 0; i < topics.Count; i++)
                     {
+                        if (this.cam.Action_mqtt_send_image)
+                        {
+                            if (topics[i].IndexOf("/image", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                if (!string.IsNullOrEmpty(this.cam.last_image_file_with_detections) && File.Exists(this.cam.last_image_file_with_detections))
+                                {
+                                    CurImg = new ClsImageQueueItem(this.cam.last_image_file_with_detections, 0);
+                                }
+                                else if (!string.IsNullOrEmpty(this.cam.last_image_file) && File.Exists(this.cam.last_image_file))
+                                {
+                                    CurImg = new ClsImageQueueItem(this.cam.last_image_file, 0);
+                                }
+                                else
+                                    CurImg = null;
+                            }
+                            else
+                                CurImg = null;
+
+                        }
+
                         pr = await mq.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message, CurImg);
 
                     }
