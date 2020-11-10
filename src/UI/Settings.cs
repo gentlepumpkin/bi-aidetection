@@ -79,9 +79,9 @@ namespace AITool
             public int RectIrrelevantColorAlpha = 150;
             public int RectMaskedColorAlpha = 150;
 
-            public int RectBorderWidth = 2;
+            public int RectBorderWidth = 3;
 
-            public int RectDetectionTextSize = 12;
+            public int RectDetectionTextSize = 14;
             public string RectDetectionTextFont = "Segoe UI Semibold";
 
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
@@ -110,7 +110,7 @@ namespace AITool
             public bool HistoryAutoRefresh = true;
             public bool HistoryStoreFalseAlerts = true;
             public bool HistoryStoreMaskedAlerts = true;
-
+            public bool HistoryRestrictMinThresholdAtSource = true;
             public bool HistoryFilterRelevant = false;
             public bool HistoryFilterNoSuccess = false;
             public bool HistoryFilterPeople = false;

@@ -110,6 +110,7 @@ namespace AITool
                 this.storeFalseAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreFalseAlerts;
                 this.storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
                 this.showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
+                this.restrictThresholdAtSourceToolStripMenuItem.Checked = AppSettings.Settings.HistoryRestrictMinThresholdAtSource;
                 this.cb_filter_animal.Checked = AppSettings.Settings.HistoryFilterAnimals;
                 this.cb_filter_masked.Checked = AppSettings.Settings.HistoryFilterMasked;
                 this.cb_filter_nosuccess.Checked = AppSettings.Settings.HistoryFilterNoSuccess;
@@ -4660,6 +4661,12 @@ namespace AITool
 
 
             }
+        }
+
+        private void restrictThresholdAtSourceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryRestrictMinThresholdAtSource = this.restrictThresholdAtSourceToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
         }
     }
 

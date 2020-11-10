@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -962,6 +963,7 @@ namespace AITool
             public string JsonString = "";
             public string Error = "";
             public long SWPostTime = 0;
+            public HttpStatusCode StatusCode = HttpStatusCode.Unused;
         }
 
         public static async Task<ClsAIServerResponse> GetDetectionsFromAIServer(ClsImageQueueItem CurImg, ClsURLItem AiUrl, Camera cam)
@@ -992,7 +994,7 @@ namespace AITool
                     using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(url, request, MasterCTS.Token);
 
                     swposttime.Stop();
-
+                    ret.StatusCode = output.StatusCode;
 
                     if (output.IsSuccessStatusCode)
                     {
@@ -1105,9 +1107,12 @@ namespace AITool
                 {
                     ClsDoodsRequest cdr = new ClsDoodsRequest();
 
-                    cdr.Detect.MinPercentMatch = cam.threshold_lower;
+                    //We could prevent doods from giving back ALL of its results but then we couldnt fully see how it was working:
+                    //So many things come back from Doods, cluttering up the db, we really need to limit at the source
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource)
+                        cdr.Detect.MinPercentMatch = cam.threshold_lower;
 
-                    string testjson = JsonConvert.SerializeObject(cdr);
+                    //string testjson = JsonConvert.SerializeObject(cdr);
 
                     long FileSize = new FileInfo(CurImg.image_path).Length;
 
@@ -1132,6 +1137,7 @@ namespace AITool
                         using HttpResponseMessage output = await AiUrl.HttpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, MasterCTS.Token);
 
                         swposttime.Stop();
+                        ret.StatusCode = output.StatusCode;
 
 
                         if (output.IsSuccessStatusCode)
@@ -1309,7 +1315,7 @@ namespace AITool
                         if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
                         {
 
-                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, Received a {asr.JsonString.Length} byte response.", CurSrv, cam.name, CurImg.image_path);
+                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", CurSrv, cam.name, CurImg.image_path);
                             Log($"Debug: (3/6) Processing results...", CurSrv, cam.name, CurImg.image_path);
 
 

@@ -288,6 +288,12 @@
     <Compile Include="FrmSplash.Designer.cs">
       <DependentUpon>FrmSplash.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_AIServers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_AIServers.Designer.cs">
+      <DependentUpon>Frm_AIServers.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm_CameraAdd.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -417,6 +423,9 @@
     <Compile Include="util.cs" />
     <EmbeddedResource Include="FrmSplash.resx">
       <DependentUpon>FrmSplash.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_AIServers.resx">
+      <DependentUpon>Frm_AIServers.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_CameraAdd.resx">
       <DependentUpon>Frm_CameraAdd.cs</DependentUpon>

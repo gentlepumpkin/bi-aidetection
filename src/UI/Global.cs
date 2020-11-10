@@ -3101,5 +3101,21 @@ namespace AITool
         }
     }
 
+
+    public static class StringExt
+    {
+        public static string Truncate(this string value, int maxLength, bool ellipsis)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+
+            if (value.Length <= maxLength) return value;
+
+            if (ellipsis) return value.Substring(0, maxLength) + "...";
+
+            return value.Substring(0, maxLength);
+
+        }
+    }
+
 }
 
