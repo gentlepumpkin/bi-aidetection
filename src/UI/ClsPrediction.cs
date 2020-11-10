@@ -154,7 +154,7 @@ namespace AITool
                 {
                     if (!string.IsNullOrWhiteSpace(this._cam.triggering_objects_as_string))
                     {
-                        if (this._cam.triggering_objects_as_string.IndexOf(this.Label, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (this._cam.IsRelevant(this.Label))
                         {
                             // -> OBJECT IS RELEVANT
 

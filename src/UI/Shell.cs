@@ -2172,7 +2172,7 @@ namespace AITool
                 cam.trigger_urls_as_string = $"[BlueIrisURL]/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
             }
 
-
+            //I dont think this is used anywhere
             cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
             //Split by cr/lf or other common delimiters
@@ -2347,6 +2347,10 @@ namespace AITool
                         cbarray[j].Checked = true;
                     }
                 }
+
+                this.tbAdditionalRelevantObjects.Text = cam.additional_triggering_objects_as_string;
+
+
             }
         }
 
@@ -2522,6 +2526,8 @@ namespace AITool
 
                 cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
+                cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
+
                 cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
                 cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
@@ -2577,6 +2583,7 @@ namespace AITool
                                         if (frm.cb_apply_objects.Checked)
                                         {
                                             icam.triggering_objects_as_string = cam.triggering_objects_as_string;
+                                            icam.additional_triggering_objects_as_string = cam.additional_triggering_objects_as_string;
                                             icam.triggering_objects = Global.Split(icam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
                                         }
                                         if (frm.cb_apply_actions.Checked)

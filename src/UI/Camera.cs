@@ -30,6 +30,7 @@ namespace AITool
         public string name = "";
         public string prefix = "";
         public string triggering_objects_as_string = "Person";
+        public string additional_triggering_objects_as_string = "Spiny Lumpsucker, Pink Fairy Armadillo, Tasselled Wobbegong";
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "";
         public string[] trigger_urls = new string[0];
@@ -103,6 +104,10 @@ namespace AITool
         [JsonIgnore]
         public String last_detections_summary; //summary text of last detection
 
+        public bool IsRelevant(string ObjectName)
+        {
+            return Global.IsInList(ObjectName, this.triggering_objects_as_string) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string);
+        }
         public Camera(string Name = "")
         {
             if (Name.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
