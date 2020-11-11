@@ -126,6 +126,10 @@ namespace AITool
 
             public string BlueIrisServer = "127.0.0.1";
 
+            public string DOODSDetectorName = "default";
+
+            public int FileSystemWatcherRetryOnErrorTimeMS = 300000;  //5 mins default
+
         }
 
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);

@@ -167,8 +167,8 @@ namespace OSVersionExtension
         public static MajorVersion10Properties MajorVersion10Properties()
         {
             // TODO: check, if will work on Server 2019 and 2016
-            if (MajorVersion < 10)
-                throw new InvalidOperationException("Cannot be called on systems earlier than version 10.");
+            //if (MajorVersion < 10)
+            //    throw new InvalidOperationException("Cannot be called on systems earlier than version 10.");
 
             MajorVersion10Properties majorVersion10Properties = new MajorVersion10Properties();
 

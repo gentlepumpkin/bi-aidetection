@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ namespace AITool
         NeedsAdminSharesEnabled,   //https://www.repairwin.com/enable-admin-shares-windows-10-8-7/
         InvalidHostOrIP,
         HasFirewall,
+        CouldNotOpenRemoteRegistry,
         Unknown
     }
     public class BlueIris
@@ -67,6 +69,8 @@ namespace AITool
             {
                 Log($"Debug: Reading BlueIris settings from registry from '{ServernameOrIP}'...");
 
+                Global.UpdateProgressBar($"Reading BlueIris Registry info on '{ServernameOrIP}'...", 1, 1, 1);
+
                 this.IsLocalhost = string.IsNullOrEmpty(ServernameOrIP) ||
                                     ServernameOrIP == "." ||
                                     string.Equals(ServernameOrIP, "localhost", StringComparison.OrdinalIgnoreCase) ||
@@ -88,13 +92,18 @@ namespace AITool
                         Log($"Error: Could not connect to BlueIris server '{ServernameOrIP}': {cpo.PingError}");
                         return this.Result;
                     }
-                    RemoteKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ServernameOrIP);
+                    Log($"Debug: Opening remote registry on '{ServernameOrIP}'...");
+                    Stopwatch sw = Stopwatch.StartNew();
+
+                    RemoteKey = await Task.Run(() => RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ServernameOrIP));
 
                     if (RemoteKey != null)
-                        Log($"Successfully connected to remote registry on {ServernameOrIP}.");
+                        Log($"Debug: Successfully connected to remote registry on {ServernameOrIP} in {sw.ElapsedMilliseconds}ms.");
                     else
                     {
-                        Log($"Error: Could not connect to remote registry on {ServernameOrIP}.");
+                        this.Result = BlueIrisResult.CouldNotOpenRemoteRegistry;
+                        Log($"Error: Could not open remote registry on {ServernameOrIP} ({sw.ElapsedMilliseconds}ms.)");
+                        return this.Result;
                     }
                 }
 

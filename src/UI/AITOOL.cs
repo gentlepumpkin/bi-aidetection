@@ -74,6 +74,9 @@ namespace AITool
 
         public static CancellationTokenSource MasterCTS = new CancellationTokenSource();
 
+        public static System.Timers.Timer FileSystemErrorCheckTimer = new System.Timers.Timer();
+
+
         public static string srv = "";
 
         public static async Task InitializeBackend()
@@ -200,6 +203,10 @@ namespace AITool
 
                 UpdateWatchers(false);
 
+                FileSystemErrorCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(TimerCheckFileSystemWatchers);
+                FileSystemErrorCheckTimer.Interval = AppSettings.Settings.FileSystemWatcherRetryOnErrorTimeMS;
+                FileSystemErrorCheckTimer.Start();
+
                 //Start the thread that watches for the file queue
                 if (!AppSettings.AlreadyRunning)
                     Task.Run(ImageQueueLoop);
@@ -207,6 +214,7 @@ namespace AITool
 
                 if (AppSettings.LastShutdownState.StartsWith("checkpoint") && !AppSettings.AlreadyRunning)
                     Log($"Error: Program did not shutdown gracefully.  Last log entry was '{AppSettings.LastLogEntry}', '{AppSettings.LastShutdownState}'");
+
 
 
             }
@@ -660,8 +668,21 @@ namespace AITool
 
         private static void OnError(object sender, System.IO.ErrorEventArgs e)
         {
-            Log("Error: File watcher error: " + e.GetException().Message);
+            //Too many changes at once in directory:C:\BlueIris\aiinput.
+            //File watcher  The specified network name is no longer available
+            string path = ((FileSystemWatcher)sender).Path;
+            Log("Error: File watcher error: " + e.GetException().Message + $" on path '{path}'");
             UpdateWatchers(true);
+
+        }
+
+        public static void TimerCheckFileSystemWatchers(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (FileWatcherHasError)
+            {
+                Log($"Debug: Re-checking bad File System Watcher Paths ('FileSystemWatcherRetryOnErrorTimeMS' = {AppSettings.Settings.FileSystemWatcherRetryOnErrorTimeMS}ms)...");
+                UpdateWatchers(true);
+            }
         }
 
         public static void UpdateWatchers(bool Reset)
@@ -671,11 +692,15 @@ namespace AITool
             try
             {
 
+
                 if (AppSettings.AlreadyRunning)
                 {
                     Log("*** Another instance is already running, skip watching for changed files ***");
                     return;
                 }
+
+                FileWatcherHasError = false;
+
                 //first add all the names and paths to check...
                 List<string> names = new List<string>();
                 Dictionary<string, string> paths = new Dictionary<string, string>();
@@ -730,9 +755,12 @@ namespace AITool
                             {
                                 //this will return null if the path is invalid...
                                 FileSystemWatcher curwatch = MyWatcherFatory(path, include);
-                                ClsFileSystemWatcher mywtc = new ClsFileSystemWatcher(name, path, curwatch, include);
-                                //add even if null to keep track of things
-                                watchers.Add(name.ToLower(), mywtc);
+                                if (curwatch != null)
+                                {
+                                    ClsFileSystemWatcher mywtc = new ClsFileSystemWatcher(name, path, curwatch, include);
+                                    //add even if null to keep track of things
+                                    watchers.Add(name.ToLower(), mywtc);
+                                }
                             }
                             else
                             {
@@ -866,6 +894,8 @@ namespace AITool
 
         }
 
+        static bool FileWatcherHasError = false;
+
         public static FileSystemWatcher MyWatcherFatory(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -876,26 +906,35 @@ namespace AITool
             {
                 // Be aware: https://stackoverflow.com/questions/1764809/filesystemwatcher-changed-event-is-raised-twice
 
-                if (!String.IsNullOrWhiteSpace(path) && Directory.Exists(path))
+                if (!String.IsNullOrWhiteSpace(path))
                 {
-                    watcher = new FileSystemWatcher(path);
-                    watcher.Path = path;
-                    watcher.Filter = filter;
-                    watcher.IncludeSubdirectories = IncludeSubdirectories;
+                    if (Directory.Exists(path))
+                    {
+                        watcher = new FileSystemWatcher(path);
+                        watcher.Path = path;
+                        watcher.Filter = filter;
+                        watcher.IncludeSubdirectories = IncludeSubdirectories;
 
-                    //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
-                    watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+                        //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
+                        watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
 
-                    //fswatcher events
-                    watcher.Created += new FileSystemEventHandler(OnCreated);
-                    watcher.Renamed += new RenamedEventHandler(OnRenamed);
-                    watcher.Deleted += new FileSystemEventHandler(OnDeleted);
-                    watcher.Error += new ErrorEventHandler(OnError);
+                        //fswatcher events
+                        watcher.Created += new FileSystemEventHandler(OnCreated);
+                        watcher.Renamed += new RenamedEventHandler(OnRenamed);
+                        watcher.Deleted += new FileSystemEventHandler(OnDeleted);
+                        watcher.Error += new ErrorEventHandler(OnError);
 
+
+                    }
+                    else
+                    {
+                        Log("Error: Path does not exist: " + path);
+                    }
                 }
             }
             catch (Exception ex)
             {
+                FileWatcherHasError = true;
                 Log($"Error: {Global.ExMsg(ex)}");
             }
 
@@ -1111,6 +1150,8 @@ namespace AITool
                     //So many things come back from Doods, cluttering up the db, we really need to limit at the source
                     if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource)
                         cdr.Detect.MinPercentMatch = cam.threshold_lower;
+
+                    cdr.DetectorName = AppSettings.Settings.DOODSDetectorName;
 
                     //string testjson = JsonConvert.SerializeObject(cdr);
 

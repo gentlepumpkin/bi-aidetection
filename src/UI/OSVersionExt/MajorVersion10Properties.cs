@@ -10,9 +10,9 @@ namespace OSVersionExt.MajorVersion10
     {
         private const string registryCurrentVersionKeyName = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion";
         private const string releaseIdKeyName = "ReleaseId";
-        private const string releaseIdDefault = null;
+        private const string releaseIdDefault = "";
         private const string UBRkeyName = "UBR";
-        private const string UBRdefault = null;
+        private const string UBRdefault = "";
 
         private IRegistry _registryProvider;
 
