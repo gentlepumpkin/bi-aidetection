@@ -69,7 +69,6 @@ namespace AITool
             {
                 Log($"Debug: Reading BlueIris settings from registry from '{ServernameOrIP}'...");
 
-                Global.UpdateProgressBar($"Reading BlueIris Registry info on '{ServernameOrIP}'...", 1, 1, 1);
 
                 this.IsLocalhost = string.IsNullOrEmpty(ServernameOrIP) ||
                                     ServernameOrIP == "." ||
@@ -84,15 +83,18 @@ namespace AITool
                 }
                 else
                 {
+                    Global.UpdateProgressBar($"Reading BlueIris Registry info on '{ServernameOrIP}'...", 1, 1, 1);
                     //quick ping to validate first
                     Global.ClsPingOut cpo = await Global.IsConnected(ServernameOrIP, 500, 1);
                     if (!cpo.Success)
                     {
                         this.Result = BlueIrisResult.InvalidHostOrIP;
-                        Log($"Error: Could not connect to BlueIris server '{ServernameOrIP}': {cpo.PingError}");
+                        Log($"Error: Could not PING BlueIris server '{ServernameOrIP}': {cpo.PingError}");
                         return this.Result;
                     }
-                    Log($"Debug: Opening remote registry on '{ServernameOrIP}'...");
+
+                    Log($"Debug: Ping response={cpo.TotalTimeMS}ms, opening remote registry on '{ServernameOrIP}'...");
+
                     Stopwatch sw = Stopwatch.StartNew();
 
                     RemoteKey = await Task.Run(() => RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ServernameOrIP));
