@@ -34,6 +34,7 @@ namespace AITool
 
                                 IMqttClient mqttClient = null;
                                 bool subscribed = false;
+                                bool IsConnected = false;
 
                                 using (mqttClient = factory.CreateMqttClient())
                                 {
@@ -189,6 +190,7 @@ namespace AITool
 
                                         mqttClient.UseDisconnectedHandler(async e =>
                                         {
+                                            IsConnected = false;
                                             string excp = "";
                                             if (e.Exception != null)
                                             {
@@ -215,6 +217,7 @@ namespace AITool
 
                                         mqttClient.UseConnectedHandler(async e =>
                                         {
+                                            IsConnected = true;
                                             Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
 
                                             // Subscribe to the topic
@@ -231,8 +234,10 @@ namespace AITool
 
                                         MqttClientAuthenticateResult cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
 
-                                        if (cres != null && cres.ResultCode == MqttClientConnectResultCode.Success)
+                                        if (cres != null && mqttClient.IsConnected && cres.ResultCode == MqttClientConnectResultCode.Success)
                                         {
+
+                                            IsConnected = true;
 
                                             MqttApplicationMessage ma;
 
@@ -295,22 +300,43 @@ namespace AITool
                                         }
                                         else if (cres != null)
                                         {
+                                            IsConnected = false;
                                             Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
                                         }
                                         else
                                         {
+                                            IsConnected = false;
                                             Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
                                         }
 
-                                        if (mqttClient != null && mqttClient.IsConnected)
+                                        if (mqttClient != null && mqttClient.IsConnected && IsConnected)
                                         {
                                             if (subscribed)
                                             {
                                                 Log($"Debug: MQTT: Unsubscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
-                                            Log($"Debug: MQTT: Disconnecting from server.");
-                                            await mqttClient.DisconnectAsync();
+
+                                            if (mqttClient.IsConnected && IsConnected)
+                                            {
+                                                Log($"Debug: MQTT: Disconnecting from server.");
+                                                try
+                                                {
+                                                    await mqttClient.DisconnectAsync();
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    //dont throw ERROR in the log if fail to disconnect
+                                                    Log($"Debug: MQTT: Could not disconnect from server, got: {Global.ExMsg(ex)}");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Log($"Debug: MQTT: Already disconnected from server, no need to disconnect.");
+                                            }
+
+
+                                            IsConnected = false;
                                         }
 
 
@@ -319,7 +345,7 @@ namespace AITool
                                     catch (Exception ex)
                                     {
 
-                                        Log($"Error: MQTT: Unexpected Error: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
+                                        Log($"Error: MQTT: Unexpected Problem: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
                                     }
                                     finally
                                     {
