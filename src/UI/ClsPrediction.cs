@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Amazon.Rekognition.Model;
+using System;
 using System.Collections.Generic;
 using static AITool.AITOOL;
 
@@ -50,6 +51,8 @@ namespace AITool
         public int YMax { get; set; } = 0;
         public int XMax { get; set; } = 0;
         public string Camera { get; set; } = "";
+        public int RectWidth { get; set; } = 0;
+        public int RectHeight { get; set; } = 0;
         public int ImageWidth { get; set; } = 0;
         public int ImageHeight { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
@@ -58,6 +61,60 @@ namespace AITool
 
         public ClsPrediction() { }
 
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg)
+        {
+            this._defaultObjType = defaultObjType;
+            this._cam = cam;
+            this._curimg = curImg;
+            this.Camera = cam.name;
+            this.ImageHeight = curImg.Height;
+            this.ImageWidth = curImg.Width;
+
+            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Name))
+            {
+                Log("Error: Prediction or Camera was null?", "", this._cam.name);
+                this.Result = ResultType.Error;
+                return;
+            }
+            //"Name": "Car",
+            //            "Confidence": 98.87621307373047,
+            //            "Instances": [
+            //                {
+            //                    "BoundingBox": {
+            //                        "Width": 0.10527367144823074,
+            //                        "Height": 0.18472492694854736,
+            //                        "Left": 0.0042892382480204105,
+            //                        "Top": 0.5051581859588623
+            //                    },
+            //                    "Confidence": 98.87621307373047
+            //                },
+
+            //Rectangle(xmin, ymin, xmax - xmin, ymax - ymin)
+            //          x,    y     Width,       Height
+
+            this.RectHeight = Convert.ToInt32(Math.Round(curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Height));
+            this.RectWidth = Convert.ToInt32(Math.Round(curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Width));
+
+            double right = (curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Left) + this.RectWidth;
+            double left = curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Left;
+
+            double top = curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Top;
+            double bottom = (curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Top) + this.RectHeight;
+
+            this.XMin = Convert.ToInt32(Math.Round(left));
+            this.YMin = Convert.ToInt32(Math.Round(top));
+
+            this.XMax = Convert.ToInt32(Math.Round(right));
+            this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+            //force first letter to always be capitalized 
+            this.Label = Global.UpperFirst(AiDetectionObject.Name);
+
+            this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
+            this.Filename = curImg.image_path;
+
+            this.GetObjectType();
+        }
         public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDeepstackDetection AiDetectionObject, ClsImageQueueItem curImg)
         {
             this._defaultObjType = defaultObjType;
@@ -83,6 +140,8 @@ namespace AITool
             this.YMin = AiDetectionObject.y_min;
             this.Confidence = AiDetectionObject.confidence * 100;  //store as whole number percent 
             this.Filename = curImg.image_path;
+            this.RectHeight = this.XMax - this.YMin;
+            this.RectWidth = this.XMax - this.XMin;
 
             this.GetObjectType();
         }
@@ -130,11 +189,14 @@ namespace AITool
             double top = curImg.Height * AiDetectionObject.Top;
             double bottom = curImg.Height * AiDetectionObject.Bottom;
 
-            this.XMin = Convert.ToInt32(left);
-            this.YMin = Convert.ToInt32(top);
+            this.XMin = Convert.ToInt32(Math.Round(left));
+            this.YMin = Convert.ToInt32(Math.Round(top));
 
-            this.XMax = Convert.ToInt32(right);
-            this.YMax = Convert.ToInt32(bottom);
+            this.XMax = Convert.ToInt32(Math.Round(right));
+            this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+            this.RectHeight = this.XMax - this.YMin;
+            this.RectWidth = this.XMax - this.XMin;
 
             this.Confidence = Convert.ToSingle(AiDetectionObject.Confidence);
             this.Filename = curImg.image_path;

@@ -83,6 +83,20 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+        public static async Task<bool> DirectoryExistsAsync(string filename, int TimeoutMS = 20000)
+        {
+            //run the function in another thread
+            CancellationTokenSource cts = new CancellationTokenSource(TimeoutMS);
+            try
+            {
+                return await Task.Run(() => Directory.Exists(filename), cts.Token);
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
 
         public static string MappedDriveToUNCPath(string path)
         {
@@ -113,6 +127,7 @@ namespace AITool
             string lastremotepathpart = Global.Split(RemoteLocalPath, @"\").Last();
             string ip = "";
             string hostname = "";
+            Stopwatch sw = Stopwatch.StartNew();
 
             if (!RemoteLocalPath.StartsWith(@"\\"))
             {
@@ -159,7 +174,7 @@ namespace AITool
                     string sharedpath = GetSharedPath(md.Path, RemoteLocalPath, false).TrimEnd(@"\".ToCharArray());
                     if (!string.IsNullOrEmpty(sharedpath))
                     {
-                        Log($"Debug: Found shared path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {sharedpath}");
+                        Log($"Debug: Found shared path in {sw.ElapsedMilliseconds}ms on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {sharedpath}");
                         return sharedpath;
                     }
                 }
@@ -177,9 +192,9 @@ namespace AITool
                     foreach (MappedDrive md in mapped)
                     {
                         string checkpath = Path.Combine(md.Path, searchpath);
-                        if (Directory.Exists(checkpath))
+                        if (await Global.DirectoryExistsAsync(checkpath))
                         {
-                            Log($"Debug: Found remote path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
+                            Log($"Debug: Found remote path in {sw.ElapsedMilliseconds}ms on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
                             return checkpath;
                         }
                     }
@@ -195,9 +210,9 @@ namespace AITool
                 foreach (MappedDrive md in mapped)
                 {
                     string checkpath = Path.Combine(md.Path, lastpath);
-                    if (Directory.Exists(checkpath))
+                    if (await Global.DirectoryExistsAsync(checkpath))
                     {
-                        Log($"Debug: Found remote path on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
+                        Log($"Debug: Found remote path in {sw.ElapsedMilliseconds}ms on '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {checkpath}");
                         return checkpath;
                     }
                 }
@@ -205,7 +220,7 @@ namespace AITool
 
                 ret = $"\\\\{RemoteMachineNameOrIP}\\{RemoteLocalPath.Replace(":", "$")}";
                 //resort to using admin shares (have to be enabled through group policy in newer versions of windows)
-                Log($"Debug: Found ADMIN share '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {ret}");
+                Log($"Debug: Found ADMIN share in {sw.ElapsedMilliseconds}ms '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {ret}");
 
             }
             return ret;
@@ -1171,23 +1186,23 @@ namespace AITool
 
         }
 
-        public static bool IsInList(List<string> FindStrList, string SearchList, string Separators = ",;|")
+        public static bool IsInList(List<string> FindStrList, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
-            if (string.IsNullOrWhiteSpace(SearchList))
+            if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
 
             return IsInList(FindStrList, Global.Split(SearchList, Separators, true, true, true));
         }
-        public static bool IsInList(string FindStr, List<string> SearchList, string Separators = ",;|")
+        public static bool IsInList(string FindStr, List<string> SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
-            if (SearchList.Count == 0)
+            if (TrueIfEmpty && SearchList.Count == 0)
                 return true;  //If there is no searchlist, always return true
 
             return IsInList(Global.Split(FindStr, Separators, true, true, true), SearchList);
         }
-        public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|")
+        public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
-            if (string.IsNullOrWhiteSpace(SearchList))
+            if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
 
             return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
@@ -3026,15 +3041,20 @@ namespace AITool
 
     public class MovingCalcs
     {
+        
         private Queue<Decimal> samples = new Queue<Decimal>();
         private int windowSize = 16;
+        private int lastDayOfYear = 0;
         private Decimal sampleAccumulator;
-        public Decimal Average { get; private set; }
-        public Decimal Min { get; private set; }
-        public Decimal Max { get; private set; }
-        public int Count { get; private set; }
-        public Decimal Current { get; private set; }
+        public Decimal Average { get; private set; } = 0;
+        public Decimal Min { get; private set; } = 0;
+        public Decimal Max { get; private set; } = 0;
+        public int Count { get; private set; } = 0;
+        public int CountToday { get; private set; } = 0;
+        public Decimal Current { get; private set; } = 0;
         public DateTime TimeInitialized = DateTime.Now;
+        public string ItemName { get; set; } = "Items";
+        public bool IsTime { get; set; } = false;
         public double ItemsPerMinute()
         {
             if (this.Count == 0)
@@ -3050,9 +3070,11 @@ namespace AITool
             return this.Count / (DateTime.Now - TimeInitialized).TotalSeconds;
         }
 
-        public MovingCalcs(int windowSize)
+        public MovingCalcs(int windowSize, string itemName, bool IsTime)
         {
             this.windowSize = windowSize;
+            this.ItemName = ItemName;
+            this.IsTime = IsTime;
         }
 
         public void AddToCalc(double newSample)
@@ -3075,6 +3097,12 @@ namespace AITool
             if (newSample > 0)
             {
                 this.Count++;
+                this.CountToday++;
+                if (DateTime.Now.DayOfYear != this.lastDayOfYear)
+                {
+                    this.CountToday = 1;
+                    this.lastDayOfYear = DateTime.Now.DayOfYear;
+                }
                 this.sampleAccumulator += newSample;
                 this.samples.Enqueue(newSample);
 
@@ -3098,6 +3126,14 @@ namespace AITool
 
             }
 
+        }
+
+        public override string ToString()
+        {
+            if (this.IsTime)
+                return $"{this.Count} {this.ItemName} ({this.CountToday} today), {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min}ms,Max={this.Max}ms,Avg={this.Average.ToString("#####")}ms)";
+            else
+                return $"{this.Count} {this.ItemName} ({this.CountToday} today), {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min},Max={this.Max},Avg={this.Average.ToString("#####")})";
         }
     }
 

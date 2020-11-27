@@ -41,8 +41,8 @@ namespace AITool
         public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
         //private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
         private BlockingCollection<DBQueueHistoryItem> DBQueueHistory = new BlockingCollection<DBQueueHistoryItem>();
-        public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000);
-        public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000);
+        public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items",true);
+        public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
 
         public static object DBLock = new object();
 

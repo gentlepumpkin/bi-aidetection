@@ -43,6 +43,7 @@ namespace AITool
         public string telegram_triggering_objects = "";
         public bool enabled = true;
         public double cooldown_time = 0;
+        public int cooldown_time_seconds = 5;
         public int threshold_lower = 0;
         public int threshold_upper = 100;
 
@@ -106,15 +107,12 @@ namespace AITool
 
         public bool IsRelevant(string ObjectName)
         {
-            return Global.IsInList(ObjectName, this.triggering_objects_as_string) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string);
+            return Global.IsInList(ObjectName, this.triggering_objects_as_string, TrueIfEmpty:false) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string, TrueIfEmpty:false);
         }
         public Camera(string Name = "")
         {
-            if (Name.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
-                this.name = Name.Substring(2).TrimStart(@"_-".ToCharArray()).Trim();  //if using dupe cam that may start with AICAMNAME or AI_CAMNAME
-            else
-                this.name = Name;
 
+            this.name = Name;
             this.prefix = Name;
         }
 

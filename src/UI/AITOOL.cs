@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Amazon;
+using Amazon.Rekognition;
+using Amazon.Rekognition.Model;
+using Amazon.Runtime;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using OSVersionExtension;
@@ -39,10 +43,10 @@ namespace AITool
 
         //keep track of timing
         //moving average will be faster for long running process with 1000's of samples
-        public static MovingCalcs tcalc = new MovingCalcs(250);
-        public static MovingCalcs fcalc = new MovingCalcs(250);
-        public static MovingCalcs qcalc = new MovingCalcs(250);
-        public static MovingCalcs qsizecalc = new MovingCalcs(250);
+        public static MovingCalcs tcalc = new MovingCalcs(250, "Images", true);
+        public static MovingCalcs fcalc = new MovingCalcs(250, "Images", true);
+        public static MovingCalcs qcalc = new MovingCalcs(250, "Images", true);
+        public static MovingCalcs qsizecalc = new MovingCalcs(250, "Queue Size", false);
 
         //public static ClsLogManager errors = new ClsLogManager();
 
@@ -61,11 +65,10 @@ namespace AITool
 
         //thread safe dictionary to prevent more than one file being processed at one time
         public static ConcurrentDictionary<string, ClsImageQueueItem> detection_dictionary = new ConcurrentDictionary<string, ClsImageQueueItem>();
-
-        public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
+                
 
         public static Dictionary<string, ClsFileSystemWatcher> watchers = new Dictionary<string, ClsFileSystemWatcher>();
-        public static ThreadSafe.Boolean AIURLSettingsChanged = new ThreadSafe.Boolean(true);
+        //public static ThreadSafe.Boolean AIURLSettingsChanged = new ThreadSafe.Boolean(true);
 
 
         public static ThreadSafe.Boolean IsClosing = new ThreadSafe.Boolean(false);
@@ -180,7 +183,12 @@ namespace AITool
 
                 if (BlueIrisInfo.Result == BlueIrisResult.Valid)
                 {
-                    Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
+                    Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Users.Count} users, {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
+                    if (BlueIrisInfo.Users.Count > 0 && string.IsNullOrEmpty(AppSettings.Settings.DefaultUserName) || string.Equals(AppSettings.Settings.DefaultUserName, "username", StringComparison.OrdinalIgnoreCase))
+                    {
+                        AppSettings.Settings.DefaultUserName = BlueIrisInfo.Users[0].Name;
+                        AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(BlueIrisInfo.Users[0].Password);
+                    }
                 }
                 else
                 {
@@ -201,7 +209,7 @@ namespace AITool
                 TriggerActionQueue = new ClsTriggerActionQueue();
 
 
-                UpdateWatchers(false);
+                await UpdateWatchers(false);
 
                 FileSystemErrorCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(TimerCheckFileSystemWatchers);
                 FileSystemErrorCheckTimer.Interval = AppSettings.Settings.FileSystemWatcherRetryOnErrorTimeMS;
@@ -248,7 +256,129 @@ namespace AITool
             }
         }
 
+        public static string UpdateAmazonSettings()
+        {
+            string error = "";
 
+            RegionEndpoint endpoint = null;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(AppSettings.Settings.AmazonRegionEndpoint))
+                    endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
+            }
+            catch (Exception ex)
+            {
+                error = $"Could not set Amazon region endpoint to '{AppSettings.Settings.AmazonRegionEndpoint}' (JSON setting=AmazonRegionEndpoint): {ex.Message}";
+            }
+
+            if (endpoint != null)
+            {
+
+                AITOOL.Log($"Debug: Amazon RegionEndpoint DisplayName={endpoint.DisplayName}, PartitionDnsSuffix={endpoint.PartitionDnsSuffix}, PartitionName={endpoint.PartitionName}, SystemName={endpoint.SystemName}");
+                //always try to extract latest from rootkey.csv if found
+                string pth = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "rootkey.csv");
+                if (File.Exists(pth))
+                {
+                    string csv = File.ReadAllText(pth);
+                    if (!string.IsNullOrWhiteSpace(csv))
+                    {
+                        AITOOL.Log($"Debug: Extracting AWSAccessKeyId and AWSSecretKey from {pth}");
+                        string tid = Global.GetWordBetween(csv, "AWSAccessKeyId=", "\r|\n");
+                        string tsid = Global.GetWordBetween(csv, "AWSSecretKey=", "\r|\n|");
+                        if (!string.IsNullOrEmpty(tid) && tid != AppSettings.Settings.AmazonAccessKeyId)
+                            AppSettings.Settings.AmazonAccessKeyId = tid;
+                        if (!string.IsNullOrEmpty(tsid) && tsid != AppSettings.Settings.AmazonSecretKey)
+                            AppSettings.Settings.AmazonSecretKey = tsid;
+
+                    }
+                    else
+                    {
+                        error = $"Error: Empty file '{pth}'";
+                    }
+
+                }
+                else
+                {
+                    error = $"Could not find AWS credentials file '{pth}'";
+                }
+
+                if (string.IsNullOrWhiteSpace(AppSettings.Settings.AmazonAccessKeyId) || string.IsNullOrWhiteSpace(AppSettings.Settings.AmazonSecretKey))
+                {
+                    error = "Please download 'rootkey.csv' and place it in AITOOL _SETTINGS folder.  1) Sign up for AWS, 2) Create user 3) Export rootkey.csv when prompted.  https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html  Please note that you have to CREATE NEW in order to see rootkey.csv if one already exists: https://console.aws.amazon.com/iam/home#/security_credentials";
+                }
+            }
+            else
+            {
+                error = "Please close AITOOL and set 'AmazonRegionEndpoint' in AITOOL.SETTTINGS.JSON to a region code near you such as 'us-east-1': https://docs.aws.amazon.com/general/latest/gr/rande.html";
+            }
+
+            return error;
+
+        }
+
+        public static void UpdateAIURLList(bool Force = false)
+        {
+            //Check to see if we need to get updated URL list
+            if (AppSettings.Settings.AIURLList.Count == 0 || Force)
+            {
+                Log("Debug: Updating/Resetting AI URL list...");
+                List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
+
+                //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
+                Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
+
+                foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
+                {
+                    string ur = url.ToString().ToLower();
+                    if (!tmpdic.ContainsKey(ur))
+                    {
+                        tmpdic.Add(ur, url);
+                    }
+                    else
+                    {
+                        Log($"Debug: ---- (duplicate url configured - {ur})");
+                    }
+                }
+
+                AppSettings.Settings.AIURLList.Clear();
+
+                for (int i = 0; i < SpltURLs.Count; i++)
+                {
+                    ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, SpltURLs.Count, URLTypeEnum.Unknown);
+
+                    if (url != null && url.IsValid)
+                    {
+                        //if it already exists, use it, otherwise add a new one
+                        if (tmpdic.ContainsKey(url.ToString().ToLower()))
+                        {
+                            url = tmpdic[url.ToString().ToLower()];
+                            AppSettings.Settings.AIURLList.Add(url);
+                            url.OrigOrder = i + 1;
+                            //url.InUse.WriteFullFence(false);
+                            url.CurErrCount.WriteFullFence(0);
+                            url.Enabled.WriteFullFence(true);
+                            Log($"Debug: ----   #{url.OrigOrder}: Re-added known URL: {url}");
+                        }
+                        else
+                        {
+                            AppSettings.Settings.AIURLList.Add(url);
+                            Log($"Debug: ----   #{url.OrigOrder}: Added new URL: {url}");
+                        }
+
+                    }
+                    else
+                    {
+                        Log($"Debug: ----   #{url.OrigOrder}: Skipped INVALID URL: {url}");
+
+                    }
+                }
+                Log($"Debug: ...Found {AppSettings.Settings.AIURLList.Count} AI URL's in settings.");
+
+                //AIURLSettingsChanged.WriteFullFence(false);
+
+            }
+
+        }
 
         public static async Task<ClsURLItem> WaitForNextURL()
         {
@@ -265,68 +395,19 @@ namespace AITool
                 try
                 {
 
-                    //Check to see if we need to get updated URL list
-                    if (DeepStackURLList.Count == 0 || AIURLSettingsChanged.ReadFullFence())
-                    {
-                        Log("Debug: Updating/Resetting AI URL list...");
-                        List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
-
-                        //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
-                        Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
-                        foreach (ClsURLItem url in DeepStackURLList)
-                        {
-                            string ur = url.ToString().ToLower();
-                            if (!tmpdic.ContainsKey(ur))
-                            {
-                                tmpdic.Add(ur, url);
-                            }
-                            else
-                            {
-                                Log($"Debug: ---- (duplicate url configured - {ur})");
-                            }
-                        }
-
-                        DeepStackURLList.Clear();
-
-                        for (int i = 0; i < SpltURLs.Count; i++)
-                        {
-                            ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, SpltURLs.Count, URLTypeEnum.Unknown);
-
-                            //if it already exists, use it, otherwise add a new one
-                            if (tmpdic.ContainsKey(url.ToString().ToLower()))
-                            {
-                                url = tmpdic[url.ToString().ToLower()];
-                                DeepStackURLList.Add(url);
-                                url.Order = i + 1;
-                                //url.InUse.WriteFullFence(false);
-                                url.ErrCount.WriteFullFence(0);
-                                url.Enabled.WriteFullFence(true);
-                                Log($"Debug: ----   #{url.Order}: Re-added known URL: {url}");
-                            }
-                            else
-                            {
-                                DeepStackURLList.Add(url);
-                                Log($"Debug: ----   #{url.Order}: Added new URL: {url}");
-                            }
-                        }
-                        Log($"Debug: ...Found {DeepStackURLList.Count} AI URL's in settings.");
-
-                        AIURLSettingsChanged.WriteFullFence(false);
-
-                    }
-
+                    UpdateAIURLList();
 
                     List<ClsURLItem> sorted = new List<ClsURLItem>();
 
                     if (AppSettings.Settings.deepstack_urls_are_queued)
                     {
                         //always use oldest first
-                        sorted = DeepStackURLList.OrderBy((d) => d.LastUsedTime).ToList();
+                        sorted = AppSettings.Settings.AIURLList.OrderBy((d) => d.LastUsedTime).ToList();
                     }
                     else
                     {
                         //use original order
-                        sorted.AddRange(DeepStackURLList);
+                        sorted.AddRange(AppSettings.Settings.AIURLList);
                     }
                     //sort by oldest last used
 
@@ -336,7 +417,7 @@ namespace AITool
                         {
                             if (!sorted[i].InUse.ReadFullFence())
                             {
-                                if (sorted[i].ErrCount.ReadFullFence() == 0)
+                                if (sorted[i].CurErrCount.ReadFullFence() == 0)
                                 {
                                     ret = sorted[i];
                                     ret.CurOrder = i + 1;
@@ -351,7 +432,7 @@ namespace AITool
                                         ret.CurOrder = i + 1;
                                         if (!displayedretry)  //if we get in a long loop waiting for URL
                                         {
-                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].ErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
                                             displayedretry = true;
                                         }
                                         break;
@@ -360,7 +441,7 @@ namespace AITool
                                     {
                                         if (!displayedbad)  //if we get in a long loop waiting for URL
                                         {
-                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].ErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
                                             displayedbad = true;
                                         }
                                     }
@@ -374,7 +455,7 @@ namespace AITool
                         {
                             //check to see if can be re-enabled yet
                             sorted[i].Enabled.WriteFullFence(true);
-                            sorted[i].ErrCount.WriteFullFence(0);
+                            sorted[i].CurErrCount.WriteFullFence(0);
                             sorted[i].InUse.WriteFullFence(false);
                             Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
                             ret = sorted[i];
@@ -473,7 +554,7 @@ namespace AITool
 
                                 double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.OrigOrder}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
 
                                 Interlocked.Increment(ref TskCnt);
 
@@ -492,17 +573,17 @@ namespace AITool
                                     {
                                         Interlocked.Increment(ref ErrCnt);
 
-                                        if (url.ErrCount.ReadFullFence() > 0)
+                                        if (url.CurErrCount.ReadFullFence() > 0)
                                         {
-                                            if (url.ErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
+                                            if (url.CurErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
                                             {
                                                 //put url back in queue when done
-                                                Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.ErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam.name);
+                                                Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam.name);
                                             }
                                             else
                                             {
                                                 url.Enabled.WriteFullFence(false);
-                                                Log($"...Error: AI URL for '{url.Type}' failed '{url.ErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam.name);
+                                                Log($"...Error: AI URL for '{url.Type}' failed '{url.CurErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam.name);
                                             }
 
                                         }
@@ -512,7 +593,7 @@ namespace AITool
                                         if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
                                         {
                                             //put back in queue to be processed by another deepstack server
-                                            Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.ErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam.name, CurImg.image_path);
+                                            Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.CurErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam.name, CurImg.image_path);
                                             ImageProcessQueue.Enqueue(CurImg);
                                         }
                                         else
@@ -520,7 +601,7 @@ namespace AITool
                                             cam.stats_skipped_images++;
                                             cam.stats_skipped_images_session++;
 
-                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.ErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam.name, CurImg.image_path);
+                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam.name, CurImg.image_path);
                                             Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv));
 
                                         }
@@ -529,7 +610,7 @@ namespace AITool
                                     {
                                         Interlocked.Increment(ref ProcImgCnt);
                                         //reset error count
-                                        url.ErrCount.WriteFullFence(0);
+                                        url.CurErrCount.WriteFullFence(0);
                                     }
 
                                     url.InUse.WriteFullFence(false);
@@ -686,7 +767,7 @@ namespace AITool
             }
         }
 
-        public static void UpdateWatchers(bool Reset)
+        public static async Task UpdateWatchers(bool Reset)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -755,7 +836,7 @@ namespace AITool
                             if (!watchers.ContainsKey(name.ToLower()))
                             {
                                 //this will return null if the path is invalid...
-                                FileSystemWatcher curwatch = CreateFileWatcher(path, include);
+                                FileSystemWatcher curwatch = await CreateFileWatcherAsync(path, include);
                                 if (curwatch != null)
                                 {
                                     ClsFileSystemWatcher mywtc = new ClsFileSystemWatcher(name, path, curwatch, include);
@@ -770,7 +851,7 @@ namespace AITool
                                 if (watchers[name.ToLower()].watcher == null)
                                 {
                                     //could be null if path is bad
-                                    watchers[name.ToLower()].watcher = CreateFileWatcher(path, include);
+                                    watchers[name.ToLower()].watcher = await CreateFileWatcherAsync(path, include);
                                 }
                             }
                         }
@@ -897,7 +978,7 @@ namespace AITool
 
         static bool FileWatcherHasError = false;
 
-        public static FileSystemWatcher CreateFileWatcher(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
+        public static async Task<FileSystemWatcher> CreateFileWatcherAsync(string path, bool IncludeSubdirectories = false, string filter = "*.jpg")
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -909,7 +990,7 @@ namespace AITool
 
                 if (!String.IsNullOrWhiteSpace(path))
                 {
-                    if (Directory.Exists(path))
+                    if (await Global.DirectoryExistsAsync(path))
                     {
                         watcher = new FileSystemWatcher(path);
                         watcher.Path = path;
@@ -1011,9 +1092,10 @@ namespace AITool
         {
             ClsAIServerResponse ret = new ClsAIServerResponse();
 
-            Uri url = new Uri(AiUrl.url);
-            String CurSrv = url.Host + ":" + url.Port;
 
+            //==============================================================================================================
+            //==============================================================================================================
+            //==============================================================================================================
             if (AiUrl.Type == URLTypeEnum.DeepStack)
             {
                 Stopwatch swposttime = new Stopwatch();
@@ -1028,11 +1110,11 @@ namespace AITool
 
                     request.Add(new StreamContent(image_data), "image", Path.GetFileName(CurImg.image_path));
 
-                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", CurSrv, cam.name, CurImg.image_path);
+                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                     swposttime.Restart();
 
-                    using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(url, request, MasterCTS.Token);
+                    using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(AiUrl.ToString(), request, MasterCTS.Token);
 
                     swposttime.Stop();
                     ret.StatusCode = output.StatusCode;
@@ -1059,8 +1141,8 @@ namespace AITool
                                         if (!response.success)
                                         {
                                             ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
-                                            AiUrl.ErrCount.AtomicIncrementAndGet();
-                                            AiUrl.ResultMessage = ret.Error;
+                                            AiUrl.IncrementError();
+                                            AiUrl.LastResultMessage = ret.Error;
                                         }
                                         else
                                         {
@@ -1080,6 +1162,7 @@ namespace AITool
                                             }
 
                                             ret.Success = true;
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
 
                                         }
 
@@ -1087,8 +1170,8 @@ namespace AITool
                                     else
                                     {
                                         ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
-                                        AiUrl.ErrCount.AtomicIncrementAndGet();
-                                        AiUrl.ResultMessage = ret.Error;
+                                        AiUrl.IncrementError();
+                                        AiUrl.LastResultMessage = ret.Error;
                                     }
 
 
@@ -1098,22 +1181,22 @@ namespace AITool
                                     //deserialization did not cause exception, it just gave a null response in the object?
                                     //probably wont happen but just making sure
                                     ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
-                                    AiUrl.ErrCount.AtomicIncrementAndGet();
-                                    AiUrl.ResultMessage = ret.Error;
+                                    AiUrl.IncrementError();
+                                    AiUrl.LastResultMessage = ret.Error;
                                 }
                             }
                             catch (Exception ex)
                             {
                                 ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                                AiUrl.ErrCount.AtomicIncrementAndGet();
-                                AiUrl.ResultMessage = ret.Error;
+                                AiUrl.IncrementError();
+                                AiUrl.LastResultMessage = ret.Error;
                             }
                         }
                         else
                         {
                             ret.Error = $"ERROR: Empty string returned from HTTP post.";
-                            AiUrl.ErrCount.AtomicIncrementAndGet();
-                            AiUrl.ResultMessage = ret.Error;
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
                         }
 
 
@@ -1121,8 +1204,8 @@ namespace AITool
                     else
                     {
                         ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
-                        AiUrl.ErrCount.AtomicIncrementAndGet();
-                        AiUrl.ResultMessage = ret.Error;
+                        AiUrl.IncrementError();
+                        AiUrl.LastResultMessage = ret.Error;
                     }
 
                 }
@@ -1131,8 +1214,8 @@ namespace AITool
                     swposttime.Stop();
 
                     ret.Error = $"ERROR: {Global.ExMsg(ex)}";
-                    AiUrl.ErrCount.AtomicIncrementAndGet();
-                    AiUrl.ResultMessage = ret.Error;
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
                 }
                 finally
                 {
@@ -1140,6 +1223,9 @@ namespace AITool
                 }
 
             }
+            //==============================================================================================================
+            //==============================================================================================================
+            //==============================================================================================================
             else if (AiUrl.Type == URLTypeEnum.DOODS)
             {
                 Stopwatch swposttime = new Stopwatch();
@@ -1164,14 +1250,14 @@ namespace AITool
                         cdr.Data = image_data.ConvertToBase64();
                     }
 
-                    using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url))
+                    using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, AiUrl.ToString()))
                     {
 
                         using HttpContent httpContent = Global.CreateHttpContentString(cdr);
 
                         request.Content = httpContent;
 
-                        Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", CurSrv, cam.name, CurImg.image_path);
+                        Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
 
                         //  Got http status code 'RequestEntityTooLarge' (413) in 42ms: Request Entity Too Large
@@ -1217,14 +1303,15 @@ namespace AITool
                                             }
 
                                             ret.Success = true;
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
 
 
                                         }
                                         else
                                         {
                                             ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
-                                            AiUrl.ErrCount.AtomicIncrementAndGet();
-                                            AiUrl.ResultMessage = ret.Error;
+                                            AiUrl.IncrementError();
+                                            AiUrl.LastResultMessage = ret.Error;
                                         }
 
 
@@ -1234,22 +1321,22 @@ namespace AITool
                                         //deserialization did not cause exception, it just gave a null response in the object?
                                         //probably wont happen but just making sure
                                         ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
-                                        AiUrl.ErrCount.AtomicIncrementAndGet();
-                                        AiUrl.ResultMessage = ret.Error;
+                                        AiUrl.IncrementError();
+                                        AiUrl.LastResultMessage = ret.Error;
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                                    AiUrl.ErrCount.AtomicIncrementAndGet();
-                                    AiUrl.ResultMessage = ret.Error;
+                                    AiUrl.IncrementError();
+                                    AiUrl.LastResultMessage = ret.Error;
                                 }
                             }
                             else
                             {
                                 ret.Error = $"ERROR: Empty string returned from HTTP post.";
-                                AiUrl.ErrCount.AtomicIncrementAndGet();
-                                AiUrl.ResultMessage = ret.Error;
+                                AiUrl.IncrementError();
+                                AiUrl.LastResultMessage = ret.Error;
                             }
 
 
@@ -1257,8 +1344,8 @@ namespace AITool
                         else
                         {
                             ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
-                            AiUrl.ErrCount.AtomicIncrementAndGet();
-                            AiUrl.ResultMessage = ret.Error;
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
                         }
 
                     }
@@ -1271,8 +1358,115 @@ namespace AITool
                     swposttime.Stop();
 
                     ret.Error = $"ERROR: {Global.ExMsg(ex)}";
-                    AiUrl.ErrCount.AtomicIncrementAndGet();
-                    AiUrl.ResultMessage = ret.Error;
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
+                }
+                finally
+                {
+                    ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                }
+
+            }
+            //==============================================================================================================
+            //==============================================================================================================
+            //==============================================================================================================
+            else if (AiUrl.Type == URLTypeEnum.AWSRekognition)
+            {
+                Stopwatch swposttime = new Stopwatch();
+
+                try
+                {
+
+                    //string testjson = JsonConvert.SerializeObject(cdr);
+
+                    long FileSize = new FileInfo(CurImg.image_path).Length;
+                    //https://docs.aws.amazon.com/general/latest/gr/rande.html
+
+
+                    RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
+                    AmazonRekognitionClient rekognitionClient = new AmazonRekognitionClient(new BasicAWSCredentials(AppSettings.Settings.AmazonAccessKeyId, AppSettings.Settings.AmazonSecretKey), endpoint);
+
+                    DetectLabelsRequest dlr = new DetectLabelsRequest();
+
+                    dlr.MaxLabels = AppSettings.Settings.AmazonMaxLabels;
+                    dlr.MinConfidence = AppSettings.Settings.AmazonMinConfidence;
+
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource)
+                        dlr.MinConfidence = cam.threshold_lower;
+
+                    Amazon.Rekognition.Model.Image rekognitionImgage = new Amazon.Rekognition.Model.Image();
+
+                    byte[] data = null;
+
+                    using (FileStream fileStream = new FileStream(CurImg.image_path, FileMode.Open, FileAccess.Read))
+                    {
+                        data = new byte[fileStream.Length];
+                        await fileStream.ReadAsync(data, 0, (int)fileStream.Length);
+                    }
+
+                    rekognitionImgage.Bytes = new MemoryStream(data);
+
+                    dlr.Image = rekognitionImgage;
+
+
+                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                    swposttime.Restart();
+
+                    DetectLabelsResponse response = await rekognitionClient.DetectLabelsAsync(dlr);
+
+                    swposttime.Stop();
+
+                    if (response != null)
+                    {
+                        ret.StatusCode = response.HttpStatusCode;
+                        if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            if (response.Labels.Count() > 0)
+                            {
+
+                                foreach (Label lbl in response.Labels)
+                                {
+                                    //not sure if there will ever be more than one instance
+                                    for (int i = 0; i < lbl.Instances.Count; i++)
+                                    {
+                                        ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, lbl, i, CurImg);
+
+                                        ret.Predictions.Add(pred);
+
+                                    }
+
+                                }
+
+
+                            }
+
+                            ret.Success = true;
+                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+                        }
+                        else 
+                        {
+                            ret.Error = $"ERROR: Amazon Rekognition 'HttpStatusCode' is '{response.HttpStatusCode}' ({Convert.ToInt32(response.HttpStatusCode)}).";
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
+                        }
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: Amazon Rekognition 'Response' is null.";
+                        AiUrl.IncrementError();
+                        AiUrl.LastResultMessage = ret.Error;
+                    }
+
+
+                }
+                catch (Exception ex)
+                {
+                    swposttime.Stop();
+
+                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
                 }
                 finally
                 {
@@ -1283,7 +1477,7 @@ namespace AITool
             else
             {
                 ret.Error = $"Error: URL type not supported yet: '{AiUrl.Type}'";
-                AiUrl.ResultMessage = ret.Error;
+                AiUrl.LastResultMessage = ret.Error;
             }
 
             return ret;
@@ -1303,9 +1497,6 @@ namespace AITool
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            Uri url = new Uri(AiUrl.url);
-            String CurSrv = url.Host + ":" + url.Port;
-
             Camera cam = AITOOL.GetCamera(CurImg.image_path);
             cam.last_image_file = CurImg.image_path;
 
@@ -1313,15 +1504,15 @@ namespace AITool
 
             // check if camera is still in the first half of the cooldown. If yes, don't analyze to minimize cpu load.
             //only analyze if 50% of the cameras cooldown time since last detection has passed
-            double mins = (DateTime.Now - cam.last_trigger_time.Read()).TotalMinutes;
-            double halfcool = cam.cooldown_time / 2;
+            double secs = (DateTime.Now - cam.last_trigger_time.Read()).TotalSeconds;
+            double halfcool = cam.cooldown_time_seconds / 2;
             ClsAIServerResponse asr = new ClsAIServerResponse();
 
-            if (mins >= halfcool)
+            if (secs >= halfcool)
             {
                 try
                 {
-                    Log($"Debug: Starting analysis of {CurImg.image_path}...", CurSrv, cam.name, CurImg.image_path);
+                    Log($"Debug: Starting analysis of {CurImg.image_path}...", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                     // Wait up to 30 seconds to gain access to the file that was just created.This should
                     //prevent the need to retry in the detection routine
@@ -1358,8 +1549,8 @@ namespace AITool
                         if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
                         {
 
-                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", CurSrv, cam.name, CurImg.image_path);
-                            Log($"Debug: (3/6) Processing results...", CurSrv, cam.name, CurImg.image_path);
+                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                            Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
 
                             List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
@@ -1382,7 +1573,7 @@ namespace AITool
                             if (asr.Predictions.Count() > 0)
                             {
                                 //print every detected object with the according confidence-level
-                                Log($"Debug:    Detected objects:", CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug:    Detected objects:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                 foreach (ClsPrediction pred in asr.Predictions)
                                 {
@@ -1428,9 +1619,9 @@ namespace AITool
                                     }
 
                                     if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                        Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name, CurImg.image_path);
+                                        Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
                                     else
-                                        Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", CurSrv, cam.name, CurImg.image_path);
+                                        Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                 }
 
@@ -1483,19 +1674,19 @@ namespace AITool
 
                                     objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
-                                    Log($"Debug: The summary:" + cam.last_detections_summary, CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: The summary:" + cam.last_detections_summary, AiUrl.CurSrv, cam.name, CurImg.image_path);
 
-                                    Log($"Debug: (5/6) Performing alert actions:", CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: (5/6) Performing alert actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AiUrl.CurSrv);
 
                                     await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AiUrl, ""); //make TRIGGER
 
                                     cam.IncrementAlerts(); //stats update
-                                    Log($"Debug: (6/6) SUCCESS.", CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: (6/6) SUCCESS.", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     //add to history list
-                                    //Log($"Debug: Adding detection to history list.", CurSrv, cam.name);
+                                    //Log($"Debug: Adding detection to history list.", AiUrl.CurSrv, cam.name);
                                     Global.CreateHistoryItem(hist);
 
                                 }
@@ -1550,16 +1741,16 @@ namespace AITool
                                         text = text.Remove(text.Length - 2);
                                     }
 
-                                    Log($"Debug: {text}, so it's an irrelevant alert.", CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: {text}, so it's an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
-                                    Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AiUrl.CurSrv);
 
                                     await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
 
                                     cam.IncrementIrrelevantAlerts(); //stats update
-                                    Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     //add to history list
                                     Global.CreateHistoryItem(hist);
@@ -1567,18 +1758,18 @@ namespace AITool
                             }
                             else
                             {
-                                Log($"Debug:      ((NO DETECTED OBJECTS))", CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug:      ((NO DETECTED OBJECTS))", AiUrl.CurSrv, cam.name, CurImg.image_path);
                                 // FALSE ALERT
 
                                 cam.IncrementFalseAlerts(); //stats update
 
-                                Log($"Debug: (5/6) Performing CANCEL actions:", CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                 hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", AiUrl.CurSrv);
 
                                 await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
 
-                                Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                 //add to history list
                                 Global.CreateHistoryItem(hist);
@@ -1589,9 +1780,9 @@ namespace AITool
                         else
                         {
                             error = asr.Error;
-                            AiUrl.ErrCount.AtomicIncrementAndGet();
-                            AiUrl.ResultMessage = error;
-                            Log(error, CurSrv, cam.name, CurImg.image_path);
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = error;
+                            Log(error, AiUrl.CurSrv, cam.name, CurImg.image_path);
                         }
 
                     }
@@ -1601,16 +1792,16 @@ namespace AITool
                         error = $"Error: Could not gain access to {CurImg.image_path} for {result.TimeMS}ms, with {result.ErrRetryCnt} retries, giving up.";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = error;
-                        Log(error, CurSrv, cam.name, CurImg.image_path);
+                        Log(error, AiUrl.CurSrv, cam.name, CurImg.image_path);
                     }
 
                 }
                 catch (Exception ex)
                 {
                     error = $"ERROR: {Global.ExMsg(ex)}";
-                    AiUrl.ErrCount.AtomicIncrementAndGet();
-                    AiUrl.ResultMessage = error;
-                    Log(error, CurSrv, cam.name, CurImg.image_path);
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = error;
+                    Log(error, AiUrl.CurSrv, cam.name, CurImg.image_path);
                 }
                 //exitfunction:
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_errors == true && cam.telegram_enabled)
@@ -1628,25 +1819,25 @@ namespace AITool
 
                 CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
                 CurImg.DeepStackTimeMS = asr.SWPostTime;
-                AiUrl.DeepStackTimeMS = asr.SWPostTime;
+                AiUrl.LastTimeMS = asr.SWPostTime;
                 tcalc.AddToCalc(CurImg.TotalTimeMS);
-                AiUrl.dscalc.AddToCalc(CurImg.DeepStackTimeMS);
+                AiUrl.AITimeCalcs.AddToCalc(CurImg.DeepStackTimeMS);
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
 
-                Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
-                Log($"Debug:       AI (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.dscalc.Count}, Min={AiUrl.dscalc.Min}ms, Max={AiUrl.dscalc.Max}ms, Avg={AiUrl.dscalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
-                Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
-                Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", CurSrv, cam.name, CurImg.image_path);
-                Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:       AI (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.AITimeCalcs.Count}, Min={AiUrl.AITimeCalcs.Min}ms, Max={AiUrl.AITimeCalcs.Max}ms, Avg={AiUrl.AITimeCalcs.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
             }
             else
             {
                 cam.stats_skipped_images++;
                 cam.stats_skipped_images_session++;
-                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", CurSrv, cam.name, CurImg.image_path);
-                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{mins.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' minutes.", "", false, "", AiUrl.CurSrv));
+                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.name}':  '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"Skipped image, cooldown was '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds.", "", false, "", AiUrl.CurSrv));
             }
 
             return (error == "");

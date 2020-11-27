@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using static AITool.AITOOL;
 
@@ -22,10 +23,24 @@ namespace AITool
         CouldNotOpenRemoteRegistry,
         Unknown
     }
+
+    public class BICamera
+    {
+
+    }
+
+    public class BIUser
+    {
+        public string Name = "";
+        public string Password = "";
+        public bool IsAdmin = false;
+        public bool IsEnabled = false;
+    }
     public class BlueIris
     {
         public List<String> ClipPaths = new List<String>();
         public List<String> Cameras = new List<String>();
+        public List<BIUser> Users = new List<BIUser>();
         public string AppPath = "";
         public string URL = "";
         public string ServerName = "127.0.0.1";
@@ -33,6 +48,7 @@ namespace AITool
         public BlueIrisResult Result = BlueIrisResult.Unknown;
         public bool IsHTTPS = false;
         public bool IsLocalhost = false;
+        public string VersionStr = "";
 
         public BlueIris()
         {
@@ -118,15 +134,15 @@ namespace AITool
                         {
                             this.AppPath = await this.UpdateRemotePathAsync(ap);
 
-                            if (this.IsLocalhost)
-                                Log($"Debug: BlueIris app path found: {ap}");
-                            else
-                                Log($"Debug: BlueIris app path found: {ap} (Remote={this.AppPath})");
+                            var versionInfo = FileVersionInfo.GetVersionInfo(Path.Combine(this.AppPath, "BlueIris.exe"));
+                            this.VersionStr = versionInfo.FileVersion;
+
+                            Log($"Debug: BlueIris found. Version '{this.VersionStr}', app path '{this.AppPath}'");
 
                             //Test the remote connection...
                             if (!this.IsLocalhost && !Directory.Exists(this.AppPath))
                             {
-                                Log($"Error: Cannot access remote BlueIris install path '{this.AppPath}' - Make sure you have permissions to remotely access and your 'Administrative shares' have been enabled (c$, d$, etc): https://www.repairwin.com/enable-admin-shares-windows-10-8-7/");
+                                Log($"Error: Cannot access remote BlueIris install path '{this.AppPath}' - Make sure you have permissions to remotely access and MAP A DRIVE to your remote blue iris CLIPS folder.  (Or make sure 'Administrative shares' have been enabled (c$, d$, etc)): https://www.repairwin.com/enable-admin-shares-windows-10-8-7/");
                                 this.Result = BlueIrisResult.NeedsAdminSharesEnabled;
                                 return this.Result;
                             }
@@ -143,6 +159,43 @@ namespace AITool
                     }
 
 
+                }
+
+                if (!string.IsNullOrEmpty(this.AppPath))
+                {
+
+                    using (RegistryKey key = RemoteKey.OpenSubKey("Software\\Perspective Software\\Blue Iris\\server\\users", false))
+                    {
+                        if (key != null)
+                        {
+                            foreach (string sk in key.GetSubKeyNames())
+                            {
+
+                                using (RegistryKey curkey = key.OpenSubKey(sk))
+                                {
+                                    if (curkey != null)
+                                    {
+                                        bool enabled = Convert.ToInt32(curkey.GetValue("enabled", 1)) == 1;
+                                        bool admin = Convert.ToInt32(curkey.GetValue("admin", 0)) == 1;
+
+                                        if (!enabled || !admin || string.Equals(sk, "local_console", StringComparison.OrdinalIgnoreCase))
+                                            continue;
+
+                                        BIUser user = new BIUser();
+                                        user.Name = sk;
+                                        string pass = Convert.ToString(curkey.GetValue("password"));
+                                        user.Password = Encoding.UTF8.GetString(Convert.FromBase64String(pass));
+
+                                        this.Users.Add(user);
+                                        Log($"Debug: Found user '{user.Name}'");
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
                 }
 
                 using (RegistryKey key = RemoteKey.OpenSubKey("Software\\Perspective Software\\Blue Iris\\server", false))

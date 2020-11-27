@@ -59,10 +59,10 @@ namespace AITool
         private String CurSrv = "";
         string ImgPath = "NoImage";
         public ThreadSafe.Integer Count { get; set; } = new ThreadSafe.Integer(0);
-        public MovingCalcs QCountCalc { get; set; } = new MovingCalcs(250);
-        public MovingCalcs QTimeCalc { get; set; } = new MovingCalcs(250);
-        public MovingCalcs ActionTimeCalc { get; set; } = new MovingCalcs(250);
-        public MovingCalcs TotalTimeCalc { get; set; } = new MovingCalcs(250);
+        public MovingCalcs QCountCalc { get; set; } = new MovingCalcs(250, "Action Queue Sizes", false);
+        public MovingCalcs QTimeCalc { get; set; } = new MovingCalcs(250, "Action Queue Times",true);
+        public MovingCalcs ActionTimeCalc { get; set; } = new MovingCalcs(250, "Actions", true);
+        public MovingCalcs TotalTimeCalc { get; set; } = new MovingCalcs(250, "Actions", true);
         public ClsTriggerActionQueue()
         {
             Task.Run(this.TriggerActionJobQueueLoop);
@@ -235,11 +235,11 @@ namespace AITool
 
             try
             {
-                double cooltime = (DateTime.Now - AQI.cam.last_trigger_time.Read()).TotalMinutes;
+                double cooltime = (DateTime.Now - AQI.cam.last_trigger_time.Read()).TotalSeconds;
                 string tmpfile = "";
 
                 //only trigger if cameras cooldown time since last detection has passed
-                if (cooltime >= AQI.cam.cooldown_time)
+                if (cooltime >= AQI.cam.cooldown_time_seconds)
                 {
 
                     if (AQI.cam.Action_image_merge_detections && AQI.Trigger)
@@ -436,11 +436,11 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {AQI.cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time} minutes - See Cameras 'cooldown_time' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                    Log($"   Camera {AQI.cam.name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
                 }
 
 
-                if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.ToLower().Contains(Environment.GetEnvironmentVariable("TEMP").ToLower()) && System.IO.File.Exists(tmpfile))
+                if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.IndexOf(Environment.GetEnvironmentVariable("TEMP"), StringComparison.OrdinalIgnoreCase) >= 0 && System.IO.File.Exists(tmpfile))
                 {
                     System.IO.File.Delete(tmpfile);
                     //Log($"Debug: Deleting tmp file {tmpfile}");
@@ -798,9 +798,9 @@ namespace AITool
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
-                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0333333)
+                    if (AppSettings.Settings.telegram_cooldown_seconds < 2)
                     {
-                        AppSettings.Settings.telegram_cooldown_minutes = 0.0333333;  //force to be at least 2 seconds
+                        AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 2 seconds
                     }
 
                     string Caption = "";
@@ -838,8 +838,8 @@ namespace AITool
 
                     if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalMinutes, 4);
-                        if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
+                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
+                        if (cooltime >= AppSettings.Settings.telegram_cooldown_seconds)
                         {
                             //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
 
@@ -870,15 +870,15 @@ namespace AITool
                             if (AQI.IsQueued)
                             {
                                 //add a minimum delay if we are in a queue to prevent minimum cooldown error
-                                Log($"Debug: Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                                await Task.Delay(TimeSpan.FromMinutes(AppSettings.Settings.telegram_cooldown_minutes));
+                                Log($"Debug: Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                                await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
                             }
 
                         }
                         else
                         {
                             //log that nothing was done
-                            Log($"Debug:   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_minutes} minutes - See 'telegram_cooldown_minutes' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                            Log($"Debug:   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
 
                         }
 
@@ -964,17 +964,17 @@ namespace AITool
                 try
                 {
 
-                    if (AppSettings.Settings.telegram_cooldown_minutes < 0.0166667)
+                    if (AppSettings.Settings.telegram_cooldown_seconds < 2)
                     {
-                        AppSettings.Settings.telegram_cooldown_minutes = 0.0166667;  //force to be at least 1 second
+                        AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 1 second
                     }
 
                     string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
 
                     if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalMinutes, 4);
-                        if (cooltime >= AppSettings.Settings.telegram_cooldown_minutes)
+                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
+                        if (cooltime >= AppSettings.Settings.telegram_cooldown_seconds)
                         {
                             TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
                             foreach (string chatid in AppSettings.Settings.telegram_chatids)
@@ -989,8 +989,8 @@ namespace AITool
                             if (AQI.IsQueued)
                             {
                                 //add a minimum delay if we are in a queue to prevent minimum cooldown error
-                                Log($"Waiting {AppSettings.Settings.telegram_cooldown_minutes} minutes (telegram_cooldown_minutes)...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                                await Task.Delay(TimeSpan.FromMinutes(AppSettings.Settings.telegram_cooldown_minutes));
+                                Log($"Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                                await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
                             }
 
                             ret = true;
@@ -998,7 +998,7 @@ namespace AITool
                         else
                         {
                             //log that nothing was done
-                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_minutes} minutes - See 'telegram_cooldown_minutes' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
 
                         }
 

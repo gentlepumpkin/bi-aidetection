@@ -157,7 +157,7 @@ namespace AITool
 
                 this.tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
                 this.tb_telegram_token.Text = AppSettings.Settings.telegram_token;
-                this.tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_minutes.ToString();
+                this.tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_seconds.ToString();
 
                 this.cb_send_errors.Checked = AppSettings.Settings.send_errors;
                 this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
@@ -2399,9 +2399,21 @@ namespace AITool
                     List<string> cams = Global.Split(frm.tb_Cameras.Text, "\r\n|;,");
                     foreach (var cs in cams)
                     {
-                        if (GetCamera(cs, false) == null)
+
+                        string cn = cs;
+
+                        if (cn.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
                         {
-                            Camera cam = new Camera(cs);
+                            cn = Name.Substring(2).TrimStart(@"_-".ToCharArray()).Trim();  //if using dupe cam that may start with AICAMNAME or AI_CAMNAME
+                            string maskfile = AITOOL.GetMaskFile(cn);
+                            string newfile = AITOOL.GetMaskFile(cs);
+                            if (File.Exists(maskfile) && !File.Exists(newfile))
+                                File.Move(maskfile, newfile);
+                        }
+
+                        if (GetCamera(cn, false) == null)
+                        {
+                            Camera cam = new Camera(cn);
                             string camresult = this.AddCamera(cam);
                             Log(camresult);
                             if (camresult.StartsWith("success", StringComparison.OrdinalIgnoreCase))
@@ -2593,7 +2605,7 @@ namespace AITool
                                             icam.trigger_urls = cam.trigger_urls;
                                             icam.cancel_urls_as_string = cam.cancel_urls_as_string;
                                             icam.cancel_urls = cam.cancel_urls;
-                                            icam.cooldown_time = cam.cooldown_time;
+                                            icam.cooldown_time_seconds = cam.cooldown_time_seconds;
                                             icam.telegram_enabled = cam.telegram_enabled;
                                             icam.telegram_caption = cam.telegram_caption;
                                             icam.Action_image_copy_enabled = cam.Action_image_copy_enabled;
@@ -2739,6 +2751,95 @@ namespace AITool
         //SETTING TAB
         //----------------------------------------------------------------------------------------------------------
 
+        private void UpdateAIURLs()
+        {
+            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
+            if (AppSettings.Settings.deepstack_url.IndexOf("amazon", StringComparison.OrdinalIgnoreCase) >= 0) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            {
+                string error = AITOOL.UpdateAmazonSettings();
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    AITOOL.Log($"Error: {error}");
+
+                    if (error.IndexOf("endpoint", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        //hardcode the list for now:  https://docs.aws.amazon.com/general/latest/gr/rande.html
+                        List<string> endpoints = new List<string>();
+                        endpoints.Add("US East (N. Virginia)  \tus-east-1");
+                        endpoints.Add("US East (Ohio)  \tus-east-2");
+                        endpoints.Add("US West (N. California)  \tus-west-1");
+                        endpoints.Add("US West (Oregon)  \tus-west-2");
+                        endpoints.Add("Canada (Central)  \tca-central-1");
+                        endpoints.Add("Europe (London)  \teu-west-2");
+                        endpoints.Add("Europe (Frankfurt)  \teu-central-1");
+                        endpoints.Add("Europe (Ireland)  \teu-west-1");
+                        endpoints.Add("Europe (Milan)  \teu-south-1");
+                        endpoints.Add("Europe (Paris)  \teu-west-3");
+                        endpoints.Add("Europe (Stockholm)  \teu-north-1");
+                        endpoints.Add("Africa (Cape Town)  \taf-south-1");
+                        endpoints.Add("Middle East (Bahrain)  \tme-south-1");
+                        endpoints.Add("South America (São Paulo)  \tsa-east-1");
+                        endpoints.Add("China (Beijing)  \tcn-north-1");
+                        endpoints.Add("China (Ningxia)  \tcn-northwest-1");
+                        endpoints.Add("Asia Pacific (Hong Kong)  \tap-east-1");
+                        endpoints.Add("Asia Pacific (Mumbai)  \tap-south-1");
+                        endpoints.Add("Asia Pacific (Osaka-Local)  \tap-northeast-3");
+                        endpoints.Add("Asia Pacific (Seoul)  \tap-northeast-2");
+                        endpoints.Add("Asia Pacific (Singapore)  \tap-southeast-1");
+                        endpoints.Add("Asia Pacific (Sydney)  \tap-southeast-2");
+                        endpoints.Add("Asia Pacific (Tokyo)  \tap-northeast-1");
+
+                        using (var form = new InputForm("Select Amazon AWS endpoint near you:", "Amazon AWS Endpoint", cbitems: endpoints))
+                        {
+                            var result = form.ShowDialog();
+                            if (result == DialogResult.OK)
+                            {
+                                string region = "";
+                                if (!string.IsNullOrEmpty(form.text))
+                                {
+                                    if (form.text.Contains("\t"))
+                                    {
+                                        region = Global.GetWordBetween(form.text, "\t", "").Trim();
+                                    }
+                                    else if (form.text.Contains("-"))
+                                    {
+                                        region = form.text.Trim();
+                                    }
+
+                                }
+                                if (string.IsNullOrEmpty(region))
+                                {
+                                    MessageBox.Show($"Error: No endpoint selected '{form.text}'");
+                                }
+                                else
+                                {
+                                    AppSettings.Settings.AmazonRegionEndpoint = region;
+                                }
+                            }
+                        }
+                    }
+
+                    error = AITOOL.UpdateAmazonSettings();
+
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        AITOOL.Log($"Error: {error}");
+                        if (error.IndexOf("rootkey", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            MessageBox.Show(error, "Missing AWS credentials", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+
+                }
+            }
+
+            //let the image loop (running in another thread) know to recheck ai server url settings.
+            //AIURLSettingsChanged.WriteFullFence(true);
+
+            AITOOL.UpdateAIURLList(true);
+
+        }
 
         //settings save button
         private async void BtnSettingsSave_Click_1(object sender, EventArgs e)
@@ -2749,11 +2850,10 @@ namespace AITool
             //save inputted settings into App.settings
             AppSettings.Settings.input_path = this.cmbInput.Text.Trim();
             AppSettings.Settings.input_path_includesubfolders = this.cb_inputpathsubfolders.Checked;
-            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
             AppSettings.Settings.deepstack_urls_are_queued = this.cb_DeepStackURLsQueued.Checked;
             AppSettings.Settings.telegram_chatids = Global.Split(this.tb_telegram_chatid.Text, "|;,", true, true);
             AppSettings.Settings.telegram_token = this.tb_telegram_token.Text.Trim();
-            AppSettings.Settings.telegram_cooldown_minutes = Convert.ToDouble(this.tb_telegram_cooldown.Text.Trim());
+            AppSettings.Settings.telegram_cooldown_seconds = Convert.ToInt32(this.tb_telegram_cooldown.Text.Trim());
             AppSettings.Settings.send_errors = this.cb_send_errors.Checked;
             AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
 
@@ -2764,8 +2864,7 @@ namespace AITool
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
-            //let the image loop (running in another thread) know to recheck ai server url settings.
-            AIURLSettingsChanged.WriteFullFence(true);
+            UpdateAIURLs();
 
             if (await AppSettings.SaveAsync())
             {
@@ -3335,7 +3434,7 @@ namespace AITool
 
                 frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
                 frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|;,"));
-                frm.tb_cooldown.Text = cam.cooldown_time.ToString(); //load cooldown time
+                frm.tb_cooldown.Text = cam.cooldown_time_seconds.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
                 frm.tb_telegram_caption.Text = cam.telegram_caption;
@@ -3377,7 +3476,7 @@ namespace AITool
                     cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|;,"));
                     cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                    cam.cooldown_time = Convert.ToDouble(frm.tb_cooldown.Text.Trim());
+                    cam.cooldown_time_seconds = Convert.ToInt32(frm.tb_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
                     cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text;
@@ -4667,6 +4766,22 @@ namespace AITool
         {
             AppSettings.Settings.HistoryRestrictMinThresholdAtSource = this.restrictThresholdAtSourceToolStripMenuItem.Checked;
             AppSettings.SaveAsync();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            UpdateAIURLs();
+
+            using (Frm_AIServers frm = new Frm_AIServers())
+            {
+                
+                frm.ShowDialog(this);
+            }
         }
     }
 

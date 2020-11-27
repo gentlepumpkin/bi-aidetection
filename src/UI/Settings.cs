@@ -36,6 +36,7 @@ namespace AITool
             public bool SettingsPortable = true;  //portable means the settings stay under EXE folder, otherwise they get dropped in %appdata%
             public string telegram_token = "";
             public double telegram_cooldown_minutes = 0.0833333;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
+            public int telegram_cooldown_seconds = 5;
             public int Telegram_RetryAfterFailSeconds = 300;  //default to 5 minutes if telegram exception
             public string input_path = "";
             public bool input_path_includesubfolders = false;
@@ -129,6 +130,14 @@ namespace AITool
             public string DOODSDetectorName = "default";
 
             public int FileSystemWatcherRetryOnErrorTimeMS = 300000;  //5 mins default
+
+            public string AmazonAccessKeyId = "";
+            public string AmazonSecretKey = "";
+            public string AmazonRegionEndpoint = "";  //https://docs.aws.amazon.com/general/latest/gr/rande.html
+            public int AmazonMaxLabels = 15;
+            public int AmazonMinConfidence = 25;
+
+            public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
         }
 
@@ -381,7 +390,7 @@ namespace AITool
                         Global.MoveFiles(OldFolder, NewFolder, "*.BMP|*.PNG", true);
                         Global.MoveFiles(OldFolder + "\\Logs", Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
                         Global.MoveFiles(OldFolder, Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
-                        Global.MoveFiles(OldFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK", true);
+                        Global.MoveFiles(OldFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK|*.CSV", true);
                     }
                     else if (OrigSettingsFileExists)
                     {
@@ -390,7 +399,7 @@ namespace AITool
                         Global.MoveFiles(OrigFolder, NewFolder, "*.BMP|*.PNG", true);
                         Global.MoveFiles(OrigFolder, Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
                         Global.MoveFiles(OrigFolder + "\\Logs", Settings.LogFileName, "AITOOL*.log|AITOOL.[*.ZIP", true);
-                        Global.MoveFiles(OrigFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK", true);
+                        Global.MoveFiles(OrigFolder, NewFolder, "*.JSON|*.JSON.BAK|*.BMP|*.PNG|*.SQLITE3|*.SQLITE3.BAK|*.CSV", true);
                     }
                     else
                     {
@@ -532,11 +541,24 @@ namespace AITool
                 if (Settings != null)
                 {
 
+                    if (Settings.telegram_cooldown_minutes > -1)
+                    {
+                        Settings.telegram_cooldown_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(Settings.telegram_cooldown_minutes).TotalSeconds, 0));
+                        Settings.telegram_cooldown_minutes = -1;
+                    }
+
                     UpdateSettingsLocation();  //save to \settings folder or appdata\settings
 
                     //Ive had a case where MaskManager was null/corrupt to double check:
                     foreach (Camera cam in Settings.CameraList)
                     {
+
+                        if (cam.cooldown_time > -1)
+                        {
+                            cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));
+                            cam.cooldown_time = -1;
+                        }
+
                         if (cam.maskManager == null)
                         {
                             cam.maskManager = new MaskManager();
@@ -639,6 +661,7 @@ namespace AITool
                     //sort the camera list:
                     AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
 
+                    AITOOL.UpdateAIURLList(true);
 
                     Ret = true;
                 }

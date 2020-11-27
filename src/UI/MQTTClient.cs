@@ -353,7 +353,7 @@ namespace AITool
                                         {
                                             if (subscribed)
                                             {
-                                                Log($"Debug: MQTT: Unsubscribing from topic '{topic}'");
+                                                Log($"Debug: MQTT: Un-Subscribing from topic '{topic}'");
                                                 await mqttClient.UnsubscribeAsync(topic);
                                             }
                                             Log($"Debug: MQTT: Disconnecting from server.");

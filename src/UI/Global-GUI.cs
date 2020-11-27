@@ -146,7 +146,9 @@ namespace AITool
             catch { }
         }
 
-        public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, System.Drawing.Font Fnt, ImageList ImageList,
+        public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, 
+                                         System.Drawing.Font Fnt = null, 
+                                         ImageList ImageList = null,
                                          string PrimarySortColumnName = "",
                                          SortOrder PrimarySortOrder = SortOrder.Ascending,
                                          string SecondarySortColumnName = "",
