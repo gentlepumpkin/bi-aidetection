@@ -328,6 +328,7 @@
     <Compile Include="Frm_WizzardParent.Designer.cs">
       <DependentUpon>Frm_WizzardParent.cs</DependentUpon>
     </Compile>
+    <Compile Include="MovingCalcs.cs" />
     <Compile Include="TaskCancellationExtension.cs" />
     <Compile Include="Trace.cs" />
     <Compile Include="ClsTriggerActionQueue.cs" />

@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Globalization;
 using static AITool.AITOOL;
 
 
@@ -82,6 +83,22 @@ namespace AITool
         }
 
         private static Nullable<bool> _isService = default(Boolean?);
+
+
+        public static bool IsTimeBetween(DateTime time, string span)
+        {
+            // convert datetime to a TimeSpan
+            TimeSpan now = time.TimeOfDay;
+
+            string[] splt = span.Split('-');
+            TimeSpan BeginSpan = TimeSpan.Parse(splt[0]);
+            TimeSpan EndSpan= TimeSpan.Parse(splt[1]);
+            // see if start comes before end
+            if (BeginSpan < EndSpan)
+                return BeginSpan <= now && now <= EndSpan;
+            // start is after end, so do the inverse comparison
+            return !(EndSpan < now && now < BeginSpan);
+        }
 
         public static async Task<bool> DirectoryExistsAsync(string filename, int TimeoutMS = 20000)
         {
@@ -3035,105 +3052,6 @@ namespace AITool
             if (this.processHandle != IntPtr.Zero)
                 NativeMethods.CloseHandle(this.processHandle);
             this.processHandle = IntPtr.Zero;
-        }
-    }
-
-
-    public class MovingCalcs
-    {
-        
-        private Queue<Decimal> samples = new Queue<Decimal>();
-        private int windowSize = 16;
-        private int lastDayOfYear = 0;
-        private Decimal sampleAccumulator;
-        public Decimal Average { get; private set; } = 0;
-        public Decimal Min { get; private set; } = 0;
-        public Decimal Max { get; private set; } = 0;
-        public int Count { get; private set; } = 0;
-        public int CountToday { get; private set; } = 0;
-        public Decimal Current { get; private set; } = 0;
-        public DateTime TimeInitialized = DateTime.Now;
-        public string ItemName { get; set; } = "Items";
-        public bool IsTime { get; set; } = false;
-        public double ItemsPerMinute()
-        {
-            if (this.Count == 0)
-                return 0;
-
-            return this.Count / (DateTime.Now - TimeInitialized).TotalMinutes;
-        }
-        public double ItemsPerSecond()
-        {
-            if (this.Count == 0)
-                return 0;
-
-            return this.Count / (DateTime.Now - TimeInitialized).TotalSeconds;
-        }
-
-        public MovingCalcs(int windowSize, string itemName, bool IsTime)
-        {
-            this.windowSize = windowSize;
-            this.ItemName = ItemName;
-            this.IsTime = IsTime;
-        }
-
-        public void AddToCalc(double newSample)
-        {
-            this.AddToCalc(Convert.ToDecimal(newSample));
-        }
-        public void AddToCalc(int newSample)
-        {
-            this.AddToCalc(Convert.ToDecimal(newSample));
-        }
-        public void AddToCalc(long newSample)
-        {
-            this.AddToCalc(Convert.ToDecimal(newSample));
-        }
-        public void AddToCalc(Decimal newSample)
-        {
-
-            this.Current = newSample;
-
-            if (newSample > 0)
-            {
-                this.Count++;
-                this.CountToday++;
-                if (DateTime.Now.DayOfYear != this.lastDayOfYear)
-                {
-                    this.CountToday = 1;
-                    this.lastDayOfYear = DateTime.Now.DayOfYear;
-                }
-                this.sampleAccumulator += newSample;
-                this.samples.Enqueue(newSample);
-
-                if (this.samples.Count > this.windowSize)
-                {
-                    this.sampleAccumulator -= this.samples.Dequeue();
-                }
-
-                if (this.sampleAccumulator > 0)  //divide by 0?
-                    this.Average = this.sampleAccumulator / this.samples.Count;
-
-                if (this.Min == 0)
-                {
-                    this.Min = newSample;
-                }
-                else
-                {
-                    this.Min = Math.Min(newSample, this.Min);
-                }
-                this.Max = Math.Max(newSample, this.Max);
-
-            }
-
-        }
-
-        public override string ToString()
-        {
-            if (this.IsTime)
-                return $"{this.Count} {this.ItemName} ({this.CountToday} today), {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min}ms,Max={this.Max}ms,Avg={this.Average.ToString("#####")}ms)";
-            else
-                return $"{this.Count} {this.ItemName} ({this.CountToday} today), {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min},Max={this.Max},Avg={this.Average.ToString("#####")})";
         }
     }
 

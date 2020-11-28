@@ -25,6 +25,8 @@ namespace AITool
         public string url { get; set; } = "";
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
+        public string Cameras { get; set; } = "";
+        public int MaxImagesPerMonth = 0;
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public string LastResultMessage { get; set; } = "";
         public long LastTimeMS { get; set; } = 0;
@@ -81,6 +83,7 @@ namespace AITool
                         this.CurSrv = "Amazon:" + AppSettings.Settings.AmazonRegionEndpoint;
                         this.IsValid = true;
                         this.Enabled.WriteFullFence(true);
+                        this.MaxImagesPerMonth = 5000;
                     }
                     else
                     {

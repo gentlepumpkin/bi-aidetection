@@ -380,7 +380,7 @@ namespace AITool
 
         }
 
-        public static async Task<ClsURLItem> WaitForNextURL()
+        public static async Task<ClsURLItem> WaitForNextURL(Camera cam)
         {
             //lets wait in here forever until a URL is available...
 
@@ -392,6 +392,10 @@ namespace AITool
 
             while (ret == null)
             {
+                int disabled = 0;
+                int inuse = 0;
+                int incorrectcam = 0;
+                int notintimerange = 0;
                 try
                 {
 
@@ -417,50 +421,74 @@ namespace AITool
                         {
                             if (!sorted[i].InUse.ReadFullFence())
                             {
-                                if (sorted[i].CurErrCount.ReadFullFence() == 0)
+                                if (Global.IsInList(cam.name, sorted[i].Cameras, TrueIfEmpty: true))
                                 {
-                                    ret = sorted[i];
-                                    ret.CurOrder = i + 1;
-                                    break;
-                                }
-                                else
-                                {
-                                    double secs = Math.Round((DateTime.Now - sorted[i].LastUsedTime).TotalSeconds, 0);
-                                    if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
+                                    DateTime now = DateTime.Now;
+
+                                    if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
                                     {
-                                        ret = sorted[i];
-                                        ret.CurOrder = i + 1;
-                                        if (!displayedretry)  //if we get in a long loop waiting for URL
+                                        if (sorted[i].CurErrCount.ReadFullFence() == 0)
                                         {
-                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                            displayedretry = true;
+                                            ret = sorted[i];
+                                            ret.CurOrder = i + 1;
+                                            break;
                                         }
-                                        break;
+                                        else
+                                        {
+                                            double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                            if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
+                                            {
+                                                ret = sorted[i];
+                                                ret.CurOrder = i + 1;
+                                                if (!displayedretry)  //if we get in a long loop waiting for URL
+                                                {
+                                                    Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                    displayedretry = true;
+                                                }
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                {
+                                                    Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                    displayedbad = true;
+                                                }
+                                            }
+
+                                        }
                                     }
                                     else
                                     {
-                                        if (!displayedbad)  //if we get in a long loop waiting for URL
-                                        {
-                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                            displayedbad = true;
-                                        }
+                                        notintimerange++;
                                     }
-
+                                }
+                                else
+                                {
+                                    incorrectcam++;
                                 }
 
                             }
+                            else
+                            {
+                                inuse++;
+                            }
                         }
                         //disabled, but check to see if we need to reenable
-                        else if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                        else 
                         {
-                            //check to see if can be re-enabled yet
-                            sorted[i].Enabled.WriteFullFence(true);
-                            sorted[i].CurErrCount.WriteFullFence(0);
-                            sorted[i].InUse.WriteFullFence(false);
-                            Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
-                            ret = sorted[i];
-                            ret.CurOrder = i + 1;
-                            break;
+                            disabled++;
+                            if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                            {
+                                //check to see if can be re-enabled yet
+                                sorted[i].Enabled.WriteFullFence(true);
+                                sorted[i].CurErrCount.WriteFullFence(0);
+                                sorted[i].InUse.WriteFullFence(false);
+                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
+                                ret = sorted[i];
+                                ret.CurOrder = i + 1;
+                                break;
+                            }
                         }
                     }
 
@@ -479,12 +507,12 @@ namespace AITool
 
                 if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
                 {
-                    Log("---- All URL's are in use or disabled, waiting...");
+                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range) Waiting...");
                     LastWaitingLog = DateTime.Now;
                 }
 
-                //wait half a second for other url's to become available
-                await Task.Delay(500);
+                //wait quarter a second for other url's to become available
+                await Task.Delay(250);
 
             }
 
@@ -548,7 +576,7 @@ namespace AITool
                                 Stopwatch sw = Stopwatch.StartNew();
 
                                 //wait for the next url to become available...
-                                ClsURLItem url = await WaitForNextURL();
+                                ClsURLItem url = await WaitForNextURL(cam);
 
                                 sw.Stop();
 
