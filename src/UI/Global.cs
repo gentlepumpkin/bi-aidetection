@@ -84,6 +84,15 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+        [DllImport("Shlwapi.dll", CharSet = CharSet.Auto)]
+        public static extern long StrFormatByteSize(long fileSize, [MarshalAs(UnmanagedType.LPTStr)] StringBuilder buffer, int bufferSize);
+       
+        public static string FormatBytes(long filesize)
+        {
+            StringBuilder sb = new StringBuilder();
+            StrFormatByteSize(filesize, sb, sb.Capacity);
+            return sb.ToString();
+        }
 
         public static bool IsTimeBetween(DateTime time, string span)
         {

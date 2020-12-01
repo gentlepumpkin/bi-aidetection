@@ -1052,8 +1052,50 @@ namespace AITool
             return watcher;
         }
 
+        public static ClsImageAdjust GetImageAdjustProfileByName(string name)
+        {
+            ClsImageAdjust ret = null;
+            ClsImageAdjust def = null;
 
-        static bool IsValidImage(ClsImageQueueItem CurImg)
+            foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
+            {
+                if (string.Equals(name.Trim(), ia.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    ret = ia;
+                }
+                if (string.Equals("Default", ia.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    def = ia;
+                }
+            }
+
+            if (ret == null)
+                ret = def;
+
+            if (ret == null)
+            {
+                ret = new ClsImageAdjust("Default");
+                Log($"Error: Could not find Image Adjust profile that matches '{name}'");
+            }
+
+            return ret;
+        }
+
+        public static bool HasImageAdjustProfile(string name)
+        {
+            bool ret = false;
+
+            foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
+            {
+                if (string.Equals(name.Trim(), ia.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return ret;
+        }
+        public static bool IsValidImage(ClsImageQueueItem CurImg)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 

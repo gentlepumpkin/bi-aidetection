@@ -54,7 +54,7 @@ namespace AITool
         public bool Action_image_copy_enabled = false;
         public bool Action_image_merge_detections = false;
         public bool Action_image_merge_detections_makecopy = true;
-        public long Action_image_merge_jpegquality = 80;
+        public long Action_image_merge_jpegquality = 90;
         public string Action_network_folder = "";
         public string Action_network_folder_filename = "[ImageFilenameNoExt]";
         public int Action_network_folder_purge_older_than_days = 30;
@@ -93,6 +93,7 @@ namespace AITool
         public int XOffset = 0;   //these are for when deepstack is having a problem with detection rectangle being in the wrong location
         public int YOffset = 0;   //  Can be negative numbers
 
+        public string ImageAdjustProfile = "Default";
 
         [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);

@@ -139,6 +139,8 @@ namespace AITool
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
+            public List<ClsImageAdjust> ImageAdjustProfiles = new List<ClsImageAdjust> { new ClsImageAdjust("Default") };
+
         }
 
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
