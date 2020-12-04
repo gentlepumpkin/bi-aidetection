@@ -2312,20 +2312,17 @@ namespace AITool
                 foreach (string pth in BlueIrisInfo.ClipPaths)
                 {
                     this.cmbcaminput.Items.Add(pth);
-                    //try to automatically pick the path that starts with AI if not already set
-                    //if ((pth.ToLower().Contains(tbName.Text.ToLower()) || pth.ToLower().Contains(tbPrefix.Text.ToLower())) && string.IsNullOrWhiteSpace(cmbcaminput.Text))
-                    //{
-                    //    cmbcaminput.Text = pth;
-                    //}
                 }
+
                 this.cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
+
+                this.tb_camera_telegram_chatid.Text = cam.telegram_chatid;
 
                 this.tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
                 this.tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
                 this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
-
 
 
                 //load triggering objects
@@ -2563,6 +2560,8 @@ namespace AITool
                 cam.input_path = this.cmbcaminput.Text.Trim();
                 cam.input_path_includesubfolders = this.cb_monitorCamInputfolder.Checked;
 
+                cam.telegram_chatid = this.tb_camera_telegram_chatid.Text.Trim();
+
                 int ccnt = 0;
 
                 if (SaveTo)
@@ -2608,6 +2607,7 @@ namespace AITool
                                             icam.cooldown_time_seconds = cam.cooldown_time_seconds;
                                             icam.telegram_enabled = cam.telegram_enabled;
                                             icam.telegram_caption = cam.telegram_caption;
+                                            icam.telegram_chatid = cam.telegram_chatid;
                                             icam.Action_image_copy_enabled = cam.Action_image_copy_enabled;
                                             icam.Action_network_folder = cam.Action_network_folder;
                                             icam.Action_network_folder_filename = cam.Action_network_folder_filename;
@@ -2912,7 +2912,7 @@ namespace AITool
 
             if (noneg)
             {
-                MessageBox.Show("Please note that the Telegram Chat ID may need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Please note that the Telegram Chat ID **may** need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
         }

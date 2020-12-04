@@ -41,6 +41,7 @@ namespace AITool
         public bool telegram_enabled = false;
         public string telegram_caption = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
         public string telegram_triggering_objects = "";
+        public string telegram_chatid = "";
         public bool enabled = true;
         public double cooldown_time = 0;
         public int cooldown_time_seconds = 5;

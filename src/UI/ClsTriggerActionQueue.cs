@@ -792,7 +792,7 @@ namespace AITool
             bool ret = false;
             string lastchatid = "";
 
-            if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
+            if ((!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid) || AppSettings.Settings.telegram_chatids.Count > 0) && AppSettings.Settings.telegram_token != "")
             {
                 //telegram upload sometimes fails
                 Stopwatch sw = Stopwatch.StartNew();
@@ -847,19 +847,29 @@ namespace AITool
                             {
                                 TelegramBotClient bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
 
+                                string chatid = "";
+                                bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
+                                if (overrideid)
+                                    chatid = AppSettings.Settings.telegram_chatids[0];
+                                else
+                                    chatid = AQI.cam.telegram_chatid.Trim();
+
                                 //upload image to Telegram servers and send to first chat
-                                Log($"Debug:      uploading image to chat \"{AppSettings.Settings.telegram_chatids[0]}\"", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                                lastchatid = AppSettings.Settings.telegram_chatids[0];
-                                Message message = await bot.SendPhotoAsync(AppSettings.Settings.telegram_chatids[0], new InputOnlineFile(image_telegram, "image.jpg"), Caption);
+                                Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                                lastchatid = chatid;
+                                Message message = await bot.SendPhotoAsync(chatid, new InputOnlineFile(image_telegram, "image.jpg"), Caption);
 
                                 string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
-                                //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                                foreach (string chatid in AppSettings.Settings.telegram_chatids.Skip(1))
+                                if (!overrideid)
                                 {
-                                    Log($"Debug:      uploading image to chat \"{chatid}\"...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
-                                    lastchatid = chatid;
-                                    await bot.SendPhotoAsync(chatid, file_id, Caption);
+                                    //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
+                                    foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
+                                    {
+                                        Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                                        lastchatid = curchatid;
+                                        await bot.SendPhotoAsync(curchatid, file_id, Caption);
+                                    }
                                 }
                                 ret = true;
                             }
@@ -976,11 +986,30 @@ namespace AITool
                         double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
                         if (cooltime >= AppSettings.Settings.telegram_cooldown_seconds)
                         {
+
+                            string chatid = "";
+                            bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
+                            if (overrideid)
+                                chatid = AppSettings.Settings.telegram_chatids[0];
+                            else
+                                chatid = AQI.cam.telegram_chatid.Trim();
+
                             TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
-                            foreach (string chatid in AppSettings.Settings.telegram_chatids)
+
+                            if (overrideid)
                             {
                                 lastchatid = chatid;
                                 Message msg = await bot.SendTextMessageAsync(chatid, Caption);
+
+                            }
+                            else
+                            {
+                                foreach (string curchatid in AppSettings.Settings.telegram_chatids)
+                                {
+                                    lastchatid = curchatid;
+                                    Message msg = await bot.SendTextMessageAsync(curchatid, Caption);
+
+                                }
 
                             }
                             this.last_telegram_trigger_time.Write(DateTime.Now);
