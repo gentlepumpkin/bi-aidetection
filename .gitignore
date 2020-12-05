@@ -259,3 +259,11 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/src/UI/.vshistory
+/src/UI/NamedPipeWrapper/.vshistory
+/src/UI/OSVersionExt/.vshistory
+/src/UI/Properties/.vshistory/AssemblyInfo.cs
+/src/UI/SQLite/.vshistory
+/src/AITool.Service/.vshistory
+/src/.vshistory/bi-aidetection.sln
+/src/AITool.Service/Properties/.vshistory/AssemblyInfo.cs
