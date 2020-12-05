@@ -850,9 +850,9 @@ namespace AITool
                                 string chatid = "";
                                 bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
                                 if (overrideid)
-                                    chatid = AppSettings.Settings.telegram_chatids[0];
-                                else
                                     chatid = AQI.cam.telegram_chatid.Trim();
+                                else
+                                    chatid = AppSettings.Settings.telegram_chatids[0]; 
 
                                 //upload image to Telegram servers and send to first chat
                                 Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
@@ -990,9 +990,9 @@ namespace AITool
                             string chatid = "";
                             bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
                             if (overrideid)
-                                chatid = AppSettings.Settings.telegram_chatids[0];
-                            else
                                 chatid = AQI.cam.telegram_chatid.Trim();
+                            else
+                                chatid = AppSettings.Settings.telegram_chatids[0];
 
                             TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
 
