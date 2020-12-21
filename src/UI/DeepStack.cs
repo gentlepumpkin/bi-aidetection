@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using static AITool.AITOOL;
 
@@ -74,8 +75,12 @@ namespace AITool
             {
                 if (!Global.ProcessValid(this.ServerProc))
                     this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
+                if (!Global.ProcessValid(this.PythonProc))
+                    this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
+                if (!Global.ProcessValid(this.RedisProc))
+                    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
-                if (Global.ProcessValid(this.ServerProc))
+                if (Global.ProcessValid(this.ServerProc) && Global.ProcessValid(this.PythonProc) && Global.ProcessValid(this.RedisProc))
                 {
                     this.IsInstalled = true;
                     this.HasError = false;
@@ -262,14 +267,15 @@ namespace AITool
                             {
                                 this.ServerEXE = Path.Combine(dspath, @"DeepStack.exe");
                             }
+                            else
+                            {
+                                this.ServerEXE = Path.Combine(dspath, @"server\server.exe");
+                            }
 
 
                             if (!string.Equals(dspath, this.DeepStackFolder, StringComparison.OrdinalIgnoreCase))
                             {
                                 Log("Debug: Deepstack running from non-default path: " + dspath);
-                                this.PythonEXE = Path.Combine(dspath, @"interpreter\python.exe");
-                                this.RedisEXE = Path.Combine(dspath, @"redis\redis-server.exe");
-                                this.ServerEXE = Path.Combine(dspath, @"server\server.exe");
                                 this.NeedsSaving = true;
                             }
                         }
@@ -328,7 +334,7 @@ namespace AITool
         {
             return await Task.Run(() => this.Start());
         }
-        private async Task<bool> Start()
+        private bool Start()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -437,9 +443,9 @@ namespace AITool
                             }
                             break;
                         }
-                        await Task.Delay(100);
+                        Thread.Sleep(100);
 
-                    } while (SW.ElapsedMilliseconds < 10000);  //wait 10 seconds max
+                    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
 
                     this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
@@ -602,9 +608,9 @@ namespace AITool
                             }
                             break;
                         }
-                        await Task.Delay(100);
+                        Thread.Sleep(100);
 
-                    } while (SW.ElapsedMilliseconds < 10000);  //wait 10 seconds max
+                    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
 
                     if (cnt == 5)
                     {

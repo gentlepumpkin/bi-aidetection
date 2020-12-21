@@ -3132,6 +3132,9 @@ namespace AITool
                 this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
                 this.Txt_Port.Text = DeepStackServerControl.Port;
 
+                if (!DeepStackServerControl.IsNewVersion)
+                    this.Txt_CustomModelPath.Enabled = false;
+
                 //if (prt != Txt_Port.Text)
                 //{
                 //    //server:port/maybe/more/path

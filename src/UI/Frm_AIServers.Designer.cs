@@ -102,7 +102,7 @@ namespace AITool
             // 
             this.deepstackToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackToolStripMenuItem.Image")));
             this.deepstackToolStripMenuItem.Name = "deepstackToolStripMenuItem";
-            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
+            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.deepstackToolStripMenuItem.Text = "Deepstack AI Server";
             this.deepstackToolStripMenuItem.Click += new System.EventHandler(this.deepstackToolStripMenuItem_Click);
             // 
@@ -110,7 +110,7 @@ namespace AITool
             // 
             this.addAmazonReToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonReToolStripMenuItem.Image")));
             this.addAmazonReToolStripMenuItem.Name = "addAmazonReToolStripMenuItem";
-            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
+            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.addAmazonReToolStripMenuItem.Text = "AWS Rekognition AI Server";
             this.addAmazonReToolStripMenuItem.Click += new System.EventHandler(this.addAmazonReToolStripMenuItem_Click);
             // 
@@ -118,7 +118,7 @@ namespace AITool
             // 
             this.addDoodsServerToolStripMenuItem.Image = global::AITool.Properties.Resources.network_server;
             this.addDoodsServerToolStripMenuItem.Name = "addDoodsServerToolStripMenuItem";
-            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
+            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.addDoodsServerToolStripMenuItem.Text = "DOODS AI Server";
             this.addDoodsServerToolStripMenuItem.Click += new System.EventHandler(this.addDoodsServerToolStripMenuItem_Click);
             // 
@@ -182,6 +182,7 @@ namespace AITool
             this.Controls.Add(this.FOLV_AIServers);
             this.Name = "Frm_AIServers";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Tag = "SAVE";
             this.Text = "AI Servers";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Frm_AddAIServers_FormClosing);
             this.Load += new System.EventHandler(this.Frm_AddAIServers_Load);

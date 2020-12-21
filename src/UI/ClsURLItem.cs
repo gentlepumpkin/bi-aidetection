@@ -248,6 +248,9 @@ namespace AITool
 
             }
 
+            if (uri != null)
+                this.CurSrv = uri.Host + ":" + uri.Port;
+
             if (!ret)
                 AITOOL.Log($"Error: '{this.Type.ToString()}' URL is not valid: '{this.url}'");
 
