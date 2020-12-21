@@ -60,7 +60,7 @@ namespace AITool
         /// https://stackoverflow.com/questions/1531668/thread-safe-datetime-update-using-interlocked
         public class Datetime
         {
-            long _value;
+            public long _value;
 
             public Datetime(DateTime value)
             {
@@ -81,7 +81,7 @@ namespace AITool
         }
         public class Integer
         {
-            private int _value;
+            public int _value;
 
             public Integer(int value)
             {
@@ -180,7 +180,7 @@ namespace AITool
 
         public class Long
         {
-            private long _value;
+            public long _value;
 
             public Long(long value)
             {
@@ -278,7 +278,7 @@ namespace AITool
 
         public class Boolean
         {
-            private int _value;
+            public int _value;
             private const int False = 0;
             private const int True = 1;
 
@@ -385,7 +385,7 @@ namespace AITool
         public class AtomicReference<T>
             where T : class
         {
-            private T _value;
+            public T _value;
 
             public AtomicReference(T value)
             {

@@ -35,90 +35,14 @@ namespace AITool
         private void Frm_ImageAdjust_Load(object sender, EventArgs e)
         {
             Global_GUI.RestoreWindowState(this);
-            UpdateCombo();
+            UpdateProfile();
 
             this.tb_ImageFile.Text = GetBestImage();
 
         }
 
-        private async Task ApplyAsync()
-        {
 
-            try
-            {
-                if (!string.IsNullOrEmpty(this.tb_ImageFile.Text) && File.Exists(this.tb_ImageFile.Text))
-                {
-                    //SixLabors.ImageSharp.Configuration config = new Configuration();
-
-                    SixLabors.ImageSharp.Image image = await SixLabors.ImageSharp.Image.LoadAsync(this.tb_ImageFile.Text);
-
-                        int width = Convert.ToInt32(tb_Width.Text);
-                    int height = Convert.ToInt32(tb_Height.Text);
-                    int sizepercent = Convert.ToInt32(tb_SizePercent.Text);
-
-                    if (width != -1 && height != -1 && image.Width != width || image.Height != height)  //hard coded size
-                    {
-                        Log($"Resizing image from {image.Width},{image.Height} to {width},{height}...");
-                        image.Mutate(img => img.Resize(width, height));
-                    }
-                    else if (sizepercent > 0 && sizepercent < 100)
-                    {
-                        double fractionalPercentage = (sizepercent / 100.0);
-                        int outputWidth = (int)(image.Width * fractionalPercentage);
-                        int outputHeight = (int)(image.Height * fractionalPercentage);
-
-                        Log($"Resizing image to {sizepercent} from {image.Width},{image.Height} to {outputWidth},{outputHeight}...");
-                        image.Mutate(img => img.Resize(outputWidth, outputHeight));
-                    }
-
-                    int quality = Convert.ToInt32(this.tb_jpegquality.Text);
-
-                    MemoryStream stream = new System.IO.MemoryStream();
-
-                    if (quality > 0 && quality < 100)
-                    {
-                        //string tfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "_AITOOL\tmpimage.jpg");
-
-                        //Save the image using the specified jpeg compression
-                        Log($"Compressing jpeg to {quality}% quality...");
-                        SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder encoder = new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder();
-                        encoder.Quality = quality;
-                        await image.SaveAsJpegAsync(stream, encoder);
-
-                        image = await SixLabors.ImageSharp.Image.LoadAsync(stream);
-
-                     }
-
-                    int bright = Convert.ToInt32(tb_brightness.Text);
-
-                    if (bright > 1)
-                    {
-
-                    }
-
-                    // render onto an Image
-                    //image.SaveAsBmp(stream);
-                    System.Drawing.Image img = System.Drawing.Image.FromStream(stream);
-
-                    // dispose the old image before displaying the new one
-                    //pictureBox1.Image?.Dispose();
-                    this.pictureBox1.BackgroundImage = img;
-                }
-                else
-                {
-                    MessageBox.Show("File does not exist.");
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log("Error: " + Global.ExMsg(ex));
-            }
-
-        }
-
-        private void UpdateCombo()
+        private void UpdateProfile()
         {
             string last = "Default";
 
@@ -127,12 +51,23 @@ namespace AITool
                 AppSettings.Settings.ImageAdjustProfiles.Add(new ClsImageAdjust("Default"));
             }
 
+
             if (!string.IsNullOrEmpty(this.comboBox1.Text.Trim()))
+            {
                 last = this.comboBox1.Text.Trim();
 
-            if (!AITOOL.HasImageAdjustProfile(this.comboBox1.Text.Trim()) && !string.IsNullOrEmpty(this.comboBox1.Text.Trim()))
-            {
-                AppSettings.Settings.ImageAdjustProfiles.Add(new ClsImageAdjust(this.comboBox1.Text.Trim()));
+                this.CurIA = AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim(), false);
+
+                if (this.CurIA == null)
+                {
+                    this.CurIA = new ClsImageAdjust(this.comboBox1.Text, tb_jpegquality.Text, tb_SizePercent.Text, tb_Width.Text, tb_Height.Text, tb_brightness.Text, tb_contrast.Text);
+                    AppSettings.Settings.ImageAdjustProfiles.Add(this.CurIA);
+                }
+                else
+                {
+                    this.CurIA.Update(this.comboBox1.Text, tb_jpegquality.Text, tb_SizePercent.Text, tb_Width.Text, tb_Height.Text, tb_brightness.Text, tb_contrast.Text);
+                }
+
             }
 
             this.comboBox1.Items.Clear();
@@ -152,7 +87,9 @@ namespace AITool
             if (this.comboBox1.Items.Count > 0)
                 this.comboBox1.SelectedIndex = oldidx;
 
-            this.CurIA = AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim());
+            this.CurIA = AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim(), false);
+
+            
 
         }
 
@@ -299,17 +236,17 @@ namespace AITool
 
         private void bt_save_Click(object sender, EventArgs e)
         {
-            UpdateCombo();
+            UpdateProfile();
         }
 
         private void bt_Delete_Click(object sender, EventArgs e)
         {
             if (AITOOL.HasImageAdjustProfile(this.comboBox1.Text.Trim()))
             {
-                AppSettings.Settings.ImageAdjustProfiles.Remove(AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim()));
+                AppSettings.Settings.ImageAdjustProfiles.Remove(AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim(), false));
                 this.comboBox1.Items.Clear();
                 this.comboBox1.Text = "";
-                UpdateCombo();
+                UpdateProfile();
             }
         }
 
@@ -321,6 +258,11 @@ namespace AITool
         private void tbar_contrast_ValueChanged(object sender, EventArgs e)
         {
             tb_contrast.Text = tbar_contrast.Value.ToString();
+        }
+
+        private void bt_Apply_Click(object sender, EventArgs e)
+        {
+            //this.CurIA = AITOOL.GetImageAdjustProfileByName(this.comboBox1.Text.Trim());
         }
     }
 }

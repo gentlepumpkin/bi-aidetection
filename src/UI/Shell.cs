@@ -51,6 +51,8 @@ namespace AITool
 
         private bool AllowShowDisplay = false;
 
+        private bool CloseImmediately = false;
+
         public Shell()
         {
             this.StartupSW = Stopwatch.StartNew();
@@ -88,6 +90,17 @@ namespace AITool
 
             //---------------------------------------------------------------------------
             //INITIALIZE HISTORY DB, load settings, ETC
+
+            if (AppSettings.AlreadyRunning && !Global.IsService)
+            {
+                if (MessageBox.Show("AITOOL.EXE is already running.  If you need to modify settings:\r\n\r\n1) Close this copy.\r\n2) Stop the other service/instance. \r\n3) Restart AITOOL.\r\n\r\nCLOSE THIS COPY?", "Already running", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    this.SplashScreen.Close();
+                    this.SplashScreen = null;
+                    this.CloseImmediately = true;
+                    Application.Exit();
+                }
+            }
 
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -148,7 +161,7 @@ namespace AITool
 
                 }
 
-                this.tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
+                //this.tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
                 this.cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
 
                 Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
@@ -277,7 +290,7 @@ namespace AITool
                     ShowForm();
                 }
 
-                Application.DoEvents();
+
 
             });
 
@@ -2753,8 +2766,8 @@ namespace AITool
 
         private void UpdateAIURLs()
         {
-            AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
-            if (AppSettings.Settings.deepstack_url.IndexOf("amazon", StringComparison.OrdinalIgnoreCase) >= 0) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            //AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
+            if (AppSettings.Settings.AIURLList.Contains(new ClsURLItem("",0,0,URLTypeEnum.AWSRekognition))) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
             {
                 string error = AITOOL.UpdateAmazonSettings();
 
@@ -2953,7 +2966,7 @@ namespace AITool
 
             try
             {
-                if (e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+                if (!this.CloseImmediately && e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
                 {
                     using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                     {
@@ -3002,7 +3015,7 @@ namespace AITool
         {
 
             if (DeepStackServerControl == null)
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
 
             DeepStackServerControl.GetDeepStackRun();
 
@@ -3023,7 +3036,7 @@ namespace AITool
             AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
             AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
             AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
-
+            AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
 
             AppSettings.SaveAsync();
 
@@ -3070,7 +3083,7 @@ namespace AITool
 
             }
 
-            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
 
         }
 
@@ -3080,7 +3093,7 @@ namespace AITool
             try
             {
                 if (DeepStackServerControl == null)
-                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
 
 
                 //first update the port in the deepstack_url if found
@@ -3134,6 +3147,9 @@ namespace AITool
 
                 if (DeepStackServerControl.IsInstalled)
                 {
+                    lbl_deepstackname.Text = DeepStackServerControl.DisplayName;
+                    lbl_Deepstackversion.Text = DeepStackServerControl.DisplayVersion;
+
                     if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                     {
                         if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))

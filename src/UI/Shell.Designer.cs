@@ -182,7 +182,6 @@
             this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
             this.lbl_deepstackurl = new System.Windows.Forms.Label();
             this.dbLayoutPanel1 = new AITool.DBLayoutPanel(this.components);
-            this.tbDeepstackUrl = new System.Windows.Forms.TextBox();
             this.cb_DeepStackURLsQueued = new System.Windows.Forms.CheckBox();
             this.button1 = new System.Windows.Forms.Button();
             this.dbLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
@@ -208,6 +207,10 @@
             this.tb_BlueIrisServer = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.lbl_Deepstackversion = new System.Windows.Forms.Label();
+            this.lbl_deepstackname = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
             this.chk_HighPriority = new System.Windows.Forms.CheckBox();
             this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
             this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
@@ -276,6 +279,8 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.Txt_CustomModelPath = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -331,6 +336,7 @@
             this.groupBox7.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.folv_log)).BeginInit();
             this.statusStrip1.SuspendLayout();
+            this.groupBox9.SuspendLayout();
             this.SuspendLayout();
             // 
             // notifyIcon
@@ -1161,7 +1167,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(792, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(800, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1174,7 +1180,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(731, 377);
+            this.pictureBox1.Size = new System.Drawing.Size(739, 377);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -1641,7 +1647,7 @@
             this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(201, 1);
             this.BtnDynamicMaskingSettings.Margin = new System.Windows.Forms.Padding(5, 1, 5, 1);
             this.BtnDynamicMaskingSettings.Name = "BtnDynamicMaskingSettings";
-            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 29);
+            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 28);
             this.BtnDynamicMaskingSettings.TabIndex = 22;
             this.BtnDynamicMaskingSettings.Text = "Settings";
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
@@ -1653,7 +1659,7 @@
             this.btnDetails.Location = new System.Drawing.Point(290, 2);
             this.btnDetails.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
             this.btnDetails.Name = "btnDetails";
-            this.btnDetails.Size = new System.Drawing.Size(70, 27);
+            this.btnDetails.Size = new System.Drawing.Size(70, 26);
             this.btnDetails.TabIndex = 23;
             this.btnDetails.Text = "Details";
             this.btnDetails.UseVisualStyleBackColor = true;
@@ -1665,7 +1671,7 @@
             this.btnCustomMask.Location = new System.Drawing.Point(459, 2);
             this.btnCustomMask.Margin = new System.Windows.Forms.Padding(1, 2, 5, 2);
             this.btnCustomMask.Name = "btnCustomMask";
-            this.btnCustomMask.Size = new System.Drawing.Size(70, 27);
+            this.btnCustomMask.Size = new System.Drawing.Size(70, 26);
             this.btnCustomMask.TabIndex = 24;
             this.btnCustomMask.Text = "Custom";
             this.btnCustomMask.UseVisualStyleBackColor = true;
@@ -1689,7 +1695,7 @@
             this.btnActions.Location = new System.Drawing.Point(165, 263);
             this.btnActions.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
             this.btnActions.Name = "btnActions";
-            this.btnActions.Size = new System.Drawing.Size(70, 29);
+            this.btnActions.Size = new System.Drawing.Size(70, 28);
             this.btnActions.TabIndex = 21;
             this.btnActions.Text = "Settings";
             this.btnActions.UseVisualStyleBackColor = true;
@@ -1706,7 +1712,7 @@
             this.flowLayoutPanel1.Controls.Add(this.label10);
             this.flowLayoutPanel1.Location = new System.Drawing.Point(147, 230);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(500, 27);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(500, 26);
             this.flowLayoutPanel1.TabIndex = 22;
             // 
             // lbl_threshold_lower
@@ -2248,12 +2254,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dbLayoutPanel1.ColumnCount = 3;
-            this.dbLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.10001F));
+            this.dbLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 72.96037F));
+            this.dbLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 13.51981F));
             this.dbLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 13.45F));
-            this.dbLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 13.45F));
-            this.dbLayoutPanel1.Controls.Add(this.tbDeepstackUrl, 0, 0);
             this.dbLayoutPanel1.Controls.Add(this.cb_DeepStackURLsQueued, 1, 0);
-            this.dbLayoutPanel1.Controls.Add(this.button1, 2, 0);
+            this.dbLayoutPanel1.Controls.Add(this.button1, 0, 0);
             this.dbLayoutPanel1.Location = new System.Drawing.Point(155, 59);
             this.dbLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.dbLayoutPanel1.Name = "dbLayoutPanel1";
@@ -2262,22 +2267,11 @@
             this.dbLayoutPanel1.Size = new System.Drawing.Size(858, 51);
             this.dbLayoutPanel1.TabIndex = 18;
             // 
-            // tbDeepstackUrl
-            // 
-            this.tbDeepstackUrl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbDeepstackUrl.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbDeepstackUrl.Location = new System.Drawing.Point(3, 13);
-            this.tbDeepstackUrl.Name = "tbDeepstackUrl";
-            this.tbDeepstackUrl.Size = new System.Drawing.Size(621, 25);
-            this.tbDeepstackUrl.TabIndex = 6;
-            this.toolTip1.SetToolTip(this.tbDeepstackUrl, "Enter SERVER:PORT for DeepStack server - Use ; to separate more than one URL for " +
-        "parallel processing");
-            // 
             // cb_DeepStackURLsQueued
             // 
             this.cb_DeepStackURLsQueued.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_DeepStackURLsQueued.AutoSize = true;
-            this.cb_DeepStackURLsQueued.Location = new System.Drawing.Point(638, 17);
+            this.cb_DeepStackURLsQueued.Location = new System.Drawing.Point(637, 17);
             this.cb_DeepStackURLsQueued.Margin = new System.Windows.Forms.Padding(11, 2, 2, 2);
             this.cb_DeepStackURLsQueued.Name = "cb_DeepStackURLsQueued";
             this.cb_DeepStackURLsQueued.Size = new System.Drawing.Size(64, 17);
@@ -2289,12 +2283,12 @@
             // 
             // button1
             // 
-            this.button1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button1.Location = new System.Drawing.Point(765, 10);
+            this.button1.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.button1.Location = new System.Drawing.Point(3, 10);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(70, 30);
             this.button1.TabIndex = 8;
-            this.button1.Text = "View";
+            this.button1.Text = "Edit";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
@@ -2390,7 +2384,7 @@
             this.dbLayoutPanel3.ColumnCount = 3;
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 84.57375F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15.42625F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 308F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 327F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_errors, 0, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_enabletelegram, 1, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_disabletelegram, 2, 0);
@@ -2415,7 +2409,7 @@
             // btn_enabletelegram
             // 
             this.btn_enabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_enabletelegram.Location = new System.Drawing.Point(470, 10);
+            this.btn_enabletelegram.Location = new System.Drawing.Point(452, 10);
             this.btn_enabletelegram.Name = "btn_enabletelegram";
             this.btn_enabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_enabletelegram.TabIndex = 13;
@@ -2427,7 +2421,7 @@
             // btn_disabletelegram
             // 
             this.btn_disabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_disabletelegram.Location = new System.Drawing.Point(666, 10);
+            this.btn_disabletelegram.Location = new System.Drawing.Point(657, 10);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_disabletelegram.TabIndex = 13;
@@ -2572,6 +2566,11 @@
             // 
             // tabDeepStack
             // 
+            this.tabDeepStack.Controls.Add(this.groupBox9);
+            this.tabDeepStack.Controls.Add(this.lbl_Deepstackversion);
+            this.tabDeepStack.Controls.Add(this.lbl_deepstackname);
+            this.tabDeepStack.Controls.Add(this.label23);
+            this.tabDeepStack.Controls.Add(this.label22);
             this.tabDeepStack.Controls.Add(this.chk_HighPriority);
             this.tabDeepStack.Controls.Add(this.Chk_DSDebug);
             this.tabDeepStack.Controls.Add(this.Lbl_BlueStackRunning);
@@ -2594,10 +2593,48 @@
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
             // 
+            // lbl_Deepstackversion
+            // 
+            this.lbl_Deepstackversion.AutoSize = true;
+            this.lbl_Deepstackversion.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.lbl_Deepstackversion.Location = new System.Drawing.Point(558, 75);
+            this.lbl_Deepstackversion.Name = "lbl_Deepstackversion";
+            this.lbl_Deepstackversion.Size = new System.Drawing.Size(10, 13);
+            this.lbl_Deepstackversion.TabIndex = 16;
+            this.lbl_Deepstackversion.Text = ".";
+            // 
+            // lbl_deepstackname
+            // 
+            this.lbl_deepstackname.AutoSize = true;
+            this.lbl_deepstackname.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.lbl_deepstackname.Location = new System.Drawing.Point(558, 56);
+            this.lbl_deepstackname.Name = "lbl_deepstackname";
+            this.lbl_deepstackname.Size = new System.Drawing.Size(10, 13);
+            this.lbl_deepstackname.TabIndex = 16;
+            this.lbl_deepstackname.Text = ".";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(507, 75);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(45, 13);
+            this.label23.TabIndex = 16;
+            this.label23.Text = "Version:";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(514, 56);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(38, 13);
+            this.label22.TabIndex = 16;
+            this.label22.Text = "Name:";
+            // 
             // chk_HighPriority
             // 
             this.chk_HighPriority.AutoSize = true;
-            this.chk_HighPriority.Location = new System.Drawing.Point(342, 301);
+            this.chk_HighPriority.Location = new System.Drawing.Point(345, 342);
             this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
             this.chk_HighPriority.Name = "chk_HighPriority";
             this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
@@ -2608,7 +2645,7 @@
             // Chk_DSDebug
             // 
             this.Chk_DSDebug.AutoSize = true;
-            this.Chk_DSDebug.Location = new System.Drawing.Point(206, 301);
+            this.Chk_DSDebug.Location = new System.Drawing.Point(209, 342);
             this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_DSDebug.Name = "Chk_DSDebug";
             this.Chk_DSDebug.Size = new System.Drawing.Size(113, 17);
@@ -2622,7 +2659,7 @@
             // 
             this.Lbl_BlueStackRunning.AutoSize = true;
             this.Lbl_BlueStackRunning.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(282, 348);
+            this.Lbl_BlueStackRunning.Location = new System.Drawing.Point(285, 389);
             this.Lbl_BlueStackRunning.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Lbl_BlueStackRunning.Name = "Lbl_BlueStackRunning";
             this.Lbl_BlueStackRunning.Size = new System.Drawing.Size(105, 13);
@@ -2631,7 +2668,7 @@
             // 
             // Btn_Save
             // 
-            this.Btn_Save.Location = new System.Drawing.Point(191, 338);
+            this.Btn_Save.Location = new System.Drawing.Point(194, 379);
             this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Save.Name = "Btn_Save";
             this.Btn_Save.Size = new System.Drawing.Size(70, 30);
@@ -2681,7 +2718,7 @@
             this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
             this.groupBox1.Controls.Add(this.Chk_FaceAPI);
             this.groupBox1.Controls.Add(this.Chk_SceneAPI);
-            this.groupBox1.Location = new System.Drawing.Point(8, 203);
+            this.groupBox1.Location = new System.Drawing.Point(11, 244);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
@@ -2748,7 +2785,7 @@
             this.groupBox2.Controls.Add(this.RB_High);
             this.groupBox2.Controls.Add(this.RB_Medium);
             this.groupBox2.Controls.Add(this.RB_Low);
-            this.groupBox2.Location = new System.Drawing.Point(175, 203);
+            this.groupBox2.Location = new System.Drawing.Point(178, 244);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
@@ -2816,7 +2853,7 @@
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.Txt_Port);
-            this.groupBox3.Location = new System.Drawing.Point(342, 203);
+            this.groupBox3.Location = new System.Drawing.Point(345, 244);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
@@ -2838,7 +2875,7 @@
             // Chk_AutoStart
             // 
             this.Chk_AutoStart.AutoSize = true;
-            this.Chk_AutoStart.Location = new System.Drawing.Point(13, 301);
+            this.Chk_AutoStart.Location = new System.Drawing.Point(11, 342);
             this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_AutoStart.Name = "Chk_AutoStart";
             this.Chk_AutoStart.Size = new System.Drawing.Size(170, 17);
@@ -2848,7 +2885,7 @@
             // 
             // Btn_Start
             // 
-            this.Btn_Start.Location = new System.Drawing.Point(8, 338);
+            this.Btn_Start.Location = new System.Drawing.Point(11, 379);
             this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Start.Name = "Btn_Start";
             this.Btn_Start.Size = new System.Drawing.Size(70, 30);
@@ -2859,7 +2896,7 @@
             // 
             // Btn_Stop
             // 
-            this.Btn_Stop.Location = new System.Drawing.Point(99, 338);
+            this.Btn_Stop.Location = new System.Drawing.Point(102, 379);
             this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Stop.Name = "Btn_Stop";
             this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
@@ -3314,6 +3351,28 @@
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
             // 
+            // groupBox9
+            // 
+            this.groupBox9.Controls.Add(this.Txt_CustomModelPath);
+            this.groupBox9.Location = new System.Drawing.Point(11, 195);
+            this.groupBox9.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox9.Name = "groupBox9";
+            this.groupBox9.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox9.Size = new System.Drawing.Size(483, 45);
+            this.groupBox9.TabIndex = 17;
+            this.groupBox9.TabStop = false;
+            this.groupBox9.Text = "Custom Model Path (Optional, only for v2020)";
+            // 
+            // Txt_CustomModelPath
+            // 
+            this.Txt_CustomModelPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_CustomModelPath.Location = new System.Drawing.Point(7, 17);
+            this.Txt_CustomModelPath.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_CustomModelPath.Name = "Txt_CustomModelPath";
+            this.Txt_CustomModelPath.Size = new System.Drawing.Size(472, 20);
+            this.Txt_CustomModelPath.TabIndex = 0;
+            // 
             // Shell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3413,6 +3472,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.folv_log)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.groupBox9.ResumeLayout(false);
+            this.groupBox9.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -3548,7 +3609,6 @@
         private System.Windows.Forms.TextBox tb_threshold_lower;
         private System.Windows.Forms.Label label10;
         private DBLayoutPanel dbLayoutPanel1;
-        private System.Windows.Forms.TextBox tbDeepstackUrl;
         private System.Windows.Forms.CheckBox cb_DeepStackURLsQueued;
         private DBLayoutPanel dbLayoutPanel2;
         private System.Windows.Forms.TextBox tb_telegram_cooldown;
@@ -3650,6 +3710,12 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox tb_camera_telegram_chatid;
+        private System.Windows.Forms.Label lbl_Deepstackversion;
+        private System.Windows.Forms.Label lbl_deepstackname;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.GroupBox groupBox9;
+        private System.Windows.Forms.TextBox Txt_CustomModelPath;
     }
 }
 

@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using OSVersionExtension;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -198,7 +200,7 @@ namespace AITool
 
                 //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
                 //allows for stopping and starting of its service
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
 
 
                 //Load the database, and migrate any old csv lines if needed
@@ -318,8 +320,9 @@ namespace AITool
 
         public static void UpdateAIURLList(bool Force = false)
         {
-            //Check to see if we need to get updated URL list
-            if (AppSettings.Settings.AIURLList.Count == 0 || Force)
+            //Check to see if we need to get updated URL list - In theory this should only happen once
+            bool hasold = !string.IsNullOrEmpty(AppSettings.Settings.deepstack_url);
+            if (((AppSettings.Settings.AIURLList.Count == 0 || Force) && hasold) || hasold)
             {
                 Log("Debug: Updating/Resetting AI URL list...");
                 List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
@@ -353,30 +356,38 @@ namespace AITool
                         {
                             url = tmpdic[url.ToString().ToLower()];
                             AppSettings.Settings.AIURLList.Add(url);
-                            url.OrigOrder = i + 1;
+                            url.Order = i + 1;
                             //url.InUse.WriteFullFence(false);
                             url.CurErrCount.WriteFullFence(0);
                             url.Enabled.WriteFullFence(true);
-                            Log($"Debug: ----   #{url.OrigOrder}: Re-added known URL: {url}");
+                            Log($"Debug: ----   #{url.Order}: Re-added known URL: {url}");
                         }
                         else
                         {
                             AppSettings.Settings.AIURLList.Add(url);
-                            Log($"Debug: ----   #{url.OrigOrder}: Added new URL: {url}");
+                            Log($"Debug: ----   #{url.Order}: Added new URL: {url}");
                         }
 
                     }
                     else
                     {
-                        Log($"Debug: ----   #{url.OrigOrder}: Skipped INVALID URL: {url}");
+                        Log($"Debug: ----   #{url.Order}: Skipped INVALID URL: {url}");
 
                     }
                 }
                 Log($"Debug: ...Found {AppSettings.Settings.AIURLList.Count} AI URL's in settings.");
 
+                AppSettings.Settings.deepstack_url = "";  //we are not going to use this any longer
                 //AIURLSettingsChanged.WriteFullFence(false);
 
             }
+            
+            //add a default DeepStack server if none found
+            //if (AppSettings.Settings.AIURLList.Count == 0)
+            //{
+            //    Log($"Debug: ----   Adding default Deepstack AI Server URL.");
+            //    AppSettings.Settings.AIURLList.Add(new ClsURLItem("", 1, 1, URLTypeEnum.DeepStack));
+            //}
 
         }
 
@@ -582,7 +593,7 @@ namespace AITool
 
                                 double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.OrigOrder}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
 
                                 Interlocked.Increment(ref TskCnt);
 
@@ -1052,7 +1063,7 @@ namespace AITool
             return watcher;
         }
 
-        public static ClsImageAdjust GetImageAdjustProfileByName(string name)
+        public static ClsImageAdjust GetImageAdjustProfileByName(string name, bool ReturnDefault)
         {
             ClsImageAdjust ret = null;
             ClsImageAdjust def = null;
@@ -1069,12 +1080,12 @@ namespace AITool
                 }
             }
 
-            if (ret == null)
+            if (ret == null && ReturnDefault)
                 ret = def;
 
             if (ret == null)
             {
-                ret = new ClsImageAdjust("Default");
+                //ret = new ClsImageAdjust("Default");
                 Log($"Error: Could not find Image Adjust profile that matches '{name}'");
             }
 
@@ -1095,6 +1106,112 @@ namespace AITool
 
             return ret;
         }
+
+        public static async Task<System.Drawing.Image> ApplyImageAdjustProfileAsync(ClsImageAdjust IAProfile, string InputImageFile, string OutputImageFile)
+        {
+
+            System.Drawing.Image retimg = null;
+            SixLabors.ImageSharp.Image ISImage = null;
+            MemoryStream IStream = new System.IO.MemoryStream();
+            try
+            {
+                if (!string.IsNullOrEmpty(InputImageFile) && File.Exists(InputImageFile))
+                {
+                    bool SaveToFile = (!string.IsNullOrEmpty(OutputImageFile));
+
+                    //SixLabors.ImageSharp.Configuration config = new Configuration();
+
+                    ISImage = await SixLabors.ImageSharp.Image.LoadAsync(InputImageFile);
+
+
+                    if (IAProfile.ImageWidth != -1 && IAProfile.ImageHeight != -1 && ISImage.Width != IAProfile.ImageWidth || ISImage.Height != IAProfile.ImageHeight)  //hard coded size
+                    {
+                        Log($"Resizing image from {ISImage.Width},{ISImage.Height} to {IAProfile.ImageWidth},{IAProfile.ImageHeight}...");
+                        ISImage.Mutate(i => i.Resize(IAProfile.ImageWidth, IAProfile.ImageHeight));
+                    }
+                    else if (IAProfile.ImageSizePercent > 0 && IAProfile.ImageSizePercent < 100)
+                    {
+                        double fractionalPercentage = (IAProfile.ImageSizePercent / 100.0);
+                        int outputWidth = (int)(ISImage.Width * fractionalPercentage);
+                        int outputHeight = (int)(ISImage.Height * fractionalPercentage);
+
+                        Log($"Resizing image to {IAProfile.ImageSizePercent} from {ISImage.Width},{ISImage.Height} to {outputWidth},{outputHeight}...");
+                        ISImage.Mutate(i => i.Resize(outputWidth, outputHeight));
+                    }
+
+                    if (IAProfile.Brightness > 1 && IAProfile.Brightness < 100)
+                    {
+                        //A value of 0 will create an image that is completely black. A value of 1 leaves the input unchanged. 
+                        //Other values are linear multipliers on the effect. Values of an amount over 1 are allowed, providing brighter results
+                        //amount - The proportion of the conversion.Must be greater than or equal to 0.
+                        Log($"Changing brightness by amount {IAProfile.Brightness}...");
+                        ISImage.Mutate(i => i.Brightness(IAProfile.Brightness));
+                    }
+
+                    if (IAProfile.Contrast > 1 && IAProfile.Contrast < 100)
+                    {
+                        //A value of 0 will create an image that is completely gray. A value of 1 leaves the input unchanged. 
+                        //Other values are linear multipliers on the effect. Values of an amount over 1 are allowed, providing results with more contrast.
+                        //amount - The proportion of the conversion. Must be greater than or equal to 0.
+                        Log($"Changing contrast by amount {IAProfile.Contrast}...");
+                        ISImage.Mutate(i => i.Contrast(IAProfile.Contrast));
+                    }
+
+
+                    //string tfile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "_AITOOL\tmpimage.jpg");
+
+                    //Save the image using the specified jpeg compression
+                    Log($"Compressing jpeg to {IAProfile.JPEGQualityPercent}% quality...");
+                    SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder encoder = new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder();
+                    encoder.Quality = IAProfile.JPEGQualityPercent;
+
+
+                    if (SaveToFile)
+                    {
+                        //save to file
+                        await ISImage.SaveAsJpegAsync(OutputImageFile, encoder);
+
+                    }
+                    else  //assume we just need the image for viewing and send back an image
+                    {
+                        //save to stream
+                        await ISImage.SaveAsJpegAsync(IStream, encoder);
+
+                        //read back from stream
+                        //ISImage = await SixLabors.ImageSharp.Image.LoadAsync(IStream);
+
+                        retimg = System.Drawing.Image.FromStream(IStream);
+                    }
+
+
+                }
+                else
+                {
+                    Log("File does not exist: " + InputImageFile);
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+            finally
+            {
+                if (IStream != null)
+                    IStream.Dispose();
+
+                if (ISImage != null)
+                    ISImage.Dispose();
+
+            }
+
+            return retimg;
+
+        }
+
+
+
         public static bool IsValidImage(ClsImageQueueItem CurImg)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -1554,7 +1671,7 @@ namespace AITool
 
         }
         //analyze image with AI
-        public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem AiUrl)
+        public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem AiUrl, Camera cam = null)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -1567,7 +1684,9 @@ namespace AITool
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            Camera cam = AITOOL.GetCamera(CurImg.image_path);
+            if (cam==null)
+               cam = AITOOL.GetCamera(CurImg.image_path);
+
             cam.last_image_file = CurImg.image_path;
 
             History hist = null;

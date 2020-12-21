@@ -1,5 +1,6 @@
 ﻿using Amazon;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 
@@ -13,30 +14,38 @@ namespace AITool
         Other,
         Unknown
     }
-    public class ClsURLItem
+    public class ClsURLItem : IEquatable<ClsURLItem>
     {
+        private bool isValid = false;
 
-        public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(false);
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Unknown;
-        public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
-        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
-        public int OrigOrder { get; set; } = 0;
-        public int CurOrder { get; set; } = 0;
+        public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(false);
+        public bool IsValid
+        {
+            get { return isValid; }
+            set { isValid = value; }
+        }
+        public int Order { get; set; } = 0;
         public string url { get; set; } = "";
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
         public string Cameras { get; set; } = "";
         public int MaxImagesPerMonth { get; set; } = 0;
         public string ImageAdjustProfile { get; set; } = "Default";
+        public int CurOrder { get; set; } = 0;
+        public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public string LastResultMessage { get; set; } = "";
         public long LastTimeMS { get; set; } = 0;
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
+        public string DefaultURL { get; set; } = "";
         public HttpClient HttpClient { get; set; }
         public int Count { get; set; } = 0;
+        public bool UrlFixed = false;
 
-        public bool IsValid { get; set; } = false;
         public override string ToString()
         {
             return this.url;
@@ -46,69 +55,215 @@ namespace AITool
             this.CurErrCount.AtomicIncrementAndGet();
             this.ErrCount.AtomicIncrementAndGet();
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ClsURLItem);
+        }
+
+        public bool Equals(ClsURLItem other)
+        {
+            return other != null &&
+                   string.Equals(url, other.url, StringComparison.OrdinalIgnoreCase);
+        }
+
         public ClsURLItem(String url, int Order, int Count, URLTypeEnum type)
         {
-            
-            if (!string.IsNullOrWhiteSpace(url))
+            this.UrlFixed = false;
+
+            if (string.IsNullOrWhiteSpace(url))
             {
-                this.url = url.Trim();
-
-                this.Type = type;
-                this.OrigOrder = Order;
-                this.Count = Count;
-
-
-                if (this.Type == URLTypeEnum.DOODS || this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase))
+                if (type == URLTypeEnum.DOODS)
                 {
-                    if (!this.url.Contains("://"))
-                        this.url = "http://" + this.url;
-                    this.Type = URLTypeEnum.DOODS;
-                    if (!(this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0))
-                        this.url = this.url + "/detect";
-                    Uri uri = new Uri(this.url);
-                    this.CurSrv = uri.Host + ":" + uri.Port;
-                    this.HttpClient = new HttpClient();
-                    this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
-                    this.IsValid = true;
-                    this.Enabled.WriteFullFence(true);
+                    this.DefaultURL = "http://localhost:8080/detect";
+                    url = this.DefaultURL;
                 }
-                else if (this.Type == URLTypeEnum.AWSRekognition || this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase)) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+                else if (type == URLTypeEnum.AWSRekognition) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
                 {
-
-                    this.Type = URLTypeEnum.AWSRekognition;
-
-                    string error = AITOOL.UpdateAmazonSettings();
-
-                    if (string.IsNullOrEmpty(error))
-                    {
-                        this.CurSrv = "Amazon:" + AppSettings.Settings.AmazonRegionEndpoint;
-                        this.IsValid = true;
-                        this.Enabled.WriteFullFence(true);
-                        this.MaxImagesPerMonth = 5000;
-                    }
-                    else
-                    {
-                        AITOOL.Log($"Error: {error}");
-                    }
-
+                    this.DefaultURL = "Amazon";
+                    url = this.DefaultURL;
                 }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    if (!this.url.Contains("://"))
-                        this.url = "http://" + this.url;
-                    this.Type = URLTypeEnum.DeepStack;
-                    if (!(this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0))
-                        this.url = this.url.Trim() + "/v1/vision/detection";
-                    Uri uri = new Uri(this.url);
-                    this.CurSrv = uri.Host + ":" + uri.Port;
-                    this.HttpClient = new HttpClient();
-                    this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
-                    this.IsValid = true;
-                    this.Enabled.WriteFullFence(true);
+                    this.DefaultURL = "http://localhost:80/v1/vision/detection";
+                    url = this.DefaultURL;
                 }
 
             }
+
+            this.url = url.Trim();
+
+            this.Type = type;
+            this.Order = Order;
+            this.Count = Count;
+
+
+            if (this.Type == URLTypeEnum.DOODS || this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase))
+            {
+                this.DefaultURL = "http://127.0.0.1:8080/detect";
+                this.HelpURL = "https://github.com/snowzach/doods";
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "http://" + this.url;
+                }
+                this.Type = URLTypeEnum.DOODS;
+                if (!(this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/detect";
+                }
+
+                Uri uri = new Uri(this.url);
+                this.CurSrv = uri.Host + ":" + uri.Port;
+                this.HttpClient = new HttpClient();
+                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.IsValid = true;
+                this.Enabled.WriteFullFence(true);
+            }
+            else if (this.Type == URLTypeEnum.AWSRekognition || this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase)) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            {
+
+                this.DefaultURL = "Amazon";
+
+                this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
+                this.Type = URLTypeEnum.AWSRekognition;
+
+                string error = AITOOL.UpdateAmazonSettings();
+
+                if (string.IsNullOrEmpty(error))
+                {
+                    this.CurSrv = "Amazon:" + AppSettings.Settings.AmazonRegionEndpoint;
+                    this.IsValid = true;
+                    this.Enabled.WriteFullFence(true);
+                    this.MaxImagesPerMonth = 5000;
+                }
+                else
+                {
+                    AITOOL.Log($"Error: {error}");
+                }
+
+            }
+            else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                this.DefaultURL = "http://127.0.0.1:80/v1/vision/detection";
+                this.HelpURL = "https://ipcamtalk.com/threads/tool-tutorial-free-ai-person-detection-for-blue-iris.37330/";
+
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "http://" + this.url;
+                }
+
+
+                this.Type = URLTypeEnum.DeepStack;
+
+                bool valid = Global.IsValidURL(this.url);
+
+                //only add path if none already given, for example /vision/custom/model-name
+                if (!valid)
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url.Trim() + "/v1/vision/detection";
+                }
+
+                Uri uri = new Uri(this.url);
+                this.CurSrv = uri.Host + ":" + uri.Port;
+                this.HttpClient = new HttpClient();
+                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.IsValid = true;
+                this.Enabled.WriteFullFence(true);
+            }
+
+
+            this.UpdateIsValid();
         }
 
+        public bool UpdateIsValid()
+        {
+            bool ret = false;
+            this.UrlFixed = false;
+
+            Uri uri = null;
+
+            if (this.Type == URLTypeEnum.DOODS)
+            {
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "http://" + this.url;
+                }
+
+                if (!(this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/detect";
+                }
+
+                if (Global.IsValidURL(this.url) && this.url.IndexOf("/detect", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    uri = new Uri(this.url);
+                    if (uri.Port > 0)
+                    {
+                        ret = true;
+                    }
+                }
+            }
+            else if (this.Type == URLTypeEnum.AWSRekognition)
+            {
+
+
+                if (this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase))
+                {
+                    ret = true;
+                }
+
+            }
+            else // assume deepstack 
+            {
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "http://" + this.url.Trim();
+                }
+
+
+                bool hasdet = this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool hascus = this.url.IndexOf("/v1/vision/custom/", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (!hasdet && !hascus)
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url.Trim() + "/v1/vision/detection";
+                }
+                ///v1/vision/custom/catsanddogs
+                if (Global.IsValidURL(this.url) && (hasdet || hascus))
+                {
+                    uri = new Uri(this.url);
+                    if (uri.Port > 0)
+                    {
+                        ret = true;
+                    }
+                }
+
+            }
+
+            if (!ret)
+                AITOOL.Log($"Error: '{this.Type.ToString()}' URL is not valid: '{this.url}'");
+
+            this.IsValid = ret;
+            this.Enabled.WriteFullFence(ret);
+            return ret;
+        }
+
+        public static bool operator ==(ClsURLItem left, ClsURLItem right)
+        {
+            return EqualityComparer<ClsURLItem>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ClsURLItem left, ClsURLItem right)
+        {
+            return !(left == right);
+        }
     }
 }

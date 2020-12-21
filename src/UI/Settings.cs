@@ -35,7 +35,7 @@ namespace AITool
 
             public bool SettingsPortable = true;  //portable means the settings stay under EXE folder, otherwise they get dropped in %appdata%
             public string telegram_token = "";
-            public double telegram_cooldown_minutes = 0.0833333;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
+            public double telegram_cooldown_minutes = -1;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
             public int telegram_cooldown_seconds = 5;
             public int Telegram_RetryAfterFailSeconds = 300;  //default to 5 minutes if telegram exception
             public string input_path = "";
@@ -47,12 +47,13 @@ namespace AITool
             public bool startwithwindows = false;
             public int close_instantly = -1;
             public List<Camera> CameraList = new List<Camera>();
-            public string deepstack_url = "127.0.0.1:81";
+            public string deepstack_url = "";
             public string deepstack_adminkey = "";
             public string deepstack_apikey = "";
             public string deepstack_installfolder = "C:\\DeepStack";
             public string deepstack_port = "81";
             public string deepstack_mode = "Medium";
+            public string deepstack_customModelPath = "";
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
             public bool deepstack_debug = false;
@@ -628,7 +629,7 @@ namespace AITool
                                 {
                                     fnd = true;
                                 }
-                                else if (c.prefix.ToLower() == System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1].ToLower())
+                                else if (string.Equals(c.prefix, System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1], StringComparison.OrdinalIgnoreCase))
                                 {
                                     fnd = true;
                                 }
@@ -664,6 +665,26 @@ namespace AITool
                     AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
 
                     AITOOL.UpdateAIURLList(true);
+
+                    //clean up image adjust list
+                    List<ClsImageAdjust> iaps = AppSettings.Settings.ImageAdjustProfiles;
+                    
+                    AppSettings.Settings.ImageAdjustProfiles.Clear();
+
+                    for (int i = 0; i < iaps.Count; i++)
+                    {
+                        if (!AppSettings.Settings.ImageAdjustProfiles.Contains(iaps[i]))
+                            Settings.ImageAdjustProfiles.Add(iaps[i]);
+                    }
+
+                    for (int i = 0; i < AppSettings.Settings.AIURLList.Count; i++)
+                    {
+                        AppSettings.Settings.AIURLList[i].Order = i + 1;
+                        if (!AITOOL.HasImageAdjustProfile(AppSettings.Settings.AIURLList[i].ImageAdjustProfile))
+                        {
+                            AppSettings.Settings.AIURLList[i].ImageAdjustProfile = "Default";
+                        }
+                    }
 
                     Ret = true;
                 }

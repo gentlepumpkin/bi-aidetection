@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,9 +17,51 @@ namespace AITool
         public int Brightness { get; set; } = 1;  //1=unchanged
         public int Contrast { get; set; } = 1;  //1=unchanged
 
+        [JsonConstructor]
+        public ClsImageAdjust()
+        {
+
+        }
+
         public ClsImageAdjust(string name)
         {
-            Name = name;
+            this.Name = name.Trim();
+        }
+        public ClsImageAdjust(string name, string jpegqualitypercent, string imagesizepercent, string imagewidth, string imageheight, string brightness, string contrast)
+        {
+            this.Update(name, jpegqualitypercent, imagesizepercent, imagewidth, imageheight, brightness, contrast);
+        }
+
+        public void Update(string name, string jpegqualitypercent, string imagesizepercent, string imagewidth, string imageheight, string brightness, string contrast)
+        {
+            this.Name = name.Trim();
+
+            if (string.IsNullOrWhiteSpace(jpegqualitypercent))
+                jpegqualitypercent = this.JPEGQualityPercent.ToString();
+
+            if (string.IsNullOrWhiteSpace(imagesizepercent))
+                imagesizepercent = this.ImageSizePercent.ToString();
+
+            if (string.IsNullOrWhiteSpace(imagewidth))
+                imagewidth = this.ImageWidth.ToString();
+
+            if (string.IsNullOrWhiteSpace(imageheight))
+                imageheight = this.ImageHeight.ToString();
+
+            if (string.IsNullOrWhiteSpace(brightness))
+                brightness = this.Brightness.ToString();
+
+            if (string.IsNullOrWhiteSpace(contrast))
+                contrast = this.Contrast.ToString();
+
+            this.JPEGQualityPercent = Convert.ToInt32(jpegqualitypercent);
+            this.ImageSizePercent = Convert.ToInt32(imagesizepercent);
+            this.ImageWidth = Convert.ToInt32(imagewidth);
+            this.ImageHeight = Convert.ToInt32(imageheight);
+            this.Brightness = Convert.ToInt32(brightness);
+            this.Contrast = Convert.ToInt32(contrast);
+
+
         }
 
         public override bool Equals(object obj)
@@ -29,7 +72,7 @@ namespace AITool
         public bool Equals(ClsImageAdjust other)
         {
             return other != null &&
-                   string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+                   string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()

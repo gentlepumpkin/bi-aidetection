@@ -84,6 +84,66 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+        public static void Move<T>(this List<T> list, int oldIndex, int newIndex)
+        {
+            // exit if positions are equal or outside array
+            if ((oldIndex == newIndex) || (0 > oldIndex) || (oldIndex >= list.Count) || (0 > newIndex) ||
+                (newIndex >= list.Count)) return;
+            // local variables
+            var i = 0;
+            T tmp = list[oldIndex];
+            // move element down and shift other elements up
+            if (oldIndex < newIndex)
+            {
+                for (i = oldIndex; i < newIndex; i++)
+                {
+                    list[i] = list[i + 1];
+                }
+            }
+            // move element up and shift other elements down
+            else
+            {
+                for (i = oldIndex; i > newIndex; i--)
+                {
+                    list[i] = list[i - 1];
+                }
+            }
+            // put element from position 1 to destination
+            list[newIndex] = tmp;
+        }
+
+        public static string GetURLPath(string InURL)
+        {
+            string ret = "";
+            try
+            {
+                Uri url = new Uri(InURL);
+                if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "\\")
+                    ret = url.PathAndQuery;
+            }
+            catch (Exception ex) 
+            {
+                Log($"Error: {InURL}: {ex.Message}");
+            }
+            return ret;
+        }
+
+
+        public static bool IsValidURL(string InURL)
+        {
+            bool ret = false;
+            try
+            {
+                Uri url = new Uri(InURL);
+                if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "/" && !url.PathAndQuery.Contains("|") && !url.PathAndQuery.Contains(";"))
+                    ret = true;
+            }
+            catch (Exception ex)
+            {
+                //Log($"Error: {InURL}: {ex.Message}");
+            }
+            return ret;
+        }
         [DllImport("Shlwapi.dll", CharSet = CharSet.Auto)]
         public static extern long StrFormatByteSize(long fileSize, [MarshalAs(UnmanagedType.LPTStr)] StringBuilder buffer, int bufferSize);
        

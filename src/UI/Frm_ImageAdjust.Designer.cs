@@ -60,7 +60,6 @@ namespace AITool
             this.tb_contrast = new System.Windows.Forms.TextBox();
             this.tb_brightness = new System.Windows.Forms.TextBox();
             this.tb_Height = new System.Windows.Forms.TextBox();
-            this.bt_Apply = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.tbar_Jpegquality)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbar_ResizePercent)).BeginInit();
@@ -177,7 +176,7 @@ namespace AITool
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(436, 16);
+            this.label5.Location = new System.Drawing.Point(349, 16);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(49, 13);
             this.label5.TabIndex = 4;
@@ -187,7 +186,7 @@ namespace AITool
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(491, 14);
+            this.label6.Location = new System.Drawing.Point(404, 14);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(12, 16);
             this.label6.TabIndex = 7;
@@ -216,7 +215,7 @@ namespace AITool
             this.bt_save.Name = "bt_save";
             this.bt_save.Size = new System.Drawing.Size(54, 24);
             this.bt_save.TabIndex = 10;
-            this.bt_save.Text = "New";
+            this.bt_save.Text = "Save";
             this.bt_save.UseVisualStyleBackColor = true;
             this.bt_save.Click += new System.EventHandler(this.bt_save_Click);
             // 
@@ -365,22 +364,12 @@ namespace AITool
             this.tb_Height.Size = new System.Drawing.Size(51, 20);
             this.tb_Height.TabIndex = 5;
             // 
-            // bt_Apply
-            // 
-            this.bt_Apply.Location = new System.Drawing.Point(340, 10);
-            this.bt_Apply.Name = "bt_Apply";
-            this.bt_Apply.Size = new System.Drawing.Size(54, 24);
-            this.bt_Apply.TabIndex = 10;
-            this.bt_Apply.Text = "Apply";
-            this.bt_Apply.UseVisualStyleBackColor = true;
-            // 
             // Frm_ImageAdjust
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1044, 514);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.bt_Apply);
             this.Controls.Add(this.bt_Delete);
             this.Controls.Add(this.bt_save);
             this.Controls.Add(this.comboBox1);
@@ -436,6 +425,5 @@ namespace AITool
         private System.Windows.Forms.TextBox tb_contrast;
         private System.Windows.Forms.TextBox tb_brightness;
         private System.Windows.Forms.TextBox tb_Height;
-        private System.Windows.Forms.Button bt_Apply;
     }
 }

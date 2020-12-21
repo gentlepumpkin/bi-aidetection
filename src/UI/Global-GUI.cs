@@ -21,7 +21,13 @@ namespace AITool
         // ====================================================================
 
 
-        public static void UpdateFOLV(FastObjectListView olv, IList objs, bool Follow = false, ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None, bool FullRefresh = false, bool UseSelected = false, object SelectObject = null, [CallerMemberName()] string memberName = null)
+        public static void UpdateFOLV(FastObjectListView olv, IList objs,
+                                       bool Follow = false,
+                                       ColumnHeaderAutoResizeStyle ResizeColsStyle = ColumnHeaderAutoResizeStyle.None,
+                                       bool FullRefresh = false,
+                                       bool UseSelected = false,
+                                       object SelectObject = null,
+                                       [CallerMemberName()] string memberName = null)
         {
 
             Global_GUI.InvokeIFRequired(olv, () =>
@@ -76,6 +82,25 @@ namespace AITool
                                 olv.EnsureModelVisible(olv.SelectedObject);
 
                         }
+                        else
+                        {
+                            if (SelectObject != null && UseSelected)
+                            {
+                                //use the given object as selected
+                                olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
+                            }
+                            else if (SelectObject == null && UseSelected && olv.IsFiltering && olv.GetItemCount() > 0)
+                            {
+                                //use the last filtered object as the selected object
+                                olv.SelectedObject = olv.FilteredObjects.Cast<object>().First();
+                            }
+                            else if (!olv.IsFiltering)
+                            {
+                                //just use the last object given to us
+                                olv.SelectedObject = objs[0];  //olv.Items.Count - 1;
+                            }
+                        }
+
 
                         //update column size only if did not restore folv state file or forced
                         if (olv.Tag == null)
@@ -146,8 +171,8 @@ namespace AITool
             catch { }
         }
 
-        public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls, 
-                                         System.Drawing.Font Fnt = null, 
+        public static void ConfigureFOLV(FastObjectListView FOLV, Type Cls,
+                                         System.Drawing.Font Fnt = null,
                                          ImageList ImageList = null,
                                          string PrimarySortColumnName = "",
                                          SortOrder PrimarySortOrder = SortOrder.Ascending,
@@ -187,7 +212,7 @@ namespace AITool
                 FOLV.SortGroupItemsByPrimaryColumn = true;
                 FOLV.TintSortColumn = true;
                 FOLV.UseFiltering = true;
-                FOLV.UseHyperlinks = false; //may cause column save/restore error?
+                FOLV.UseHyperlinks = true; //may cause column save/restore error?
                 FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
                 FOLV.UseCellFormatEvents = true;
                 FOLV.UseNotifyPropertyChanged = true;
@@ -297,14 +322,50 @@ namespace AITool
                         //cl.Width = -2
                     }
 
-                    //if (ei.Name.ToLower().Contains("url"))
+                    if (ei.Name.IndexOf("url", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        cl.Hyperlink = true;
+                    }
+
+
+                    //if (ei.PropertyType == typeof(ThreadSafe.Boolean))
                     //{
-                    //	cl.Hyperlink = true;
+                    //    if (FOLV.Name == "FOLV_AIServers")
+                    //    {
+                    //        cl.AspectGetter = delegate (object rowObject)
+                    //        {
+                    //            bool ret = false;
+                    //            ClsURLItem obj = (ClsURLItem)rowObject;
+                    //            if (ei.Name == "Enabled")
+                    //            {
+                    //                ret = obj.Enabled.ReadFullFence();
+                    //            }
+                    //            else if (ei.Name == "InUse")
+                    //            {
+                    //                ret = obj.InUse.ReadFullFence();
+                    //            }
+                    //            else
+                    //            {
+                    //                int test = 0;
+                    //            }
+                    //            return ret;
+                    //        };
+
+                    //        cl.DataType = typeof(bool);
+                    //        cl.CheckBoxes = true;
+                    //    }
+
                     //}
-                    //If cl.DataType = GetType(Boolean) Then
-                    //    cl.CheckBoxes = True
-                    //    cl.IsEditable = False
-                    //End If
+                    //if (ei.Name == "Enabled")
+                    //{
+                    //    int test = 0;
+                    //}
+
+                    //if (ei.PropertyType == typeof(Boolean))
+                    //{
+                    //    cl.CheckBoxes = true;
+                    //    cl.IsEditable = false;
+                    //}
 
 
                     if (string.Equals(ei.Name, PrimarySortColumnName, StringComparison.OrdinalIgnoreCase))
