@@ -21,6 +21,7 @@ namespace AITool
         public static string LastShutdownState = "";
         public static string LastLogEntry = "";
         private static string LastSettingsJSON = "";
+        private static int LastJPGCleanDay = 0;
         private static ClsDeepstackDetection ThreadLock = new ClsDeepstackDetection();
         public class ClsSettings
         {
@@ -145,6 +146,19 @@ namespace AITool
         }
 
         static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+        public static ClsURLItem GetURL(string url = "", URLTypeEnum type = URLTypeEnum.Unknown)
+        {
+            ClsURLItem ret = null;
+            foreach (var cu in Settings.AIURLList)
+            {
+                if (string.Equals(cu.url, url, StringComparison.OrdinalIgnoreCase) || cu.Type == type)
+                {
+                    return cu;
+                }
+            }
+            return ret;
+
+        }
 
         public static async Task<bool> SaveAsync()
         {
@@ -581,7 +595,11 @@ namespace AITool
                         cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
                         cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                        if (cam.Action_image_copy_enabled && !string.IsNullOrWhiteSpace(cam.Action_network_folder) && cam.Action_network_folder_purge_older_than_days > 0 && Directory.Exists(cam.Action_network_folder))
+                        if (cam.Action_image_copy_enabled && 
+                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) && 
+                            cam.Action_network_folder_purge_older_than_days > 0 && 
+                            LastJPGCleanDay != DateTime.Now.DayOfYear &&
+                            Directory.Exists(cam.Action_network_folder))
                         {
                             Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
 
@@ -601,6 +619,7 @@ namespace AITool
                             else
                                 Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
 
+                            LastJPGCleanDay = DateTime.Now.DayOfYear;
 
 
                         }

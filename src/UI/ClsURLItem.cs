@@ -1,4 +1,5 @@
 ﻿using Amazon;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,7 +33,9 @@ namespace AITool
         public string Cameras { get; set; } = "";
         public int MaxImagesPerMonth { get; set; } = 0;
         public string ImageAdjustProfile { get; set; } = "Default";
+        [JsonIgnore]
         public int CurOrder { get; set; } = 0;
+        [JsonIgnore]
         public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
         public string HelpURL { get; set; } = "";
@@ -42,8 +45,9 @@ namespace AITool
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
         public string DefaultURL { get; set; } = "";
+        [JsonIgnore]
         public HttpClient HttpClient { get; set; }
-        public int Count { get; set; } = 0;
+        //public int Count { get; set; } = 0;
         public bool UrlFixed = false;
 
         public override string ToString()
@@ -67,7 +71,10 @@ namespace AITool
                    string.Equals(url, other.url, StringComparison.OrdinalIgnoreCase);
         }
 
-        public ClsURLItem(String url, int Order, int Count, URLTypeEnum type)
+        [JsonConstructor]
+        public ClsURLItem() { }
+
+        public ClsURLItem(String url, int Order, URLTypeEnum type)
         {
             this.UrlFixed = false;
 
@@ -95,7 +102,6 @@ namespace AITool
 
             this.Type = type;
             this.Order = Order;
-            this.Count = Count;
 
 
             if (this.Type == URLTypeEnum.DOODS || this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase))
@@ -141,6 +147,8 @@ namespace AITool
                 else
                 {
                     AITOOL.Log($"Error: {error}");
+                    this.IsValid = false;
+                    this.Enabled.WriteFullFence(false);
                 }
 
             }

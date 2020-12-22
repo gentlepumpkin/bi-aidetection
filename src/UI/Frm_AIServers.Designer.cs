@@ -53,10 +53,11 @@ namespace AITool
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FOLV_AIServers.HideSelection = false;
-            this.FOLV_AIServers.Location = new System.Drawing.Point(0, 34);
+            this.FOLV_AIServers.Location = new System.Drawing.Point(0, 52);
+            this.FOLV_AIServers.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.FOLV_AIServers.Name = "FOLV_AIServers";
             this.FOLV_AIServers.ShowGroups = false;
-            this.FOLV_AIServers.Size = new System.Drawing.Size(591, 122);
+            this.FOLV_AIServers.Size = new System.Drawing.Size(884, 186);
             this.FOLV_AIServers.TabIndex = 0;
             this.FOLV_AIServers.UseCompatibleStateImageBehavior = false;
             this.FOLV_AIServers.View = System.Windows.Forms.View.Details;
@@ -80,8 +81,8 @@ namespace AITool
             this.toolStripButtonDown});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(591, 31);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(886, 34);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -94,7 +95,7 @@ namespace AITool
             this.toolStripSplitButtonAdd.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButtonAdd.Image")));
             this.toolStripSplitButtonAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripSplitButtonAdd.Name = "toolStripSplitButtonAdd";
-            this.toolStripSplitButtonAdd.Size = new System.Drawing.Size(69, 28);
+            this.toolStripSplitButtonAdd.Size = new System.Drawing.Size(91, 29);
             this.toolStripSplitButtonAdd.Text = "Add";
             this.toolStripSplitButtonAdd.ButtonClick += new System.EventHandler(this.toolStripSplitButtonAdd_ButtonClick);
             // 
@@ -102,7 +103,7 @@ namespace AITool
             // 
             this.deepstackToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackToolStripMenuItem.Image")));
             this.deepstackToolStripMenuItem.Name = "deepstackToolStripMenuItem";
-            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(328, 34);
             this.deepstackToolStripMenuItem.Text = "Deepstack AI Server";
             this.deepstackToolStripMenuItem.Click += new System.EventHandler(this.deepstackToolStripMenuItem_Click);
             // 
@@ -110,7 +111,7 @@ namespace AITool
             // 
             this.addAmazonReToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonReToolStripMenuItem.Image")));
             this.addAmazonReToolStripMenuItem.Name = "addAmazonReToolStripMenuItem";
-            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(328, 34);
             this.addAmazonReToolStripMenuItem.Text = "AWS Rekognition AI Server";
             this.addAmazonReToolStripMenuItem.Click += new System.EventHandler(this.addAmazonReToolStripMenuItem_Click);
             // 
@@ -118,68 +119,73 @@ namespace AITool
             // 
             this.addDoodsServerToolStripMenuItem.Image = global::AITool.Properties.Resources.network_server;
             this.addDoodsServerToolStripMenuItem.Name = "addDoodsServerToolStripMenuItem";
-            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(328, 34);
             this.addDoodsServerToolStripMenuItem.Text = "DOODS AI Server";
             this.addDoodsServerToolStripMenuItem.Click += new System.EventHandler(this.addDoodsServerToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 34);
             // 
             // toolStripButtonEdit
             // 
+            this.toolStripButtonEdit.Enabled = false;
             this.toolStripButtonEdit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonEdit.Image")));
             this.toolStripButtonEdit.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonEdit.Name = "toolStripButtonEdit";
-            this.toolStripButtonEdit.Size = new System.Drawing.Size(55, 28);
+            this.toolStripButtonEdit.Size = new System.Drawing.Size(70, 29);
             this.toolStripButtonEdit.Text = "Edit";
             this.toolStripButtonEdit.Click += new System.EventHandler(this.toolStripButtonEdit_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 34);
             // 
             // toolStripButtonDelete
             // 
+            this.toolStripButtonDelete.Enabled = false;
             this.toolStripButtonDelete.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDelete.Image")));
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(68, 28);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(90, 29);
             this.toolStripButtonDelete.Text = "Delete";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 31);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 34);
             // 
             // toolStripButtonUp
             // 
+            this.toolStripButtonUp.Enabled = false;
             this.toolStripButtonUp.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonUp.Image")));
             this.toolStripButtonUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonUp.Name = "toolStripButtonUp";
-            this.toolStripButtonUp.Size = new System.Drawing.Size(50, 28);
+            this.toolStripButtonUp.Size = new System.Drawing.Size(63, 29);
             this.toolStripButtonUp.Text = "Up";
             this.toolStripButtonUp.Click += new System.EventHandler(this.toolStripButtonUp_Click);
             // 
             // toolStripButtonDown
             // 
+            this.toolStripButtonDown.Enabled = false;
             this.toolStripButtonDown.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDown.Image")));
             this.toolStripButtonDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDown.Name = "toolStripButtonDown";
-            this.toolStripButtonDown.Size = new System.Drawing.Size(66, 28);
+            this.toolStripButtonDown.Size = new System.Drawing.Size(87, 29);
             this.toolStripButtonDown.Text = "Down";
             this.toolStripButtonDown.Click += new System.EventHandler(this.toolStripButtonDown_Click);
             // 
             // Frm_AIServers
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(591, 159);
+            this.ClientSize = new System.Drawing.Size(886, 245);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.FOLV_AIServers);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Frm_AIServers";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Tag = "SAVE";

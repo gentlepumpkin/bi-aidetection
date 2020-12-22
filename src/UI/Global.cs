@@ -1177,7 +1177,7 @@ namespace AITool
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
         {
             //run the function in another thread
             return await Task.Run(() => WaitForFileAccess(filename, rights, share, WaitMS, RetryDelayMS));
@@ -1192,7 +1192,7 @@ namespace AITool
 
         }
 
-        public static WaitFileAccessResult WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 20)
+        public static WaitFileAccessResult WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
         {
             WaitFileAccessResult ret = new WaitFileAccessResult();
             try
@@ -1209,6 +1209,7 @@ namespace AITool
                     {
                         if (new FileInfo(filename).Length > 0)
                         {
+                            //SafeFileHandle fileHandle = CreateFile(fileName,FileSystemRights.Modify, FileShare.Write,IntPtr.Zero, FileMode.OpenOrCreate,FileOptions.None, IntPtr.Zero);
                             using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
                             {
 

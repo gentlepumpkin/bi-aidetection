@@ -2766,11 +2766,10 @@ namespace AITool
 
         private void UpdateAIURLs()
         {
-            //AppSettings.Settings.deepstack_url = this.tbDeepstackUrl.Text.Trim();
-            if (AppSettings.Settings.AIURLList.Contains(new ClsURLItem("",0,0,URLTypeEnum.AWSRekognition))) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            if (AppSettings.GetURL(type:URLTypeEnum.AWSRekognition) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
             {
                 string error = AITOOL.UpdateAmazonSettings();
-
+                
                 if (!string.IsNullOrEmpty(error))
                 {
                     AITOOL.Log($"Error: {error}");
@@ -4801,6 +4800,8 @@ namespace AITool
                 
                 frm.ShowDialog(this);
             }
+
+            UpdateAIURLs();
         }
     }
 

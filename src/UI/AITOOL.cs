@@ -260,6 +260,10 @@ namespace AITool
 
         public static string UpdateAmazonSettings()
         {
+
+            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) == null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+                return "";
+
             string error = "";
 
             RegionEndpoint endpoint = null;
@@ -267,6 +271,8 @@ namespace AITool
             {
                 if (!string.IsNullOrWhiteSpace(AppSettings.Settings.AmazonRegionEndpoint))
                     endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
+                else
+                    error = "No AmazonRegionEndpoint set.";
             }
             catch (Exception ex)
             {
@@ -311,7 +317,7 @@ namespace AITool
             }
             else
             {
-                error = "Please close AITOOL and set 'AmazonRegionEndpoint' in AITOOL.SETTTINGS.JSON to a region code near you such as 'us-east-1': https://docs.aws.amazon.com/general/latest/gr/rande.html";
+                error = error + "- Please close AITOOL and set 'AmazonRegionEndpoint' in AITOOL.SETTTINGS.JSON to a region code near you such as 'us-east-1': https://docs.aws.amazon.com/general/latest/gr/rande.html";
             }
 
             return error;
@@ -320,6 +326,17 @@ namespace AITool
 
         public static void UpdateAIURLList(bool Force = false)
         {
+            //double check all the URL's have a new httpclient
+            foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
+            {
+                url.UpdateIsValid();
+                if (url.Type != URLTypeEnum.AWSRekognition && url.HttpClient == null)
+                {
+                    url.HttpClient = new HttpClient();
+                    url.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                }
+            }
+            
             //Check to see if we need to get updated URL list - In theory this should only happen once
             bool hasold = !string.IsNullOrEmpty(AppSettings.Settings.deepstack_url);
             if (((AppSettings.Settings.AIURLList.Count == 0 || Force) && hasold) || hasold)
@@ -347,7 +364,7 @@ namespace AITool
 
                 for (int i = 0; i < SpltURLs.Count; i++)
                 {
-                    ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, SpltURLs.Count, URLTypeEnum.Unknown);
+                    ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, URLTypeEnum.Unknown);
 
                     if (url != null && url.IsValid)
                     {
@@ -603,7 +620,7 @@ namespace AITool
 
                                 double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
 
-                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder} of {url.Count}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam.name, CurImg.image_path);
 
                                 Interlocked.Increment(ref TskCnt);
 
@@ -1717,7 +1734,7 @@ namespace AITool
                     //prevent the need to retry in the detection routine
                     sw.Restart();
 
-                    Global.WaitFileAccessResult result = await Global.WaitForFileAccessAsync(CurImg.image_path, FileSystemRights.Read, FileShare.Read, 30000, 20);
+                    Global.WaitFileAccessResult result = await Global.WaitForFileAccessAsync(CurImg.image_path, FileSystemRights.Modify, FileShare.Read, 30000, 50);
 
                     sw.Stop();
 
@@ -1733,256 +1750,269 @@ namespace AITool
                         {
                             if (!Directory.Exists(fldr))
                                 Directory.CreateDirectory(fldr);
-                            File.Copy(CurImg.image_path, file, true);
-                            LastImageBackupTime.Write(DateTime.Now);
+                            Global.WaitFileAccessResult result2 = await Global.WaitForFileAccessAsync(file, FileSystemRights.Read, FileShare.ReadWrite, 3000, 50);
+                            if (result2.Success)
+                            {
+                                File.Copy(CurImg.image_path, file, true);
+                                LastImageBackupTime.Write(DateTime.Now);
+                            }
                         }
 
 
-                        if (IsValidImage(CurImg))
+                        bool ValidImg = IsValidImage(CurImg);
+
+                        if (ValidImg)
                         {
                             asr = await GetDetectionsFromAIServer(CurImg, AiUrl, cam);
-                        }
-                        else
-                            asr.Error = $"Error: Invalid image file: {filename}";
 
-                        if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
-                        {
-
-                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
-                            Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam.name, CurImg.image_path);
-
-
-                            List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                            List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
-                            List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
-
-                            List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                            List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
-                            List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
-
-
-                            int masked_counter = 0; //this value is incremented if an object is in a masked area
-                            int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
-                            int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
-                            int error_counter = 0;
-
-                            //if we are not using the local deepstack windows version, this means nothing:
-                            DeepStackServerControl.IsActivated = true;
-
-                            if (asr.Predictions.Count() > 0)
+                            if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
                             {
-                                //print every detected object with the according confidence-level
-                                Log($"Debug:    Detected objects:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
-                                foreach (ClsPrediction pred in asr.Predictions)
+                                Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+
+                                List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
+                                List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                                List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
+
+                                List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
+                                List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                                List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
+
+
+                                int masked_counter = 0; //this value is incremented if an object is in a masked area
+                                int threshold_counter = 0; // this value is incremented if an object does not satisfy the confidence limit requirements
+                                int irrelevant_counter = 0; // this value is incremented if an irrelevant (but not masked or out of range) object is detected
+                                int error_counter = 0;
+
+                                //if we are not using the local deepstack windows version, this means nothing:
+                                DeepStackServerControl.IsActivated = true;
+
+                                if (asr.Predictions.Count() > 0)
                                 {
-                                    pred.AnalyzePrediction();
-
-                                    string clr = "";
-                                    if (pred.Result != ResultType.Error)
-                                        DeepStackServerControl.VisionDetectionRunning = true;
-
-                                    if (pred.Result == ResultType.Relevant)
-                                    {
-                                        objects.Add(pred.Label);
-                                        objects_confidence.Add(pred.Confidence);
-                                        objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
-                                        clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
-                                    }
-                                    else
-                                    {
-                                        clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
-                                        irrelevant_objects.Add(pred.Label);
-                                        irrelevant_objects_confidence.Add(pred.Confidence);
-                                        string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
-                                        irrelevant_objects_position.Add(position);
-
-                                        if (pred.Result == ResultType.NoConfidence)
-                                        {
-                                            threshold_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked)
-                                        {
-                                            clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
-                                            masked_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.UnwantedObject)
-                                        {
-                                            irrelevant_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.Error)
-                                        {
-                                            clr = "{red}";
-                                            error_counter++;
-                                        }
-                                    }
-
-                                    if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                        Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
-                                    else
-                                        Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
-
-                                }
-
-                                //mark the end of AI detection for the current image
-                                cam.maskManager.LastDetectionDate = DateTime.Now;
-
-                                //sort predictions so most important are at the top
-                                asr.Predictions = asr.Predictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
-
-                                string PredictionsJSON = Global.GetJSONString(asr.Predictions);
-
-                                //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                if (objects.Count() > 0)
-                                {
-                                    //store these last detections for the specific camera
-                                    cam.last_detections = objects;
-                                    cam.last_confidences = objects_confidence;
-                                    cam.last_positions = objects_position;
-                                    cam.last_image_file_with_detections = CurImg.image_path;
-
-                                    //the new way
-
-
-                                    //create summary string for this detection
-                                    StringBuilder detectionsTextSb = new StringBuilder();
-                                    for (int i = 0; i < objects.Count(); i++)
-                                    {
-                                        detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
-                                    }
-
-                                    cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
-
-                                    //create text string objects and confidences
-                                    string objects_and_confidences = "";
-                                    string object_positions_as_string = "";
-                                    //for (int i = 0; i < objects.Count; i++)
-                                    //{
-                                    //    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
-                                    //    object_positions_as_string += $"{objects_position[i]};";
-                                    //}
+                                    //print every detected object with the according confidence-level
+                                    Log($"Debug:    Detected objects:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     foreach (ClsPrediction pred in asr.Predictions)
                                     {
-                                        if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
-                                            continue;
+                                        pred.AnalyzePrediction();
 
-                                        objects_and_confidences += $"{pred.ToString()}; ";
-                                        object_positions_as_string += $"{pred.PositionString()};";
+                                        string clr = "";
+                                        if (pred.Result != ResultType.Error)
+                                            DeepStackServerControl.VisionDetectionRunning = true;
+
+                                        if (pred.Result == ResultType.Relevant)
+                                        {
+                                            objects.Add(pred.Label);
+                                            objects_confidence.Add(pred.Confidence);
+                                            objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
+                                            clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
+                                        }
+                                        else
+                                        {
+                                            clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
+                                            irrelevant_objects.Add(pred.Label);
+                                            irrelevant_objects_confidence.Add(pred.Confidence);
+                                            string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
+                                            irrelevant_objects_position.Add(position);
+
+                                            if (pred.Result == ResultType.NoConfidence)
+                                            {
+                                                threshold_counter++;
+                                            }
+                                            else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked)
+                                            {
+                                                clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
+                                                masked_counter++;
+                                            }
+                                            else if (pred.Result == ResultType.UnwantedObject)
+                                            {
+                                                irrelevant_counter++;
+                                            }
+                                            else if (pred.Result == ResultType.Error)
+                                            {
+                                                clr = "{red}";
+                                                error_counter++;
+                                            }
+                                        }
+
+                                        if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
+                                            Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                        else
+                                            Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
                                     }
 
-                                    objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+                                    //mark the end of AI detection for the current image
+                                    cam.maskManager.LastDetectionDate = DateTime.Now;
 
-                                    Log($"Debug: The summary:" + cam.last_detections_summary, AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                    //sort predictions so most important are at the top
+                                    asr.Predictions = asr.Predictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
 
-                                    Log($"Debug: (5/6) Performing alert actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                    string PredictionsJSON = Global.GetJSONString(asr.Predictions);
 
-                                    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AiUrl.CurSrv);
-
-                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AiUrl, ""); //make TRIGGER
-
-                                    cam.IncrementAlerts(); //stats update
-                                    Log($"Debug: (6/6) SUCCESS.", AiUrl.CurSrv, cam.name, CurImg.image_path);
-
-                                    //add to history list
-                                    //Log($"Debug: Adding detection to history list.", AiUrl.CurSrv, cam.name);
-                                    Global.CreateHistoryItem(hist);
-
-                                }
-                                //if no object fulfills all 3 requirements but there are other objects: 
-                                else if (irrelevant_objects.Count() > 0)
-                                {
-                                    //IRRELEVANT ALERT
-
-                                    //retrieve confidences and positions
-                                    string objects_and_confidences = "";
-                                    string object_positions_as_string = "";
-
-                                    //for (int i = 0; i < irrelevant_objects.Count; i++)
-                                    //{
-                                    //    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                    //    object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                    //}
-
-                                    foreach (ClsPrediction pred in asr.Predictions)
+                                    //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
+                                    if (objects.Count() > 0)
                                     {
-                                        //if (pred.Result != ResultType.Relevant)
+                                        //store these last detections for the specific camera
+                                        cam.last_detections = objects;
+                                        cam.last_confidences = objects_confidence;
+                                        cam.last_positions = objects_position;
+                                        cam.last_image_file_with_detections = CurImg.image_path;
+
+                                        //the new way
+
+
+                                        //create summary string for this detection
+                                        StringBuilder detectionsTextSb = new StringBuilder();
+                                        for (int i = 0; i < objects.Count(); i++)
+                                        {
+                                            detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                        }
+
+                                        cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
+
+                                        //create text string objects and confidences
+                                        string objects_and_confidences = "";
+                                        string object_positions_as_string = "";
+                                        //for (int i = 0; i < objects.Count; i++)
                                         //{
-                                        objects_and_confidences += $"{pred.ToString()}; ";
-                                        object_positions_as_string += $"{pred.PositionString()};";
+                                        //    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
+                                        //    object_positions_as_string += $"{objects_position[i]};";
                                         //}
+
+                                        foreach (ClsPrediction pred in asr.Predictions)
+                                        {
+                                            if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                                continue;
+
+                                            objects_and_confidences += $"{pred.ToString()}; ";
+                                            object_positions_as_string += $"{pred.PositionString()};";
+                                        }
+
+                                        objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+
+                                        Log($"Debug: The summary:" + cam.last_detections_summary, AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        Log($"Debug: (5/6) Performing alert actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AiUrl.CurSrv);
+
+                                        await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AiUrl, ""); //make TRIGGER
+
+                                        cam.IncrementAlerts(); //stats update
+                                        Log($"Debug: (6/6) SUCCESS.", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        //add to history list
+                                        //Log($"Debug: Adding detection to history list.", AiUrl.CurSrv, cam.name);
+                                        Global.CreateHistoryItem(hist);
+
                                     }
+                                    //if no object fulfills all 3 requirements but there are other objects: 
+                                    else if (irrelevant_objects.Count() > 0)
+                                    {
+                                        //IRRELEVANT ALERT
+
+                                        //retrieve confidences and positions
+                                        string objects_and_confidences = "";
+                                        string object_positions_as_string = "";
+
+                                        //for (int i = 0; i < irrelevant_objects.Count; i++)
+                                        //{
+                                        //    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                        //    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                        //}
+
+                                        foreach (ClsPrediction pred in asr.Predictions)
+                                        {
+                                            //if (pred.Result != ResultType.Relevant)
+                                            //{
+                                            objects_and_confidences += $"{pred.ToString()}; ";
+                                            object_positions_as_string += $"{pred.PositionString()};";
+                                            //}
+                                        }
 
 
-                                    objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+                                        objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
 
-                                    //string text contains what is written in the log and in the history list
-                                    string text = "";
-                                    if (masked_counter > 0)//if masked objects, add them
-                                    {
-                                        text += $"{masked_counter}x masked; ";
-                                    }
-                                    if (threshold_counter > 0)//if objects out of confidence range, add them
-                                    {
-                                        text += $"{threshold_counter}x not in confidence range; ";
-                                    }
-                                    if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                    {
-                                        text += $"{irrelevant_counter}x irrelevant; ";
-                                    }
-                                    if (error_counter > 0) //if other irrelevant objects, add them
-                                    {
-                                        text += $"{error_counter}x errors; ";
-                                    }
+                                        //string text contains what is written in the log and in the history list
+                                        string text = "";
+                                        if (masked_counter > 0)//if masked objects, add them
+                                        {
+                                            text += $"{masked_counter}x masked; ";
+                                        }
+                                        if (threshold_counter > 0)//if objects out of confidence range, add them
+                                        {
+                                            text += $"{threshold_counter}x not in confidence range; ";
+                                        }
+                                        if (irrelevant_counter > 0) //if other irrelevant objects, add them
+                                        {
+                                            text += $"{irrelevant_counter}x irrelevant; ";
+                                        }
+                                        if (error_counter > 0) //if other irrelevant objects, add them
+                                        {
+                                            text += $"{error_counter}x errors; ";
+                                        }
 
-                                    if (text != "") //remove last ";"
-                                    {
-                                        text = text.Remove(text.Length - 2);
-                                    }
+                                        if (text != "") //remove last ";"
+                                        {
+                                            text = text.Remove(text.Length - 2);
+                                        }
 
-                                    Log($"Debug: {text}, so it's an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                        Log($"Debug: {text}, so it's an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AiUrl.CurSrv);
+
+                                        await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
+
+                                        cam.IncrementIrrelevantAlerts(); //stats update
+                                        Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
+
+                                        //add to history list
+                                        Global.CreateHistoryItem(hist);
+                                    }
+                                }
+                                else
+                                {
+                                    Log($"Debug:      ((NO DETECTED OBJECTS))", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                    // FALSE ALERT
+
+                                    cam.IncrementFalseAlerts(); //stats update
 
                                     Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
-                                    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AiUrl.CurSrv);
+                                    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", AiUrl.CurSrv);
 
                                     await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
 
-                                    cam.IncrementIrrelevantAlerts(); //stats update
-                                    Log($"Debug: (6/6) Camera {cam.name} caused an irrelevant alert.", AiUrl.CurSrv, cam.name, CurImg.image_path);
+                                    Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", AiUrl.CurSrv, cam.name, CurImg.image_path);
 
                                     //add to history list
                                     Global.CreateHistoryItem(hist);
                                 }
+
+
                             }
                             else
                             {
-                                Log($"Debug:      ((NO DETECTED OBJECTS))", AiUrl.CurSrv, cam.name, CurImg.image_path);
-                                // FALSE ALERT
-
-                                cam.IncrementFalseAlerts(); //stats update
-
-                                Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam.name, CurImg.image_path);
-
-                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.name, "false alert", "", false, "", AiUrl.CurSrv);
-
-                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
-
-                                Log($"Debug: (6/6) Camera {cam.name} caused a false alert, nothing detected.", AiUrl.CurSrv, cam.name, CurImg.image_path);
-
-                                //add to history list
-                                Global.CreateHistoryItem(hist);
+                                error = asr.Error;
+                                AiUrl.IncrementError();
+                                AiUrl.LastResultMessage = error;
+                                Log(error, AiUrl.CurSrv, cam.name, CurImg.image_path);
                             }
-
-
                         }
                         else
                         {
-                            error = asr.Error;
-                            AiUrl.IncrementError();
-                            AiUrl.LastResultMessage = error;
+                            error = $"Error: Invalid image file: {filename}";
+                            CurImg.ErrCount.AtomicIncrementAndGet();
+                            CurImg.ResultMessage = error;
                             Log(error, AiUrl.CurSrv, cam.name, CurImg.image_path);
                         }
+
+                        
 
                     }
                     else

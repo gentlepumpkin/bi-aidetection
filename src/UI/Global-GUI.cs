@@ -84,21 +84,21 @@ namespace AITool
                         }
                         else
                         {
-                            if (SelectObject != null && UseSelected)
-                            {
-                                //use the given object as selected
-                                olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
-                            }
-                            else if (SelectObject == null && UseSelected && olv.IsFiltering && olv.GetItemCount() > 0)
-                            {
-                                //use the last filtered object as the selected object
-                                olv.SelectedObject = olv.FilteredObjects.Cast<object>().First();
-                            }
-                            else if (!olv.IsFiltering)
-                            {
-                                //just use the last object given to us
-                                olv.SelectedObject = objs[0];  //olv.Items.Count - 1;
-                            }
+                            //if (SelectObject != null && UseSelected)
+                            //{
+                            //    //use the given object as selected
+                            //    olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
+                            //}
+                            //else if (SelectObject == null && UseSelected && olv.IsFiltering && olv.GetItemCount() > 0)
+                            //{
+                            //    //use the last filtered object as the selected object
+                            //    olv.SelectedObject = olv.FilteredObjects.Cast<object>().First();
+                            //}
+                            //else if (!olv.IsFiltering && UseSelected)
+                            //{
+                            //    //just use the last object given to us
+                            //    olv.SelectedObject = objs[0];  //olv.Items.Count - 1;
+                            //}
                         }
 
 

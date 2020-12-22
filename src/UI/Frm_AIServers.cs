@@ -85,7 +85,7 @@ namespace AITool
 
         private void deepstackToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
             //if (!AppSettings.Settings.AIURLList.Contains(url))
             //{
                 this.CurURL = url;
@@ -102,7 +102,7 @@ namespace AITool
 
         private void addAmazonReToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.AWSRekognition);
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.AWSRekognition);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
                 this.CurURL = url;
@@ -119,7 +119,7 @@ namespace AITool
 
         private void addDoodsServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DOODS);
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DOODS);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
                 this.CurURL = url;
