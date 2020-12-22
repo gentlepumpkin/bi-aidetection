@@ -407,6 +407,7 @@ namespace AITool
                 int inuse = 0;
                 int incorrectcam = 0;
                 int notintimerange = 0;
+                int maxpermonth = 0;
                 try
                 {
 
@@ -434,44 +435,53 @@ namespace AITool
                             {
                                 if (Global.IsInList(cam.name, sorted[i].Cameras, TrueIfEmpty: true))
                                 {
-                                    DateTime now = DateTime.Now;
-
-                                    if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
+                                    
+                                    if (sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
                                     {
-                                        if (sorted[i].CurErrCount.ReadFullFence() == 0)
+                                        DateTime now = DateTime.Now;
+
+                                        if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
                                         {
-                                            ret = sorted[i];
-                                            ret.CurOrder = i + 1;
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
-                                            if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
+                                            if (sorted[i].CurErrCount.ReadFullFence() == 0)
                                             {
                                                 ret = sorted[i];
                                                 ret.CurOrder = i + 1;
-                                                if (!displayedretry)  //if we get in a long loop waiting for URL
-                                                {
-                                                    Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                    displayedretry = true;
-                                                }
                                                 break;
                                             }
                                             else
                                             {
-                                                if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                                if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
                                                 {
-                                                    Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                    displayedbad = true;
+                                                    ret = sorted[i];
+                                                    ret.CurOrder = i + 1;
+                                                    if (!displayedretry)  //if we get in a long loop waiting for URL
+                                                    {
+                                                        Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                        displayedretry = true;
+                                                    }
+                                                    break;
                                                 }
-                                            }
+                                                else
+                                                {
+                                                    if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                    {
+                                                        Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                        displayedbad = true;
+                                                    }
+                                                }
 
+                                            }
                                         }
+                                        else
+                                        {
+                                            notintimerange++;
+                                        }
+
                                     }
                                     else
                                     {
-                                        notintimerange++;
+                                        maxpermonth++;
                                     }
                                 }
                                 else
@@ -518,7 +528,7 @@ namespace AITool
 
                 if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
                 {
-                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range) Waiting...");
+                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit) Waiting...");
                     LastWaitingLog = DateTime.Now;
                 }
 
