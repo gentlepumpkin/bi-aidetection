@@ -436,7 +436,7 @@ namespace AITool
                                 if (Global.IsInList(cam.name, sorted[i].Cameras, TrueIfEmpty: true))
                                 {
                                     
-                                    if (sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
+                                    if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
                                     {
                                         DateTime now = DateTime.Now;
 
