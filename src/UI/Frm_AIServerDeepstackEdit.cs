@@ -39,6 +39,8 @@ namespace AITool
             this.tb_ImagesPerMonth.Text = this.CurURL.MaxImagesPerMonth.ToString();
             this.cb_ImageAdjustProfile.Text = this.CurURL.ImageAdjustProfile;
             this.linkHelpURL.Text = this.CurURL.HelpURL;
+            this.tb_Lower.Text = this.CurURL.Threshold_Lower.ToString();
+            this.tb_Upper.Text = this.CurURL.Threshold_Upper.ToString();
 
             foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
             {
@@ -98,6 +100,10 @@ namespace AITool
             this.CurURL.Cameras = this.tb_ApplyToCams.Text.Trim();
             this.CurURL.ImageAdjustProfile = this.cb_ImageAdjustProfile.Text;
             this.CurURL.MaxImagesPerMonth = Convert.ToInt32(this.tb_ImagesPerMonth.Text.Trim());
+
+            this.CurURL.Threshold_Lower = Convert.ToInt32(this.tb_Lower.Text.Trim());
+            this.CurURL.Threshold_Upper = Convert.ToInt32(this.tb_Upper.Text.Trim());
+
         }
         private void linkHelpURL_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {

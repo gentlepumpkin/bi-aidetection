@@ -1306,6 +1306,7 @@ namespace AITool
         {
             ClsAIServerResponse ret = new ClsAIServerResponse();
 
+            bool OverrideThreshold = AiUrl.Threshold_Lower > 0 || (AiUrl.Threshold_Upper > 0 && AiUrl.Threshold_Upper < 100);
 
             //==============================================================================================================
             //==============================================================================================================
@@ -1450,8 +1451,12 @@ namespace AITool
 
                     //We could prevent doods from giving back ALL of its results but then we couldnt fully see how it was working:
                     //So many things come back from Doods, cluttering up the db, we really need to limit at the source
-                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource)
+
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && !OverrideThreshold)
                         cdr.Detect.MinPercentMatch = cam.threshold_lower;
+
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
+                        cdr.Detect.MinPercentMatch = AiUrl.Threshold_Lower;
 
                     cdr.DetectorName = AppSettings.Settings.DOODSDetectorName;
 
@@ -1605,8 +1610,11 @@ namespace AITool
                     dlr.MaxLabels = AppSettings.Settings.AmazonMaxLabels;
                     dlr.MinConfidence = AppSettings.Settings.AmazonMinConfidence;
 
-                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource)
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && !OverrideThreshold)
                         dlr.MinConfidence = cam.threshold_lower;
+
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
+                        dlr.MinConfidence = AiUrl.Threshold_Lower;
 
                     Amazon.Rekognition.Model.Image rekognitionImgage = new Amazon.Rekognition.Model.Image();
 
@@ -1644,7 +1652,7 @@ namespace AITool
                                     //not sure if there will ever be more than one instance
                                     for (int i = 0; i < lbl.Instances.Count; i++)
                                     {
-                                        ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, lbl, i, CurImg);
+                                        ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, lbl, i, CurImg, AiUrl);
 
                                         ret.Predictions.Add(pred);
 
@@ -1764,7 +1772,7 @@ namespace AITool
                         if (ValidImg)
                         {
                             asr = await GetDetectionsFromAIServer(CurImg, AiUrl, cam);
-
+                            
                             if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
                             {
 

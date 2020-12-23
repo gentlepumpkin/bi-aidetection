@@ -28,11 +28,14 @@ namespace AITool
         }
         public int Order { get; set; } = 0;
         public string url { get; set; } = "";
+        
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
         public string Cameras { get; set; } = "";
         public int MaxImagesPerMonth { get; set; } = 0;
         public string ImageAdjustProfile { get; set; } = "Default";
+        public int Threshold_Lower { get; set; } = 0;   //override the cameras threshold since different AI servers may need to be tuned to different values
+        public int Threshold_Upper { get; set; } = 100;
         [JsonIgnore]
         public int CurOrder { get; set; } = 0;
         [JsonIgnore]
@@ -263,7 +266,10 @@ namespace AITool
                 AITOOL.Log($"Error: '{this.Type.ToString()}' URL is not valid: '{this.url}'");
 
             this.IsValid = ret;
-            this.Enabled.WriteFullFence(ret);
+
+            if (!this.isValid)
+               this.Enabled.WriteFullFence(false);
+
             return ret;
         }
 

@@ -33,6 +33,7 @@ namespace AITool
         private ObjectType _defaultObjType;
         private Camera _cam;
         private ClsImageQueueItem _curimg;
+        private ClsURLItem _cururl;
 
         public string Label { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
@@ -61,10 +62,11 @@ namespace AITool
 
         public ClsPrediction() { }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
+            this._cururl = curURL;
             this._curimg = curImg;
             this.Camera = cam.name;
             this.ImageHeight = curImg.Height;
@@ -221,7 +223,10 @@ namespace AITool
                             // -> OBJECT IS RELEVANT
 
                             //if confidence limits are satisfied
-                            if (this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper)
+                            bool OverrideThreshold = this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100);
+
+                            if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
+                                (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
                             {
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
