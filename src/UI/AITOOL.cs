@@ -1367,7 +1367,7 @@ namespace AITool
 
                                                 foreach (ClsDeepstackDetection DSObj in response.predictions)
                                                 {
-                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg);
+                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
 
                                                     ret.Predictions.Add(pred);
 
@@ -1512,7 +1512,7 @@ namespace AITool
 
                                                 foreach (ClsDoodsDetection DSObj in response.Detections)
                                                 {
-                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg);
+                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
 
                                                     ret.Predictions.Add(pred);
 

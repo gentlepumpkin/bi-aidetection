@@ -117,11 +117,13 @@ namespace AITool
 
             this.GetObjectType();
         }
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDeepstackDetection AiDetectionObject, ClsImageQueueItem curImg)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDeepstackDetection AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._curimg = curImg;
+            this._cururl = curURL;
+
             //this._imageObject = AiDetectionObject;
             this.Camera = cam.name;
             this.ImageHeight = curImg.Height;
@@ -148,11 +150,13 @@ namespace AITool
             this.GetObjectType();
         }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDoodsDetection AiDetectionObject, ClsImageQueueItem curImg)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDoodsDetection AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._curimg = curImg;
+            this._cururl = curURL;
+
             //this._imageObject = AiDetectionObject;
             this.Camera = cam.name;
             this.ImageHeight = curImg.Height;
@@ -223,7 +227,7 @@ namespace AITool
                             // -> OBJECT IS RELEVANT
 
                             //if confidence limits are satisfied
-                            bool OverrideThreshold = this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100);
+                            bool OverrideThreshold = this._cururl !=null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
 
                             if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
                                 (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
