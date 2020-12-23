@@ -49,8 +49,8 @@ namespace AITool
                     string topic = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Topic.Text.Trim());
                     string payload = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Payload.Text.Trim());
 
-                    List<string> topics = Global.Split(topic, ";|");
-                    List<string> payloads = Global.Split(payload, ";|");
+                    List<string> topics = Global.Split(topic, "|");
+                    List<string> payloads = Global.Split(payload, "|");
 
                     MQTTClient mq = new MQTTClient();
                     MqttClientPublishResult pr = null;

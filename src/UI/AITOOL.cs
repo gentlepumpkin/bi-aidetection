@@ -1758,7 +1758,12 @@ namespace AITool
                         {
                             if (!Directory.Exists(fldr))
                                 Directory.CreateDirectory(fldr);
-                            Global.WaitFileAccessResult result2 = await Global.WaitForFileAccessAsync(file, FileSystemRights.Read, FileShare.ReadWrite, 3000, 50);
+                            Global.WaitFileAccessResult result2 = new Global.WaitFileAccessResult();
+                            if (File.Exists(file))
+                                result2 = await Global.WaitForFileAccessAsync(file, FileSystemRights.Read, FileShare.ReadWrite, 3000, 50);
+                            else
+                                result2.Success = true;
+                            
                             if (result2.Success)
                             {
                                 File.Copy(CurImg.image_path, file, true);

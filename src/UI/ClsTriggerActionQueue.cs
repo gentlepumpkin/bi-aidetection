@@ -375,6 +375,9 @@ namespace AITool
                     {
                         string topic = "";
                         string payload = "";
+
+                        Log($"Debug: Before Topic='{AQI.cam.Action_mqtt_topic}', Payload='{AQI.cam.Action_mqtt_payload}'");
+
                         if (AQI.Trigger)
                         {
                             topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic);
@@ -386,8 +389,10 @@ namespace AITool
                             payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel);
                         }
 
-                        List<string> topics = Global.Split(topic, ";|");
-                        List<string> payloads = Global.Split(payload, ";|");
+                        Log($"Debug: [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
+
+                        List<string> topics = Global.Split(topic, "|");
+                        List<string> payloads = Global.Split(payload, "|");
 
                         ClsImageQueueItem ci = null;
 
@@ -729,9 +734,11 @@ namespace AITool
 
                 Log($"Debug:  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
 
-                if (!Directory.Exists(netfld))
+                DirectoryInfo d = new DirectoryInfo(netfld);
+                if (d.Root != null && !d.Exists)
                 {
-                    Directory.CreateDirectory(netfld);
+                    //dont try to create if working off root drive
+                    d.Create();
                 }
 
                 System.IO.File.Copy(AQI.CurImg.image_path, dest_path, true);
