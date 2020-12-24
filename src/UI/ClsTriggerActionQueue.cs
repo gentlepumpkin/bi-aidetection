@@ -52,6 +52,7 @@ namespace AITool
     public class ClsTriggerActionQueue
     {
         BlockingCollection<ClsTriggerActionQueueItem> TriggerActionQueue = new BlockingCollection<ClsTriggerActionQueueItem>();
+        ConcurrentDictionary<string, ClsTriggerActionQueueItem> CancelActionDict = new ConcurrentDictionary<string, ClsTriggerActionQueueItem>();
 
         public ThreadSafe.Datetime last_telegram_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ThreadSafe.Datetime TelegramRetryTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
@@ -60,12 +61,13 @@ namespace AITool
         string ImgPath = "NoImage";
         public ThreadSafe.Integer Count { get; set; } = new ThreadSafe.Integer(0);
         public MovingCalcs QCountCalc { get; set; } = new MovingCalcs(250, "Action Queue Sizes", false);
-        public MovingCalcs QTimeCalc { get; set; } = new MovingCalcs(250, "Action Queue Times",true);
+        public MovingCalcs QTimeCalc { get; set; } = new MovingCalcs(250, "Action Queue Times", true);
         public MovingCalcs ActionTimeCalc { get; set; } = new MovingCalcs(250, "Actions", true);
         public MovingCalcs TotalTimeCalc { get; set; } = new MovingCalcs(250, "Actions", true);
         public ClsTriggerActionQueue()
         {
             Task.Run(this.TriggerActionJobQueueLoop);
+            Task.Run(this.CancelActionJobQueueLoop);
         }
 
         public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
@@ -86,7 +88,12 @@ namespace AITool
             ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, hist, Trigger, Text, !Wait);
 
             //Make sure not to put cancel items in the queue if no cancel triggers are defined...
-            bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count() > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
+
+            bool NeedsToCancel = (cam.Action_mqtt_enabled && string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel) ||
+                                  Trigger && cam.cancel_urls.Count() > 0);
+
+            //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count() > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
+            bool DoIt = (Trigger || (!NeedsToCancel));
 
             if (DoIt)
             {
@@ -129,6 +136,9 @@ namespace AITool
             //this runs forever and blocks if nothing is in the queue
             foreach (ClsTriggerActionQueueItem AQI in this.TriggerActionQueue.GetConsumingEnumerable())
             {
+                if (MasterCTS.IsCancellationRequested)
+                    break;
+
                 try
                 {
                     await this.RunTriggers(AQI);
@@ -143,6 +153,51 @@ namespace AITool
             }
 
             Log($"Error: Should not have left ActionQueueLoop?");
+
+        }
+
+        private async Task CancelActionJobQueueLoop()
+        {
+            while (true)
+            {
+                if (MasterCTS.IsCancellationRequested)
+                    break;
+
+                if (!this.CancelActionDict.IsEmpty)
+                {
+
+                    foreach (ClsTriggerActionQueueItem AQI in CancelActionDict.Values)
+                    {
+
+                        try
+                        {
+                            if (AQI.cam.Action_Cancel_Timer_Enabled)
+                            {
+                                if ((DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds >= AppSettings.Settings.ActionCancelSeconds)
+                                {
+                                    await this.RunTriggers(AQI);
+                                    AQI.cam.Action_Cancel_Timer_Enabled = false;  // will be deleted next time the loop goes through
+                                }
+                            }
+                            else
+                            {
+                                CancelActionDict.TryRemove(AQI.cam.name.ToLower(), out ClsTriggerActionQueueItem removedItem);
+                                Log($"Debug: Removed cancel action in queue for camera '{AQI.cam.name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds} seconds", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        }
+                    }
+
+                }
+
+                await Task.Delay(1000); //Only check every second
+            }
 
         }
 
@@ -183,6 +238,35 @@ namespace AITool
                 else
                 {
                     res = await this.Trigger(AQI);
+                }
+
+
+                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && string.IsNullOrEmpty(AQI.cam.Action_mqtt_payload_cancel)) || (AQI.cam.cancel_urls.Count() > 0));
+                
+                if (HasCancelAction)
+                {
+                    if (AQI.Trigger == false)  //If this is a CANCEL anyway...
+                    {
+                        //if we already did a cancel, set flag to delete the queued cancel item if exists
+                        AQI.cam.Action_Cancel_Timer_Enabled = false;
+                    }
+                    else //If this is another TRIGGER...
+                    {
+                        if (this.CancelActionDict.ContainsKey(AQI.cam.name.ToLower()))
+                        {
+                            //if already in queue, update date
+                            AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
+                            Log($"Debug: EXTENDING cancel action time for camera '{AQI.cam.name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        }
+                        else  //add it to the queue
+                        {
+                            AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
+                            AQI.cam.Action_Cancel_Timer_Enabled = true;
+                            AQI.Trigger = false;  //set to be a cancel
+                            this.CancelActionDict.TryAdd(AQI.cam.name.ToLower(),AQI);
+                            Log($"Debug: Cancel action queued for camera '{AQI.cam.name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);
+                        }
+                    }
                 }
 
                 this.Count.WriteFullFence(this.TriggerActionQueue.Count);
@@ -859,7 +943,7 @@ namespace AITool
                                 if (overrideid)
                                     chatid = AQI.cam.telegram_chatid.Trim();
                                 else
-                                    chatid = AppSettings.Settings.telegram_chatids[0]; 
+                                    chatid = AppSettings.Settings.telegram_chatids[0];
 
                                 //upload image to Telegram servers and send to first chat
                                 Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.name, AQI.CurImg.image_path);

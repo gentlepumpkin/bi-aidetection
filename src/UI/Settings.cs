@@ -139,6 +139,8 @@ namespace AITool
             public int AmazonMaxLabels = 15;
             public int AmazonMinConfidence = 25;
 
+            public int ActionCancelSeconds = 30;
+
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
             public List<ClsImageAdjust> ImageAdjustProfiles = new List<ClsImageAdjust> { new ClsImageAdjust("Default") };

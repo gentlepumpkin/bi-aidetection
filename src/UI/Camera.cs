@@ -74,6 +74,11 @@ namespace AITool
         public bool Action_mqtt_send_image = false;
         public bool Action_queued = false;
 
+        [JsonIgnore]
+        public bool Action_Cancel_Timer_Enabled = false;
+        [JsonIgnore]
+        public DateTime Action_Cancel_Start_Time = DateTime.MinValue;
+
         public MaskManager maskManager = new MaskManager();
         public int mask_brush_size = 35;
 

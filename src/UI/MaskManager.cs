@@ -29,7 +29,7 @@ namespace AITool
         public int MaskRemoveMins { get; set; } = 5;                    //how many minutes to keep masked objects that are not visible 
         public int HistorySaveMins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
-        public double PercentMatch { get; set; } = 85;                  //miniumn percentage match to be considered a match
+        public double PercentMatch { get; set; } = 85;                  //minimum percentage match to be considered a match
         public int MaskRemoveThreshold { get; set; } = 2;               //number of times object is NOT seen before being removed by the cleanup timer 
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
