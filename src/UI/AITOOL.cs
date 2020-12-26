@@ -81,6 +81,7 @@ namespace AITool
 
         public static System.Timers.Timer FileSystemErrorCheckTimer = new System.Timers.Timer();
 
+        public static MQTTClient mq = new MQTTClient();
 
         public static string srv = "";
 
@@ -717,6 +718,9 @@ namespace AITool
                         }
 
                     }
+
+                    if (MasterCTS.IsCancellationRequested)
+                        break;
 
                     //Only loop 10 times a second conserve cpu
                     await Task.Delay(100);

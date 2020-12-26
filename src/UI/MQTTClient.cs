@@ -3,6 +3,7 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Subscribing;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,12 +14,275 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public class MQTTClient
+    public class MQTTClient : IDisposable
     {
+        public bool IsSubscribed = false;
+        public bool IsConnected = false;
+
+        int portint = 0;
+        string server = "";
+        string port = "";
+        string LastTopic = "";
+        string LastPayload = "";
+        bool LastRetain = false;
+
+        MqttFactory factory = null;
+        IMqttClient mqttClient = null;
+        IMqttClientOptions options = null;
+        MqttClientAuthenticateResult cres = null;
+
+        public async void Dispose()
+        {
+
+            if (mqttClient != null)
+            {
+
+                if (mqttClient.IsConnected )
+                {
+                    Log($"Debug: MQTT: Disconnecting from server.");
+                    try
+                    {
+                        await mqttClient.DisconnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        //dont throw ERROR in the log if fail to disconnect
+                        Log($"Debug: MQTT: Could not disconnect from server, got: {Global.ExMsg(ex)}");
+                    }
+                }
+                else
+                {
+                    Log($"Debug: MQTT: Already disconnected from server, no need to disconnect.");
+                }
+
+
+                IsConnected = false;
+
+                mqttClient.Dispose();
+
+            }
+                        
+
+
+        }
 
         public MQTTClient()
         {
+            try
+            {
+                this.factory = new MqttFactory();
+                this.mqttClient = factory.CreateMqttClient();
+                                               
 
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+        }
+
+
+        public async Task<bool> Connect()
+        {
+            bool ret = false;
+            try
+            {
+
+                this.server = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, "", ":");
+                this.port = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, ":", "/");
+                this.portint = 0;
+
+                if (!string.IsNullOrEmpty(this.port))
+                    this.portint = Convert.ToInt32(this.port);
+                if (this.portint == 0 && AppSettings.Settings.mqtt_UseTLS)
+                {
+                    this.portint = 8883;
+                }
+                else if (this.portint == 0)
+                {
+                    this.portint = 1883;
+                }
+
+                bool IsWebSocket = (AppSettings.Settings.mqtt_serverandport.IndexOf("ws://", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    AppSettings.Settings.mqtt_serverandport.IndexOf("/mqtt", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                bool UseTLS = (AppSettings.Settings.mqtt_UseTLS || portint == 8883 || AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                bool UseCreds = (!string.IsNullOrWhiteSpace(AppSettings.Settings.mqtt_username));
+
+
+
+                //=====================================================================
+                //Seems like there should be a better way here with this Options builder...
+                //I dont see an obvious way to directly modify options without the builder
+                //and I cant seem to put IF statements around each part of the option builder
+                //parameters.
+                //=====================================================================
+
+
+
+                if (UseTLS)
+                {
+                    if (UseCreds)
+                    {
+                        if (IsWebSocket)
+                        {
+
+                            options = new MqttClientOptionsBuilder()
+                                .WithClientId(AppSettings.Settings.mqtt_clientid)
+                                .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                                .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                                .WithTls()
+                                .WithCleanSession()
+                                .Build();
+
+                        }
+                        else
+                        {
+                            options = new MqttClientOptionsBuilder()
+                                .WithClientId(AppSettings.Settings.mqtt_clientid)
+                                .WithTcpServer(server, portint)
+                                .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                                .WithTls()
+                                .WithCleanSession()
+                                .Build();
+                        }
+
+                    }
+                    else
+                    {
+                        if (IsWebSocket)
+                        {
+                            options = new MqttClientOptionsBuilder()
+                                .WithClientId(AppSettings.Settings.mqtt_clientid)
+                                .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                                .WithTls()
+                                .WithCleanSession()
+                                .Build();
+
+                        }
+                        else
+                        {
+                            options = new MqttClientOptionsBuilder()
+                                .WithClientId(AppSettings.Settings.mqtt_clientid)
+                                .WithTcpServer(server, portint)
+                                .WithTls()
+                                .WithCleanSession()
+                                .Build();
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    if (UseCreds)
+                    {
+                        if (IsWebSocket)
+                        {
+                            options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithCleanSession()
+                            .Build();
+
+                        }
+                        else
+                        {
+                            options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithTcpServer(server, portint)
+                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithCleanSession()
+                            .Build();
+
+                        }
+
+                    }
+                    else
+                    {
+                        if (IsWebSocket)
+                        {
+                            options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithTcpServer(server, portint)
+                            .WithCleanSession()
+                            .Build();
+
+                        }
+                        else
+                        {
+                            options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                            .WithCleanSession()
+                            .Build();
+
+                        }
+                    }
+
+
+                }
+
+                mqttClient.UseDisconnectedHandler(async e =>
+                {
+                    IsConnected = false;
+                    string excp = "";
+                    if (e.Exception != null)
+                    {
+                        excp = e.Exception.Message;
+                    }
+                    Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
+
+                    //reconnect here if needed?
+                });
+
+
+                mqttClient.UseApplicationMessageReceivedHandler(async e =>
+                {
+                    Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
+                    Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
+                    if (e.ApplicationMessage.Payload.Length < 64)
+                        Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                    Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                    Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
+                    Log("");
+
+                });
+
+
+                mqttClient.UseConnectedHandler(async e =>
+                {
+                    IsConnected = true;
+                    Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
+
+                    
+                    //if (!string.IsNullOrWhiteSpace(this.LastTopic))
+                    //{
+                    //    // Subscribe to the topic
+                    //    MqttClientSubscribeResult res = await mqttClient.SubscribeAsync(this.LastTopic, MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
+
+                    //    IsSubscribed = true;
+
+                    //    Log($"Debug: MQTT: ### SUBSCRIBED to topic '{this.LastTopic}'");
+                    //}
+                });
+
+                Log($"Debug: MQTT: Connecting to server '{this.server}:{this.portint}'...");
+
+
+                cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+            return ret;
         }
 
         public async Task<MqttClientPublishResult> PublishAsync(string topic, string payload, bool retain, ClsImageQueueItem CurImg)
@@ -28,339 +292,118 @@ namespace AITool
             MqttClientPublishResult res = null;
             Stopwatch sw = Stopwatch.StartNew();
 
-            await Task.Run(async () =>
+            this.LastRetain = retain;
+            this.LastPayload = payload;
+            this.LastTopic = topic;
+            if (string.IsNullOrWhiteSpace(topic))
+            {
+                this.LastTopic = Guid.NewGuid().ToString();
+            }
+
+            if (!this.IsConnected)
+                await this.Connect();
+
+            if (!this.IsConnected)
+                return res;
+
+                await Task.Run(async () =>
                             {
-                                MqttFactory factory = new MqttFactory();
+                                
 
-                                IMqttClient mqttClient = null;
-                                bool subscribed = false;
-                                bool IsConnected = false;
-
-                                using (mqttClient = factory.CreateMqttClient())
+                                try
                                 {
-                                    try
+
+
+                                    Log($"Debug: MQTT: Sending topic '{this.LastTopic}' with payload '{this.LastPayload}' to server '{this.server}:{this.portint}'...");
+
+                                    if (cres != null && mqttClient.IsConnected && cres.ResultCode == MqttClientConnectResultCode.Success)
                                     {
 
+                                        IsConnected = true;
 
+                                        MqttApplicationMessage ma;
 
-
-                                        string server = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, "", ":");
-                                        string port = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, ":", "/");
-                                        int portint = 0;
-                                        if (!string.IsNullOrEmpty(port))
-                                            portint = Convert.ToInt32(port);
-                                        if (portint == 0 && AppSettings.Settings.mqtt_UseTLS)
+                                        if (CurImg != null)
                                         {
-                                            portint = 8883;
-                                        }
-                                        else if (portint == 0)
-                                        {
-                                            portint = 1883;
-                                        }
+                                            using FileStream image_data = System.IO.File.OpenRead(CurImg.image_path);
 
-                                        bool IsWebSocket = (AppSettings.Settings.mqtt_serverandport.IndexOf("ws://", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                                            AppSettings.Settings.mqtt_serverandport.IndexOf("/mqtt", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                                            AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
+                                            ma = new MqttApplicationMessageBuilder()
+                                                     .WithTopic(this.LastTopic)
+                                                     .WithPayload(image_data)
+                                                     .WithAtLeastOnceQoS()
+                                                     .WithRetainFlag(this.LastRetain)
+                                                     .Build();
 
-                                        bool UseTLS = (AppSettings.Settings.mqtt_UseTLS || portint == 8883 || AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
-
-                                        bool UseCreds = (!string.IsNullOrWhiteSpace(AppSettings.Settings.mqtt_username));
-
-                                        IMqttClientOptions options;
+                                            res = await mqttClient.PublishAsync(ma, CancellationToken.None);
 
 
-                                        //=====================================================================
-                                        //Seems like there should be a better way here with this Options builder...
-                                        //I dont see an obvious way to directly modify options without the builder
-                                        //and I cant seem to put IF statements around each part of the option builder
-                                        //parameters.
-                                        //=====================================================================
-
-
-
-                                        if (UseTLS)
-                                        {
-                                            if (UseCreds)
+                                            if (res.ReasonCode == MqttClientPublishReasonCode.Success)
                                             {
-                                                if (IsWebSocket)
-                                                {
-
-                                                    options = new MqttClientOptionsBuilder()
-                                                        .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                        .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                                        .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                                        .WithTls()
-                                                        .WithCleanSession()
-                                                        .Build();
-
-                                                }
-                                                else
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                        .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                        .WithTcpServer(server, portint)
-                                                        .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                                        .WithTls()
-                                                        .WithCleanSession()
-                                                        .Build();
-                                                }
-
+                                                Log($"Debug: MQTT: ...Sent image in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
                                             else
                                             {
-                                                if (IsWebSocket)
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                        .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                        .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                                        .WithTls()
-                                                        .WithCleanSession()
-                                                        .Build();
-
-                                                }
-                                                else
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                        .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                        .WithTcpServer(server, portint)
-                                                        .WithTls()
-                                                        .WithCleanSession()
-                                                        .Build();
-
-                                                }
-
+                                                Log($"Error: MQTT: sending image: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
 
                                         }
                                         else
                                         {
-                                            if (UseCreds)
+                                            ma = new MqttApplicationMessageBuilder()
+                                                    .WithTopic(this.LastTopic)
+                                                    .WithPayload(this.LastPayload)
+                                                    .WithAtLeastOnceQoS()
+                                                    .WithRetainFlag(this.LastRetain)
+                                                    .Build();
+
+                                            res = await mqttClient.PublishAsync(ma, CancellationToken.None);
+
+                                            //Success = 0,
+                                            //        NoMatchingSubscribers = 0x10,
+                                            //        UnspecifiedError = 0x80,
+                                            //        ImplementationSpecificError = 0x83,
+                                            //        NotAuthorized = 0x87,
+                                            //        TopicNameInvalid = 0x90,
+                                            //        PacketIdentifierInUse = 0x91,
+                                            //        QuotaExceeded = 0x97,
+                                            //        PayloadFormatInvalid = 0x99
+
+                                            if (res.ReasonCode == MqttClientPublishReasonCode.Success)
                                             {
-                                                if (IsWebSocket)
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                    .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                    .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                                    .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                                    .WithCleanSession()
-                                                    .Build();
-
-                                                }
-                                                else
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                    .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                    .WithTcpServer(server, portint)
-                                                    .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                                    .WithCleanSession()
-                                                    .Build();
-
-                                                }
-
+                                                Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
                                             else
                                             {
-                                                if (IsWebSocket)
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                    .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                    .WithTcpServer(server, portint)
-                                                    .WithCleanSession()
-                                                    .Build();
-
-                                                }
-                                                else
-                                                {
-                                                    options = new MqttClientOptionsBuilder()
-                                                    .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                                    .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                                    .WithCleanSession()
-                                                    .Build();
-
-                                                }
-                                            }
-
-
-                                        }
-
-                                        if (string.IsNullOrWhiteSpace(topic))
-                                        {
-                                            topic = Guid.NewGuid().ToString();
-                                        }
-
-                                        mqttClient.UseDisconnectedHandler(async e =>
-                                        {
-                                            IsConnected = false;
-                                            string excp = "";
-                                            if (e.Exception != null)
-                                            {
-                                                excp = e.Exception.Message;
-                                            }
-                                            Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
-
-                                            //reconnect here if needed?
-                                        });
-
-
-                                        mqttClient.UseApplicationMessageReceivedHandler(async e =>
-                                        {
-                                            Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
-                                            Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                                            if (e.ApplicationMessage.Payload.Length < 64)
-                                                Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
-                                            Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                                            Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
-                                            Log("");
-
-                                        });
-
-
-                                        mqttClient.UseConnectedHandler(async e =>
-                                        {
-                                            IsConnected = true;
-                                            Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
-
-                                            // Subscribe to the topic
-                                            await mqttClient.SubscribeAsync(topic, MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
-
-                                            subscribed = true;
-
-                                            Log($"Debug: MQTT: ### SUBSCRIBED to topic '{topic}'");
-                                        });
-
-
-                                        Log($"Debug: MQTT: Sending topic '{topic}' with payload '{payload}' to server '{server}:{portint}'...");
-
-
-                                        MqttClientAuthenticateResult cres = await mqttClient.ConnectAsync(options, CancellationToken.None);
-
-                                        if (cres != null && mqttClient.IsConnected && cres.ResultCode == MqttClientConnectResultCode.Success)
-                                        {
-
-                                            IsConnected = true;
-
-                                            MqttApplicationMessage ma;
-
-                                            if (CurImg != null)
-                                            {
-                                                using FileStream image_data = System.IO.File.OpenRead(CurImg.image_path);
-
-                                                ma = new MqttApplicationMessageBuilder()
-                                                         .WithTopic(topic)
-                                                         .WithPayload(image_data)
-                                                         .WithAtLeastOnceQoS()
-                                                         .WithRetainFlag(retain)
-                                                         .Build();
-
-                                                res = await mqttClient.PublishAsync(ma, CancellationToken.None);
-
-
-                                                if (res.ReasonCode == MqttClientPublishReasonCode.Success)
-                                                {
-                                                    Log($"Debug: MQTT: ...Sent image in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                                }
-                                                else
-                                                {
-                                                    Log($"Error: MQTT: sending image: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                                }
-
-                                            }
-                                            else
-                                            {
-                                                ma = new MqttApplicationMessageBuilder()
-                                                        .WithTopic(topic)
-                                                        .WithPayload(payload)
-                                                        .WithAtLeastOnceQoS()
-                                                        .WithRetainFlag(retain)
-                                                        .Build();
-
-                                                res = await mqttClient.PublishAsync(ma, CancellationToken.None);
-
-                                                //Success = 0,
-                                                //        NoMatchingSubscribers = 0x10,
-                                                //        UnspecifiedError = 0x80,
-                                                //        ImplementationSpecificError = 0x83,
-                                                //        NotAuthorized = 0x87,
-                                                //        TopicNameInvalid = 0x90,
-                                                //        PacketIdentifierInUse = 0x91,
-                                                //        QuotaExceeded = 0x97,
-                                                //        PayloadFormatInvalid = 0x99
-
-                                                if (res.ReasonCode == MqttClientPublishReasonCode.Success)
-                                                {
-                                                    Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                                }
-                                                else
-                                                {
-                                                    Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                                }
-
+                                                Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                             }
 
                                         }
-                                        else if (cres != null)
-                                        {
-                                            IsConnected = false;
-                                            Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
-                                        }
-                                        else
-                                        {
-                                            IsConnected = false;
-                                            Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
-                                        }
-
-                                        if (mqttClient != null && mqttClient.IsConnected && IsConnected)
-                                        {
-                                            if (subscribed)
-                                            {
-                                                Log($"Debug: MQTT: Unsubscribing from topic '{topic}'");
-                                                await mqttClient.UnsubscribeAsync(topic);
-                                            }
-
-                                            if (mqttClient.IsConnected && IsConnected)
-                                            {
-                                                Log($"Debug: MQTT: Disconnecting from server.");
-                                                try
-                                                {
-                                                    await mqttClient.DisconnectAsync();
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    //dont throw ERROR in the log if fail to disconnect
-                                                    Log($"Debug: MQTT: Could not disconnect from server, got: {Global.ExMsg(ex)}");
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Log($"Debug: MQTT: Already disconnected from server, no need to disconnect.");
-                                            }
-
-
-                                            IsConnected = false;
-                                        }
-
-
 
                                     }
-                                    catch (Exception ex)
+                                    else if (cres != null)
                                     {
-
-                                        Log($"Error: MQTT: Unexpected Problem: Topic '{topic}' Payload '{payload}': " + Global.ExMsg(ex));
+                                        IsConnected = false;
+                                        Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
                                     }
-                                    finally
+                                    else
                                     {
-                                        if (mqttClient != null && mqttClient.IsConnected)
-                                        {
-                                            if (subscribed)
-                                            {
-                                                Log($"Debug: MQTT: Un-Subscribing from topic '{topic}'");
-                                                await mqttClient.UnsubscribeAsync(topic);
-                                            }
-                                            Log($"Debug: MQTT: Disconnecting from server.");
-                                            await mqttClient.DisconnectAsync();
-                                            mqttClient.Dispose();  //using should dispose anyway
-                                        }
+                                        IsConnected = false;
+                                        Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
                                     }
+
+                                    
+
+
+
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    Log($"Error: MQTT: Unexpected Problem: Topic '{this.LastTopic}' Payload '{this.LastPayload}': " + Global.ExMsg(ex));
+                                }
+                                finally
+                                {
+                                   
                                 }
 
                             });

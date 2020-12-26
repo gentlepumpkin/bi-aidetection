@@ -52,7 +52,6 @@ namespace AITool
                     List<string> topics = Global.Split(topic, "|");
                     List<string> payloads = Global.Split(payload, "|");
 
-                    MQTTClient mq = new MQTTClient();
                     MqttClientPublishResult pr = null;
                     ClsImageQueueItem CurImg = null;
 

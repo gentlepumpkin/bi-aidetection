@@ -486,8 +486,7 @@ namespace AITool
                                 ci = AQI.CurImg;
                             else
                                 ci = null;
-                            MQTTClient mq = new MQTTClient();
-                            MqttClientPublishResult pr = await mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message, ci);
+                            MqttClientPublishResult pr = await AITOOL.mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message, ci);
                             if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                 ret = false;
 

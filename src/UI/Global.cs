@@ -2030,7 +2030,7 @@ namespace AITool
                         //    //Log($"Cannot get command line for '{curproc.ProcessName}', must be running as administrator.");
                         //}
 
-                        if (Ret != null && !string.IsNullOrEmpty(CurPrc.FileName) && CurPrc.FileName.ToLower() == processname.ToLower())
+                        if (Ret != null && CurPrc != null && !string.IsNullOrEmpty(CurPrc.FileName) && string.Equals(CurPrc.FileName, processname, StringComparison.OrdinalIgnoreCase))
                         {
                             CurPrc.process = curproc;
                             Ret.Add(CurPrc);

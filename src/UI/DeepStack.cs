@@ -43,6 +43,9 @@ namespace AITool
         public List<double> ResponseTimeList = new List<double>();  //From this you can get min/max/avg
 
 
+        private ThreadSafe.Boolean Starting = new ThreadSafe.Boolean(false);
+        private ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
+
         public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath)
         {
 
@@ -332,10 +335,17 @@ namespace AITool
         }
         public async Task<bool> StartAsync()
         {
-            return await Task.Run(() => this.Start());
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            return await Task.Run(async () => this.Start());
         }
         private bool Start()
         {
+
+            if (this.Starting.ReadFullFence())
+                return false;
+
+            this.Starting.WriteFullFence(true);
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
@@ -638,6 +648,10 @@ namespace AITool
                 this.HasError = true;
                 Log("Error: Cannot start: " + Global.ExMsg(ex));
             }
+            finally
+            {
+                this.Starting.WriteFullFence(false);
+            }
 
             return Ret;
 
@@ -861,6 +875,17 @@ namespace AITool
         public async Task<bool> StopAsync()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            return await Task.Run(() => this.Stop());
+        }
+        public bool Stop()
+        {
+
+            if (this.Stopping.ReadFullFence())
+                return false;
+
+            this.Stopping.WriteFullFence(true);
+
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool Ret = false;
             bool err = false;
@@ -876,8 +901,10 @@ namespace AITool
                 {
                     try
                     {
-                        await Task.Run(() => this.PythonProc.process.Kill());
-                        await Task.Delay(100);
+                        Log($"Debug: Stopping {this.PythonEXE}...");
+                        this.PythonProc.process.Kill();
+                        Log($"Debug: Stopped {this.PythonEXE}");
+                        Thread.Sleep(100);
                         this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
                     }
                     catch (Exception ex)
@@ -897,7 +924,15 @@ namespace AITool
             try
             {
                 if (Global.ProcessValid(this.RedisProc))
-                    await Task.Run(() => this.RedisProc.process.Kill());
+                {
+                    Log($"Debug: Stopping {this.RedisEXE}...");
+                    this.RedisProc.process.Kill();
+                    Log($"Debug: Stopped {this.RedisEXE}");
+                }
+                else
+                {
+                    Log($"Debug: Not running? {this.RedisEXE}?");
+                }
             }
             catch (Exception ex)
             {
@@ -907,7 +942,15 @@ namespace AITool
             try
             {
                 if (Global.ProcessValid(this.ServerProc))
-                    await Task.Run(() => this.ServerProc.process.Kill());
+                {
+                    Log($"Debug: Stopping {this.ServerEXE}...");
+                    this.ServerProc.process.Kill();
+                    Log($"Debug: Stopped {this.ServerEXE}");
+                }
+                else
+                {
+                    Log($"Debug: Not running? {this.ServerEXE}?");
+                }
             }
             catch (Exception ex)
             {
@@ -917,7 +960,11 @@ namespace AITool
             try
             {
                 if (Global.ProcessValid(this.DeepStackProc))
-                    await Task.Run(() => this.DeepStackProc.process.Kill());
+                {
+                    Log($"Debug: Stopping {this.DeepStackEXE}...");
+                    this.DeepStackProc.process.Kill();
+                    Log($"Debug: Stopped {this.DeepStackEXE}");
+                }
             }
             catch (Exception ex)
             {
@@ -926,7 +973,7 @@ namespace AITool
             }
 
             //takes a while for other python.exe processes to fully stop
-            await Task.Delay(250);
+            Thread.Sleep(250);
 
             if (!err)
             {
@@ -943,6 +990,8 @@ namespace AITool
                 Log("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
             }
 
+
+            this.Stopping.WriteFullFence(false);
 
             this.HasError = !Ret;
             return Ret;

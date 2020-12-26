@@ -2955,13 +2955,12 @@ namespace AITool
         }
 
         //ask before closing AI Tool to prevent accidentally closing
-        private void Shell_FormClosing(object sender, FormClosingEventArgs e)
+        private async void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             Log($"------Closing------- CloseReason: {e.CloseReason}");
 
-            IsClosing.WriteFullFence(true);
 
             try
             {
@@ -2995,6 +2994,11 @@ namespace AITool
                 Global_GUI.SaveWindowState(this);
 
                 AppSettings.SaveAsync();  //save settings in any case
+
+                //if (AITOOL.DeepStackServerControl.IsInstalled && AITOOL.DeepStackServerControl.IsStarted && AppSettings.Settings.deepstack_autostart)
+                //    await AITOOL.DeepStackServerControl.StopAsync();
+
+                IsClosing.WriteFullFence(true);
 
                 if (!AppSettings.AlreadyRunning)
                     Global.SaveSetting("LastShutdownState", "graceful shutdown");

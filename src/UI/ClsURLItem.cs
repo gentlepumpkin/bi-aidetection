@@ -63,17 +63,7 @@ namespace AITool
             this.ErrCount.AtomicIncrementAndGet();
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as ClsURLItem);
-        }
-
-        public bool Equals(ClsURLItem other)
-        {
-            return other != null &&
-                   string.Equals(url, other.url, StringComparison.OrdinalIgnoreCase);
-        }
-
+       
         [JsonConstructor]
         public ClsURLItem() { }
 
@@ -281,6 +271,21 @@ namespace AITool
         public static bool operator !=(ClsURLItem left, ClsURLItem right)
         {
             return !(left == right);
+
+
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ClsURLItem);
+        }
+
+        public bool Equals(ClsURLItem other)
+        {
+            return other != null &&
+                   string.Equals(this.url, other.url, StringComparison.OrdinalIgnoreCase) &&
+                   this.Type == other.Type;
+        }
+
     }
 }
