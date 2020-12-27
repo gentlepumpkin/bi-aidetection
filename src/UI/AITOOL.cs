@@ -203,6 +203,11 @@ namespace AITool
                 //allows for stopping and starting of its service
                 DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
 
+                if (DeepStackServerControl.IsInstalled && AppSettings.Settings.deepstack_autostart)
+                {
+                    Global.UpdateProgressBar("Starting Deepstack...", 1, 1, 1);
+                    await DeepStackServerControl.StartAsync();
+                }
 
                 //Load the database, and migrate any old csv lines if needed
                 HistoryDB = new SQLiteHistory(AppSettings.Settings.HistoryDBFileName, AppSettings.AlreadyRunning);
@@ -447,7 +452,10 @@ namespace AITool
 
                     for (int i = 0; i < sorted.Count; i++)
                     {
-                        if (sorted[i].Enabled.ReadFullFence())
+                        if (!sorted[i].Enabled.ReadFullFence())
+                            continue;
+
+                        if (!sorted[i].ErrDisabled.ReadFullFence())
                         {
                             if (!sorted[i].InUse.ReadFullFence())
                             {
@@ -520,7 +528,7 @@ namespace AITool
                             if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
                             {
                                 //check to see if can be re-enabled yet
-                                sorted[i].Enabled.WriteFullFence(true);
+                                sorted[i].ErrDisabled.WriteFullFence(false);
                                 sorted[i].CurErrCount.WriteFullFence(0);
                                 sorted[i].InUse.WriteFullFence(false);
                                 Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
@@ -550,8 +558,8 @@ namespace AITool
                     LastWaitingLog = DateTime.Now;
                 }
 
-                //wait quarter a second for other url's to become available
-                await Task.Delay(250);
+                //short wait
+                await Task.Delay(50);
 
             }
 

@@ -3155,6 +3155,7 @@ namespace AITool
                 {
                     lbl_deepstackname.Text = DeepStackServerControl.DisplayName;
                     lbl_Deepstackversion.Text = DeepStackServerControl.DisplayVersion;
+                    lbl_DeepstackType.Text = DeepStackServerControl.Type.ToString();
 
                     if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                     {

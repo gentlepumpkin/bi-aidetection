@@ -40,6 +40,8 @@ namespace AITool
         public int CurOrder { get; set; } = 0;
         [JsonIgnore]
         public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
+        [JsonIgnore]
+        public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
         public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
