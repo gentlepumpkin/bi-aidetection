@@ -572,6 +572,12 @@ namespace AITool
                     foreach (Camera cam in Settings.CameraList)
                     {
 
+                        if (string.IsNullOrEmpty(cam.BICamName))
+                            cam.BICamName = cam.Name;
+
+                        if (string.IsNullOrEmpty(cam.MaskFileName))
+                            cam.MaskFileName = $"{cam.Name}.bmp";
+
                         if (cam.cooldown_time > -1)
                         {
                             cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));
@@ -581,7 +587,7 @@ namespace AITool
                         if (cam.maskManager == null)
                         {
                             cam.maskManager = new MaskManager();
-                            Log("Warning: Had to reset MaskManager for camera " + cam.name);
+                            Log("Warning: Had to reset MaskManager for camera " + cam.Name);
                         }
 
                         //update threshold in all masks if changed during session
@@ -646,11 +652,11 @@ namespace AITool
                             bool fnd = false;
                             foreach (Camera c in AppSettings.Settings.CameraList)
                             {
-                                if (string.Equals(c.name, Path.GetFileNameWithoutExtension(file.FullName), StringComparison.OrdinalIgnoreCase))
+                                if (string.Equals(c.Name, Path.GetFileNameWithoutExtension(file.FullName), StringComparison.OrdinalIgnoreCase))
                                 {
                                     fnd = true;
                                 }
-                                else if (string.Equals(c.prefix, System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1], StringComparison.OrdinalIgnoreCase))
+                                else if (string.Equals(c.Prefix, System.IO.File.ReadAllLines(file.FullName)[2].Split('"')[1], StringComparison.OrdinalIgnoreCase))
                                 {
                                     fnd = true;
                                 }
@@ -683,7 +689,7 @@ namespace AITool
                     }
 
                     //sort the camera list:
-                    AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.name).ToList();
+                    AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.Name).ToList();
 
                     AITOOL.UpdateAIURLList(true);
 

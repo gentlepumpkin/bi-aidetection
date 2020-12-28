@@ -124,7 +124,7 @@ namespace AITool
                     else
                     {
                         //extra debugging
-                        Log($" >No CAM.last_image_file_with_detections for '{this.cam.name}'");
+                        Log($" >No CAM.last_image_file_with_detections for '{this.cam.Name}'");
                     }
 
 
@@ -146,12 +146,12 @@ namespace AITool
                     else
                     {
                         //extra debugging
-                        Log($" >No CAM.last_image_file for '{this.cam.name}'");
+                        Log($" >No CAM.last_image_file for '{this.cam.Name}'");
                     }
 
                     //try to use the LastCamImages version
                     string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
-                    string file = Path.Combine(fldr, $"{cam.name}-Last.jpg");
+                    string file = Path.Combine(fldr, $"{cam.Name}-Last.jpg");
 
                     if (File.Exists(file))
                     {
@@ -177,18 +177,18 @@ namespace AITool
                     //I expect this may take a few seconds if folder is huge
                     DirectoryInfo dirinfo = new DirectoryInfo(lastfolder);
                     FileInfo myFile;
-                    if (this.cam != null && !string.IsNullOrEmpty(this.cam.prefix))
+                    if (this.cam != null && !string.IsNullOrEmpty(this.cam.Prefix))
                     {
-                        myFile = dirinfo.GetFiles($"{this.cam.prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
+                        myFile = dirinfo.GetFiles($"{this.cam.Prefix.Trim()}*.jpg").OrderByDescending(f => f.LastWriteTime).First();
                         if (myFile != null)
                         {
-                            Log($" (Found most recent image in camera folder for prefix '{this.cam.prefix}' (no detections): {myFile.FullName})");
+                            Log($" (Found most recent image in camera folder for prefix '{this.cam.Prefix}' (no detections): {myFile.FullName})");
                             return myFile.FullName;
                         }
                         else
                         {
                             //extra debugging
-                            Log($" >No files found starting with '{this.cam.prefix}' in {lastfolder}'");
+                            Log($" >No files found starting with '{this.cam.Prefix}' in {lastfolder}'");
                         }
 
                     }

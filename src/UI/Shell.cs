@@ -2081,7 +2081,7 @@ namespace AITool
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
                     //Add loaded camera to list2
-                    ListViewItem item = new ListViewItem(new string[] { cam.name });
+                    ListViewItem item = new ListViewItem(new string[] { cam.Name });
                     if (!cam.enabled)
                     {
                         item.ForeColor = System.Drawing.Color.Gray;
@@ -2089,17 +2089,17 @@ namespace AITool
                     //item.Tag = file; //tag is not used anywhere I can see
                     this.list2.Items.Add(item);
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
-                    this.comboBox1.Items.Add($"   {cam.name}");
-                    this.comboBox_filter_camera.Items.Add($"   {cam.name}");
-                    if (string.Equals(oldnamecameras.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
+                    this.comboBox1.Items.Add($"   {cam.Name}");
+                    this.comboBox_filter_camera.Items.Add($"   {cam.Name}");
+                    if (string.Equals(oldnamecameras.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxcameras = i;
                     }
-                    if (string.Equals(oldnamefilters.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(oldnamefilters.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxfilters = i + 1;
                     }
-                    if (string.Equals(oldnamestats.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(oldnamestats.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxstats = i + 1;
                     }
@@ -2165,15 +2165,15 @@ namespace AITool
             //check if camera with specified name already exists. If yes, then abort.
             foreach (Camera c in AppSettings.Settings.CameraList)
             {
-                if (string.Equals(c.name.Trim(), cam.name.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(c.Name.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show($"ERROR: Camera name must be unique,{cam.name} already exists.");
-                    return ($"ERROR: Camera name must be unique,{cam.name} already exists.");
+                    MessageBox.Show($"ERROR: Camera name must be unique,{cam.Name} already exists.");
+                    return ($"ERROR: Camera name must be unique,{cam.Name} already exists.");
                 }
             }
 
             //check if name is empty
-            if (cam.name == "")
+            if (cam.Name == "")
             {
                 MessageBox.Show($"ERROR: Camera name may not be empty.");
                 return ($"ERROR: Camera name may not be empty.");
@@ -2193,11 +2193,15 @@ namespace AITool
             cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
             cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
 
+            cam.BICamName = cam.Name;
+
+            cam.MaskFileName = $"{cam.Name}.bmp";
+
             AppSettings.Settings.CameraList.Add(cam); //add created camera object to CameraList
 
             this.LoadCameras();
 
-            return ($"SUCCESS: {cam.name} created.");
+            return ($"SUCCESS: {cam.Name} created.");
         }
 
 
@@ -2210,7 +2214,7 @@ namespace AITool
             Log($"Removing camera {name}...");
             if (this.list2.Items.Count > 0) //if list is empty, nothing can be deleted
             {
-                if (AppSettings.Settings.CameraList.Exists(x => string.Equals(x.name, name, StringComparison.OrdinalIgnoreCase))) //check if camera with specified name exists in list
+                if (AppSettings.Settings.CameraList.Exists(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))) //check if camera with specified name exists in list
                 {
 
                     //find index of specified camera in list
@@ -2219,7 +2223,7 @@ namespace AITool
                     //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
                     for (int i = 0; i < AppSettings.Settings.CameraList.Count; i++)
                     {
-                        if (AppSettings.Settings.CameraList[i].name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                        if (AppSettings.Settings.CameraList[i].Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                         {
                             index = i;
 
@@ -2298,6 +2302,10 @@ namespace AITool
                 //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
                 Camera cam = AITOOL.GetCamera(this.tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
 
+                this.tbBiCamName.Text = cam.BICamName;
+
+                this.tbCustomMaskFile.Text = cam.MaskFileName;
+
                 //load cameras stats
 
                 string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
@@ -2317,7 +2325,7 @@ namespace AITool
                 {
                     this.cb_enabled.Checked = false;
                 }
-                this.tbPrefix.Text = cam.prefix; //load 'input file begins with'
+                this.tbPrefix.Text = cam.Prefix; //load 'input file begins with'
                 this.lbl_prefix.Text = this.tbPrefix.Text + ".××××××.jpg"; //prefix live preview
 
                 this.cmbcaminput.Text = cam.input_path;
@@ -2498,6 +2506,8 @@ namespace AITool
                     }
                     else
                     {
+                        //update the mask filename
+                        CamCheck.MaskFileName = $"{CamCheck.Name}.bmp";
                         Log($"SUCCESS: Camera {this.list2.SelectedItems[0].Text} was updated to {this.tbName.Text}.");
                     }
                 }
@@ -2554,9 +2564,9 @@ namespace AITool
                 cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
                 cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                if (cam.name != this.tbName.Text.Trim())
+                if (cam.Name != this.tbName.Text.Trim())
                 {
-                    string Oldmaskfile = GetMaskFile(cam.name);
+                    string Oldmaskfile = GetMaskFile(cam);
                     if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
                     {
                         string ext = Path.GetExtension(Oldmaskfile);
@@ -2564,10 +2574,13 @@ namespace AITool
                         string NewMaskFile = Path.Combine(pth, this.tbName.Text.Trim() + ext);
                         File.Move(Oldmaskfile, NewMaskFile);
                     }
-                    cam.name = this.tbName.Text.Trim();  //just in case we needed to rename it
+                    cam.Name = this.tbName.Text.Trim();  //just in case we needed to rename it
                 }
 
-                cam.prefix = this.tbPrefix.Text.Trim();
+                cam.BICamName = this.tbBiCamName.Text.Trim();
+                cam.MaskFileName = this.tbCustomMaskFile.Text.Trim();
+
+                cam.Prefix = this.tbPrefix.Text.Trim();
                 cam.enabled = this.cb_enabled.Checked;
                 cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
                 cam.input_path = this.cmbcaminput.Text.Trim();
@@ -2583,8 +2596,8 @@ namespace AITool
                     {
                         foreach (Camera ccam in AppSettings.Settings.CameraList)
                         {
-                            if (ccam.name != cam.name)
-                                frm.checkedListBoxCameras.Items.Add(ccam.name, false);
+                            if (ccam.Name != cam.Name)
+                                frm.checkedListBoxCameras.Items.Add(ccam.Name, false);
                         }
 
                         if (frm.ShowDialog() == DialogResult.OK)
@@ -2598,7 +2611,10 @@ namespace AITool
                                     {
                                         ccnt++;
 
-                                        Log($"Updating camera '{cam.name}' with settings from '{icam.name}'...");
+                                        Log($"Updating camera '{cam.Name}' with settings from '{icam.Name}'...");
+
+                                        icam.BICamName = cam.BICamName;
+                                        
 
                                         if (frm.cb_apply_confidence_limits.Checked)
                                         {
@@ -2621,6 +2637,7 @@ namespace AITool
                                             icam.telegram_enabled = cam.telegram_enabled;
                                             icam.telegram_caption = cam.telegram_caption;
                                             icam.telegram_chatid = cam.telegram_chatid;
+
                                             icam.Action_image_copy_enabled = cam.Action_image_copy_enabled;
                                             icam.Action_network_folder = cam.Action_network_folder;
                                             icam.Action_network_folder_filename = cam.Action_network_folder_filename;
@@ -2655,6 +2672,7 @@ namespace AITool
                                             icam.maskManager.ScaleConfig.MediumObjectMaxPercent = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
                                             icam.maskManager.ScaleConfig.SmallObjectMatchPercent = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
                                             icam.maskManager.ScaleConfig.SmallObjectMaxPercent = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
+                                            
                                         }
 
                                     }
@@ -3320,7 +3338,7 @@ namespace AITool
             {
                 Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
                 frm.cam = cam;
-                frm.Text = "Dynamic Masking Settings - " + cam.name;
+                frm.Text = "Dynamic Masking Settings - " + cam.Name;
 
                 //Merge ClassObject's code
                 frm.num_history_mins.Value = cam.maskManager.HistorySaveMins;//load minutes to retain history objects that have yet to become masks
@@ -3975,7 +3993,7 @@ namespace AITool
                 if (!cam.telegram_enabled)
                 {
                     cam.telegram_enabled = true;
-                    Log($"Enabled Telegram on camera '{cam.name}'.");
+                    Log($"Enabled Telegram on camera '{cam.Name}'.");
                 }
             }
             AppSettings.SaveAsync();
@@ -3988,7 +4006,7 @@ namespace AITool
                 if (cam.telegram_enabled)
                 {
                     cam.telegram_enabled = false;
-                    Log($"Disabled Telegram on camera '{cam.name}'.");
+                    Log($"Disabled Telegram on camera '{cam.Name}'.");
                 }
             }
             AppSettings.SaveAsync();

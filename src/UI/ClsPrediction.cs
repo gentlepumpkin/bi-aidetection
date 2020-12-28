@@ -68,13 +68,13 @@ namespace AITool
             this._cam = cam;
             this._cururl = curURL;
             this._curimg = curImg;
-            this.Camera = cam.name;
+            this.Camera = cam.Name;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Name))
             {
-                Log("Error: Prediction or Camera was null?", "", this._cam.name);
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
                 this.Result = ResultType.Error;
                 return;
             }
@@ -125,13 +125,13 @@ namespace AITool
             this._cururl = curURL;
 
             //this._imageObject = AiDetectionObject;
-            this.Camera = cam.name;
+            this.Camera = cam.Name;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.label))
             {
-                Log("Error: Prediction or Camera was null?", "", this._cam.name);
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
                 this.Result = ResultType.Error;
                 return;
             }
@@ -158,13 +158,13 @@ namespace AITool
             this._cururl = curURL;
 
             //this._imageObject = AiDetectionObject;
-            this.Camera = cam.name;
+            this.Camera = cam.Name;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Label))
             {
-                Log("Error: Prediction or Camera was null?", "", this._cam.name);
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
                 this.Result = ResultType.Error;
                 return;
             }
@@ -235,7 +235,7 @@ namespace AITool
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
                                 //only if the object is outside of the masked area
-                                result = AITOOL.Outsidemask(this._cam.name, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
+                                result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
                                 this.ImgMaskResult = result.Result;
                                 this.ImgMaskType = result.MaskType;
                                 this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
@@ -260,7 +260,7 @@ namespace AITool
                                     if (this._cam.maskManager.MaskingEnabled)
                                     {
                                         ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
-                                                                                          this._curimg.Width, this._curimg.Height, this._cam.name, this._curimg.image_path);
+                                                                                          this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
                                         //creates history and masked lists for objects returned
                                         result = this._cam.maskManager.CreateDynamicMask(currentObject);
                                         this.DynMaskResult = result.Result;
@@ -280,7 +280,7 @@ namespace AITool
                                 if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
                                 {
                                     this.Result = ResultType.Error;
-                                    Log($"Error: Masking error? '{this._cam.name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.name, this._curimg.image_path);
+                                    Log($"Error: Masking error? '{this._cam.Name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.Name, this._curimg.image_path);
                                 }
 
                             }
@@ -298,21 +298,21 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Error: Camera does not have any objects enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, this._curimg.image_path);
+                        Log($"Error: Camera does not have any objects enabled '{this._cam.Name}' ('{this.Label}')", "", this._cam.Name, this._curimg.image_path);
                         this.Result = ResultType.Error;
                     }
 
                 }
                 else
                 {
-                    Log($"Debug: Camera not enabled '{this._cam.name}' ('{this.Label}')", "", this._cam.name, this._curimg.image_path);
+                    Log($"Debug: Camera not enabled '{this._cam.Name}' ('{this.Label}')", "", this._cam.Name, this._curimg.image_path);
                     this.Result = ResultType.CameraNotEnabled;
                 }
 
             }
             catch (Exception ex)
             {
-                Log($"Error: Label '{this.Label}', Camera '{this._cam.name}': {Global.ExMsg(ex)}", "", this._cam.name, this._curimg.image_path);
+                Log($"Error: Label '{this.Label}', Camera '{this._cam.Name}': {Global.ExMsg(ex)}", "", this._cam.Name, this._curimg.image_path);
                 this.Result = ResultType.Error;
             }
 

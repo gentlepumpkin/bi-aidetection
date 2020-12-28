@@ -257,7 +257,7 @@ namespace AITool
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
             Global_GUI.RestoreWindowState(this);
-            this._maskfilename = AITOOL.GetMaskFile(this.Cam.name);
+            this._maskfilename = AITOOL.GetMaskFile(this.Cam.Name);
             this.Text = "Custom Masking - " + this._maskfilename;
 
             if (!File.Exists(this._maskfilename))

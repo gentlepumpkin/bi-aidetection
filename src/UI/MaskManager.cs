@@ -84,7 +84,7 @@ namespace AITool
                     op.PercentMatch = this.PercentMatch;
 
                     //update the camera name since it could have been renamed since the mask was created
-                    op.CameraName = cam.name;
+                    op.CameraName = cam.Name;
 
                     //update last seen date if hasnt been set
                     if (op.LastSeenDate == DateTime.MinValue)
@@ -114,7 +114,7 @@ namespace AITool
                     op.PercentMatch = this.PercentMatch;
 
                     //update the camera name since it could have been renamed since the mask was created
-                    op.CameraName = cam.name;
+                    op.CameraName = cam.Name;
 
                     //update last seen date if hasnt been set
                     if (op.LastSeenDate == DateTime.MinValue)

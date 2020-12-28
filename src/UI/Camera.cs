@@ -27,8 +27,10 @@ namespace AITool
     }
     public class Camera
     {
-        public string name = "";
-        public string prefix = "";
+        public string Name = "";
+        public string Prefix = "";
+        public string BICamName = "";
+        public string MaskFileName = "";
         public string triggering_objects_as_string = "Person";
         public string additional_triggering_objects_as_string = "Spiny Lumpsucker, Pink Fairy Armadillo, Tasselled Wobbegong";
         public string[] triggering_objects = new string[0];
@@ -119,8 +121,8 @@ namespace AITool
         public Camera(string Name = "")
         {
 
-            this.name = Name;
-            this.prefix = Name;
+            this.Name = Name;
+            this.Prefix = Name;
         }
 
         public void ReadConfig(string config_path)
@@ -129,8 +131,8 @@ namespace AITool
             string[] content = System.IO.File.ReadAllLines(config_path);
 
             //import config data into variables, cut out relevant data between " "
-            this.name = Path.GetFileNameWithoutExtension(config_path);
-            this.prefix = content[2].Split('"')[1];
+            this.Name = Path.GetFileNameWithoutExtension(config_path);
+            this.Prefix = content[2].Split('"')[1];
 
             //read triggering objects
             this.triggering_objects_as_string = content[1].Split('"')[1].Replace(" ", ""); //take the second line, split it between every ", take the part after the first ", remove every " " in this part
