@@ -12,6 +12,7 @@ namespace AITool
         DeepStack,
         DOODS,
         AWSRekognition,
+        SightHound,
         Other,
         Unknown
     }
@@ -87,6 +88,11 @@ namespace AITool
                     this.DefaultURL = "Amazon";
                     url = this.DefaultURL;
                 }
+                else if (type == URLTypeEnum.SightHound) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+                {
+                    this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections";
+                    url = this.DefaultURL;
+                }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     this.DefaultURL = "http://127.0.0.1:80/v1/vision/detection";
@@ -151,6 +157,33 @@ namespace AITool
                     this.Enabled.WriteFullFence(false);
                 }
 
+            }
+            else if (this.Type == URLTypeEnum.SightHound || this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                this.MaxImagesPerMonth = 5000;
+
+                this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections";
+                this.HelpURL = "https://accounts.sighthound.com/#/sighthound-cloud";
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "https://" + this.url;
+                }
+                this.Type = URLTypeEnum.SightHound;
+                if (!(this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/v1/detections";
+                }
+
+                Uri uri = new Uri(this.url);
+                this.CurSrv = uri.Host + ":" + uri.Port;
+                this.Port = uri.Port;
+                this.IsLocalHost = false;
+                this.HttpClient = new HttpClient();
+                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.IsValid = true;
+                this.Enabled.WriteFullFence(true);
             }
             else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
             {

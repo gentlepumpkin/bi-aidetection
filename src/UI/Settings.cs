@@ -139,6 +139,8 @@ namespace AITool
             public int AmazonMaxLabels = 15;
             public int AmazonMinConfidence = 25;
 
+            public string SightHoundAPIKey = "";   //https://accounts.sighthound.com/#/sighthound-cloud
+
             public int ActionCancelSeconds = 30;
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();

@@ -3,6 +3,7 @@ using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using Amazon.Runtime;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using OSVersionExtension;
@@ -24,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace AITool
@@ -262,6 +264,119 @@ namespace AITool
                 TmpHistQueue.Enqueue(new ClsLogItm(null, DateTime.Now, Source, memberName, AIServer, Camera, Image, Detail, 0, Depth, "", 0));
                 //Console.WriteLine($"Error: Wrote to log before initialized? '{Detail}'");
             }
+        }
+
+        public static void UpdateAIURLs()
+        {
+            
+            
+            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            {
+                string error = AITOOL.UpdateAmazonSettings();
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    AITOOL.Log($"Error: {error}");
+
+                    if (error.IndexOf("endpoint", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        //hardcode the list for now:  https://docs.aws.amazon.com/general/latest/gr/rande.html
+                        List<string> endpoints = new List<string>();
+                        endpoints.Add("US East (N. Virginia)  \tus-east-1");
+                        endpoints.Add("US East (Ohio)  \tus-east-2");
+                        endpoints.Add("US West (N. California)  \tus-west-1");
+                        endpoints.Add("US West (Oregon)  \tus-west-2");
+                        endpoints.Add("Canada (Central)  \tca-central-1");
+                        endpoints.Add("Europe (London)  \teu-west-2");
+                        endpoints.Add("Europe (Frankfurt)  \teu-central-1");
+                        endpoints.Add("Europe (Ireland)  \teu-west-1");
+                        endpoints.Add("Europe (Milan)  \teu-south-1");
+                        endpoints.Add("Europe (Paris)  \teu-west-3");
+                        endpoints.Add("Europe (Stockholm)  \teu-north-1");
+                        endpoints.Add("Africa (Cape Town)  \taf-south-1");
+                        endpoints.Add("Middle East (Bahrain)  \tme-south-1");
+                        endpoints.Add("South America (São Paulo)  \tsa-east-1");
+                        endpoints.Add("China (Beijing)  \tcn-north-1");
+                        endpoints.Add("China (Ningxia)  \tcn-northwest-1");
+                        endpoints.Add("Asia Pacific (Hong Kong)  \tap-east-1");
+                        endpoints.Add("Asia Pacific (Mumbai)  \tap-south-1");
+                        endpoints.Add("Asia Pacific (Osaka-Local)  \tap-northeast-3");
+                        endpoints.Add("Asia Pacific (Seoul)  \tap-northeast-2");
+                        endpoints.Add("Asia Pacific (Singapore)  \tap-southeast-1");
+                        endpoints.Add("Asia Pacific (Sydney)  \tap-southeast-2");
+                        endpoints.Add("Asia Pacific (Tokyo)  \tap-northeast-1");
+
+                        using (var form = new InputForm("Select Amazon AWS endpoint near you:", "Amazon AWS Endpoint", cbitems: endpoints))
+                        {
+                            var result = form.ShowDialog();
+                            if (result == DialogResult.OK)
+                            {
+                                string region = "";
+                                if (!string.IsNullOrEmpty(form.text))
+                                {
+                                    if (form.text.Contains("\t"))
+                                    {
+                                        region = Global.GetWordBetween(form.text, "\t", "").Trim();
+                                    }
+                                    else if (form.text.Contains("-"))
+                                    {
+                                        region = form.text.Trim();
+                                    }
+
+                                }
+                                if (string.IsNullOrEmpty(region))
+                                {
+                                    MessageBox.Show($"Error: No endpoint selected '{form.text}'");
+                                }
+                                else
+                                {
+                                    AppSettings.Settings.AmazonRegionEndpoint = region;
+                                }
+                            }
+                        }
+                    }
+
+                    error = AITOOL.UpdateAmazonSettings();
+
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        AITOOL.Log($"Error: {error}");
+                        if (error.IndexOf("rootkey", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            MessageBox.Show(error, "Missing AWS credentials", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+
+                }
+            }
+            
+            if (AppSettings.GetURL(type: URLTypeEnum.SightHound) != null)
+            {
+                if (string.IsNullOrWhiteSpace(AppSettings.Settings.SightHoundAPIKey))
+                {
+                    using (var form = new InputForm("Enter SightHound API Key", "SightHound API Key"))
+                    {
+                        var result = form.ShowDialog();
+                        if (result == DialogResult.OK)
+                        {
+                            if (!string.IsNullOrEmpty(form.text) && form.text.Trim().Length > 30) //It looks like they are 36 chars
+                            {
+                                AppSettings.Settings.SightHoundAPIKey = form.text.Trim();
+                            }
+                            else
+                            {
+                                MessageBox.Show("Enter a valid key.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            //let the image loop (running in another thread) know to recheck ai server url settings.
+            //AIURLSettingsChanged.WriteFullFence(true);
+
+            AITOOL.UpdateAIURLList(true);
+
         }
 
         public static string UpdateAmazonSettings()
@@ -540,6 +655,12 @@ namespace AITool
                                 sorted[i].ErrDisabled.WriteFullFence(false);
                                 sorted[i].CurErrCount.WriteFullFence(0);
                                 sorted[i].InUse.WriteFullFence(false);
+                                if (sorted[i].HttpClient != null)
+                                {
+                                    sorted[i].HttpClient.Dispose();
+                                    sorted[i].HttpClient = new HttpClient();
+                                    sorted[i].HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                                }
                                 Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
                                 ret = sorted[i];
                                 ret.CurOrder = i + 1;
@@ -1349,7 +1470,7 @@ namespace AITool
                     Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.Name, CurImg.image_path);
 
                     swposttime.Restart();
-
+                    
                     using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(AiUrl.ToString(), request, MasterCTS.Token);
 
                     swposttime.Stop();
@@ -1459,6 +1580,162 @@ namespace AITool
                 }
 
             }
+
+            //==============================================================================================================
+            //==============================================================================================================
+            //==============================================================================================================
+
+            else if (AiUrl.Type == URLTypeEnum.SightHound)
+            {
+                
+                if (string.IsNullOrEmpty(AppSettings.Settings.SightHoundAPIKey))
+                {
+                    ret.Success = false;
+                    ret.Error = $"ERROR: No SightHound API key set. (SightHoundAPIKey in AITOOL.SETTINGS.JSON).'";
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
+                    return ret;
+                }
+
+                //Stopwatch swposttime = new Stopwatch();
+
+                //try
+                //{
+                //    long FileSize = new FileInfo(CurImg.image_path).Length;
+
+
+                //    Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
+                //    dict.Add("image", CurImg.ImageByteArray);
+                //    string json = JsonConvert.SerializeObject((object)dict);
+                //    byte[] body = Encoding.UTF8.GetBytes(json);
+
+                //    WebRequest request = WebRequest.Create("https://dev.sighthoundapi.com/v1/detections?type=face,person&faceOption=landmark,gender");
+                //    request.Method = "POST";
+                //    request.ContentType = "application/json";
+                //    request.ContentLength = json.Length;
+                //    request.Headers["X-Access-Token"] = AppSettings.Settings.SightHoundAPIKey;
+
+                //    using (Stream requestStream = request.GetRequestStream())
+                //    {
+                //        requestStream.Write(body, 0, body.Length);
+                //    }
+
+                //    Log($"Debug: (1/6) Uploading a {FileSize} byte image ({body.Length} bytes in request) to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+
+                //    swposttime.Restart();
+
+                //    using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                                        
+                //    ret.StatusCode = response.StatusCode;
+
+                //    if (response.StatusCode == HttpStatusCode.OK)
+                //    {
+
+                //        using StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                //        ret.JsonString = reader.ReadToEnd();
+
+                //        swposttime.Stop();
+
+                //        if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
+                //        {
+                //            string cleanjsonString = Global.CleanString(ret.JsonString);
+
+                //            JObject result = JObject.Parse(ret.JsonString);
+
+                //            try
+                //            {
+                //                //This can throw an exception
+                //                response = JsonConvert.DeserializeObject<ClsDeepStackResponse>(ret.JsonString);
+
+                //                if (response != null)
+                //                {
+                //                    if (response.predictions != null)
+                //                    {
+                //                        if (!response.success)
+                //                        {
+                //                            ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
+                //                            AiUrl.IncrementError();
+                //                            AiUrl.LastResultMessage = ret.Error;
+                //                        }
+                //                        else
+                //                        {
+
+                //                            if (response.predictions.Count() > 0)
+                //                            {
+
+                //                                foreach (ClsDeepstackDetection DSObj in response.predictions)
+                //                                {
+                //                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
+
+                //                                    ret.Predictions.Add(pred);
+
+                //                                }
+
+
+                //                            }
+
+                //                            ret.Success = true;
+                //                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+
+                //                        }
+
+                //                    }
+                //                    else
+                //                    {
+                //                        ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
+                //                        AiUrl.IncrementError();
+                //                        AiUrl.LastResultMessage = ret.Error;
+                //                    }
+
+
+                //                }
+                //                else if (string.IsNullOrEmpty(ret.Error))
+                //                {
+                //                    //deserialization did not cause exception, it just gave a null response in the object?
+                //                    //probably wont happen but just making sure
+                //                    ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                //                    AiUrl.IncrementError();
+                //                    AiUrl.LastResultMessage = ret.Error;
+                //                }
+                //            }
+                //            catch (Exception ex)
+                //            {
+                //                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                //                AiUrl.IncrementError();
+                //                AiUrl.LastResultMessage = ret.Error;
+                //            }
+                //        }
+                //        else
+                //        {
+                //            ret.Error = $"ERROR: Empty string returned from HTTP post.";
+                //            AiUrl.IncrementError();
+                //            AiUrl.LastResultMessage = ret.Error;
+                //        }
+
+
+                //    }
+                //    else
+                //    {
+                //        ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
+                //        AiUrl.IncrementError();
+                //        AiUrl.LastResultMessage = ret.Error;
+                //    }
+
+                //}
+                //catch (Exception ex)
+                //{
+                //    swposttime.Stop();
+
+                //    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                //    AiUrl.IncrementError();
+                //    AiUrl.LastResultMessage = ret.Error;
+                //}
+                //finally
+                //{
+                //    ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                //}
+            }
+
             //==============================================================================================================
             //==============================================================================================================
             //==============================================================================================================
@@ -1667,7 +1944,7 @@ namespace AITool
                             if (response.Labels.Count() > 0)
                             {
 
-                                foreach (Label lbl in response.Labels)
+                                foreach (Amazon.Rekognition.Model.Label lbl in response.Labels)
                                 {
                                     //not sure if there will ever be more than one instance
                                     for (int i = 0; i < lbl.Instances.Count; i++)

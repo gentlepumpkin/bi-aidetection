@@ -108,6 +108,8 @@ namespace AITool
                 this.CurURL = url;
                 AppSettings.Settings.AIURLList.Add(url);
                 Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+                AITOOL.UpdateAIURLs();
+
             }
             else
             {
@@ -255,6 +257,23 @@ namespace AITool
         private void toolStripSplitButtonAdd_ButtonClick(object sender, EventArgs e)
         {
             toolStripSplitButtonAdd.ShowDropDown();
+        }
+
+        private void sightHoundAIServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound);
+            if (!AppSettings.Settings.AIURLList.Contains(url))
+            {
+                this.CurURL = url;
+                AppSettings.Settings.AIURLList.Add(url);
+                Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+                AITOOL.UpdateAIURLs();
+            }
+            else
+            {
+                MessageBox.Show("Already exists");
+            }
+            UpdateButtons();
         }
     }
 }

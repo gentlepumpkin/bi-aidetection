@@ -88,6 +88,7 @@ namespace AITool
         private void bt_Save_Click(object sender, EventArgs e)
         {
             this.Update();
+            AITOOL.UpdateAIURLs();
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -117,6 +118,9 @@ namespace AITool
 
         private async void btTest_Click(object sender, EventArgs e)
         {
+
+            AITOOL.UpdateAIURLs();
+
             string pth = Global.GetSetting("TestImage", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestImage.jpg"));
 
             OpenFileDialog ofd = new OpenFileDialog

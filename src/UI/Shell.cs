@@ -521,6 +521,14 @@ namespace AITool
                 this.HistoryStartStop();
 
             }
+            else if (msg.MessageType == MessageType.UpdateDeepstackStatus)
+            {
+
+                Log($"debug: Deepstack control message '{msg.Description}'");
+
+                LoadDeepStackTab();
+
+            }
             else if (msg.MessageType == MessageType.CreateHistoryItem)
             {
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
@@ -2609,7 +2617,7 @@ namespace AITool
                                         Log($"Updating camera '{cam.Name}' with settings from '{icam.Name}'...");
 
                                         icam.BICamName = cam.BICamName;
-                                        
+
 
                                         if (frm.cb_apply_confidence_limits.Checked)
                                         {
@@ -2667,7 +2675,7 @@ namespace AITool
                                             icam.maskManager.ScaleConfig.MediumObjectMaxPercent = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
                                             icam.maskManager.ScaleConfig.SmallObjectMatchPercent = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
                                             icam.maskManager.ScaleConfig.SmallObjectMaxPercent = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
-                                            
+
                                         }
 
                                     }
@@ -2777,94 +2785,7 @@ namespace AITool
         //SETTING TAB
         //----------------------------------------------------------------------------------------------------------
 
-        private void UpdateAIURLs()
-        {
-            if (AppSettings.GetURL(type:URLTypeEnum.AWSRekognition) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
-            {
-                string error = AITOOL.UpdateAmazonSettings();
-                
-                if (!string.IsNullOrEmpty(error))
-                {
-                    AITOOL.Log($"Error: {error}");
-
-                    if (error.IndexOf("endpoint", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        //hardcode the list for now:  https://docs.aws.amazon.com/general/latest/gr/rande.html
-                        List<string> endpoints = new List<string>();
-                        endpoints.Add("US East (N. Virginia)  \tus-east-1");
-                        endpoints.Add("US East (Ohio)  \tus-east-2");
-                        endpoints.Add("US West (N. California)  \tus-west-1");
-                        endpoints.Add("US West (Oregon)  \tus-west-2");
-                        endpoints.Add("Canada (Central)  \tca-central-1");
-                        endpoints.Add("Europe (London)  \teu-west-2");
-                        endpoints.Add("Europe (Frankfurt)  \teu-central-1");
-                        endpoints.Add("Europe (Ireland)  \teu-west-1");
-                        endpoints.Add("Europe (Milan)  \teu-south-1");
-                        endpoints.Add("Europe (Paris)  \teu-west-3");
-                        endpoints.Add("Europe (Stockholm)  \teu-north-1");
-                        endpoints.Add("Africa (Cape Town)  \taf-south-1");
-                        endpoints.Add("Middle East (Bahrain)  \tme-south-1");
-                        endpoints.Add("South America (São Paulo)  \tsa-east-1");
-                        endpoints.Add("China (Beijing)  \tcn-north-1");
-                        endpoints.Add("China (Ningxia)  \tcn-northwest-1");
-                        endpoints.Add("Asia Pacific (Hong Kong)  \tap-east-1");
-                        endpoints.Add("Asia Pacific (Mumbai)  \tap-south-1");
-                        endpoints.Add("Asia Pacific (Osaka-Local)  \tap-northeast-3");
-                        endpoints.Add("Asia Pacific (Seoul)  \tap-northeast-2");
-                        endpoints.Add("Asia Pacific (Singapore)  \tap-southeast-1");
-                        endpoints.Add("Asia Pacific (Sydney)  \tap-southeast-2");
-                        endpoints.Add("Asia Pacific (Tokyo)  \tap-northeast-1");
-
-                        using (var form = new InputForm("Select Amazon AWS endpoint near you:", "Amazon AWS Endpoint", cbitems: endpoints))
-                        {
-                            var result = form.ShowDialog();
-                            if (result == DialogResult.OK)
-                            {
-                                string region = "";
-                                if (!string.IsNullOrEmpty(form.text))
-                                {
-                                    if (form.text.Contains("\t"))
-                                    {
-                                        region = Global.GetWordBetween(form.text, "\t", "").Trim();
-                                    }
-                                    else if (form.text.Contains("-"))
-                                    {
-                                        region = form.text.Trim();
-                                    }
-
-                                }
-                                if (string.IsNullOrEmpty(region))
-                                {
-                                    MessageBox.Show($"Error: No endpoint selected '{form.text}'");
-                                }
-                                else
-                                {
-                                    AppSettings.Settings.AmazonRegionEndpoint = region;
-                                }
-                            }
-                        }
-                    }
-
-                    error = AITOOL.UpdateAmazonSettings();
-
-                    if (!string.IsNullOrEmpty(error))
-                    {
-                        AITOOL.Log($"Error: {error}");
-                        if (error.IndexOf("rootkey", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            MessageBox.Show(error, "Missing AWS credentials", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-
-                }
-            }
-
-            //let the image loop (running in another thread) know to recheck ai server url settings.
-            //AIURLSettingsChanged.WriteFullFence(true);
-
-            AITOOL.UpdateAIURLList(true);
-
-        }
+        
 
         //settings save button
         private async void BtnSettingsSave_Click_1(object sender, EventArgs e)
@@ -3065,7 +2986,8 @@ namespace AITool
 
                     if (DeepStackServerControl.IsActivated)
                     {
-                        MethodInvoker LabelUpdate = delegate { 
+                        MethodInvoker LabelUpdate = delegate
+                        {
                             this.Lbl_BlueStackRunning.Text = "*RUNNING*";
                             this.Lbl_BlueStackRunning.ForeColor = Color.Green;
 
@@ -3086,9 +3008,10 @@ namespace AITool
                 }
                 else
                 {
-                   if (DeepStackServerControl.Starting.ReadFullFence())
+                    if (DeepStackServerControl.Starting.ReadFullFence())
                     {
-                        MethodInvoker LabelUpdate = delegate {
+                        MethodInvoker LabelUpdate = delegate
+                        {
                             this.Lbl_BlueStackRunning.Text = "STARTING...";
                             this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
                         };
@@ -3098,7 +3021,8 @@ namespace AITool
                     }
                     else if (DeepStackServerControl.Stopping.ReadFullFence())
                     {
-                        MethodInvoker LabelUpdate = delegate {
+                        MethodInvoker LabelUpdate = delegate
+                        {
                             this.Lbl_BlueStackRunning.Text = "STOPPING...";
                             this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
                         };
@@ -3108,7 +3032,8 @@ namespace AITool
                     }
                     else
                     {
-                        MethodInvoker LabelUpdate = delegate {
+                        MethodInvoker LabelUpdate = delegate
+                        {
                             this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
                             this.Lbl_BlueStackRunning.ForeColor = Color.Black;
                         };
@@ -3209,7 +3134,8 @@ namespace AITool
                         if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
                         {
 
-                            MethodInvoker LabelUpdate = delegate { 
+                            MethodInvoker LabelUpdate = delegate
+                            {
                                 this.Lbl_BlueStackRunning.Text = "*RUNNING*";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.Green;
                             };
@@ -3238,10 +3164,11 @@ namespace AITool
                     }
                     else if (DeepStackServerControl.HasError)
                     {
-                        MethodInvoker LabelUpdate = delegate { 
+                        MethodInvoker LabelUpdate = delegate
+                        {
                             this.Lbl_BlueStackRunning.Text = "*ERROR*";
                             this.Lbl_BlueStackRunning.ForeColor = Color.Red;
-                                                             };
+                        };
                         this.Invoke(LabelUpdate);
 
                         this.Btn_Start.Enabled = true;
@@ -3251,27 +3178,32 @@ namespace AITool
                     {
                         if (DeepStackServerControl.Starting.ReadFullFence())
                         {
-                            MethodInvoker LabelUpdate = delegate {
+                            MethodInvoker LabelUpdate = delegate
+                            {
                                 this.Lbl_BlueStackRunning.Text = "STARTING...";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
                             };
+                            this.Invoke(LabelUpdate);
                             this.Btn_Start.Enabled = false;
                             this.Btn_Stop.Enabled = true;
 
                         }
                         else if (DeepStackServerControl.Stopping.ReadFullFence())
                         {
-                            MethodInvoker LabelUpdate = delegate {
+                            MethodInvoker LabelUpdate = delegate
+                            {
                                 this.Lbl_BlueStackRunning.Text = "STOPPING...";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
                             };
+                            this.Invoke(LabelUpdate);
                             this.Btn_Start.Enabled = false;
                             this.Btn_Stop.Enabled = false;
 
                         }
                         else
                         {
-                            MethodInvoker LabelUpdate = delegate {
+                            MethodInvoker LabelUpdate = delegate
+                            {
                                 this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.Black;
                             };
@@ -4885,7 +4817,7 @@ namespace AITool
 
             using (Frm_AIServers frm = new Frm_AIServers())
             {
-                
+
                 frm.ShowDialog(this);
             }
 

@@ -7,6 +7,8 @@ namespace AITool
         LogEntry,
         UpdateLabel,
         UpdateStatus,
+        UpdateDeepstackStatus,
+        UpdateProgressBar,
         ImageAddedToQueue,
         CreateHistoryItem,
         DeleteHistoryItem,
@@ -14,7 +16,6 @@ namespace AITool
         EndProcessImage,
         SettingsSaved,
         SettingsLoaded,
-        UpdateProgressBar,
         DatabaseInitialized
 
     }

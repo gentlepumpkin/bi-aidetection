@@ -429,7 +429,10 @@ namespace AITool
         {
 
             if (this.Starting.ReadFullFence())
+            {
+                Log("Already starting?");
                 return false;
+            }
 
             this.Starting.WriteFullFence(true);
 
@@ -811,11 +814,125 @@ namespace AITool
                 this.Starting.WriteFullFence(false);
             }
 
+            Global.SendMessage(MessageType.UpdateDeepstackStatus, "Manual start");
+
+
             return Ret;
 
         }
 
+        public async Task<bool> StopDeepstackAsync()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            return await Task.Run(() => this.StopDeepstack());
+        }
 
+
+        public bool StopDeepstack()
+        {
+
+            if (this.Stopping.ReadFullFence())
+            {
+                Log("Already stopping?");
+                return false;
+            }
+
+            this.Stopping.WriteFullFence(true);
+
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            bool Ret = false;
+            bool err = false;
+
+            Log("Stopping Deepstack...");
+            Stopwatch sw = Stopwatch.StartNew();
+
+            //Try to get current running processes in any case
+            bool success = this.GetDeepStackRun();
+
+            //more than one python process we need to take care of...  Sometimes MANY 
+            bool perr = Global.KillProcesses(this.PythonProc);
+            bool rerr = Global.KillProcesses(this.RedisProc);
+            bool serr = Global.KillProcesses(this.ServerProc);
+
+            err = !perr || !rerr || !serr;
+
+            if (!err)
+            {
+                this.DeepStackProc = new List<Global.ClsProcess>();
+                this.ServerProc = new List<Global.ClsProcess>();
+                this.PythonProc = new List<Global.ClsProcess>();
+                this.RedisProc = new List<Global.ClsProcess>();
+                //this.DeepStackProc = null;
+                Log("Debug: Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
+                Ret = true;
+            }
+            else
+            {
+                Log("Could not fully stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
+            }
+
+            this.IsStarted = false;
+
+            this.Stopping.WriteFullFence(false);
+
+            this.HasError = !Ret;
+
+            Global.SendMessage(MessageType.UpdateDeepstackStatus, "Manual stop");
+
+            return Ret;
+
+        }
+        public void ResetDeepstack()
+        {
+            try
+            {
+                if (this.IsStarted)
+                {
+                    Log("Stopping already running DeepStack instance...");
+                    this.StopDeepstack();
+                }
+
+                Thread.Sleep(250);
+
+                Log("Resetting DeepStack...");
+
+                String curdir = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".deepstack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+                curdir = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "DeepStack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+                curdir = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+
+                List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.pyc");
+                if (files.Count > 0)
+                {
+                    Log($"Removing {files.Count} compiled Python files {this.DeepStackFolder}\\*.PYC...");
+                    foreach (FileInfo fi in files)
+                    {
+                        fi.Delete();
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+        }
         private void DSProcess_Exited(object sender, System.EventArgs e, string Name)
         {
 
@@ -852,10 +969,10 @@ namespace AITool
                 this.HasError = true;
             }
             Log(output, "");
+            Global.SendMessage(MessageType.UpdateDeepstackStatus, "Process exited");
+
 
         }
-
-
 
         private void DSHandleRedisProcERROR(object sender, DataReceivedEventArgs line)
         {
@@ -1030,111 +1147,7 @@ namespace AITool
             }
             catch { }
         }
-        public async Task<bool> StopDeepstackAsync()
-        {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            return await Task.Run(() => this.StopDeepstack());
-        }
-
-        public void ResetDeepstack()
-        {
-            try
-            {
-                if (this.IsStarted)
-                {
-                    Log("Stopping already running DeepStack instance...");
-                    this.StopDeepstack();
-                }
-
-                Thread.Sleep(250);
-
-                Log("Resetting DeepStack...");
-
-                String curdir = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".deepstack");
-                if (Directory.Exists(curdir))
-                {
-                    Log($"Removing {curdir}...");
-                    Directory.Delete(curdir, true);
-                }
-                curdir = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "DeepStack");
-                if (Directory.Exists(curdir))
-                {
-                    Log($"Removing {curdir}...");
-                    Directory.Delete(curdir, true);
-                }
-                curdir = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack");
-                if (Directory.Exists(curdir))
-                {
-                    Log($"Removing {curdir}...");
-                    Directory.Delete(curdir, true);
-                }
-
-                List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.pyc");
-                if (files.Count > 0)
-                {
-                    Log($"Removing {files.Count} compiled Python files {this.DeepStackFolder}\\*.PYC...");
-                    foreach (FileInfo fi in files)
-                    {
-                        fi.Delete();
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                Log($"Error: {Global.ExMsg(ex)}");
-            }
-        }
-        public bool StopDeepstack()
-        {
-
-            if (this.Stopping.ReadFullFence())
-                return false;
-
-            this.Stopping.WriteFullFence(true);
-
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-
-            bool Ret = false;
-            bool err = false;
-
-            Log("Stopping Deepstack...");
-            Stopwatch sw = Stopwatch.StartNew();
-            
-            //Try to get current running processes in any case
-            bool success = this.GetDeepStackRun();
-
-            //more than one python process we need to take care of...  Sometimes MANY 
-            bool perr = Global.KillProcesses(this.PythonProc);
-            bool rerr = Global.KillProcesses(this.RedisProc);
-            bool serr = Global.KillProcesses(this.ServerProc);
-
-            err = !perr || !rerr || !serr;
-
-            if (!err)
-            {
-                this.DeepStackProc = new List<Global.ClsProcess>();
-                this.ServerProc = new List<Global.ClsProcess>();
-                this.PythonProc = new List<Global.ClsProcess>();
-                this.RedisProc = new List<Global.ClsProcess>();
-                //this.DeepStackProc = null;
-                Log("Debug: Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
-                Ret = true;
-            }
-            else
-            {
-                Log("Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
-            }
-
-            this.IsStarted = false;
-
-            this.Stopping.WriteFullFence(false);
-
-            this.HasError = !Ret;
-            return Ret;
-
-        }
+        
 
     }
 }
