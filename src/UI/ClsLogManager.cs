@@ -470,7 +470,7 @@ namespace AITool
                 {
                     Global.UpdateProgressBar($"Loading {Path.GetFileName(Filename)}...", 1, 1, 1);
 
-                    Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.Read, 30000, 20);
+                    Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 30000, 20);
                     if (result.Success)
                     {
                         //if its a zip file, extract that puppy...

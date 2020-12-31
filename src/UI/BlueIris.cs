@@ -86,12 +86,7 @@ namespace AITool
                 Log($"Debug: Reading BlueIris settings from registry from '{ServernameOrIP}'...");
 
 
-                this.IsLocalhost = string.IsNullOrEmpty(ServernameOrIP) ||
-                                    ServernameOrIP == "." ||
-                                    string.Equals(ServernameOrIP, "localhost", StringComparison.OrdinalIgnoreCase) ||
-                                    ServernameOrIP == "127.0.0.1" ||
-                                    ServernameOrIP == "0.0.0.0" ||
-                                    string.Equals(ServernameOrIP, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase);
+                this.IsLocalhost = await Global.IsLocalHostAsync(ServernameOrIP);
 
                 if (this.IsLocalhost)
                 {

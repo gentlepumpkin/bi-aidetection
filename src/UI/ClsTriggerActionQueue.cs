@@ -750,7 +750,7 @@ namespace AITool
 
                                 if (System.IO.File.Exists(OutputImageFile))
                                 {
-                                    result = await Global.WaitForFileAccessAsync(OutputImageFile, FileSystemRights.FullControl, FileShare.ReadWrite);
+                                    result = await Global.WaitForFileAccessAsync(OutputImageFile, FileAccess.ReadWrite, FileShare.ReadWrite);
                                 }
 
                                 if (result.Success)

@@ -27,6 +27,7 @@ namespace AITool
         public string APIKey = "";
         public string Port = "81";
         public string Mode = "Medium";
+        public int Count = 1;
         public string DeepStackFolder = @"C:\DeepStack";
         public string DeepStackEXE = @"C:\DeepStack\DeepStack.exe";
         public string ServerEXE = @"C:\DeepStack\server\server.exe";
@@ -43,15 +44,16 @@ namespace AITool
         public bool IsActivated = false;
         public bool VisionDetectionRunning = false;
         public bool NeedsSaving = false;
-        public Global.ClsProcess DeepStackProc;
-        public Global.ClsProcess ServerProc;
-        public Global.ClsProcess PythonProc;
-        public Global.ClsProcess RedisProc;
+        public string CommandLine = "";
+        public List<Global.ClsProcess> DeepStackProc = new List<Global.ClsProcess>();
+        public List<Global.ClsProcess> ServerProc = new List<Global.ClsProcess>();
+        public List<Global.ClsProcess> PythonProc = new List<Global.ClsProcess>();
+        public List<Global.ClsProcess> RedisProc = new List<Global.ClsProcess>();
         public List<double> ResponseTimeList = new List<double>();  //From this you can get min/max/avg
+        public string URLS = "";
 
-
-        private ThreadSafe.Boolean Starting = new ThreadSafe.Boolean(false);
-        private ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
+        public ThreadSafe.Boolean Starting = new ThreadSafe.Boolean(false);
+        public ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
 
         public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath)
         {
@@ -71,8 +73,9 @@ namespace AITool
             this.CustomModelEnabled = !string.IsNullOrEmpty(this.CustomModelPath) && Directory.Exists(this.CustomModelPath);
             this.Port = Port;
             this.Mode = Mode;
+            this.Count = Global.Split(this.Port, ",|").Count;
 
-            bool found = this.RefreshInfo();
+            bool found = this.RefreshDeepstackInfo();
 
         }
         public bool GetDeepStackRun()
@@ -83,20 +86,21 @@ namespace AITool
 
             if (this.IsNewVersion)
             {
-                
+                this.Count = Global.Split(this.Port, ",|").Count;
+
 
                 if (!Global.ProcessValid(this.ServerProc))
-                    this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
+                    this.ServerProc = Global.GetProcessesByPath(this.ServerEXE);
                 if (!Global.ProcessValid(this.PythonProc))
-                    this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
+                    this.PythonProc = Global.GetProcessesByPath(this.PythonEXE);
                 if (!Global.ProcessValid(this.RedisProc))
-                    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
+                    this.RedisProc = Global.GetProcessesByPath(this.RedisEXE);
 
                 List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
 
                 bool srvvalid = Global.ProcessValid(this.ServerProc);
                 bool redvalid = Global.ProcessValid(this.RedisProc);
-                bool pytvalid = montys.Count == 2;
+                bool pytvalid = srvvalid && montys.Count == this.Count * 2;
 
                 bool allvalid = srvvalid && redvalid && pytvalid;
 
@@ -106,13 +110,13 @@ namespace AITool
                 {
                     this.HasError = false;
                     this.IsStarted = true;
-                    Log("Debug: DeepStack Desktop IS running from " + this.ServerProc.FileName);
+                    Log("Debug: DeepStack Desktop IS running from " + this.ServerEXE);
                 }
                 else if (partvalid)
                 {
                     this.HasError = true;
                     this.IsStarted = true;
-                    Log("Error: Deepstack partially running.  You many need to manually kill deepstack.exe, python.exe, redis-server.exe");
+                    Log("Deepstack partially running.");
 
                 }
                 else
@@ -124,128 +128,129 @@ namespace AITool
             }
             else
             {
-                //Note - deepstack.exe does NOT need to be running
-                if (!Global.ProcessValid(this.DeepStackProc))
-                    this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
-                if (!Global.ProcessValid(this.ServerProc))
-                    this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
-                if (!Global.ProcessValid(this.PythonProc))
-                    this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
-                if (!Global.ProcessValid(this.RedisProc))
-                    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
+                Log("Error: Deepstack v3.4 not supported.  Install version 2020. https://docs.deepstack.cc/windows/index.html");
+                ////Note - deepstack.exe does NOT need to be running
+                //if (!Global.ProcessValid(this.DeepStackProc))
+                //    this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
+                //if (!Global.ProcessValid(this.ServerProc))
+                //    this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
+                //if (!Global.ProcessValid(this.PythonProc))
+                //    this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
+                //if (!Global.ProcessValid(this.RedisProc))
+                //    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
 
-                if (Global.ProcessValid(this.ServerProc) && Global.ProcessValid(this.PythonProc) && Global.ProcessValid(this.RedisProc))
-                {
-                    this.IsInstalled = true;
-                    this.HasError = false;
-                    Log("Debug: DeepStack Desktop IS running from " + this.ServerProc.FileName);
+                //if (Global.ProcessValid(this.ServerProc) && Global.ProcessValid(this.PythonProc) && Global.ProcessValid(this.RedisProc))
+                //{
+                //    this.IsInstalled = true;
+                //    this.HasError = false;
+                //    Log("Debug: DeepStack Desktop IS running from " + this.ServerProc.FileName);
 
-                    this.IsStarted = true;
-                    //C:\DeepStack\server\server.exe
-                    //check to see if it is a different path than default
-                    if (!this.ServerProc.FileName.StartsWith(this.DeepStackFolder, StringComparison.OrdinalIgnoreCase))
-                    {
-                        string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
-                        Log("Debug: Deepstack running from non-default path: " + dspath);
-                        this.DeepStackFolder = dspath;
-                        this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
-                        this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
-                        this.RedisEXE = Path.Combine(this.DeepStackFolder, @"redis\redis-server.exe");
-                        this.ServerEXE = Path.Combine(this.DeepStackFolder, @"server\server.exe");
-                        this.NeedsSaving = true;
-                    }
+                //    this.IsStarted = true;
+                //    //C:\DeepStack\server\server.exe
+                //    //check to see if it is a different path than default
+                //    if (!this.ServerProc.FileName.StartsWith(this.DeepStackFolder, StringComparison.OrdinalIgnoreCase))
+                //    {
+                //        string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
+                //        Log("Debug: Deepstack running from non-default path: " + dspath);
+                //        this.DeepStackFolder = dspath;
+                //        this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
+                //        this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
+                //        this.RedisEXE = Path.Combine(this.DeepStackFolder, @"redis\redis-server.exe");
+                //        this.ServerEXE = Path.Combine(this.DeepStackFolder, @"server\server.exe");
+                //        this.NeedsSaving = true;
+                //    }
 
-                    //Try to get command line params to fill in correct running port, etc
-                    //"C:\DeepStack\server\server.exe" -VISION-FACE=False -VISION-SCENE=True -VISION-DETECTION=True -ADMIN-KEY= -API-KEY= -PORT=84
+                //    //Try to get command line params to fill in correct running port, etc
+                //    //"C:\DeepStack\server\server.exe" -VISION-FACE=False -VISION-SCENE=True -VISION-DETECTION=True -ADMIN-KEY= -API-KEY= -PORT=84
 
-                    string face = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-FACE=", " |-");
-                    if (!string.IsNullOrEmpty(face))
-                        if (this.FaceAPIEnabled != Convert.ToBoolean(face))
-                        {
-                            Log($"Debug: ...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
-                            this.FaceAPIEnabled = Convert.ToBoolean(face);
-                            this.NeedsSaving = true;
-                        }
+                //    string face = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-FACE=", " |-");
+                //    if (!string.IsNullOrEmpty(face))
+                //        if (this.FaceAPIEnabled != Convert.ToBoolean(face))
+                //        {
+                //            Log($"Debug: ...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
+                //            this.FaceAPIEnabled = Convert.ToBoolean(face);
+                //            this.NeedsSaving = true;
+                //        }
 
-                    string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
-                    if (!string.IsNullOrEmpty(scene))
-                        if (Convert.ToBoolean(scene) != this.SceneAPIEnabled)
-                        {
-                            Log($"Debug: ...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
-                            this.SceneAPIEnabled = Convert.ToBoolean(scene);
-                            this.NeedsSaving = true;
-                        };
+                //    string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
+                //    if (!string.IsNullOrEmpty(scene))
+                //        if (Convert.ToBoolean(scene) != this.SceneAPIEnabled)
+                //        {
+                //            Log($"Debug: ...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
+                //            this.SceneAPIEnabled = Convert.ToBoolean(scene);
+                //            this.NeedsSaving = true;
+                //        };
 
-                    string detect = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-DETECTION=", " |-");
-                    if (!string.IsNullOrEmpty(detect))
-                        if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
-                        {
-                            Log($"Debug: ...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
-                            this.DetectionAPIEnabled = Convert.ToBoolean(detect);
-                            this.NeedsSaving = true;
-                        }
+                //    string detect = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-DETECTION=", " |-");
+                //    if (!string.IsNullOrEmpty(detect))
+                //        if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
+                //        {
+                //            Log($"Debug: ...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
+                //            this.DetectionAPIEnabled = Convert.ToBoolean(detect);
+                //            this.NeedsSaving = true;
+                //        }
 
-                    string admin = Global.GetWordBetween(this.ServerProc.CommandLine, "-ADMIN-KEY=", " |-");
-                    if (!string.IsNullOrEmpty(admin))
-                        if (this.AdminKey != admin)
-                        {
-                            Log($"Debug: ...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
-                            this.AdminKey = admin;
-                            this.NeedsSaving = true;
-                        }
+                //    string admin = Global.GetWordBetween(this.ServerProc.CommandLine, "-ADMIN-KEY=", " |-");
+                //    if (!string.IsNullOrEmpty(admin))
+                //        if (this.AdminKey != admin)
+                //        {
+                //            Log($"Debug: ...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
+                //            this.AdminKey = admin;
+                //            this.NeedsSaving = true;
+                //        }
 
-                    string api = Global.GetWordBetween(this.ServerProc.CommandLine, "-API-KEY=", " |-");
-                    if (!string.IsNullOrEmpty(api))
-                        if (this.APIKey != api)
-                        {
-                            Log($"Debug: ...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
-                            this.APIKey = api;
-                            this.NeedsSaving = true;
-                        }
+                //    string api = Global.GetWordBetween(this.ServerProc.CommandLine, "-API-KEY=", " |-");
+                //    if (!string.IsNullOrEmpty(api))
+                //        if (this.APIKey != api)
+                //        {
+                //            Log($"Debug: ...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
+                //            this.APIKey = api;
+                //            this.NeedsSaving = true;
+                //        }
 
-                    string port = Global.GetWordBetween(this.ServerProc.CommandLine, "-PORT=", " |-");
-                    if (!string.IsNullOrEmpty(port))
-                        if (this.Port != port)
-                        {
-                            Log($"Debug: ...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
-                            this.Port = port;
-                            this.NeedsSaving = true;
-                        }
+                //    string port = Global.GetWordBetween(this.ServerProc.CommandLine, "-PORT=", " |-");
+                //    if (!string.IsNullOrEmpty(port))
+                //        if (this.Port != port)
+                //        {
+                //            Log($"Debug: ...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
+                //            this.Port = port;
+                //            this.NeedsSaving = true;
+                //        }
 
-                    //Get mode:
-                    //"C:\DeepStack\interpreter\python.exe" ../intelligence.py -MODE=Medium -VFACE=False -VSCENE=True -VDETECTION=True
+                //    //Get mode:
+                //    //"C:\DeepStack\interpreter\python.exe" ../intelligence.py -MODE=Medium -VFACE=False -VSCENE=True -VDETECTION=True
 
-                    string mode = Global.GetWordBetween(this.PythonProc.CommandLine, "-MODE=", " |-");
-                    if (!string.IsNullOrEmpty(port))
-                        if (this.Mode != mode)
-                        {
-                            Log($"Debug: ...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
-                            this.Mode = mode;
-                            this.NeedsSaving = true;
-                        }
+                //    string mode = Global.GetWordBetween(this.PythonProc.CommandLine, "-MODE=", " |-");
+                //    if (!string.IsNullOrEmpty(port))
+                //        if (this.Mode != mode)
+                //        {
+                //            Log($"Debug: ...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
+                //            this.Mode = mode;
+                //            this.NeedsSaving = true;
+                //        }
 
 
-                    //"C:\DeepStack\interpreter\python.exe" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=17744, pipe_handle=328)" "--multiprocessing-fork"
+                //    //"C:\DeepStack\interpreter\python.exe" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=17744, pipe_handle=328)" "--multiprocessing-fork"
 
-                }
-                else if (Global.ProcessValid(this.ServerProc) || Global.ProcessValid(this.PythonProc) || Global.ProcessValid(this.RedisProc))
-                {
-                    Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
-                    this.HasError = true;
-                    this.IsStarted = true;
-                }
-                else
-                {
-                    Log("Debug: DeepStack Desktop NOT running.");
-                    this.IsStarted = false;
-                    this.HasError = false;
-                }
+                //}
+                //else if (Global.ProcessValid(this.ServerProc) || Global.ProcessValid(this.PythonProc) || Global.ProcessValid(this.RedisProc))
+                //{
+                //    Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
+                //    this.HasError = true;
+                //    this.IsStarted = true;
+                //}
+                //else
+                //{
+                //    Log("Debug: DeepStack Desktop NOT running.");
+                //    this.IsStarted = false;
+                //    this.HasError = false;
+                //}
 
             }
 
             return Ret;
         }
-        public bool RefreshInfo()
+        public bool RefreshDeepstackInfo()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -381,6 +386,13 @@ namespace AITool
                             Log($"Error: Could not find .ISS file in Deepstack folder?");
                         }
 
+                        Log($"Debug: DeepStack v'{this.DisplayVersion}' ({this.Type}) is installed: " + this.DeepStackEXE);
+                        //Try to get running processes in any case
+                        bool success = this.GetDeepStackRun();
+
+                        Ret = true;
+
+
 
                     }
                     else
@@ -388,14 +400,10 @@ namespace AITool
                         this.IsNewVersion = false;
                         this.Type = DeepStackTypeEnum.CPU;
                         this.DisplayVersion = "3.4";
+                        Log("Error: Deepstack v3.4 not supported.  Install version 2020.");
+
 
                     }
-
-                    Log($"Debug: DeepStack v'{this.DisplayVersion}' ({this.Type}) is installed: " + this.DeepStackEXE);
-                    //Try to get running processes in any case
-                    bool success = this.GetDeepStackRun();
-
-                    Ret = true;
 
                 }
 
@@ -412,12 +420,12 @@ namespace AITool
             return Ret;
 
         }
-        public async Task<bool> StartAsync()
+        public async Task<bool> StartDeepstackAsync()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            return await Task.Run(async () => this.Start());
+            return await Task.Run(() => this.StartDeepstack());
         }
-        private bool Start()
+        public bool StartDeepstack()
         {
 
             if (this.Starting.ReadFullFence())
@@ -442,64 +450,112 @@ namespace AITool
                 {
                     if (this.IsStarted)
                     {
-                        Log("Stopping already running DeepStack instance...");
-                        this.Stop();
+                        Log("Debug: Stopping already running DeepStack instance...");
+                        this.StopDeepstack();
+                        Thread.Sleep(250);
                     }
 
                     Log("Starting DeepStack...");
                 }
 
                 Stopwatch SW = Stopwatch.StartNew();
+                this.URLS = "";
 
                 if (this.IsNewVersion)
                 {
-                    this.ServerProc = new Global.ClsProcess();
-                    this.ServerProc.process.StartInfo.FileName = this.DeepStackEXE;
-                    this.ServerProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
-                    if (this.CustomModelEnabled)
-                    {
-                        this.ServerProc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{this.CustomModelPath}\" --PORT {this.Port}";
-                    }
-                    else
-                    {
-                        string face = "";
-                        string scene = "";
-                        string detect = "";
-                        string admin = "";
-                        string api = "";
+                    List<string> ports = Global.Split(this.Port, ",|");
+                    this.Count = ports.Count;
 
-                        if (this.FaceAPIEnabled)
-                            face = $"--VISION-FACE {this.FaceAPIEnabled} ";
-                        if (this.SceneAPIEnabled)
-                            scene = $"--VISION-SCENE {this.SceneAPIEnabled} ";
-                        if (this.DetectionAPIEnabled)
-                            detect = $"--VISION-DETECTION {this.DetectionAPIEnabled} ";
-                        if (!string.IsNullOrEmpty(this.AdminKey))
-                            admin = $"--ADMIN-KEY {this.AdminKey} ";
-                        if (!string.IsNullOrEmpty(this.APIKey))
-                            api = $"--API-KEY {this.APIKey} ";
-
-                        this.ServerProc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}--PORT {this.Port}";
-                    }
-                    this.ServerProc.process.StartInfo.CreateNoWindow = true;
-                    this.ServerProc.process.StartInfo.UseShellExecute = false;
-                    this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
-                    this.ServerProc.process.StartInfo.RedirectStandardError = true;
-                    this.ServerProc.process.EnableRaisingEvents = true;
-                    this.ServerProc.process.OutputDataReceived += this.DSHandleServerProcMSG;
-                    this.ServerProc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
-                    this.ServerProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
-                    this.ServerProc.FileName = this.DeepStackEXE;
-                    this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
-                    Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
-                    this.ServerProc.process.Start();
-                    if (AppSettings.Settings.deepstack_highpriority)
+                    this.CommandLine = "";
+                    int pcnt = 0;
+                    foreach (string CurPort in ports)
                     {
-                        this.ServerProc.process.PriorityClass = ProcessPriorityClass.High;
-                    }
+                        pcnt++;
 
-                    this.ServerProc.process.BeginOutputReadLine();
-                    this.ServerProc.process.BeginErrorReadLine();
+                        Global.ClsProcess prc = new Global.ClsProcess();
+                        prc.process.StartInfo.FileName = this.DeepStackEXE;
+                        prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
+                        if (this.CustomModelEnabled)
+                        {
+                            prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{this.CustomModelPath}\" --PORT {CurPort}";
+                        }
+                        else
+                        {
+                            string face = "";
+                            string scene = "";
+                            string detect = "";
+                            string admin = "";
+                            string api = "";
+                            //string mode = "";
+
+                            if (this.FaceAPIEnabled)
+                                face = $"--VISION-FACE {this.FaceAPIEnabled} ";
+                            if (this.SceneAPIEnabled)
+                                scene = $"--VISION-SCENE {this.SceneAPIEnabled} ";
+                            if (this.DetectionAPIEnabled)
+                                detect = $"--VISION-DETECTION {this.DetectionAPIEnabled} ";
+                            if (!string.IsNullOrEmpty(this.AdminKey))
+                                admin = $"--ADMIN-KEY {this.AdminKey} ";
+                            if (!string.IsNullOrEmpty(this.APIKey))
+                                api = $"--API-KEY {this.APIKey} ";
+
+                            //if (!string.IsNullOrEmpty(this.Mode))
+                            //    mode = $"--MODE {this.Mode} ";
+
+                            prc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}--PORT {CurPort}";
+                        }
+                        if (!AppSettings.Settings.deepstack_debug)
+                        {
+                            prc.process.StartInfo.CreateNoWindow = true;
+                            prc.process.StartInfo.UseShellExecute = false;
+                            prc.process.StartInfo.RedirectStandardOutput = true;
+                            prc.process.StartInfo.RedirectStandardError = true;
+                            prc.process.EnableRaisingEvents = true;
+                            prc.process.OutputDataReceived += this.DSHandleServerProcMSG;
+                            prc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
+                        }
+                        else
+                        {
+                            prc.process.StartInfo.UseShellExecute = false;
+                        }
+
+                        prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
+                        prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
+                        prc.FileName = this.DeepStackEXE;
+                        prc.CommandLine = prc.process.StartInfo.Arguments;
+                        Log($"Starting {pcnt} of {ports.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
+                        prc.process.Start();
+
+                        Global.WaitForProcessToStart(prc.process, 3000);
+
+                        if (AppSettings.Settings.deepstack_highpriority)
+                        {
+                            prc.process.PriorityClass = ProcessPriorityClass.High;
+                        }
+
+                        if (!AppSettings.Settings.deepstack_debug)
+                        {
+                            prc.process.BeginOutputReadLine();
+                            prc.process.BeginErrorReadLine();
+                        }
+
+                        this.ServerProc.Add(prc);
+
+                        ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/detection", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
+
+                        this.CommandLine += $"{prc.FileName} {prc.CommandLine}\r\n";
+
+                        this.URLS += $"{url.ToString()}\r\n";
+
+
+                        if (!AppSettings.Settings.AIURLList.Contains(url))
+                        {
+                            Log("Automatically adding local Windows Deepstack URL: " + url.ToString());
+                            AppSettings.Settings.AIURLList.Add(url);
+                        }
+
+                        Thread.Sleep(250);
+                    }
 
                     this.IsStarted = true;
                     this.HasError = false;
@@ -513,11 +569,11 @@ namespace AITool
                     {
 
                         List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
-                        if (montys.Count >= 2)
+                        cnt = montys.Count;
+                        if (montys.Count >= this.Count * 2)
                         {
-                            //when deepstack is running normaly there will be 5 python.exe processes
+                            //when deepstack is running normaly there will be 2 python.exe processes running for each deepstack.exe
                             //Set priority for each this way since we didnt start them in the first place...
-                            cnt = montys.Count;
                             if (AppSettings.Settings.deepstack_highpriority)
                             {
                                 foreach (Global.ClsProcess prc in montys)
@@ -528,203 +584,220 @@ namespace AITool
                                         try
                                         {
                                             prc.process.PriorityClass = ProcessPriorityClass.High;
-                                            if (cc == 1)
-                                                this.PythonProc = prc;
+                                            prc.process.StartInfo.UseShellExecute = false;
+                                            prc.process.StartInfo.RedirectStandardOutput = true;
+                                            prc.process.StartInfo.RedirectStandardError = true;
+                                            prc.process.EnableRaisingEvents = true;
+                                            prc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
+                                            prc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
+                                            prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "python.exe"); //new EventHandler(myProcess_Exited);
                                         }
                                         catch { }
 
                                     }
                                 }
                             }
+                            
+                            this.PythonProc = montys;
+
                             break;
                         }
-                        Thread.Sleep(100);
+                        else
+                        {
+                            Log($"Debug: ...Waiting for {this.Count * 2} copies of {this.PythonEXE} to start (now={montys.Count})...");
+                            Thread.Sleep(250);
+                        }
 
                     } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
 
-                    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
+                    this.RedisProc = Global.GetProcessesByPath(this.RedisEXE);
 
                     if (Global.ProcessValid(this.RedisProc))
                     {
                         if (AppSettings.Settings.deepstack_highpriority)
-                            this.RedisProc.process.PriorityClass = ProcessPriorityClass.High;
+                        {
+                            
+                            this.RedisProc[0].process.PriorityClass = ProcessPriorityClass.High;
+                            
+                        }
                     }
                     else
                     {
                         this.HasError = true;
-                        this.IsStarted = true;
-                        Log("Error: redis-server.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
+                        Log($"Error: 1 redis-server.exe processes did not start. (" + SW.ElapsedMilliseconds + "ms)");
                     }
 
-                    if (cnt > 1)
+                    if (cnt >= this.Count * 2)
                     {
                         
                         Log("Started in " + SW.ElapsedMilliseconds + "ms");
                     }
-                    else if (cnt == 0)
+                    else 
                     {
                         this.HasError = true;
-                        this.IsStarted = true;
-                        Log("Error: 2 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
+                        Log($"Error: {this.Count * 2} python.exe processes did not start within " + SW.ElapsedMilliseconds + "ms");
                     }
 
                     if (!this.HasError)
+                    {
                         this.IsActivated = true;
-
-                }
-                else
-                {
-                    //First initialize with the py script
-
-                    Process InitProc = new Process();
-                    InitProc.StartInfo.FileName = this.PythonEXE;
-                    InitProc.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
-                    InitProc.StartInfo.Arguments = "../init.py";
-                    InitProc.StartInfo.UseShellExecute = false;
-                    InitProc.StartInfo.CreateNoWindow = true;
-                    InitProc.StartInfo.RedirectStandardOutput = true;
-                    InitProc.StartInfo.RedirectStandardError = true;
-                    InitProc.EnableRaisingEvents = true;
-                    InitProc.OutputDataReceived += this.DSHandleInitProcMSG;
-                    InitProc.ErrorDataReceived += this.DSHandleInitProcERROR;
-                    InitProc.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
-                    Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
-                    InitProc.Start();
-                    InitProc.PriorityClass = ProcessPriorityClass.High;  //always run this as high priority since it will initialize faster
-                    InitProc.BeginOutputReadLine();
-                    InitProc.BeginErrorReadLine();
-
-                    //next start the redis server...
-                    this.RedisProc = new Global.ClsProcess();
-                    this.RedisProc.process.StartInfo.FileName = this.RedisEXE;
-                    this.RedisProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.RedisEXE);
-                    this.RedisProc.process.StartInfo.UseShellExecute = false;
-                    this.RedisProc.process.StartInfo.CreateNoWindow = true;
-                    this.RedisProc.process.StartInfo.RedirectStandardOutput = true;
-                    this.RedisProc.process.StartInfo.RedirectStandardError = true;
-                    this.RedisProc.process.EnableRaisingEvents = true;
-                    this.RedisProc.process.OutputDataReceived += this.DSHandleRedisProcMSG;
-                    this.RedisProc.process.ErrorDataReceived += this.DSHandleRedisProcERROR;
-                    this.RedisProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
-                    this.RedisProc.FileName = this.RedisEXE;
-                    this.RedisProc.CommandLine = this.RedisEXE;
-                    Log($"Starting {this.RedisEXE}...");
-                    this.RedisProc.process.Start();
-                    if (AppSettings.Settings.deepstack_highpriority)
-                    {
-                        this.RedisProc.process.PriorityClass = ProcessPriorityClass.High;
-                    }
-                    this.RedisProc.process.BeginOutputReadLine();
-                    this.RedisProc.process.BeginErrorReadLine();
-
-                    //next, start the server
-
-                    this.ServerProc = new Global.ClsProcess();
-                    this.ServerProc.process.StartInfo.FileName = this.ServerEXE;
-                    this.ServerProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.ServerEXE);
-                    this.ServerProc.process.StartInfo.Arguments = $"-VISION-FACE={this.FaceAPIEnabled} -VISION-SCENE={this.SceneAPIEnabled} -VISION-DETECTION={this.DetectionAPIEnabled} -ADMIN-KEY={this.AdminKey} -API-KEY={this.APIKey} -PORT={this.Port}";
-                    this.ServerProc.process.StartInfo.CreateNoWindow = true;
-                    this.ServerProc.process.StartInfo.UseShellExecute = false;
-                    this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
-                    this.ServerProc.process.StartInfo.RedirectStandardError = true;
-                    this.ServerProc.process.EnableRaisingEvents = true;
-                    this.ServerProc.process.OutputDataReceived += this.DSHandleServerProcMSG;
-                    this.ServerProc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
-                    this.ServerProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
-                    this.ServerProc.FileName = this.ServerEXE;
-                    this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
-                    Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
-                    this.ServerProc.process.Start();
-                    if (AppSettings.Settings.deepstack_highpriority)
-                    {
-                        this.ServerProc.process.PriorityClass = ProcessPriorityClass.High;
-                    }
-
-                    this.ServerProc.process.BeginOutputReadLine();
-                    this.ServerProc.process.BeginErrorReadLine();
-
-                    //start the python intelligence.py script
-                    this.PythonProc = new Global.ClsProcess();
-                    this.PythonProc.process.StartInfo.FileName = this.PythonEXE;
-                    this.PythonProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
-                    this.PythonProc.process.StartInfo.Arguments = $"../intelligence.py -MODE={this.Mode} -VFACE={this.FaceAPIEnabled} -VSCENE={this.SceneAPIEnabled} -VDETECTION={this.DetectionAPIEnabled}";
-                    this.PythonProc.process.StartInfo.UseShellExecute = false;
-                    this.PythonProc.process.StartInfo.CreateNoWindow = true;
-                    this.PythonProc.process.EnableRaisingEvents = true;
-                    this.PythonProc.process.StartInfo.RedirectStandardOutput = true;
-                    this.PythonProc.process.StartInfo.RedirectStandardError = true;
-                    this.PythonProc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
-                    this.PythonProc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
-                    this.PythonProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
-                    this.PythonProc.FileName = this.PythonEXE;
-                    this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
-                    Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
-                    this.PythonProc.process.Start();
-                    if (AppSettings.Settings.deepstack_highpriority)
-                    {
-                        this.PythonProc.process.PriorityClass = ProcessPriorityClass.High;
-                    }
-
-
-                    this.PythonProc.process.BeginOutputReadLine();
-                    this.PythonProc.process.BeginErrorReadLine();
-
-
-                    this.IsStarted = true;
-                    this.HasError = false;
-                    Ret = true;
-
-                    //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
-
-                    int cnt = 0;
-                    do
-                    {
-
-                        List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
-                        if (montys.Count >= 5)
-                        {
-                            //when deepstack is running normaly there will be 5 python.exe processes
-                            //Set priority for each this way since we didnt start them in the first place...
-                            cnt = montys.Count;
-                            if (AppSettings.Settings.deepstack_highpriority)
-                            {
-                                foreach (Global.ClsProcess prc in montys)
-                                {
-                                    if (Global.ProcessValid(prc))
-                                    {
-                                        try
-                                        {
-                                            prc.process.PriorityClass = ProcessPriorityClass.High;
-                                        }
-                                        catch { }
-
-                                    }
-                                }
-                            }
-                            break;
-                        }
-                        Thread.Sleep(100);
-
-                    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
-
-                    if (cnt == 5)
-                    {
-                        Log("Started in " + SW.ElapsedMilliseconds + "ms");
-                    }
-                    else if (cnt > 5)
-                    {
-                        this.HasError = true;
                         this.IsStarted = true;
-                        Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
-                    }
-                    else if (cnt == 0)
-                    {
-                        this.HasError = true;
-                        this.IsStarted = true;
-                        Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
                     }
 
                 }
+                //else
+                //{
+                //    //First initialize with the py script
+
+                //    Process InitProc = new Process();
+                //    InitProc.StartInfo.FileName = this.PythonEXE;
+                //    InitProc.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
+                //    InitProc.StartInfo.Arguments = "../init.py";
+                //    InitProc.StartInfo.UseShellExecute = false;
+                //    InitProc.StartInfo.CreateNoWindow = true;
+                //    InitProc.StartInfo.RedirectStandardOutput = true;
+                //    InitProc.StartInfo.RedirectStandardError = true;
+                //    InitProc.EnableRaisingEvents = true;
+                //    InitProc.OutputDataReceived += this.DSHandleInitProcMSG;
+                //    InitProc.ErrorDataReceived += this.DSHandleInitProcERROR;
+                //    InitProc.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
+                //    Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
+                //    InitProc.Start();
+                //    InitProc.PriorityClass = ProcessPriorityClass.High;  //always run this as high priority since it will initialize faster
+                //    InitProc.BeginOutputReadLine();
+                //    InitProc.BeginErrorReadLine();
+
+                //    //next start the redis server...
+                //    this.RedisProc = new Global.ClsProcess();
+                //    this.RedisProc.process.StartInfo.FileName = this.RedisEXE;
+                //    this.RedisProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.RedisEXE);
+                //    this.RedisProc.process.StartInfo.UseShellExecute = false;
+                //    this.RedisProc.process.StartInfo.CreateNoWindow = true;
+                //    this.RedisProc.process.StartInfo.RedirectStandardOutput = true;
+                //    this.RedisProc.process.StartInfo.RedirectStandardError = true;
+                //    this.RedisProc.process.EnableRaisingEvents = true;
+                //    this.RedisProc.process.OutputDataReceived += this.DSHandleRedisProcMSG;
+                //    this.RedisProc.process.ErrorDataReceived += this.DSHandleRedisProcERROR;
+                //    this.RedisProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
+                //    this.RedisProc.FileName = this.RedisEXE;
+                //    this.RedisProc.CommandLine = this.RedisEXE;
+                //    Log($"Starting {this.RedisEXE}...");
+                //    this.RedisProc.process.Start();
+                //    if (AppSettings.Settings.deepstack_highpriority)
+                //    {
+                //        this.RedisProc.process.PriorityClass = ProcessPriorityClass.High;
+                //    }
+                //    this.RedisProc.process.BeginOutputReadLine();
+                //    this.RedisProc.process.BeginErrorReadLine();
+
+                //    //next, start the server
+
+                //    this.ServerProc = new Global.ClsProcess();
+                //    this.ServerProc.process.StartInfo.FileName = this.ServerEXE;
+                //    this.ServerProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.ServerEXE);
+                //    this.ServerProc.process.StartInfo.Arguments = $"-VISION-FACE={this.FaceAPIEnabled} -VISION-SCENE={this.SceneAPIEnabled} -VISION-DETECTION={this.DetectionAPIEnabled} -ADMIN-KEY={this.AdminKey} -API-KEY={this.APIKey} -PORT={this.Port}";
+                //    this.ServerProc.process.StartInfo.CreateNoWindow = true;
+                //    this.ServerProc.process.StartInfo.UseShellExecute = false;
+                //    this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
+                //    this.ServerProc.process.StartInfo.RedirectStandardError = true;
+                //    this.ServerProc.process.EnableRaisingEvents = true;
+                //    this.ServerProc.process.OutputDataReceived += this.DSHandleServerProcMSG;
+                //    this.ServerProc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
+                //    this.ServerProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
+                //    this.ServerProc.FileName = this.ServerEXE;
+                //    this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
+                //    Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
+                //    this.ServerProc.process.Start();
+                //    if (AppSettings.Settings.deepstack_highpriority)
+                //    {
+                //        this.ServerProc.process.PriorityClass = ProcessPriorityClass.High;
+                //    }
+
+                //    this.ServerProc.process.BeginOutputReadLine();
+                //    this.ServerProc.process.BeginErrorReadLine();
+
+                //    //start the python intelligence.py script
+                //    this.PythonProc = new Global.ClsProcess();
+                //    this.PythonProc.process.StartInfo.FileName = this.PythonEXE;
+                //    this.PythonProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
+                //    this.PythonProc.process.StartInfo.Arguments = $"../intelligence.py -MODE={this.Mode} -VFACE={this.FaceAPIEnabled} -VSCENE={this.SceneAPIEnabled} -VDETECTION={this.DetectionAPIEnabled}";
+                //    this.PythonProc.process.StartInfo.UseShellExecute = false;
+                //    this.PythonProc.process.StartInfo.CreateNoWindow = true;
+                //    this.PythonProc.process.EnableRaisingEvents = true;
+                //    this.PythonProc.process.StartInfo.RedirectStandardOutput = true;
+                //    this.PythonProc.process.StartInfo.RedirectStandardError = true;
+                //    this.PythonProc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
+                //    this.PythonProc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
+                //    this.PythonProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
+                //    this.PythonProc.FileName = this.PythonEXE;
+                //    this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
+                //    Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
+                //    this.PythonProc.process.Start();
+                //    if (AppSettings.Settings.deepstack_highpriority)
+                //    {
+                //        this.PythonProc.process.PriorityClass = ProcessPriorityClass.High;
+                //    }
+
+
+                //    this.PythonProc.process.BeginOutputReadLine();
+                //    this.PythonProc.process.BeginErrorReadLine();
+
+
+                //    this.IsStarted = true;
+                //    this.HasError = false;
+                //    Ret = true;
+
+                //    //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
+
+                //    int cnt = 0;
+                //    do
+                //    {
+
+                //        List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
+                //        if (montys.Count >= 5)
+                //        {
+                //            //when deepstack is running normaly there will be 5 python.exe processes
+                //            //Set priority for each this way since we didnt start them in the first place...
+                //            cnt = montys.Count;
+                //            if (AppSettings.Settings.deepstack_highpriority)
+                //            {
+                //                foreach (Global.ClsProcess prc in montys)
+                //                {
+                //                    if (Global.ProcessValid(prc))
+                //                    {
+                //                        try
+                //                        {
+                //                            prc.process.PriorityClass = ProcessPriorityClass.High;
+                //                        }
+                //                        catch { }
+
+                //                    }
+                //                }
+                //            }
+                //            break;
+                //        }
+                //        Thread.Sleep(100);
+
+                //    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
+
+                //    if (cnt == 5)
+                //    {
+                //        Log("Started in " + SW.ElapsedMilliseconds + "ms");
+                //    }
+                //    else if (cnt > 5)
+                //    {
+                //        this.HasError = true;
+                //        this.IsStarted = true;
+                //        Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
+                //    }
+                //    else if (cnt == 0)
+                //    {
+                //        this.HasError = true;
+                //        this.IsStarted = true;
+                //        Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
+                //    }
+
+                //}
 
             }
             catch (Exception ex)
@@ -743,7 +816,7 @@ namespace AITool
         }
 
 
-        private void myProcess_Exited(object sender, System.EventArgs e, string Name)
+        private void DSProcess_Exited(object sender, System.EventArgs e, string Name)
         {
 
             string output = "Debug: DeepStack>> Process exited: ";
@@ -933,6 +1006,10 @@ namespace AITool
                     return;
                 }
 
+                //--VISION-DETECTION True --PORT 84
+                Process prc = (Process)sender;
+                string dsinfo = $"DeepStack:{Global.GetWordBetween(prc.StartInfo.Arguments, "PORT ", " |")}>>";
+
                 //Console.WriteLine(Message);
                 if (line.Data.IndexOf("visit localhost to activate deepstack", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -948,21 +1025,68 @@ namespace AITool
                     this.VisionDetectionRunning = true;
                 }
 
-                Log($"Debug: DeepStack>> {line.Data}", "", "", "SERVER.EXE");
+                Log($"Debug: {dsinfo} {line.Data}", "", "", "DEEPSTACK.EXE");
 
             }
-            catch (Exception)
-            {
-
-                throw;
-            }
+            catch { }
         }
-        public async Task<bool> StopAsync()
+        public async Task<bool> StopDeepstackAsync()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            return await Task.Run(() => this.Stop());
+            return await Task.Run(() => this.StopDeepstack());
         }
-        public bool Stop()
+
+        public void ResetDeepstack()
+        {
+            try
+            {
+                if (this.IsStarted)
+                {
+                    Log("Stopping already running DeepStack instance...");
+                    this.StopDeepstack();
+                }
+
+                Thread.Sleep(250);
+
+                Log("Resetting DeepStack...");
+
+                String curdir = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".deepstack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+                curdir = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "DeepStack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+                curdir = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack");
+                if (Directory.Exists(curdir))
+                {
+                    Log($"Removing {curdir}...");
+                    Directory.Delete(curdir, true);
+                }
+
+                List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.pyc");
+                if (files.Count > 0)
+                {
+                    Log($"Removing {files.Count} compiled Python files {this.DeepStackFolder}\\*.PYC...");
+                    foreach (FileInfo fi in files)
+                    {
+                        fi.Delete();
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+        }
+        public bool StopDeepstack()
         {
 
             if (this.Stopping.ReadFullFence())
@@ -977,104 +1101,33 @@ namespace AITool
 
             Log("Stopping Deepstack...");
             Stopwatch sw = Stopwatch.StartNew();
-            //Try to get running processes in any case
+            
+            //Try to get current running processes in any case
             bool success = this.GetDeepStackRun();
+
             //more than one python process we need to take care of...  Sometimes MANY 
-            for (int i = 0; i < 20; i++)
-            {
-                if (Global.ProcessValid(this.PythonProc))
-                {
-                    try
-                    {
-                        Log($"Debug: Stopping {this.PythonEXE}...");
-                        this.PythonProc.process.Kill();
-                        Log($"Debug: Stopped {this.PythonEXE}");
-                        Thread.Sleep(100);
-                        this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
-                    }
-                    catch (Exception ex)
-                    {
+            bool perr = Global.KillProcesses(this.PythonProc);
+            bool rerr = Global.KillProcesses(this.RedisProc);
+            bool serr = Global.KillProcesses(this.ServerProc);
 
-                        Log("Error: Could not stop DeepStack python.exe process: " + Global.ExMsg(ex));
-                        err = true;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-
-            }
-
-            try
-            {
-                if (Global.ProcessValid(this.RedisProc))
-                {
-                    Log($"Debug: Stopping {this.RedisEXE}...");
-                    this.RedisProc.process.Kill();
-                    Log($"Debug: Stopped {this.RedisEXE}");
-                }
-                else
-                {
-                    Log($"Debug: Not running? {this.RedisEXE}?");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log("Error: Could not stop DeepStack redis-server.exe process: " + Global.ExMsg(ex));
-                err = true;
-            }
-            try
-            {
-                if (Global.ProcessValid(this.ServerProc))
-                {
-                    Log($"Debug: Stopping {this.ServerEXE}...");
-                    this.ServerProc.process.Kill();
-                    Log($"Debug: Stopped {this.ServerEXE}");
-                }
-                else
-                {
-                    Log($"Debug: Not running? {this.ServerEXE}?");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log("Error: Could not stop DeepStack server.exe process: " + Global.ExMsg(ex));
-                err = true;
-            }
-            try
-            {
-                if (Global.ProcessValid(this.DeepStackProc))
-                {
-                    Log($"Debug: Stopping {this.DeepStackEXE}...");
-                    this.DeepStackProc.process.Kill();
-                    Log($"Debug: Stopped {this.DeepStackEXE}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log("Error: Could not stop DeepStack.exe process: " + Global.ExMsg(ex));
-                err = true;
-            }
-
-            //takes a while for other python.exe processes to fully stop
-            Thread.Sleep(250);
+            err = !perr || !rerr || !serr;
 
             if (!err)
             {
-                this.PythonProc = null;
-                this.RedisProc = null;
-                this.ServerProc = null;
-                this.DeepStackProc = null;
-                this.IsStarted = false;
+                this.DeepStackProc = new List<Global.ClsProcess>();
+                this.ServerProc = new List<Global.ClsProcess>();
+                this.PythonProc = new List<Global.ClsProcess>();
+                this.RedisProc = new List<Global.ClsProcess>();
+                //this.DeepStackProc = null;
                 Log("Debug: Stopped DeepStack in " + sw.ElapsedMilliseconds + "ms");
                 Ret = true;
             }
             else
             {
-                Log("Error: Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
+                Log("Could not stop - This can happen for a few reasons: 1) This tool did not originally START deepstack.  2) If this tool is 32 bit it cannot stop 64 bit Deepstack process.  Kill manually via task manager - Server.exe, python.exe, redis-server.exe.");
             }
 
+            this.IsStarted = false;
 
             this.Stopping.WriteFullFence(false);
 

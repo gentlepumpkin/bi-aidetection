@@ -271,7 +271,7 @@ namespace AITool
             return await Task.Run(() => IsFileValidInternal(Filename));
         }
 
-        private static bool IsFileValidInternal(string Filename)
+        public static bool IsFileValidInternal(string Filename)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -284,7 +284,7 @@ namespace AITool
                     if (fi.Length > 800)
                     {
                         //try to prevent multiple threads from erroring out writing the json file...
-                        Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileSystemRights.Read, FileShare.ReadWrite, 5000);
+                        Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.Read, FileShare.ReadWrite, 5000);
                         if (result.Success)
                         {
                             //check its contents, 0 bytes indicate corruption
@@ -573,7 +573,12 @@ namespace AITool
                     {
 
                         if (string.IsNullOrEmpty(cam.BICamName))
+                        {
+                            //if (!string.IsNullOrEmpty(cam.Prefix) && !cam.Prefix.Contains("*"))
+                            //    cam.BICamName = cam.Prefix.Trim(".-".ToCharArray());
+                            //else
                             cam.BICamName = cam.Name;
+                        }
 
                         if (string.IsNullOrEmpty(cam.MaskFileName))
                             cam.MaskFileName = $"{cam.Name}.bmp";

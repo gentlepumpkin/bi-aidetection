@@ -121,7 +121,7 @@ namespace AITool
                 if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "\\")
                     ret = url.PathAndQuery;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Log($"Error: {InURL}: {ex.Message}");
             }
@@ -146,7 +146,7 @@ namespace AITool
         }
         [DllImport("Shlwapi.dll", CharSet = CharSet.Auto)]
         public static extern long StrFormatByteSize(long fileSize, [MarshalAs(UnmanagedType.LPTStr)] StringBuilder buffer, int bufferSize);
-       
+
         public static string FormatBytes(long filesize)
         {
             StringBuilder sb = new StringBuilder();
@@ -161,7 +161,7 @@ namespace AITool
 
             string[] splt = span.Split('-');
             TimeSpan BeginSpan = TimeSpan.Parse(splt[0]);
-            TimeSpan EndSpan= TimeSpan.Parse(splt[1]);
+            TimeSpan EndSpan = TimeSpan.Parse(splt[1]);
             // see if start comes before end
             if (BeginSpan < EndSpan)
                 return BeginSpan <= now && now <= EndSpan;
@@ -399,6 +399,74 @@ namespace AITool
 
             return IPAddressOrHostName;
 
+        }
+        public static bool IsLocalHost(string HostNameOrIPAddress)
+        {
+            return string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                   HostNameOrIPAddress == "." ||
+                   string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                   HostNameOrIPAddress == "127.0.0.1" ||
+                   HostNameOrIPAddress == "0.0.0.0" ||
+                   string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase);
+
+
+        }
+        public static async Task<bool> IsLocalHostAsync(string HostNameOrIPAddress)
+        {
+            return string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                   HostNameOrIPAddress == "." ||
+                   string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                   HostNameOrIPAddress == "127.0.0.1" ||
+                   HostNameOrIPAddress == "0.0.0.0" ||
+                   string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(HostNameOrIPAddress, (await GetIPAddressFromHostnameAsync("")).ToString(), StringComparison.OrdinalIgnoreCase);
+
+        }
+
+        public static IPAddress GetIPAddressFromHostname(string HostNameOrIPAddress = "")
+        {
+            IPAddress ret = default(IPAddress);
+            try
+            {
+                if (IsValidIPAddress(HostNameOrIPAddress))
+                    return GetIPAddressFromIPString(HostNameOrIPAddress);
+
+                IPHostEntry Host;
+                if (string.IsNullOrWhiteSpace(HostNameOrIPAddress))
+                    Host = Dns.GetHostEntry(Dns.GetHostName());
+                else
+                    Host = Dns.GetHostEntry(HostNameOrIPAddress);
+
+                foreach (IPAddress IP in Host.AddressList)
+                {
+                    if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        // just return the first one
+                        ret = IP;
+                        break;
+                    }
+                }
+                if (!IsValidIPAddress(ret))
+                {
+                    // fall back to ipv6
+                    foreach (IPAddress IP in Host.AddressList)
+                    {
+                        if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        {
+                            // just return the first one
+                            ret = IP;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: Hostname '{HostNameOrIPAddress}': {ExMsg(ex)}");
+            }
+
+            return ret;
         }
         public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddres = "")
         {
@@ -1172,12 +1240,30 @@ namespace AITool
             //return sDefMsg;
         }
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private extern static SafeFileHandle CreateFile(string lpFileName, FileSystemRights dwDesiredAccess, FileShare dwShareMode, IntPtr securityAttrs, FileMode dwCreationDisposition, FileOptions dwFlagsAndAttributes, IntPtr hTemplateFile);
+        //[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        //private extern static SafeFileHandle CreateFile(
+        //    string lpFileName,
+        //    FileSystemRights dwDesiredAccess,
+        //    FileShare dwShareMode,
+        //    IntPtr securityAttrs,
+        //    FileMode dwCreationDisposition,
+        //    FileOptions dwFlagsAndAttributes,
+        //    IntPtr hTemplateFile);
+
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private extern static SafeFileHandle CreateFile(
+            string lpFileName,
+            [MarshalAs(UnmanagedType.U4)] FileAccess dwDesiredAccess,
+            [MarshalAs(UnmanagedType.U4)] FileShare dwShareMode,
+            IntPtr lpSecurityAttributes,
+            [MarshalAs(UnmanagedType.U4)] FileMode dwCreationDisposition,
+            [MarshalAs(UnmanagedType.U4)] FileAttributes dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
+        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileAccess rights = FileAccess.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
         {
             //run the function in another thread
             return await Task.Run(() => WaitForFileAccess(filename, rights, share, WaitMS, RetryDelayMS));
@@ -1189,61 +1275,77 @@ namespace AITool
             public long TimeMS = 0;
             public int ErrRetryCnt = 0;
             public string ResultString = "";
+            public SafeFileHandle Handle = default(SafeFileHandle);
 
         }
 
-        public static WaitFileAccessResult WaitForFileAccess(string filename, FileSystemRights rights = FileSystemRights.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
+        public static WaitFileAccessResult WaitForFileAccess(string filename, 
+                                                              FileAccess rights = FileAccess.Read, 
+                                                              FileShare share = FileShare.None, 
+                                                              long WaitMS = 30000, 
+                                                              int RetryDelayMS = 50, 
+                                                              bool ReturnHandle = false, 
+                                                              long MinFileSize = 1,
+                                                              int MaxErrRetryCnt = 2000)
         {
             WaitFileAccessResult ret = new WaitFileAccessResult();
+            
             try
             {
                 //lets give it an initial tiny wait
                 //await Task.Delay(RetryDelayMS);
 
-                if (File.Exists(filename))
+                FileInfo FI = new FileInfo(filename);
+                
+                if (FI.Exists)
                 {
                     Stopwatch SW = new Stopwatch();
                     SW.Start();
 
-                    while ((ret.ErrRetryCnt < 2000) && (SW.ElapsedMilliseconds < WaitMS))
+                    long LastLength = FI.Length;  //if the file is growing, try to wait for it
+
+                    while ((ret.ErrRetryCnt < MaxErrRetryCnt) && (SW.ElapsedMilliseconds < WaitMS))
                     {
-                        if (new FileInfo(filename).Length > 0)
+                        if (FI.Length >= MinFileSize && LastLength == FI.Length)
                         {
+
                             //SafeFileHandle fileHandle = CreateFile(fileName,FileSystemRights.Modify, FileShare.Write,IntPtr.Zero, FileMode.OpenOrCreate,FileOptions.None, IntPtr.Zero);
-                            using (SafeFileHandle fileHandle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileOptions.None, IntPtr.Zero))
+                            ret.Handle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileAttributes.Normal, IntPtr.Zero);
+
+
+                            if (ret.Handle.IsInvalid)
                             {
+                                int LastErr = Marshal.GetLastWin32Error();
 
-                                if (fileHandle.IsInvalid)
+                                if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                 {
-                                    int LastErr = Marshal.GetLastWin32Error();
-                                    ret.ErrRetryCnt += 1;
-
-                                    if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
-                                    {
-                                        //unexpected error, break out
-                                        Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
-                                        break;
-                                    }
-
-                                }
-                                else
-                                {
-                                    ret.Success = true;
+                                    //unexpected error, break out
+                                    Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
                                     break;
                                 }
 
-                                if (!fileHandle.IsClosed)
-                                {
-                                    //the using statement should make sure the handle is closed but I just feel better about doing this...
-                                    fileHandle.Close();
-                                }
+                            }
+                            else
+                            {
+                                ret.Success = true;
+                                break;
+                            }
 
+                            if (!ret.Handle.IsClosed)
+                            {
+                                ret.Handle.Close();
+                                ret.Handle.Dispose();
                             }
 
                         }
 
+                        LastLength = FI.Length;
+
+                        ret.ErrRetryCnt += 1;
+
                         Thread.Sleep(RetryDelayMS);
-                        //await Task.Delay(RetryDelayMS);
+                        
+                        FI.Refresh();
                     }
                     SW.Stop();
 
@@ -1267,11 +1369,20 @@ namespace AITool
                 ret.ResultString = $"Error: {filename}: {Global.ExMsg(ex)}";
                 Log(ret.ResultString);
             }
+            finally
+            {
+                if (!ReturnHandle && ret.Handle != null && !ret.Handle.IsClosed)
+                {
+                    ret.Handle.Close();
+                    ret.Handle.Dispose();
+                }
+            }
 
 
             return ret;
 
         }
+
 
         public static bool IsInList(List<string> FindStrList, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
@@ -1964,6 +2075,93 @@ namespace AITool
             }
         }
 
+        public static bool KillProcesses(List<ClsProcess> prc)
+        {
+
+            int valid = 0;
+            int ccnt = 0;
+            if (prc != null && prc.Count > 0)
+            {
+                foreach (ClsProcess curprc in prc)
+                {
+                    ccnt++;
+                    if (ProcessValid(curprc))
+                    {
+                        try
+                        {
+                            Log($"Debug: Killing {ccnt} of {prc.Count}: {curprc.FileName}");
+                            curprc.process.Kill();
+                            valid++;
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Log($"Error: Could not kill process {curprc.FileName}");
+                        }
+                    }
+                    else
+                    {
+                        Log($"Process no longer valid {curprc.FileName}");
+
+                    }
+                }
+                if (prc.Count == valid)
+                    return true;
+                else
+                    return false;
+            }
+            return true;
+        }
+
+        public static bool WaitForProcessToStart(Process prc, int TimeoutMS)
+        {
+            bool ret = false;
+            Stopwatch sw = Stopwatch.StartNew();
+            try
+            {
+                if (prc != null && !prc.HasExited)
+                {
+                    long LastMem = 0;
+                    int cnt = 0;
+                    //prc.WaitForInputIdle(TimeoutMS); //I think this only works with GUI app
+                    while (sw.ElapsedMilliseconds <= TimeoutMS && !prc.HasExited && LastMem != prc.PrivateMemorySize64)
+                    {
+                        cnt++;
+                        LastMem = prc.PrivateMemorySize64;
+                        System.Threading.Thread.Sleep(50);
+                        prc.Refresh();
+                    }
+                    sw.Stop();
+                    Log($"Debug: Waited {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {prc.ProcessName} to initialize.");
+                    ret = prc != null && !prc.HasExited;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ExMsg(ex)}");
+            }
+            return ret;
+
+        }
+
+        public static bool ProcessValid(List<ClsProcess> prc)
+        {
+
+            int valid = 0;
+            if (prc != null && prc.Count > 0)
+            {
+                foreach (ClsProcess curprc in prc)
+                {
+                    if (ProcessValid(curprc))
+                        valid++;
+                    else
+                        break;
+                }
+                if (prc.Count == valid)
+                    return true;
+            }
+            return false;
+        }
         public static bool ProcessValid(ClsProcess prc)
         {
 

@@ -43,12 +43,14 @@ namespace AITool
         [JsonIgnore]
         public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public bool IsLocalHost { get; set; } = false;
         public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public string LastResultMessage { get; set; } = "";
         public long LastTimeMS { get; set; } = 0;
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
+        public int Port { get; set; } = 0;
         public string DefaultURL { get; set; } = "";
         [JsonIgnore]
         public HttpClient HttpClient { get; set; }
@@ -77,7 +79,7 @@ namespace AITool
             {
                 if (type == URLTypeEnum.DOODS)
                 {
-                    this.DefaultURL = "http://localhost:8080/detect";
+                    this.DefaultURL = "http://127.0.0.1:8080/detect";
                     url = this.DefaultURL;
                 }
                 else if (type == URLTypeEnum.AWSRekognition) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
@@ -87,7 +89,7 @@ namespace AITool
                 }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    this.DefaultURL = "http://localhost:80/v1/vision/detection";
+                    this.DefaultURL = "http://127.0.0.1:80/v1/vision/detection";
                     url = this.DefaultURL;
                 }
 
@@ -117,6 +119,8 @@ namespace AITool
 
                 Uri uri = new Uri(this.url);
                 this.CurSrv = uri.Host + ":" + uri.Port;
+                this.Port = uri.Port;
+                this.IsLocalHost = Global.IsLocalHost(uri.Host);
                 this.HttpClient = new HttpClient();
                 this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
                 this.IsValid = true;
@@ -129,6 +133,7 @@ namespace AITool
 
                 this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
                 this.Type = URLTypeEnum.AWSRekognition;
+                this.IsLocalHost = false;
 
                 string error = AITOOL.UpdateAmazonSettings();
 
@@ -172,6 +177,10 @@ namespace AITool
 
                 Uri uri = new Uri(this.url);
                 this.CurSrv = uri.Host + ":" + uri.Port;
+                this.Port = uri.Port;
+
+                this.IsLocalHost = Global.IsLocalHost(uri.Host);
+
                 this.HttpClient = new HttpClient();
                 this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
                 this.IsValid = true;
@@ -209,13 +218,24 @@ namespace AITool
                     if (uri.Port > 0)
                     {
                         ret = true;
+                        this.IsLocalHost = Global.IsLocalHost(uri.Host);
+                        if (this.IsLocalHost)
+                        {
+                            if (this.IsLocalHost)
+                            {
+                                //force it to always be 127.0.0.1 for localhost
+                                uri = new Uri($"{uri.Scheme}://127.0.0.1:{uri.Port}{uri.PathAndQuery}");
+                                this.url = uri.ToString();
+                            }
+                        }
+
                     }
                 }
             }
             else if (this.Type == URLTypeEnum.AWSRekognition)
             {
 
-
+                this.IsLocalHost = false;
                 if (this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase))
                 {
                     ret = true;
@@ -246,6 +266,15 @@ namespace AITool
                     if (uri.Port > 0)
                     {
                         ret = true;
+                        this.IsLocalHost = Global.IsLocalHost(uri.Host);
+                        if (this.IsLocalHost)
+                        {
+                            //force it to always be 127.0.0.1 for localhost
+                            uri = new Uri($"{uri.Scheme}://127.0.0.1:{uri.Port}{uri.PathAndQuery}");
+                            this.url = uri.ToString();
+                        }
+
+
                     }
                 }
 
@@ -285,8 +314,10 @@ namespace AITool
         public bool Equals(ClsURLItem other)
         {
             return other != null &&
-                   string.Equals(this.url, other.url, StringComparison.OrdinalIgnoreCase) &&
-                   this.Type == other.Type;
+                   (string.Equals(this.url, other.url, StringComparison.OrdinalIgnoreCase) && 
+                   this.Type == other.Type &&
+                   this.ActiveTimeRange == other.ActiveTimeRange &&
+                   this.Cameras == other.Cameras);
         }
 
     }

@@ -203,7 +203,7 @@ namespace AITool
                         //this may happen if the already running instance has a different port, etc, so we update the config
                         this.SaveDeepStackTab();
                     }
-                    this.LoadDeepStackTab(true);
+                    this.LoadDeepStackTab();
                 }
 
                 //---------------------------------------------------------------------------
@@ -1010,7 +1010,7 @@ namespace AITool
             }
             else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
             {
-                this.LoadDeepStackTab(true);
+                this.LoadDeepStackTab();
             }
             else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabLog"])
             {
@@ -2504,12 +2504,6 @@ namespace AITool
                         this.DisplayCameraSettings(); //reset displayed settings
                         return;
                     }
-                    else
-                    {
-                        //update the mask filename
-                        CamCheck.MaskFileName = $"{CamCheck.Name}.bmp";
-                        Log($"SUCCESS: Camera {this.list2.SelectedItems[0].Text} was updated to {this.tbName.Text}.");
-                    }
                 }
 
 
@@ -2573,6 +2567,7 @@ namespace AITool
                         string pth = Path.GetDirectoryName(Oldmaskfile);
                         string NewMaskFile = Path.Combine(pth, this.tbName.Text.Trim() + ext);
                         File.Move(Oldmaskfile, NewMaskFile);
+                        cam.MaskFileName = NewMaskFile;
                     }
                     cam.Name = this.tbName.Text.Trim();  //just in case we needed to rename it
                 }
@@ -3070,7 +3065,11 @@ namespace AITool
 
                     if (DeepStackServerControl.IsActivated)
                     {
-                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                        MethodInvoker LabelUpdate = delegate { 
+                            this.Lbl_BlueStackRunning.Text = "*RUNNING*";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.Green;
+
+                        };
                         this.Invoke(LabelUpdate);
 
                         this.Btn_Start.Enabled = false;
@@ -3087,11 +3086,38 @@ namespace AITool
                 }
                 else
                 {
-                    MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
-                    this.Invoke(LabelUpdate);
+                   if (DeepStackServerControl.Starting.ReadFullFence())
+                    {
+                        MethodInvoker LabelUpdate = delegate {
+                            this.Lbl_BlueStackRunning.Text = "STARTING...";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                        };
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = true;
 
-                    this.Btn_Start.Enabled = true;
-                    this.Btn_Stop.Enabled = false;
+                    }
+                    else if (DeepStackServerControl.Stopping.ReadFullFence())
+                    {
+                        MethodInvoker LabelUpdate = delegate {
+                            this.Lbl_BlueStackRunning.Text = "STOPPING...";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                        };
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = false;
+
+                    }
+                    else
+                    {
+                        MethodInvoker LabelUpdate = delegate {
+                            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.Black;
+                        };
+                        this.Invoke(LabelUpdate);
+
+                        this.Btn_Start.Enabled = true;
+                        this.Btn_Stop.Enabled = false;
+
+                    }
                 }
             }
             else
@@ -3108,7 +3134,7 @@ namespace AITool
 
         }
 
-        private async Task LoadDeepStackTab(bool StartIfNeeded)
+        private async Task LoadDeepStackTab()
         {
 
             try
@@ -3156,6 +3182,9 @@ namespace AITool
                 if (!DeepStackServerControl.IsNewVersion)
                     this.Txt_CustomModelPath.Enabled = false;
 
+                this.tb_DeepstackCommandLine.Text = DeepStackServerControl.CommandLine;
+                this.tb_DeepStackURLs.Text = DeepStackServerControl.URLS;
+
                 //if (prt != Txt_Port.Text)
                 //{
                 //    //server:port/maybe/more/path
@@ -3180,7 +3209,10 @@ namespace AITool
                         if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
                         {
 
-                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                            MethodInvoker LabelUpdate = delegate { 
+                                this.Lbl_BlueStackRunning.Text = "*RUNNING*";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.Green;
+                            };
                             this.Invoke(LabelUpdate);
 
                             this.Btn_Start.Enabled = false;
@@ -3206,49 +3238,79 @@ namespace AITool
                     }
                     else if (DeepStackServerControl.HasError)
                     {
-                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                        MethodInvoker LabelUpdate = delegate { 
+                            this.Lbl_BlueStackRunning.Text = "*ERROR*";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.Red;
+                                                             };
                         this.Invoke(LabelUpdate);
 
-                        this.Btn_Start.Enabled = false;
+                        this.Btn_Start.Enabled = true;
                         this.Btn_Stop.Enabled = true;
                     }
                     else
                     {
-                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*"; };
-                        this.Invoke(LabelUpdate);
-
-                        this.Btn_Start.Enabled = true;
-                        this.Btn_Stop.Enabled = false;
-                        if (this.Chk_AutoStart.Checked && StartIfNeeded)
+                        if (DeepStackServerControl.Starting.ReadFullFence())
                         {
-                            if (await DeepStackServerControl.StartAsync())
-                            {
-                                if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
-                                {
-                                    LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
-                                    this.Invoke(LabelUpdate);
-                                    this.Btn_Start.Enabled = false;
-                                    this.Btn_Stop.Enabled = true;
-                                }
-                                else if (DeepStackServerControl.HasError)
-                                {
-                                    LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                                    this.Invoke(LabelUpdate);
+                            MethodInvoker LabelUpdate = delegate {
+                                this.Lbl_BlueStackRunning.Text = "STARTING...";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                            };
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
 
-                                    this.Btn_Start.Enabled = false;
-                                    this.Btn_Stop.Enabled = true;
-                                }
-
-                            }
-                            else
-                            {
-                                LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                                this.Invoke(LabelUpdate);
-
-                                this.Btn_Start.Enabled = false;
-                                this.Btn_Stop.Enabled = true;
-                            }
                         }
+                        else if (DeepStackServerControl.Stopping.ReadFullFence())
+                        {
+                            MethodInvoker LabelUpdate = delegate {
+                                this.Lbl_BlueStackRunning.Text = "STOPPING...";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                            };
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = false;
+
+                        }
+                        else
+                        {
+                            MethodInvoker LabelUpdate = delegate {
+                                this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.Black;
+                            };
+                            this.Invoke(LabelUpdate);
+
+                            this.Btn_Start.Enabled = true;
+                            this.Btn_Stop.Enabled = false;
+
+                        }
+                        //if (this.Chk_AutoStart.Checked && StartIfNeeded)
+                        //{
+                        //    if (await DeepStackServerControl.StartDeepstackAsync())
+                        //    {
+                        //        if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                        //        {
+                        //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                        //            this.Invoke(LabelUpdate);
+                        //            this.Btn_Start.Enabled = false;
+                        //            this.Btn_Stop.Enabled = true;
+                        //        }
+                        //        else if (DeepStackServerControl.HasError)
+                        //        {
+                        //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                        //            this.Invoke(LabelUpdate);
+
+                        //            this.Btn_Start.Enabled = false;
+                        //            this.Btn_Stop.Enabled = true;
+                        //        }
+
+                        //    }
+                        //    else
+                        //    {
+                        //        LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                        //        this.Invoke(LabelUpdate);
+
+                        //        this.Btn_Start.Enabled = false;
+                        //        this.Btn_Stop.Enabled = true;
+                        //    }
+                        //}
                     }
                 }
                 else
@@ -3275,8 +3337,9 @@ namespace AITool
             this.Btn_Start.Enabled = false;
             this.Btn_Stop.Enabled = false;
             this.SaveDeepStackTab();
-            await DeepStackServerControl.StartAsync();
-            this.LoadDeepStackTab(true);
+            await DeepStackServerControl.StartDeepstackAsync();
+            //MessageBox.Show("Started");
+            this.LoadDeepStackTab();
         }
 
         private void Btn_Save_Click(object sender, EventArgs e)
@@ -3289,8 +3352,10 @@ namespace AITool
             this.Lbl_BlueStackRunning.Text = "STOPPING...";
             this.Btn_Start.Enabled = false;
             this.Btn_Stop.Enabled = false;
-            await DeepStackServerControl.StopAsync();
-            this.LoadDeepStackTab(false);
+            this.SaveDeepStackTab();
+            await DeepStackServerControl.StopDeepstackAsync();
+            //MessageBox.Show("Stopped");
+            this.LoadDeepStackTab();
         }
 
 
@@ -4825,6 +4890,39 @@ namespace AITool
             }
 
             UpdateAIURLs();
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("https://docs.deepstack.cc/windows/index.html");
+        }
+
+        private void bt_DeepstackReset_Click(object sender, EventArgs e)
+        {
+            this.Lbl_BlueStackRunning.Text = "RESETTING...";
+            this.Btn_Start.Enabled = false;
+            this.Btn_Stop.Enabled = false;
+            this.Btn_DeepstackReset.Enabled = false;
+            this.SaveDeepStackTab();
+            DeepStackServerControl.ResetDeepstack();
+            this.Btn_DeepstackReset.Enabled = true;
+            this.LoadDeepStackTab();
+        }
+
+        private void Btn_ViewLog_Click(object sender, EventArgs e)
+        {
+            string errfile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack", "logs", "stderr.txt");
+            if (File.Exists(errfile))
+            {
+                if (new FileInfo(errfile).Length > 4)
+                    Process.Start(errfile);
+                else
+                    MessageBox.Show("File has no lines " + errfile);
+            }
+            else
+            {
+                MessageBox.Show("Cannot find " + errfile);
+            }
         }
     }
 
