@@ -41,20 +41,24 @@ namespace AITool
             this.tb_ApplyToCams = new System.Windows.Forms.TextBox();
             this.chk_Enabled = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tb_Upper = new System.Windows.Forms.TextBox();
+            this.tb_Lower = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.tb_ImagesPerMonth = new System.Windows.Forms.TextBox();
             this.btn_ImageAdjustEdit = new System.Windows.Forms.Button();
             this.cb_ImageAdjustProfile = new System.Windows.Forms.ComboBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkHelpURL = new System.Windows.Forms.LinkLabel();
             this.btTest = new System.Windows.Forms.Button();
             this.bt_clear = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.tb_Lower = new System.Windows.Forms.TextBox();
-            this.tb_Upper = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
+            this.cb_RefinementServer = new System.Windows.Forms.CheckBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.tb_RefinementObjects = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -93,7 +97,7 @@ namespace AITool
             this.tb_URL.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_URL.Location = new System.Drawing.Point(111, 35);
             this.tb_URL.Name = "tb_URL";
-            this.tb_URL.Size = new System.Drawing.Size(464, 20);
+            this.tb_URL.Size = new System.Drawing.Size(462, 20);
             this.tb_URL.TabIndex = 2;
             this.tb_URL.TextChanged += new System.EventHandler(this.tb_URL_TextChanged);
             // 
@@ -101,7 +105,7 @@ namespace AITool
             // 
             this.bt_Save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.bt_Save.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.bt_Save.Location = new System.Drawing.Point(516, 193);
+            this.bt_Save.Location = new System.Drawing.Point(514, 245);
             this.bt_Save.Name = "bt_Save";
             this.bt_Save.Size = new System.Drawing.Size(70, 30);
             this.bt_Save.TabIndex = 3;
@@ -141,7 +145,7 @@ namespace AITool
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_ApplyToCams.Location = new System.Drawing.Point(111, 61);
             this.tb_ApplyToCams.Name = "tb_ApplyToCams";
-            this.tb_ApplyToCams.Size = new System.Drawing.Size(463, 20);
+            this.tb_ApplyToCams.Size = new System.Drawing.Size(461, 20);
             this.tb_ApplyToCams.TabIndex = 5;
             this.toolTip1.SetToolTip(this.tb_ApplyToCams, "A comma separated list of cameras that this AI server will work with.\r\n\r\nLeave em" +
         "pty for ALL.");
@@ -161,8 +165,12 @@ namespace AITool
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.tb_RefinementObjects);
+            this.groupBox1.Controls.Add(this.label11);
+            this.groupBox1.Controls.Add(this.cb_RefinementServer);
             this.groupBox1.Controls.Add(this.tb_Upper);
             this.groupBox1.Controls.Add(this.tb_Lower);
+            this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.tb_ImagesPerMonth);
             this.groupBox1.Controls.Add(this.btn_ImageAdjustEdit);
@@ -182,9 +190,35 @@ namespace AITool
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Location = new System.Drawing.Point(5, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(581, 168);
+            this.groupBox1.Size = new System.Drawing.Size(579, 220);
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
+            // 
+            // tb_Upper
+            // 
+            this.tb_Upper.Location = new System.Drawing.Point(214, 140);
+            this.tb_Upper.Name = "tb_Upper";
+            this.tb_Upper.Size = new System.Drawing.Size(49, 20);
+            this.tb_Upper.TabIndex = 11;
+            this.tb_Upper.Text = "100";
+            // 
+            // tb_Lower
+            // 
+            this.tb_Lower.Location = new System.Drawing.Point(111, 140);
+            this.tb_Lower.Name = "tb_Lower";
+            this.tb_Lower.Size = new System.Drawing.Size(49, 20);
+            this.tb_Lower.TabIndex = 11;
+            this.tb_Lower.Tag = "";
+            this.tb_Lower.Text = "0";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(18, 143);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(89, 13);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Confidence limits:";
             // 
             // tb_ImagesPerMonth
             // 
@@ -192,7 +226,7 @@ namespace AITool
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_ImagesPerMonth.Location = new System.Drawing.Point(525, 87);
             this.tb_ImagesPerMonth.Name = "tb_ImagesPerMonth";
-            this.tb_ImagesPerMonth.Size = new System.Drawing.Size(49, 20);
+            this.tb_ImagesPerMonth.Size = new System.Drawing.Size(47, 20);
             this.tb_ImagesPerMonth.TabIndex = 9;
             this.tb_ImagesPerMonth.Text = "0";
             this.toolTip1.SetToolTip(this.tb_ImagesPerMonth, "Max images per month - 0 for unlimited.    Amazon has 5000 free images a month");
@@ -218,6 +252,24 @@ namespace AITool
             this.cb_ImageAdjustProfile.Size = new System.Drawing.Size(152, 21);
             this.cb_ImageAdjustProfile.TabIndex = 7;
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(269, 143);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(303, 13);
+            this.label9.TabIndex = 1;
+            this.label9.Text = "Upper    (These will override the CAMERA setting if configured)";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(161, 143);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(36, 13);
+            this.label8.TabIndex = 1;
+            this.label8.Text = "Lower";
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
@@ -240,7 +292,7 @@ namespace AITool
             // 
             this.linkHelpURL.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkHelpURL.AutoSize = true;
-            this.linkHelpURL.Location = new System.Drawing.Point(2, 175);
+            this.linkHelpURL.Location = new System.Drawing.Point(2, 227);
             this.linkHelpURL.Name = "linkHelpURL";
             this.linkHelpURL.Size = new System.Drawing.Size(10, 13);
             this.linkHelpURL.TabIndex = 8;
@@ -251,7 +303,7 @@ namespace AITool
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(440, 193);
+            this.btTest.Location = new System.Drawing.Point(438, 245);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 9;
@@ -262,7 +314,7 @@ namespace AITool
             // bt_clear
             // 
             this.bt_clear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.bt_clear.Location = new System.Drawing.Point(364, 193);
+            this.bt_clear.Location = new System.Drawing.Point(362, 245);
             this.bt_clear.Name = "bt_clear";
             this.bt_clear.Size = new System.Drawing.Size(70, 30);
             this.bt_clear.TabIndex = 9;
@@ -270,55 +322,48 @@ namespace AITool
             this.bt_clear.UseVisualStyleBackColor = true;
             this.bt_clear.Click += new System.EventHandler(this.bt_clear_Click);
             // 
-            // label3
+            // cb_RefinementServer
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 143);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(89, 13);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "Confidence limits:";
+            this.cb_RefinementServer.AutoSize = true;
+            this.cb_RefinementServer.Location = new System.Drawing.Point(111, 166);
+            this.cb_RefinementServer.Name = "cb_RefinementServer";
+            this.cb_RefinementServer.Size = new System.Drawing.Size(15, 14);
+            this.cb_RefinementServer.TabIndex = 12;
+            this.cb_RefinementServer.UseVisualStyleBackColor = true;
+            this.cb_RefinementServer.CheckedChanged += new System.EventHandler(this.cb_RefinementServer_CheckedChanged);
             // 
-            // tb_Lower
+            // label10
             // 
-            this.tb_Lower.Location = new System.Drawing.Point(111, 140);
-            this.tb_Lower.Name = "tb_Lower";
-            this.tb_Lower.Size = new System.Drawing.Size(49, 20);
-            this.tb_Lower.TabIndex = 11;
-            this.tb_Lower.Tag = "";
-            this.tb_Lower.Text = "0";
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(9, 167);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(98, 13);
+            this.label10.TabIndex = 10;
+            this.label10.Text = "Refinement Server:";
             // 
-            // tb_Upper
+            // label11
             // 
-            this.tb_Upper.Location = new System.Drawing.Point(214, 140);
-            this.tb_Upper.Name = "tb_Upper";
-            this.tb_Upper.Size = new System.Drawing.Size(49, 20);
-            this.tb_Upper.TabIndex = 11;
-            this.tb_Upper.Text = "100";
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(132, 167);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(337, 13);
+            this.label11.TabIndex = 13;
+            this.label11.Text = "Use this server only if another server detects the following objects first:";
             // 
-            // label8
+            // tb_RefinementObjects
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(161, 143);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(36, 13);
-            this.label8.TabIndex = 1;
-            this.label8.Text = "Lower";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(269, 143);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(303, 13);
-            this.label9.TabIndex = 1;
-            this.label9.Text = "Upper    (These will override the CAMERA setting if configured)";
+            this.tb_RefinementObjects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_RefinementObjects.Location = new System.Drawing.Point(111, 186);
+            this.tb_RefinementObjects.Name = "tb_RefinementObjects";
+            this.tb_RefinementObjects.Size = new System.Drawing.Size(461, 20);
+            this.tb_RefinementObjects.TabIndex = 14;
             // 
             // Frm_AIServerDeepstackEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 231);
+            this.ClientSize = new System.Drawing.Size(587, 283);
             this.Controls.Add(this.bt_clear);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.linkHelpURL);
@@ -363,5 +408,9 @@ namespace AITool
         private System.Windows.Forms.TextBox tb_Lower;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox tb_RefinementObjects;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.CheckBox cb_RefinementServer;
+        private System.Windows.Forms.Label label10;
     }
 }

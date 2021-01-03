@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using OSVersionExtension;
+using PushoverClient;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -83,7 +84,9 @@ namespace AITool
 
         public static System.Timers.Timer FileSystemErrorCheckTimer = new System.Timers.Timer();
 
-        public static MQTTClient mq = new MQTTClient();
+        public static MQTTClient mqttClient = new MQTTClient();
+
+        public static Pushover pushoverClient = null;
 
         public static string srv = "";
 
@@ -268,8 +271,8 @@ namespace AITool
 
         public static void UpdateAIURLs()
         {
-            
-            
+
+
             if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
             {
                 string error = AITOOL.UpdateAmazonSettings();
@@ -349,8 +352,8 @@ namespace AITool
 
                 }
             }
-            
-            if (AppSettings.GetURL(type: URLTypeEnum.SightHound) != null)
+
+            if (AppSettings.GetURL(type: URLTypeEnum.SightHound_Person) != null || AppSettings.GetURL(type: URLTypeEnum.SightHound_Vehicle) != null)
             {
                 if (string.IsNullOrWhiteSpace(AppSettings.Settings.SightHoundAPIKey))
                 {
@@ -538,7 +541,7 @@ namespace AITool
 
         }
 
-        public static async Task<ClsURLItem> WaitForNextURL(Camera cam)
+        public static async Task<ClsURLItem> WaitForNextURL(Camera cam, bool AllowRefinementServer)
         {
             //lets wait in here forever until a URL is available...
 
@@ -555,6 +558,7 @@ namespace AITool
                 int incorrectcam = 0;
                 int notintimerange = 0;
                 int maxpermonth = 0;
+                int notrefined = 0;
                 try
                 {
 
@@ -585,54 +589,62 @@ namespace AITool
                             {
                                 if (Global.IsInList(cam.Name, sorted[i].Cameras, TrueIfEmpty: true))
                                 {
-
-                                    if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
+                                    if (AllowRefinementServer && sorted[i].UseAsRefinementServer || !sorted[i].UseAsRefinementServer)
                                     {
-                                        DateTime now = DateTime.Now;
-
-                                        if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
+                                        if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
                                         {
-                                            if (sorted[i].CurErrCount.ReadFullFence() == 0)
+                                            DateTime now = DateTime.Now;
+
+                                            if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
                                             {
-                                                ret = sorted[i];
-                                                ret.CurOrder = i + 1;
-                                                break;
-                                            }
-                                            else
-                                            {
-                                                double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
-                                                if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
+                                                if (sorted[i].CurErrCount.ReadFullFence() == 0)
                                                 {
                                                     ret = sorted[i];
                                                     ret.CurOrder = i + 1;
-                                                    if (!displayedretry)  //if we get in a long loop waiting for URL
-                                                    {
-                                                        Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                        displayedretry = true;
-                                                    }
                                                     break;
                                                 }
                                                 else
                                                 {
-                                                    if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                    double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                                    if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
                                                     {
-                                                        Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                        displayedbad = true;
+                                                        ret = sorted[i];
+                                                        ret.CurOrder = i + 1;
+                                                        if (!displayedretry)  //if we get in a long loop waiting for URL
+                                                        {
+                                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                            displayedretry = true;
+                                                        }
+                                                        break;
                                                     }
-                                                }
+                                                    else
+                                                    {
+                                                        if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                        {
+                                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                            displayedbad = true;
+                                                        }
+                                                    }
 
+                                                }
                                             }
+                                            else
+                                            {
+                                                notintimerange++;
+                                            }
+
                                         }
                                         else
                                         {
-                                            notintimerange++;
+                                            maxpermonth++;
                                         }
 
                                     }
                                     else
                                     {
-                                        maxpermonth++;
+                                        notrefined++;
                                     }
+
                                 }
                                 else
                                 {
@@ -684,7 +696,7 @@ namespace AITool
 
                 if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
                 {
-                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit) Waiting...");
+                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit, {notrefined} not refinement server) Waiting...");
                     LastWaitingLog = DateTime.Now;
                 }
 
@@ -753,7 +765,7 @@ namespace AITool
                                 Stopwatch sw = Stopwatch.StartNew();
 
                                 //wait for the next url to become available...
-                                ClsURLItem url = await WaitForNextURL(cam);
+                                ClsURLItem url = await WaitForNextURL(cam, false);
 
                                 sw.Stop();
 
@@ -1465,12 +1477,25 @@ namespace AITool
 
                     using MemoryStream ms = CurImg.ToStream();
                     using StreamContent sc = new StreamContent(ms);
+
                     request.Add(sc, "image", Path.GetFileName(CurImg.image_path));
+
+                    double minconf = 0;
+                    if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && !OverrideThreshold)
+                        minconf = cam.threshold_lower;
+                    else if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
+                        minconf = AiUrl.Threshold_Lower;
+
+                    if (minconf > 0)
+                    {
+                        request.Add(new StringContent((minconf / 100).ToString()), "min_confidence");
+                    }
+
 
                     Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.Name, CurImg.image_path);
 
                     swposttime.Restart();
-                    
+
                     using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(AiUrl.ToString(), request, MasterCTS.Token);
 
                     swposttime.Stop();
@@ -1585,9 +1610,9 @@ namespace AITool
             //==============================================================================================================
             //==============================================================================================================
 
-            else if (AiUrl.Type == URLTypeEnum.SightHound)
+            else if (AiUrl.Type.ToString().StartsWith("sighthound", StringComparison.OrdinalIgnoreCase))
             {
-                
+
                 if (string.IsNullOrEmpty(AppSettings.Settings.SightHoundAPIKey))
                 {
                     ret.Success = false;
@@ -1597,143 +1622,179 @@ namespace AITool
                     return ret;
                 }
 
-                //Stopwatch swposttime = new Stopwatch();
+                Stopwatch swposttime = new Stopwatch();
 
-                //try
-                //{
-                //    long FileSize = new FileInfo(CurImg.image_path).Length;
-
-
-                //    Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
-                //    dict.Add("image", CurImg.ImageByteArray);
-                //    string json = JsonConvert.SerializeObject((object)dict);
-                //    byte[] body = Encoding.UTF8.GetBytes(json);
-
-                //    WebRequest request = WebRequest.Create("https://dev.sighthoundapi.com/v1/detections?type=face,person&faceOption=landmark,gender");
-                //    request.Method = "POST";
-                //    request.ContentType = "application/json";
-                //    request.ContentLength = json.Length;
-                //    request.Headers["X-Access-Token"] = AppSettings.Settings.SightHoundAPIKey;
-
-                //    using (Stream requestStream = request.GetRequestStream())
-                //    {
-                //        requestStream.Write(body, 0, body.Length);
-                //    }
-
-                //    Log($"Debug: (1/6) Uploading a {FileSize} byte image ({body.Length} bytes in request) to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-
-                //    swposttime.Restart();
-
-                //    using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                                        
-                //    ret.StatusCode = response.StatusCode;
-
-                //    if (response.StatusCode == HttpStatusCode.OK)
-                //    {
-
-                //        using StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                //        ret.JsonString = reader.ReadToEnd();
-
-                //        swposttime.Stop();
-
-                //        if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
-                //        {
-                //            string cleanjsonString = Global.CleanString(ret.JsonString);
-
-                //            JObject result = JObject.Parse(ret.JsonString);
-
-                //            try
-                //            {
-                //                //This can throw an exception
-                //                response = JsonConvert.DeserializeObject<ClsDeepStackResponse>(ret.JsonString);
-
-                //                if (response != null)
-                //                {
-                //                    if (response.predictions != null)
-                //                    {
-                //                        if (!response.success)
-                //                        {
-                //                            ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
-                //                            AiUrl.IncrementError();
-                //                            AiUrl.LastResultMessage = ret.Error;
-                //                        }
-                //                        else
-                //                        {
-
-                //                            if (response.predictions.Count() > 0)
-                //                            {
-
-                //                                foreach (ClsDeepstackDetection DSObj in response.predictions)
-                //                                {
-                //                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
-
-                //                                    ret.Predictions.Add(pred);
-
-                //                                }
+                try
+                {
+                    long FileSize = new FileInfo(CurImg.image_path).Length;
 
 
-                //                            }
+                    Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
+                    dict.Add("image", CurImg.ImageByteArray);
+                    string json = JsonConvert.SerializeObject((object)dict);
+                    byte[] body = Encoding.UTF8.GetBytes(json);
 
-                //                            ret.Success = true;
-                //                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+                    WebRequest request = WebRequest.Create(AiUrl.ToString());
 
-                //                        }
+                    request.Method = "POST";
+                    request.ContentType = "application/json";
+                    request.ContentLength = json.Length;
+                    request.Headers["X-Access-Token"] = AppSettings.Settings.SightHoundAPIKey;
 
-                //                    }
-                //                    else
-                //                    {
-                //                        ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
-                //                        AiUrl.IncrementError();
-                //                        AiUrl.LastResultMessage = ret.Error;
-                //                    }
+                    Log($"Debug: (1/6) Uploading a {FileSize} byte image ({body.Length} bytes in request) to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+
+                    swposttime.Restart();
+
+                    using Stream requestStream = request.GetRequestStream();
+                    requestStream.Write(body, 0, body.Length);
+
+                    using HttpWebResponse WebResponse = (HttpWebResponse)request.GetResponse();
+
+                    ret.StatusCode = WebResponse.StatusCode;
+
+                    //Successful queries will return a 200 (OK) response with a JSON body describing all detected objects and the attributes of the processed image.
+                    if (WebResponse.StatusCode == HttpStatusCode.OK)
+                    {
+
+                        using StreamReader reader = new StreamReader(WebResponse.GetResponseStream(), Encoding.UTF8);
+                        ret.JsonString = reader.ReadToEnd();
+
+                        swposttime.Stop();
+
+                        if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
+                        {
+                            string cleanjsonString = Global.CleanString(ret.JsonString);
+
+                            try
+                            {
+
+                                JObject JOResult = JObject.Parse(ret.JsonString);
+
+                                if (AiUrl.ToString().IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    //Vehicle Recognition
+
+                                    //This can throw an exception
+                                    SightHoundVehicleRoot SHObj = JsonConvert.DeserializeObject<SightHoundVehicleRoot>(ret.JsonString);
+
+                                    if (SHObj != null)
+                                    {
+                                        if (SHObj.Objects != null)
+                                        {
 
 
-                //                }
-                //                else if (string.IsNullOrEmpty(ret.Error))
-                //                {
-                //                    //deserialization did not cause exception, it just gave a null response in the object?
-                //                    //probably wont happen but just making sure
-                //                    ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
-                //                    AiUrl.IncrementError();
-                //                    AiUrl.LastResultMessage = ret.Error;
-                //                }
-                //            }
-                //            catch (Exception ex)
-                //            {
-                //                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
-                //                AiUrl.IncrementError();
-                //                AiUrl.LastResultMessage = ret.Error;
-                //            }
-                //        }
-                //        else
-                //        {
-                //            ret.Error = $"ERROR: Empty string returned from HTTP post.";
-                //            AiUrl.IncrementError();
-                //            AiUrl.LastResultMessage = ret.Error;
-                //        }
+                                            if (SHObj.Objects.Count() > 0)
+                                            {
+                                                foreach (SightHoundVehicleObject DSObj in SHObj.Objects)
+                                                {
+                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl, SHObj.Image);
+                                                    ret.Predictions.Add(pred);
+                                                }
+                                            }
+
+                                            ret.Success = true;
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} Vehicle predictions found.";
+                                        }
+                                        else
+                                        {
+                                            ret.Error = $"ERROR: No Vehicle predictions?  JSON: '{cleanjsonString}')";
+                                            AiUrl.IncrementError();
+                                            AiUrl.LastResultMessage = ret.Error;
+                                        }
 
 
-                //    }
-                //    else
-                //    {
-                //        ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
-                //        AiUrl.IncrementError();
-                //        AiUrl.LastResultMessage = ret.Error;
-                //    }
+                                    }
+                                    else if (string.IsNullOrEmpty(ret.Error))
+                                    {
+                                        //deserialization did not cause exception, it just gave a null response in the object?
+                                        //probably wont happen but just making sure
+                                        ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                        AiUrl.IncrementError();
+                                        AiUrl.LastResultMessage = ret.Error;
+                                    }
+                                }
+                                else if (AiUrl.ToString().IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    //face/person detection
 
-                //}
-                //catch (Exception ex)
-                //{
-                //    swposttime.Stop();
+                                    //This can throw an exception
+                                    SightHoundPersonRoot SHObj = JsonConvert.DeserializeObject<SightHoundPersonRoot>(ret.JsonString);
 
-                //    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
-                //    AiUrl.IncrementError();
-                //    AiUrl.LastResultMessage = ret.Error;
-                //}
-                //finally
-                //{
-                //    ret.SWPostTime = swposttime.ElapsedMilliseconds;
-                //}
+                                    if (SHObj != null)
+                                    {
+                                        if (SHObj.Objects != null)
+                                        {
+                                            if (SHObj.Objects.Count() > 0)
+                                            {
+                                                foreach (SightHoundPersonObject DSObj in SHObj.Objects)
+                                                {
+                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl, SHObj.Image);
+                                                    ret.Predictions.Add(pred);
+                                                }
+                                            }
+
+                                            ret.Success = true;
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} Person predictions found.";
+
+                                        }
+                                        else
+                                        {
+                                            ret.Error = $"ERROR: No Person predictions?  JSON: '{cleanjsonString}')";
+                                            AiUrl.IncrementError();
+                                            AiUrl.LastResultMessage = ret.Error;
+                                        }
+
+
+                                    }
+                                    else if (string.IsNullOrEmpty(ret.Error))
+                                    {
+                                        //deserialization did not cause exception, it just gave a null response in the object?
+                                        //probably wont happen but just making sure
+                                        ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                        AiUrl.IncrementError();
+                                        AiUrl.LastResultMessage = ret.Error;
+                                    }
+                                }
+                                
+                                
+                            }
+                            catch (Exception ex)
+                            {
+                                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                AiUrl.IncrementError();
+                                AiUrl.LastResultMessage = ret.Error;
+                            }
+                        }
+                        else
+                        {
+                            ret.Error = $"ERROR: Empty string returned from HTTP post.";
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
+                        }
+
+
+                    }
+                    else
+                    {
+                        swposttime.Stop();
+                        ret.Error = $"ERROR: Got http status code '{WebResponse.StatusCode}' ({Convert.ToInt32(WebResponse.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {WebResponse.StatusDescription}";
+                        AiUrl.IncrementError();
+                        AiUrl.LastResultMessage = ret.Error;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    swposttime.Stop();
+
+                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
+                }
+                finally
+                {
+                    ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                }
             }
 
             //==============================================================================================================
@@ -1762,9 +1823,9 @@ namespace AITool
 
                     long FileSize = new FileInfo(CurImg.image_path).Length;
 
-                    
+
                     cdr.Data = CurImg.ToStream().ConvertToBase64();
-                    
+
 
                     using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, AiUrl.ToString()))
                     {
@@ -2719,18 +2780,18 @@ namespace AITool
                         if (ccam.Prefix.Contains("*") || ccam.Prefix.Contains("?"))
                         {
                             if (Regex.IsMatch(Global.WildCardToRegular(ccam.Prefix), ImageOrNameOrPrefix, RegexOptions.IgnoreCase))
-                                { cam = ccam; break; }
+                            { cam = ccam; break; }
                         }
                         else if (ccam.Prefix.EndsWith("-") || ccam.Prefix.EndsWith("."))
                         {
                             if (fname.StartsWith(ccam.Prefix.Trim(), StringComparison.OrdinalIgnoreCase))
-                                { cam = ccam; break; }
+                            { cam = ccam; break; }
                         }
                         else
                         {
                             if (fname.StartsWith(ccam.Prefix.Trim() + ".", StringComparison.OrdinalIgnoreCase) ||
                                 fname.StartsWith(ccam.Prefix.Trim() + "-", StringComparison.OrdinalIgnoreCase))
-                                { cam = ccam; break; }
+                            { cam = ccam; break; }
                         }
                     }
 
@@ -2754,7 +2815,7 @@ namespace AITool
                             //                       c:\bi\cameraname\date\time\randomefilename.jpg 
                             //we just check the beginning of the path
                             if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().StartsWith(pth, StringComparison.OrdinalIgnoreCase))
-                                { cam = ccam; break; }
+                            { cam = ccam; break; }
                         }
 
                     }
@@ -2766,7 +2827,7 @@ namespace AITool
                     foreach (Camera ccam in AppSettings.Settings.CameraList)
                     {
                         if (ImageOrNameOrPrefix.Equals(ccam.Name, StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
+                        { cam = ccam; break; }
                     }
                     if (cam == null)
                     {
@@ -2774,7 +2835,7 @@ namespace AITool
                         foreach (Camera ccam in AppSettings.Settings.CameraList)
                         {
                             if (ImageOrNameOrPrefix.Equals(ccam.BICamName, StringComparison.OrdinalIgnoreCase))
-                                { cam = ccam; break; }
+                            { cam = ccam; break; }
                         }
                     }
 

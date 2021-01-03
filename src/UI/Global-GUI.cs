@@ -286,6 +286,13 @@ namespace AITool
                                 };
                             }
                         }
+                        else if (string.Equals(FOLV.Name, "FOLV_AIServers", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (colcnt == 1)
+                            {
+                                cl.ImageGetter = GetImageForAIServerList;
+                            }
+                        }
                         //else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
                         //{
                         //	cl.ImageGetter = GetImageForBlocklistViewerRIR;
@@ -838,6 +845,43 @@ namespace AITool
                 {
                     RetKey = "detection" + png;
                 }
+
+
+            }
+            catch (Exception)
+            {
+            }
+
+            return RetKey;
+
+        }
+        public static string GetImageForAIServerList(object row)
+        {
+            string RetKey = "";
+
+            try
+            {
+
+                string png = ".png";  //make empty string to avoid using the png version of the images
+
+                ClsURLItem url = (ClsURLItem)row;
+                if (url.Type == URLTypeEnum.AWSRekognition)
+                {
+                    RetKey = "AWSRekognition" + png;
+                }
+                else if (url.Type == URLTypeEnum.DeepStack)
+                {
+                    RetKey = "Deepstack" + png;
+                }
+                else if (url.Type == URLTypeEnum.DOODS)
+                {
+                    RetKey = "DOODS" + png;
+                }
+                else if (url.Type == URLTypeEnum.SightHound_Person || url.Type == URLTypeEnum.SightHound_Vehicle) 
+                {
+                    RetKey = "SightHound" + png;
+                }
+                
 
 
             }

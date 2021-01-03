@@ -1,6 +1,7 @@
 ﻿using Amazon.Rekognition.Model;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -62,7 +63,7 @@ namespace AITool
 
         public ClsPrediction() { }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg, ClsURLItem curURL)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Amazon.Rekognition.Model.Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
@@ -113,6 +114,353 @@ namespace AITool
             this.Label = Global.UpperFirst(AiDetectionObject.Name);
 
             this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
+            this.Filename = curImg.image_path;
+
+            this.GetObjectType();
+        }
+
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundVehicleObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg)
+        {
+            //https://docs.sighthound.com/cloud/recognition/
+
+            this._defaultObjType = defaultObjType;
+            this._cam = cam;
+            this._cururl = curURL;
+            this._curimg = curImg;
+            this.Camera = cam.Name;
+
+            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.ObjectType))
+            {
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
+                this.Result = ResultType.Error;
+                return;
+            }
+
+            this.ImageHeight = SHImg.Height; //curImg.Height;
+            this.ImageWidth = SHImg.Width; //curImg.Width;
+
+            if (curImg.Height != SHImg.Height)
+            {
+                Log($"Debug: Original image Height does not match returned height: Original={curImg.Height}, Returned={SHImg.Height}");
+            }
+            if (curImg.Width != SHImg.Width)
+            {
+                Log($"Debug: Original image Width does not match returned Width: Original={curImg.Width}, Returned={SHImg.Width}");
+            }
+
+            //{
+            //    "image": { 
+            //    "width":2016,
+            //    "orientation":1,
+            //    "height":1512
+            //},
+            //"objects":[  
+            //    {  
+            //        "vehicleAnnotation":{  
+            //            "bounding":{  
+            //                "vertices":[  
+            //                    {  "x":430, "y":286 },
+            //                    {  "x":835, "y":286 },
+            //                    {  "x":835, "y":559 },
+            //                    {  "x":430, "y":559 }
+            //                ]
+            //            },
+            //            "attributes":{  
+            //            "system":{  
+            //                "color":{  
+            //                    "confidence":0.9968,
+            //                    "name":"silver/grey"
+            //                },
+            //                "make":{  
+            //                    "confidence":0.8508,
+            //                    "name":"BMW"
+            //                },
+            //                "model":{  
+            //                    "confidence":0.8508,
+            //                    "name":"3 Series"
+            //                },
+            //                "vehicleType":"car"
+            //            }
+            //            },
+            //            "recognitionConfidence":0.8508
+            //            "licenseplate":{
+            //                "bounding":{
+            //                    "vertices":[
+            //                        { "x":617, "y":452 },
+            //                        { "x":743, "y":452 },
+            //                        { "x":743, "y":482 },
+            //                        { "x":617, "y":482 }
+            //                    ]
+            //                },
+            //                "attributes":{
+            //                    "system":{
+            //                        "region":{
+            //                            "name":"Florida",
+            //                            "confidence":0.9994
+            //                        },
+            //                        "string":{
+            //                            "name":"RTB2",
+            //                            "confidence":0.999
+            //                        },
+            //                        "characters":[
+            //                            {
+            //                                "bounding":{
+            //                                    "vertices":[
+            //                                        { "y":455, "x":637 },
+            //                                        { "y":455, "x":649 },
+            //                                        { "y":473, "x":649 },
+            //                                        { "y":473, "x":637 }
+            //                                    ]
+            //                                },
+            //                                "index":0,
+            //                                "confidence":0.9999,
+            //                                "character":"R"
+            //                            },
+            //                            {
+            //                                "bounding":{
+            //                                    "vertices":[
+            //                                        { "y":455, "x":648 },
+            //                                        { "y":455, "x":661 },
+            //                                        { "y":473, "x":661 },
+            //                                        { "y":473, "x":648 }
+            //                                    ]
+            //                                },
+            //                                "index":1,
+            //                                "confidence":0.9999,
+            //                                "character":"T"
+            //                            },
+            //                            {
+            //                                "bounding":{  
+            //                                    "vertices":[  
+            //                                        { "y":455, "x":671 },
+            //                                        { "y":455, "x":684 },
+            //                                        { "y":474, "x":684 },
+            //                                        { "y":474, "x":671 }
+            //                                    ]
+            //                                },
+            //                                "index":2,
+            //                                "confidence":0.9996,
+            //                                "character":"B"
+            //                            },
+            //                            {
+            //                                "bounding":{
+            //                                    "vertices":[
+            //                                        { "y":456, "x":683 },
+            //                                        { "y":456, "x":696 },
+            //                                        { "y":474, "x":696 },
+            //                                        { "y":474, "x":683 }
+            //                                    ]
+            //                                },
+            //                                "index":3,
+            //                                "confidence":0.9995,
+            //                                "character":"2"
+            //                            }
+            //                        ]
+            //                    }
+            //                }
+            //            },
+            //        },
+            //        "objectId":"_vehicle_f3c3d26b-c568-4d98-b6db-b96659fd7766",
+            //        "objectType":"vehicle"
+            //    }
+            //],
+            //"requestId":"d25b5e5d22f6431498065e9a25134d59"
+            //}
+
+
+
+            //Rectangle(xmin, ymin, xmax - xmin, ymax - ymin)
+            //          x,    y     Width,       Height
+
+
+            //
+            //    vertices (array): A list of objects that define coordinates of the vertices that surround the Object
+            //        x (integer): Horizontal pixel position of the vertex
+            //        y (integer): Vertical pixel position of the vertex
+
+
+            // get the bounding box from vertices 
+            List< System.Drawing.Point> pts = new List<System.Drawing.Point>();
+            foreach (var pt in AiDetectionObject.VehicleAnnotation.Bounding.Vertices)
+                pts.Add(new System.Drawing.Point(pt.X, pt.Y));
+
+            Rectangle rect = Global.RectFromVertices(pts);
+
+            this.RectHeight = rect.Height;
+            this.RectWidth = rect.Width;
+
+            double right = rect.X + this.RectWidth;
+            double left = rect.X;
+
+            double top = rect.Y;
+            double bottom = rect.Y + this.RectHeight;
+
+            this.XMin = Convert.ToInt32(Math.Round(left));
+            this.YMin = Convert.ToInt32(Math.Round(top));
+
+            this.XMax = Convert.ToInt32(Math.Round(right));
+            this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+            if (AiDetectionObject.VehicleAnnotation != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType))
+            {
+                string type = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType);
+                string color = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Color.Name);
+                string make = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Make.Name);
+                string model = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Model.Name);
+
+                string plate = "Unknown";
+                if (AiDetectionObject.VehicleAnnotation.Licenseplate != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name))
+                {
+                    plate = $"{AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.Region.Name} {AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name}";
+                }
+
+                this.Label += $"{type} [{color}, {make}, {model}, Plate={plate}]";
+
+                //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
+                this.Confidence = AiDetectionObject.VehicleAnnotation.RecognitionConfidence * 100;
+            }
+            else
+            {
+                this.Confidence = 100;
+            }
+
+            this.Filename = curImg.image_path;
+
+            this.GetObjectType();
+        }
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundPersonObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg)
+        {
+            this._defaultObjType = defaultObjType;
+            this._cam = cam;
+            this._cururl = curURL;
+            this._curimg = curImg;
+            this.Camera = cam.Name;
+
+            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Type))
+            {
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
+                this.Result = ResultType.Error;
+                return;
+            }
+
+                this.ImageHeight = SHImg.Height; //curImg.Height;
+                this.ImageWidth = SHImg.Width; //curImg.Width;
+
+            if (curImg.Height != SHImg.Height)
+            {
+                Log($"Debug: Original image Height does not match returned height: Original={curImg.Height}, Returned={SHImg.Height}");
+            }
+            if (curImg.Width != SHImg.Width)
+            {
+                Log($"Debug: Original image Width does not match returned Width: Original={curImg.Width}, Returned={SHImg.Width}");
+            }
+
+            //{
+            //    "image": {
+            //        "width": 1280, 
+            //        "height": 960, 
+            //        "orientation": 1
+            //    },
+
+            //    "objects": [
+
+            //        {
+            //            "type": "person",
+            //            "boundingBox": { 
+            //                "x": 363, 
+            //                "y": 182, 
+            //                "height": 778, 
+            //                "width": 723
+            //            } 
+            //        },
+
+            //        {
+            //            "type": "face",
+            //            "boundingBox": {
+            //                "x": 508, 
+            //                "y": 305, 
+            //                "height": 406, 
+            //                "width": 406
+            //            },
+            //            "attributes": {
+            //                "gender": "male", 
+            //                "genderConfidence": 0.9883, 
+            //                "age":25,
+            //                "ageConfidence": 0.2599,
+            //                "emotion": "happiness",
+            //                "emotionConfidence": 0.9943,
+            //                "emotionsAll": {
+            //                    "neutral": 0.0018,
+            //                    "sadness": 0.0009,
+            //                    "disgust": 0.0002,
+            //                    "anger": 0.0003,
+            //                    "surprise": 0,
+            //                    "fear": 0.0022,
+            //                    "happiness": 0.9943
+            //                },
+            //                "pose":{
+            //                    "pitch":-18.4849,
+            //                    "roll":0.854,
+            //                    "yaw":-4.2123
+            //                },
+            //                "frontal": true
+            //            },
+            //            "landmarks": {
+            //                "faceContour": [[515,447],[517,491]...[872,436]],
+            //                "noseBridge": [[710,419],[711,441]...[712,487]],
+            //                "noseBall": [[680,519],[696,522]...[742,518]],
+            //                "eyebrowRight": [[736,387],[768,376]...[854,394]],
+            //                "eyebrowLeft": [[555,413],[578,391]...[679,391]],
+            //                "eyeRight": [[753,428],[774,414]...[777,432]],
+            //                "eyeRightCenter": [[786,423]],
+            //                "eyeLeft": [[597,435],[617,423]...[619,442]],
+            //                "eyeLeftCenter": [[630,432]],
+            //                "mouthOuter": [[650,590],[674,572]...[675,600]],
+            //                "mouthInner": [[661,587],[697,580]...[697,584]]
+            //            }
+            //        }
+            //    ]
+            //}
+
+
+            //Rectangle(xmin, ymin, xmax - xmin, ymax - ymin)
+            //          x,    y     Width,       Height
+
+
+            //boundingBox (object): An object containing x, y, width, and height values 
+            //defining the location of the object in the image. The top left pixel of 
+            //the image represents coordinate (0,0).
+
+            this.RectHeight = AiDetectionObject.BoundingBox.Height;
+            this.RectWidth = AiDetectionObject.BoundingBox.Width;
+
+            double right = AiDetectionObject.BoundingBox.X + this.RectWidth;
+            double left = AiDetectionObject.BoundingBox.X;
+
+            double top = AiDetectionObject.BoundingBox.Y;
+            double bottom = AiDetectionObject.BoundingBox.Y + this.RectHeight;
+
+            this.XMin = Convert.ToInt32(Math.Round(left));
+            this.YMin = Convert.ToInt32(Math.Round(top));
+
+            this.XMax = Convert.ToInt32(Math.Round(right));
+            this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+            //force first letter to always be capitalized 
+            this.Label = Global.UpperFirst(AiDetectionObject.Type);
+
+            if (AiDetectionObject.Attributes != null && !string.IsNullOrEmpty(AiDetectionObject.Attributes.Gender))
+            {
+                this.Label += $" [{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {Global.UpperFirst(AiDetectionObject.Attributes.Emotion)}]";
+
+                //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
+                this.Confidence = AiDetectionObject.Attributes.GenderConfidence * 100;
+            }
+            else
+            {
+                this.Confidence = 100;
+            }
+
             this.Filename = curImg.image_path;
 
             this.GetObjectType();
@@ -335,6 +683,9 @@ namespace AITool
         {
             string tmp = this.Label.Trim().ToLower();
 
+            if (tmp.Contains("["))
+                tmp = Global.GetWordBetween(tmp, "", "[").Trim();
+
             List<string> pris = Global.Split(AppSettings.Settings.ObjectPriority, ",", ToLower: true);
             this.ObjectPriority = pris.IndexOf(tmp);
             if (this.ObjectPriority == -1)
@@ -352,7 +703,7 @@ namespace AITool
             //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
             //hair dryer, toothbrush.
 
-            if (tmp.Equals("person"))
+            if (tmp.Equals("person") || tmp.Equals("face"))
                 this.ObjType = ObjectType.Person;
             else if (tmp.Equals("dog") ||
                      tmp.Equals("cat") ||
@@ -368,6 +719,8 @@ namespace AITool
             else if (tmp.Equals("car") ||
                      tmp.Equals("truck") ||
                      tmp.Equals("bus") ||
+                     tmp.Equals("van") ||
+                     tmp.Equals("suv") ||
                      tmp.Equals("bicycle") ||
                      tmp.Equals("motorcycle") ||
                      tmp.Equals("horse") ||

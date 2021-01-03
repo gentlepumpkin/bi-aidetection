@@ -10,6 +10,7 @@ namespace AITool
 
         public string image_path { get; set; } = "";
         public DateTime TimeAdded { get; set; } = DateTime.MinValue;
+        public DateTime TimeCreated { get; set; } = DateTime.MinValue;
         public long QueueWaitMS { get; set; } = 0;
         public long TotalTimeMS { get; set; } = 0;
         public long DeepStackTimeMS { get; set; } = 0;
@@ -28,6 +29,10 @@ namespace AITool
             this.image_path = FileName;
             this.TimeAdded = DateTime.Now;
             this.CurQueueSize = CurQueueSize;
+            FileInfo fi = new FileInfo(this.image_path);
+            if (fi.Exists)
+                this.TimeCreated = fi.CreationTime;
+
         }
         public MemoryStream ToStream()
         {

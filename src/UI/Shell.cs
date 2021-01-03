@@ -175,10 +175,12 @@ namespace AITool
                 this.cb_send_errors.Checked = AppSettings.Settings.send_errors;
                 this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
 
-                this.tb_username.Text = AppSettings.Settings.DefaultUserName.Trim();
+                this.tb_username.Text = AppSettings.Settings.DefaultUserName;
                 this.tb_password.Text = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
 
-                this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer.Trim();
+                this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
+
+                this.tb_Pushover_API_Key.Text = AppSettings.Settings.pushover_APIKey;
 
                 //---------------------------------------------------------------------------
                 //STATS TAB
@@ -2577,6 +2579,7 @@ namespace AITool
                         File.Move(Oldmaskfile, NewMaskFile);
                         cam.MaskFileName = NewMaskFile;
                     }
+                    Log($"Renaming Camera '{cam.Name}' to '{this.tbName.Text}'");
                     cam.Name = this.tbName.Text.Trim();  //just in case we needed to rename it
                 }
 
@@ -2656,6 +2659,10 @@ namespace AITool
                                             icam.Action_mqtt_topic_cancel = cam.Action_mqtt_topic_cancel;
                                             icam.Action_image_merge_detections = cam.Action_image_merge_detections;
                                             icam.Action_image_merge_jpegquality = cam.Action_image_merge_jpegquality;
+                                            icam.Action_pushover_enabled = cam.Action_pushover_enabled;
+                                            icam.Action_pushover_title = cam.Action_pushover_title;
+                                            icam.Action_pushover_message = cam.Action_pushover_message;
+                                            icam.Action_pushover_device = cam.Action_pushover_device;
                                             icam.Action_queued = cam.Action_queued;
                                         }
                                         if (frm.cb_apply_mask_settings.Checked)
@@ -2807,6 +2814,8 @@ namespace AITool
             AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text.Trim());
 
             AppSettings.Settings.BlueIrisServer = this.tb_BlueIrisServer.Text.Trim();
+
+            AppSettings.Settings.pushover_APIKey = this.tb_Pushover_API_Key.Text.Trim();
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
@@ -3344,6 +3353,8 @@ namespace AITool
                 frm.num_percent_var.Value = (decimal)cam.maskManager.PercentMatch;
                 frm.numMaskThreshold.Value = cam.maskManager.MaskRemoveThreshold;
 
+                frm.num_max_unused.Value = cam.maskManager.MaxMaskUnusedDays;
+
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
                 frm.tb_objects.Text = cam.maskManager.Objects;
@@ -3356,12 +3367,14 @@ namespace AITool
                     Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
                     Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
                     Int32.TryParse(frm.num_percent_var.Text, out int variance);
+                    Int32.TryParse(frm.num_max_unused.Text, out int MaxUnusedDays);
 
                     cam.maskManager.HistorySaveMins = history_mins;
                     cam.maskManager.HistoryThresholdCount = mask_create_counter;
                     cam.maskManager.MaskRemoveMins = mask_remove_mins;
                     cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
                     cam.maskManager.PercentMatch = variance;
+                    cam.maskManager.MaxMaskUnusedDays = MaxUnusedDays;
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
                     cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
@@ -3496,6 +3509,11 @@ namespace AITool
                 frm.tb_MQTT_Topic_Cancel.Text = cam.Action_mqtt_topic_cancel;
                 frm.cb_MQTT_SendImage.Checked = cam.Action_mqtt_send_image;
 
+                frm.cb_Pushover_Enabled.Checked = cam.Action_pushover_enabled;
+                frm.tb_Pushover_Title.Text = cam.Action_pushover_title;
+                frm.tb_Pushover_Message.Text = cam.Action_pushover_message;
+                frm.tb_Pushover_Device.Text = cam.Action_pushover_device;
+
                 frm.cb_queue_actions.Checked = cam.Action_queued;
 
                 frm.cb_mergeannotations.Checked = cam.Action_image_merge_detections;
@@ -3536,6 +3554,11 @@ namespace AITool
                     cam.Action_mqtt_payload_cancel = frm.tb_MQTT_Payload_cancel.Text.Trim();
                     cam.Action_mqtt_topic_cancel = frm.tb_MQTT_Topic_Cancel.Text.Trim();
                     cam.Action_mqtt_send_image = frm.cb_MQTT_SendImage.Checked;
+
+                    cam.Action_pushover_enabled = frm.cb_Pushover_Enabled.Checked;
+                    cam.Action_pushover_title = frm.tb_Pushover_Title.Text.Trim();
+                    cam.Action_pushover_message = frm.tb_Pushover_Message.Text.Trim();
+                    cam.Action_pushover_device = frm.tb_Pushover_Device.Text.Trim();
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 

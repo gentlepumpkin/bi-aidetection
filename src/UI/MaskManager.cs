@@ -27,6 +27,7 @@ namespace AITool
         }
 
         public int MaskRemoveMins { get; set; } = 5;                    //how many minutes to keep masked objects that are not visible 
+        public int MaxMaskUnusedDays { get; set; } = 60;       //If a static mask has not been used in this many days, remove it.
         public int HistorySaveMins { get; set; } = 5;                   //how long to store detected objects in history before purging list 
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public double PercentMatch { get; set; } = 85;                  //minimum percentage match to be considered a match
@@ -203,6 +204,8 @@ namespace AITool
             {
                 lock (this._maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
+
+                    
 
                     if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty:true))
                     {
@@ -420,13 +423,19 @@ namespace AITool
 
                             TimeSpan ts = this.LastDetectionDate - maskedObject.LastSeenDate;
                             double minutes = ts.TotalMinutes;
+                            double days = ts.TotalDays;
 
                             switch (trigger)
                             {
                                 case RemoveEvent.Timer:
                                     if (minutes >= this.MaskRemoveMins && !maskedObject.IsStatic && maskedObject.Counter == 0)
                                     {
-                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins, MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                        Log($"Debug: Removing expired (after {minutes.ToString("####0.0")} mins), MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                        this.MaskedPositions.RemoveAt(x);
+                                    }
+                                    else if (days >= this.MaxMaskUnusedDays && maskedObject.IsStatic)
+                                    {
+                                        Log($"Debug: Removing unused (after {days.ToString("####0.0")} days), MaxMaskUnusedDays={this.MaxMaskUnusedDays}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         this.MaskedPositions.RemoveAt(x);
                                     }
                                     break;

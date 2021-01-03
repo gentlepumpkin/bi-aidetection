@@ -23,7 +23,7 @@ namespace AITool
 
         private void Frm_AIServerDeepstackEdit_Load(object sender, EventArgs e)
         {
-            Global_GUI.RestoreWindowState(this);
+            //Global_GUI.RestoreWindowState(this);
 
             this.tb_URL.Text = this.CurURL.url;
             this.lbl_type.Text = this.CurURL.Type.ToString();
@@ -41,6 +41,9 @@ namespace AITool
             this.linkHelpURL.Text = this.CurURL.HelpURL;
             this.tb_Lower.Text = this.CurURL.Threshold_Lower.ToString();
             this.tb_Upper.Text = this.CurURL.Threshold_Upper.ToString();
+
+            this.cb_RefinementServer.Checked = this.CurURL.UseAsRefinementServer;
+            this.tb_RefinementObjects.Text = this.CurURL.RefinementObjects;
 
             foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
             {
@@ -104,6 +107,11 @@ namespace AITool
 
             this.CurURL.Threshold_Lower = Convert.ToInt32(this.tb_Lower.Text.Trim());
             this.CurURL.Threshold_Upper = Convert.ToInt32(this.tb_Upper.Text.Trim());
+
+            this.CurURL.RefinementObjects = this.tb_RefinementObjects.Text.Trim();
+            this.CurURL.UseAsRefinementServer = this.cb_RefinementServer.Checked;
+
+
 
         }
         private void linkHelpURL_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -188,6 +196,11 @@ namespace AITool
             this.CurURL.LastTimeMS = 0;
             this.CurURL.LastUsedTime = DateTime.MinValue;
 
+        }
+
+        private void cb_RefinementServer_CheckedChanged(object sender, EventArgs e)
+        {
+            tb_RefinementObjects.Enabled = cb_RefinementServer.Checked;
         }
     }
 }

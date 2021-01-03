@@ -78,7 +78,7 @@ namespace AITool
 
                         }
 
-                        pr = await mq.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message, CurImg);
+                        pr = await mqttClient.PublishAsync(topics[i], payloads[i], this.cam.Action_mqtt_retain_message, CurImg);
 
                     }
 

@@ -151,6 +151,12 @@
       <HintPath>..\packages\ObjectListView.Official.2.9.2-alpha2\lib\net20\ObjectListView.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="PushoverClient, Version=1.0.7392.25569, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PushoverNET.1.0.28\lib\net472\PushoverClient.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Text, Version=5.0.0.0, Culture=neutral, PublicKeyToken=02c12cbda47e6587, processorArchitecture=MSIL">
+      <HintPath>..\packages\ServiceStack.Text.5.0.2\lib\net45\ServiceStack.Text.dll</HintPath>
+    </Reference>
     <Reference Include="SixLabors.ImageSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
       <HintPath>..\packages\SixLabors.ImageSharp.1.0.2\lib\net472\SixLabors.ImageSharp.dll</HintPath>
     </Reference>
@@ -287,7 +293,7 @@
     <Compile Include="ClsDoodsRequest.cs" />
     <Compile Include="ClsDoodsResponse.cs" />
     <Compile Include="ClsImageAdjust.cs" />
-    <Compile Include="ClsSightHoundObject.cs" />
+    <Compile Include="ClsSightHound.cs" />
     <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -540,6 +546,9 @@
   <ItemGroup>
     <Content Include="TestImage.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestVehicleImage.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\network-server.ico" />
     <Content Include="sqlite3.dll">

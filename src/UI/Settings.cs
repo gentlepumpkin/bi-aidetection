@@ -99,6 +99,8 @@ namespace AITool
             public string mqtt_password = "password";
             public string mqtt_clientid = "AITool";
 
+            public string pushover_APIKey = "";
+
             public bool Autoscroll_log = true;
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;

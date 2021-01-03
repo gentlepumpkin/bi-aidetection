@@ -84,6 +84,16 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+        public static Rectangle RectFromVertices(List<Point> vertices)
+        {
+            var minX = vertices.Min(p => p.X);
+            var minY = vertices.Min(p => p.Y);
+            var maxX = vertices.Max(p => p.X);
+            var maxY = vertices.Max(p => p.Y);
+            return new Rectangle(new Point(minX, minY), new Size(maxX - minX, maxY - minY));
+
+        }
+
         public static void Move<T>(this List<T> list, int oldIndex, int newIndex)
         {
             // exit if positions are equal or outside array
@@ -1402,6 +1412,10 @@ namespace AITool
         {
             if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
+
+            //remove face details
+            if (FindStr.Contains("["))
+                FindStr = Global.GetWordBetween(FindStr, "", "[").Trim();
 
             return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
         }

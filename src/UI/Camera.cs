@@ -31,8 +31,8 @@ namespace AITool
         public string Prefix = "";
         public string BICamName = "";
         public string MaskFileName = "";
-        public string triggering_objects_as_string = "Person";
-        public string additional_triggering_objects_as_string = "Spiny Lumpsucker, Pink Fairy Armadillo, Tasselled Wobbegong";
+        public string triggering_objects_as_string = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+        public string additional_triggering_objects_as_string = "Chicken Turtle, Hummingbird Hawk-moth, Goblin Shark";
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "";
         public string[] trigger_urls = new string[0];
@@ -47,7 +47,7 @@ namespace AITool
         public bool enabled = true;
         public double cooldown_time = 0;
         public int cooldown_time_seconds = 5;
-        public int threshold_lower = 0;
+        public int threshold_lower = 1;
         public int threshold_upper = 100;
 
         //watch folder for each camera
@@ -75,6 +75,11 @@ namespace AITool
         public bool Action_mqtt_retain_message = false;
         public bool Action_mqtt_send_image = false;
         public bool Action_queued = false;
+
+        public bool Action_pushover_enabled = false;
+        public string Action_pushover_title = "AI Detection";
+        public string Action_pushover_message = "[detections]";
+        public string Action_pushover_device = "";
 
         [JsonIgnore]
         public bool Action_Cancel_Timer_Enabled = false;

@@ -12,7 +12,8 @@ namespace AITool
         DeepStack,
         DOODS,
         AWSRekognition,
-        SightHound,
+        SightHound_Vehicle,
+        SightHound_Person,
         Other,
         Unknown
     }
@@ -29,7 +30,7 @@ namespace AITool
         }
         public int Order { get; set; } = 0;
         public string url { get; set; } = "";
-        
+        [JsonIgnore]
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
         public string Cameras { get; set; } = "";
@@ -37,6 +38,8 @@ namespace AITool
         public string ImageAdjustProfile { get; set; } = "Default";
         public int Threshold_Lower { get; set; } = 0;   //override the cameras threshold since different AI servers may need to be tuned to different values
         public int Threshold_Upper { get; set; } = 100;
+        public bool UseAsRefinementServer { get; set; } = false;
+        public string RefinementObjects { get; set; } = "";
         [JsonIgnore]
         public int CurOrder { get; set; } = 0;
         [JsonIgnore]
@@ -88,9 +91,14 @@ namespace AITool
                     this.DefaultURL = "Amazon";
                     url = this.DefaultURL;
                 }
-                else if (type == URLTypeEnum.SightHound) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+                else if (type == URLTypeEnum.SightHound_Vehicle)
                 {
-                    this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections";
+                    this.DefaultURL = "https://dev.sighthoundapi.com/v1/recognition?objectType=vehicle,licenseplate";
+                    url = this.DefaultURL;
+                }
+                else if (type == URLTypeEnum.SightHound_Person)
+                {
+                    this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections?type=face,person&faceOption=gender,landmark,age,pose,emotion";
                     url = this.DefaultURL;
                 }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -158,30 +166,58 @@ namespace AITool
                 }
 
             }
-            else if (this.Type == URLTypeEnum.SightHound || this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0)
+            else if (this.Type == URLTypeEnum.SightHound_Person || this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 this.MaxImagesPerMonth = 5000;
-
-                this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections";
-                this.HelpURL = "https://accounts.sighthound.com/#/sighthound-cloud";
+                this.UseAsRefinementServer = true;
+                this.RefinementObjects = "person";
+                this.DefaultURL = "https://dev.sighthoundapi.com/v1/detections?type=face,person&faceOption=gender,landmark,age,pose,emotion";
+                this.HelpURL = "https://docs.sighthound.com/cloud/detection/";
                 if (!this.url.Contains("://"))
                 {
                     this.UrlFixed = true;
                     this.url = "https://" + this.url;
                 }
-                this.Type = URLTypeEnum.SightHound;
+                this.Type = URLTypeEnum.SightHound_Person;
                 if (!(this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     this.UrlFixed = true;
-                    this.url = this.url + "/v1/detections";
+                    this.url = this.url + "/v1/detections?type=face,person&faceOption=gender,landmark,age,pose,emotion";
                 }
 
                 Uri uri = new Uri(this.url);
                 this.CurSrv = uri.Host + ":" + uri.Port;
                 this.Port = uri.Port;
                 this.IsLocalHost = false;
-                this.HttpClient = new HttpClient();
-                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.HttpClient = null;
+                this.IsValid = true;
+                this.Enabled.WriteFullFence(true);
+            }
+            else if (this.Type == URLTypeEnum.SightHound_Vehicle || this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                //https://docs.sighthound.com/cloud/recognition/
+                this.MaxImagesPerMonth = 5000;
+                this.UseAsRefinementServer = true;
+                this.RefinementObjects = "car,truck,bus,suv,van,motorcycle";
+                this.DefaultURL = "https://dev.sighthoundapi.com/v1/recognition?objectType=vehicle,licenseplate";
+                this.HelpURL = "https://docs.sighthound.com/cloud/recognition/";
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "https://" + this.url;
+                }
+                this.Type = URLTypeEnum.SightHound_Vehicle;
+                if (!(this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/v1/recognition?objectType=vehicle,licenseplate";
+                }
+
+                Uri uri = new Uri(this.url);
+                this.CurSrv = uri.Host + ":" + uri.Port;
+                this.Port = uri.Port;
+                this.IsLocalHost = false;
+                this.HttpClient = null;
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
             }
@@ -275,6 +311,50 @@ namespace AITool
                 }
 
             }
+            else if (this.Type == URLTypeEnum.SightHound_Person)
+            {
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "https://" + this.url;
+                }
+
+                bool hasdet = this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool hasrec = this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (!hasdet)
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/v1/recognition?objectType=vehicle,licenseplate";
+                }
+
+                if (Global.IsValidURL(this.url) && hasdet && !hasrec)
+                {
+                   ret = true;
+                }
+            }
+            else if (this.Type == URLTypeEnum.SightHound_Vehicle)
+            {
+                if (!this.url.Contains("://"))
+                {
+                    this.UrlFixed = true;
+                    this.url = "https://" + this.url;
+                }
+
+                bool hasdet = this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool hasrec = this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (!hasrec)
+                {
+                    this.UrlFixed = true;
+                    this.url = this.url + "/v1/detections?type=face,person&faceOption=gender,landmark,age,pose,emotion";
+                }
+
+                if (Global.IsValidURL(this.url) && hasrec && !hasdet)
+                {
+                    ret = true;
+                }
+            }
             else // assume deepstack 
             {
                 if (!this.url.Contains("://"))
@@ -350,7 +430,9 @@ namespace AITool
                    (string.Equals(this.url, other.url, StringComparison.OrdinalIgnoreCase) && 
                    this.Type == other.Type &&
                    this.ActiveTimeRange == other.ActiveTimeRange &&
-                   this.Cameras == other.Cameras);
+                   this.Cameras == other.Cameras &&
+                   this.ImageAdjustProfile == other.ImageAdjustProfile &&
+                   this.RefinementObjects == other.RefinementObjects);
         }
 
     }

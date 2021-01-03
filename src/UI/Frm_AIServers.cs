@@ -24,7 +24,7 @@ namespace AITool
         private void Frm_AddAIServers_Load(object sender, EventArgs e)
         {
             Global_GUI.RestoreWindowState(this);
-            Global_GUI.ConfigureFOLV(FOLV_AIServers, typeof(ClsURLItem), null, null);
+            Global_GUI.ConfigureFOLV(FOLV_AIServers, typeof(ClsURLItem), null, this.imageList1);
             Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList);
         }
 
@@ -231,8 +231,12 @@ namespace AITool
                 ClsURLItem url = (ClsURLItem)e.Model;
 
                 // If SPI IsNot Nothing Then
-                if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0)
+                if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && !url.UseAsRefinementServer)
                     e.Item.ForeColor = Color.Green;
+                
+                else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && url.UseAsRefinementServer)
+                    e.Item.ForeColor = Color.DarkOrange;
+
                 else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() > 0)
                 {
                     e.Item.ForeColor = Color.Black;
@@ -261,7 +265,24 @@ namespace AITool
 
         private void sightHoundAIServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound);
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound_Vehicle);
+            if (!AppSettings.Settings.AIURLList.Contains(url))
+            {
+                this.CurURL = url;
+                AppSettings.Settings.AIURLList.Add(url);
+                Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+                AITOOL.UpdateAIURLs();
+            }
+            else
+            {
+                MessageBox.Show("Already exists");
+            }
+            UpdateButtons();
+        }
+
+        private void sightHoundPersonAIServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound_Person);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
                 this.CurURL = url;

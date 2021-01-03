@@ -54,6 +54,9 @@
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tb_objects = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.num_max_unused = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
             this.tableLayoutAdvancedMasking.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.num_history_mins)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_create)).BeginInit();
@@ -63,12 +66,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.numMaskThreshold)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.num_max_unused)).BeginInit();
             this.SuspendLayout();
             // 
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(649, 251);
+            this.btnSave.Location = new System.Drawing.Point(649, 289);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -81,7 +85,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(727, 251);
+            this.btnCancel.Location = new System.Drawing.Point(727, 289);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -98,6 +102,7 @@
             this.tableLayoutAdvancedMasking.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.81959F));
             this.tableLayoutAdvancedMasking.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 7.603093F));
             this.tableLayoutAdvancedMasking.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 77.57732F));
+            this.tableLayoutAdvancedMasking.Controls.Add(this.label4, 2, 4);
             this.tableLayoutAdvancedMasking.Controls.Add(this.label16, 0, 2);
             this.tableLayoutAdvancedMasking.Controls.Add(this.label17, 0, 0);
             this.tableLayoutAdvancedMasking.Controls.Add(this.label18, 0, 1);
@@ -110,16 +115,18 @@
             this.tableLayoutAdvancedMasking.Controls.Add(this.label19, 2, 1);
             this.tableLayoutAdvancedMasking.Controls.Add(this.flowLayoutPanel2, 2, 2);
             this.tableLayoutAdvancedMasking.Controls.Add(this.flowLayoutPanel1, 2, 3);
+            this.tableLayoutAdvancedMasking.Controls.Add(this.label3, 0, 4);
+            this.tableLayoutAdvancedMasking.Controls.Add(this.num_max_unused, 1, 4);
             this.tableLayoutAdvancedMasking.Location = new System.Drawing.Point(4, 24);
             this.tableLayoutAdvancedMasking.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutAdvancedMasking.Name = "tableLayoutAdvancedMasking";
-            this.tableLayoutAdvancedMasking.RowCount = 4;
-            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutAdvancedMasking.Size = new System.Drawing.Size(776, 176);
+            this.tableLayoutAdvancedMasking.RowCount = 5;
+            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutAdvancedMasking.Size = new System.Drawing.Size(776, 212);
             this.tableLayoutAdvancedMasking.TabIndex = 20;
             // 
             // label16
@@ -127,7 +134,7 @@
             this.label16.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label16.AutoSize = true;
             this.label16.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label16.Location = new System.Drawing.Point(5, 102);
+            this.label16.Location = new System.Drawing.Point(5, 97);
             this.label16.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(108, 15);
@@ -139,7 +146,7 @@
             this.label17.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label17.Location = new System.Drawing.Point(5, 14);
+            this.label17.Location = new System.Drawing.Point(5, 13);
             this.label17.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(86, 15);
@@ -151,7 +158,7 @@
             this.label18.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label18.AutoSize = true;
             this.label18.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label18.Location = new System.Drawing.Point(5, 58);
+            this.label18.Location = new System.Drawing.Point(5, 55);
             this.label18.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(99, 15);
@@ -162,7 +169,7 @@
             // 
             this.num_history_mins.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.num_history_mins.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_history_mins.Location = new System.Drawing.Point(119, 10);
+            this.num_history_mins.Location = new System.Drawing.Point(119, 9);
             this.num_history_mins.Margin = new System.Windows.Forms.Padding(4);
             this.num_history_mins.Maximum = new decimal(new int[] {
             300,
@@ -187,7 +194,7 @@
             // 
             this.num_mask_create.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.num_mask_create.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_mask_create.Location = new System.Drawing.Point(119, 54);
+            this.num_mask_create.Location = new System.Drawing.Point(119, 51);
             this.num_mask_create.Margin = new System.Windows.Forms.Padding(4);
             this.num_mask_create.Maximum = new decimal(new int[] {
             20,
@@ -213,7 +220,7 @@
             this.label20.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label20.AutoSize = true;
             this.label20.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label20.Location = new System.Drawing.Point(175, 14);
+            this.label20.Location = new System.Drawing.Point(175, 13);
             this.label20.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(317, 15);
@@ -224,7 +231,7 @@
             // 
             this.num_mask_remove.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.num_mask_remove.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_mask_remove.Location = new System.Drawing.Point(119, 98);
+            this.num_mask_remove.Location = new System.Drawing.Point(119, 93);
             this.num_mask_remove.Margin = new System.Windows.Forms.Padding(4);
             this.num_mask_remove.Maximum = new decimal(new int[] {
             300,
@@ -244,13 +251,14 @@
             0,
             0,
             0});
+            this.num_mask_remove.ValueChanged += new System.EventHandler(this.num_mask_remove_ValueChanged);
             // 
             // label22
             // 
             this.label22.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label22.AutoSize = true;
             this.label22.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label22.Location = new System.Drawing.Point(5, 146);
+            this.label22.Location = new System.Drawing.Point(5, 139);
             this.label22.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(84, 15);
@@ -261,7 +269,7 @@
             // 
             this.num_percent_var.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.num_percent_var.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_percent_var.Location = new System.Drawing.Point(119, 142);
+            this.num_percent_var.Location = new System.Drawing.Point(119, 135);
             this.num_percent_var.Margin = new System.Windows.Forms.Padding(4);
             this.num_percent_var.Minimum = new decimal(new int[] {
             1,
@@ -282,7 +290,7 @@
             this.label19.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label19.Location = new System.Drawing.Point(175, 58);
+            this.label19.Location = new System.Drawing.Point(175, 55);
             this.label19.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(365, 15);
@@ -295,10 +303,10 @@
             this.flowLayoutPanel2.Controls.Add(this.label21);
             this.flowLayoutPanel2.Controls.Add(this.numMaskThreshold);
             this.flowLayoutPanel2.Controls.Add(this.label2);
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(174, 88);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(174, 84);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(602, 44);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(602, 42);
             this.flowLayoutPanel2.TabIndex = 15;
             // 
             // label21
@@ -350,10 +358,10 @@
             // 
             this.flowLayoutPanel1.Controls.Add(this.label23);
             this.flowLayoutPanel1.Controls.Add(this.btnAdvanced);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(175, 132);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(175, 126);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(1, 0, 5, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(596, 44);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(596, 42);
             this.flowLayoutPanel1.TabIndex = 14;
             // 
             // label23
@@ -386,7 +394,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(784, 212);
+            this.groupBox1.Size = new System.Drawing.Size(784, 248);
             this.groupBox1.TabIndex = 21;
             this.groupBox1.TabStop = false;
             // 
@@ -394,7 +402,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label1.Location = new System.Drawing.Point(13, 223);
+            this.label1.Location = new System.Drawing.Point(13, 261);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(50, 15);
@@ -405,7 +413,7 @@
             // 
             this.cb_enabled.AutoSize = true;
             this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_enabled.Location = new System.Drawing.Point(16, 251);
+            this.cb_enabled.Location = new System.Drawing.Point(16, 289);
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(4);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(68, 19);
@@ -417,7 +425,7 @@
             // 
             this.tb_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_objects.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_objects.Location = new System.Drawing.Point(107, 220);
+            this.tb_objects.Location = new System.Drawing.Point(107, 258);
             this.tb_objects.Margin = new System.Windows.Forms.Padding(4);
             this.tb_objects.Name = "tb_objects";
             this.tb_objects.Size = new System.Drawing.Size(690, 23);
@@ -426,12 +434,50 @@
         "pply dynamic masking to. \r\nIE person, bear, Tasseled Wobbegong, Pink Fairy Armad" +
         "illo, etc.");
             // 
+            // label3
+            // 
+            this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label3.Location = new System.Drawing.Point(5, 182);
+            this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(108, 15);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Remove mask after ";
+            // 
+            // num_max_unused
+            // 
+            this.num_max_unused.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.num_max_unused.Location = new System.Drawing.Point(118, 178);
+            this.num_max_unused.Name = "num_max_unused";
+            this.num_max_unused.Size = new System.Drawing.Size(49, 23);
+            this.num_max_unused.TabIndex = 16;
+            this.num_max_unused.Value = new decimal(new int[] {
+            60,
+            0,
+            0,
+            0});
+            this.num_max_unused.Leave += new System.EventHandler(this.num_max_unused_Leave);
+            // 
+            // label4
+            // 
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label4.Location = new System.Drawing.Point(175, 184);
+            this.label4.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(202, 15);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "days if static mask has not been used";
+            // 
             // Frm_DynamicMasking
             // 
             this.AcceptButton = this.btnSave;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(807, 294);
+            this.ClientSize = new System.Drawing.Size(807, 332);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tb_objects);
             this.Controls.Add(this.cb_enabled);
@@ -456,6 +502,7 @@
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.num_max_unused)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -488,5 +535,8 @@
         private System.Windows.Forms.Label label21;
         public System.Windows.Forms.NumericUpDown numMaskThreshold;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        public System.Windows.Forms.NumericUpDown num_max_unused;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MQTTnet.Client.Publishing;
+using PushoverClient;
 using SixLabors.ImageSharp;
 using System;
 using System.Collections.Concurrent;
@@ -460,8 +461,6 @@ namespace AITool
                         string topic = "";
                         string payload = "";
 
-                        Log($"Debug: Before Topic='{AQI.cam.Action_mqtt_topic}', Payload='{AQI.cam.Action_mqtt_payload}'");
-
                         if (AQI.Trigger)
                         {
                             topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic);
@@ -473,7 +472,7 @@ namespace AITool
                             payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel);
                         }
 
-                        Log($"Debug: [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
+                        //Log($"Debug: [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
 
                         List<string> topics = Global.Split(topic, "|");
                         List<string> payloads = Global.Split(payload, "|");
@@ -486,10 +485,89 @@ namespace AITool
                                 ci = AQI.CurImg;
                             else
                                 ci = null;
-                            MqttClientPublishResult pr = await AITOOL.mq.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message, ci);
+                            MqttClientPublishResult pr = await AITOOL.mqttClient.PublishAsync(topics[i], payloads[i], AQI.cam.Action_mqtt_retain_message, ci);
                             if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                 ret = false;
 
+                        }
+
+
+                    }
+
+                    if (AQI.cam.Action_pushover_enabled)
+                    {
+                        
+                        if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey))
+                        {
+                            string title = "";
+                            string message = "";
+                            string device = "";
+
+                            if (AQI.Trigger)
+                            {
+                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
+                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
+                            }
+                            else  //TODO: Add cancel if requested
+                            {
+                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
+                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
+                            }
+
+
+                            List<string> titles = Global.Split(title, "|");
+                            List<string> messages = Global.Split(message, "|");
+                            List<string> devices = Global.Split(device, "|");
+
+                            if (AITOOL.pushoverClient == null)
+                            {
+                                AITOOL.pushoverClient = new PushoverClient.Pushover(AppSettings.Settings.pushover_APIKey);
+                            }
+
+                            for (int i = 0; i < titles.Count; i++)
+                            {
+                                PushResponse response = null;
+                                try
+                                {
+                                    response = await AITOOL.pushoverClient.PushAsync(titles[i], messages[i],device:devices[i],timestamp:AQI.CurImg.TimeCreated); 
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    ret = false;
+                                    Log($"Error: Pushover: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                }
+
+                                if (response != null)
+                                {
+
+                                    if (response.Status == 1)
+                                    {
+                                        Log($"Debug: Pushover success.");
+                                    }
+                                    else
+                                    {
+                                        string errs = "";
+                                        if (response.Errors.Count() > 0)
+                                            errs = string.Join(";", response.Errors);
+                                        ret = false;
+                                        Log($"Error: Pushover response code={response.Status}, Errs='{errs}'");
+                                    }
+                                }
+                                else
+                                {
+                                    ret = false;
+                                    Log($"Error: Pushover failed to return a response?", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            ret = false;
+                            Log("Error: Pushover API key not set.");
                         }
 
 

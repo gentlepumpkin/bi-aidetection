@@ -95,5 +95,18 @@ namespace AITool
             }
 
         }
+
+        private void num_mask_remove_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void num_max_unused_Leave(object sender, EventArgs e)
+        {
+            if (this.num_max_unused.Text == "")
+            {
+                this.num_max_unused.Text = this.num_max_unused.Value.ToString();
+            }
+        }
     }
 }

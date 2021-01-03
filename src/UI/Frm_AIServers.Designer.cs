@@ -29,14 +29,16 @@ namespace AITool
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Frm_AIServers));
             this.FOLV_AIServers = new BrightIdeasSoftware.FastObjectListView();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripSplitButtonAdd = new System.Windows.Forms.ToolStripSplitButton();
             this.deepstackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.addAmazonReToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sightHoundAIServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addDoodsServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addAmazonReToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sightHoundVehicleAIServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sightHoundPersonAIServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonEdit = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -44,6 +46,7 @@ namespace AITool
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonUp = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDown = new System.Windows.Forms.ToolStripButton();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.FOLV_AIServers)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -90,9 +93,10 @@ namespace AITool
             // 
             this.toolStripSplitButtonAdd.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.deepstackToolStripMenuItem,
-            this.addAmazonReToolStripMenuItem,
             this.addDoodsServerToolStripMenuItem,
-            this.sightHoundAIServerToolStripMenuItem});
+            this.addAmazonReToolStripMenuItem,
+            this.sightHoundVehicleAIServerToolStripMenuItem,
+            this.sightHoundPersonAIServerToolStripMenuItem});
             this.toolStripSplitButtonAdd.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButtonAdd.Image")));
             this.toolStripSplitButtonAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripSplitButtonAdd.Name = "toolStripSplitButtonAdd";
@@ -104,34 +108,41 @@ namespace AITool
             // 
             this.deepstackToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackToolStripMenuItem.Image")));
             this.deepstackToolStripMenuItem.Name = "deepstackToolStripMenuItem";
-            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
+            this.deepstackToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.deepstackToolStripMenuItem.Text = "Deepstack AI Server";
             this.deepstackToolStripMenuItem.Click += new System.EventHandler(this.deepstackToolStripMenuItem_Click);
-            // 
-            // addAmazonReToolStripMenuItem
-            // 
-            this.addAmazonReToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonReToolStripMenuItem.Image")));
-            this.addAmazonReToolStripMenuItem.Name = "addAmazonReToolStripMenuItem";
-            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
-            this.addAmazonReToolStripMenuItem.Text = "AWS Rekognition AI Server";
-            this.addAmazonReToolStripMenuItem.Click += new System.EventHandler(this.addAmazonReToolStripMenuItem_Click);
-            // 
-            // sightHoundAIServerToolStripMenuItem
-            // 
-            this.sightHoundAIServerToolStripMenuItem.Enabled = false;
-            this.sightHoundAIServerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("sightHoundAIServerToolStripMenuItem.Image")));
-            this.sightHoundAIServerToolStripMenuItem.Name = "sightHoundAIServerToolStripMenuItem";
-            this.sightHoundAIServerToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
-            this.sightHoundAIServerToolStripMenuItem.Text = "SightHound AI Server";
-            this.sightHoundAIServerToolStripMenuItem.Click += new System.EventHandler(this.sightHoundAIServerToolStripMenuItem_Click);
             // 
             // addDoodsServerToolStripMenuItem
             // 
             this.addDoodsServerToolStripMenuItem.Image = global::AITool.Properties.Resources.network_server;
             this.addDoodsServerToolStripMenuItem.Name = "addDoodsServerToolStripMenuItem";
-            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(222, 30);
+            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.addDoodsServerToolStripMenuItem.Text = "DOODS AI Server";
             this.addDoodsServerToolStripMenuItem.Click += new System.EventHandler(this.addDoodsServerToolStripMenuItem_Click);
+            // 
+            // addAmazonReToolStripMenuItem
+            // 
+            this.addAmazonReToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonReToolStripMenuItem.Image")));
+            this.addAmazonReToolStripMenuItem.Name = "addAmazonReToolStripMenuItem";
+            this.addAmazonReToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.addAmazonReToolStripMenuItem.Text = "AWS Rekognition AI Server";
+            this.addAmazonReToolStripMenuItem.Click += new System.EventHandler(this.addAmazonReToolStripMenuItem_Click);
+            // 
+            // sightHoundVehicleAIServerToolStripMenuItem
+            // 
+            this.sightHoundVehicleAIServerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("sightHoundVehicleAIServerToolStripMenuItem.Image")));
+            this.sightHoundVehicleAIServerToolStripMenuItem.Name = "sightHoundVehicleAIServerToolStripMenuItem";
+            this.sightHoundVehicleAIServerToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.sightHoundVehicleAIServerToolStripMenuItem.Text = "SightHound (Vehicle) AI Server";
+            this.sightHoundVehicleAIServerToolStripMenuItem.Click += new System.EventHandler(this.sightHoundAIServerToolStripMenuItem_Click);
+            // 
+            // sightHoundPersonAIServerToolStripMenuItem
+            // 
+            this.sightHoundPersonAIServerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("sightHoundPersonAIServerToolStripMenuItem.Image")));
+            this.sightHoundPersonAIServerToolStripMenuItem.Name = "sightHoundPersonAIServerToolStripMenuItem";
+            this.sightHoundPersonAIServerToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.sightHoundPersonAIServerToolStripMenuItem.Text = "SightHound (Person) AI Server";
+            this.sightHoundPersonAIServerToolStripMenuItem.Click += new System.EventHandler(this.sightHoundPersonAIServerToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -188,6 +199,15 @@ namespace AITool
             this.toolStripButtonDown.Text = "Down";
             this.toolStripButtonDown.Click += new System.EventHandler(this.toolStripButtonDown_Click);
             // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "AWSRekognition.png");
+            this.imageList1.Images.SetKeyName(1, "Deepstack.png");
+            this.imageList1.Images.SetKeyName(2, "DOODS.png");
+            this.imageList1.Images.SetKeyName(3, "SightHound.png");
+            // 
             // Frm_AIServers
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -223,6 +243,8 @@ namespace AITool
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton toolStripButtonUp;
         private System.Windows.Forms.ToolStripButton toolStripButtonDown;
-        private System.Windows.Forms.ToolStripMenuItem sightHoundAIServerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sightHoundVehicleAIServerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sightHoundPersonAIServerToolStripMenuItem;
+        private System.Windows.Forms.ImageList imageList1;
     }
 }

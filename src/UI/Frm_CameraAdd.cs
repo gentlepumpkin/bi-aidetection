@@ -54,7 +54,7 @@ namespace AITool
 
         private void checkedListBoxCameras_Leave(object sender, EventArgs e)
         {
-            UpdateCamList(false);
+            UpdateCamList(true);
 
         }
 
