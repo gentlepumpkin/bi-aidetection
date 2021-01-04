@@ -80,6 +80,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.tb_Pushover_Device = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.tb_pushover_triggering_objects = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,7 +90,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(834, 499);
+            this.btnCancel.Location = new System.Drawing.Point(834, 534);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -101,7 +103,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(756, 499);
+            this.btnSave.Location = new System.Drawing.Point(756, 534);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -121,8 +123,10 @@
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.cb_queue_actions);
             this.groupBox1.Controls.Add(this.cb_mergeannotations);
+            this.groupBox1.Controls.Add(this.tb_pushover_triggering_objects);
             this.groupBox1.Controls.Add(this.tb_telegram_triggering_objects);
             this.groupBox1.Controls.Add(this.tb_network_folder_filename);
+            this.groupBox1.Controls.Add(this.label17);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label15);
             this.groupBox1.Controls.Add(this.label7);
@@ -164,7 +168,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.groupBox1.Size = new System.Drawing.Size(892, 418);
+            this.groupBox1.Size = new System.Drawing.Size(892, 453);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             // 
@@ -172,7 +176,7 @@
             // 
             this.cb_MQTT_SendImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cb_MQTT_SendImage.AutoSize = true;
-            this.cb_MQTT_SendImage.Location = new System.Drawing.Point(800, 197);
+            this.cb_MQTT_SendImage.Location = new System.Drawing.Point(800, 227);
             this.cb_MQTT_SendImage.Name = "cb_MQTT_SendImage";
             this.cb_MQTT_SendImage.Size = new System.Drawing.Size(88, 19);
             this.cb_MQTT_SendImage.TabIndex = 50;
@@ -286,7 +290,7 @@
             // linkLabelMqttSettings
             // 
             this.linkLabelMqttSettings.AutoSize = true;
-            this.linkLabelMqttSettings.Location = new System.Drawing.Point(78, 199);
+            this.linkLabelMqttSettings.Location = new System.Drawing.Point(78, 229);
             this.linkLabelMqttSettings.Name = "linkLabelMqttSettings";
             this.linkLabelMqttSettings.Size = new System.Drawing.Size(49, 15);
             this.linkLabelMqttSettings.TabIndex = 41;
@@ -310,7 +314,7 @@
             this.label13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label13.AutoSize = true;
             this.label13.ForeColor = System.Drawing.Color.DarkRed;
-            this.label13.Location = new System.Drawing.Point(495, 227);
+            this.label13.Location = new System.Drawing.Point(495, 257);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(52, 15);
             this.label13.TabIndex = 39;
@@ -320,7 +324,7 @@
             // 
             this.label12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(495, 199);
+            this.label12.Location = new System.Drawing.Point(495, 229);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(52, 15);
             this.label12.TabIndex = 39;
@@ -329,7 +333,7 @@
             // tb_MQTT_Payload_cancel
             // 
             this.tb_MQTT_Payload_cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_MQTT_Payload_cancel.Location = new System.Drawing.Point(554, 223);
+            this.tb_MQTT_Payload_cancel.Location = new System.Drawing.Point(554, 253);
             this.tb_MQTT_Payload_cancel.Name = "tb_MQTT_Payload_cancel";
             this.tb_MQTT_Payload_cancel.Size = new System.Drawing.Size(331, 23);
             this.tb_MQTT_Payload_cancel.TabIndex = 38;
@@ -338,7 +342,7 @@
             // tb_MQTT_Payload
             // 
             this.tb_MQTT_Payload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_MQTT_Payload.Location = new System.Drawing.Point(554, 195);
+            this.tb_MQTT_Payload.Location = new System.Drawing.Point(554, 225);
             this.tb_MQTT_Payload.Name = "tb_MQTT_Payload";
             this.tb_MQTT_Payload.Size = new System.Drawing.Size(240, 23);
             this.tb_MQTT_Payload.TabIndex = 38;
@@ -348,7 +352,7 @@
             // 
             this.tb_MQTT_Topic_Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(263, 223);
+            this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(263, 253);
             this.tb_MQTT_Topic_Cancel.Name = "tb_MQTT_Topic_Cancel";
             this.tb_MQTT_Topic_Cancel.Size = new System.Drawing.Size(220, 23);
             this.tb_MQTT_Topic_Cancel.TabIndex = 37;
@@ -358,7 +362,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.ForeColor = System.Drawing.Color.DarkRed;
-            this.label9.Location = new System.Drawing.Point(180, 227);
+            this.label9.Location = new System.Drawing.Point(180, 257);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(77, 15);
             this.label9.TabIndex = 36;
@@ -368,7 +372,7 @@
             // 
             this.tb_MQTT_Topic.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_MQTT_Topic.Location = new System.Drawing.Point(263, 195);
+            this.tb_MQTT_Topic.Location = new System.Drawing.Point(263, 225);
             this.tb_MQTT_Topic.Name = "tb_MQTT_Topic";
             this.tb_MQTT_Topic.Size = new System.Drawing.Size(220, 23);
             this.tb_MQTT_Topic.TabIndex = 37;
@@ -377,7 +381,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(180, 199);
+            this.label1.Location = new System.Drawing.Point(180, 229);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(77, 15);
             this.label1.TabIndex = 36;
@@ -386,7 +390,7 @@
             // cb_MQTT_enabled
             // 
             this.cb_MQTT_enabled.AutoSize = true;
-            this.cb_MQTT_enabled.Location = new System.Drawing.Point(13, 197);
+            this.cb_MQTT_enabled.Location = new System.Drawing.Point(13, 227);
             this.cb_MQTT_enabled.Name = "cb_MQTT_enabled";
             this.cb_MQTT_enabled.Size = new System.Drawing.Size(60, 19);
             this.cb_MQTT_enabled.TabIndex = 35;
@@ -474,7 +478,7 @@
             this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbCancelUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbCancelUrl.Location = new System.Drawing.Point(17, 354);
+            this.tbCancelUrl.Location = new System.Drawing.Point(14, 388);
             this.tbCancelUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbCancelUrl.Multiline = true;
             this.tbCancelUrl.Name = "tbCancelUrl";
@@ -487,7 +491,7 @@
             this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbTriggerUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbTriggerUrl.Location = new System.Drawing.Point(17, 273);
+            this.tbTriggerUrl.Location = new System.Drawing.Point(14, 307);
             this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbTriggerUrl.Multiline = true;
             this.tbTriggerUrl.Name = "tbTriggerUrl";
@@ -502,7 +506,7 @@
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.label11.ForeColor = System.Drawing.Color.DarkRed;
-            this.label11.Location = new System.Drawing.Point(14, 333);
+            this.label11.Location = new System.Drawing.Point(11, 367);
             this.label11.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label11.MinimumSize = new System.Drawing.Size(158, 0);
             this.label11.Name = "label11";
@@ -514,7 +518,7 @@
             // 
             this.lblTriggerUrl.AutoSize = true;
             this.lblTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblTriggerUrl.Location = new System.Drawing.Point(14, 252);
+            this.lblTriggerUrl.Location = new System.Drawing.Point(11, 286);
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(158, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
@@ -582,7 +586,7 @@
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(679, 499);
+            this.btTest.Location = new System.Drawing.Point(679, 534);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 6;
@@ -595,9 +599,9 @@
             this.cb_Pushover_Enabled.AutoSize = true;
             this.cb_Pushover_Enabled.Location = new System.Drawing.Point(13, 168);
             this.cb_Pushover_Enabled.Name = "cb_Pushover_Enabled";
-            this.cb_Pushover_Enabled.Size = new System.Drawing.Size(75, 19);
+            this.cb_Pushover_Enabled.Size = new System.Drawing.Size(167, 19);
             this.cb_Pushover_Enabled.TabIndex = 35;
-            this.cb_Pushover_Enabled.Text = "Pushover";
+            this.cb_Pushover_Enabled.Text = "Send message to Pushover";
             this.cb_Pushover_Enabled.UseVisualStyleBackColor = true;
             // 
             // label8
@@ -660,12 +664,31 @@
             this.label16.TabIndex = 39;
             this.label16.Text = "Device:";
             // 
+            // label17
+            // 
+            this.label17.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(207, 200);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(50, 15);
+            this.label17.TabIndex = 44;
+            this.label17.Text = "Objects:";
+            // 
+            // tb_pushover_triggering_objects
+            // 
+            this.tb_pushover_triggering_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_pushover_triggering_objects.Location = new System.Drawing.Point(263, 196);
+            this.tb_pushover_triggering_objects.Name = "tb_pushover_triggering_objects";
+            this.tb_pushover_triggering_objects.Size = new System.Drawing.Size(621, 23);
+            this.tb_pushover_triggering_objects.TabIndex = 45;
+            this.toolTip1.SetToolTip(this.tb_pushover_triggering_objects, "A list of objects that trigger send to pushover");
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(912, 537);
+            this.ClientSize = new System.Drawing.Size(912, 572);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);
@@ -736,5 +759,7 @@
         public System.Windows.Forms.CheckBox cb_Pushover_Enabled;
         private System.Windows.Forms.Label label16;
         public System.Windows.Forms.TextBox tb_Pushover_Device;
+        public System.Windows.Forms.TextBox tb_pushover_triggering_objects;
+        private System.Windows.Forms.Label label17;
     }
 }

@@ -180,7 +180,9 @@ namespace AITool
 
                 this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
 
-                this.tb_Pushover_API_Key.Text = AppSettings.Settings.pushover_APIKey;
+                this.tb_Pushover_APIKey.Text = AppSettings.Settings.pushover_APIKey;
+                this.tb_Pushover_UserKey.Text = AppSettings.Settings.pushover_UserKey;
+                this.tb_Pushover_Cooldown.Text = AppSettings.Settings.pushover_cooldown_seconds.ToString();
 
                 //---------------------------------------------------------------------------
                 //STATS TAB
@@ -2815,7 +2817,9 @@ namespace AITool
 
             AppSettings.Settings.BlueIrisServer = this.tb_BlueIrisServer.Text.Trim();
 
-            AppSettings.Settings.pushover_APIKey = this.tb_Pushover_API_Key.Text.Trim();
+            AppSettings.Settings.pushover_APIKey = this.tb_Pushover_APIKey.Text.Trim();
+            AppSettings.Settings.pushover_UserKey = this.tb_Pushover_UserKey.Text.Trim();
+            AppSettings.Settings.pushover_cooldown_seconds = Convert.ToInt32(this.tb_Pushover_Cooldown.Text.Trim());
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
@@ -3513,6 +3517,7 @@ namespace AITool
                 frm.tb_Pushover_Title.Text = cam.Action_pushover_title;
                 frm.tb_Pushover_Message.Text = cam.Action_pushover_message;
                 frm.tb_Pushover_Device.Text = cam.Action_pushover_device;
+                frm.tb_pushover_triggering_objects.Text = cam.Action_pushover_triggering_objects;
 
                 frm.cb_queue_actions.Checked = cam.Action_queued;
 
@@ -3559,6 +3564,7 @@ namespace AITool
                     cam.Action_pushover_title = frm.tb_Pushover_Title.Text.Trim();
                     cam.Action_pushover_message = frm.tb_Pushover_Message.Text.Trim();
                     cam.Action_pushover_device = frm.tb_Pushover_Device.Text.Trim();
+                    cam.Action_pushover_triggering_objects = frm.tb_pushover_triggering_objects.Text.Trim();
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 

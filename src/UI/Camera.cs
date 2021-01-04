@@ -80,6 +80,7 @@ namespace AITool
         public string Action_pushover_title = "AI Detection";
         public string Action_pushover_message = "[detections]";
         public string Action_pushover_device = "";
+        public string Action_pushover_triggering_objects = "";
 
         [JsonIgnore]
         public bool Action_Cancel_Timer_Enabled = false;

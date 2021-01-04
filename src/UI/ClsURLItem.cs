@@ -365,12 +365,12 @@ namespace AITool
 
 
                 bool hasdet = this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0;
-                bool hascus = this.url.IndexOf("/v1/vision/custom/", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool hascus = this.url.IndexOf("/v1/vision/custom", StringComparison.OrdinalIgnoreCase) >= 0;
 
                 if (!hasdet && !hascus)
                 {
                     this.UrlFixed = true;
-                    this.url = this.url.Trim() + "/v1/vision/detection";
+                    this.url = this.url.Trim() + ":80/v1/vision/detection";
                 }
                 ///v1/vision/custom/catsanddogs
                 if (Global.IsValidURL(this.url) && (hasdet || hascus))
