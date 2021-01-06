@@ -77,6 +77,8 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
+            //ClsImageQueueItem qi = new ClsImageQueueItem("C:\\Downloads\\TestVehicleImage.jpg",0);
+            //qi.CopyFileTo("C:\\TEST\\blah.jpg");
 
             //ClsDoodsRequest cdr = new ClsDoodsRequest();
 
@@ -2432,14 +2434,14 @@ namespace AITool
 
                         string cn = cs;
 
-                        if (cn.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
-                        {
-                            cn = Name.Substring(2).TrimStart(@"_-".ToCharArray()).Trim();  //if using dupe cam that may start with AICAMNAME or AI_CAMNAME
-                            string maskfile = AITOOL.GetMaskFile(cn);
-                            string newfile = AITOOL.GetMaskFile(cs);
-                            if (File.Exists(maskfile) && !File.Exists(newfile))
-                                File.Move(maskfile, newfile);
-                        }
+                        //if (cn.StartsWith("ai", StringComparison.OrdinalIgnoreCase))
+                        //{
+                        //    cn = Name.Substring(2).TrimStart(@"_-".ToCharArray()).Trim();  //if using dupe cam that may start with AICAMNAME or AI_CAMNAME
+                        //    string maskfile = AITOOL.GetMaskFile(cn);
+                        //    string newfile = AITOOL.GetMaskFile(cs);
+                        //    if (File.Exists(maskfile) && !File.Exists(newfile))
+                        //        File.Move(maskfile, newfile);
+                        //}
 
                         if (GetCamera(cn, false) == null)
                         {

@@ -44,14 +44,18 @@ namespace AITool
             {
                 if (this.IsValid())  //loads into memory if not already loaded
                 {
-                    DirectoryInfo d = new DirectoryInfo(outputFilePath);
+                    DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(outputFilePath));
                     if (d.Root != null && !d.Exists)
                     {
                         //dont try to create if working off root drive
                         d.Create();
                     }
                     Stream inStream = this.ToStream();
-                    using (FileStream fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
+
+                    if (File.Exists(outputFilePath))
+                        File.Delete(outputFilePath);
+
+                    using (FileStream fileStream = new FileStream(outputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
                         fileStream.SetLength(inStream.Length);
                         int bytesRead = -1;
