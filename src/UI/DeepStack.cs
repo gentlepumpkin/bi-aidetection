@@ -10,6 +10,11 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
+    public class DeepstackPlatformJson
+    {
+        public string PROFILE = "";
+        public bool CUDA_MODE = false;
+    }
     public enum DeepStackTypeEnum
     {
         CPU,
@@ -280,7 +285,7 @@ namespace AITool
                 {
                     this.DisplayName = (string)key.GetValue("DisplayName");
                     this.DisplayVersion = (string)key.GetValue("DisplayVersion");
-                    this.IsNewVersion = this.DisplayName.Contains("202") || this.DisplayVersion.Contains("202");
+                    this.IsNewVersion = this.DisplayName.Contains("2021") || this.DisplayVersion.Contains("2021");
                    
 
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
@@ -349,29 +354,26 @@ namespace AITool
                     //get type and version
 
                     //this file exists with 2020 version:
-                    string servergo = Path.Combine(this.DeepStackFolder, "server", "server.go");
+                    string platform = Path.Combine(this.DeepStackFolder, "server", "platform.json");
                     //{
                     //    "PROFILE":"windows_native",
                     //    "GPU":false
                     //}
-                    if (File.Exists(servergo))
+                    if (File.Exists(platform))
                     {
                         this.IsNewVersion = true;
                         this.IsActivated = true;
-                        string contents = File.ReadAllText(servergo);
-                        if (contents.IndexOf("\"CUDA_MODE\", \"True\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                        string contents = File.ReadAllText(platform);
+                        DeepstackPlatformJson dp = Global.SetJSONString<DeepstackPlatformJson>(contents);
+                        if (dp.CUDA_MODE)
                         {
                             this.Type = DeepStackTypeEnum.GPU;
                         }
-                        else if (contents.IndexOf("\"CUDA_MODE\", \"False\"", StringComparison.OrdinalIgnoreCase) >= 0 || contents.IndexOf("\"CUDA_MODE\"", StringComparison.OrdinalIgnoreCase) == -1)
+                        else if (!dp.CUDA_MODE)
                         {
                             this.Type = DeepStackTypeEnum.CPU;
                         }
-                        else
-                        {
-                            this.Type = DeepStackTypeEnum.Unknown;
-                            Log($"Error: Could not determine CPU/GPU type in {servergo}?");
-                        }
+                        
 
                         //get the version
                         List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.iss", SearchOption.TopDirectoryOnly);
@@ -495,7 +497,7 @@ namespace AITool
                             string detect = "";
                             string admin = "";
                             string api = "";
-                            //string mode = "";
+                            string mode = "";
 
                             if (this.FaceAPIEnabled)
                                 face = $"--VISION-FACE {this.FaceAPIEnabled} ";
@@ -508,10 +510,10 @@ namespace AITool
                             if (!string.IsNullOrEmpty(this.APIKey))
                                 api = $"--API-KEY {this.APIKey} ";
 
-                            //if (!string.IsNullOrEmpty(this.Mode))
-                            //    mode = $"--MODE {this.Mode} ";
+                            if (!string.IsNullOrEmpty(this.Mode))
+                                mode = $"--MODE {this.Mode} ";
 
-                            prc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}--PORT {CurPort}";
+                            prc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}{mode}--PORT {CurPort}";
                         }
                         if (!AppSettings.Settings.deepstack_debug)
                         {
@@ -528,8 +530,8 @@ namespace AITool
                             prc.process.StartInfo.UseShellExecute = false;
                         }
 
-                        if (!string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
-                            prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
+                        //if (!string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
+                        //    prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
 
                         prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
                         prc.FileName = this.DeepStackEXE;
@@ -659,6 +661,10 @@ namespace AITool
                         this.IsStarted = true;
                     }
 
+                }
+                else
+                {
+                    Log("Error: DeepStack for Windows v2021 or higher is not installed. https://github.com/johnolafenwa/DeepStack/releases");
                 }
                 //else
                 //{
