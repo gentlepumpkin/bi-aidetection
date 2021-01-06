@@ -2621,7 +2621,7 @@ namespace AITool
 
                                         Log($"Updating camera '{cam.Name}' with settings from '{icam.Name}'...");
 
-                                        icam.BICamName = cam.BICamName;
+                                        //icam.BICamName = cam.BICamName;
 
 
                                         if (frm.cb_apply_confidence_limits.Checked)
@@ -2871,7 +2871,7 @@ namespace AITool
 
             if (noneg)
             {
-                MessageBox.Show("Please note that the Telegram Chat ID **may** need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //MessageBox.Show("Please note that the Telegram Chat ID **may** need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
         }

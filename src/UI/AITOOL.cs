@@ -6,8 +6,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using NLog;
+using NPushover;
 using OSVersionExtension;
-using PushoverClient;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -21,12 +21,12 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Telegram.Bot;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace AITool
@@ -50,6 +50,7 @@ namespace AITool
         //moving average will be faster for long running process with 1000's of samples
         public static MovingCalcs tcalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs fcalc = new MovingCalcs(250, "Images", true);
+        public static MovingCalcs lcalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs qcalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs qsizecalc = new MovingCalcs(250, "Queue Size", false);
 
@@ -87,6 +88,8 @@ namespace AITool
         public static MQTTClient mqttClient = new MQTTClient();
 
         public static Pushover pushoverClient = null;
+
+        public static TelegramBotClient telegramBot = null;
 
         public static string srv = "";
 
@@ -667,12 +670,12 @@ namespace AITool
                                 sorted[i].ErrDisabled.WriteFullFence(false);
                                 sorted[i].CurErrCount.WriteFullFence(0);
                                 sorted[i].InUse.WriteFullFence(false);
-                                if (sorted[i].HttpClient != null)
-                                {
-                                    sorted[i].HttpClient.Dispose();
-                                    sorted[i].HttpClient = new HttpClient();
-                                    sorted[i].HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
-                                }
+                                //if (sorted[i].HttpClient != null)
+                                //{
+                                //    sorted[i].HttpClient.Dispose();
+                                //    sorted[i].HttpClient = new HttpClient();
+                                //    sorted[i].HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                                //}
                                 Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
                                 ret = sorted[i];
                                 ret.CurOrder = i + 1;
@@ -1475,8 +1478,7 @@ namespace AITool
 
                     using MultipartFormDataContent request = new MultipartFormDataContent();
 
-                    using MemoryStream ms = CurImg.ToStream();
-                    using StreamContent sc = new StreamContent(ms);
+                    using StreamContent sc = new StreamContent(CurImg.ToStream());
 
                     request.Add(sc, "image", Path.GetFileName(CurImg.image_path));
 
@@ -2098,13 +2100,8 @@ namespace AITool
 
                     // Wait up to 30 seconds to gain access to the file that was just created.This should
                     //prevent the need to retry in the detection routine
-                    sw.Restart();
 
-                    CurImg.LoadImage();
-
-                    sw.Stop();
-
-                    if (CurImg.Valid)
+                    if (CurImg.IsValid())  //Waits for access and loads into memory if not already loaded
                     {
 
                         string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
@@ -2408,10 +2405,12 @@ namespace AITool
                 AiUrl.AITimeCalcs.AddToCalc(CurImg.DeepStackTimeMS);
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
+                lcalc.AddToCalc(CurImg.FileLoadMS);
 
                 Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
                 Log($"Debug:       AI (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.AITimeCalcs.Count}, Min={AiUrl.AITimeCalcs.Min}ms, Max={AiUrl.AITimeCalcs.Max}ms, Avg={AiUrl.AITimeCalcs.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
                 Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:      File load Time:  {CurImg.FileLoadMS}ms (Count={lcalc.Count}, Min={lcalc.Min}ms, Max={lcalc.Max}ms, Avg={lcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
                 Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
                 Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", AiUrl.CurSrv, cam.Name, CurImg.image_path);
 
@@ -2462,7 +2461,8 @@ namespace AITool
                     else
                         CamMaskFile = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.MaskFileName}.bmp");
 
-                    files.Add(CamMaskFile);
+                    ret = CamMaskFile;
+                    return ret;
                 }
 
                 files.Add(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.Name}.bmp"));

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.30413.136
+VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{B8ACBD49-0830-4E34-B5B6-C876BEAE6F65}"
 EndProject
@@ -31,6 +31,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {70C9FD94-C962-456A-9C9F-796B13AD6FA0}
+		SolutionGuid = {90F77C3F-B8B1-42AE-B6EF-5ED36951BF6E}
 	EndGlobalSection
 EndGlobal

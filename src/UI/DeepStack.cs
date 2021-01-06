@@ -30,7 +30,7 @@ namespace AITool
         public int Count = 1;
         public string DeepStackFolder = @"C:\DeepStack";
         public string DeepStackEXE = @"C:\DeepStack\DeepStack.exe";
-        public string ServerEXE = @"C:\DeepStack\server\server.exe";
+        public string ServerEXE = @"C:\DeepStack\server\DeepStack.exe";
         public string PythonEXE = @"C:\DeepStack\interpreter\python.exe";
         public string RedisEXE = @"C:\DeepStack\redis\redis-server.exe";
         public bool SceneAPIEnabled = false;
@@ -288,7 +288,7 @@ namespace AITool
                     {
                         Log("Debug: Deepstack Desktop install path found in Uninstall registry: " + dspath);
 
-                        string exepth = Path.Combine(dspath, "DeepStack.exe");
+                        string exepth = Path.Combine(dspath, "server", "DeepStack.exe");
                         if (File.Exists(exepth))
                         {
                             this.IsInstalled = true;
@@ -300,7 +300,7 @@ namespace AITool
 
                             if (this.IsNewVersion)
                             {
-                                this.ServerEXE = Path.Combine(dspath, @"DeepStack.exe");
+                                this.ServerEXE = exepth;
                             }
                             else
                             {
@@ -333,7 +333,7 @@ namespace AITool
 
                     if (File.Exists(this.DeepStackEXE))
                     {
-                        this.DeepStackFolder = Path.GetDirectoryName(this.DeepStackEXE);
+                        //this.DeepStackFolder = Path.GetDirectoryName(this.DeepStackEXE);
                         this.IsInstalled = true;
                         
                     }
@@ -473,7 +473,13 @@ namespace AITool
                     int pcnt = 0;
                     foreach (string CurPort in ports)
                     {
-                        pcnt++;
+
+                        if (Global.IsLocalPortInUse(Convert.ToInt32(CurPort)))
+                        {
+                            Log($"Error: Port {CurPort} is already open, so cannot start deepstack.exe using that port.");
+                            continue;
+                        }
+
 
                         Global.ClsProcess prc = new Global.ClsProcess();
                         prc.process.StartInfo.FileName = this.DeepStackEXE;
@@ -522,10 +528,14 @@ namespace AITool
                             prc.process.StartInfo.UseShellExecute = false;
                         }
 
-                        prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
+                        if (!string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
+                            prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
+
                         prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
                         prc.FileName = this.DeepStackEXE;
                         prc.CommandLine = prc.process.StartInfo.Arguments;
+
+                        pcnt++;
                         Log($"Starting {pcnt} of {ports.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
                         prc.process.Start();
 
@@ -559,6 +569,8 @@ namespace AITool
 
                         Thread.Sleep(250);
                     }
+
+                    this.Count = pcnt;
 
                     this.IsStarted = true;
                     this.HasError = false;
@@ -854,6 +866,8 @@ namespace AITool
             bool perr = Global.KillProcesses(this.PythonProc);
             bool rerr = Global.KillProcesses(this.RedisProc);
             bool serr = Global.KillProcesses(this.ServerProc);
+            if (serr)
+                serr = Global.KillProcesses("C:\\DeepStack\\DeepStack.exe");  //force the old location to be killed also
 
             err = !perr || !rerr || !serr;
 

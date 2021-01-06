@@ -77,10 +77,12 @@ namespace AITool
         public bool Action_queued = false;
 
         public bool Action_pushover_enabled = false;
-        public string Action_pushover_title = "AI Detection";
-        public string Action_pushover_message = "[detections]";
+        public string Action_pushover_title = "AI Detection - [camera]";
+        public string Action_pushover_message = "[SummaryNonEscaped]";
         public string Action_pushover_device = "";
         public string Action_pushover_triggering_objects = "";
+        public string Action_pushover_Priority = "Normal";
+        public string Action_pushover_Sound = "";
 
         [JsonIgnore]
         public bool Action_Cancel_Timer_Enabled = false;

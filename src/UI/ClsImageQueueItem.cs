@@ -16,6 +16,7 @@ namespace AITool
         public long TotalTimeMS { get; set; } = 0;
         public long DeepStackTimeMS { get; set; } = 0;
         public long FileLockMS { get; set; } = 0;
+        public long FileLoadMS { get; set; } = 0;
         public long FileLockErrRetryCnt { get; set; } = 0;
         public long CurQueueSize { get; set; } = 0;
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
@@ -24,7 +25,60 @@ namespace AITool
         public int Width { get; set; } = 0;
         public int Height { get; set; } = 0;
         public byte[] ImageByteArray { get; set; } = null;
-        public bool Valid { get; set; } = false;
+        private bool _valid { get; set; } = false;
+        private bool _loaded { get; set; } = false;
+        public bool IsValid()
+        {
+            if (!this._loaded)
+                this.LoadImage();
+            return this._valid;
+        }
+
+        public bool CopyFileTo(string outputFilePath)
+        {
+            bool ret = false;
+            
+            int bufferSize = 1024 * 1024;
+
+            try
+            {
+                if (this.IsValid())  //loads into memory if not already loaded
+                {
+                    DirectoryInfo d = new DirectoryInfo(outputFilePath);
+                    if (d.Root != null && !d.Exists)
+                    {
+                        //dont try to create if working off root drive
+                        d.Create();
+                    }
+                    Stream inStream = this.ToStream();
+                    using (FileStream fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
+                    {
+                        fileStream.SetLength(inStream.Length);
+                        int bytesRead = -1;
+                        byte[] bytes = new byte[bufferSize];
+
+                        while ((bytesRead = inStream.Read(bytes, 0, bufferSize)) > 0)
+                        {
+                            fileStream.Write(bytes, 0, bytesRead);
+                        }
+                    }
+                    ret = true;
+
+                }
+                else
+                {
+                    AITOOL.Log($"Error: File not valid: {this.image_path}");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                AITOOL.Log($"Error: Copying to {outputFilePath}: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+
+        }
         public ClsImageQueueItem(String FileName, long CurQueueSize)
         {
             this.image_path = FileName;
@@ -42,11 +96,11 @@ namespace AITool
         {
             MemoryStream ms = new MemoryStream();
 
-            if (this.Valid)
+            if (this.IsValid())
             {
                 try
                 {
-                    ms = new MemoryStream(this.ImageByteArray);
+                    ms = new MemoryStream(this.ImageByteArray, false);
                 }
                 catch (Exception ex)
                 {
@@ -65,7 +119,7 @@ namespace AITool
             //a single time rather than multiple
             Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
             string LastError = "";
-            this.Valid = false;
+            this._valid = false;
             try
             {
                 if (!string.IsNullOrEmpty(this.image_path) && File.Exists(this.image_path))
@@ -83,16 +137,17 @@ namespace AITool
 
                             try
                             {
+                                sw.Restart();
                                 // Open a FileStream object using the passed in safe file handle.
                                 using (FileStream fileStream = new FileStream(result.Handle, FileAccess.Read))
                                 {
                                     using System.Drawing.Image img = System.Drawing.Image.FromStream(fileStream,true,true);
 
-                                    this.Valid = img !=null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    this._valid = img !=null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg);
 
-                                    this.FileLockMS = sw.ElapsedMilliseconds;
+                                    this.FileLoadMS = sw.ElapsedMilliseconds;
 
-                                    if (!this.Valid)
+                                    if (!this._valid)
                                     {
                                         LastError = $"Error: Image file is not jpeg? LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt} - ({img.RawFormat}): {this.image_path}";
                                         AITOOL.Log(LastError);
@@ -106,7 +161,7 @@ namespace AITool
                                         //fileStream.CopyTo(ms);
                                         img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         this.ImageByteArray = ms.ToArray();
-                                        this.FileLockMS = sw.ElapsedMilliseconds;
+                                        this.FileLoadMS = sw.ElapsedMilliseconds;
                                         AITOOL.Log($"Debug: Image file is valid. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}: {Path.GetFileName(this.image_path)}");
                                         break;
                                     }
@@ -115,11 +170,13 @@ namespace AITool
                             }
                             catch (Exception ex)
                             {
-                                this.Valid = false;
+                                this._valid = false;
                                 LastError = $"Error: Image is corrupt. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}: {Global.ExMsg(ex)}";
                             }
                             finally 
                             {
+                                this._loaded = true;
+
                                 if (!result.Handle.IsClosed)
                                 {
                                     result.Handle.Close();
@@ -133,7 +190,7 @@ namespace AITool
                             LastError = $"Error: Could not gain access to the image in {result.TimeMS}ms, retries={result.ErrRetryCnt}.";
                         }
 
-                    } while ((!result.Success || !this.Valid) && sw.ElapsedMilliseconds < 30000);
+                    } while ((!result.Success || !this._valid) && sw.ElapsedMilliseconds < 30000);
 
                 }
                 else
@@ -153,7 +210,7 @@ namespace AITool
                     result.Handle.Close();
                     result.Handle.Dispose();
                 }
-                if (!this.Valid && !string.IsNullOrEmpty(LastError))
+                if (!this._valid && !string.IsNullOrEmpty(LastError))
                     AITOOL.Log(LastError);
             }
         }

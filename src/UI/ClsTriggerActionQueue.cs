@@ -1,5 +1,4 @@
 ﻿using MQTTnet.Client.Publishing;
-using PushoverClient;
 using SixLabors.ImageSharp;
 using System;
 using System.Collections.Concurrent;
@@ -19,6 +18,10 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InputFiles;
+using NPushover;
+using NPushover.Exceptions;
+using NPushover.RequestObjects;
+using NPushover.ResponseObjects;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -245,7 +248,7 @@ namespace AITool
 
 
                 bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && string.IsNullOrEmpty(AQI.cam.Action_mqtt_payload_cancel)) || (AQI.cam.cancel_urls.Count() > 0));
-                
+
                 if (HasCancelAction)
                 {
                     if (AQI.Trigger == false)  //If this is a CANCEL anyway...
@@ -266,7 +269,7 @@ namespace AITool
                             AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
                             AQI.cam.Action_Cancel_Timer_Enabled = true;
                             AQI.Trigger = false;  //set to be a cancel
-                            this.CancelActionDict.TryAdd(AQI.cam.Name.ToLower(),AQI);
+                            this.CancelActionDict.TryAdd(AQI.cam.Name.ToLower(), AQI);
                             Log($"Debug: Cancel action queued for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
                         }
                     }
@@ -512,7 +515,7 @@ namespace AITool
 
                     }
 
-                   
+
 
                     //upload to telegram
                     if (AQI.cam.telegram_enabled && AQI.Trigger)
@@ -581,11 +584,10 @@ namespace AITool
             {
                 Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path, "", "", AQI.CurImg.image_path);
 
-                if (System.IO.File.Exists(AQI.CurImg.image_path))
+                if (AQI.CurImg.IsValid())
                 {
                     Stopwatch sw = Stopwatch.StartNew();
-
-                    using (Bitmap img = new Bitmap(AQI.CurImg.image_path))
+                    using (Bitmap img = new Bitmap(AQI.CurImg.ToStream()))
                     {
                         using (Graphics g = Graphics.FromImage(img))
                         {
@@ -769,7 +771,7 @@ namespace AITool
 
                                 if (System.IO.File.Exists(OutputImageFile))
                                 {
-                                    result = await Global.WaitForFileAccessAsync(OutputImageFile, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                    result = await Global.WaitForFileAccessAsync(OutputImageFile, FileAccess.ReadWrite, FileShare.None);
                                 }
 
                                 if (result.Success)
@@ -836,18 +838,11 @@ namespace AITool
 
                 Log($"Debug:  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
 
-                DirectoryInfo d = new DirectoryInfo(netfld);
-                if (d.Root != null && !d.Exists)
+
+                if (AQI.CurImg.CopyFileTo(dest_path))
                 {
-                    //dont try to create if working off root drive
-                    d.Create();
+                    ret = true;
                 }
-
-                System.IO.File.Copy(AQI.CurImg.image_path, dest_path, true);
-
-                ret = true;
-
-
             }
             catch (Exception ex)
             {
@@ -905,7 +900,7 @@ namespace AITool
                 //make sure it is a matching object
                 if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects))
                 {
-                    
+
                     List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
                     if (preds != null && preds.Count > 0)
                     {
@@ -938,7 +933,6 @@ namespace AITool
                     if (cooltime >= AppSettings.Settings.pushover_cooldown_seconds)
                     {
 
-                        Stopwatch sw = Stopwatch.StartNew();
 
                         string title = "";
                         string message = "";
@@ -964,62 +958,101 @@ namespace AITool
 
                         if (AITOOL.pushoverClient == null)
                         {
-                            AITOOL.pushoverClient = new PushoverClient.Pushover(AppSettings.Settings.pushover_APIKey, AppSettings.Settings.pushover_UserKey);
+                            AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
                         }
 
                         for (int i = 0; i < titles.Count; i++)
                         {
-                            PushResponse response = null;
+                            PushoverUserResponse response = null;
+
+                            Stopwatch sw = Stopwatch.StartNew();
+
                             try
                             {
                                 string pushtitle = titles[i];
                                 string pushmessage = messages[i];
                                 string pushdevice = "";
+                                string attachment = "";
                                 if (i <= devices.Count - 1)
                                     pushdevice = devices[i];
-                                
-                                //your app may send messages to the API with the timestamp parameter set to the Unix timestamp 
-                                //of the original message. For example, sending timestamp=1331249662 would deliver the message
-                                //with a time of March 8, 2011 17:34:22 CST (but shown relative to the local device's timezone). 
 
-                                response = await AITOOL.pushoverClient.PushAsync(pushtitle, pushmessage, device: pushdevice, timestamp: AQI.CurImg.TimeCreatedUTC);
+                                //MemoryStream ms = AQI.CurImg.ToStream();
+                                //if (ms != null && ms.Length > 32)
+                                //    attachment = $"(\"image.jpg\", {ms.ConvertToBase64()}, \"image/jpeg\")";
+                                
+                                NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
+                                {
+                                    Title = pushtitle,
+                                    Body = pushmessage,
+                                    Timestamp = AQI.CurImg.TimeCreated,
+                                    Priority = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority),
+                                    Sound = AQI.cam.Action_pushover_Sound,
+                                    Attachment = attachment,
+                                    //RetryOptions = new RetryOptions
+                                    //{
+                                    //    RetryEvery = TimeSpan.FromSeconds(30),
+                                    //    RetryPeriod = TimeSpan.FromHours(3)
+                                    //},
+                                    //SupplementaryUrl = new SupplementaryURL
+                                    //{
+                                    //    Uri = new Uri("http://robiii.me"),
+                                    //    Title = "Awesome dude!"
+                                    //},
+                                };
+
+                                sw.Restart();
+
+                                response = await AITOOL.pushoverClient.SendMessageAsync(msg, AppSettings.Settings.pushover_UserKey, pushdevice);
+
+                                sw.Stop();
                             }
                             catch (Exception ex)
                             {
 
+                                sw.Stop();
                                 ret = false;
-                                this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
-                                Log($"Error: Pushover: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
                             }
 
                             if (response != null)
                             {
+                                string rateinfo = "";
+                                if (response.RateLimitInfo != null)
+                                {
+                                    rateinfo = $"(Monthly Limit={response.RateLimitInfo.Limit}, Remaining={response.RateLimitInfo.Remaining}, ResetDate={response.RateLimitInfo.Reset})";
+                                }
 
-                                if (response.Status == 1)
+                                if (response.IsOk)
                                 {
                                     ret = true;
-                                    Log($"Debug: Pushover success.");
+                                    Log($"Debug: Pushover success in {sw.ElapsedMilliseconds}ms {rateinfo}");
                                 }
                                 else
                                 {
                                     string errs = "";
-                                    if (response.Errors.Count() > 0)
+                                    if (response.HasErrors)
                                         errs = string.Join(";", response.Errors);
                                     ret = false;
-                                    Log($"Error: Pushover response code={response.Status}, Errs='{errs}'");
+                                    Log($"Error: Pushover response code={response.Status} in {sw.ElapsedMilliseconds}ms, Errs='{errs}' {rateinfo}");
                                 }
                             }
                             else
                             {
                                 ret = false;
-                                Log($"Error: Pushover failed to return a response?", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                Log($"Error: Pushover failed to return a response in {sw.ElapsedMilliseconds}ms?", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
                             }
+
+                            if (!ret)
+                                this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
+                            else
+                                this.PushoverRetryTime.Write(DateTime.MinValue);
+
                         }
                     }
                     else
                     {
                         //log that nothing was done
-                        Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Pushover.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
 
                     }
                 }
@@ -1038,8 +1071,8 @@ namespace AITool
 
             return ret;
         }
-            //send image to Telegram
-         public async Task<bool> TelegramUpload(ClsTriggerActionQueueItem AQI)
+        //send image to Telegram
+        public async Task<bool> TelegramUpload(ClsTriggerActionQueueItem AQI)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -1097,36 +1130,38 @@ namespace AITool
                         {
                             //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
 
-                            using (var image_telegram = System.IO.File.OpenRead(AQI.CurImg.image_path))
+                            //using (var image_telegram = System.IO.File.OpenRead(AQI.CurImg.image_path))
+                            //{
+
+                            if (AITOOL.telegramBot == null)
+                                AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+
+                            string chatid = "";
+                            bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
+                            if (overrideid)
+                                chatid = AQI.cam.telegram_chatid.Trim();
+                            else
+                                chatid = AppSettings.Settings.telegram_chatids[0];
+
+                            //upload image to Telegram servers and send to first chat
+                            Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            lastchatid = chatid;
+                            Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), "image.jpg"), Caption);
+
+                            string file_id = message.Photo[0].FileId; //get file_id of uploaded image
+
+                            if (!overrideid)
                             {
-                                TelegramBotClient bot = new TelegramBotClient(AppSettings.Settings.telegram_token);
-
-                                string chatid = "";
-                                bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
-                                if (overrideid)
-                                    chatid = AQI.cam.telegram_chatid.Trim();
-                                else
-                                    chatid = AppSettings.Settings.telegram_chatids[0];
-
-                                //upload image to Telegram servers and send to first chat
-                                Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                                lastchatid = chatid;
-                                Message message = await bot.SendPhotoAsync(chatid, new InputOnlineFile(image_telegram, "image.jpg"), Caption);
-
-                                string file_id = message.Photo[0].FileId; //get file_id of uploaded image
-
-                                if (!overrideid)
+                                //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
+                                foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
                                 {
-                                    //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                                    foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
-                                    {
-                                        Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                                        lastchatid = curchatid;
-                                        await bot.SendPhotoAsync(curchatid, file_id, Caption);
-                                    }
+                                    Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                    lastchatid = curchatid;
+                                    await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
                                 }
-                                ret = true;
                             }
+                            ret = true;
+                            //}
 
                             this.last_telegram_trigger_time.Write(DateTime.Now);
                             this.TelegramRetryTime.Write(DateTime.MinValue);
@@ -1248,12 +1283,13 @@ namespace AITool
                             else
                                 chatid = AppSettings.Settings.telegram_chatids[0];
 
-                            TelegramBotClient bot = new Telegram.Bot.TelegramBotClient(AppSettings.Settings.telegram_token);
+                            if (AITOOL.telegramBot == null)
+                                AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
 
                             if (overrideid)
                             {
                                 lastchatid = chatid;
-                                Message msg = await bot.SendTextMessageAsync(chatid, Caption);
+                                Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(chatid, Caption);
 
                             }
                             else
@@ -1261,7 +1297,7 @@ namespace AITool
                                 foreach (string curchatid in AppSettings.Settings.telegram_chatids)
                                 {
                                     lastchatid = curchatid;
-                                    Message msg = await bot.SendTextMessageAsync(curchatid, Caption);
+                                    Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(curchatid, Caption);
 
                                 }
 

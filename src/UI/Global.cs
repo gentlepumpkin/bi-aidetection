@@ -28,7 +28,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Globalization;
 using static AITool.AITOOL;
-
+using System.Net.Sockets;
 
 namespace AITool
 {
@@ -94,6 +94,109 @@ namespace AITool
 
         }
 
+        public static async Task<bool> IsPortOpenAsync(string Host, int port)
+        {
+            Socket socket = null;
+
+            try
+            {
+                // make a TCP based socket
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                // connect
+                await Task.Run(() => socket.Connect(Host, port));
+
+                return true;
+            }
+            catch (SocketException ex)
+            {
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused)
+                {
+                    return false;
+                }
+
+                //An error occurred when attempting to access the socket
+                Debug.WriteLine(ex.ToString());
+                Console.WriteLine(ex);
+            }
+            finally
+            {
+                if (socket?.Connected ?? false)
+                {
+                    socket?.Disconnect(false);
+                }
+                socket?.Close();
+            }
+
+            return false;
+        }
+
+        public static bool IsPortOpen(string Host, int port)
+        {
+            Socket socket = null;
+
+            try
+            {
+                // make a TCP based socket
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                // connect
+                socket.Connect(Host, port);
+
+                return true;
+            }
+            catch (SocketException ex)
+            {
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused)
+                {
+                    return false;
+                }
+
+                //An error occurred when attempting to access the socket
+                //Debug.WriteLine(ex.ToString());
+                //Console.WriteLine(ex);
+            }
+            finally
+            {
+                if (socket?.Connected ?? false)
+                {
+                    socket?.Disconnect(false);
+                }
+                socket?.Close();
+            }
+
+            return false;
+        }
+
+        public static bool IsLocalPortInUse(int port)
+        {
+
+            try
+            {
+                // Evaluate current system tcp connections. This is the same information provided
+                // by the netstat command line application, just in .Net strongly-typed object
+                // form.  We will look through the list, and if our port we would like to use
+                // in our TcpClient is occupied, we will set isAvailable to false.
+                IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+                
+                TcpConnectionInformation[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
+
+                foreach (TcpConnectionInformation tcpi in tcpConnInfoArray)
+                {
+                    if (tcpi.LocalEndPoint.Port == port)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ExMsg(ex)}");
+                return true;
+            }
+
+            return false;
+        }
         public static void Move<T>(this List<T> list, int oldIndex, int newIndex)
         {
             // exit if positions are equal or outside array
@@ -2087,6 +2190,12 @@ namespace AITool
             {
                 return null;
             }
+        }
+
+        public static bool KillProcesses(string ProcessPath)
+        {
+            List<ClsProcess> prc = GetProcessesByPath(ProcessPath);
+            return KillProcesses(prc);
         }
 
         public static bool KillProcesses(List<ClsProcess> prc)
