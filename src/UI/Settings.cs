@@ -55,6 +55,7 @@ namespace AITool
             public string deepstack_port = "81";
             public string deepstack_mode = "Medium";
             public string deepstack_customModelPath = "";
+            public bool deepstack_stopbeforestart = true;
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
             public bool deepstack_debug = false;

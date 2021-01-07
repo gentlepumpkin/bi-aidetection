@@ -2967,7 +2967,7 @@ namespace AITool
         {
 
             if (DeepStackServerControl == null)
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
 
             DeepStackServerControl.GetDeepStackRun();
 
@@ -2989,6 +2989,8 @@ namespace AITool
             AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
             AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
             AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
+
+            AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
 
             AppSettings.SaveAsync();
 
@@ -3070,7 +3072,7 @@ namespace AITool
 
             }
 
-            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
+            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
 
         }
 
@@ -3080,7 +3082,7 @@ namespace AITool
             try
             {
                 if (DeepStackServerControl == null)
-                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
 
 
                 //first update the port in the deepstack_url if found
@@ -3118,6 +3120,8 @@ namespace AITool
                 this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
                 this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
                 this.Txt_Port.Text = DeepStackServerControl.Port;
+                this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
+                this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
 
                 if (!DeepStackServerControl.IsNewVersion)
                     this.Txt_CustomModelPath.Enabled = false;

@@ -2236,7 +2236,7 @@ namespace AITool
             return true;
         }
 
-        public static bool WaitForProcessToStart(Process prc, int TimeoutMS)
+        public static bool WaitForProcessToStart(Process prc, int TimeoutMS, string fullpath)
         {
             bool ret = false;
             Stopwatch sw = Stopwatch.StartNew();
@@ -2255,8 +2255,12 @@ namespace AITool
                         prc.Refresh();
                     }
                     sw.Stop();
-                    Log($"Debug: Waited {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {prc.ProcessName} to initialize.");
                     ret = prc != null && !prc.HasExited;
+                    if (ret)
+                        Log($"Debug: Waited {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath} to initialize.");
+                    else
+                        Log($"Error: Process failed to start in {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath} to initialize.");
+
                 }
             }
             catch (Exception ex)

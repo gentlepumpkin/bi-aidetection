@@ -209,7 +209,7 @@ namespace AITool
 
                 //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
                 //allows for stopping and starting of its service
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
 
                 if (DeepStackServerControl.IsInstalled && AppSettings.Settings.deepstack_autostart)
                 {
@@ -1502,83 +1502,91 @@ namespace AITool
 
                     swposttime.Stop();
                     ret.StatusCode = output.StatusCode;
+                    ret.JsonString = await output.Content.ReadAsStringAsync();
+
+                    ClsDeepStackResponse response = null;
+                    string cleanjsonString = "";
+                    if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
+                    {
+                        cleanjsonString = Global.CleanString(ret.JsonString);
+                        try
+                        {
+                            response = JsonConvert.DeserializeObject<ClsDeepStackResponse>(ret.JsonString);
+                        }
+                        catch (Exception ex)
+                        {
+                            //deserialization did not cause exception, it just gave a null response in the object?
+                            //probably wont happen but just making sure
+                            ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
+                        }
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: Empty string returned from HTTP post?";
+                        AiUrl.IncrementError();
+                        AiUrl.LastResultMessage = ret.Error;
+                    }
 
                     if (output.IsSuccessStatusCode)
                     {
-                        ret.JsonString = await output.Content.ReadAsStringAsync();
-
-                        if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
+                        try
                         {
-                            string cleanjsonString = Global.CleanString(ret.JsonString);
-
-                            ClsDeepStackResponse response = null;
-
-                            try
+                            if (response != null)
                             {
-                                //This can throw an exception
-                                response = JsonConvert.DeserializeObject<ClsDeepStackResponse>(ret.JsonString);
-
-                                if (response != null)
+                                if (response.predictions != null)
                                 {
-                                    if (response.predictions != null)
+                                    if (!response.success)
                                     {
-                                        if (!response.success)
-                                        {
-                                            ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
-                                            AiUrl.IncrementError();
-                                            AiUrl.LastResultMessage = ret.Error;
-                                        }
-                                        else
-                                        {
-
-                                            if (response.predictions.Count() > 0)
-                                            {
-
-                                                foreach (ClsDeepstackDetection DSObj in response.predictions)
-                                                {
-                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
-
-                                                    ret.Predictions.Add(pred);
-
-                                                }
-
-
-                                            }
-
-                                            ret.Success = true;
-                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
-
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
+                                        ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
                                         AiUrl.IncrementError();
                                         AiUrl.LastResultMessage = ret.Error;
                                     }
+                                    else
+                                    {
 
+                                        if (response.predictions.Count() > 0)
+                                        {
+
+                                            foreach (ClsDeepstackDetection DSObj in response.predictions)
+                                            {
+                                                ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
+
+                                                ret.Predictions.Add(pred);
+
+                                            }
+
+
+                                        }
+
+                                        ret.Success = true;
+                                        AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+
+                                    }
 
                                 }
-                                else if (string.IsNullOrEmpty(ret.Error))
+                                else
                                 {
-                                    //deserialization did not cause exception, it just gave a null response in the object?
-                                    //probably wont happen but just making sure
-                                    ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                                    ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
                                     AiUrl.IncrementError();
                                     AiUrl.LastResultMessage = ret.Error;
                                 }
+
+
                             }
-                            catch (Exception ex)
+                            else if (string.IsNullOrEmpty(ret.Error))
                             {
-                                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                //deserialization did not cause exception, it just gave a null response in the object?
+                                //probably wont happen but just making sure
+                                ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
                                 AiUrl.IncrementError();
                                 AiUrl.LastResultMessage = ret.Error;
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            ret.Error = $"ERROR: Empty string returned from HTTP post.";
+                            ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
                             AiUrl.IncrementError();
                             AiUrl.LastResultMessage = ret.Error;
                         }
@@ -1587,7 +1595,11 @@ namespace AITool
                     }
                     else
                     {
-                        ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
+                        if (response != null && !string.IsNullOrEmpty(response.error))
+                            ret.Error = $"ERROR: Deepstack returned '{response.error}' - http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
+                        else
+                            ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
+                        
                         AiUrl.IncrementError();
                         AiUrl.LastResultMessage = ret.Error;
                     }
@@ -1757,8 +1769,8 @@ namespace AITool
                                         AiUrl.LastResultMessage = ret.Error;
                                     }
                                 }
-                                
-                                
+
+
                             }
                             catch (Exception ex)
                             {

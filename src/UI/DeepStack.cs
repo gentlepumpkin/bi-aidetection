@@ -13,7 +13,7 @@ namespace AITool
     public class DeepstackPlatformJson
     {
         public string PROFILE = "";
-        public bool CUDA_MODE = false;
+        public string CUDA_MODE = "";
     }
     public enum DeepStackTypeEnum
     {
@@ -48,6 +48,7 @@ namespace AITool
         public bool IsInstalled = false;
         public bool IsActivated = false;
         public bool VisionDetectionRunning = false;
+        public bool StopBeforeStart = true;
         public bool NeedsSaving = false;
         public string CommandLine = "";
         public List<Global.ClsProcess> DeepStackProc = new List<Global.ClsProcess>();
@@ -60,14 +61,14 @@ namespace AITool
         public ThreadSafe.Boolean Starting = new ThreadSafe.Boolean(false);
         public ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
 
-        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath)
+        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart)
         {
 
-            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath);
+            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath, StopBeforeStart);
 
         }
 
-        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath)
+        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart)
         {
             this.AdminKey = AdminKey.Trim();
             this.APIKey = APIKey.Trim();
@@ -79,6 +80,7 @@ namespace AITool
             this.Port = Port;
             this.Mode = Mode;
             this.Count = Global.Split(this.Port, ",|").Count;
+            this.StopBeforeStart = StopBeforeStart;
 
             bool found = this.RefreshDeepstackInfo();
 
@@ -285,7 +287,7 @@ namespace AITool
                 {
                     this.DisplayName = (string)key.GetValue("DisplayName");
                     this.DisplayVersion = (string)key.GetValue("DisplayVersion");
-                    this.IsNewVersion = this.DisplayName.Contains("2021") || this.DisplayVersion.Contains("2021");
+                    this.IsNewVersion = this.DisplayName.Contains("202") || this.DisplayVersion.Contains("202");
                    
 
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
@@ -354,34 +356,58 @@ namespace AITool
                     //get type and version
 
                     //this file exists with 2020 version:
-                    string platform = Path.Combine(this.DeepStackFolder, "server", "platform.json");
+                    string platformfile = Path.Combine(this.DeepStackFolder, "server", "platform.json");
+                    //New 2021 platform.json:
+                    //{
+                    //    "PROFILE":"windows_native",
+                    //    "CUDA_MODE":true
+                    //}
+
+                    //OLD 2020 beta platform.json (which did not change between cpu and gpu
                     //{
                     //    "PROFILE":"windows_native",
                     //    "GPU":false
                     //}
-                    if (File.Exists(platform))
+
+                    //For old 2020 beta we have to read SERVER.GO:
+                    //   os.Setenv("CUDA_MODE", "True")
+
+                    string servergofile = Path.Combine(this.DeepStackFolder, "server", "server.go");
+
+                    if (File.Exists(platformfile))
                     {
                         this.IsNewVersion = true;
                         this.IsActivated = true;
-                        string contents = File.ReadAllText(platform);
-                        DeepstackPlatformJson dp = Global.SetJSONString<DeepstackPlatformJson>(contents);
-                        if (dp.CUDA_MODE)
+                        string platcontents = File.ReadAllText(platformfile);
+
+                        if (platcontents.IndexOf("CUDA_MODE", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            this.Type = DeepStackTypeEnum.GPU;
+                            //2021 version
+                            DeepstackPlatformJson dp = Global.SetJSONString<DeepstackPlatformJson>(platcontents);
+                            if (string.Equals(dp.CUDA_MODE, "true", StringComparison.OrdinalIgnoreCase))
+                                this.Type = DeepStackTypeEnum.GPU;
+                            else 
+                                this.Type = DeepStackTypeEnum.CPU;
                         }
-                        else if (!dp.CUDA_MODE)
+                        else
                         {
-                            this.Type = DeepStackTypeEnum.CPU;
+                            //2020 version - server.go file
+                            //   os.Setenv("CUDA_MODE", "True")
+                            string gocontents = File.ReadAllText(servergofile);
+                            if (gocontents.IndexOf("\"CUDA_MODE\", \"True\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                                this.Type = DeepStackTypeEnum.GPU;
+                            else
+                                this.Type = DeepStackTypeEnum.CPU;
                         }
-                        
+                                                                      
 
                         //get the version
                         List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.iss", SearchOption.TopDirectoryOnly);
                         if (files.Count > 0)
                         {
-                            contents = File.ReadAllText(files[0].FullName);
+                            string isscontents = File.ReadAllText(files[0].FullName);
                             //#define MyAppVersion "2020.12.beta"
-                            this.DisplayVersion = Global.GetWordBetween(contents, "MyAppVersion \"", "\"");
+                            this.DisplayVersion = Global.GetWordBetween(isscontents, "MyAppVersion \"", "\"");
                         }
                         else
                         {
@@ -429,6 +455,18 @@ namespace AITool
         }
         public bool StartDeepstack()
         {
+            //This error happens when you run out of video memory:
+            //stderr.txt
+            //  File "C://DeepStack\windows_packages\torch\cuda\__init__.py", line 480, in _lazy_new
+            //    return super(_CudaBase, cls).__new__(cls, *args, **kwargs)
+            //RuntimeError: CUDA out of memory. Tried to allocate 20.00 MiB (GPU 0; 2.00 GiB total capacity; 35.77 MiB already allocated; 0 bytes free; 38.00 MiB reserved in total by PyTorch)
+
+            //this error happens after sending an image to deepstack - I believe it is still running out of video memory:
+            //  File "C:\DeepStack\intelligencelayer\shared\detection.py", line 138, in objectdetection
+            //    os.remove(img_path)
+            //FileNotFoundError: [WinError 2] The system cannot find the file specified: 'C:\\Users\\Vorlon\\AppData\\Local\\Temp\\DeepStack\\83e9c5b0-d698-44f3-a8df-d19655d9f7da'
+
+
 
             if (this.Starting.ReadFullFence())
             {
@@ -455,9 +493,17 @@ namespace AITool
                 {
                     if (this.IsStarted)
                     {
-                        Log("Debug: Stopping already running DeepStack instance...");
-                        this.StopDeepstack();
-                        Thread.Sleep(250);
+                        if (this.StopBeforeStart)
+                        {
+                            Log("Debug: Stopping already running DeepStack instance...");
+                            this.StopDeepstack();
+                            Thread.Sleep(250);
+                        }
+                        else
+                        {
+                            Log("Debug: Deepstack is already running, not re-starting due to 'deepstack_stopbeforestart' setting = false in aitool.settings.json file.");
+                            return Ret;
+                        }
                     }
 
                     Log("Starting DeepStack...");
@@ -510,7 +556,7 @@ namespace AITool
                             if (!string.IsNullOrEmpty(this.APIKey))
                                 api = $"--API-KEY {this.APIKey} ";
 
-                            if (!string.IsNullOrEmpty(this.Mode))
+                            if (!string.IsNullOrEmpty(this.Mode) && !this.DisplayVersion.Contains("2020"))
                                 mode = $"--MODE {this.Mode} ";
 
                             prc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}{mode}--PORT {CurPort}";
@@ -530,8 +576,8 @@ namespace AITool
                             prc.process.StartInfo.UseShellExecute = false;
                         }
 
-                        //if (!string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
-                        //    prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
+                        if (this.DisplayVersion.Contains("2020") && !string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
+                            prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
 
                         prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
                         prc.FileName = this.DeepStackEXE;
@@ -541,7 +587,7 @@ namespace AITool
                         Log($"Starting {pcnt} of {ports.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
                         prc.process.Start();
 
-                        Global.WaitForProcessToStart(prc.process, 3000);
+                        Global.WaitForProcessToStart(prc.process, 3000, this.DeepStackEXE);
 
                         if (AppSettings.Settings.deepstack_highpriority)
                         {
