@@ -268,7 +268,7 @@ namespace AITool
                     }
 
                     if (sw.ElapsedMilliseconds > 3000)
-                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.AddTimeCalc.Count}, Min={this.AddTimeCalc.Min}ms, Max={this.AddTimeCalc.Max}ms, Avg={this.AddTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
+                        Log($"Debug: It took a long time to add a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.AddTimeCalc.Count}, Min={this.AddTimeCalc.Min}ms, Max={this.AddTimeCalc.Max}ms, Avg={this.AddTimeCalc.Avg.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
@@ -357,7 +357,7 @@ namespace AITool
                     //}
 
                     if (sw.ElapsedMilliseconds > 2000)
-                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Average.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
+                        Log($"Debug: It took a long time to delete a history item @ {sw.ElapsedMilliseconds}ms, (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Avg.ToString("#####")}ms), StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {this.Filename}", hist.AIServer, hist.Camera, hist.Filename);
 
                 }
                 catch (Exception ex)
@@ -794,7 +794,7 @@ namespace AITool
 
                             //this.DeletedCount.AtomicAddAndGet(rcnt);
 
-                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Average.ToString("#####")}ms)");
+                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Avg.ToString("#####")}ms)");
 
                         }
                         else

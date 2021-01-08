@@ -284,7 +284,7 @@ namespace AITool
 
                 if (!WasSkipped)
                 {
-                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min},Max={this.QCountCalc.Max},Avg={this.QCountCalc.Average}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.Average)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={Convert.ToInt64(this.QTimeCalc.Average)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.Average)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min},Max={this.QCountCalc.Max},Avg={this.QCountCalc.Avg}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.Avg)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={Convert.ToInt64(this.QTimeCalc.Avg)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.Avg)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
                 }
 
                 Global.SendMessage(MessageType.UpdateStatus);

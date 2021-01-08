@@ -448,6 +448,67 @@ namespace AITool
             return Ret;
 
         }
+
+        private string LastStdErr = "";
+        public string GetStdErr()
+        {
+            string ret = "";
+            try
+            {
+                string errfile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack", "logs", "stderr.txt");
+                
+                if (File.Exists(errfile))
+                {
+                    if (new FileInfo(errfile).Length > 4)
+                    {
+                        string contents = File.ReadAllText(errfile);
+                        List<string> lines = Global.Split(contents,"\r\n",TrimStr:false);
+                        for (int i = lines.Count - 1; i >= 0; i--)
+                        {
+                            if (!string.IsNullOrWhiteSpace(lines[i]) && lines[i].Substring(0) != " " && !lines[i].Contains("Traceback"))
+                            {
+                                //stderr.txt
+                                //  File "C://DeepStack\windows_packages\torch\cuda\__init__.py", line 480, in _lazy_new
+                                //    return super(_CudaBase, cls).__new__(cls, *args, **kwargs)
+                                //RuntimeError: CUDA out of memory. Tried to allocate 20.00 MiB (GPU 0; 2.00 GiB total capacity; 35.77 MiB already allocated; 0 bytes free; 38.00 MiB reserved in total by PyTorch)
+
+                                //this error happens after sending an image to deepstack - I believe it is still running out of video memory:
+                                //  File "C:\DeepStack\intelligencelayer\shared\detection.py", line 138, in objectdetection
+                                //    os.remove(img_path)
+                                //FileNotFoundError: [WinError 2] The system cannot find the file specified: 'C:\\Users\\Vorlon\\AppData\\Local\\Temp\\DeepStack\\83e9c5b0-d698-44f3-a8df-d19655d9f7da'
+
+                                if (lines[i].Trim() != LastStdErr)
+                                {
+                                    ret = lines[i].Trim();
+                                    LastStdErr = ret;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+        }
+
+        public void PrintDeepStackError()
+        {
+            if (!this.IsInstalled)
+                return;
+
+            string err = this.GetStdErr();
+
+            if (!string.IsNullOrEmpty(err))
+            {
+                if (!string.IsNullOrEmpty(err))
+                    Log($"Error: Last Deepstack STDERR.TXT error is '{err}'");
+            }
+        }
         public async Task<bool> StartDeepstackAsync()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -710,161 +771,8 @@ namespace AITool
                 }
                 else
                 {
-                    Log("Error: DeepStack for Windows v2021 or higher is not installed. https://github.com/johnolafenwa/DeepStack/releases");
+                    Log("Error: DeepStack for Windows v2020 or higher is not installed. https://github.com/johnolafenwa/DeepStack/releases");
                 }
-                //else
-                //{
-                //    //First initialize with the py script
-
-                //    Process InitProc = new Process();
-                //    InitProc.StartInfo.FileName = this.PythonEXE;
-                //    InitProc.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
-                //    InitProc.StartInfo.Arguments = "../init.py";
-                //    InitProc.StartInfo.UseShellExecute = false;
-                //    InitProc.StartInfo.CreateNoWindow = true;
-                //    InitProc.StartInfo.RedirectStandardOutput = true;
-                //    InitProc.StartInfo.RedirectStandardError = true;
-                //    InitProc.EnableRaisingEvents = true;
-                //    InitProc.OutputDataReceived += this.DSHandleInitProcMSG;
-                //    InitProc.ErrorDataReceived += this.DSHandleInitProcERROR;
-                //    InitProc.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Init:Python.exe"); //new EventHandler(myProcess_Exited);
-                //    Log($"Starting {InitProc.StartInfo.FileName} {InitProc.StartInfo.Arguments}...");
-                //    InitProc.Start();
-                //    InitProc.PriorityClass = ProcessPriorityClass.High;  //always run this as high priority since it will initialize faster
-                //    InitProc.BeginOutputReadLine();
-                //    InitProc.BeginErrorReadLine();
-
-                //    //next start the redis server...
-                //    this.RedisProc = new Global.ClsProcess();
-                //    this.RedisProc.process.StartInfo.FileName = this.RedisEXE;
-                //    this.RedisProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.RedisEXE);
-                //    this.RedisProc.process.StartInfo.UseShellExecute = false;
-                //    this.RedisProc.process.StartInfo.CreateNoWindow = true;
-                //    this.RedisProc.process.StartInfo.RedirectStandardOutput = true;
-                //    this.RedisProc.process.StartInfo.RedirectStandardError = true;
-                //    this.RedisProc.process.EnableRaisingEvents = true;
-                //    this.RedisProc.process.OutputDataReceived += this.DSHandleRedisProcMSG;
-                //    this.RedisProc.process.ErrorDataReceived += this.DSHandleRedisProcERROR;
-                //    this.RedisProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Redis.exe"); //new EventHandler(myProcess_Exited);
-                //    this.RedisProc.FileName = this.RedisEXE;
-                //    this.RedisProc.CommandLine = this.RedisEXE;
-                //    Log($"Starting {this.RedisEXE}...");
-                //    this.RedisProc.process.Start();
-                //    if (AppSettings.Settings.deepstack_highpriority)
-                //    {
-                //        this.RedisProc.process.PriorityClass = ProcessPriorityClass.High;
-                //    }
-                //    this.RedisProc.process.BeginOutputReadLine();
-                //    this.RedisProc.process.BeginErrorReadLine();
-
-                //    //next, start the server
-
-                //    this.ServerProc = new Global.ClsProcess();
-                //    this.ServerProc.process.StartInfo.FileName = this.ServerEXE;
-                //    this.ServerProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.ServerEXE);
-                //    this.ServerProc.process.StartInfo.Arguments = $"-VISION-FACE={this.FaceAPIEnabled} -VISION-SCENE={this.SceneAPIEnabled} -VISION-DETECTION={this.DetectionAPIEnabled} -ADMIN-KEY={this.AdminKey} -API-KEY={this.APIKey} -PORT={this.Port}";
-                //    this.ServerProc.process.StartInfo.CreateNoWindow = true;
-                //    this.ServerProc.process.StartInfo.UseShellExecute = false;
-                //    this.ServerProc.process.StartInfo.RedirectStandardOutput = true;
-                //    this.ServerProc.process.StartInfo.RedirectStandardError = true;
-                //    this.ServerProc.process.EnableRaisingEvents = true;
-                //    this.ServerProc.process.OutputDataReceived += this.DSHandleServerProcMSG;
-                //    this.ServerProc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
-                //    this.ServerProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Server.exe"); //new EventHandler(myProcess_Exited);
-                //    this.ServerProc.FileName = this.ServerEXE;
-                //    this.ServerProc.CommandLine = this.ServerProc.process.StartInfo.Arguments;
-                //    Log($"Starting {this.ServerProc.process.StartInfo.FileName} {this.ServerProc.process.StartInfo.Arguments}...");
-                //    this.ServerProc.process.Start();
-                //    if (AppSettings.Settings.deepstack_highpriority)
-                //    {
-                //        this.ServerProc.process.PriorityClass = ProcessPriorityClass.High;
-                //    }
-
-                //    this.ServerProc.process.BeginOutputReadLine();
-                //    this.ServerProc.process.BeginErrorReadLine();
-
-                //    //start the python intelligence.py script
-                //    this.PythonProc = new Global.ClsProcess();
-                //    this.PythonProc.process.StartInfo.FileName = this.PythonEXE;
-                //    this.PythonProc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.PythonEXE);
-                //    this.PythonProc.process.StartInfo.Arguments = $"../intelligence.py -MODE={this.Mode} -VFACE={this.FaceAPIEnabled} -VSCENE={this.SceneAPIEnabled} -VDETECTION={this.DetectionAPIEnabled}";
-                //    this.PythonProc.process.StartInfo.UseShellExecute = false;
-                //    this.PythonProc.process.StartInfo.CreateNoWindow = true;
-                //    this.PythonProc.process.EnableRaisingEvents = true;
-                //    this.PythonProc.process.StartInfo.RedirectStandardOutput = true;
-                //    this.PythonProc.process.StartInfo.RedirectStandardError = true;
-                //    this.PythonProc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
-                //    this.PythonProc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
-                //    this.PythonProc.process.Exited += (sender, e) => this.myProcess_Exited(sender, e, "Main:Python.exe"); //new EventHandler(myProcess_Exited);
-                //    this.PythonProc.FileName = this.PythonEXE;
-                //    this.PythonProc.CommandLine = this.PythonProc.process.StartInfo.Arguments;
-                //    Log($"Starting {this.PythonProc.process.StartInfo.FileName} {this.PythonProc.process.StartInfo.Arguments}...");
-                //    this.PythonProc.process.Start();
-                //    if (AppSettings.Settings.deepstack_highpriority)
-                //    {
-                //        this.PythonProc.process.PriorityClass = ProcessPriorityClass.High;
-                //    }
-
-
-                //    this.PythonProc.process.BeginOutputReadLine();
-                //    this.PythonProc.process.BeginErrorReadLine();
-
-
-                //    this.IsStarted = true;
-                //    this.HasError = false;
-                //    Ret = true;
-
-                //    //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
-
-                //    int cnt = 0;
-                //    do
-                //    {
-
-                //        List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
-                //        if (montys.Count >= 5)
-                //        {
-                //            //when deepstack is running normaly there will be 5 python.exe processes
-                //            //Set priority for each this way since we didnt start them in the first place...
-                //            cnt = montys.Count;
-                //            if (AppSettings.Settings.deepstack_highpriority)
-                //            {
-                //                foreach (Global.ClsProcess prc in montys)
-                //                {
-                //                    if (Global.ProcessValid(prc))
-                //                    {
-                //                        try
-                //                        {
-                //                            prc.process.PriorityClass = ProcessPriorityClass.High;
-                //                        }
-                //                        catch { }
-
-                //                    }
-                //                }
-                //            }
-                //            break;
-                //        }
-                //        Thread.Sleep(100);
-
-                //    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
-
-                //    if (cnt == 5)
-                //    {
-                //        Log("Started in " + SW.ElapsedMilliseconds + "ms");
-                //    }
-                //    else if (cnt > 5)
-                //    {
-                //        this.HasError = true;
-                //        this.IsStarted = true;
-                //        Log("Error: More than 5 python.exe processes are running from the deepstack folder?  Manually stop/restart.   (" + SW.ElapsedMilliseconds + "ms)");
-                //    }
-                //    else if (cnt == 0)
-                //    {
-                //        this.HasError = true;
-                //        this.IsStarted = true;
-                //        Log("Error: 5 python.exe processes did not fully start in " + SW.ElapsedMilliseconds + "ms");
-                //    }
-
-                //}
 
             }
             catch (Exception ex)
@@ -876,6 +784,7 @@ namespace AITool
             finally
             {
                 this.Starting.WriteFullFence(false);
+                this.PrintDeepStackError();
             }
 
             Global.SendMessage(MessageType.UpdateDeepstackStatus, "Manual start");

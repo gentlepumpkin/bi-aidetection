@@ -51,8 +51,9 @@ namespace AITool
         public static MovingCalcs tcalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs fcalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs lcalc = new MovingCalcs(250, "Images", true);
+        public static MovingCalcs icalc = new MovingCalcs(250, "Images", true);
         public static MovingCalcs qcalc = new MovingCalcs(250, "Images", true);
-        public static MovingCalcs qsizecalc = new MovingCalcs(250, "Queue Size", false);
+        public static MovingCalcs scalc = new MovingCalcs(250, "Queue Size", false);
 
         //public static ClsLogManager errors = new ClsLogManager();
 
@@ -931,7 +932,7 @@ namespace AITool
                                     ClsImageQueueItem CurImg = new ClsImageQueueItem(Filename, qsize);
                                     detection_dictionary.TryAdd(Filename.ToLower(), CurImg);
                                     ImageProcessQueue.Enqueue(CurImg);
-                                    qsizecalc.AddToCalc(qsize);
+                                    scalc.AddToCalc(qsize);
                                     Global.SendMessage(MessageType.ImageAddedToQueue);
                                 }
 
@@ -1616,6 +1617,9 @@ namespace AITool
                 finally
                 {
                     ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    if (!string.IsNullOrEmpty(ret.Error))
+                        DeepStackServerControl.PrintDeepStackError();  //only prints error if we have locally installed windows deepstack and there is a new entry in stderr.txt
+
                 }
 
             }
@@ -2412,19 +2416,22 @@ namespace AITool
 
                 CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
                 CurImg.DeepStackTimeMS = asr.SWPostTime;
+                CurImg.LifeTimeMS = (long)(DateTime.Now - CurImg.TimeCreated).TotalMilliseconds;
                 AiUrl.LastTimeMS = asr.SWPostTime;
-                tcalc.AddToCalc(CurImg.TotalTimeMS);
                 AiUrl.AITimeCalcs.AddToCalc(CurImg.DeepStackTimeMS);
+                tcalc.AddToCalc(CurImg.TotalTimeMS);
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
                 lcalc.AddToCalc(CurImg.FileLoadMS);
+                icalc.AddToCalc(CurImg.LifeTimeMS);
 
-                Log($"Debug:          Total Time:  {CurImg.TotalTimeMS}ms (Count={tcalc.Count}, Min={tcalc.Min}ms, Max={tcalc.Max}ms, Avg={tcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-                Log($"Debug:       AI (URL) Time:  {CurImg.DeepStackTimeMS}ms (Count={AiUrl.AITimeCalcs.Count}, Min={AiUrl.AITimeCalcs.Min}ms, Max={AiUrl.AITimeCalcs.Max}ms, Avg={AiUrl.AITimeCalcs.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-                Log($"Debug:      File lock Time:  {CurImg.FileLockMS}ms (Count={fcalc.Count}, Min={fcalc.Min}ms, Max={fcalc.Max}ms, Avg={fcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-                Log($"Debug:      File load Time:  {CurImg.FileLoadMS}ms (Count={lcalc.Count}, Min={lcalc.Min}ms, Max={lcalc.Max}ms, Avg={lcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-                Log($"Debug:    Image Queue Time:  {CurImg.QueueWaitMS}ms (Count={qcalc.Count}, Min={qcalc.Min}ms, Max={qcalc.Max}ms, Avg={qcalc.Average.ToString("#####")}ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
-                Log($"Debug:   Image Queue Depth:  {CurImg.CurQueueSize} (Count={qsizecalc.Count}, Min={qsizecalc.Min}, Max={qsizecalc.Max}, Avg={qsizecalc.Average.ToString("#####")})", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:          Total Time: {CurImg.TotalTimeMS.ToString().PadLeft(6)} ms (Count={tcalc.Count}, Min={tcalc.MinS.PadLeft(6)} ms, Max={tcalc.MaxS.PadLeft(6)} ms, Avg={tcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:       AI (URL) Time: {CurImg.DeepStackTimeMS.ToString().PadLeft(6)} ms (Count={AiUrl.AITimeCalcs.Count}, Min={AiUrl.AITimeCalcs.MinS.PadLeft(6)} ms, Max={AiUrl.AITimeCalcs.MaxS.PadLeft(6)} ms, Avg={AiUrl.AITimeCalcs.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:      File lock Time: {CurImg.FileLockMS.ToString().PadLeft(6)} ms (Count={fcalc.Count}, Min={fcalc.MinS.PadLeft(6)} ms, Max={fcalc.MaxS.PadLeft(6)} ms, Avg={fcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:      File load Time: {CurImg.FileLoadMS.ToString().PadLeft(6)} ms (Count={lcalc.Count}, Min={lcalc.MinS.PadLeft(6)} ms, Max={lcalc.MaxS.PadLeft(6)} ms, Avg={lcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:    Image Queue Time: {CurImg.QueueWaitMS.ToString().PadLeft(6)} ms (Count={qcalc.Count}, Min={qcalc.MinS.PadLeft(6)} ms, Max={qcalc.MaxS.PadLeft(6)} ms, Avg={qcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:     Image Life Time: {CurImg.LifeTimeMS.ToString().PadLeft(6)} ms (Count={icalc.Count}, Min={icalc.MinS.PadLeft(6)} ms, Max={icalc.MaxS.PadLeft(6)} ms, Avg={icalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam.Name, CurImg.image_path);
+                Log($"Debug:   Image Queue Depth: {CurImg.CurQueueSize.ToString().PadLeft(6)}    (Count={scalc.Count}, Min={scalc.MinS.PadLeft(6)},    Max={scalc.MaxS.PadLeft(6)},    Avg={scalc.AvgS.PadLeft(6)})", AiUrl.CurSrv, cam.Name, CurImg.image_path);
 
             }
             else

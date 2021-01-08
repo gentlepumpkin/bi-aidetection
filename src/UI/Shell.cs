@@ -1684,7 +1684,7 @@ namespace AITool
                     if (TriggerActionQueue != null)
                         TriggerActionQueueCount = TriggerActionQueue.Count.ReadFullFence();
 
-                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={qsizecalc.Max},Avg={Math.Round(qsizecalc.Average, 0)}) | {TriggerActionQueueCount} Actions Queued";
+                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={scalc.Max},Avg={Math.Round(scalc.Avg, 0)}) | {TriggerActionQueueCount} Actions Queued";
 
                     this.toolStripStatusErrors.Text = $"{LogMan.ErrorCount} Errors";
 
@@ -1724,7 +1724,7 @@ namespace AITool
 
                 Global_GUI.InvokeIFRequired(this.lblQueue, () =>
                 {
-                    this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {qsizecalc.Max} ({qcalc.Max}ms), Average: {qsizecalc.Average.ToString("#####")} ({qcalc.Average.ToString("#####")}ms queue wait time)";
+                    this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {scalc.Max} ({qcalc.Max}ms), Average: {scalc.Avg.ToString("#####")} ({qcalc.Avg.ToString("#####")}ms queue wait time)";
 
                 });
                 Global_GUI.InvokeIFRequired(this.lbl_errors, () =>

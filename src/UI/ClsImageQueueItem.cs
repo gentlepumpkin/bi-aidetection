@@ -14,6 +14,7 @@ namespace AITool
         public DateTime TimeCreatedUTC { get; set; } = DateTime.MinValue;
         public long QueueWaitMS { get; set; } = 0;
         public long TotalTimeMS { get; set; } = 0;
+        public long LifeTimeMS { get; set; } = 0;
         public long DeepStackTimeMS { get; set; } = 0;
         public long FileLockMS { get; set; } = 0;
         public long FileLoadMS { get; set; } = 0;
