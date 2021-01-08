@@ -1971,7 +1971,7 @@ namespace AITool
 
 
             //output Running on Overview Tab
-            Global_GUI.InvokeIFRequired(this.label2, () => { this.label2.Text = $"Running"; });
+            Global_GUI.InvokeIFRequired(this.label2, () => { this.label2.Text = $"Idle"; });
 
             //only update charts if stats tab is open
 

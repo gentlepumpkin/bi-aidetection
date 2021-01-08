@@ -281,14 +281,14 @@ namespace AITool
                     if (key != null)
                         break;
                 }
-                
+
 
                 if (key != null)
                 {
                     this.DisplayName = (string)key.GetValue("DisplayName");
                     this.DisplayVersion = (string)key.GetValue("DisplayVersion");
                     this.IsNewVersion = this.DisplayName.Contains("202") || this.DisplayVersion.Contains("202");
-                   
+
 
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
                     if (!string.IsNullOrWhiteSpace(dspath))
@@ -342,7 +342,7 @@ namespace AITool
                     {
                         //this.DeepStackFolder = Path.GetDirectoryName(this.DeepStackEXE);
                         this.IsInstalled = true;
-                        
+
                     }
                     else
                     {
@@ -386,7 +386,7 @@ namespace AITool
                             DeepstackPlatformJson dp = Global.SetJSONString<DeepstackPlatformJson>(platcontents);
                             if (string.Equals(dp.CUDA_MODE, "true", StringComparison.OrdinalIgnoreCase))
                                 this.Type = DeepStackTypeEnum.GPU;
-                            else 
+                            else
                                 this.Type = DeepStackTypeEnum.CPU;
                         }
                         else
@@ -399,7 +399,7 @@ namespace AITool
                             else
                                 this.Type = DeepStackTypeEnum.CPU;
                         }
-                                                                      
+
 
                         //get the version
                         List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.iss", SearchOption.TopDirectoryOnly);
@@ -456,13 +456,13 @@ namespace AITool
             try
             {
                 string errfile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DeepStack", "logs", "stderr.txt");
-                
+
                 if (File.Exists(errfile))
                 {
-                    if (new FileInfo(errfile).Length > 4)
+                    string contents = Global.SafeLoadTextFile(errfile);
+                    if (!string.IsNullOrWhiteSpace(contents))
                     {
-                        string contents = File.ReadAllText(errfile);
-                        List<string> lines = Global.Split(contents,"\r\n",TrimStr:false);
+                        List<string> lines = Global.Split(contents, "\r\n", TrimStr: false);
                         for (int i = lines.Count - 1; i >= 0; i--)
                         {
                             if (!string.IsNullOrWhiteSpace(lines[i]) && lines[i].Substring(0) != " " && !lines[i].Contains("Traceback"))
@@ -721,7 +721,7 @@ namespace AITool
                                     }
                                 }
                             }
-                            
+
                             this.PythonProc = montys;
 
                             break;
@@ -740,9 +740,9 @@ namespace AITool
                     {
                         if (AppSettings.Settings.deepstack_highpriority)
                         {
-                            
+
                             this.RedisProc[0].process.PriorityClass = ProcessPriorityClass.High;
-                            
+
                         }
                     }
                     else
@@ -753,10 +753,10 @@ namespace AITool
 
                     if (cnt >= this.Count * 2)
                     {
-                        
+
                         Log("Started in " + SW.ElapsedMilliseconds + "ms");
                     }
-                    else 
+                    else
                     {
                         this.HasError = true;
                         Log($"Error: {this.Count * 2} python.exe processes did not start within " + SW.ElapsedMilliseconds + "ms");
@@ -784,7 +784,7 @@ namespace AITool
             finally
             {
                 this.Starting.WriteFullFence(false);
-                this.PrintDeepStackError();
+                //this.PrintDeepStackError();
             }
 
             Global.SendMessage(MessageType.UpdateDeepstackStatus, "Manual start");
@@ -1122,7 +1122,7 @@ namespace AITool
             }
             catch { }
         }
-        
+
 
     }
 }

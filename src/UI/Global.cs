@@ -84,6 +84,41 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
+
+        public static string SafeLoadTextFile(string Filename)
+        {
+
+            string ret = "";
+
+            //dont wait very long for access, only grab text if the file is not being used (for stderr.txt, etc)
+            WaitFileAccessResult result = WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 100, 25, true, 4, MaxErrRetryCnt: 4);
+
+            try
+            {
+                if (result.Success)
+                {
+                    // Open a FileStream object using the passed in safe file handle.
+                    using FileStream fileStream = new FileStream(result.Handle, FileAccess.Read);
+                    using StreamReader sr = new StreamReader(fileStream, Encoding.UTF8);
+                    ret = sr.ReadToEnd();
+                }
+            }
+            catch { }
+            finally
+            {
+                if (result.Handle != null)
+                {
+                    if (!result.Handle.IsClosed)
+                       result.Handle.Close();
+                    
+                    result.Handle.Dispose();
+                }
+            }
+
+            return ret;
+
+        }
+
         public static Rectangle RectFromVertices(List<Point> vertices)
         {
             var minX = vertices.Min(p => p.X);
@@ -178,7 +213,7 @@ namespace AITool
                 // form.  We will look through the list, and if our port we would like to use
                 // in our TcpClient is occupied, we will set isAvailable to false.
                 IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-                
+
                 TcpConnectionInformation[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
 
                 foreach (TcpConnectionInformation tcpi in tcpConnInfoArray)
@@ -1392,24 +1427,24 @@ namespace AITool
 
         }
 
-        public static WaitFileAccessResult WaitForFileAccess(string filename, 
-                                                              FileAccess rights = FileAccess.Read, 
-                                                              FileShare share = FileShare.None, 
-                                                              long WaitMS = 30000, 
-                                                              int RetryDelayMS = 50, 
-                                                              bool ReturnHandle = false, 
+        public static WaitFileAccessResult WaitForFileAccess(string filename,
+                                                              FileAccess rights = FileAccess.Read,
+                                                              FileShare share = FileShare.None,
+                                                              long WaitMS = 30000,
+                                                              int RetryDelayMS = 50,
+                                                              bool ReturnHandle = false,
                                                               long MinFileSize = 1,
                                                               int MaxErrRetryCnt = 2000)
         {
             WaitFileAccessResult ret = new WaitFileAccessResult();
-            
+
             try
             {
                 //lets give it an initial tiny wait
                 //await Task.Delay(RetryDelayMS);
 
                 FileInfo FI = new FileInfo(filename);
-                
+
                 if (FI.Exists)
                 {
                     Stopwatch SW = new Stopwatch();
@@ -1457,7 +1492,7 @@ namespace AITool
                         ret.ErrRetryCnt += 1;
 
                         Thread.Sleep(RetryDelayMS);
-                        
+
                         FI.Refresh();
                     }
                     SW.Stop();
