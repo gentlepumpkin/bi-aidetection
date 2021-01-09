@@ -65,7 +65,11 @@ namespace AITool
             Global.progress = new Progress<ClsMessage>(this.EventMessage);
 
             this.SplashScreen = new FrmSplash();
-            this.SplashScreen.Show();
+
+            if (Debugger.IsAttached)
+                this.SplashScreen.Hide();
+            else
+                this.SplashScreen.Show();
 
             HideForm();
 
@@ -77,8 +81,8 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
-            //ClsImageQueueItem qi = new ClsImageQueueItem("C:\\Downloads\\TestVehicleImage.jpg",0);
-            //qi.CopyFileTo("C:\\TEST\\blah.jpg");
+
+           
 
             //ClsDoodsRequest cdr = new ClsDoodsRequest();
 
@@ -108,7 +112,18 @@ namespace AITool
 
             await AITOOL.InitializeBackend();
 
+
+            //ClsImageQueueItem cli = new ClsImageQueueItem("C:\\Downloads\\TestImage.jpg", 0);
+            //NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message();
+            //msg.Timestamp = DateTime.Now;
+            //msg.Title = "Test title";
+            //msg.Body = "Some message";
+
+            //AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey);
+            //NPushover.ResponseObjects.PushoverUserResponse usr = await AITOOL.pushoverClient.SendMessageAsync(msg, "", cli);
+
             Log($"Debug: Back end initialization completed in {sw.ElapsedMilliseconds}ms.");
+
 
             //since async stuff continues on another thread, we have to do this:
 
@@ -1636,13 +1651,28 @@ namespace AITool
         }
 
         // add new entry in left list
-
+        private bool showingtrayerr = false;
+        private bool showingtrayok = false;
 
         private void UpdateStats(string Message = "")
         {
             try
             {
-
+                //make tray icon read if there are errors
+                if (LogMan.ErrorCount.ReadFullFence() == 0 && !showingtrayok)
+                {
+                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo1;
+                    this.Icon = AITool.Properties.Resources.Logo1;
+                    showingtrayok = true;
+                    showingtrayerr = false;
+                }
+                else if (LogMan.ErrorCount.ReadFullFence() > 0 && !showingtrayerr)
+                {
+                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo_Error;
+                    this.Icon = AITool.Properties.Resources.Logo_Error;
+                    showingtrayok = false;
+                    showingtrayerr = true;
+                }
 
                 if (!this.Visible || (this.WindowState == FormWindowState.Minimized) || this.IsStatsUpdating.ReadFullFence() || IsClosing.ReadFullFence())
                     return;  //save a tree
@@ -2656,17 +2686,27 @@ namespace AITool
                                             icam.Action_RunProgramArgsString = cam.Action_RunProgramArgsString;
                                             icam.Action_PlaySounds = cam.Action_PlaySounds;
                                             icam.Action_Sounds = cam.Action_Sounds;
+                                            
                                             icam.Action_mqtt_enabled = cam.Action_mqtt_enabled;
                                             icam.Action_mqtt_payload = cam.Action_mqtt_payload;
                                             icam.Action_mqtt_topic = cam.Action_mqtt_topic;
                                             icam.Action_mqtt_payload_cancel = cam.Action_mqtt_payload_cancel;
                                             icam.Action_mqtt_topic_cancel = cam.Action_mqtt_topic_cancel;
+                                            
                                             icam.Action_image_merge_detections = cam.Action_image_merge_detections;
                                             icam.Action_image_merge_jpegquality = cam.Action_image_merge_jpegquality;
+                                            
                                             icam.Action_pushover_enabled = cam.Action_pushover_enabled;
                                             icam.Action_pushover_title = cam.Action_pushover_title;
                                             icam.Action_pushover_message = cam.Action_pushover_message;
                                             icam.Action_pushover_device = cam.Action_pushover_device;
+                                            icam.Action_pushover_Sound = cam.Action_pushover_Sound;
+                                            icam.Action_pushover_Priority = cam.Action_pushover_Priority;
+                                            icam.Action_pushover_retrycallback_url = cam.Action_pushover_retrycallback_url;
+                                            icam.Action_pushover_SupplementaryUrl = cam.Action_pushover_SupplementaryUrl;
+                                            icam.Action_pushover_expire_seconds = cam.Action_pushover_expire_seconds;
+                                            icam.Action_pushover_retry_seconds = cam.Action_pushover_retry_seconds;
+
                                             icam.Action_queued = cam.Action_queued;
                                         }
                                         if (frm.cb_apply_mask_settings.Checked)
@@ -3524,6 +3564,8 @@ namespace AITool
                 frm.tb_Pushover_Message.Text = cam.Action_pushover_message;
                 frm.tb_Pushover_Device.Text = cam.Action_pushover_device;
                 frm.tb_pushover_triggering_objects.Text = cam.Action_pushover_triggering_objects;
+                frm.tb_Pushover_Priority.Text = cam.Action_pushover_Priority;
+                frm.tb_Pushover_sound.Text = cam.Action_pushover_Sound;
 
                 frm.cb_queue_actions.Checked = cam.Action_queued;
 
@@ -3571,6 +3613,9 @@ namespace AITool
                     cam.Action_pushover_message = frm.tb_Pushover_Message.Text.Trim();
                     cam.Action_pushover_device = frm.tb_Pushover_Device.Text.Trim();
                     cam.Action_pushover_triggering_objects = frm.tb_pushover_triggering_objects.Text.Trim();
+                    cam.Action_pushover_Sound = frm.tb_Pushover_sound.Text.Trim();
+                    cam.Action_pushover_Priority = frm.tb_Pushover_Priority.Text.Trim();
+
 
                     cam.Action_image_merge_detections = frm.cb_mergeannotations.Checked;
 

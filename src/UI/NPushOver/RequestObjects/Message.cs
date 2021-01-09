@@ -148,9 +148,6 @@ namespace NPushover.RequestObjects
         public RetryOptions RetryOptions { get; set; }
 
 
-        public string Attachment { get; set; }
-
-
         /// <summary>
         /// Creates a <see cref="Message"/> with the specified <see cref="Sound"/> and default <see cref="Priority"/> (Normal).
         /// </summary>

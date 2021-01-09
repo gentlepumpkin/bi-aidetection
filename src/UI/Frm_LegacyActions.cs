@@ -135,5 +135,20 @@ namespace AITool
                 this.tb_jpeg_merge_quality.Enabled = false;
 
         }
+
+        private void cb_Pushover_Enabled_CheckedChanged(object sender, EventArgs e)
+        {
+            //groupBoxPushover.Enabled = cb_Pushover_Enabled.Checked;
+        }
+
+        private void cb_telegram_CheckedChanged(object sender, EventArgs e)
+        {
+            //groupBoxTelegram.Enabled = cb_telegram.Checked;
+        }
+
+        private void cb_MQTT_enabled_CheckedChanged(object sender, EventArgs e)
+        {
+            //groupBoxMQTT.Enabled = cb_MQTT_enabled.Checked;
+        }
     }
 }

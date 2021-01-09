@@ -1491,7 +1491,9 @@ namespace AITool
 
                     if (minconf > 0)
                     {
-                        request.Add(new StringContent((minconf / 100).ToString()), "min_confidence");
+                        double pc = minconf / 100;
+                        StringContent scmc = new StringContent((pc).ToString());
+                        request.Add(scmc, "min_confidence");
                     }
 
 
@@ -1600,7 +1602,7 @@ namespace AITool
                             ret.Error = $"ERROR: Deepstack returned '{response.error}' - http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
                         else
                             ret.Error = $"ERROR: Got http status code '{output.StatusCode}' ({Convert.ToInt32(output.StatusCode)}) in {swposttime.ElapsedMilliseconds}ms: {output.ReasonPhrase}";
-                        
+
                         AiUrl.IncrementError();
                         AiUrl.LastResultMessage = ret.Error;
                     }
@@ -2125,21 +2127,10 @@ namespace AITool
                         //Create a copy of the current image for use in mask manager when the original image was deleted
                         if ((DateTime.Now - LastImageBackupTime.Read()).TotalMinutes >= 60 || !File.Exists(file))
                         {
-                            if (!Directory.Exists(fldr))
-                                Directory.CreateDirectory(fldr);
-                            Global.WaitFileAccessResult result2 = new Global.WaitFileAccessResult();
-                            if (File.Exists(file))
-                                result2 = await Global.WaitForFileAccessAsync(file, FileAccess.Read, FileShare.None, 3000, 50);
-                            else
-                                result2.Success = true;
-
-                            if (result2.Success)
-                            {
-                                File.Copy(CurImg.image_path, file, true);
-                                LastImageBackupTime.Write(DateTime.Now);
-                            }
+                            //File.Copy(CurImg.image_path, file, true);
+                            CurImg.CopyFileTo(file);
+                            LastImageBackupTime.Write(DateTime.Now);
                         }
-
 
                         asr = await GetDetectionsFromAIServer(CurImg, AiUrl, cam);
 

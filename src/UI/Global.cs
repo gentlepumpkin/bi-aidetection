@@ -84,7 +84,7 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
-
+       
         public static string SafeLoadTextFile(string Filename)
         {
 
@@ -1769,7 +1769,7 @@ namespace AITool
 
         public static string CleanString(string inp)
         {
-            if (inp == null)
+            if (inp == null || string.IsNullOrWhiteSpace(inp))
             {
                 return "";
             }

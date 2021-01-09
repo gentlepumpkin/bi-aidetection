@@ -567,6 +567,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Logo-Error.ico" />
     <Content Include="TestImage.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -51,24 +51,40 @@ namespace AITool
                         //dont try to create if working off root drive
                         d.Create();
                     }
-                    Stream inStream = this.ToStream();
 
+
+                    //If the destination file exists, wait for exclusive access
+                    Global.WaitFileAccessResult result2 = new Global.WaitFileAccessResult();
                     if (File.Exists(outputFilePath))
-                        File.Delete(outputFilePath);
-
-                    using (FileStream fileStream = new FileStream(outputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
-                        fileStream.SetLength(inStream.Length);
-                        int bytesRead = -1;
-                        byte[] bytes = new byte[bufferSize];
-
-                        while ((bytesRead = inStream.Read(bytes, 0, bufferSize)) > 0)
-                        {
-                            fileStream.Write(bytes, 0, bytesRead);
-                        }
+                        result2 = Global.WaitForFileAccess(outputFilePath, FileAccess.ReadWrite, FileShare.None, 3000, 50, MinFileSize: 0);
+                        if (result2.Success)
+                            File.Delete(outputFilePath);
                     }
-                    ret = true;
+                    else
+                        result2.Success = true;
 
+                    if (result2.Success)
+                    {
+                        Stream inStream = this.ToStream();
+
+                        using (FileStream fileStream = new FileStream(outputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        {
+                            fileStream.SetLength(inStream.Length);
+                            int bytesRead = -1;
+                            byte[] bytes = new byte[bufferSize];
+
+                            while ((bytesRead = inStream.Read(bytes, 0, bufferSize)) > 0)
+                            {
+                                fileStream.Write(bytes, 0, bytesRead);
+                            }
+                        }
+                        ret = true;
+                    }
+                    else
+                    {
+                        AITOOL.Log($"Error: Could not gain access to destination file ({result2.TimeMS}ms, '{result2.ResultString}') {outputFilePath}");
+                    }
                 }
                 else
                 {
@@ -106,6 +122,7 @@ namespace AITool
                 try
                 {
                     ms = new MemoryStream(this.ImageByteArray, false);
+                    ms.Flush();
                 }
                 catch (Exception ex)
                 {
@@ -167,7 +184,7 @@ namespace AITool
                                         img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         this.ImageByteArray = ms.ToArray();
                                         this.FileLoadMS = sw.ElapsedMilliseconds;
-                                        AITOOL.Log($"Debug: Image file is valid. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}: {Path.GetFileName(this.image_path)}");
+                                        AITOOL.Log($"Debug: Image file is valid. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
                                         break;
                                     }
                                 }
@@ -200,7 +217,7 @@ namespace AITool
                 }
                 else
                 {
-                    AITOOL.Log("Error: Tried to load the image too soon?");
+                    //AITOOL.Log("Error: Tried to load the image too soon?");
                 }
             }
             catch (Exception ex)

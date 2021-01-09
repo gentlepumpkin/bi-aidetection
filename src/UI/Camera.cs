@@ -82,7 +82,11 @@ namespace AITool
         public string Action_pushover_device = "";
         public string Action_pushover_triggering_objects = "";
         public string Action_pushover_Priority = "Normal";
-        public string Action_pushover_Sound = "";
+        public string Action_pushover_Sound = "pushover";
+        public int Action_pushover_retry_seconds = 60;
+        public int Action_pushover_expire_seconds = 10800;
+        public string Action_pushover_retrycallback_url = "";
+        public string Action_pushover_SupplementaryUrl = "";
 
         [JsonIgnore]
         public bool Action_Cancel_Timer_Enabled = false;

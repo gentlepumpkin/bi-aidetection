@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using AITool;
+using Newtonsoft.Json;
 using NPushover.Exceptions;
 using NPushover.RequestObjects;
 using NPushover.ResponseObjects;
@@ -8,6 +9,8 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +30,8 @@ namespace NPushover
         private static readonly AssemblyName ASSEMBLYNAME = typeof(Pushover).Assembly.GetName();
         private static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private static readonly string USERAGENT = string.Format("{0} v{1} ({2})", ASSEMBLYNAME.Name, ASSEMBLYNAME.Version.ToString(2), HOMEURL);
+
+        private HttpClient httpClient = null;
 
         #region Public 'consts'
         /// <summary>
@@ -169,9 +174,9 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup)
+        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, ClsImageQueueItem CurImg)
         {
-            return await this.SendMessageAsync(message, userOrGroup, (string[])null).ConfigureAwait(false);
+            return await this.SendMessageAsync(message, userOrGroup, (string[])null, CurImg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -185,9 +190,9 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string deviceName)
+        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string deviceName, ClsImageQueueItem CurImg)
         {
-            return await this.SendMessageAsync(message, userOrGroup, new[] { deviceName }).ConfigureAwait(false);
+            return await this.SendMessageAsync(message, userOrGroup, new[] { deviceName }, CurImg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -201,48 +206,122 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string[] deviceNames)
+        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string[] deviceNames, ClsImageQueueItem CurImg)
         {
-            (this.MessageValidator ?? new DefaultMessageValidator()).Validate("message", message);
-            (this.UserOrGroupKeyValidator ?? new UserOrGroupKeyValidator()).Validate("userOrGroup", userOrGroup);
-            if (deviceNames != null && deviceNames.Length > 0)
+
+            PushoverUserResponse ret = new PushoverUserResponse();
+
+            try
             {
-                foreach (var device in deviceNames)
+                (this.MessageValidator ?? new DefaultMessageValidator()).Validate("message", message);
+                (this.UserOrGroupKeyValidator ?? new UserOrGroupKeyValidator()).Validate("userOrGroup", userOrGroup);
+                if (deviceNames != null && deviceNames.Length > 0)
                 {
-                    if (!string.IsNullOrWhiteSpace(device))
-                        (this.DeviceNameValidator ?? new DeviceNameValidator()).Validate("device", device);
+                    foreach (var device in deviceNames)
+                    {
+                        if (!string.IsNullOrWhiteSpace(device))
+                            (this.DeviceNameValidator ?? new DeviceNameValidator()).Validate("device", device);
+                    }
+                }
+
+                MultipartFormDataContent parameters = new MultipartFormDataContent();
+
+                parameters.AddConditional("token", this.ApplicationKey);
+                parameters.AddConditional("user", userOrGroup);
+                parameters.AddConditional("message", message.Body);
+                parameters.Add("priority", (int)message.Priority);
+                parameters.AddConditional("device", deviceNames);
+                parameters.AddConditional("title", message.Title);
+                parameters.AddConditional("sound", message.Sound);
+                parameters.AddConditional("html", message.IsHtmlBody);
+                if (message.SupplementaryUrl != null)
+                {
+                    parameters.Add("url", message.SupplementaryUrl.Uri);
+                    parameters.AddConditional("url_title", message.SupplementaryUrl.Title);
+                }
+
+                if (message.Priority == Priority.Emergency)
+                {
+                    parameters.Add("retry", message.RetryOptions.RetryEvery);
+                    parameters.Add("expire", message.RetryOptions.RetryPeriod);
+                    parameters.Add("callback", message.RetryOptions.CallBackUrl);
+                }
+                if (message.Timestamp != null)
+                    parameters.Add("timestamp", (int)(TimeZoneInfo.ConvertTimeToUtc(message.Timestamp.Value).Subtract(EPOCH).TotalSeconds));
+
+                if (CurImg != null && CurImg.IsValid())
+                {
+                    StreamContent imageParameter = new StreamContent(CurImg.ToStream());
+                    imageParameter.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+                    parameters.Add(imageParameter, "attachment", Path.GetFileName(CurImg.image_path));
+                }
+
+                ret = await this.Post(GetV1APIUriFromBase("messages.json"), parameters);
+
+            }
+            catch (Exception ex)
+            {
+
+                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
+                ret.Errors = new string[] { Global.ExMsg(ex) };
+            }
+
+            return ret;
+
+        }
+
+
+        private async Task<PushoverUserResponse> Post(Uri uri, MultipartFormDataContent parameters)
+        {
+
+            PushoverUserResponse ret = new PushoverUserResponse();
+
+            if (this.httpClient == null)
+            {
+                this.httpClient = new HttpClient();
+                this.httpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+            }
+
+            // Remove content type that is not in the docs
+            //foreach (HttpContent param in parameters)
+            //    param.Headers.ContentType = null;
+
+            try
+            {
+                HttpResponseMessage response = null;
+                string json = "";
+
+                response = await httpClient.PostAsync(uri, parameters);
+
+                json = Global.CleanString(response.Content.ReadAsStringAsync().Result);
+
+                if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(json))
+                {
+                    //var json = this.Encoding.GetString(await wc.UploadValuesTaskAsync(uri, parameters).ConfigureAwait(false));
+                    ret = await ParseResponse<PushoverUserResponse>(json, response.Headers);
+                }
+                else
+                {
+                    if (response.StatusCode.ToString().Contains("TooLarge"))
+                    {
+                        ret.Errors = new string[] { $"StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}' (Max pushover attachment size is 2.5MB), ResponseText='{json}'" };
+                    }
+                    else
+                    {
+                        ret.Errors = new string[] { $"StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}', ResponseText='{json}'" };
+                    }
                 }
             }
-
-            var parameters = new NameValueCollection {
-                { "token", this.ApplicationKey },
-                { "user", userOrGroup },
-                { "message", message.Body }
-            };
-
-            parameters.Add("priority", (int)message.Priority);
-            parameters.AddConditional("device", deviceNames);
-            parameters.AddConditional("title", message.Title);
-            parameters.AddConditional("sound", message.Sound);
-            parameters.AddConditional("html", message.IsHtmlBody);
-            if (message.SupplementaryUrl != null)
+            catch (Exception ex)
             {
-                parameters.Add("url", message.SupplementaryUrl.Uri);
-                parameters.AddConditional("url_title", message.SupplementaryUrl.Title);
+                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
+                ret.Errors = new string[] { Global.ExMsg(ex) };
             }
-            if (message.Priority == Priority.Emergency)
-            {
-                parameters.Add("retry", message.RetryOptions.RetryEvery);
-                parameters.Add("expire", message.RetryOptions.RetryPeriod);
-                parameters.Add("callback", message.RetryOptions.CallBackUrl);
-            }
-            if (message.Timestamp != null)
-                parameters.Add("timestamp", (int)(TimeZoneInfo.ConvertTimeToUtc(message.Timestamp.Value).Subtract(EPOCH).TotalSeconds));
 
-            parameters.AddConditional("attachment", message.Attachment);
+            return ret;
 
-            return await this.Post<PushoverUserResponse>(GetV1APIUriFromBase("messages.json"), parameters).ConfigureAwait(false);
         }
+
 
         /// <summary>
         /// Retrieves, asynchronously, a list of available sounds.
@@ -672,6 +751,8 @@ namespace NPushover
             return string.Format(uri, args.Select(a => Uri.EscapeDataString(a.ToString())).ToArray());
         }
 
+
+
         /// <summary>
         /// Executes a POST to the given <see cref="Uri"/> passing the specified parameters.
         /// </summary>
@@ -781,6 +862,19 @@ namespace NPushover
             return errorresponse;
         }
 
+        private static RateLimitInfo ParseRateLimitInfo(HttpResponseHeaders headers)
+        {
+            int limit, remaining, reset;
+
+            if (int.TryParse(headers.GetValues("X-Limit-App-Limit").FirstOrDefault(), out limit)
+                && int.TryParse(headers.GetValues("X-Limit-App-Remaining").FirstOrDefault(), out remaining)
+                && int.TryParse(headers.GetValues("X-Limit-App-Reset").FirstOrDefault(), out reset))
+            {
+                return new RateLimitInfo(limit, remaining, EPOCH.AddSeconds(reset));
+            }
+            return null;
+        }
+
         /// <summary>
         /// Parses, possible, rate-limiting information from a Pushover response if any.
         /// </summary>
@@ -795,6 +889,27 @@ namespace NPushover
                 return new RateLimitInfo(limit, remaining, EPOCH.AddSeconds(reset));
             }
             return null;
+        }
+
+
+        private static async Task<T> ParseResponse<T>(string json, HttpResponseHeaders headers)
+            where T : PushoverResponse
+        {
+            T result;
+            try
+            {
+                result = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<T>(json)).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new PushoverException("Error parsing response", ex);
+            }
+
+            result.RateLimitInfo = ParseRateLimitInfo(headers);
+            if (!result.IsOk)
+                throw new ResponseException("API returned one or more errors", result);
+
+            return result;
         }
 
         /// <summary>

@@ -236,6 +236,7 @@
             this.label24 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
             this.label22 = new System.Windows.Forms.Label();
+            this.chk_stopbeforestart = new System.Windows.Forms.CheckBox();
             this.chk_HighPriority = new System.Windows.Forms.CheckBox();
             this.Chk_DSDebug = new System.Windows.Forms.CheckBox();
             this.Lbl_BlueStackRunning = new System.Windows.Forms.Label();
@@ -305,7 +306,6 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
-            this.chk_stopbeforestart = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -1197,7 +1197,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(760, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(762, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1210,7 +1210,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(757, 377);
+            this.pictureBox1.Size = new System.Drawing.Size(759, 377);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2495,7 +2495,7 @@
             this.dbLayoutPanel3.ColumnCount = 3;
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 84.57375F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15.42625F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 367F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 368F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_errors, 0, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_enabletelegram, 1, 0);
             this.dbLayoutPanel3.Controls.Add(this.btn_disabletelegram, 2, 0);
@@ -2520,7 +2520,7 @@
             // btn_enabletelegram
             // 
             this.btn_enabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_enabletelegram.Location = new System.Drawing.Point(416, 6);
+            this.btn_enabletelegram.Location = new System.Drawing.Point(415, 6);
             this.btn_enabletelegram.Name = "btn_enabletelegram";
             this.btn_enabletelegram.Size = new System.Drawing.Size(69, 30);
             this.btn_enabletelegram.TabIndex = 13;
@@ -2532,7 +2532,7 @@
             // btn_disabletelegram
             // 
             this.btn_disabletelegram.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_disabletelegram.Location = new System.Drawing.Point(637, 6);
+            this.btn_disabletelegram.Location = new System.Drawing.Point(636, 6);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
             this.btn_disabletelegram.TabIndex = 13;
@@ -2970,6 +2970,18 @@
             this.label22.Size = new System.Drawing.Size(38, 13);
             this.label22.TabIndex = 16;
             this.label22.Text = "Name:";
+            // 
+            // chk_stopbeforestart
+            // 
+            this.chk_stopbeforestart.AutoSize = true;
+            this.chk_stopbeforestart.Location = new System.Drawing.Point(358, 342);
+            this.chk_stopbeforestart.Margin = new System.Windows.Forms.Padding(2);
+            this.chk_stopbeforestart.Name = "chk_stopbeforestart";
+            this.chk_stopbeforestart.Size = new System.Drawing.Size(138, 17);
+            this.chk_stopbeforestart.TabIndex = 15;
+            this.chk_stopbeforestart.Text = "Always stop before start";
+            this.toolTip1.SetToolTip(this.chk_stopbeforestart, "If deepstack exe files are running when a START is requested, stop them first.");
+            this.chk_stopbeforestart.UseVisualStyleBackColor = true;
             // 
             // chk_HighPriority
             // 
@@ -3701,18 +3713,6 @@
             // 
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
-            // 
-            // chk_stopbeforestart
-            // 
-            this.chk_stopbeforestart.AutoSize = true;
-            this.chk_stopbeforestart.Location = new System.Drawing.Point(358, 342);
-            this.chk_stopbeforestart.Margin = new System.Windows.Forms.Padding(2);
-            this.chk_stopbeforestart.Name = "chk_stopbeforestart";
-            this.chk_stopbeforestart.Size = new System.Drawing.Size(138, 17);
-            this.chk_stopbeforestart.TabIndex = 15;
-            this.chk_stopbeforestart.Text = "Always stop before start";
-            this.toolTip1.SetToolTip(this.chk_stopbeforestart, "If deepstack exe files are running when a START is requested, stop them first.");
-            this.chk_stopbeforestart.UseVisualStyleBackColor = true;
             // 
             // Shell
             // 

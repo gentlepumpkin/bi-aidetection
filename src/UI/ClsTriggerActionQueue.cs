@@ -284,7 +284,7 @@ namespace AITool
 
                 if (!WasSkipped)
                 {
-                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.Min},Max={this.QCountCalc.Max},Avg={this.QCountCalc.Avg}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.Min}ms,Max={this.TotalTimeCalc.Max}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.Avg)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.Min}ms,Max={this.QTimeCalc.Max}ms,Avg={Convert.ToInt64(this.QTimeCalc.Avg)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.Min}ms,Max={this.ActionTimeCalc.Max}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.Avg)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.MinS},Max={this.QCountCalc.MaxS},Avg={this.QCountCalc.AvgS}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.MinS}ms,Max={this.TotalTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.AvgS)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.MinS}ms,Max={this.QTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.QTimeCalc.AvgS)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.MinS}ms,Max={this.ActionTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.AvgS)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
                 }
 
                 Global.SendMessage(MessageType.UpdateStatus);
@@ -318,7 +318,7 @@ namespace AITool
                 }
                 else
                 {
-                    Log($"Error: No image to process?", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Error: No image to process?", this.CurSrv, AQI.cam.Name);
                     return false;
                 }
             }
@@ -972,37 +972,36 @@ namespace AITool
                                 string pushtitle = titles[i];
                                 string pushmessage = messages[i];
                                 string pushdevice = "";
-                                string attachment = "";
                                 if (i <= devices.Count - 1)
                                     pushdevice = devices[i];
 
                                 //MemoryStream ms = AQI.CurImg.ToStream();
                                 //if (ms != null && ms.Length > 32)
                                 //    attachment = $"(\"image.jpg\", {ms.ConvertToBase64()}, \"image/jpeg\")";
-                                
+
+                                NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
+
                                 NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
                                 {
                                     Title = pushtitle,
                                     Body = pushmessage,
                                     Timestamp = AQI.CurImg.TimeCreated,
-                                    Priority = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority),
+                                    Priority = pri,
                                     Sound = AQI.cam.Action_pushover_Sound,
-                                    Attachment = attachment,
-                                    //RetryOptions = new RetryOptions
-                                    //{
-                                    //    RetryEvery = TimeSpan.FromSeconds(30),
-                                    //    RetryPeriod = TimeSpan.FromHours(3)
-                                    //},
-                                    //SupplementaryUrl = new SupplementaryURL
-                                    //{
-                                    //    Uri = new Uri("http://robiii.me"),
-                                    //    Title = "Awesome dude!"
-                                    //},
+
+                                    //Attachment = attachment,
+                                    RetryOptions = pri == Priority.Emergency ? new RetryOptions
+                                    {
+                                        RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
+                                        RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
+                                        CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url): null,
+                                    } : null,
+                                    SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL {Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42"} : null,
                                 };
 
                                 sw.Restart();
 
-                                response = await AITOOL.pushoverClient.SendMessageAsync(msg, AppSettings.Settings.pushover_UserKey, pushdevice);
+                                response = await AITOOL.pushoverClient.SendMessageAsync(msg, AppSettings.Settings.pushover_UserKey, pushdevice, AQI.CurImg);
 
                                 sw.Stop();
                             }
