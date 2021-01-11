@@ -84,12 +84,15 @@ namespace AITool
             this._url = ds_url;
             if (ds_url == null)
             {
-                this.CurSrv = "NoServer";
+                this.CurSrv = "None";
             }
             if (CurImg != null)
             {
                 this.ImgPath = CurImg.image_path;
             }
+
+            if (cam == null)
+                cam = new Camera("None");
 
             ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, hist, Trigger, Text, !Wait);
 
@@ -99,7 +102,7 @@ namespace AITool
                                   Trigger && cam.cancel_urls.Count() > 0);
 
             //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count() > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
-            bool DoIt = (Trigger || (!NeedsToCancel));
+            bool DoIt = (Trigger || (!NeedsToCancel) || ttype == TriggerType.TelegramText || ttype == TriggerType.Pushover);
 
             if (DoIt)
             {
@@ -113,7 +116,7 @@ namespace AITool
                     {
                         if (!this.TriggerActionQueue.TryAdd(AQI))
                         {
-                            Log($"Error: Action '{AQI.TType}' could not be added? {this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error: Action '{AQI.TType}' could not be added? {this.ImgPath}", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                         else
                         {
@@ -121,13 +124,13 @@ namespace AITool
                             AQI.QueueCount = this.Count.ReadFullFence();
 
                             ret = true;
-                            Log($"Debug: Action '{AQI.TType}' ADDED to queue. Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount}, Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug: Action '{AQI.TType}' ADDED to queue. Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount}, Image={this.ImgPath}", this.CurSrv, AQI.cam, AQI.CurImg);
 
                         }
                     }
                     else
                     {
-                        Log($"Error: Action '{AQI.TType}' could not be added because queue size is {this.TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Error: Action '{AQI.TType}' could not be added because queue size is {this.TriggerActionQueue.Count} and the max is {AppSettings.Settings.MaxActionQueueSize} (MaxActionQueueSize) - {this.ImgPath}", this.CurSrv, AQI.cam, AQI.CurImg);
                     }
 
                 }
@@ -153,7 +156,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
             }
@@ -188,7 +191,7 @@ namespace AITool
                             else
                             {
                                 CancelActionDict.TryRemove(AQI.cam.Name.ToLower(), out ClsTriggerActionQueueItem removedItem);
-                                Log($"Debug: Removed cancel action in queue for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds} seconds", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                Log($"Debug: Removed cancel action in queue for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds} seconds", this.CurSrv, AQI.cam, AQI.CurImg);
 
                             }
 
@@ -196,7 +199,7 @@ namespace AITool
                         catch (Exception ex)
                         {
 
-                            Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
 
@@ -241,6 +244,13 @@ namespace AITool
                     else
                         WasSkipped = true;
                 }
+                else if (AQI.TType == TriggerType.Pushover)
+                {
+                    if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) && !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey))
+                        res = await this.PushoverUpload(AQI);
+                    else
+                        WasSkipped = true;
+                }
                 else
                 {
                     res = await this.Trigger(AQI);
@@ -262,7 +272,7 @@ namespace AITool
                         {
                             //if already in queue, update date
                             AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
-                            Log($"Debug: EXTENDING cancel action time for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug: EXTENDING cancel action time for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                         else  //add it to the queue
                         {
@@ -270,7 +280,7 @@ namespace AITool
                             AQI.cam.Action_Cancel_Timer_Enabled = true;
                             AQI.Trigger = false;  //set to be a cancel
                             this.CancelActionDict.TryAdd(AQI.cam.Name.ToLower(), AQI);
-                            Log($"Debug: Cancel action queued for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug: Cancel action queued for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
                 }
@@ -284,7 +294,7 @@ namespace AITool
 
                 if (!WasSkipped)
                 {
-                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.MinS},Max={this.QCountCalc.MaxS},Avg={this.QCountCalc.AvgS}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.MinS}ms,Max={this.TotalTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.AvgS)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.MinS}ms,Max={this.QTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.QTimeCalc.AvgS)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.MinS}ms,Max={this.ActionTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.AvgS)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Debug: Action '{AQI.TType}' done. Succeeded={res}, Trigger={AQI.Trigger}, Queued={AQI.IsQueued}, Queue Count={AQI.QueueCount} (Min={this.QCountCalc.MinS},Max={this.QCountCalc.MaxS},Avg={this.QCountCalc.AvgS}), Total time={AQI.TotalTimeMS}ms (Min={this.TotalTimeCalc.MinS}ms,Max={this.TotalTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.TotalTimeCalc.AvgS)}ms), Queue time={AQI.QueueWaitMS} (Min={this.QTimeCalc.MinS}ms,Max={this.QTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.QTimeCalc.AvgS)}ms), Action Time={AQI.ActionTimeMS}ms (Min={this.ActionTimeCalc.MinS}ms,Max={this.ActionTimeCalc.MaxS}ms,Avg={Convert.ToInt64(this.ActionTimeCalc.AvgS)}ms), Image={this.ImgPath}", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
                 Global.SendMessage(MessageType.UpdateStatus);
@@ -292,7 +302,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log("Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return res;
@@ -342,16 +352,16 @@ namespace AITool
 
                     if (AQI.cam.Action_image_copy_enabled && AQI.Trigger)
                     {
-                        Log($"Debug:   Copying image to network folder...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Debug:   Copying image to network folder...", this.CurSrv, AQI.cam, AQI.CurImg);
                         string newimagepath = "";
                         if (!this.CopyImage(AQI, ref newimagepath))
                         {
                             ret = false;
-                            Log($"Warn:   -> Warning: Image could not be copied to network folder.", AQI.CurImg.image_path);
+                            Log($"Warn:   -> Warning: Image could not be copied to network folder.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                         else
                         {
-                            Log($"Debug:   -> Image copied to network folder.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug:   -> Image copied to network folder.", this.CurSrv, AQI.cam, AQI.CurImg);
                             //set the image path to the new path so all imagename variable works
                             AQI.CurImg = new ClsImageQueueItem(newimagepath, 1);
                         }
@@ -398,14 +408,14 @@ namespace AITool
                         {
                             run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString);
                             param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString);
-                            Log($"Debug:   Starting external app - Camera={AQI.cam.Name} run='{run}', param='{param}'", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug:   Starting external app - Camera={AQI.cam.Name} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
                             Process.Start(run, param);
                         }
                         catch (Exception ex)
                         {
 
                             ret = false;
-                            Log($"Error: while running program '{run}' with params '{param}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error: while running program '{run}' with params '{param}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
 
@@ -438,7 +448,7 @@ namespace AITool
                                         {
                                             if (detection.IndexOf(objname, StringComparison.OrdinalIgnoreCase) >= 0 || (objname == "*"))
                                             {
-                                                Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...", AQI.CurImg.image_path);
+                                                Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
                                                 SoundPlayer sp = new SoundPlayer(soundfile);
                                                 sp.Play();
                                                 played++;
@@ -448,7 +458,7 @@ namespace AITool
                                 }
                                 if (played == 0)
                                 {
-                                    Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                    Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam, AQI.CurImg);
                                 }
                             }
 
@@ -457,7 +467,7 @@ namespace AITool
                         {
 
                             ret = false;
-                            Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
 
@@ -499,18 +509,18 @@ namespace AITool
 
                     }
 
-                    //upload to telegram
+                    //upload to pushover
                     if (AQI.cam.Action_pushover_enabled && AQI.Trigger)
                     {
 
                         if (!await this.PushoverUpload(AQI))
                         {
                             ret = false;
-                            Log($"Error:   -> ERROR sending image to Pushover", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error:   -> ERROR sending message or image to Pushover", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                         else
                         {
-                            Log($"Debug:   -> Sent image to Pushover.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug:   -> Sent message or image to Pushover.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
 
                     }
@@ -524,11 +534,11 @@ namespace AITool
                         if (!await this.TelegramUpload(AQI))
                         {
                             ret = false;
-                            Log($"Error:   -> ERROR sending image to Telegram.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Error:   -> ERROR sending image to Telegram.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                         else
                         {
-                            Log($"Debug:   -> Sent image to Telegram.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug:   -> Sent image to Telegram.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
 
                     }
@@ -537,7 +547,7 @@ namespace AITool
                     if (AQI.Trigger)
                     {
                         AQI.cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                        Log($"Debug: {AQI.cam.Name} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Debug: {AQI.cam.Name} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam, AQI.CurImg);
                         Global.UpdateLabel($"{AQI.cam.Name} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
                     }
 
@@ -546,7 +556,7 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {AQI.cam.Name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"   Camera {AQI.cam.Name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
 
@@ -561,7 +571,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
 
@@ -582,7 +592,7 @@ namespace AITool
 
             try
             {
-                Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path, "", "", AQI.CurImg.image_path);
+                Log($"Debug: Merging image annotations: " + AQI.CurImg.image_path, "", "", AQI.CurImg);
 
                 if (AQI.CurImg.IsValid())
                 {
@@ -777,17 +787,17 @@ namespace AITool
                                 if (result.Success)
                                 {
                                     img.Save(OutputImageFile, jpgEncoder, myEncoderParameters);
-                                    Log($"Debug: Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                    Log($"Debug: Merged {countr} detections in {sw.ElapsedMilliseconds}ms into image {OutputImageFile}", this.CurSrv, AQI.cam, AQI.CurImg);
                                 }
                                 else
                                 {
-                                    Log($"Error: Could not gain access to write merged file {OutputImageFile}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                    Log($"Error: Could not gain access to write merged file {OutputImageFile}", this.CurSrv, AQI.cam, AQI.CurImg);
                                 }
 
                             }
                             else
                             {
-                                Log($"Debug: No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                Log($"Debug: No detections to merge.  Time={sw.ElapsedMilliseconds}ms, {OutputImageFile}", this.CurSrv, AQI.cam, AQI.CurImg);
 
                             }
 
@@ -798,13 +808,13 @@ namespace AITool
                 }
                 else
                 {
-                    Log($"Error: could not find last image with detections: " + AQI.CurImg.image_path, this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Error: could not find last image with detections: " + AQI.CurImg.image_path, this.CurSrv, AQI.cam, AQI.CurImg);
                 }
             }
             catch (Exception ex)
             {
 
-                Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return OutputImageFile;
@@ -836,7 +846,7 @@ namespace AITool
 
                 dest_path = System.IO.Path.Combine(netfld, filename);
 
-                Log($"Debug:  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Debug:  File copying from {AQI.CurImg.image_path} to {dest_path}", this.CurSrv, AQI.cam, AQI.CurImg);
 
 
                 if (AQI.CurImg.CopyFileTo(dest_path))
@@ -847,7 +857,7 @@ namespace AITool
             catch (Exception ex)
             {
                 ret = false;
-                Log($"ERROR: Could not copy image {AQI.CurImg.image_path} to network path {dest_path}: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"ERROR: Could not copy image {AQI.CurImg.image_path} to network path {dest_path}: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return ret;
@@ -916,7 +926,7 @@ namespace AITool
                         }
                         if (!fnd)
                         {
-                            Log($"Debug: Skipping pushover because object(s) '{bad}' not in trigger objects list '{AQI.cam.Action_pushover_triggering_objects}'", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug: Skipping pushover because object(s) '{bad}' not in trigger objects list '{AQI.cam.Action_pushover_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
                             return false;
                         }
                     }
@@ -927,144 +937,174 @@ namespace AITool
                     AppSettings.Settings.pushover_cooldown_seconds = 2;  //force to be at least 2 seconds
                 }
 
-                if (this.PushoverRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.PushoverRetryTime.Read())
+                DateTime now = DateTime.Now;
+
+                if (this.PushoverRetryTime.Read() == DateTime.MinValue || now >= this.PushoverRetryTime.Read())
                 {
-                    double cooltime = Math.Round((DateTime.Now - this.last_Pushover_trigger_time.Read()).TotalSeconds, 4);
+                    double cooltime = Math.Round((now - this.last_Pushover_trigger_time.Read()).TotalSeconds, 4);
                     if (cooltime >= AppSettings.Settings.pushover_cooldown_seconds)
                     {
 
-
-                        string title = "";
-                        string message = "";
-                        string device = "";
-
-                        if (AQI.Trigger)
+                        if (Global.IsTimeBetween(now, AQI.cam.Action_pushover_active_time_range))
                         {
-                            title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
-                            message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
-                            device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
-                        }
-                        else  //TODO: Add cancel if requested
-                        {
-                            title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
-                            message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
-                            device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
-                        }
+                            string title = "";
+                            string message = "";
+                            string device = "";
 
-
-                        List<string> titles = Global.Split(title, "|");
-                        List<string> messages = Global.Split(message, "|");
-                        List<string> devices = Global.Split(device, "|");
-
-                        if (AITOOL.pushoverClient == null)
-                        {
-                            AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
-                        }
-
-                        for (int i = 0; i < titles.Count; i++)
-                        {
-                            PushoverUserResponse response = null;
-
-                            Stopwatch sw = Stopwatch.StartNew();
-
-                            try
-                            {
-                                string pushtitle = titles[i];
-                                string pushmessage = messages[i];
-                                string pushdevice = "";
-                                if (i <= devices.Count - 1)
-                                    pushdevice = devices[i];
-
-                                //MemoryStream ms = AQI.CurImg.ToStream();
-                                //if (ms != null && ms.Length > 32)
-                                //    attachment = $"(\"image.jpg\", {ms.ConvertToBase64()}, \"image/jpeg\")";
-
-                                NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
-
-                                NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
-                                {
-                                    Title = pushtitle,
-                                    Body = pushmessage,
-                                    Timestamp = AQI.CurImg.TimeCreated,
-                                    Priority = pri,
-                                    Sound = AQI.cam.Action_pushover_Sound,
-
-                                    //Attachment = attachment,
-                                    RetryOptions = pri == Priority.Emergency ? new RetryOptions
-                                    {
-                                        RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
-                                        RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
-                                        CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url): null,
-                                    } : null,
-                                    SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL {Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42"} : null,
-                                };
-
-                                sw.Restart();
-
-                                response = await AITOOL.pushoverClient.SendMessageAsync(msg, AppSettings.Settings.pushover_UserKey, pushdevice, AQI.CurImg);
-
-                                sw.Stop();
-                            }
-                            catch (Exception ex)
+                            if (AQI.Trigger)
                             {
 
-                                sw.Stop();
-                                ret = false;
-                                Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                            }
-
-                            if (response != null)
-                            {
-                                string rateinfo = "";
-                                if (response.RateLimitInfo != null)
+                                if (!string.IsNullOrEmpty(AQI.Text))
                                 {
-                                    rateinfo = $"(Monthly Limit={response.RateLimitInfo.Limit}, Remaining={response.RateLimitInfo.Remaining}, ResetDate={response.RateLimitInfo.Reset})";
-                                }
+                                    if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
+                                        title = "Error";
+                                    else
+                                        title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
 
-                                if (response.IsOk)
-                                {
-                                    ret = true;
-                                    Log($"Debug: Pushover success in {sw.ElapsedMilliseconds}ms {rateinfo}");
+                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+
                                 }
                                 else
                                 {
-                                    string errs = "";
-                                    if (response.HasErrors)
-                                        errs = string.Join(";", response.Errors);
-                                    ret = false;
-                                    Log($"Error: Pushover response code={response.Status} in {sw.ElapsedMilliseconds}ms, Errs='{errs}' {rateinfo}");
+                                    title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
+                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
                                 }
+
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
                             }
-                            else
+                            else  //TODO: Add cancel if requested
                             {
-                                ret = false;
-                                Log($"Error: Pushover failed to return a response in {sw.ElapsedMilliseconds}ms?", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
+                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
                             }
 
-                            if (!ret)
-                                this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
-                            else
-                                this.PushoverRetryTime.Write(DateTime.MinValue);
+
+                            List<string> titles = Global.Split(title, "|");
+                            List<string> messages = Global.Split(message, "|");
+                            List<string> devices = Global.Split(device, "|");
+                            List<string> sounds = Global.Split(AQI.cam.Action_pushover_Sound, "|");
+
+                            if (AITOOL.pushoverClient == null)
+                                AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
+
+                            string imginfo = "";
+                            if (AQI.CurImg != null && AQI.CurImg.IsValid())
+                            {
+                                imginfo = $"Attached Image: {Path.GetFileName(AQI.CurImg.image_path)}";
+                            }
+
+                            for (int i = 0; i < titles.Count; i++)
+                            {
+                                PushoverUserResponse response = null;
+
+                                Stopwatch sw = Stopwatch.StartNew();
+
+                                try
+                                {
+                                    string pushtitle = titles[i];
+                                    string pushmessage = messages[i];
+                                    string pushsound = sounds[i];
+                                    string pushdevice = "";
+                                    if (i <= devices.Count - 1)
+                                        pushdevice = devices[i];
+
+                                    NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
+
+                                    NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
+                                    {
+                                        Title = pushtitle,
+                                        Body = pushmessage,
+                                        Timestamp = AQI.CurImg != null ? AQI.CurImg.TimeCreated : DateTime.Now,
+                                        Priority = pri,
+                                        Sound = pushsound,
+
+                                        RetryOptions = pri == Priority.Emergency ? new RetryOptions
+                                        {
+                                            RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
+                                            RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
+                                            CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url) : null,
+                                        } : null,
+                                        SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL { Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42" } : null,
+                                    };
+
+                                    sw.Restart();
+
+                                    List<string> userkeys = Global.Split(AppSettings.Settings.pushover_UserKey, "|,;");
+                                    foreach (string userkey in userkeys)
+                                    {
+                                        Log($"Debug: Sending pushover message '{pushmessage}' to user '{userkey}' {imginfo}...");
+                                        response = await AITOOL.pushoverClient.SendPushoverMessageAsync(msg, userkey, pushdevice, AQI.CurImg);
+                                    }
+                                    sw.Stop();
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    sw.Stop();
+                                    ret = false;
+                                    Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
+                                }
+
+                                if (response != null)
+                                {
+                                    string rateinfo = "";
+                                    if (response.RateLimitInfo != null)
+                                    {
+                                        rateinfo = $"(Monthly Limit={response.RateLimitInfo.Limit}, Remaining={response.RateLimitInfo.Remaining}, ResetDate={response.RateLimitInfo.Reset})";
+                                    }
+
+                                    if (response.IsOk)
+                                    {
+                                        ret = true;
+                                        Log($"Debug: ...Pushover success in {sw.ElapsedMilliseconds}ms {rateinfo}");
+                                    }
+                                    else
+                                    {
+                                        string errs = "";
+                                        if (response.HasErrors)
+                                            errs = string.Join(";", response.Errors);
+                                        ret = false;
+                                        Log($"Error: Pushover response code={response.Status} in {sw.ElapsedMilliseconds}ms, Errs='{errs}' {rateinfo}");
+                                    }
+                                }
+                                else
+                                {
+                                    ret = false;
+                                    Log($"Error: Pushover failed to return a response in {sw.ElapsedMilliseconds}ms?", this.CurSrv, AQI.cam, AQI.CurImg);
+                                }
+
+                                if (!ret)
+                                    this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
+                                else
+                                    this.PushoverRetryTime.Write(DateTime.MinValue);
+
+                            }
 
                         }
+                        else
+                        {
+                            Log($"Debug: Skipping pushover because time is not between {AQI.cam.Action_pushover_active_time_range}");
+                        }
+                        
                     }
                     else
                     {
                         //log that nothing was done
-                        Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Pushover.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Pushover.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
                     }
                 }
                 else
                 {
-                    Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
             }
             else
             {
                 ret = false;
-                Log("Error: Pushover API key not set.");
+                Log("Error: Pushover API key or User Key not set.");
             }
 
 
@@ -1116,86 +1156,92 @@ namespace AITool
                             }
                             if (!fnd)
                             {
-                                Log($"Debug: Skipping telegram because object(s) '{bad}' not in trigger objects list '{AQI.cam.telegram_triggering_objects}'", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                                Log($"Debug: Skipping telegram because object(s) '{bad}' not in trigger objects list '{AQI.cam.telegram_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
                                 return false;
                             }
                         }
                     }
 
-                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
+                    DateTime now = DateTime.Now;
+
+                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
+                        double cooltime = Math.Round((now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
                         if (cooltime >= AppSettings.Settings.telegram_cooldown_seconds)
                         {
                             //in order to avoid hitting our limits when sending out mass notifications, consider spreading them over longer intervals, e.g. 8-12 hours. The API will not allow bulk notifications to more than ~30 users per second, if you go over that, you'll start getting 429 errors.
 
-                            //using (var image_telegram = System.IO.File.OpenRead(AQI.CurImg.image_path))
-                            //{
-
-                            if (AITOOL.telegramBot == null)
-                                AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
-
-                            string chatid = "";
-                            bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
-                            if (overrideid)
-                                chatid = AQI.cam.telegram_chatid.Trim();
-                            else
-                                chatid = AppSettings.Settings.telegram_chatids[0];
-
-                            //upload image to Telegram servers and send to first chat
-                            Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                            lastchatid = chatid;
-                            Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), "image.jpg"), Caption);
-
-                            string file_id = message.Photo[0].FileId; //get file_id of uploaded image
-
-                            if (!overrideid)
+                            if (Global.IsTimeBetween(now, AQI.cam.telegram_active_time_range))
                             {
-                                //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
-                                foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
+                                if (AITOOL.telegramBot == null)
+                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+
+                                string chatid = "";
+                                bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
+                                if (overrideid)
+                                    chatid = AQI.cam.telegram_chatid.Trim();
+                                else
+                                    chatid = AppSettings.Settings.telegram_chatids[0];
+
+                                //upload image to Telegram servers and send to first chat
+                                Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam, AQI.CurImg);
+                                lastchatid = chatid;
+                                Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), "image.jpg"), Caption);
+
+                                string file_id = message.Photo[0].FileId; //get file_id of uploaded image
+
+                                if (!overrideid)
                                 {
-                                    Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                                    lastchatid = curchatid;
-                                    await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
+                                    //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
+                                    foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
+                                    {
+                                        Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                        lastchatid = curchatid;
+                                        await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
+                                    }
                                 }
+                                ret = true;
+                                //}
+
+                                this.last_telegram_trigger_time.Write(DateTime.Now);
+                                this.TelegramRetryTime.Write(DateTime.MinValue);
+
+                                if (AQI.IsQueued)
+                                {
+                                    //add a minimum delay if we are in a queue to prevent minimum cooldown error
+                                    Log($"Debug: Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                    await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
+                                }
+
                             }
-                            ret = true;
-                            //}
-
-                            this.last_telegram_trigger_time.Write(DateTime.Now);
-                            this.TelegramRetryTime.Write(DateTime.MinValue);
-
-                            if (AQI.IsQueued)
+                            else
                             {
-                                //add a minimum delay if we are in a queue to prevent minimum cooldown error
-                                Log($"Debug: Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                                await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
+                                Log($"Debug: Skipping Telegram because time is not between {AQI.cam.telegram_active_time_range}");
                             }
-
                         }
                         else
                         {
                             //log that nothing was done
-                            Log($"Debug:   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"Debug:   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
                         }
 
                     }
                     else
                     {
-                        Log($"Debug:   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"Debug:   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam, AQI.CurImg);
                     }
 
 
                 }
                 catch (ApiRequestException ex)  //current version only gives webexception NOT this exception!  https://github.com/TelegramBots/Telegram.Bot/issues/891
                 {
-                    bool se = AppSettings.Settings.send_errors;
-                    AppSettings.Settings.send_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    bool se = AppSettings.Settings.send_telegram_errors;
+                    AppSettings.Settings.send_telegram_errors = false;
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                    AppSettings.Settings.send_errors = se;
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    AppSettings.Settings.send_telegram_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
                     {
@@ -1213,12 +1259,12 @@ namespace AITool
                 }
                 catch (Exception ex)  //As of version 
                 {
-                    bool se = AppSettings.Settings.send_errors;
-                    AppSettings.Settings.send_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    bool se = AppSettings.Settings.send_telegram_errors;
+                    AppSettings.Settings.send_telegram_errors = false;
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
-                    Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                    AppSettings.Settings.send_errors = se;
+                    Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    AppSettings.Settings.send_telegram_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
                     {
@@ -1236,12 +1282,12 @@ namespace AITool
                 }
 
 
-                Log($"Debug: ...Finished in {sw.ElapsedMilliseconds}ms", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Debug: ...Finished in {sw.ElapsedMilliseconds}ms", this.CurSrv, AQI.cam, AQI.CurImg);
 
             }
             else
             {
-                Log($"Error:  Telegram settings misconfigured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Error:  Telegram settings misconfigured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return ret;
@@ -1269,61 +1315,69 @@ namespace AITool
 
                     string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
 
-                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || DateTime.Now >= this.TelegramRetryTime.Read())
+                    DateTime now = DateTime.Now;
+
+                    if (this.TelegramRetryTime.Read() == DateTime.MinValue || now >= this.TelegramRetryTime.Read())
                     {
-                        double cooltime = Math.Round((DateTime.Now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
+                        double cooltime = Math.Round((now - this.last_telegram_trigger_time.Read()).TotalSeconds, 4);
                         if (cooltime >= AppSettings.Settings.telegram_cooldown_seconds)
                         {
-
-                            string chatid = "";
-                            bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
-                            if (overrideid)
-                                chatid = AQI.cam.telegram_chatid.Trim();
-                            else
-                                chatid = AppSettings.Settings.telegram_chatids[0];
-
-                            if (AITOOL.telegramBot == null)
-                                AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
-
-                            if (overrideid)
+                            if (Global.IsTimeBetween(now, AQI.cam.telegram_active_time_range))
                             {
-                                lastchatid = chatid;
-                                Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(chatid, Caption);
+                                string chatid = "";
+                                bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
+                                if (overrideid)
+                                    chatid = AQI.cam.telegram_chatid.Trim();
+                                else
+                                    chatid = AppSettings.Settings.telegram_chatids[0];
 
-                            }
-                            else
-                            {
-                                foreach (string curchatid in AppSettings.Settings.telegram_chatids)
+                                if (AITOOL.telegramBot == null)
+                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+
+                                if (overrideid)
                                 {
-                                    lastchatid = curchatid;
-                                    Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(curchatid, Caption);
+                                    lastchatid = chatid;
+                                    Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(chatid, Caption);
 
                                 }
+                                else
+                                {
+                                    foreach (string curchatid in AppSettings.Settings.telegram_chatids)
+                                    {
+                                        lastchatid = curchatid;
+                                        Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(curchatid, Caption);
 
+                                    }
+
+                                }
+                                this.last_telegram_trigger_time.Write(DateTime.Now);
+                                this.TelegramRetryTime.Write(DateTime.MinValue);
+
+                                if (AQI.IsQueued)
+                                {
+                                    //add a minimum delay if we are in a queue to prevent minimum cooldown error
+                                    Log($"Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                    await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
+                                }
+
+                                ret = true;
                             }
-                            this.last_telegram_trigger_time.Write(DateTime.Now);
-                            this.TelegramRetryTime.Write(DateTime.MinValue);
-
-                            if (AQI.IsQueued)
+                            else
                             {
-                                //add a minimum delay if we are in a queue to prevent minimum cooldown error
-                                Log($"Waiting {AppSettings.Settings.telegram_cooldown_seconds} seconds (telegram_cooldown_seconds)...", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                                await Task.Delay(TimeSpan.FromSeconds(AppSettings.Settings.telegram_cooldown_seconds));
+                                Log($"Debug: Skipping Telegram because time is not between {AQI.cam.telegram_active_time_range}");
                             }
-
-                            ret = true;
                         }
                         else
                         {
                             //log that nothing was done
-                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                            Log($"   Still in TELEGRAM cooldown. No image will be uploaded to Telegram.  ({cooltime} of {AppSettings.Settings.telegram_cooldown_seconds} seconds - See 'telegram_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
                         }
 
                     }
                     else
                     {
-                        Log($"   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                        Log($"   Waiting {Math.Round((this.TelegramRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.TelegramRetryTime}) to retry TELEGRAM connection.  This is due to a previous telegram send error.", this.CurSrv, AQI.cam, AQI.CurImg);
                     }
 
 
@@ -1331,30 +1385,30 @@ namespace AITool
                 }
                 catch (ApiRequestException ex)  //current version only gives webexception NOT this exception!  https://github.com/TelegramBots/Telegram.Bot/issues/891
                 {
-                    bool se = AppSettings.Settings.send_errors;
-                    AppSettings.Settings.send_errors = false;
-                    Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    bool se = AppSettings.Settings.send_telegram_errors;
+                    AppSettings.Settings.send_telegram_errors = false;
+                    Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                    AppSettings.Settings.send_errors = se;
+                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    AppSettings.Settings.send_telegram_errors = se;
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
 
                 }
                 catch (Exception ex)
                 {
-                    bool se = AppSettings.Settings.send_errors;
-                    AppSettings.Settings.send_errors = false;
-                    Log($"ERROR: Could not upload image '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                    bool se = AppSettings.Settings.send_telegram_errors;
+                    AppSettings.Settings.send_telegram_errors = false;
+                    Log($"ERROR: Could not upload image '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
-                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
-                    AppSettings.Settings.send_errors = se;
+                    Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    AppSettings.Settings.send_telegram_errors = se;
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
                 }
 
             }
             else
             {
-                Log($"Error:  Telegram settings misconfigured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam.Name, AQI.CurImg.image_path);
+                Log($"Error:  Telegram settings misconfigured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return ret;

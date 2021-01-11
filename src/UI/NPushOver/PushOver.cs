@@ -174,9 +174,9 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, ClsImageQueueItem CurImg)
+        public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, ClsImageQueueItem CurImg)
         {
-            return await this.SendMessageAsync(message, userOrGroup, (string[])null, CurImg).ConfigureAwait(false);
+            return await this.SendPushoverMessageAsync(message, userOrGroup, (string[])null, CurImg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -190,9 +190,9 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string deviceName, ClsImageQueueItem CurImg)
+        public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, string deviceName, ClsImageQueueItem CurImg)
         {
-            return await this.SendMessageAsync(message, userOrGroup, new[] { deviceName }, CurImg).ConfigureAwait(false);
+            return await this.SendPushoverMessageAsync(message, userOrGroup, new[] { deviceName }, CurImg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace NPushover
         /// <seealso href="https://pushover.net/api#messages">Pushover API documentation</seealso>
         /// <exception cref="ArgumentNullException">Thrown when message or user/group arguments are null.</exception>
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
-        public async Task<PushoverUserResponse> SendMessageAsync(Message message, string userOrGroup, string[] deviceNames, ClsImageQueueItem CurImg)
+        public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, string[] deviceNames, ClsImageQueueItem CurImg)
         {
 
             PushoverUserResponse ret = new PushoverUserResponse();
@@ -256,7 +256,7 @@ namespace NPushover
                     parameters.Add(imageParameter, "attachment", Path.GetFileName(CurImg.image_path));
                 }
 
-                ret = await this.Post(GetV1APIUriFromBase("messages.json"), parameters);
+                ret = await this.PushoverPost(GetV1APIUriFromBase("messages.json"), parameters);
 
             }
             catch (Exception ex)
@@ -271,7 +271,7 @@ namespace NPushover
         }
 
 
-        private async Task<PushoverUserResponse> Post(Uri uri, MultipartFormDataContent parameters)
+        private async Task<PushoverUserResponse> PushoverPost(Uri uri, MultipartFormDataContent parameters)
         {
 
             PushoverUserResponse ret = new PushoverUserResponse();

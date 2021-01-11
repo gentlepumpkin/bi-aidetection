@@ -44,7 +44,10 @@ namespace AITool
             public List<string> telegram_chatids = new List<string>();
             public bool log_everything = false;
             public string LogLevel = "Debug";
-            public bool send_errors = true;
+            [JsonProperty("send_errors")]
+            public bool send_telegram_errors = true;
+            public bool send_pushover_errors = true;
+
             public bool startwithwindows = false;
             public int close_instantly = -1;
             public List<Camera> CameraList = new List<Camera>();
@@ -521,7 +524,7 @@ namespace AITool
                             if (el.ToString().Contains("input_path")) { Settings.input_path = val; cnt += 1; }
                             if (el.ToString().Contains("deepstack_url")) { Settings.deepstack_url = val; cnt += 1; }
                             if (el.ToString().Contains("log_everything")) { Settings.log_everything = Convert.ToBoolean(val); cnt += 1; }
-                            if (el.ToString().Contains("send_errors")) { Settings.send_errors = Convert.ToBoolean(val); cnt += 1; }
+                            if (el.ToString().Contains("send_errors")) { Settings.send_telegram_errors = Convert.ToBoolean(val); cnt += 1; }
                             if (el.ToString().Contains("close_instantly")) { Settings.close_instantly = Convert.ToInt32(val); cnt += 1; }
 
                         }

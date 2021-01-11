@@ -20,6 +20,35 @@ namespace AITool
         // NO direct UI interaction
         // ====================================================================
 
+        public static void GroupboxEnableDisable(GroupBox gb, CheckBox MasterCheckBox)
+        {
+
+            //if (gb.Tag == null || !(gb.Tag is Color))
+            //    gb.Tag = gb.ForeColor;
+
+            //if (MasterCheckBox.Checked)
+            //    gb.ForeColor = (Color)gb.Tag;
+            //else
+            //    gb.ForeColor = SystemColors.GrayText;
+
+            foreach (Control cont in gb.Controls)
+            {
+                if (!cont.Equals(MasterCheckBox))
+                {
+                    if (cont.Enabled && (cont.Tag == null || !(cont.Tag is Color)))
+                        cont.Tag = cont.ForeColor;
+
+                    cont.Enabled = MasterCheckBox.Checked;
+
+
+                    if (MasterCheckBox.Checked)
+                        cont.ForeColor = (Color)cont.Tag;
+                    else
+                        cont.ForeColor = SystemColors.GrayText;
+                }
+            }
+        }
+
 
         public static void UpdateFOLV(FastObjectListView olv, IList objs,
                                        bool Follow = false,

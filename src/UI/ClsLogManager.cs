@@ -424,11 +424,29 @@ namespace AITool
                     Console.WriteLine(this.LastLogItm.ToDetailString());
 
                 string itm = this.LastLogItm.ToString();
-                if (AppSettings.Settings.send_errors == true && (HasError) && AppSettings.Settings.telegram_chatids.Count > 0 && AITOOL.TriggerActionQueue != null && !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) && !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
+
+                //Send telegram error message
+                if (AppSettings.Settings.send_telegram_errors &&
+                    (HasError) && 
+                    AppSettings.Settings.telegram_chatids.Count > 0 &&
+                    AITOOL.TriggerActionQueue != null &&
+                    !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                    !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
                     AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, null, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                }
 
+                //Send pushover error message
+                if (AppSettings.Settings.send_pushover_errors &&
+                    (HasError) &&
+                    !string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) &&
+                    !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey) &&
+                    AITOOL.TriggerActionQueue != null &&
+                    !(itm.IndexOf("pushover", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                    !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.Pushover, null, null, null, true, false, null, this.LastLogItm.ToDetailString());
                 }
 
                 if (HasError)

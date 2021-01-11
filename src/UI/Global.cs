@@ -304,6 +304,9 @@ namespace AITool
 
         public static bool IsTimeBetween(DateTime time, string span)
         {
+            if (string.IsNullOrEmpty(span))
+                return true;  //if span is not set, assume its always true
+
             // convert datetime to a TimeSpan
             TimeSpan now = time.TimeOfDay;
 

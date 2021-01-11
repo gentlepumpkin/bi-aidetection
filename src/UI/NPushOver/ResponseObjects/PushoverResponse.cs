@@ -45,7 +45,7 @@ namespace NPushover.ResponseObjects
         /// Gets information about ratelimiting returned by the Pushover services, if any. Null otherwise.
         /// </summary>
         /// <remarks>
-        /// Usually only a response to a <see cref="O:NPushover.Pushover.SendMessageAsync"/> contains this
+        /// Usually only a response to a <see cref="O:NPushover.Pushover.SendPushoverMessageAsync"/> contains this
         /// information.
         /// </remarks>
         /// <seealso href="https://pushover.net/api#response">Pushover API documentation</seealso>
