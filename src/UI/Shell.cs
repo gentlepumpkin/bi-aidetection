@@ -927,6 +927,9 @@ namespace AITool
                 this.ResizeListViews();
                 //Log($"Debug: Form_Resize. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, tryicon={this.notifyIcon.Visible}");
             }
+
+            UpdateErrorIcon();
+
         }
 
         //open from tray
@@ -1655,15 +1658,16 @@ namespace AITool
         private bool showingtrayerr = false;
         private bool showingtrayok = false;
 
-        private void UpdateStats(string Message = "")
+        private void UpdateErrorIcon()
         {
             try
             {
-                //make tray icon read if there are errors
+                //make tray icon red if there are errors
                 if (LogMan.ErrorCount.ReadFullFence() == 0 && !showingtrayok)
                 {
                     this.notifyIcon.Icon = AITool.Properties.Resources.Logo1;
                     this.Icon = AITool.Properties.Resources.Logo1;
+                    this.Refresh();
                     showingtrayok = true;
                     showingtrayerr = false;
                 }
@@ -1671,9 +1675,20 @@ namespace AITool
                 {
                     this.notifyIcon.Icon = AITool.Properties.Resources.Logo_Error;
                     this.Icon = AITool.Properties.Resources.Logo_Error;
+                    this.Refresh();
                     showingtrayok = false;
                     showingtrayerr = true;
                 }
+
+            }
+            catch { }
+        }
+
+        private void UpdateStats(string Message = "")
+        {
+            try
+            {
+                UpdateErrorIcon();
 
                 if (!this.Visible || (this.WindowState == FormWindowState.Minimized) || this.IsStatsUpdating.ReadFullFence() || IsClosing.ReadFullFence())
                     return;  //save a tree

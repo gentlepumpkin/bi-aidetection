@@ -84,7 +84,40 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
-       
+        public static async Task<bool> SafeFileDeleteAsync(string Filename)
+        {
+            //run the function in another thread
+            return await Task.Run(() => SafeFileDelete(Filename));
+        }
+        public static bool SafeFileDelete(string Filename)
+        {
+            bool ret = false;
+
+            if (!File.Exists(Filename))
+                return true;
+
+            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, 50, true, 0);
+            if (result.Success)
+            {
+                try
+                {
+                    File.Delete(Filename);
+                    ret = true;
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error: Could not delete file after {result.TimeMS} ms: {ExMsg(ex)}");
+                }
+            }
+            else
+            {
+                Log($"Error: Could not delete file after {result.TimeMS} ms: {Filename}");
+            }
+
+            return ret;
+
+        }
+
         public static string SafeLoadTextFile(string Filename)
         {
 
@@ -109,8 +142,8 @@ namespace AITool
                 if (result.Handle != null)
                 {
                     if (!result.Handle.IsClosed)
-                       result.Handle.Close();
-                    
+                        result.Handle.Close();
+
                     result.Handle.Dispose();
                 }
             }
@@ -1440,6 +1473,8 @@ namespace AITool
                                                               int MaxErrRetryCnt = 2000)
         {
             WaitFileAccessResult ret = new WaitFileAccessResult();
+            string LastFailReason = "";
+            Stopwatch SW = Stopwatch.StartNew();
 
             try
             {
@@ -1448,10 +1483,17 @@ namespace AITool
 
                 FileInfo FI = new FileInfo(filename);
 
+                bool NeedsToWrite = rights == FileAccess.ReadWrite || rights == FileAccess.Write;
+
                 if (FI.Exists)
                 {
-                    Stopwatch SW = new Stopwatch();
-                    SW.Start();
+                    
+                    if (NeedsToWrite && FI.IsReadOnly)
+                    {
+                        ret.Success = false;
+                        ret.ResultString = "(ReadOnly)";
+                        return ret;
+                    }
 
                     long LastLength = FI.Length;  //if the file is growing, try to wait for it
 
@@ -1463,13 +1505,15 @@ namespace AITool
                             //SafeFileHandle fileHandle = CreateFile(fileName,FileSystemRights.Modify, FileShare.Write,IntPtr.Zero, FileMode.OpenOrCreate,FileOptions.None, IntPtr.Zero);
                             ret.Handle = CreateFile(filename, rights, share, IntPtr.Zero, FileMode.Open, FileAttributes.Normal, IntPtr.Zero);
 
-
                             if (ret.Handle.IsInvalid)
                             {
                                 int LastErr = Marshal.GetLastWin32Error();
 
+                                LastFailReason = "(FileLocked)";
+
                                 if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                 {
+                                    LastFailReason = "(Unexpected)";
                                     //unexpected error, break out
                                     Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
                                     break;
@@ -1478,8 +1522,21 @@ namespace AITool
                             }
                             else
                             {
-                                ret.Success = true;
-                                break;
+                                //passed the first test
+                                if (NeedsToWrite)
+                                {
+                                    //make sure we can read a byte and write the same byte back to verify access
+                                    if (IsFileWritable(filename,ref ret.Handle, ref FI, out LastFailReason))
+                                    {
+                                        ret.Success = true;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    ret.Success = true;
+                                    break;
+                                }
                             }
 
                             if (!ret.Handle.IsClosed)
@@ -1502,9 +1559,9 @@ namespace AITool
 
                     ret.TimeMS = SW.ElapsedMilliseconds;
 
-                    if (!ret.Success || ret.ErrRetryCnt > 3)
+                    if (!ret.Success || ret.ErrRetryCnt > 0)
                     {
-                        ret.ResultString = $"Debug: lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay.";
+                        ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay.";
                         Log(ret.ResultString);
                     }
 
@@ -1517,6 +1574,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
+                ret.TimeMS = SW.ElapsedMilliseconds;
                 ret.ResultString = $"Error: {filename}: {Global.ExMsg(ex)}";
                 Log(ret.ResultString);
             }
@@ -1534,6 +1592,81 @@ namespace AITool
 
         }
 
+        public static bool IsFileWritable(string filename, ref SafeFileHandle handle, ref FileInfo FI, out string FailReason)
+        {
+            bool Ret = false;
+            string err = "";
+            FailReason = "";
+
+            byte[] TestReadByte;
+            try
+            {
+                if (FI == null)
+                    FI = new FileInfo(filename);
+
+                if (FI.IsReadOnly)
+                {
+                    FailReason = "(ReadOnly)";
+                    return false;
+                }
+
+                bool Updated = false;
+
+                using (FileStream fs = new FileStream(handle, FileAccess.ReadWrite))
+                {
+
+                    using (BinaryReader br = new BinaryReader(fs))
+                    {
+
+                        if (br.BaseStream.CanRead)
+                        {
+                            //read 1 byte
+                            TestReadByte = br.ReadBytes(1);
+                            fs.Position = 0;
+                            using (BinaryWriter bw = new BinaryWriter(fs))
+                            {
+
+                                if (bw.BaseStream.CanWrite)
+                                {
+                                    //write same byte back - get exception if file is in use
+                                    bw.Write(TestReadByte);
+                                    bw.Flush();
+                                    Updated = true;
+                                }
+                                else
+                                {
+                                    FailReason = "(CantWrite)";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            FailReason = "(CantRead)";
+                        }
+                    }
+                }
+
+                if (Updated)
+                {
+                    //reset dates on the file back to what they were before the test write
+                    FileInfo DFI = new FileInfo(filename);
+                    if (DFI.CreationTime != FI.CreationTime)
+                        DFI.CreationTime = FI.CreationTime;  //reset date the same as the old file
+                    if (DFI.LastWriteTime != FI.LastWriteTime)
+                        DFI.LastWriteTime = FI.LastWriteTime;
+                }
+
+                if (String.IsNullOrWhiteSpace(FailReason))
+                    Ret = true;
+
+            }
+            catch (Exception ex)
+            {
+                err = "(" + ex.Message + ")";
+            }
+            FailReason = err;
+            return Ret;
+        }
 
         public static bool IsInList(List<string> FindStrList, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
@@ -2273,6 +2406,8 @@ namespace AITool
             }
             return true;
         }
+
+
 
         public static bool WaitForProcessToStart(Process prc, int TimeoutMS, string fullpath)
         {

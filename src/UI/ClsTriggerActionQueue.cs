@@ -562,8 +562,7 @@ namespace AITool
 
                 if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.IndexOf(Environment.GetEnvironmentVariable("TEMP"), StringComparison.OrdinalIgnoreCase) >= 0 && System.IO.File.Exists(tmpfile))
                 {
-                    System.IO.File.Delete(tmpfile);
-                    //Log($"Debug: Deleting tmp file {tmpfile}");
+                    Global.SafeFileDeleteAsync(tmpfile);
                 }
 
 
@@ -902,7 +901,7 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            bool ret = false;
+            bool ret = true;
 
             if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) && !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey))
             {
@@ -927,7 +926,7 @@ namespace AITool
                         if (!fnd)
                         {
                             Log($"Debug: Skipping pushover because object(s) '{bad}' not in trigger objects list '{AQI.cam.Action_pushover_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
-                            return false;
+                            return true;  //to avoid error showing
                         }
                     }
                 }
@@ -1004,10 +1003,12 @@ namespace AITool
                                 {
                                     string pushtitle = titles[i];
                                     string pushmessage = messages[i];
-                                    string pushsound = sounds[i];
+                                    string pushsound = "";
                                     string pushdevice = "";
                                     if (i <= devices.Count - 1)
                                         pushdevice = devices[i];
+                                    if (i <= sounds.Count - 1)
+                                        pushsound = sounds[i];
 
                                     NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
 
@@ -1097,7 +1098,7 @@ namespace AITool
                 }
                 else
                 {
-                    Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime.Read()}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
             }
@@ -1115,7 +1116,7 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            bool ret = false;
+            bool ret = true;
             string lastchatid = "";
 
             if ((!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid) || AppSettings.Settings.telegram_chatids.Count > 0) && AppSettings.Settings.telegram_token != "")
@@ -1157,7 +1158,7 @@ namespace AITool
                             if (!fnd)
                             {
                                 Log($"Debug: Skipping telegram because object(s) '{bad}' not in trigger objects list '{AQI.cam.telegram_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
-                                return false;
+                                return true;  //to avoid error showing
                             }
                         }
                     }
@@ -1186,7 +1187,7 @@ namespace AITool
                                 //upload image to Telegram servers and send to first chat
                                 Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam, AQI.CurImg);
                                 lastchatid = chatid;
-                                Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), "image.jpg"), Caption);
+                                Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), Path.GetFileName(AQI.CurImg.image_path)), Caption);
 
                                 string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
@@ -1197,12 +1198,11 @@ namespace AITool
                                     {
                                         Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam, AQI.CurImg);
                                         lastchatid = curchatid;
-                                        await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
+                                        message = await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
                                     }
                                 }
-                                ret = true;
-                                //}
-
+                                ret = message != null;
+                                
                                 this.last_telegram_trigger_time.Write(DateTime.Now);
                                 this.TelegramRetryTime.Write(DateTime.MinValue);
 
@@ -1255,6 +1255,7 @@ namespace AITool
                         await image.SaveAsync($"./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(AQI.CurImg.image_path) + ".jpg");
                     }
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
+                    ret = false;
 
                 }
                 catch (Exception ex)  //As of version 
@@ -1278,6 +1279,7 @@ namespace AITool
                         await image.SaveAsync("./errors/" + "TELEGRAM-ERROR-" + Path.GetFileName(AQI.CurImg.image_path) + ".jpg");
                     }
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
+                    ret = false;
 
                 }
 
@@ -1288,6 +1290,7 @@ namespace AITool
             else
             {
                 Log($"Error:  Telegram settings misconfigured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam, AQI.CurImg);
+                ret = false;
             }
 
             return ret;

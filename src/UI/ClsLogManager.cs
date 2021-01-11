@@ -177,7 +177,7 @@ namespace AITool
                     this.GetCurrentLogFileName();
 
                 //load the current log file into memory
-                await this.LoadLogFileAsync(this._Filename, true, false);
+                //await this.LoadLogFileAsync(this._Filename, true, false);
 
             }
             catch (Exception ex)
