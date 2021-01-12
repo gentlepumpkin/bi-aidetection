@@ -838,7 +838,19 @@ namespace AITool
 
             try
             {
+                if (string.IsNullOrWhiteSpace(AQI.cam.Action_network_folder) || string.IsNullOrWhiteSpace(AQI.cam.Action_network_folder_filename))
+                {
+                    AITOOL.Log($"Error: Camera settings > 'Copy alert images to folder' path or 'Filename' is empty.: {AQI.cam.Action_network_folder} -- {AQI.cam.Action_network_folder_filename}");
+                    return false;
+                }
+
                 string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder);
+
+                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\") || netfld.Contains("."))
+                {
+                    AITOOL.Log($"Error: Camera settings > Copy alert images to folder is not a valid path: {netfld}");
+                    return false;
+                }
 
                 string ext = Path.GetExtension(AQI.CurImg.image_path);
                 string filename = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder_filename).Trim() + ext;

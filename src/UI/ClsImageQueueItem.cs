@@ -40,12 +40,22 @@ namespace AITool
             bool ret = false;
             
             int bufferSize = 1024 * 1024;
+            string copydir = "";
 
             try
             {
+                if (!outputFilePath.Contains("\\"))
+                {
+                    AITOOL.Log($"Error: Must specify a full path: {outputFilePath}");
+                    return false;
+                }
+                
                 if (this.IsValid())  //loads into memory if not already loaded
                 {
-                    DirectoryInfo d = new DirectoryInfo(Path.GetDirectoryName(outputFilePath));
+
+                    copydir = Path.GetDirectoryName(outputFilePath);
+
+                    DirectoryInfo d = new DirectoryInfo(copydir);
                     if (d.Root != null && !d.Exists)
                     {
                         //dont try to create if working off root drive
