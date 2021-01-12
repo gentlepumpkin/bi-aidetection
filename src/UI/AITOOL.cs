@@ -1554,7 +1554,7 @@ namespace AITool
                     {
                         pc = minconf / 100;
                         overr += $"({pc})";
-                        StringContent scmc = new StringContent((pc).ToString());
+                        StringContent scmc = new StringContent((pc).ToString().Replace(",","."));  //replace comma with period in cases where the regional decimal symbol is a comma - Deepstack doesnt like that.
                         request.Add(scmc, "min_confidence");
                     }
 
