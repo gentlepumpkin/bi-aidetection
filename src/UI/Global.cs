@@ -1509,11 +1509,16 @@ namespace AITool
                             {
                                 int LastErr = Marshal.GetLastWin32Error();
 
-                                LastFailReason = "(FileLocked)";
+                                if (LastErr == ERROR_SHARING_VIOLATION)
+                                    LastFailReason = "(SharingViolation)";
+                                else if (LastErr == ERROR_LOCK_VIOLATION)
+                                    LastFailReason = "(LockViolation)";
+
+
 
                                 if (LastErr != ERROR_SHARING_VIOLATION && LastErr != ERROR_LOCK_VIOLATION)
                                 {
-                                    LastFailReason = "(Unexpected)";
+                                    LastFailReason = $"(Unexpected-{LastErr})";
                                     //unexpected error, break out
                                     Log($"Error: Unexpected Win32Error waiting for access to {filename}: {LastErr}: {new Win32Exception(LastErr)}");
                                     break;
@@ -1561,7 +1566,7 @@ namespace AITool
 
                     if (!ret.Success || ret.ErrRetryCnt > 0)
                     {
-                        ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay.";
+                        ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay: {Path.GetFileName(filename)}";
                         Log(ret.ResultString);
                     }
 

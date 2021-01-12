@@ -1534,21 +1534,31 @@ namespace AITool
 
                     request.Add(sc, "image", Path.GetFileName(CurImg.image_path));
 
+                    string overr = "(NoLowerThresholdOverride)";
+
                     double minconf = 0;
                     if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && !OverrideThreshold)
+                    {
+                        overr = $"(CAM_LowerThresholdOverride={cam.threshold_lower},Upper={cam.threshold_upper})";
                         minconf = cam.threshold_lower;
+                    }
                     else if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
+                    {
+                        overr = $"(URL_LowerThresholdOverride={AiUrl.Threshold_Lower},Upper={AiUrl.Threshold_Upper})";
                         minconf = AiUrl.Threshold_Lower;
+                    }
+
+                    double pc = 0;
 
                     if (minconf > 0)
                     {
-                        double pc = minconf / 100;
+                        pc = minconf / 100;
+                        overr += $"({pc})";
                         StringContent scmc = new StringContent((pc).ToString());
                         request.Add(scmc, "min_confidence");
                     }
 
-
-                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' {overr} AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
 
                     swposttime.Restart();
 
