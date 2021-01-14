@@ -631,6 +631,7 @@ namespace AITool
                 frm.num_mask_create.Value = this.cam.maskManager.HistoryThresholdCount; // load mask create counter
                 frm.num_mask_remove.Value = this.cam.maskManager.MaskRemoveMins; //load mask remove counter
                 frm.numMaskThreshold.Value = this.cam.maskManager.MaskRemoveThreshold;
+                frm.num_max_unused.Value = this.cam.maskManager.MaxMaskUnusedDays;
 
                 //frm.num_percent_var.Value = (decimal)cam.maskManager.thresholdPercent * 100;
                 frm.num_percent_var.Value = (decimal)this.cam.maskManager.PercentMatch;
@@ -647,6 +648,7 @@ namespace AITool
                     Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
                     Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
                     Int32.TryParse(frm.num_percent_var.Text, out int percent_match);
+                    Int32.TryParse(frm.num_max_unused.Text, out int unused);
 
                     ////convert to percent
                     //Double percent_variance = (double)variance / 100;
@@ -656,6 +658,8 @@ namespace AITool
                     this.cam.maskManager.MaskRemoveMins = mask_remove_mins;
                     this.cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
                     this.cam.maskManager.PercentMatch = percent_match;
+                    this.cam.maskManager.MaxMaskUnusedDays = unused;
+
                     this.cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
                     this.cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
