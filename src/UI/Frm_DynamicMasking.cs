@@ -20,41 +20,26 @@ namespace AITool
 
         private void num_history_mins_Leave(object sender, EventArgs e)
         {
-            if (this.num_history_mins.Text == "")
-            {
-                this.num_history_mins.Text = this.num_history_mins.Value.ToString();
-            }
+            this.num_history_mins.Text = this.num_history_mins.Value.ToString();
         }
 
         private void num_mask_create_Leave(object sender, EventArgs e)
         {
-            if (this.num_mask_create.Text == "")
-            {
-                this.num_mask_create.Text = this.num_mask_create.Value.ToString();
-            }
+            this.num_mask_create.Text = this.num_mask_create.Value.ToString();
         }
 
         private void num_mask_remove_Leave(object sender, EventArgs e)
         {
-            if (this.num_mask_remove.Text == "")
-            {
-                this.num_mask_remove.Text = this.num_mask_remove.Value.ToString();
-            }
+             this.num_mask_remove.Text = this.num_mask_remove.Value.ToString();
         }
 
         private void num_percent_var_Leave(object sender, EventArgs e)
         {
-            if (this.num_percent_var.Text == "")
-            {
-                this.num_percent_var.Text = this.num_percent_var.Value.ToString();
-            }
+             this.num_percent_var.Text = this.num_percent_var.Value.ToString();
         }
         private void numMaskThreshold_Leave(object sender, EventArgs e)
         {
-            if (this.numMaskThreshold.Text == "")
-            {
-                this.numMaskThreshold.Text = this.numMaskThreshold.Value.ToString();
-            }
+             this.numMaskThreshold.Text = this.numMaskThreshold.Value.ToString();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -103,10 +88,7 @@ namespace AITool
 
         private void num_max_unused_Leave(object sender, EventArgs e)
         {
-            if (this.num_max_unused.Text == "")
-            {
-                this.num_max_unused.Text = this.num_max_unused.Value.ToString();
-            }
+            this.num_max_unused.Text = this.num_max_unused.Value.ToString();
         }
     }
 }

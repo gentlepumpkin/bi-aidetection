@@ -184,8 +184,6 @@
             this.btn_input_path = new System.Windows.Forms.Button();
             this.cmbInput = new System.Windows.Forms.ComboBox();
             this.cb_inputpathsubfolders = new System.Windows.Forms.CheckBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
             this.lbl_deepstackurl = new System.Windows.Forms.Label();
             this.dbLayoutPanel1 = new AITool.DBLayoutPanel(this.components);
             this.cb_DeepStackURLsQueued = new System.Windows.Forms.CheckBox();
@@ -220,6 +218,10 @@
             this.label31 = new System.Windows.Forms.Label();
             this.label30 = new System.Windows.Forms.Label();
             this.tb_Pushover_UserKey = new System.Windows.Forms.TextBox();
+            this.dbLayoutPanel9 = new AITool.DBLayoutPanel(this.components);
+            this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
+            this.cbMinimizeToTray = new System.Windows.Forms.CheckBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
             this.Btn_ViewLog = new System.Windows.Forms.Button();
             this.Btn_DeepstackReset = new System.Windows.Forms.Button();
@@ -353,6 +355,7 @@
             this.dbLayoutPanel4.SuspendLayout();
             this.dbLayoutPanel5.SuspendLayout();
             this.dbLayoutPanel8.SuspendLayout();
+            this.dbLayoutPanel9.SuspendLayout();
             this.tabDeepStack.SuspendLayout();
             this.groupBox11.SuspendLayout();
             this.groupBox10.SuspendLayout();
@@ -1198,7 +1201,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(778, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(786, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1211,7 +1214,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(775, 377);
+            this.pictureBox1.Size = new System.Drawing.Size(783, 377);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2224,8 +2227,6 @@
             this.tableLayoutPanel5.Controls.Add(this.lbl_input, 0, 0);
             this.tableLayoutPanel5.Controls.Add(this.lbl_telegram_token, 0, 2);
             this.tableLayoutPanel5.Controls.Add(this.tableLayoutPanel18, 1, 0);
-            this.tableLayoutPanel5.Controls.Add(this.label13, 0, 5);
-            this.tableLayoutPanel5.Controls.Add(this.cbStartWithWindows, 1, 5);
             this.tableLayoutPanel5.Controls.Add(this.lbl_deepstackurl, 0, 1);
             this.tableLayoutPanel5.Controls.Add(this.dbLayoutPanel1, 1, 1);
             this.tableLayoutPanel5.Controls.Add(this.dbLayoutPanel2, 1, 2);
@@ -2237,6 +2238,8 @@
             this.tableLayoutPanel5.Controls.Add(this.dbLayoutPanel5, 1, 7);
             this.tableLayoutPanel5.Controls.Add(this.label29, 0, 3);
             this.tableLayoutPanel5.Controls.Add(this.dbLayoutPanel8, 1, 3);
+            this.tableLayoutPanel5.Controls.Add(this.dbLayoutPanel9, 1, 5);
+            this.tableLayoutPanel5.Controls.Add(this.label13, 0, 5);
             this.tableLayoutPanel5.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
             this.tableLayoutPanel5.RowCount = 8;
@@ -2325,30 +2328,6 @@
             this.cb_inputpathsubfolders.TabIndex = 4;
             this.cb_inputpathsubfolders.Text = "Subfolders";
             this.cb_inputpathsubfolders.UseVisualStyleBackColor = true;
-            // 
-            // label13
-            // 
-            this.label13.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
-            this.label13.Location = new System.Drawing.Point(113, 265);
-            this.label13.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(37, 17);
-            this.label13.TabIndex = 16;
-            this.label13.Text = "Start";
-            // 
-            // cbStartWithWindows
-            // 
-            this.cbStartWithWindows.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.cbStartWithWindows.AutoSize = true;
-            this.cbStartWithWindows.Location = new System.Drawing.Point(155, 265);
-            this.cbStartWithWindows.Margin = new System.Windows.Forms.Padding(2);
-            this.cbStartWithWindows.Name = "cbStartWithWindows";
-            this.cbStartWithWindows.Size = new System.Drawing.Size(182, 17);
-            this.cbStartWithWindows.TabIndex = 17;
-            this.cbStartWithWindows.Text = "Start with user login (non-service)";
-            this.cbStartWithWindows.UseVisualStyleBackColor = true;
             // 
             // lbl_deepstackurl
             // 
@@ -2495,8 +2474,8 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dbLayoutPanel3.ColumnCount = 4;
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.21495F));
-            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 68.80841F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.16822F));
+            this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.85514F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 9.918678F));
             this.dbLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 9.9018F));
             this.dbLayoutPanel3.Controls.Add(this.cb_send_telegram_errors, 0, 0);
@@ -2549,7 +2528,7 @@
             // 
             this.cb_send_pushover_errors.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_send_pushover_errors.AutoSize = true;
-            this.cb_send_pushover_errors.Location = new System.Drawing.Point(99, 13);
+            this.cb_send_pushover_errors.Location = new System.Drawing.Point(227, 13);
             this.cb_send_pushover_errors.Name = "cb_send_pushover_errors";
             this.cb_send_pushover_errors.Size = new System.Drawing.Size(71, 17);
             this.cb_send_pushover_errors.TabIndex = 12;
@@ -2773,6 +2752,58 @@
             this.tb_Pushover_UserKey.Name = "tb_Pushover_UserKey";
             this.tb_Pushover_UserKey.Size = new System.Drawing.Size(267, 25);
             this.tb_Pushover_UserKey.TabIndex = 10;
+            // 
+            // dbLayoutPanel9
+            // 
+            this.dbLayoutPanel9.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dbLayoutPanel9.ColumnCount = 3;
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
+            this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
+            this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
+            this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 252);
+            this.dbLayoutPanel9.Name = "dbLayoutPanel9";
+            this.dbLayoutPanel9.RowCount = 1;
+            this.dbLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.dbLayoutPanel9.Size = new System.Drawing.Size(856, 43);
+            this.dbLayoutPanel9.TabIndex = 24;
+            // 
+            // cbStartWithWindows
+            // 
+            this.cbStartWithWindows.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.cbStartWithWindows.AutoSize = true;
+            this.cbStartWithWindows.Location = new System.Drawing.Point(2, 13);
+            this.cbStartWithWindows.Margin = new System.Windows.Forms.Padding(2);
+            this.cbStartWithWindows.Name = "cbStartWithWindows";
+            this.cbStartWithWindows.Size = new System.Drawing.Size(182, 17);
+            this.cbStartWithWindows.TabIndex = 17;
+            this.cbStartWithWindows.Text = "Start with user login (non-service)";
+            this.cbStartWithWindows.UseVisualStyleBackColor = true;
+            // 
+            // cbMinimizeToTray
+            // 
+            this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.cbMinimizeToTray.AutoSize = true;
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(226, 13);
+            this.cbMinimizeToTray.Name = "cbMinimizeToTray";
+            this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
+            this.cbMinimizeToTray.TabIndex = 18;
+            this.cbMinimizeToTray.Text = "Minimize to Tray";
+            this.cbMinimizeToTray.UseVisualStyleBackColor = true;
+            // 
+            // label13
+            // 
+            this.label13.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(59, 265);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(90, 17);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "Misc Settings";
             // 
             // tabDeepStack
             // 
@@ -3814,6 +3845,8 @@
             this.dbLayoutPanel5.PerformLayout();
             this.dbLayoutPanel8.ResumeLayout(false);
             this.dbLayoutPanel8.PerformLayout();
+            this.dbLayoutPanel9.ResumeLayout(false);
+            this.dbLayoutPanel9.PerformLayout();
             this.tabDeepStack.ResumeLayout(false);
             this.tabDeepStack.PerformLayout();
             this.groupBox11.ResumeLayout(false);
@@ -3946,7 +3979,6 @@
         private System.Windows.Forms.Button Btn_Save;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.ComboBox cmbInput;
-        private System.Windows.Forms.Label label13;
         private System.Windows.Forms.CheckBox cbStartWithWindows;
         private System.Windows.Forms.CheckBox cb_inputpathsubfolders;
         private System.Windows.Forms.Label label14;
@@ -4108,6 +4140,9 @@
         private System.Windows.Forms.TextBox tb_Pushover_UserKey;
         private System.Windows.Forms.CheckBox chk_stopbeforestart;
         private System.Windows.Forms.CheckBox cb_send_pushover_errors;
+        private DBLayoutPanel dbLayoutPanel9;
+        private System.Windows.Forms.CheckBox cbMinimizeToTray;
+        private System.Windows.Forms.Label label13;
     }
 }
 

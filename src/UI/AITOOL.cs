@@ -91,6 +91,7 @@ namespace AITool
         public static Pushover pushoverClient = null;
 
         public static TelegramBotClient telegramBot = null;
+        public static HttpClient telegramHttpClient = null;
 
         public static string srv = "";
 
@@ -512,7 +513,7 @@ namespace AITool
                 if (url.Type != URLTypeEnum.AWSRekognition && url.HttpClient == null)
                 {
                     url.HttpClient = new HttpClient();
-                    url.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                    url.HttpClient.Timeout = url.GetTimeout();
                 }
             }
 
@@ -1558,7 +1559,7 @@ namespace AITool
                         request.Add(scmc, "min_confidence");
                     }
 
-                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' {overr} AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+                    Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image to '{AiUrl.Type}' {overr} AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
 
                     swposttime.Restart();
 
@@ -1672,8 +1673,15 @@ namespace AITool
                 catch (Exception ex)
                 {
                     swposttime.Stop();
-
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    long seconds = swposttime.ElapsedMilliseconds / 1000;
+                    if (seconds >= AiUrl.GetTimeout().TotalSeconds)
+                    {
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {Global.ExMsg(ex)}";
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                   }
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -1717,12 +1725,14 @@ namespace AITool
 
                     WebRequest request = WebRequest.Create(AiUrl.ToString());
 
+                    request.Timeout = AppSettings.Settings.HTTPClientLocalTimeoutSeconds * 1000;
+
                     request.Method = "POST";
                     request.ContentType = "application/json";
                     request.ContentLength = json.Length;
                     request.Headers["X-Access-Token"] = AppSettings.Settings.SightHoundAPIKey;
 
-                    Log($"Debug: (1/6) Uploading a {FileSize} byte image ({body.Length} bytes in request) to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+                    Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image ({body.Length} bytes in request) to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
 
                     swposttime.Restart();
 
@@ -1867,8 +1877,15 @@ namespace AITool
                 catch (Exception ex)
                 {
                     swposttime.Stop();
-
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    long seconds = swposttime.ElapsedMilliseconds / 1000;
+                    if (seconds >= AiUrl.GetTimeout().TotalSeconds)
+                    {
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {Global.ExMsg(ex)}";
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    }
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -1915,7 +1932,7 @@ namespace AITool
 
                         request.Content = httpContent;
 
-                        Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+                        Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
 
 
                         //  Got http status code 'RequestEntityTooLarge' (413) in 42ms: Request Entity Too Large
@@ -2015,6 +2032,16 @@ namespace AITool
                 {
                     swposttime.Stop();
 
+                    long seconds = swposttime.ElapsedMilliseconds / 1000;
+                    if (seconds >= AiUrl.GetTimeout().TotalSeconds)
+                    {
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {Global.ExMsg(ex)}";
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    }
+
                     ret.Error = $"ERROR: {Global.ExMsg(ex)}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
@@ -2043,7 +2070,7 @@ namespace AITool
 
                     RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
                     AmazonRekognitionClient rekognitionClient = new AmazonRekognitionClient(new BasicAWSCredentials(AppSettings.Settings.AmazonAccessKeyId, AppSettings.Settings.AmazonSecretKey), endpoint);
-
+                    
                     DetectLabelsRequest dlr = new DetectLabelsRequest();
 
                     dlr.MaxLabels = AppSettings.Settings.AmazonMaxLabels;
@@ -2070,7 +2097,7 @@ namespace AITool
                     dlr.Image = rekognitionImgage;
 
 
-                    Log($"Debug: (1/6) Uploading a {FileSize} byte image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+                    Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
 
                     swposttime.Restart();
 
@@ -2175,13 +2202,13 @@ namespace AITool
             {
                 try
                 {
-                    Log($"Debug: Starting analysis of {CurImg.image_path}...", AiUrl.CurSrv, cam, CurImg);
 
-                    // Wait up to 30 seconds to gain access to the file that was just created.This should
-                    //prevent the need to retry in the detection routine
+                    Log($"Debug: Starting analysis of {CurImg.image_path}...", AiUrl.CurSrv, cam, CurImg);
 
                     if (CurImg.IsValid())  //Waits for access and loads into memory if not already loaded
                     {
+
+                        Log($"Debug: (Image resolution={CurImg.Width}x{CurImg.Height})", AiUrl.CurSrv, cam, CurImg);
 
                         string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
                         string file = Path.Combine(fldr, $"{cam.Name}-Last.jpg");
@@ -2273,6 +2300,14 @@ namespace AITool
                                         Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam, CurImg);
 
                                 }
+
+                                // check to see if we can get a refinement server URL to postprocess 
+                                //wait for the next url to become available...
+                                
+
+                                //ClsURLItem PostProcessURL = await WaitForNextURL(cam, false);
+
+                                //asdfasdf
 
                                 //mark the end of AI detection for the current image
                                 cam.maskManager.LastDetectionDate = DateTime.Now;
@@ -2447,6 +2482,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
+                    
                     error = $"ERROR: {Global.ExMsg(ex)}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = error;

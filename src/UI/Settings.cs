@@ -78,7 +78,9 @@ namespace AITool
             public int MaxHistoryAgeDays = 14;
             public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
-            public int HTTPClientTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            [JsonProperty("HTTPClientTimeoutSeconds")]
+            public int HTTPClientLocalTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            public int HTTPClientRemoteTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
                                                         //public int MaxDeepStackProcessTimeSeconds = 120;
 
@@ -102,6 +104,10 @@ namespace AITool
             public bool mqtt_UseTLS = false;
             public string mqtt_password = "password";
             public string mqtt_clientid = "AITool";
+            public string mqtt_LastWillTopic = "AITool/status";
+            public string mqtt_LastWillPayload = "Offline";
+            public string mqtt_OnlinePayload = "Online";
+
 
             public string pushover_APIKey = "";
             public string pushover_UserKey = "";
@@ -151,6 +157,8 @@ namespace AITool
             public string SightHoundAPIKey = "";   //https://accounts.sighthound.com/#/sighthound-cloud
 
             public int ActionCancelSeconds = 30;
+
+            public bool MinimizeToTray = true;
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 

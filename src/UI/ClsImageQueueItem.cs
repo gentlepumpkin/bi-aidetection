@@ -194,7 +194,7 @@ namespace AITool
                                         img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
                                         this.ImageByteArray = ms.ToArray();
                                         this.FileLoadMS = sw.ElapsedMilliseconds;
-                                        AITOOL.Log($"Debug: Image file is valid. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
+                                        AITOOL.Log($"Debug: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
                                         break;
                                     }
                                 }

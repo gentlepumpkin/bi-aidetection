@@ -361,7 +361,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Debug:   -> Image copied to network folder.", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug:   -> Image copied to network folder {newimagepath}", this.CurSrv, AQI.cam, AQI.CurImg);
                             //set the image path to the new path so all imagename variable works
                             AQI.CurImg = new ClsImageQueueItem(newimagepath, 1);
                         }
@@ -1186,8 +1186,14 @@ namespace AITool
 
                             if (Global.IsTimeBetween(now, AQI.cam.telegram_active_time_range))
                             {
-                                if (AITOOL.telegramBot == null)
-                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+                                if (AITOOL.telegramBot == null || AITOOL.telegramHttpClient == null)
+                                {
+                                    AITOOL.telegramHttpClient = new System.Net.Http.HttpClient();
+                                    AITOOL.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, AITOOL.telegramHttpClient);
+                                    //this may be redundant:
+                                    AITOOL.telegramBot.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+                                }
 
                                 string chatid = "";
                                 bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
@@ -1346,8 +1352,14 @@ namespace AITool
                                 else
                                     chatid = AppSettings.Settings.telegram_chatids[0];
 
-                                if (AITOOL.telegramBot == null)
-                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token);
+                                if (AITOOL.telegramBot == null || AITOOL.telegramHttpClient == null)
+                                {
+                                    AITOOL.telegramHttpClient = new System.Net.Http.HttpClient();
+                                    AITOOL.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, AITOOL.telegramHttpClient);
+                                    //this may be redundant:
+                                    AITOOL.telegramBot.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+                                }
 
                                 if (overrideid)
                                 {

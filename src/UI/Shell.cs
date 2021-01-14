@@ -192,6 +192,7 @@ namespace AITool
                 this.cb_send_telegram_errors.Checked = AppSettings.Settings.send_telegram_errors;
                 this.cb_send_pushover_errors.Checked = AppSettings.Settings.send_pushover_errors;
                 this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
+                this.cbMinimizeToTray.Checked = AppSettings.Settings.MinimizeToTray;
 
                 this.tb_username.Text = AppSettings.Settings.DefaultUserName;
                 this.tb_password.Text = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
@@ -298,7 +299,7 @@ namespace AITool
 
                 IsLoading.WriteFullFence(false);
 
-                Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
+                this.Resize += new System.EventHandler(this.Form1_Resize); //resize event to enable 'minimize to tray'
 
                 Log($"{{yellow}}APP START complete.  Initialized in {this.StartupSW.Elapsed.TotalSeconds.ToString("##0.0")} seconds ({this.StartupSW.ElapsedMilliseconds}ms)");
 
@@ -971,6 +972,9 @@ namespace AITool
         {
 
             if (IsClosing.ReadFullFence())
+                return;
+
+            if (!AppSettings.Settings.MinimizeToTray)
                 return;
 
             try
@@ -2873,6 +2877,7 @@ namespace AITool
             AppSettings.Settings.send_telegram_errors = this.cb_send_telegram_errors.Checked;
             AppSettings.Settings.send_pushover_errors = this.cb_send_pushover_errors.Checked;
             AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
+            AppSettings.Settings.MinimizeToTray = this.cbMinimizeToTray.Checked;
 
             AppSettings.Settings.DefaultUserName = this.tb_username.Text.Trim();
             AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text.Trim());

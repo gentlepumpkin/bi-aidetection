@@ -279,7 +279,7 @@ namespace NPushover
             if (this.httpClient == null)
             {
                 this.httpClient = new HttpClient();
-                this.httpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.httpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
             }
 
             // Remove content type that is not in the docs

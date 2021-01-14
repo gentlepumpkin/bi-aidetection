@@ -29,7 +29,7 @@ namespace AITool
         Error = 9,
         Unknown = 10
     }
-    public class ClsPrediction
+    public class ClsPrediction : IEquatable<ClsPrediction>
     {
         private ObjectType _defaultObjType;
         private Camera _cam;
@@ -730,6 +730,38 @@ namespace AITool
                 this.ObjType = ObjectType.Vehicle;
             else
                 this.ObjType = this._defaultObjType;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ClsPrediction);
+        }
+
+        public bool Equals(ClsPrediction other)
+        {
+            if (other == null)
+                return false;
+
+            string tmp1 = this.Label.Trim().ToLower();
+            string tmp2 = other.Label.Trim().ToLower();
+
+            if (tmp1.Contains("["))
+                tmp1 = Global.GetWordBetween(tmp1, "", "[").Trim();
+
+            if (tmp2.Contains("["))
+                tmp2 = Global.GetWordBetween(tmp2, "", "[").Trim();
+
+            return tmp1 == tmp2;
+        }
+
+        public static bool operator ==(ClsPrediction left, ClsPrediction right)
+        {
+            return EqualityComparer<ClsPrediction>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ClsPrediction left, ClsPrediction right)
+        {
+            return !(left == right);
         }
     }
 }

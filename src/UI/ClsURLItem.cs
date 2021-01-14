@@ -48,6 +48,7 @@ namespace AITool
         public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
         public bool IsLocalHost { get; set; } = false;
+        public bool IsLocalNetwork { get; set; } = false;
         public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public string LastResultMessage { get; set; } = "";
@@ -55,6 +56,7 @@ namespace AITool
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
         public int Port { get; set; } = 0;
+        public int HttpClientTimeoutSeconds = 0;
         public string DefaultURL { get; set; } = "";
         [JsonIgnore]
         public HttpClient HttpClient { get; set; }
@@ -71,6 +73,16 @@ namespace AITool
             this.ErrCount.AtomicIncrementAndGet();
         }
 
+        public TimeSpan GetTimeout()
+        {
+            if (this.HttpClientTimeoutSeconds > 0)
+                return TimeSpan.FromSeconds(this.HttpClientTimeoutSeconds);
+            else if (this.IsLocalNetwork)
+                return TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds);
+            else
+                return TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+
+        }
        
         [JsonConstructor]
         public ClsURLItem() { }
@@ -135,8 +147,9 @@ namespace AITool
                 this.CurSrv = uri.Host + ":" + uri.Port;
                 this.Port = uri.Port;
                 this.IsLocalHost = Global.IsLocalHost(uri.Host);
+                this.IsLocalNetwork = Global.IsLocalNetwork(uri.Host);
                 this.HttpClient = new HttpClient();
-                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.HttpClient.Timeout = this.GetTimeout();
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
             }
@@ -148,7 +161,7 @@ namespace AITool
                 this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
                 this.Type = URLTypeEnum.AWSRekognition;
                 this.IsLocalHost = false;
-
+                this.IsLocalNetwork = false;
                 string error = AITOOL.UpdateAmazonSettings();
 
                 if (string.IsNullOrEmpty(error))
@@ -189,6 +202,7 @@ namespace AITool
                 this.CurSrv = uri.Host + ":" + uri.Port;
                 this.Port = uri.Port;
                 this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
                 this.HttpClient = null;
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
@@ -217,6 +231,7 @@ namespace AITool
                 this.CurSrv = uri.Host + ":" + uri.Port;
                 this.Port = uri.Port;
                 this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
                 this.HttpClient = null;
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
@@ -249,9 +264,9 @@ namespace AITool
                 this.Port = uri.Port;
 
                 this.IsLocalHost = Global.IsLocalHost(uri.Host);
-
+                this.IsLocalNetwork = Global.IsLocalNetwork(uri.Host);
                 this.HttpClient = new HttpClient();
-                this.HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
+                this.HttpClient.Timeout = this.GetTimeout();
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
             }
@@ -288,6 +303,7 @@ namespace AITool
                     {
                         ret = true;
                         this.IsLocalHost = Global.IsLocalHost(uri.Host);
+                        this.IsLocalNetwork = Global.IsLocalNetwork(uri.Host);
                         if (this.IsLocalHost)
                         {
                             if (this.IsLocalHost)
@@ -305,6 +321,7 @@ namespace AITool
             {
 
                 this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
                 if (this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase))
                 {
                     ret = true;
@@ -318,6 +335,8 @@ namespace AITool
                     this.UrlFixed = true;
                     this.url = "https://" + this.url;
                 }
+                this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
 
                 bool hasdet = this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0;
                 bool hasrec = this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -340,6 +359,9 @@ namespace AITool
                     this.UrlFixed = true;
                     this.url = "https://" + this.url;
                 }
+
+                this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
 
                 bool hasdet = this.url.IndexOf("/v1/detections", StringComparison.OrdinalIgnoreCase) >= 0;
                 bool hasrec = this.url.IndexOf("/v1/recognition", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -380,6 +402,7 @@ namespace AITool
                     {
                         ret = true;
                         this.IsLocalHost = Global.IsLocalHost(uri.Host);
+                        this.IsLocalNetwork = Global.IsLocalHost(uri.Host);
                         if (this.IsLocalHost)
                         {
                             //force it to always be 127.0.0.1 for localhost

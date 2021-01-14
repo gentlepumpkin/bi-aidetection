@@ -596,6 +596,20 @@ namespace AITool
 
 
         }
+
+        public static bool IsLocalNetwork(string HostNameOrIPAddress)
+        {
+            return IsLocalHost(HostNameOrIPAddress) ||
+                   HostNameOrIPAddress.StartsWith("10.") ||
+                   HostNameOrIPAddress.StartsWith("192.168.") ||
+                   HostNameOrIPAddress.StartsWith("172.16.") ||
+                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("10.") ||
+                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("172.16.") ||
+                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("192.168.");
+
+
+
+        }
         public static async Task<bool> IsLocalHostAsync(string HostNameOrIPAddress)
         {
             return string.IsNullOrEmpty(HostNameOrIPAddress) ||

@@ -4,6 +4,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Protocol;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -120,6 +121,13 @@ namespace AITool
                 //parameters.
                 //=====================================================================
 
+                var lw = new MqttApplicationMessage()
+                {
+                    Topic = AppSettings.Settings.mqtt_LastWillTopic,
+                    Payload = Encoding.UTF8.GetBytes(AppSettings.Settings.mqtt_LastWillPayload),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                    Retain = true
+                };
 
 
                 if (UseTLS)
@@ -134,9 +142,10 @@ namespace AITool
                                 .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
                                 .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
                                 .WithTls()
+                                .WithWillMessage(lw)
                                 .WithCleanSession()
                                 .Build();
-
+                            
                         }
                         else
                         {
@@ -145,6 +154,7 @@ namespace AITool
                                 .WithTcpServer(server, portint)
                                 .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
                                 .WithTls()
+                                .WithWillMessage(lw)
                                 .WithCleanSession()
                                 .Build();
                         }
@@ -158,6 +168,7 @@ namespace AITool
                                 .WithClientId(AppSettings.Settings.mqtt_clientid)
                                 .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
                                 .WithTls()
+                                .WithWillMessage(lw)
                                 .WithCleanSession()
                                 .Build();
 
@@ -168,6 +179,7 @@ namespace AITool
                                 .WithClientId(AppSettings.Settings.mqtt_clientid)
                                 .WithTcpServer(server, portint)
                                 .WithTls()
+                                .WithWillMessage(lw)
                                 .WithCleanSession()
                                 .Build();
 
@@ -186,6 +198,7 @@ namespace AITool
                             .WithClientId(AppSettings.Settings.mqtt_clientid)
                             .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
                             .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithWillMessage(lw)
                             .WithCleanSession()
                             .Build();
 
@@ -196,6 +209,7 @@ namespace AITool
                             .WithClientId(AppSettings.Settings.mqtt_clientid)
                             .WithTcpServer(server, portint)
                             .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithWillMessage(lw)
                             .WithCleanSession()
                             .Build();
 
@@ -209,6 +223,7 @@ namespace AITool
                             options = new MqttClientOptionsBuilder()
                             .WithClientId(AppSettings.Settings.mqtt_clientid)
                             .WithTcpServer(server, portint)
+                            .WithWillMessage(lw)
                             .WithCleanSession()
                             .Build();
 
@@ -218,6 +233,7 @@ namespace AITool
                             options = new MqttClientOptionsBuilder()
                             .WithClientId(AppSettings.Settings.mqtt_clientid)
                             .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                            .WithWillMessage(lw)
                             .WithCleanSession()
                             .Build();
 
@@ -245,8 +261,7 @@ namespace AITool
                 {
                     Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
                     Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                    if (e.ApplicationMessage.Payload.Length < 64)
-                        Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                    Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload).Truncate(128,true)}");
                     Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                     Log("");
@@ -258,8 +273,18 @@ namespace AITool
                 {
                     IsConnected = true;
                     Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
-
                     
+
+                    MqttApplicationMessage ma = new MqttApplicationMessageBuilder()
+                                                    .WithTopic(AppSettings.Settings.mqtt_LastWillTopic)
+                                                    .WithPayload(AppSettings.Settings.mqtt_OnlinePayload)
+                                                    .WithAtLeastOnceQoS()
+                                                    .WithRetainFlag(true)
+                                                    .Build();
+
+                    Log($"Debug: MQTT: Sending '{AppSettings.Settings.mqtt_OnlinePayload}' message...");
+                    MqttClientPublishResult res = await mqttClient.PublishAsync(ma, CancellationToken.None);
+
                     //if (!string.IsNullOrWhiteSpace(this.LastTopic))
                     //{
                     //    // Subscribe to the topic
@@ -333,7 +358,7 @@ namespace AITool
                                                      .WithAtLeastOnceQoS()
                                                      .WithRetainFlag(this.LastRetain)
                                                      .Build();
-
+                                            
                                             res = await mqttClient.PublishAsync(ma, CancellationToken.None);
 
 

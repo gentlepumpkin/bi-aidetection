@@ -37,7 +37,7 @@ namespace AITool
             try
             {
                 //first check for saved image in cameras folder. If doesn't exist load the last camera image.
-                if (this.pbMaskImage.Tag == null || this.pbMaskImage.Tag.ToString().ToLower() != this.Cam.last_image_file.ToLower())
+                if (this.pbMaskImage.Tag == null || !string.Equals(this.pbMaskImage.Tag.ToString(), this.Cam.last_image_file, StringComparison.OrdinalIgnoreCase))
                 {
                     this.pbMaskImage.Tag = this.Cam.last_image_file;
 
@@ -257,7 +257,7 @@ namespace AITool
         private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
             Global_GUI.RestoreWindowState(this);
-            this._maskfilename = AITOOL.GetMaskFile(this.Cam.Name);
+            this._maskfilename = AITOOL.GetMaskFile(this.Cam);
             this.Text = "Custom Masking - " + this._maskfilename;
 
             if (!File.Exists(this._maskfilename))
@@ -403,7 +403,9 @@ namespace AITool
                 if (this._transparentLayer != null)
                 {
                     //save masks at 50% opacity 
-                    this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY).Save(this._maskfilename);
+                    Bitmap img = this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY);
+                    img.Save(this._maskfilename);
+                    Log($"Mask file saved.  Resolution={img.Width}x{img.Height}. Transparency Resolution={this._transparentLayer.Width}x{this._transparentLayer.Height} : " + this._maskfilename);
                 }
 
                 this.DialogResult = DialogResult.OK;
