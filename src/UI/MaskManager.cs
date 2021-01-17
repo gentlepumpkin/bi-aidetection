@@ -68,6 +68,8 @@ namespace AITool
 
         public void Update(Camera cam)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             lock (this._maskLockObject)
             {
                 //This will run on save/load settings
@@ -144,6 +146,8 @@ namespace AITool
 
         public void RemoveActiveMask(ObjectPosition op)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             lock (this._maskLockObject)
             {
                 try
@@ -169,6 +173,8 @@ namespace AITool
         }
         public void RemoveHistoryMask(ObjectPosition op)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             lock (this._maskLockObject)
             {
                 try
@@ -196,6 +202,8 @@ namespace AITool
 
         public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject, bool forceStatic = false, bool forceDynamic = false)
         {
+            
+            
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             MaskResultInfo returnInfo = new MaskResultInfo();
@@ -305,6 +313,8 @@ namespace AITool
         ========================================================================*/
         private MaskResultInfo forceMaskCreation(bool forceStatic, bool forceDynamic, ObjectPosition currentObject)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             MaskResultInfo returnInfo = new MaskResultInfo();
 
             int idx = this.MaskedPositions.IndexOf(currentObject);

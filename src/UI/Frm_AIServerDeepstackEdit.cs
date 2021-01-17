@@ -41,6 +41,8 @@ namespace AITool
             this.linkHelpURL.Text = this.CurURL.HelpURL;
             this.tb_Lower.Text = this.CurURL.Threshold_Lower.ToString();
             this.tb_Upper.Text = this.CurURL.Threshold_Upper.ToString();
+            this.tb_timeout.Text = this.CurURL.HttpClientTimeoutSeconds.ToString();
+            this.labelTimeout.Text = $"Timeout Seconds Override (Default={this.CurURL.GetTimeout().TotalSeconds}):";
 
             this.cb_RefinementServer.Checked = this.CurURL.UseAsRefinementServer;
             this.tb_RefinementObjects.Text = this.CurURL.RefinementObjects;
@@ -51,6 +53,9 @@ namespace AITool
             }
 
             this.cb_ImageAdjustProfile.SelectedIndex = this.cb_ImageAdjustProfile.Items.IndexOf(this.CurURL.DefaultURL);
+
+            Global_GUI.GroupboxEnableDisable(groupBox1, chk_Enabled);
+
 
         }
 
@@ -111,6 +116,7 @@ namespace AITool
             this.CurURL.RefinementObjects = this.tb_RefinementObjects.Text.Trim();
             this.CurURL.UseAsRefinementServer = this.cb_RefinementServer.Checked;
 
+            this.CurURL.HttpClientTimeoutSeconds = Convert.ToInt32(this.tb_timeout.Text.Trim());
 
 
         }
@@ -201,6 +207,11 @@ namespace AITool
         private void cb_RefinementServer_CheckedChanged(object sender, EventArgs e)
         {
             tb_RefinementObjects.Enabled = cb_RefinementServer.Checked;
+        }
+
+        private void chk_Enabled_CheckedChanged(object sender, EventArgs e)
+        {
+            Global_GUI.GroupboxEnableDisable(groupBox1, chk_Enabled);
         }
     }
 }

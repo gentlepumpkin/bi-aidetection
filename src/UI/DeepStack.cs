@@ -452,6 +452,7 @@ namespace AITool
         private string LastStdErr = "";
         public string GetStdErr()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
             string ret = "";
             try
             {
@@ -860,6 +861,8 @@ namespace AITool
         }
         public void ResetDeepstack()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             try
             {
                 if (this.IsStarted)

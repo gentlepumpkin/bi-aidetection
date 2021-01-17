@@ -209,6 +209,8 @@ namespace NPushover
         public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, string[] deviceNames, ClsImageQueueItem CurImg)
         {
 
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             PushoverUserResponse ret = new PushoverUserResponse();
 
             try
@@ -273,6 +275,8 @@ namespace NPushover
 
         private async Task<PushoverUserResponse> PushoverPost(Uri uri, MultipartFormDataContent parameters)
         {
+
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             PushoverUserResponse ret = new PushoverUserResponse();
 

@@ -602,6 +602,9 @@ namespace AITool
                         if (string.IsNullOrEmpty(cam.MaskFileName))
                             cam.MaskFileName = $"{cam.Name}.bmp";
 
+                        if (cam.ImageResolutions.Count == 0)
+                            cam.ScanImages(10,500,-1);//run a quick scan to get resolutions
+
                         if (cam.cooldown_time > -1)
                         {
                             cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));

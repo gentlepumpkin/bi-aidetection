@@ -2624,7 +2624,7 @@ namespace AITool
 
                 if (cam.Name != this.tbName.Text.Trim())
                 {
-                    string Oldmaskfile = GetMaskFile(cam);
+                    string Oldmaskfile = cam.GetMaskFile(false);
                     if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
                     {
                         string ext = Path.GetExtension(Oldmaskfile);

@@ -69,6 +69,8 @@ namespace AITool
 
         public MQTTClient()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             try
             {
                 this.factory = new MqttFactory();
@@ -85,6 +87,8 @@ namespace AITool
 
         public async Task<bool> Connect()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool ret = false;
             try
             {

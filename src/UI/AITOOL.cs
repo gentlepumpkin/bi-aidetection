@@ -92,6 +92,7 @@ namespace AITool
 
         public static TelegramBotClient telegramBot = null;
         public static HttpClient telegramHttpClient = null;
+        public static HttpClient triggerHttpClient = null;
 
         public static string srv = "";
 
@@ -441,6 +442,8 @@ namespace AITool
         public static string UpdateAmazonSettings()
         {
 
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) == null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
                 return "";
 
@@ -506,6 +509,8 @@ namespace AITool
 
         public static void UpdateAIURLList(bool Force = false)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             //double check all the URL's have a new httpclient
             foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
             {
@@ -600,6 +605,7 @@ namespace AITool
         public static async Task<ClsURLItem> WaitForNextURL(Camera cam, bool AllowRefinementServer)
         {
             //lets wait in here forever until a URL is available...
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             ClsURLItem ret = null;
 
@@ -1346,6 +1352,7 @@ namespace AITool
 
         public static async Task<System.Drawing.Image> ApplyImageAdjustProfileAsync(ClsImageAdjust IAProfile, string InputImageFile, string OutputImageFile)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             System.Drawing.Image retimg = null;
             SixLabors.ImageSharp.Image ISImage = null;
@@ -1514,6 +1521,8 @@ namespace AITool
 
         public static async Task<ClsAIServerResponse> GetDetectionsFromAIServer(ClsImageQueueItem CurImg, ClsURLItem AiUrl, Camera cam)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             ClsAIServerResponse ret = new ClsAIServerResponse();
 
             bool OverrideThreshold = AiUrl.Threshold_Lower > 0 || (AiUrl.Threshold_Upper > 0 && AiUrl.Threshold_Upper < 100);
@@ -2207,8 +2216,9 @@ namespace AITool
 
                     if (CurImg.IsValid())  //Waits for access and loads into memory if not already loaded
                     {
+                        cam.UpdateImageResolutions(CurImg);
 
-                        Log($"Debug: (Image resolution={CurImg.Width}x{CurImg.Height})", AiUrl.CurSrv, cam, CurImg);
+                        Log($"Debug: (Image resolution={CurImg.Width}x{CurImg.Height} @ {CurImg.DPI} DPI and {Global.FormatBytes(CurImg.FileSize)})", AiUrl.CurSrv, cam, CurImg);
 
                         string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
                         string file = Path.Combine(fldr, $"{cam.Name}-Last.jpg");
@@ -2225,7 +2235,7 @@ namespace AITool
                         if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
                         {
 
-                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(32, true)}'", AiUrl.CurSrv, cam, CurImg);
+                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
                             Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
 
 
@@ -2539,75 +2549,13 @@ namespace AITool
         {
             Camera cam = GetCamera(cameraname, false);
             if (cam != null)
-                return GetMaskFile(cam);
+                return cam.GetMaskFile(true);
             else
                 return "";
         }
 
-        //check if detected object is outside the mask for the specific camera
-        //TODO: refacotor png, bmp mask logic later. This is just a starting point. 
-        public static string GetMaskFile(Camera cam)
-        {
-            string ret = "";
-            try
-            {
-
-
-                //we are not using cameras folder any longer
-
-                List<string> files = new List<string>();
-
-                //this is for future support of storing all settings files in one folder such as AppData, or simply \SETTINGS
-                string CamMaskFile = "";
-                if (!string.IsNullOrEmpty(cam.MaskFileName))
-                {
-                    if (cam.MaskFileName.Contains("\\") && cam.MaskFileName.Contains("."))
-                        CamMaskFile = cam.MaskFileName;
-                    else if (cam.MaskFileName.Contains("."))
-                        CamMaskFile = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.MaskFileName}");
-                    else
-                        CamMaskFile = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.MaskFileName}.bmp");
-
-                    ret = CamMaskFile;
-                    return ret;
-                }
-
-                files.Add(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.Name}.bmp"));
-                files.Add(Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.BICamName}.bmp"));
-                //original cameras folder
-                //files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.bmp"));
-                //files.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras", $"{cameraname}.png"));
-
-                foreach (string fil in files)
-                {
-                    if (System.IO.File.Exists(fil))
-                    {
-                        ret = fil;
-                        break;
-                    }
-                }
-                if (string.IsNullOrEmpty(ret))
-                {
-                    if (string.IsNullOrEmpty(CamMaskFile))
-                    {
-                        ret = CamMaskFile;
-                    }
-                    else
-                    {
-                        ret = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{cam.Name}.bmp");
-                    }
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-
-                Log("Error: " + Global.ExMsg(ex));
-            }
-            return ret;
-
-        }
+       
+        
         public static MaskResultInfo Outsidemask(Camera cam, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -2620,16 +2568,16 @@ namespace AITool
             try
             {
 
-                foundfile = GetMaskFile(cam);
+                foundfile = cam.GetMaskFile(true);
 
-                if (System.IO.File.Exists(foundfile))
+                if (!string.IsNullOrEmpty(foundfile) && System.IO.File.Exists(foundfile))
                 {
                     Log($"Debug:     ->Using found mask file {foundfile}...");
                     fileType = Path.GetExtension(foundfile).ToLower();
                 }
                 else
                 {
-                    Log("Debug:     ->Camera has no mask, the object is OUTSIDE of the masked area.");
+                    Log($"Debug:     ->Camera has no mask file yet");
                     ret.IsMasked = false;
                     ret.MaskType = MaskType.None;
                     ret.Result = MaskResult.NoMaskImageFile;
@@ -2864,6 +2812,8 @@ namespace AITool
 
         public static Camera GetCamera(String ImageOrNameOrPrefix, bool ReturnDefault = true)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             Camera cam = null;
             try
             {

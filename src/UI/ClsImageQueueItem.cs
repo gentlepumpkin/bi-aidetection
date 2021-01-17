@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace AITool
 {
@@ -25,9 +26,12 @@ namespace AITool
         public string ResultMessage { get; set; } = "";
         public int Width { get; set; } = 0;
         public int Height { get; set; } = 0;
+        public float DPI { get; set; } = 0;
+        public long FileSize { get; set; } = 0;
         public byte[] ImageByteArray { get; set; } = null;
         private bool _valid { get; set; } = false;
         private bool _loaded { get; set; } = false;
+        private bool _Temp { get; set; } = false;
         public bool IsValid()
         {
             if (!this._loaded)
@@ -37,6 +41,8 @@ namespace AITool
 
         public bool CopyFileTo(string outputFilePath)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool ret = false;
             
             int bufferSize = 1024 * 1024;
@@ -89,6 +95,10 @@ namespace AITool
                                 fileStream.Write(bytes, 0, bytesRead);
                             }
                         }
+
+                        //wait for a small amount of time to allow the file to become accessible to blue iris - trying to prevent blank alert image in BI
+                        //Thread.Sleep(50);
+
                         ret = true;
                     }
                     else
@@ -110,21 +120,25 @@ namespace AITool
             return ret;
 
         }
-        public ClsImageQueueItem(String FileName, long CurQueueSize)
+        public ClsImageQueueItem(String FileName, long CurQueueSize, bool Temp = false)
         {
             this.image_path = FileName;
             this.TimeAdded = DateTime.Now;
             this.CurQueueSize = CurQueueSize;
+            this._Temp = Temp;
             FileInfo fi = new FileInfo(this.image_path);
             if (fi.Exists)
             {
                 this.TimeCreated = fi.CreationTime;
                 this.TimeCreatedUTC = fi.CreationTimeUtc;
+                this.FileSize = fi.Length;
             }
 
         }
         public MemoryStream ToStream()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             MemoryStream ms = new MemoryStream();
 
             if (this.IsValid())
@@ -147,11 +161,15 @@ namespace AITool
         }
         public void LoadImage()
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             //since having a lot of trouble with image access problems, try to wait for image to become available, validate the image and load
             //a single time rather than multiple
             Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
             string LastError = "";
             this._valid = false;
+            bool validate = !this._Temp;
+
             try
             {
                 if (!string.IsNullOrEmpty(this.image_path) && File.Exists(this.image_path))
@@ -159,7 +177,20 @@ namespace AITool
                     Stopwatch sw = Stopwatch.StartNew();
                     do
                     {
-                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, 10000, 50, true, 4096);
+                        int MaxWaitMS = 0;
+                        int MaxRetries = 0;
+                        if (this._Temp)
+                        {
+                            MaxWaitMS = 500;
+                            MaxRetries = 2;
+                        }
+                        else
+                        {
+                            MaxWaitMS = 10000;
+                            MaxRetries = 100;
+                        }
+
+                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, MaxWaitMS, 50, true, 4096, MaxRetries);
 
                         this.FileLockMS = sw.ElapsedMilliseconds;
                         this.FileLockErrRetryCnt += result.ErrRetryCnt;
@@ -173,15 +204,16 @@ namespace AITool
                                 // Open a FileStream object using the passed in safe file handle.
                                 using (FileStream fileStream = new FileStream(result.Handle, FileAccess.Read))
                                 {
-                                    using System.Drawing.Image img = System.Drawing.Image.FromStream(fileStream,true,true);
 
-                                    this._valid = img !=null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    using System.Drawing.Image img = System.Drawing.Image.FromStream(fileStream,true,validate);
+                                   
+                                    this._valid = img !=null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg) && img.Width > 0 && img.Height > 0;
 
                                     this.FileLoadMS = sw.ElapsedMilliseconds;
 
                                     if (!this._valid)
                                     {
-                                        LastError = $"Error: Image file is not jpeg? LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt} - ({img.RawFormat}): {this.image_path}";
+                                        LastError = $"Error: Image file is not jpeg? {this.image_path}";
                                         AITOOL.Log(LastError);
                                         break;
                                     }
@@ -189,12 +221,21 @@ namespace AITool
                                     {
                                         this.Width = img.Width;
                                         this.Height = img.Height;
-                                        using MemoryStream ms = new MemoryStream();
-                                        //fileStream.CopyTo(ms);
-                                        img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                        this.ImageByteArray = ms.ToArray();
-                                        this.FileLoadMS = sw.ElapsedMilliseconds;
-                                        AITOOL.Log($"Debug: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
+                                        this.DPI = img.HorizontalResolution;
+                                        if (this._Temp)
+                                        {
+                                            this.FileLoadMS = sw.ElapsedMilliseconds;
+                                        }
+                                        else
+                                        {
+                                            using MemoryStream ms = new MemoryStream();
+                                            //fileStream.CopyTo(ms);
+                                            img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+                                            this.ImageByteArray = ms.ToArray();
+                                            this.FileSize = this.ImageByteArray.Length;
+                                            this.FileLoadMS = sw.ElapsedMilliseconds;
+                                            AITOOL.Log($"Debug: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
+                                        }
                                         break;
                                     }
                                 }
@@ -203,7 +244,7 @@ namespace AITool
                             catch (Exception ex)
                             {
                                 this._valid = false;
-                                LastError = $"Error: Image is corrupt. LockMS={this.FileLockMS}ms, retries={this.FileLockErrRetryCnt}: {Global.ExMsg(ex)}";
+                                LastError = $"Error: Image is corrupt. LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}: {Path.GetFileName(this.image_path)} - {Global.ExMsg(ex)}";
                             }
                             finally 
                             {
@@ -219,8 +260,14 @@ namespace AITool
                         }
                         else
                         {
-                            LastError = $"Error: Could not gain access to the image in {result.TimeMS}ms, retries={result.ErrRetryCnt}.";
+                            if (this._Temp)
+                                LastError = $"Debug: Could not gain access to the image in {result.TimeMS}ms, retries={result.ErrRetryCnt}: {Path.GetFileName(this.image_path)}";
+                            else
+                                LastError = $"Error: Could not gain access to the image in {result.TimeMS}ms, retries={result.ErrRetryCnt}: {Path.GetFileName(this.image_path)}";
                         }
+
+                        if (this._Temp) //only one loop
+                            break;
 
                     } while ((!result.Success || !this._valid) && sw.ElapsedMilliseconds < 30000);
 

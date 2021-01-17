@@ -41,8 +41,12 @@ namespace AITool
             this.tb_ApplyToCams = new System.Windows.Forms.TextBox();
             this.chk_Enabled = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tb_RefinementObjects = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.cb_RefinementServer = new System.Windows.Forms.CheckBox();
             this.tb_Upper = new System.Windows.Forms.TextBox();
             this.tb_Lower = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.tb_ImagesPerMonth = new System.Windows.Forms.TextBox();
             this.btn_ImageAdjustEdit = new System.Windows.Forms.Button();
@@ -55,10 +59,8 @@ namespace AITool
             this.linkHelpURL = new System.Windows.Forms.LinkLabel();
             this.btTest = new System.Windows.Forms.Button();
             this.bt_clear = new System.Windows.Forms.Button();
-            this.cb_RefinementServer = new System.Windows.Forms.CheckBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.tb_RefinementObjects = new System.Windows.Forms.TextBox();
+            this.labelTimeout = new System.Windows.Forms.Label();
+            this.tb_timeout = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -124,6 +126,7 @@ namespace AITool
             // 
             // tb_ActiveTimeRange
             // 
+            this.tb_ActiveTimeRange.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_ActiveTimeRange.Location = new System.Drawing.Point(111, 87);
             this.tb_ActiveTimeRange.Name = "tb_ActiveTimeRange";
             this.tb_ActiveTimeRange.Size = new System.Drawing.Size(152, 20);
@@ -143,6 +146,7 @@ namespace AITool
             // 
             this.tb_ApplyToCams.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_ApplyToCams.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_ApplyToCams.Location = new System.Drawing.Point(111, 61);
             this.tb_ApplyToCams.Name = "tb_ApplyToCams";
             this.tb_ApplyToCams.Size = new System.Drawing.Size(461, 20);
@@ -159,6 +163,7 @@ namespace AITool
             this.chk_Enabled.TabIndex = 6;
             this.chk_Enabled.Text = "Enabled";
             this.chk_Enabled.UseVisualStyleBackColor = true;
+            this.chk_Enabled.CheckedChanged += new System.EventHandler(this.chk_Enabled_CheckedChanged);
             // 
             // groupBox1
             // 
@@ -172,6 +177,7 @@ namespace AITool
             this.groupBox1.Controls.Add(this.tb_Lower);
             this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.tb_timeout);
             this.groupBox1.Controls.Add(this.tb_ImagesPerMonth);
             this.groupBox1.Controls.Add(this.btn_ImageAdjustEdit);
             this.groupBox1.Controls.Add(this.cb_ImageAdjustProfile);
@@ -184,6 +190,7 @@ namespace AITool
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.tb_URL);
+            this.groupBox1.Controls.Add(this.labelTimeout);
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label6);
@@ -194,8 +201,38 @@ namespace AITool
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
             // 
+            // tb_RefinementObjects
+            // 
+            this.tb_RefinementObjects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_RefinementObjects.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_RefinementObjects.Location = new System.Drawing.Point(111, 186);
+            this.tb_RefinementObjects.Name = "tb_RefinementObjects";
+            this.tb_RefinementObjects.Size = new System.Drawing.Size(461, 20);
+            this.tb_RefinementObjects.TabIndex = 14;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(132, 167);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(337, 13);
+            this.label11.TabIndex = 13;
+            this.label11.Text = "Use this server only if another server detects the following objects first:";
+            // 
+            // cb_RefinementServer
+            // 
+            this.cb_RefinementServer.AutoSize = true;
+            this.cb_RefinementServer.Location = new System.Drawing.Point(111, 166);
+            this.cb_RefinementServer.Name = "cb_RefinementServer";
+            this.cb_RefinementServer.Size = new System.Drawing.Size(15, 14);
+            this.cb_RefinementServer.TabIndex = 12;
+            this.cb_RefinementServer.UseVisualStyleBackColor = true;
+            this.cb_RefinementServer.CheckedChanged += new System.EventHandler(this.cb_RefinementServer_CheckedChanged);
+            // 
             // tb_Upper
             // 
+            this.tb_Upper.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_Upper.Location = new System.Drawing.Point(214, 140);
             this.tb_Upper.Name = "tb_Upper";
             this.tb_Upper.Size = new System.Drawing.Size(49, 20);
@@ -204,12 +241,22 @@ namespace AITool
             // 
             // tb_Lower
             // 
+            this.tb_Lower.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_Lower.Location = new System.Drawing.Point(111, 140);
             this.tb_Lower.Name = "tb_Lower";
             this.tb_Lower.Size = new System.Drawing.Size(49, 20);
             this.tb_Lower.TabIndex = 11;
             this.tb_Lower.Tag = "";
             this.tb_Lower.Text = "0";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(9, 167);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(98, 13);
+            this.label10.TabIndex = 10;
+            this.label10.Text = "Refinement Server:";
             // 
             // label3
             // 
@@ -224,6 +271,7 @@ namespace AITool
             // 
             this.tb_ImagesPerMonth.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_ImagesPerMonth.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_ImagesPerMonth.Location = new System.Drawing.Point(525, 87);
             this.tb_ImagesPerMonth.Name = "tb_ImagesPerMonth";
             this.tb_ImagesPerMonth.Size = new System.Drawing.Size(47, 20);
@@ -246,6 +294,7 @@ namespace AITool
             // cb_ImageAdjustProfile
             // 
             this.cb_ImageAdjustProfile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cb_ImageAdjustProfile.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cb_ImageAdjustProfile.FormattingEnabled = true;
             this.cb_ImageAdjustProfile.Location = new System.Drawing.Point(111, 113);
             this.cb_ImageAdjustProfile.Name = "cb_ImageAdjustProfile";
@@ -322,42 +371,26 @@ namespace AITool
             this.bt_clear.UseVisualStyleBackColor = true;
             this.bt_clear.Click += new System.EventHandler(this.bt_clear_Click);
             // 
-            // cb_RefinementServer
+            // labelTimeout
             // 
-            this.cb_RefinementServer.AutoSize = true;
-            this.cb_RefinementServer.Location = new System.Drawing.Point(111, 166);
-            this.cb_RefinementServer.Name = "cb_RefinementServer";
-            this.cb_RefinementServer.Size = new System.Drawing.Size(15, 14);
-            this.cb_RefinementServer.TabIndex = 12;
-            this.cb_RefinementServer.UseVisualStyleBackColor = true;
-            this.cb_RefinementServer.CheckedChanged += new System.EventHandler(this.cb_RefinementServer_CheckedChanged);
+            this.labelTimeout.Location = new System.Drawing.Point(320, 117);
+            this.labelTimeout.Name = "labelTimeout";
+            this.labelTimeout.Size = new System.Drawing.Size(199, 13);
+            this.labelTimeout.TabIndex = 1;
+            this.labelTimeout.Text = "Timeout:";
+            this.labelTimeout.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // label10
+            // tb_timeout
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(9, 167);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(98, 13);
-            this.label10.TabIndex = 10;
-            this.label10.Text = "Refinement Server:";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(132, 167);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(337, 13);
-            this.label11.TabIndex = 13;
-            this.label11.Text = "Use this server only if another server detects the following objects first:";
-            // 
-            // tb_RefinementObjects
-            // 
-            this.tb_RefinementObjects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.tb_timeout.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_RefinementObjects.Location = new System.Drawing.Point(111, 186);
-            this.tb_RefinementObjects.Name = "tb_RefinementObjects";
-            this.tb_RefinementObjects.Size = new System.Drawing.Size(461, 20);
-            this.tb_RefinementObjects.TabIndex = 14;
+            this.tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_timeout.Location = new System.Drawing.Point(525, 112);
+            this.tb_timeout.Name = "tb_timeout";
+            this.tb_timeout.Size = new System.Drawing.Size(47, 20);
+            this.tb_timeout.TabIndex = 9;
+            this.tb_timeout.Text = "0";
+            this.toolTip1.SetToolTip(this.tb_timeout, "If you set this to any value other than 0 it will override the default timeout");
             // 
             // Frm_AIServerDeepstackEdit
             // 
@@ -412,5 +445,7 @@ namespace AITool
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.CheckBox cb_RefinementServer;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox tb_timeout;
+        private System.Windows.Forms.Label labelTimeout;
     }
 }

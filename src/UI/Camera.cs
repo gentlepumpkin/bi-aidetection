@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -25,6 +28,65 @@ namespace AITool
         public TriggerType Type = TriggerType.Unknown;
         public string Description = "";
         public string LastResponse = "";
+    }
+
+    public class ImageResItem : IEquatable<ImageResItem>
+    {
+        public int Width = 0;
+        public int Height = 0;
+        public long Count = 0;
+        public string LastFileName = "";
+        public long LastFileSize = 0;
+        public float LastFileDPI = 0;
+        public DateTime LastSeenDate = DateTime.MinValue;
+
+        public ImageResItem() { }
+        public ImageResItem(ClsImageQueueItem CurImg)
+        {
+            this.Count = 1;
+            this.Height = CurImg.Height;
+            this.Width = CurImg.Width;
+            this.LastFileName = CurImg.image_path;
+            this.LastSeenDate = CurImg.TimeCreated;
+            this.LastFileSize = CurImg.FileSize;
+            this.LastFileDPI = CurImg.DPI;
+
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ImageResItem);
+        }
+
+        public bool Equals(ImageResItem other)
+        {
+            return other != null &&
+                   Width == other.Width &&
+                   Height == other.Height;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 859600377;
+            hashCode = hashCode * -1521134295 + Width.GetHashCode();
+            hashCode = hashCode * -1521134295 + Height.GetHashCode();
+            return hashCode;
+        }
+
+        public override string ToString()
+        {
+            return $"{this.Width}x{this.Height}";
+        }
+
+        public static bool operator ==(ImageResItem left, ImageResItem right)
+        {
+            return EqualityComparer<ImageResItem>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ImageResItem left, ImageResItem right)
+        {
+            return !(left == right);
+        }
     }
     public class Camera
     {
@@ -118,6 +180,9 @@ namespace AITool
 
         public string ImageAdjustProfile = "Default";
 
+        //Keep a list of image resolutions and the last image file name with that resolution.  This will help us keep track of which image mask to use
+        public List<ImageResItem> ImageResolutions = new List<ImageResItem>();
+
         [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);
         [JsonIgnore]
@@ -128,15 +193,256 @@ namespace AITool
         public List<string> last_positions = new List<string>(); //stores last objects positions
         [JsonIgnore]
         public String last_detections_summary; //summary text of last detection
+        [JsonIgnore]
+        private object CamLock = new object();
+
+        public string GetMaskFile(bool MustExist, ClsImageQueueItem CurImg = null, ImageResItem ir = null)
+        {
+            string ret = "";
+
+            lock (CamLock)
+            {
+                try
+                {
+                    String resstr = "";
+
+                    if (CurImg != null)
+                    {
+                        resstr = $"_{CurImg.Width}x{CurImg.Height}";
+                    }
+                    else if (ir == null && this.ImageResolutions.Count > 0)
+                    {
+                        ir = this.ImageResolutions[0];  //the first one should be the most recent image processed because of the sort.
+                        resstr = $"_{ir.Width}x{ir.Height}";
+                    }
+                    else if (ir != null)
+                    {
+                        resstr = $"_{ir.Width}x{ir.Height}";
+                    }
+
+                    string CamMaskFile = "";
+                    if (!string.IsNullOrEmpty(this.MaskFileName))
+                    {
+                        if (this.MaskFileName.Contains("\\") && this.MaskFileName.Contains("."))
+                            CamMaskFile = this.MaskFileName;
+                        else if (this.MaskFileName.Contains("."))
+                            CamMaskFile = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{this.MaskFileName}");
+                        else
+                            CamMaskFile = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), $"{this.MaskFileName}.bmp");
+
+                        //Add WidthxHeight to filename
+                        string ResFile = Path.Combine(Path.GetDirectoryName(CamMaskFile), $"{Path.GetFileNameWithoutExtension(CamMaskFile)}{resstr}.bmp");
+
+                        bool resempty = string.IsNullOrEmpty(resstr);
+                        bool cammaskexist = File.Exists(CamMaskFile);
+                        bool resexist = File.Exists(ResFile);
+                        if (!resempty && cammaskexist && !Path.GetFileName(CamMaskFile).Contains("_") && !resexist)
+                        {
+                            //lets rename it to appropriate ResFile name
+                            string tmpresstr = "";
+                            using (FileStream fileStream = new FileStream(CamMaskFile, FileMode.Open, FileAccess.Read))
+                            {
+                                using Image img = Image.FromStream(fileStream, false, false);
+                                tmpresstr = $"_{img.Width}x{img.Height}";
+                            }
+                            if (tmpresstr == resstr)
+                            {
+                                AITOOL.Log($"Debug: Renaming mask file from '{CamMaskFile}' to '{ResFile}'...");
+                                File.Move(CamMaskFile, ResFile);
+                            }
+                            else
+                            {
+                                AITOOL.Log($"Debug: Cannot rename mask file because it does not match the current image resolution of '{resstr}' (!={tmpresstr}):  MaskFile='{CamMaskFile}'...");
+                            }
+                        }
+                        else
+                        {
+                            //AITOOL.Log($"Debug: ResEmpty={resempty}, CamMaskExist={cammaskexist}, ResMaskFileExist={resexist}, CurRes={resstr}, MaskRes={resstr}, CamMaskFile='{CamMaskFile}', ResMaskFile={ResFile}...");
+                        }
+
+                        if (MustExist)
+                        {
+                            if (File.Exists(ResFile))
+                            {
+                                return ResFile;
+                            }
+                            else
+                            {
+                                return "";
+                            }
+                        }
+                        else
+                        {
+                            return ResFile;
+                        }
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    AITOOL.Log("Error: " + Global.ExMsg(ex));
+                }
+
+            }
+
+            return ret;
+
+        }
+        public bool UpdateImageResolutions(ClsImageQueueItem CurImg)
+        {
+
+            bool ret = false;
+
+            if (!CurImg.IsValid())
+                return ret;
+
+            lock (CamLock)
+            {
+                ImageResItem newri = new ImageResItem(CurImg);
+
+                int idx = this.ImageResolutions.IndexOf(newri);
+                bool updated = false;
+
+                if (idx > -1)
+                {
+                    if (CurImg.TimeCreated > this.ImageResolutions[idx].LastSeenDate)
+                    {
+                        updated = true;
+                        this.ImageResolutions[idx].LastFileName = CurImg.image_path;
+                        this.ImageResolutions[idx].LastSeenDate = CurImg.TimeCreated;
+                        this.ImageResolutions[idx].LastFileSize = CurImg.FileSize;
+                        this.ImageResolutions[idx].LastFileDPI = CurImg.DPI;
+                        this.ImageResolutions[idx].Count++;
+                    }
+                }
+                else
+                {
+                    ret = true;
+                    this.ImageResolutions.Add(newri);
+                }
+
+                //sort so most recent is at top of list
+
+                if (ret || updated)
+                    this.ImageResolutions = this.ImageResolutions.OrderByDescending(x => x.LastSeenDate).ToList();
+
+            }
+
+            return ret;
+
+        }
+        public async Task ScanImagesAsync(int MaxFiles = 3000, int MaxTimeScanningMS = 60000, int MaxDaysOld = -4)
+        {
+            await Task.Run(() => ScanImages(MaxFiles,MaxTimeScanningMS,MaxDaysOld));
+        }
+        public void ScanImages(int MaxFiles = 3000, int MaxTimeScanningMS = 60000, int MaxDaysOld = -4)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            List<FileInfo> files = new List<FileInfo>();
+
+            Stopwatch fscansw = Stopwatch.StartNew();
+
+            if (!string.IsNullOrEmpty(this.input_path) && Directory.Exists(this.input_path))
+            {
+                List<FileInfo> newfiles = Global.GetFiles(this.input_path, $"{this.Prefix}*.jpg", this.input_path_includesubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(MaxDaysOld), DateTime.Now, MaxFiles);
+                files.AddRange(newfiles);
+                AITOOL.Log($"Debug: Found {newfiles.Count} {this.Prefix}*.jpg files in {this.input_path}");
+            }
+
+            if (files.Count < MaxFiles && !string.IsNullOrEmpty(AppSettings.Settings.input_path) && AppSettings.Settings.input_path != this.input_path && Directory.Exists(AppSettings.Settings.input_path))
+            {
+                List<FileInfo> newfiles = Global.GetFiles(AppSettings.Settings.input_path, $"{this.Prefix}*.jpg", AppSettings.Settings.input_path_includesubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(MaxDaysOld), DateTime.Now, MaxFiles);
+                files.AddRange(newfiles);
+                AITOOL.Log($"Debug: Found {newfiles.Count} {this.Prefix}*.jpg files in {AppSettings.Settings.input_path}");
+            }
+
+            if (files.Count < MaxFiles && !string.IsNullOrEmpty(this.Action_network_folder) && Directory.Exists(this.Action_network_folder)) 
+            {
+                List<FileInfo> newfiles = Global.GetFiles(this.Action_network_folder, $"{this.Prefix}*.jpg", SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(MaxDaysOld), DateTime.Now, MaxFiles);
+                files.AddRange(newfiles);
+                AITOOL.Log($"Debug: Found {newfiles.Count} {this.Prefix}*.jpg files in {this.Action_network_folder}");
+            }
+
+            if (!string.IsNullOrEmpty(this.last_image_file) && File.Exists(this.last_image_file))
+            {
+                if (!files.Any(x => string.Equals(x.FullName, this.last_image_file, StringComparison.OrdinalIgnoreCase)))
+                {
+                    files.Add(new FileInfo(this.last_image_file));
+                }
+            }
+
+            files = files.OrderByDescending(t => t.CreationTime).ToList();
+
+            fscansw.Stop();
+
+
+            int cnt = 0;
+            int updated = 0;
+            int invalid = 0;
+
+            AITOOL.Log($"Debug: Found {files.Count} images in {fscansw.ElapsedMilliseconds} ms. Scanning images...");
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            foreach (FileInfo fi in files)
+            {
+
+                try
+                {
+                    ClsImageQueueItem img = new ClsImageQueueItem(fi.FullName, 0, true);
+                    if (img.IsValid())
+                    {
+                        if (this.UpdateImageResolutions(img))
+                            updated++;
+
+                        cnt++;
+                    }
+                    else
+                    {
+                        invalid++;
+                    }
+                }
+                catch (Exception ex) 
+                {
+                    invalid++;
+                    AITOOL.Log($"Debug: {fi.Name}: {ex.Message}");
+                }
+
+                if (sw.ElapsedMilliseconds >= MaxTimeScanningMS)
+                {
+                    AITOOL.Log($"Debug: Max search time exceeded: {sw.ElapsedMilliseconds} ms >= {MaxTimeScanningMS} ms");
+                    break;
+                }
+
+            }
+
+            sw.Stop();
+
+            string reseseses = "";
+            foreach (ImageResItem res in this.ImageResolutions)
+            {
+                reseseses += $"{res.ToString()};";
+            }
+
+            if (string.IsNullOrEmpty(this.last_image_file) && files.Count > 0)
+                this.last_image_file = files[0].FullName;
+
+            AITOOL.Log($"Debug: {cnt} of {files.Count} image files processed, {updated} new resolutions found ({invalid} invalid) in {sw.ElapsedMilliseconds} ms (Max={MaxTimeScanningMS} ms), {this.ImageResolutions.Count()} different image resolutions found: {reseseses}");
+
+        }
 
         public bool IsRelevant(string ObjectName)
         {
-            return Global.IsInList(ObjectName, this.triggering_objects_as_string, TrueIfEmpty:false) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string, TrueIfEmpty:false);
+            return Global.IsInList(ObjectName, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string, TrueIfEmpty: false);
         }
         public Camera(string Name = "")
         {
 
             this.Name = Name;
+            this.BICamName = Name;
             this.Prefix = Name;
         }
 

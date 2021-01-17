@@ -56,7 +56,7 @@ namespace AITool
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
         public int Port { get; set; } = 0;
-        public int HttpClientTimeoutSeconds = 0;
+        public int HttpClientTimeoutSeconds { get; set; } = 0;
         public string DefaultURL { get; set; } = "";
         [JsonIgnore]
         public HttpClient HttpClient { get; set; }

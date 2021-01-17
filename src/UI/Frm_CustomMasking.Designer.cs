@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pbMaskImage = new System.Windows.Forms.PictureBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -39,6 +40,10 @@
             this.btnClear = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cbResolution = new System.Windows.Forms.ComboBox();
+            this.linkLabelScan = new System.Windows.Forms.LinkLabel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbMaskImage)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -55,7 +60,7 @@
             this.panel1.Location = new System.Drawing.Point(2, 4);
             this.panel1.Margin = new System.Windows.Forms.Padding(6);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(861, 407);
+            this.panel1.Size = new System.Drawing.Size(906, 407);
             this.panel1.TabIndex = 1;
             // 
             // pbMaskImage
@@ -67,7 +72,7 @@
             this.pbMaskImage.Location = new System.Drawing.Point(0, 0);
             this.pbMaskImage.Margin = new System.Windows.Forms.Padding(4);
             this.pbMaskImage.Name = "pbMaskImage";
-            this.pbMaskImage.Size = new System.Drawing.Size(861, 407);
+            this.pbMaskImage.Size = new System.Drawing.Size(906, 407);
             this.pbMaskImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbMaskImage.TabIndex = 1;
             this.pbMaskImage.TabStop = false;
@@ -170,7 +175,7 @@
             // btnClear
             // 
             this.btnClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClear.Location = new System.Drawing.Point(620, 432);
+            this.btnClear.Location = new System.Drawing.Point(665, 433);
             this.btnClear.Margin = new System.Windows.Forms.Padding(6, 15, 6, 6);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(70, 30);
@@ -182,7 +187,7 @@
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(702, 432);
+            this.btnSave.Location = new System.Drawing.Point(747, 433);
             this.btnSave.Margin = new System.Windows.Forms.Padding(6);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -195,7 +200,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(784, 432);
+            this.btnCancel.Location = new System.Drawing.Point(829, 433);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(6, 6, 46, 6);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -203,10 +208,48 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(426, 442);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(60, 13);
+            this.label2.TabIndex = 8;
+            this.label2.Text = "Resolution:";
+            // 
+            // cbResolution
+            // 
+            this.cbResolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbResolution.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbResolution.FormattingEnabled = true;
+            this.cbResolution.Location = new System.Drawing.Point(492, 438);
+            this.cbResolution.Name = "cbResolution";
+            this.cbResolution.Size = new System.Drawing.Size(100, 21);
+            this.cbResolution.TabIndex = 9;
+            this.cbResolution.SelectedIndexChanged += new System.EventHandler(this.cbResolution_SelectedIndexChanged);
+            this.cbResolution.SelectionChangeCommitted += new System.EventHandler(this.cbResolution_SelectionChangeCommitted);
+            // 
+            // linkLabelScan
+            // 
+            this.linkLabelScan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabelScan.AutoSize = true;
+            this.linkLabelScan.Location = new System.Drawing.Point(598, 442);
+            this.linkLabelScan.Name = "linkLabelScan";
+            this.linkLabelScan.Size = new System.Drawing.Size(32, 13);
+            this.linkLabelScan.TabIndex = 10;
+            this.linkLabelScan.TabStop = true;
+            this.linkLabelScan.Text = "Scan";
+            this.toolTip1.SetToolTip(this.linkLabelScan, "Scan BI Images folder for this camera to find all image resolutions");
+            this.linkLabelScan.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelScan_LinkClicked);
+            // 
             // Frm_CustomMasking
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.ClientSize = new System.Drawing.Size(864, 478);
+            this.ClientSize = new System.Drawing.Size(909, 478);
+            this.Controls.Add(this.linkLabelScan);
+            this.Controls.Add(this.cbResolution);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.groupBox1);
@@ -225,6 +268,7 @@
             this.flowLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numBrushSize)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -240,5 +284,9 @@
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox cbResolution;
+        private System.Windows.Forms.LinkLabel linkLabelScan;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

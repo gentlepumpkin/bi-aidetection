@@ -18,6 +18,7 @@ namespace AITool
         public int BrushSize { get; set; }
         private bool _drawing = false;
 
+        private ImageResItem _imageRes = null;
         //brush drawing
         private PointHistory _currentPoints = new PointHistory(); //Contains all points since the mouse down event fired. Draw all points at once in Paint method. Prevents tearing and performance issues
         private List<PointHistory> _allPointLists = new List<PointHistory>();  //History of all points. Reserved for future undo feature
@@ -32,20 +33,108 @@ namespace AITool
             this.InitializeComponent();
         }
 
-        private void ShowImage()
+        /********************* Start EVENT section*************************************/
+
+        private void Frm_CustomMasking_Load(object sender, EventArgs e)
         {
+            Global_GUI.RestoreWindowState(this);
+
+            UpdateRes();
+
+            UpdateMaskFile();
+
+        }
+
+        private void UpdateMaskFile()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             try
             {
+
+
+                this._maskfilename = this.Cam.GetMaskFile(false, null, this._imageRes);
+                this.Text = "Custom Masking - " + this._maskfilename;
+
+                if (!File.Exists(this._maskfilename))
+                    this.Text += " (Missing)";
+
+                this.BrushSize = this.Cam.mask_brush_size;
+                this.numBrushSize.Value = this.Cam.mask_brush_size;
+                this.ShowImage();
+
+            }
+            catch (Exception ex)
+            {
+                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+        }
+
+        private void UpdateRes()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            cbResolution.Items.Clear();
+            foreach (ImageResItem res in this.Cam.ImageResolutions)
+            {
+                cbResolution.Items.Add(res);
+            }
+
+            if (cbResolution.Items.Count > 0)
+            {
+                cbResolution.SelectedIndex = 0;
+                if (cbResolution.SelectedValue != null)
+                    this._imageRes = (ImageResItem)cbResolution.SelectedValue;
+
+            }
+
+        }
+
+        private async void linkLabelScan_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            linkLabelScan.Text = "Scanning 60 secs...";
+            linkLabelScan.Enabled = false;
+            linkLabelScan.Update();
+            await this.Cam.ScanImagesAsync();
+            linkLabelScan.Text = "Scan";
+            linkLabelScan.Update();
+            linkLabelScan.Enabled = true;
+
+            this.UpdateRes();
+            this.UpdateMaskFile();
+
+
+        }
+
+        private void cbResolution_SelectedIndexChanged(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void ShowImage()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            try
+            {
+                string lastimage = "";
+
+                if (this._imageRes == null && this.Cam.ImageResolutions.Count > 0)
+                    this._imageRes = this.Cam.ImageResolutions[0];
+
+                if (this._imageRes != null)
+                    lastimage = this._imageRes.LastFileName;
+
                 //first check for saved image in cameras folder. If doesn't exist load the last camera image.
-                if (this.pbMaskImage.Tag == null || !string.Equals(this.pbMaskImage.Tag.ToString(), this.Cam.last_image_file, StringComparison.OrdinalIgnoreCase))
+                if (this.pbMaskImage.Tag == null || !string.Equals(this.pbMaskImage.Tag.ToString(), lastimage, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.pbMaskImage.Tag = this.Cam.last_image_file;
+                    this.pbMaskImage.Tag = lastimage;
 
-                    if ((!string.IsNullOrWhiteSpace(this.Cam.last_image_file)) && (File.Exists(this.Cam.last_image_file)))
+                    if ((!string.IsNullOrWhiteSpace(lastimage)) && (File.Exists(lastimage)))
                     {
-                        //lbl_imagefile.ForeColor = Color.Black;
-
-                        this._cameraLayer = new Bitmap(this.Cam.last_image_file);
+                        this._cameraLayer = new Bitmap(lastimage);
 
                         //merge layer if masks exist
                         if (File.Exists(this._maskfilename))
@@ -252,23 +341,6 @@ namespace AITool
             }
         }
 
-        /********************* Start EVENT section*************************************/
-
-        private void Frm_CustomMasking_Load(object sender, EventArgs e)
-        {
-            Global_GUI.RestoreWindowState(this);
-            this._maskfilename = AITOOL.GetMaskFile(this.Cam);
-            this.Text = "Custom Masking - " + this._maskfilename;
-
-            if (!File.Exists(this._maskfilename))
-            {
-                this.Text += " (Missing)";
-            }
-
-            this.BrushSize = this.Cam.mask_brush_size;
-            this.numBrushSize.Value = this.Cam.mask_brush_size;
-            this.ShowImage();
-        }
 
         private void pbMaskImage_Paint(object sender, PaintEventArgs e)
         {
@@ -358,6 +430,8 @@ namespace AITool
 
         private void btnClear_Click(object sender, EventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             this._allPointLists.Clear();
 
             this.pbMaskImage.Tag = null;
@@ -368,6 +442,7 @@ namespace AITool
                 File.Delete(this._maskfilename);
             }
 
+            UpdateMaskFile();
             this.ShowImage();
         }
 
@@ -396,8 +471,15 @@ namespace AITool
             Global_GUI.SaveWindowState(this);
         }
 
+        private void cbResolution_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            UpdateMaskFile();
+        }
+
         private void btnSave_Click(object sender, EventArgs e)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             try
             {
                 if (this._transparentLayer != null)
@@ -405,6 +487,8 @@ namespace AITool
                     //save masks at 50% opacity 
                     Bitmap img = this.AdjustImageOpacity(this._transparentLayer, DEFAULT_OPACITY);
                     img.Save(this._maskfilename);
+                    //save mask file with resolution attached
+                    //string resfile = Path.Combine(Path.GetDirectoryName(this._maskfilename), $"{Path.GetFileNameWithoutExtension(this._maskfilename)}_{this._transparentLayer.Width}x{this._transparentLayer.Height}.bmp");
                     Log($"Mask file saved.  Resolution={img.Width}x{img.Height}. Transparency Resolution={this._transparentLayer.Width}x{this._transparentLayer.Height} : " + this._maskfilename);
                 }
 

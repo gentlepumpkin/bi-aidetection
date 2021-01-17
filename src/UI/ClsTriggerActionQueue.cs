@@ -23,6 +23,7 @@ using NPushover.Exceptions;
 using NPushover.RequestObjects;
 using NPushover.ResponseObjects;
 using static AITool.AITOOL;
+using System.Net.Http;
 
 namespace AITool
 {
@@ -347,7 +348,11 @@ namespace AITool
                         tmpfile = await this.MergeImageAnnotations(AQI);
 
                         if (!string.Equals(AQI.CurImg.image_path, tmpfile, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(tmpfile))  //it wont exist if no detections or failure...
+                        {
                             AQI.CurImg = new ClsImageQueueItem(tmpfile, 1);
+                            //force the image to load right away to try to avoid BI showing blank images when given a jpg file for the thumbnail
+                            AQI.CurImg.LoadImage();
+                        }
                     }
 
                     if (AQI.cam.Action_image_copy_enabled && AQI.Trigger)
@@ -364,6 +369,8 @@ namespace AITool
                             Log($"Debug:   -> Image copied to network folder {newimagepath}", this.CurSrv, AQI.cam, AQI.CurImg);
                             //set the image path to the new path so all imagename variable works
                             AQI.CurImg = new ClsImageQueueItem(newimagepath, 1);
+                            //force the image to load right away to try to avoid BI showing blank images when given a jpg file for the thumbnail
+                            AQI.CurImg.LoadImage();
                         }
 
                     }
@@ -595,6 +602,8 @@ namespace AITool
 
                 if (AQI.CurImg.IsValid())
                 {
+                    AQI.cam.UpdateImageResolutions(AQI.CurImg);
+
                     Stopwatch sw = Stopwatch.StartNew();
                     using (Bitmap img = new Bitmap(AQI.CurImg.ToStream()))
                     {
@@ -834,6 +843,8 @@ namespace AITool
 
         public bool CopyImage(ClsTriggerActionQueueItem AQI, ref string dest_path)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             bool ret = false;
 
             try
@@ -881,28 +892,43 @@ namespace AITool
 
             bool ret = true;
 
-            using (WebClient client = new WebClient())
-            {
-                string type = "trigger";
-                if (!Trigger)
-                    type = "cancel";
+            string type = "trigger";
+            if (!Trigger)
+                type = "cancel";
 
-                foreach (string url in trigger_urls)
+            if (AITOOL.triggerHttpClient == null)
+            {
+                AITOOL.triggerHttpClient = new System.Net.Http.HttpClient();
+                AITOOL.triggerHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds);
+            }
+
+            foreach (string url in trigger_urls)
+            {
+                Stopwatch sw = Stopwatch.StartNew();
+                try
                 {
-                    try
+                    HttpResponseMessage response = await triggerHttpClient.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
                     {
-                        string content = await client.DownloadStringTaskAsync(url);
-                        Log($"Debug:   -> {type} URL called: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ")}'");
+                        string content = await response.Content.ReadAsStringAsync();
+                        Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ").Truncate(128,true)}'");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        ret = false;
-                        Log($"ERROR: Could not {type} URL '{url}', please check if '{url}' is correct and reachable: {Global.ExMsg(ex)}");
+                        ret = false;  
+                        Log($"ERROR: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
                     }
 
                 }
+                catch (Exception ex)
+                {
+                    ret = false;
+                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} URL '{url}', please check if correct and reachable: {Global.ExMsg(ex)}");
+                }
 
             }
+
 
             return ret;
 
@@ -1099,7 +1125,7 @@ namespace AITool
                         {
                             Log($"Debug: Skipping pushover because time is not between {AQI.cam.Action_pushover_active_time_range}");
                         }
-                        
+
                     }
                     else
                     {
@@ -1220,7 +1246,7 @@ namespace AITool
                                     }
                                 }
                                 ret = message != null;
-                                
+
                                 this.last_telegram_trigger_time.Write(DateTime.Now);
                                 this.TelegramRetryTime.Write(DateTime.MinValue);
 

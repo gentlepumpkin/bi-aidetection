@@ -1480,12 +1480,15 @@ namespace AITool
         public static WaitFileAccessResult WaitForFileAccess(string filename,
                                                               FileAccess rights = FileAccess.Read,
                                                               FileShare share = FileShare.None,
-                                                              long WaitMS = 30000,
+                                                              long MaxWaitMS = 30000,
                                                               int RetryDelayMS = 50,
                                                               bool ReturnHandle = false,
                                                               long MinFileSize = 1,
                                                               int MaxErrRetryCnt = 2000)
         {
+
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             WaitFileAccessResult ret = new WaitFileAccessResult();
             string LastFailReason = "";
             Stopwatch SW = Stopwatch.StartNew();
@@ -1511,7 +1514,7 @@ namespace AITool
 
                     long LastLength = FI.Length;  //if the file is growing, try to wait for it
 
-                    while ((ret.ErrRetryCnt < MaxErrRetryCnt) && (SW.ElapsedMilliseconds < WaitMS))
+                    while ((ret.ErrRetryCnt <= MaxErrRetryCnt) && (SW.ElapsedMilliseconds <= MaxWaitMS))
                     {
                         if (FI.Length >= MinFileSize && LastLength == FI.Length)
                         {
@@ -1578,9 +1581,9 @@ namespace AITool
 
                     ret.TimeMS = SW.ElapsedMilliseconds;
 
-                    if (!ret.Success || ret.ErrRetryCnt > 0)
+                    if (!ret.Success || ret.ErrRetryCnt > 2 || ret.TimeMS > 1000)
                     {
-                        ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms, {ret.ErrRetryCnt} retries with a {RetryDelayMS}ms retry delay: {Path.GetFileName(filename)}";
+                        ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms (max={MaxWaitMS}), {ret.ErrRetryCnt} retries (max={MaxErrRetryCnt}) with a {RetryDelayMS}ms retry delay: {Path.GetFileName(filename)}";
                         Log(ret.ResultString);
                     }
 
@@ -1830,33 +1833,17 @@ namespace AITool
                     string ST = ThisEX.StackTrace;
                     string[] SpltStr = new string[1] { " at " };
                     string[] Splt = ST.Split(SpltStr, StringSplitOptions.None);
-                    //at FreeDNSUpdateTool.SharedModule.VB$StateMachine_1_GetPublicIPAddress.MoveNext() in
-                    //                                  VB$StateMachine_16_GetPublicIPAddress
                     string Lst = Splt[Splt.Count() - 1].Replace(".MoveNext()", "").Trim();
                     Lst = GetWordBetween(Lst, "", " in ");
-                    //FreeDNSUpdateTool.SharedModule.VB$StateMachine_1_GetPublicIPAddress
                     string[] Splt2 = Lst.Split('.');
                     string LastMod = Splt2[Splt2.Count() - 1].Trim();
-                    //for (int statenum = 0; statenum <= 256; statenum++)
-                    //{
-                    //    LastMod = LastMod.Replace($"VB$StateMachine_{statenum}_", "");
-                    //}
-                    //GetPublicIPAddress
                     StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
 
-                    //string mods = "";
 
-                    //for (int i = 1; i < Frames.Count(); i++)
-                    //{
-
-                    //}
-
-                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}:{Frames[Frames.Count() - 1].GetFileColumnNumber()}";
+                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}";
                 }
             }
-            catch (Exception)
-            {
-            }
+            catch { }
             return ExtraInfo;
         }
 
@@ -2895,7 +2882,7 @@ namespace AITool
             return Ret;
         }
 
-        public static List<System.IO.FileInfo> GetFiles(string CurDirectory, string FileName = "*", System.IO.SearchOption SearchOptions = System.IO.SearchOption.AllDirectories, DateTime? MinLastWriteTime = null, DateTime? MaxLastWriteTime = null)
+        public static List<System.IO.FileInfo> GetFiles(string CurDirectory, string FileName = "*", System.IO.SearchOption SearchOptions = System.IO.SearchOption.AllDirectories, DateTime? MinLastWriteTime = null, DateTime? MaxLastWriteTime = null, int MaxFiles = 99999)
         {
 
             List<System.IO.FileInfo> files = new List<System.IO.FileInfo>();
@@ -2929,7 +2916,10 @@ namespace AITool
                                         {
                                             if (fi.LastWriteTime >= MinLastWriteTime.Value && fi.LastWriteTime <= MaxLastWriteTime)
                                             {
-                                                files.Add(fi);
+                                                if (files.Count < MaxFiles)
+                                                    files.Add(fi);
+                                                else
+                                                    break;
                                             }
 
                                         }
@@ -2937,13 +2927,19 @@ namespace AITool
                                         {
                                             if (fi.LastWriteTime == MinLastWriteTime.Value)
                                             {
-                                                files.Add(fi);
+                                                if (files.Count < MaxFiles)
+                                                    files.Add(fi);
+                                                else
+                                                    break;
                                             }
                                         }
                                     }
                                     else
                                     {
-                                        files.Add(fi);
+                                        if (files.Count < MaxFiles)
+                                            files.Add(fi);
+                                        else
+                                            break;
                                     }
                                 }
                             }
