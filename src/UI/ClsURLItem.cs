@@ -58,10 +58,12 @@ namespace AITool
         public int Port { get; set; } = 0;
         public int HttpClientTimeoutSeconds { get; set; } = 0;
         public string DefaultURL { get; set; } = "";
+        //[JsonIgnore]
+        //public Global.ClsProcess Process { get; set; } = null;
         [JsonIgnore]
-        public HttpClient HttpClient { get; set; }
+        public HttpClient HttpClient { get; set; } = null;
         //public int Count { get; set; } = 0;
-        public bool UrlFixed = false;
+        public bool UrlFixed { get; set; } = false;
 
         public override string ToString()
         {

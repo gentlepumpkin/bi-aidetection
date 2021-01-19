@@ -113,6 +113,8 @@ namespace AITool
             await AITOOL.InitializeBackend();
 
 
+            //Camera testcam = GetCamera("c:\\test\\CAMNAME.1.123456.jpg");
+
             //ClsImageQueueItem cli = new ClsImageQueueItem("C:\\Downloads\\TestImage.jpg", 0);
             //NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message();
             //msg.Timestamp = DateTime.Now;

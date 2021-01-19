@@ -586,19 +586,29 @@ namespace AITool
         }
         public static bool IsLocalHost(string HostNameOrIPAddress)
         {
-            return string.IsNullOrEmpty(HostNameOrIPAddress) ||
-                   HostNameOrIPAddress == "." ||
-                   string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
-                   HostNameOrIPAddress == "127.0.0.1" ||
-                   HostNameOrIPAddress == "0.0.0.0" ||
-                   string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                return string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                       HostNameOrIPAddress == "." ||
+                       string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                       HostNameOrIPAddress == "127.0.0.1" ||
+                       HostNameOrIPAddress == "0.0.0.0" ||
+                       string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase);
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ExMsg(ex)}");
+                return false;
+            }
 
 
         }
 
         public static bool IsLocalNetwork(string HostNameOrIPAddress)
         {
+            
             return IsLocalHost(HostNameOrIPAddress) ||
                    HostNameOrIPAddress.StartsWith("10.") ||
                    HostNameOrIPAddress.StartsWith("192.168.") ||
@@ -612,13 +622,23 @@ namespace AITool
         }
         public static async Task<bool> IsLocalHostAsync(string HostNameOrIPAddress)
         {
-            return string.IsNullOrEmpty(HostNameOrIPAddress) ||
-                   HostNameOrIPAddress == "." ||
-                   string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
-                   HostNameOrIPAddress == "127.0.0.1" ||
-                   HostNameOrIPAddress == "0.0.0.0" ||
-                   string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(HostNameOrIPAddress, (await GetIPAddressFromHostnameAsync("")).ToString(), StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                return string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                       HostNameOrIPAddress == "." ||
+                       string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                       HostNameOrIPAddress == "127.0.0.1" ||
+                       HostNameOrIPAddress == "0.0.0.0" ||
+                       string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(HostNameOrIPAddress, (await GetIPAddressFromHostnameAsync("")).ToString(), StringComparison.OrdinalIgnoreCase);
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ExMsg(ex)}");
+                return false;
+            }
+
 
         }
 
@@ -2818,7 +2838,7 @@ namespace AITool
         }
 
         //I had to make this class since win32 apps cant access 64 bit command line and module info
-        public class ClsProcess
+        public class ClsProcess : IEquatable<ClsProcess>
         {
             public Process process = null;
             public string FileName = "";
@@ -2826,6 +2846,33 @@ namespace AITool
             public ClsProcess()
             {
                 this.process = new Process();
+            }
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as ClsProcess);
+            }
+
+            public bool Equals(ClsProcess other)
+            {
+                return other != null &&
+                       string.Equals(FileName, other.FileName, StringComparison.OrdinalIgnoreCase) &&
+                       string.Equals(CommandLine, other.CommandLine, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public override string ToString()
+            {
+                return $"{Path.GetFileName(this.FileName)} {this.CommandLine}";
+            }
+
+            public static bool operator ==(ClsProcess left, ClsProcess right)
+            {
+                return EqualityComparer<ClsProcess>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(ClsProcess left, ClsProcess right)
+            {
+                return !(left == right);
             }
         }
 

@@ -262,7 +262,7 @@ namespace AITool
         //}
         //public static void Log(string Detail, bool fakeout = false, [CallerMemberName()] string memberName = null)
         //{
-            
+
         //    Log(Detail, "", "", "", "", 0, null, null, memberName);
         //}
 
@@ -535,58 +535,82 @@ namespace AITool
             bool hasold = !string.IsNullOrEmpty(AppSettings.Settings.deepstack_url);
             if (((AppSettings.Settings.AIURLList.Count == 0 || Force) && hasold) || hasold)
             {
-                Log("Debug: Updating/Resetting AI URL list...");
-                List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
+                int newcnt = 0;
 
-                //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
-                Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
-
-                foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
+                try
                 {
-                    string ur = url.ToString().ToLower();
-                    if (!tmpdic.ContainsKey(ur))
-                    {
-                        tmpdic.Add(ur, url);
-                    }
-                    else
-                    {
-                        Log($"Debug: ---- (duplicate url configured - {ur})");
-                    }
-                }
+                    Log("Debug: Updating/Resetting AI URL list...");
+                    List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
 
-                AppSettings.Settings.AIURLList.Clear();
+                    //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
+                    Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
 
-                for (int i = 0; i < SpltURLs.Count; i++)
-                {
-                    ClsURLItem url = new ClsURLItem(SpltURLs[i], i + 1, URLTypeEnum.Unknown);
-
-                    if (url != null && url.IsValid)
+                    foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
                     {
-                        //if it already exists, use it, otherwise add a new one
-                        if (tmpdic.ContainsKey(url.ToString().ToLower()))
+                        string ur = url.ToString().ToLower();
+                        if (!tmpdic.ContainsKey(ur))
                         {
-                            url = tmpdic[url.ToString().ToLower()];
-                            AppSettings.Settings.AIURLList.Add(url);
-                            url.Order = i + 1;
-                            //url.InUse.WriteFullFence(false);
-                            url.CurErrCount.WriteFullFence(0);
-                            url.Enabled.WriteFullFence(true);
-                            Log($"Debug: ----   #{url.Order}: Re-added known URL: {url}");
+                            tmpdic.Add(ur, url);
                         }
                         else
                         {
-                            AppSettings.Settings.AIURLList.Add(url);
-                            Log($"Debug: ----   #{url.Order}: Added new URL: {url}");
+                            Log($"Debug: ---- (duplicate url configured - {ur})");
+                        }
+                    }
+
+                    AppSettings.Settings.AIURLList.Clear();
+
+
+                    for (int i = 0; i < SpltURLs.Count; i++)
+                    {
+                        if (!SpltURLs[i].Contains(":"))
+                        {
+                            Log($"Error: Skipping old server name migration because it doesn't have a port: '{SpltURLs[i]}'");
+                            continue;
                         }
 
-                    }
-                    else
-                    {
-                        Log($"Debug: ----   #{url.Order}: Skipped INVALID URL: {url}");
+                        ClsURLItem url = null;
+                        try
+                        {
+                            url = new ClsURLItem(SpltURLs[i], i + 1, URLTypeEnum.Unknown);
+                        }
+                        catch (Exception ex) { Log($"Error: url='{SpltURLs[i]}': {Global.ExMsg(ex)}"); }
 
+                        if (url != null && url.IsValid)
+                        {
+                            //if it already exists, use it, otherwise add a new one
+                            if (tmpdic.ContainsKey(url.ToString().ToLower()))
+                            {
+                                url = tmpdic[url.ToString().ToLower()];
+                                AppSettings.Settings.AIURLList.Add(url);
+                                url.Order = i + 1;
+                                //url.InUse.WriteFullFence(false);
+                                url.CurErrCount.WriteFullFence(0);
+                                url.Enabled.WriteFullFence(true);
+                                Log($"Debug: ----   #{url.Order}: Re-added known URL: '{url}'");
+                            }
+                            else
+                            {
+                                newcnt++;
+                                AppSettings.Settings.AIURLList.Add(url);
+                                Log($"Debug: ----   #{url.Order}: Added new URL: '{url}'");
+                            }
+
+                        }
+                        else
+                        {
+                            Log($"Debug: ----   #{url.Order}: Skipped INVALID URL: '{SpltURLs[i]}'");
+
+                        }
                     }
+
                 }
-                Log($"Debug: ...Found {AppSettings.Settings.AIURLList.Count} AI URL's in settings.");
+                catch (Exception ex)
+                {
+                    Log($"Error: {Global.ExMsg(ex)}");
+                }
+
+                Log($"Debug: ...{newcnt} new AI URL's migrated from old settings, with a total of {AppSettings.Settings.AIURLList.Count} AI URL's");
 
                 AppSettings.Settings.deepstack_url = "";  //we are not going to use this any longer
                 //AIURLSettingsChanged.WriteFullFence(false);
@@ -970,7 +994,7 @@ namespace AITool
                     }
                     else
                     {
-                        Camera cam = GetCamera(Filename);
+                        Camera cam = GetCamera(Filename, true);
                         if (cam != null)  //only put in queue if we can match to camera (even default)
                         {
 
@@ -997,7 +1021,7 @@ namespace AITool
                             }
                             else
                             {
-                                Log($"Error: Skipping image because camera '{cam}' is DISABLED " + Filename, "", cam, Filename);
+                                Log($"Debug: Skipping image because camera '{cam}' is DISABLED " + Filename, "", cam, Filename);
                             }
                         }
                         else
@@ -1564,7 +1588,7 @@ namespace AITool
                     {
                         pc = minconf / 100;
                         overr += $"({pc})";
-                        StringContent scmc = new StringContent((pc).ToString().Replace(",","."));  //replace comma with period in cases where the regional decimal symbol is a comma - Deepstack doesnt like that.
+                        StringContent scmc = new StringContent((pc).ToString().Replace(",", "."));  //replace comma with period in cases where the regional decimal symbol is a comma - Deepstack doesnt like that.
                         request.Add(scmc, "min_confidence");
                     }
 
@@ -1685,12 +1709,12 @@ namespace AITool
                     long seconds = swposttime.ElapsedMilliseconds / 1000;
                     if (seconds >= AiUrl.GetTimeout().TotalSeconds)
                     {
-                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds ('HTTPClientTimeoutSeconds' is currently set to {AiUrl.GetTimeout().TotalSeconds} in AITOOL.Settings.JSON file.): {Global.ExMsg(ex)}";
                     }
                     else
                     {
                         ret.Error = $"ERROR: {Global.ExMsg(ex)}";
-                   }
+                    }
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -2079,7 +2103,7 @@ namespace AITool
 
                     RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
                     AmazonRekognitionClient rekognitionClient = new AmazonRekognitionClient(new BasicAWSCredentials(AppSettings.Settings.AmazonAccessKeyId, AppSettings.Settings.AmazonSecretKey), endpoint);
-                    
+
                     DetectLabelsRequest dlr = new DetectLabelsRequest();
 
                     dlr.MaxLabels = AppSettings.Settings.AmazonMaxLabels;
@@ -2313,7 +2337,7 @@ namespace AITool
 
                                 // check to see if we can get a refinement server URL to postprocess 
                                 //wait for the next url to become available...
-                                
+
 
                                 //ClsURLItem PostProcessURL = await WaitForNextURL(cam, false);
 
@@ -2492,7 +2516,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    
+
                     error = $"ERROR: {Global.ExMsg(ex)}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = error;
@@ -2554,8 +2578,8 @@ namespace AITool
                 return "";
         }
 
-       
-        
+
+
         public static MaskResultInfo Outsidemask(Camera cam, double xmin, double xmax, double ymin, double ymax, int width, int height)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -2814,7 +2838,10 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            Camera cam = null;
+            //Camera cam = null;
+
+            List<Camera> cams = new List<Camera>();
+
             try
             {
                 ImageOrNameOrPrefix = ImageOrNameOrPrefix.Trim();
@@ -2834,84 +2861,148 @@ namespace AITool
                     //first look for . or - at end of prefix if not specified.   So CAM1 prefix wont match CAM12
                     foreach (Camera ccam in AppSettings.Settings.CameraList)
                     {
+                        //if (!ccam.enabled)
+                        //    continue;
+
                         if (ccam.Prefix.Contains("*") || ccam.Prefix.Contains("?"))
                         {
-                            if (Regex.IsMatch(Global.WildCardToRegular(ccam.Prefix), ImageOrNameOrPrefix, RegexOptions.IgnoreCase))
-                            { cam = ccam; break; }
+                            if (Regex.IsMatch(Global.WildCardToRegular(ccam.Prefix), ImageOrNameOrPrefix, RegexOptions.IgnoreCase) || Regex.IsMatch(Global.WildCardToRegular(ccam.Prefix), fname, RegexOptions.IgnoreCase))
+                            {
+                                if (!cams.Contains(ccam))
+                                {
+                                    ccam.LastGetCameraMatchResult = "(Regex)";
+                                    cams.Add(ccam);
+                                }
+                            }
                         }
                         else if (ccam.Prefix.EndsWith("-") || ccam.Prefix.EndsWith("."))
                         {
                             if (fname.StartsWith(ccam.Prefix.Trim(), StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
+                            {
+                                {
+                                    if (!cams.Contains(ccam))
+                                    {
+                                        ccam.LastGetCameraMatchResult = "(StartsWith-Prefix-Dot)";
+                                        cams.Add(ccam);
+                                    }
+                                }
+                            }
                         }
-                        else
+                        else if (!string.IsNullOrWhiteSpace(ccam.Prefix))
                         {
-                            if (fname.StartsWith(ccam.Prefix.Trim() + ".", StringComparison.OrdinalIgnoreCase) ||
-                                fname.StartsWith(ccam.Prefix.Trim() + "-", StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
+                            //&CAM.A.%Y%m%d_%H%M%S
+                            //AIFOSCAMDRIVEWAY.A.20200827_131840312
+
+                            //loop through so that we always check a match with the LONGEST prefix (between 2 dots), before the shorter ones
+                            string tmpfname = fname;
+                            int meno = 0;
+                            do
+                            {
+                                meno = tmpfname.LastIndexOf(".");
+                                if (meno > 0)
+                                {
+                                    tmpfname = fname.Substring(0, meno);
+                                    if (tmpfname.Equals(ccam.Prefix.Trim(), StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        if (!cams.Contains(ccam))
+                                        {
+                                            ccam.LastGetCameraMatchResult = "(Equals-Prefix-AnyDot)";
+                                            cams.Add(ccam);
+                                        }
+                                    }
+
+                                }
+
+                            } while (meno > 0);
                         }
                     }
 
-                    if (cam == null)
+                    //regular search
+                    foreach (Camera ccam in AppSettings.Settings.CameraList)
                     {
-                        //regular search
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            if (fname.StartsWith(ccam.Prefix.Trim(), StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
-                        }
+                        //if (!ccam.enabled)
+                        //    continue;
 
+                        if (!string.IsNullOrWhiteSpace(ccam.Prefix) && fname.StartsWith(ccam.Prefix.Trim(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!cams.Contains(ccam))
+                            {
+                                ccam.LastGetCameraMatchResult = "(StartsWith-Prefix)";
+                                cams.Add(ccam);
+                            }
+                        }
                     }
+
 
                     //if it is not found, search by the camera input path
-                    if (cam == null)
+                    foreach (Camera ccam in AppSettings.Settings.CameraList)
                     {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
-                        {
-                            //If the watched path is c:\bi\cameraname but the full path of found file is 
-                            //                       c:\bi\cameraname\date\time\randomefilename.jpg 
-                            //we just check the beginning of the path
-                            if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().StartsWith(pth, StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
-                        }
+                        //if (!ccam.enabled)
+                        //    continue;
 
+                        //If the watched path is c:\bi\cameraname but the full path of found file is 
+                        //                       c:\bi\cameraname\date\time\randomefilename.jpg 
+                        //we just check the beginning of the path
+                        if (!String.IsNullOrWhiteSpace(ccam.input_path) && ccam.input_path.Trim().StartsWith(pth, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!cams.Contains(ccam))
+                            {
+                                ccam.LastGetCameraMatchResult = "(StartsWith-InputPath)";
+                                cams.Add(ccam);
+                            }
+                        }
                     }
+
 
                 }
                 else
                 {
-                    //find by name 
+                    //find by name - we dont care if the camera is disabled
                     foreach (Camera ccam in AppSettings.Settings.CameraList)
                     {
                         if (ImageOrNameOrPrefix.Equals(ccam.Name, StringComparison.OrdinalIgnoreCase))
-                        { cam = ccam; break; }
-                    }
-                    if (cam == null)
-                    {
-                        //find by actual cam name if we have to
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
                         {
-                            if (ImageOrNameOrPrefix.Equals(ccam.BICamName, StringComparison.OrdinalIgnoreCase))
-                            { cam = ccam; break; }
+                            if (!cams.Contains(ccam))
+                            {
+                                ccam.LastGetCameraMatchResult = "(ByAICamName)";
+                                cams.Add(ccam);
+                            }
+                        }
+                    }
+                    //find by actual cam name if we have to
+                    foreach (Camera ccam in AppSettings.Settings.CameraList)
+                    {
+                        if (ImageOrNameOrPrefix.Equals(ccam.BICamName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!cams.Contains(ccam))
+                            {
+                                ccam.LastGetCameraMatchResult = "(ByBICamName?)";
+                                cams.Add(ccam);
+                            }
                         }
                     }
 
                 }
 
 
-
                 //if we didnt find a camera see if there is a default camera name we can use without a prefix
-                if (cam == null)
+                if (cams.Count() == 0)
                 {
                     Log($"Debug: No enabled camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
                     //check if there is a default camera which accepts any prefix, select it
                     if (ReturnDefault)
                     {
-                        if (AppSettings.Settings.CameraList.Exists(x => x.Prefix.Trim() == ""))
+                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.Prefix.Trim() == "");
+
+                        if (i == -1)
+                            i = AppSettings.Settings.CameraList.FindIndex(x => string.Equals(x.Name.Trim(), "default", StringComparison.OrdinalIgnoreCase));
+
+                        if (i > -1)
                         {
-                            int i = AppSettings.Settings.CameraList.FindIndex(x => x.Prefix.Trim() == "");
-                            cam = AppSettings.Settings.CameraList[i];
-                            Log($"(   Found a default camera: '{cam.Name}')");
+                            if (!cams.Contains(AppSettings.Settings.CameraList[i]))
+                                cams.Add(AppSettings.Settings.CameraList[i]);
+
+                            Log($"Debug:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
                         }
                         else
                         {
@@ -2928,9 +3019,23 @@ namespace AITool
                 Log(Global.ExMsg(ex));
             }
 
-            if (cam == null)
+            Camera cam = null;
+
+            if (cams.Count() == 0)
             {
                 Log($"Debug: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
+            }
+            else
+            {
+                cam = cams[0];
+                if (cams.Count() > 1)
+                {
+                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched ***");
+                    for (int i = 0; i < cams.Count; i++)
+                    {
+                        Log($"Debug:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");
+                    }
+                }
             }
 
             return cam;

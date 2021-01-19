@@ -88,7 +88,7 @@ namespace AITool
             return !(left == right);
         }
     }
-    public class Camera
+    public class Camera : IEquatable<Camera>
     {
         public string Name = "";
         public string Prefix = "";
@@ -185,6 +185,10 @@ namespace AITool
 
         [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);
+
+        [JsonIgnore]
+        public string LastGetCameraMatchResult = "";
+
         [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
@@ -195,6 +199,7 @@ namespace AITool
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
         private object CamLock = new object();
+        
 
         public string GetMaskFile(bool MustExist, ClsImageQueueItem CurImg = null, ImageResItem ir = null)
         {
@@ -545,6 +550,30 @@ namespace AITool
             //WriteConfig(name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper);
         }
 
+        public override string ToString()
+        {
+            return this.Name;
+        }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Camera);
+        }
+
+        public bool Equals(Camera other)
+        {
+            return other != null &&
+                   string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool operator ==(Camera left, Camera right)
+        {
+            return EqualityComparer<Camera>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(Camera left, Camera right)
+        {
+            return !(left == right);
+        }
     }
 }

@@ -107,7 +107,13 @@ namespace AITool
 
                 bool srvvalid = Global.ProcessValid(this.ServerProc);
                 bool redvalid = Global.ProcessValid(this.RedisProc);
-                bool pytvalid = srvvalid && montys.Count == this.Count * 2;
+                bool pytvalid = false;
+
+                if (this.FaceAPIEnabled)
+                    pytvalid = srvvalid && montys.Count == this.Count * 5;  //face runs 5 copies of python.exe
+                else
+                    pytvalid = srvvalid && montys.Count == this.Count * 2;  //normal detection runs 2 copies
+
 
                 bool allvalid = srvvalid && redvalid && pytvalid;
 
@@ -688,14 +694,22 @@ namespace AITool
 
                     //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
 
-                    int cnt = 0;
+                    int PythonCnt = 0;
                     int cc = 0;
+                    int ExpectedPythonCnt = 0;
+                    if (this.FaceAPIEnabled)
+                        ExpectedPythonCnt = this.Count * 5;  //face runs 5 copies of python.exe
+                    else
+                        ExpectedPythonCnt = this.Count * 2;  //normal detection runs 2 copies
+
                     do
                     {
 
                         List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
-                        cnt = montys.Count;
-                        if (montys.Count >= this.Count * 2)
+                        PythonCnt = montys.Count;
+
+
+                        if (montys.Count >= ExpectedPythonCnt)
                         {
                             //when deepstack is running normaly there will be 2 python.exe processes running for each deepstack.exe
                             //Set priority for each this way since we didnt start them in the first place...
@@ -729,11 +743,11 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Debug: ...Waiting for {this.Count * 2} copies of {this.PythonEXE} to start (now={montys.Count})...");
+                            Log($"Debug: ...Waiting for {ExpectedPythonCnt} copies of {this.PythonEXE} to start (now={montys.Count})...");
                             Thread.Sleep(250);
                         }
 
-                    } while (SW.ElapsedMilliseconds < 30000);  //wait 10 seconds max
+                    } while (SW.ElapsedMilliseconds < 30000);  //wait 30 seconds max
 
                     this.RedisProc = Global.GetProcessesByPath(this.RedisEXE);
 
@@ -749,10 +763,10 @@ namespace AITool
                     else
                     {
                         this.HasError = true;
-                        Log($"Error: 1 redis-server.exe processes did not start. (" + SW.ElapsedMilliseconds + "ms)");
+                        Log($"Error: 1 'redis-server.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
                     }
 
-                    if (cnt >= this.Count * 2)
+                    if (PythonCnt >= ExpectedPythonCnt)
                     {
 
                         Log("Started in " + SW.ElapsedMilliseconds + "ms");
@@ -760,7 +774,7 @@ namespace AITool
                     else
                     {
                         this.HasError = true;
-                        Log($"Error: {this.Count * 2} python.exe processes did not start within " + SW.ElapsedMilliseconds + "ms");
+                        Log($"Error: {ExpectedPythonCnt} 'python.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
                     }
 
                     if (!this.HasError)

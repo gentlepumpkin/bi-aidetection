@@ -258,7 +258,7 @@ namespace AITool
 
                             this.LastPositionsHistory.RemoveAt(historyIndex);
                             foundObject.CreateDate = DateTime.Now;     //reset create date as history object is converted to a mask
-                            foundObject.Counter = this.MaskRemoveThreshold; //sets the number of detections not visiable before being eligable to remove by timer
+                            foundObject.Counter = this.MaskRemoveThreshold; //sets the number of detections not visible before being eligible to remove by timer
                             foundObject.LastPercentMatch = 0;
                             this.MaskedPositions.Add(foundObject);
                             returnInfo.SetResults(MaskType.Dynamic, MaskResult.NewDynamicCreated, foundObject);
