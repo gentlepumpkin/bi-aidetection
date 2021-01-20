@@ -516,12 +516,12 @@ namespace AITool
                     Log($"Error: Last Deepstack STDERR.TXT error is '{err}'");
             }
         }
-        public async Task<bool> StartDeepstackAsync()
+        public async Task<bool> StartDeepstackAsync(bool ForceRestart = false)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            return await Task.Run(() => this.StartDeepstack());
+            return await Task.Run(() => this.StartDeepstack(ForceRestart));
         }
-        public bool StartDeepstack()
+        public bool StartDeepstack(bool ForceRestart = false)
         {
             //This error happens when you run out of video memory:
             //stderr.txt
@@ -561,7 +561,7 @@ namespace AITool
                 {
                     if (this.IsStarted)
                     {
-                        if (this.StopBeforeStart)
+                        if (this.StopBeforeStart || ForceRestart)
                         {
                             Log("Debug: Stopping already running DeepStack instance...");
                             this.StopDeepstack();

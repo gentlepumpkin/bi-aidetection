@@ -73,7 +73,7 @@ namespace AITool
                     Global.WaitFileAccessResult result2 = new Global.WaitFileAccessResult();
                     if (File.Exists(outputFilePath))
                     {
-                        result2 = Global.WaitForFileAccess(outputFilePath, FileAccess.ReadWrite, FileShare.None, 3000, 50, MinFileSize: 0);
+                        result2 = Global.WaitForFileAccess(outputFilePath, FileAccess.ReadWrite, FileShare.None, 3000, MinFileSize: 0);
                         if (result2.Success)
                             File.Delete(outputFilePath);
                     }
@@ -190,7 +190,7 @@ namespace AITool
                             MaxRetries = 100;
                         }
 
-                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, MaxWaitMS, 50, true, 4096, MaxRetries);
+                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, MaxWaitMS, AppSettings.Settings.file_access_delay_ms, true, 4096, MaxRetries);
 
                         this.FileLockMS = sw.ElapsedMilliseconds;
                         this.FileLockErrRetryCnt += result.ErrRetryCnt;

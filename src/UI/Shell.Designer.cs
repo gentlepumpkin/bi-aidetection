@@ -223,6 +223,9 @@
             this.cbMinimizeToTray = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.label32 = new System.Windows.Forms.Label();
+            this.txt_DeepstackRestartFailCount = new System.Windows.Forms.TextBox();
+            this.Chk_AutoReStart = new System.Windows.Forms.CheckBox();
             this.Btn_ViewLog = new System.Windows.Forms.Button();
             this.Btn_DeepstackReset = new System.Windows.Forms.Button();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
@@ -309,6 +312,9 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.label33 = new System.Windows.Forms.Label();
+            this.txt_DeepstackNoMoreOftenThanMins = new System.Windows.Forms.TextBox();
+            this.label34 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -1201,7 +1207,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(786, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(790, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1214,7 +1220,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(783, 377);
+            this.pictureBox1.Size = new System.Drawing.Size(787, 377);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2761,7 +2767,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 252);
@@ -2787,7 +2793,7 @@
             // 
             this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbMinimizeToTray.AutoSize = true;
-            this.cbMinimizeToTray.Location = new System.Drawing.Point(226, 13);
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(225, 13);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
             this.cbMinimizeToTray.TabIndex = 18;
@@ -2807,6 +2813,12 @@
             // 
             // tabDeepStack
             // 
+            this.tabDeepStack.Controls.Add(this.label34);
+            this.tabDeepStack.Controls.Add(this.label33);
+            this.tabDeepStack.Controls.Add(this.label32);
+            this.tabDeepStack.Controls.Add(this.txt_DeepstackNoMoreOftenThanMins);
+            this.tabDeepStack.Controls.Add(this.txt_DeepstackRestartFailCount);
+            this.tabDeepStack.Controls.Add(this.Chk_AutoReStart);
             this.tabDeepStack.Controls.Add(this.Btn_ViewLog);
             this.tabDeepStack.Controls.Add(this.Btn_DeepstackReset);
             this.tabDeepStack.Controls.Add(this.linkLabel1);
@@ -2843,10 +2855,36 @@
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
             // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Location = new System.Drawing.Point(174, 365);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(111, 13);
+            this.label32.TabIndex = 24;
+            this.label32.Text = "URL Failures in a row.";
+            // 
+            // txt_DeepstackRestartFailCount
+            // 
+            this.txt_DeepstackRestartFailCount.Location = new System.Drawing.Point(126, 361);
+            this.txt_DeepstackRestartFailCount.Name = "txt_DeepstackRestartFailCount";
+            this.txt_DeepstackRestartFailCount.Size = new System.Drawing.Size(42, 20);
+            this.txt_DeepstackRestartFailCount.TabIndex = 23;
+            // 
+            // Chk_AutoReStart
+            // 
+            this.Chk_AutoReStart.AutoSize = true;
+            this.Chk_AutoReStart.Location = new System.Drawing.Point(11, 364);
+            this.Chk_AutoReStart.Name = "Chk_AutoReStart";
+            this.Chk_AutoReStart.Size = new System.Drawing.Size(109, 17);
+            this.Chk_AutoReStart.TabIndex = 22;
+            this.Chk_AutoReStart.Text = "Auto Restart after";
+            this.Chk_AutoReStart.UseVisualStyleBackColor = true;
+            // 
             // Btn_ViewLog
             // 
             this.Btn_ViewLog.ForeColor = System.Drawing.Color.Maroon;
-            this.Btn_ViewLog.Location = new System.Drawing.Point(363, 379);
+            this.Btn_ViewLog.Location = new System.Drawing.Point(363, 388);
             this.Btn_ViewLog.Name = "Btn_ViewLog";
             this.Btn_ViewLog.Size = new System.Drawing.Size(70, 30);
             this.Btn_ViewLog.TabIndex = 21;
@@ -2857,7 +2895,7 @@
             // 
             // Btn_DeepstackReset
             // 
-            this.Btn_DeepstackReset.Location = new System.Drawing.Point(275, 379);
+            this.Btn_DeepstackReset.Location = new System.Drawing.Point(275, 388);
             this.Btn_DeepstackReset.Name = "Btn_DeepstackReset";
             this.Btn_DeepstackReset.Size = new System.Drawing.Size(70, 30);
             this.Btn_DeepstackReset.TabIndex = 20;
@@ -2884,7 +2922,7 @@
             this.groupBox11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox11.Controls.Add(this.tb_DeepStackURLs);
-            this.groupBox11.Location = new System.Drawing.Point(510, 291);
+            this.groupBox11.Location = new System.Drawing.Point(511, 300);
             this.groupBox11.Name = "groupBox11";
             this.groupBox11.Size = new System.Drawing.Size(502, 118);
             this.groupBox11.TabIndex = 18;
@@ -3066,7 +3104,7 @@
             // 
             // Btn_Save
             // 
-            this.Btn_Save.Location = new System.Drawing.Point(187, 379);
+            this.Btn_Save.Location = new System.Drawing.Point(187, 388);
             this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Save.Name = "Btn_Save";
             this.Btn_Save.Size = new System.Drawing.Size(70, 30);
@@ -3294,7 +3332,7 @@
             // 
             // Btn_Start
             // 
-            this.Btn_Start.Location = new System.Drawing.Point(11, 379);
+            this.Btn_Start.Location = new System.Drawing.Point(11, 388);
             this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Start.Name = "Btn_Start";
             this.Btn_Start.Size = new System.Drawing.Size(70, 30);
@@ -3305,7 +3343,7 @@
             // 
             // Btn_Stop
             // 
-            this.Btn_Stop.Location = new System.Drawing.Point(99, 379);
+            this.Btn_Stop.Location = new System.Drawing.Point(99, 388);
             this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Stop.Name = "Btn_Stop";
             this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
@@ -3760,6 +3798,31 @@
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
             // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(309, 365);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(98, 13);
+            this.label33.TabIndex = 25;
+            this.label33.Text = "No more often than";
+            // 
+            // txt_DeepstackNoMoreOftenThanMins
+            // 
+            this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(413, 361);
+            this.txt_DeepstackNoMoreOftenThanMins.Name = "txt_DeepstackNoMoreOftenThanMins";
+            this.txt_DeepstackNoMoreOftenThanMins.Size = new System.Drawing.Size(42, 20);
+            this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 23;
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(461, 364);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(29, 13);
+            this.label34.TabIndex = 26;
+            this.label34.Text = "Mins";
+            // 
             // Shell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -4143,6 +4206,12 @@
         private DBLayoutPanel dbLayoutPanel9;
         private System.Windows.Forms.CheckBox cbMinimizeToTray;
         private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.TextBox txt_DeepstackRestartFailCount;
+        private System.Windows.Forms.CheckBox Chk_AutoReStart;
+        private System.Windows.Forms.Label label34;
+        private System.Windows.Forms.Label label33;
+        private System.Windows.Forms.TextBox txt_DeepstackNoMoreOftenThanMins;
     }
 }
 

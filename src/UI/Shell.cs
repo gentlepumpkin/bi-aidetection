@@ -1832,7 +1832,7 @@ namespace AITool
 
             try
             {
-                if (semsw.ElapsedMilliseconds > 50)
+                if (semsw.ElapsedMilliseconds >= AppSettings.Settings.file_access_delay_ms)
                     Log($"debug: Waited {semsw.ElapsedMilliseconds}ms while waiting for other threads to finish.");
 
                 //wait a bit for the list to be available
@@ -1848,7 +1848,7 @@ namespace AITool
                         Log("debug: Waiting for database to finish initializing...");
                         displayed = true;
                     }
-                    await Task.Delay(100);
+                    await Task.Delay(AppSettings.Settings.file_access_delay_ms);
 
                 } while (sw.ElapsedMilliseconds < 60000);
 
@@ -3059,6 +3059,15 @@ namespace AITool
 
             AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
 
+            AppSettings.Settings.deepstack_autorestart = this.Chk_AutoReStart.Checked;
+            AppSettings.Settings.deepstack_autorestart_fail_count = Convert.ToInt32(this.txt_DeepstackRestartFailCount.Text);
+            AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = Convert.ToDouble(this.txt_DeepstackNoMoreOftenThanMins.Text);
+
+            if (AppSettings.Settings.deepstack_autorestart_fail_count >= AppSettings.Settings.MaxQueueItemRetries)
+            {
+                MessageBox.Show($"Note: Deepstack restart fail count is '{AppSettings.Settings.deepstack_autorestart_fail_count}' but the maximum \r\nnumber of times a URL can fail before being disabled is '{AppSettings.Settings.MaxQueueItemRetries}'\r\nTo change, see 'MaxQueueItemRetries' in AITOOL.SETTINGS.JSON file.");
+            }
+            
             AppSettings.SaveAsync();
 
 
@@ -3189,6 +3198,10 @@ namespace AITool
                 this.Txt_Port.Text = DeepStackServerControl.Port;
                 this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
                 this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
+
+                this.Chk_AutoReStart.Checked = AppSettings.Settings.deepstack_autorestart;
+                this.txt_DeepstackRestartFailCount.Text = AppSettings.Settings.deepstack_autorestart_fail_count.ToString();
+                this.txt_DeepstackNoMoreOftenThanMins.Text = AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts.ToString();
 
                 if (!DeepStackServerControl.IsNewVersion)
                     this.Txt_CustomModelPath.Enabled = false;
@@ -4929,7 +4942,7 @@ namespace AITool
                         Global.SaveSetting("LastLoadedImageFile", ofd.FileName);
                         AddImageToQueue(ofd.FileName);
                         //small delay
-                        await Task.Delay(AppSettings.Settings.file_access_delay);
+                        await Task.Delay(AppSettings.Settings.file_access_delay_ms);
                     }
                 }
 

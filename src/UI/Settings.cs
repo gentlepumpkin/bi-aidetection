@@ -66,23 +66,25 @@ namespace AITool
             public bool deepstack_sceneapienabled = false;
             public bool deepstack_faceapienabled = false;
             public bool deepstack_detectionapienabled = false;
-            public int file_access_delay = 50;
-            public int retry_delay = 10;
+            public bool deepstack_autorestart = true;
+            public int deepstack_autorestart_fail_count = 3;  //this many fails in a row will trigger restart
+            public double deepstack_autorestart_minutes_between_restart_attempts = 10.0;
+
+            public int file_access_delay_ms = 50;  //the small delay applied in a loop after a failed file access check
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
             public long MaxLogFileSize = ((1024 * 1024) * 10);  //10mb in bytes
+
             public int MaxImageQueueSize = 100;
             public int MaxActionQueueSize = 100;
             public double MaxImageQueueTimeMinutes = 30;  //Take an image out of the queue if it sits in there over this time
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
-            public int MaxHistoryAgeDays = 14;
             public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
+
             [JsonProperty("HTTPClientTimeoutSeconds")]
-            public int HTTPClientLocalTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
-            public int HTTPClientRemoteTimeoutSeconds = 55;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
-            public int AIDetectionTimeoutSeconds = 60;  //cancelationsource task timeout timeout
-                                                        //public int MaxDeepStackProcessTimeSeconds = 120;
+            public int HTTPClientLocalTimeoutSeconds = 60;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            public int HTTPClientRemoteTimeoutSeconds = 60;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
 
             public int RectRelevantColorAlpha = 150;    //255=solid, 127 half transparent
             public int RectIrrelevantColorAlpha = 150;
@@ -121,6 +123,7 @@ namespace AITool
             public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
             public int TimeBetweenListRefreshsMS = 5000;
+
             public bool HistoryShowMask = true;
             public bool HistoryShowObjects = true;
             public bool HistoryOnlyDisplayRelevantObjects = true;
@@ -136,6 +139,7 @@ namespace AITool
             public bool HistoryFilterVehicles = false;
             public bool HistoryFilterSkipped = false;
             public bool HistoryFilterMasked = false;
+            public int MaxHistoryAgeDays = 14;
 
             public string ObjectPriority = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
@@ -145,7 +149,7 @@ namespace AITool
             public string BlueIrisServer = "127.0.0.1";
 
             public string DOODSDetectorName = "default";
-
+            public bool ScrewPutinTrumpAndWinniethePooh = true;
             public int FileSystemWatcherRetryOnErrorTimeMS = 300000;  //5 mins default
 
             public string AmazonAccessKeyId = "";

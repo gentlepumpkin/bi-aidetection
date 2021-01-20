@@ -823,6 +823,7 @@ namespace AITool
                         int ProcImgCnt = 0;
                         int ErrCnt = 0;
                         int TskCnt = 0;
+                        ThreadSafe.Datetime LastDeepstackRestartTime = new ThreadSafe.Datetime(DateTime.MinValue);
 
                         while (!ImageProcessQueue.IsEmpty)
                         {
@@ -875,6 +876,7 @@ namespace AITool
                                     if (!success)
                                     {
                                         Interlocked.Increment(ref ErrCnt);
+                                        url.ErrsInRowCount.AtomicIncrementAndGet();
 
                                         if (url.CurErrCount.ReadFullFence() > 0)
                                         {
@@ -887,6 +889,30 @@ namespace AITool
                                             {
                                                 url.ErrDisabled.WriteFullFence(false);
                                                 Log($"...Error: AI URL for '{url.Type}' failed '{url.CurErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam);
+                                            }
+
+                                        }
+
+                                        if (url.ErrsInRowCount.ReadUnfenced() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
+                                            AppSettings.Settings.deepstack_autostart &&
+                                            DeepStackServerControl.IsInstalled &&
+                                            DeepStackServerControl.URLS.IndexOf(url.ToString(), StringComparison.OrdinalIgnoreCase) >= 0) 
+                                            
+                                        {
+                                            double mins = (DateTime.Now - LastDeepstackRestartTime.Read()).TotalMinutes;
+                                            double togo = (AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts - mins);
+                                            if (!DeepStackServerControl.Starting.ReadFullFence() && 
+                                               mins >= AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts)
+                                            {
+                                                Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Restarting Deepstack...");
+                                                //dont wait for it
+                                                await DeepStackServerControl.StartDeepstackAsync(true);
+                                                url.ErrsInRowCount.WriteFullFence(0);
+                                                LastDeepstackRestartTime.Write(DateTime.Now);
+                                            }
+                                            else
+                                            {
+                                                Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Waiting {togo.ToString("##0.0")} mins before attempting restart...");
                                             }
 
                                         }
@@ -914,6 +940,7 @@ namespace AITool
                                         Interlocked.Increment(ref ProcImgCnt);
                                         //reset error count
                                         url.CurErrCount.WriteFullFence(0);
+                                        url.ErrsInRowCount.WriteFullFence(0);
                                     }
 
                                     url.InUse.WriteFullFence(false);

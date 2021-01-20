@@ -47,6 +47,7 @@ namespace AITool
         [JsonIgnore]
         public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer ErrsInRowCount { get; set; } = new ThreadSafe.Integer(0);
         public bool IsLocalHost { get; set; } = false;
         public bool IsLocalNetwork { get; set; } = false;
         public string HelpURL { get; set; } = "";

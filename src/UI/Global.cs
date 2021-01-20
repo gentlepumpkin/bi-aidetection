@@ -96,7 +96,7 @@ namespace AITool
             if (!File.Exists(Filename))
                 return true;
 
-            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, 50, true, 0);
+            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, AppSettings.Settings.file_access_delay_ms, true, 0);
             if (result.Success)
             {
                 try
@@ -124,7 +124,7 @@ namespace AITool
             string ret = "";
 
             //dont wait very long for access, only grab text if the file is not being used (for stderr.txt, etc)
-            WaitFileAccessResult result = WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 100, 25, true, 4, MaxErrRetryCnt: 4);
+            WaitFileAccessResult result = WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 100, AppSettings.Settings.file_access_delay_ms, true, 4, MaxErrRetryCnt: 4);
 
             try
             {
@@ -1481,7 +1481,7 @@ namespace AITool
 
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
-        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileAccess rights = FileAccess.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 50)
+        public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileAccess rights = FileAccess.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 0)
         {
             //run the function in another thread
             return await Task.Run(() => WaitForFileAccess(filename, rights, share, WaitMS, RetryDelayMS));
@@ -1501,7 +1501,7 @@ namespace AITool
                                                               FileAccess rights = FileAccess.Read,
                                                               FileShare share = FileShare.None,
                                                               long MaxWaitMS = 30000,
-                                                              int RetryDelayMS = 50,
+                                                              int RetryDelayMS = 0,
                                                               bool ReturnHandle = false,
                                                               long MinFileSize = 1,
                                                               int MaxErrRetryCnt = 2000)
@@ -1512,6 +1512,9 @@ namespace AITool
             WaitFileAccessResult ret = new WaitFileAccessResult();
             string LastFailReason = "";
             Stopwatch SW = Stopwatch.StartNew();
+
+            if (RetryDelayMS == 0)
+                RetryDelayMS = AppSettings.Settings.file_access_delay_ms;
 
             try
             {
@@ -2450,7 +2453,7 @@ namespace AITool
                     {
                         cnt++;
                         LastMem = prc.PrivateMemorySize64;
-                        System.Threading.Thread.Sleep(50);
+                        System.Threading.Thread.Sleep(AppSettings.Settings.file_access_delay_ms);
                         prc.Refresh();
                     }
                     sw.Stop();
