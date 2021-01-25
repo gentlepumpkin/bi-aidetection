@@ -96,9 +96,6 @@ namespace AITool
                             }
                         }
 
-                        //wait for a small amount of time to allow the file to become accessible to blue iris - trying to prevent blank alert image in BI
-                        //Thread.Sleep(50);
-
                         ret = true;
                     }
                     else
@@ -190,7 +187,7 @@ namespace AITool
                             MaxRetries = 100;
                         }
 
-                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, MaxWaitMS, AppSettings.Settings.file_access_delay_ms, true, 4096, MaxRetries);
+                        result = Global.WaitForFileAccess(this.image_path, FileAccess.Read, FileShare.None, MaxWaitMS, AppSettings.Settings.loop_delay_ms, true, 4096, MaxRetries);
 
                         this.FileLockMS = sw.ElapsedMilliseconds;
                         this.FileLockErrRetryCnt += result.ErrRetryCnt;

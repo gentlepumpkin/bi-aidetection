@@ -70,7 +70,7 @@ namespace AITool
             public int deepstack_autorestart_fail_count = 3;  //this many fails in a row will trigger restart
             public double deepstack_autorestart_minutes_between_restart_attempts = 10.0;
 
-            public int file_access_delay_ms = 50;  //the small delay applied in a loop after a failed file access check
+            public int loop_delay_ms = 50;  //the small delay applied in a loop after a failed file access check
             public bool SettingsValid = false;
             public int MaxLogFileAgeDays = 14;
             public long MaxLogFileSize = ((1024 * 1024) * 10);  //10mb in bytes
@@ -83,8 +83,8 @@ namespace AITool
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
 
             [JsonProperty("HTTPClientTimeoutSeconds")]
-            public int HTTPClientLocalTimeoutSeconds = 60;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
-            public int HTTPClientRemoteTimeoutSeconds = 60;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            public int HTTPClientLocalTimeoutSeconds = 120;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
+            public int HTTPClientRemoteTimeoutSeconds = 120;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
 
             public int RectRelevantColorAlpha = 150;    //255=solid, 127 half transparent
             public int RectIrrelevantColorAlpha = 150;
@@ -141,7 +141,7 @@ namespace AITool
             public bool HistoryFilterMasked = false;
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+            public string ObjectPriority = "person, face, bear, elephant, car, truck, suv, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -163,6 +163,8 @@ namespace AITool
             public int ActionCancelSeconds = 30;
 
             public bool MinimizeToTray = true;
+
+            public int MaxWaitForAIServerMS = 5000;
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 

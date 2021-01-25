@@ -12,7 +12,7 @@ namespace AITool
 
         public Frm_WizzardParent()
         {
-            count = frm.Count();
+            count = frm.Length;
             InitializeComponent();
         }
 

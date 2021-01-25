@@ -283,6 +283,9 @@
     <Compile Include="AITOOL.cs" />
     <Compile Include="BlueIris.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="CheckedComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ClsDoodsDetection.cs" />
     <Compile Include="ClsDoodsRequest.cs" />
     <Compile Include="ClsDoodsResponse.cs" />
@@ -481,6 +484,9 @@
     <Compile Include="SQLite\SQLiteAsync.cs" />
     <Compile Include="ThreadSafe.cs" />
     <Compile Include="util.cs" />
+    <EmbeddedResource Include="CheckedComboBox.resx">
+      <DependentUpon>CheckedComboBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrmSplash.resx">
       <DependentUpon>FrmSplash.cs</DependentUpon>
     </EmbeddedResource>

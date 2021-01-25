@@ -1581,8 +1581,10 @@ namespace AITool
 
                         predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
 
-                        foreach (var pred in predictions)
+                        //draw in reverse, assuming most important should be on top
+                        for (int i = predictions.Count - 1; i >= 0; i--)
                         {
+                            ClsPrediction pred = predictions[i];
                             if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
                             {
                                 this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
@@ -1599,11 +1601,11 @@ namespace AITool
                     {
                         List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
 
-                        int countr = positionssArray.Count();
+                        int countr = positionssArray.Count;
 
                         ResultType result = ResultType.Unknown;
 
-                        if (detections.ToLower().Contains("irrelevant") || detections.ToLower().Contains("masked") || detections.ToLower().Contains("confidence"))
+                        if (detections.IndexOf("irrelevant", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("confidence", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
                             if (detections.Contains("masked"))
@@ -1724,7 +1726,7 @@ namespace AITool
 
                     if (HistoryDB != null)
                     {
-                        items = HistoryDB.HistoryDic.Count();
+                        items = HistoryDB.HistoryDic.Count;
                         removed = HistoryDB.DeletedCount.ReadFullFence();
                     }
 
@@ -1832,7 +1834,7 @@ namespace AITool
 
             try
             {
-                if (semsw.ElapsedMilliseconds >= AppSettings.Settings.file_access_delay_ms)
+                if (semsw.ElapsedMilliseconds >= AppSettings.Settings.loop_delay_ms)
                     Log($"debug: Waited {semsw.ElapsedMilliseconds}ms while waiting for other threads to finish.");
 
                 //wait a bit for the list to be available
@@ -1848,7 +1850,7 @@ namespace AITool
                         Log("debug: Waiting for database to finish initializing...");
                         displayed = true;
                     }
-                    await Task.Delay(AppSettings.Settings.file_access_delay_ms);
+                    await Task.Delay(AppSettings.Settings.loop_delay_ms);
 
                 } while (sw.ElapsedMilliseconds < 60000);
 
@@ -2046,7 +2048,7 @@ namespace AITool
                     string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
                     if (cam.maskManager.MaskingEnabled)
                     {
-                        stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
+                        stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count}";
                     }
                     this.lbl_camstats.Text = stats;
                 }
@@ -2378,7 +2380,7 @@ namespace AITool
 
                 if (cam.maskManager.MaskingEnabled)
                 {
-                    stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count()} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count()}";
+                    stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count}";
                 }
                 this.lbl_camstats.Text = stats;
 
@@ -2513,7 +2515,7 @@ namespace AITool
 
                     }
 
-                    MessageBox.Show($"Added {added} out of {cams.Count()}.  See log for details.");
+                    MessageBox.Show($"Added {added} out of {cams.Count}.  See log for details.");
 
                 }
             }
@@ -4942,7 +4944,7 @@ namespace AITool
                         Global.SaveSetting("LastLoadedImageFile", ofd.FileName);
                         AddImageToQueue(ofd.FileName);
                         //small delay
-                        await Task.Delay(AppSettings.Settings.file_access_delay_ms);
+                        await Task.Delay(AppSettings.Settings.loop_delay_ms);
                     }
                 }
 

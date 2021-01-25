@@ -42,26 +42,32 @@ namespace AITool
             this.chk_Enabled = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tb_RefinementObjects = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
+            this.cb_LinkedServers = new System.Windows.Forms.CheckBox();
             this.cb_RefinementServer = new System.Windows.Forms.CheckBox();
             this.tb_Upper = new System.Windows.Forms.TextBox();
             this.tb_Lower = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.tb_timeout = new System.Windows.Forms.TextBox();
             this.tb_ImagesPerMonth = new System.Windows.Forms.TextBox();
             this.btn_ImageAdjustEdit = new System.Windows.Forms.Button();
             this.cb_ImageAdjustProfile = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
+            this.labelTimeout = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkHelpURL = new System.Windows.Forms.LinkLabel();
             this.btTest = new System.Windows.Forms.Button();
             this.bt_clear = new System.Windows.Forms.Button();
-            this.labelTimeout = new System.Windows.Forms.Label();
-            this.tb_timeout = new System.Windows.Forms.TextBox();
+            this.groupBoxRefine = new System.Windows.Forms.GroupBox();
+            this.groupBoxLinked = new System.Windows.Forms.GroupBox();
+            this.checkedComboBoxLinked = new CheckComboBoxTest.CheckedComboBox();
             this.groupBox1.SuspendLayout();
+            this.groupBoxRefine.SuspendLayout();
+            this.groupBoxLinked.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -99,7 +105,7 @@ namespace AITool
             this.tb_URL.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_URL.Location = new System.Drawing.Point(111, 35);
             this.tb_URL.Name = "tb_URL";
-            this.tb_URL.Size = new System.Drawing.Size(462, 20);
+            this.tb_URL.Size = new System.Drawing.Size(461, 20);
             this.tb_URL.TabIndex = 2;
             this.tb_URL.TextChanged += new System.EventHandler(this.tb_URL_TextChanged);
             // 
@@ -107,7 +113,7 @@ namespace AITool
             // 
             this.bt_Save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.bt_Save.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.bt_Save.Location = new System.Drawing.Point(514, 245);
+            this.bt_Save.Location = new System.Drawing.Point(513, 333);
             this.bt_Save.Name = "bt_Save";
             this.bt_Save.Size = new System.Drawing.Size(70, 30);
             this.bt_Save.TabIndex = 3;
@@ -149,7 +155,7 @@ namespace AITool
             this.tb_ApplyToCams.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_ApplyToCams.Location = new System.Drawing.Point(111, 61);
             this.tb_ApplyToCams.Name = "tb_ApplyToCams";
-            this.tb_ApplyToCams.Size = new System.Drawing.Size(461, 20);
+            this.tb_ApplyToCams.Size = new System.Drawing.Size(460, 20);
             this.tb_ApplyToCams.TabIndex = 5;
             this.toolTip1.SetToolTip(this.tb_ApplyToCams, "A comma separated list of cameras that this AI server will work with.\r\n\r\nLeave em" +
         "pty for ALL.");
@@ -157,6 +163,7 @@ namespace AITool
             // chk_Enabled
             // 
             this.chk_Enabled.AutoSize = true;
+            this.chk_Enabled.ForeColor = System.Drawing.Color.DodgerBlue;
             this.chk_Enabled.Location = new System.Drawing.Point(11, 0);
             this.chk_Enabled.Name = "chk_Enabled";
             this.chk_Enabled.Size = new System.Drawing.Size(65, 17);
@@ -170,12 +177,10 @@ namespace AITool
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.tb_RefinementObjects);
-            this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.cb_RefinementServer);
+            this.groupBox1.Controls.Add(this.groupBoxLinked);
+            this.groupBox1.Controls.Add(this.groupBoxRefine);
             this.groupBox1.Controls.Add(this.tb_Upper);
             this.groupBox1.Controls.Add(this.tb_Lower);
-            this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.tb_timeout);
             this.groupBox1.Controls.Add(this.tb_ImagesPerMonth);
@@ -197,7 +202,7 @@ namespace AITool
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Location = new System.Drawing.Point(5, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(579, 220);
+            this.groupBox1.Size = new System.Drawing.Size(578, 308);
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
             // 
@@ -206,27 +211,50 @@ namespace AITool
             this.tb_RefinementObjects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tb_RefinementObjects.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_RefinementObjects.Location = new System.Drawing.Point(111, 186);
+            this.tb_RefinementObjects.Location = new System.Drawing.Point(8, 36);
             this.tb_RefinementObjects.Name = "tb_RefinementObjects";
-            this.tb_RefinementObjects.Size = new System.Drawing.Size(461, 20);
+            this.tb_RefinementObjects.Size = new System.Drawing.Size(547, 20);
             this.tb_RefinementObjects.TabIndex = 14;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(6, 20);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(343, 13);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "Wait for results from all linked servers - Useful for custom trained models";
             // 
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(132, 167);
+            this.label11.Location = new System.Drawing.Point(3, 20);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(337, 13);
             this.label11.TabIndex = 13;
             this.label11.Text = "Use this server only if another server detects the following objects first:";
             // 
+            // cb_LinkedServers
+            // 
+            this.cb_LinkedServers.AutoSize = true;
+            this.cb_LinkedServers.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.cb_LinkedServers.Location = new System.Drawing.Point(8, 0);
+            this.cb_LinkedServers.Name = "cb_LinkedServers";
+            this.cb_LinkedServers.Size = new System.Drawing.Size(84, 17);
+            this.cb_LinkedServers.TabIndex = 12;
+            this.cb_LinkedServers.Text = "Link Results";
+            this.cb_LinkedServers.UseVisualStyleBackColor = true;
+            this.cb_LinkedServers.CheckedChanged += new System.EventHandler(this.cb_LinkedServers_CheckedChanged);
+            // 
             // cb_RefinementServer
             // 
             this.cb_RefinementServer.AutoSize = true;
-            this.cb_RefinementServer.Location = new System.Drawing.Point(111, 166);
+            this.cb_RefinementServer.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.cb_RefinementServer.Location = new System.Drawing.Point(8, 0);
             this.cb_RefinementServer.Name = "cb_RefinementServer";
-            this.cb_RefinementServer.Size = new System.Drawing.Size(15, 14);
+            this.cb_RefinementServer.Size = new System.Drawing.Size(150, 17);
             this.cb_RefinementServer.TabIndex = 12;
+            this.cb_RefinementServer.Text = "Use as Refinement Server";
             this.cb_RefinementServer.UseVisualStyleBackColor = true;
             this.cb_RefinementServer.CheckedChanged += new System.EventHandler(this.cb_RefinementServer_CheckedChanged);
             // 
@@ -249,15 +277,6 @@ namespace AITool
             this.tb_Lower.Tag = "";
             this.tb_Lower.Text = "0";
             // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(9, 167);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(98, 13);
-            this.label10.TabIndex = 10;
-            this.label10.Text = "Refinement Server:";
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -267,6 +286,18 @@ namespace AITool
             this.label3.TabIndex = 10;
             this.label3.Text = "Confidence limits:";
             // 
+            // tb_timeout
+            // 
+            this.tb_timeout.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_timeout.Location = new System.Drawing.Point(525, 112);
+            this.tb_timeout.Name = "tb_timeout";
+            this.tb_timeout.Size = new System.Drawing.Size(46, 20);
+            this.tb_timeout.TabIndex = 9;
+            this.tb_timeout.Text = "0";
+            this.toolTip1.SetToolTip(this.tb_timeout, "If you set this to any value other than 0 it will override the default timeout");
+            // 
             // tb_ImagesPerMonth
             // 
             this.tb_ImagesPerMonth.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -274,7 +305,7 @@ namespace AITool
             this.tb_ImagesPerMonth.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_ImagesPerMonth.Location = new System.Drawing.Point(525, 87);
             this.tb_ImagesPerMonth.Name = "tb_ImagesPerMonth";
-            this.tb_ImagesPerMonth.Size = new System.Drawing.Size(47, 20);
+            this.tb_ImagesPerMonth.Size = new System.Drawing.Size(46, 20);
             this.tb_ImagesPerMonth.TabIndex = 9;
             this.tb_ImagesPerMonth.Text = "0";
             this.toolTip1.SetToolTip(this.tb_ImagesPerMonth, "Max images per month - 0 for unlimited.    Amazon has 5000 free images a month");
@@ -319,6 +350,15 @@ namespace AITool
             this.label8.TabIndex = 1;
             this.label8.Text = "Lower";
             // 
+            // labelTimeout
+            // 
+            this.labelTimeout.Location = new System.Drawing.Point(320, 117);
+            this.labelTimeout.Name = "labelTimeout";
+            this.labelTimeout.Size = new System.Drawing.Size(199, 13);
+            this.labelTimeout.TabIndex = 1;
+            this.labelTimeout.Text = "Timeout:";
+            this.labelTimeout.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
@@ -341,7 +381,7 @@ namespace AITool
             // 
             this.linkHelpURL.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkHelpURL.AutoSize = true;
-            this.linkHelpURL.Location = new System.Drawing.Point(2, 227);
+            this.linkHelpURL.Location = new System.Drawing.Point(2, 315);
             this.linkHelpURL.Name = "linkHelpURL";
             this.linkHelpURL.Size = new System.Drawing.Size(10, 13);
             this.linkHelpURL.TabIndex = 8;
@@ -352,7 +392,7 @@ namespace AITool
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(438, 245);
+            this.btTest.Location = new System.Drawing.Point(437, 333);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 9;
@@ -363,7 +403,7 @@ namespace AITool
             // bt_clear
             // 
             this.bt_clear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.bt_clear.Location = new System.Drawing.Point(362, 245);
+            this.bt_clear.Location = new System.Drawing.Point(361, 333);
             this.bt_clear.Name = "bt_clear";
             this.bt_clear.Size = new System.Drawing.Size(70, 30);
             this.bt_clear.TabIndex = 9;
@@ -371,32 +411,54 @@ namespace AITool
             this.bt_clear.UseVisualStyleBackColor = true;
             this.bt_clear.Click += new System.EventHandler(this.bt_clear_Click);
             // 
-            // labelTimeout
+            // groupBoxRefine
             // 
-            this.labelTimeout.Location = new System.Drawing.Point(320, 117);
-            this.labelTimeout.Name = "labelTimeout";
-            this.labelTimeout.Size = new System.Drawing.Size(199, 13);
-            this.labelTimeout.TabIndex = 1;
-            this.labelTimeout.Text = "Timeout:";
-            this.labelTimeout.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // tb_timeout
-            // 
-            this.tb_timeout.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.groupBoxRefine.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_timeout.Location = new System.Drawing.Point(525, 112);
-            this.tb_timeout.Name = "tb_timeout";
-            this.tb_timeout.Size = new System.Drawing.Size(47, 20);
-            this.tb_timeout.TabIndex = 9;
-            this.tb_timeout.Text = "0";
-            this.toolTip1.SetToolTip(this.tb_timeout, "If you set this to any value other than 0 it will override the default timeout");
+            this.groupBoxRefine.Controls.Add(this.cb_RefinementServer);
+            this.groupBoxRefine.Controls.Add(this.label11);
+            this.groupBoxRefine.Controls.Add(this.tb_RefinementObjects);
+            this.groupBoxRefine.Location = new System.Drawing.Point(6, 166);
+            this.groupBoxRefine.Name = "groupBoxRefine";
+            this.groupBoxRefine.Size = new System.Drawing.Size(561, 63);
+            this.groupBoxRefine.TabIndex = 16;
+            this.groupBoxRefine.TabStop = false;
+            // 
+            // groupBoxLinked
+            // 
+            this.groupBoxLinked.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxLinked.Controls.Add(this.cb_LinkedServers);
+            this.groupBoxLinked.Controls.Add(this.label13);
+            this.groupBoxLinked.Controls.Add(this.checkedComboBoxLinked);
+            this.groupBoxLinked.Location = new System.Drawing.Point(6, 235);
+            this.groupBoxLinked.Name = "groupBoxLinked";
+            this.groupBoxLinked.Size = new System.Drawing.Size(561, 63);
+            this.groupBoxLinked.TabIndex = 17;
+            this.groupBoxLinked.TabStop = false;
+            // 
+            // checkedComboBoxLinked
+            // 
+            this.checkedComboBoxLinked.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkedComboBoxLinked.CheckOnClick = true;
+            this.checkedComboBoxLinked.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.checkedComboBoxLinked.DropDownHeight = 1;
+            this.checkedComboBoxLinked.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.checkedComboBoxLinked.FormattingEnabled = true;
+            this.checkedComboBoxLinked.IntegralHeight = false;
+            this.checkedComboBoxLinked.Location = new System.Drawing.Point(6, 36);
+            this.checkedComboBoxLinked.Name = "checkedComboBoxLinked";
+            this.checkedComboBoxLinked.Size = new System.Drawing.Size(549, 21);
+            this.checkedComboBoxLinked.TabIndex = 15;
+            this.checkedComboBoxLinked.Text = "Click dropdown to select";
+            this.checkedComboBoxLinked.ValueSeparator = ", ";
             // 
             // Frm_AIServerDeepstackEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(587, 283);
+            this.ClientSize = new System.Drawing.Size(586, 371);
             this.Controls.Add(this.bt_clear);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.linkHelpURL);
@@ -409,6 +471,10 @@ namespace AITool
             this.Load += new System.EventHandler(this.Frm_AIServerDeepstackEdit_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBoxRefine.ResumeLayout(false);
+            this.groupBoxRefine.PerformLayout();
+            this.groupBoxLinked.ResumeLayout(false);
+            this.groupBoxLinked.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -444,8 +510,12 @@ namespace AITool
         private System.Windows.Forms.TextBox tb_RefinementObjects;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.CheckBox cb_RefinementServer;
-        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox tb_timeout;
         private System.Windows.Forms.Label labelTimeout;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.CheckBox cb_LinkedServers;
+        private CheckComboBoxTest.CheckedComboBox checkedComboBoxLinked;
+        private System.Windows.Forms.GroupBox groupBoxLinked;
+        private System.Windows.Forms.GroupBox groupBoxRefine;
     }
 }

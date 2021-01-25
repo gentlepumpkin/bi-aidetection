@@ -53,12 +53,15 @@ namespace AITool
         public int YMax { get; set; } = 0;
         public int XMax { get; set; } = 0;
         public string Camera { get; set; } = "";
+        public string BICamName { get; set; } = "";
         public int RectWidth { get; set; } = 0;
         public int RectHeight { get; set; } = 0;
         public int ImageWidth { get; set; } = 0;
         public int ImageHeight { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
+        public string Server { get; set; } = "";
+        public DateTime Time { get; set; } = DateTime.MinValue;
         //private ClsDeepstackObject _imageObject;
 
         public ClsPrediction() { }
@@ -70,8 +73,12 @@ namespace AITool
             this._cururl = curURL;
             this._curimg = curImg;
             this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+            this.Filename = curImg.image_path;
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Name))
             {
@@ -114,7 +121,6 @@ namespace AITool
             this.Label = Global.UpperFirst(AiDetectionObject.Name);
 
             this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
-            this.Filename = curImg.image_path;
 
             this.GetObjectType();
         }
@@ -128,6 +134,11 @@ namespace AITool
             this._cururl = curURL;
             this._curimg = curImg;
             this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+            this.Filename = curImg.image_path;
+
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.ObjectType))
             {
@@ -335,6 +346,11 @@ namespace AITool
             this._cururl = curURL;
             this._curimg = curImg;
             this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+            this.Filename = curImg.image_path;
+
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Type))
             {
@@ -471,11 +487,16 @@ namespace AITool
             this._cam = cam;
             this._curimg = curImg;
             this._cururl = curURL;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+
 
             //this._imageObject = AiDetectionObject;
             this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
+            this.Filename = curImg.image_path;
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.label))
             {
@@ -507,8 +528,13 @@ namespace AITool
 
             //this._imageObject = AiDetectionObject;
             this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
             this.ImageHeight = curImg.Height;
             this.ImageWidth = curImg.Width;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+            this.Filename = curImg.image_path;
+
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Label))
             {

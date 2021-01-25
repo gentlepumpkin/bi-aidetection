@@ -41,6 +41,10 @@ namespace AITool
         public bool UseAsRefinementServer { get; set; } = false;
         public string RefinementObjects { get; set; } = "";
         [JsonIgnore]
+        public bool RefinementUseCurrentlyValid { get; set; } = false;
+        public bool LinkServerResults { get; set; } = false;
+        public string LinkedResultsServerList { get; set; } = "";
+        [JsonIgnore]
         public int CurOrder { get; set; } = 0;
         [JsonIgnore]
         public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
@@ -52,6 +56,7 @@ namespace AITool
         public bool IsLocalNetwork { get; set; } = false;
         public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
+        public bool LastResultSuccess { get; set; } = false;
         public string LastResultMessage { get; set; } = "";
         public long LastTimeMS { get; set; } = 0;
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url

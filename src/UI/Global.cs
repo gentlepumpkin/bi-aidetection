@@ -96,7 +96,7 @@ namespace AITool
             if (!File.Exists(Filename))
                 return true;
 
-            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, AppSettings.Settings.file_access_delay_ms, true, 0);
+            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, AppSettings.Settings.loop_delay_ms, true, 0);
             if (result.Success)
             {
                 try
@@ -124,7 +124,7 @@ namespace AITool
             string ret = "";
 
             //dont wait very long for access, only grab text if the file is not being used (for stderr.txt, etc)
-            WaitFileAccessResult result = WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 100, AppSettings.Settings.file_access_delay_ms, true, 4, MaxErrRetryCnt: 4);
+            WaitFileAccessResult result = WaitForFileAccess(Filename, FileAccess.Read, FileShare.Read, 100, AppSettings.Settings.loop_delay_ms, true, 4, MaxErrRetryCnt: 4);
 
             try
             {
@@ -1514,7 +1514,7 @@ namespace AITool
             Stopwatch SW = Stopwatch.StartNew();
 
             if (RetryDelayMS == 0)
-                RetryDelayMS = AppSettings.Settings.file_access_delay_ms;
+                RetryDelayMS = AppSettings.Settings.loop_delay_ms;
 
             try
             {
@@ -1738,7 +1738,7 @@ namespace AITool
 
             return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
         }
-        private static bool IsInList(List<string> FindStrsList, List<string> SearchList)
+        public static bool IsInList(List<string> FindStrsList, List<string> SearchList)
         {
             foreach (string findstr in FindStrsList)
             {
@@ -1762,7 +1762,7 @@ namespace AITool
                     SSO = StringSplitOptions.RemoveEmptyEntries;
 
                 string[] splt = InList.Split(Separators.ToCharArray(), SSO);
-                for (int i = 0; i < splt.Count(); i++)
+                for (int i = 0; i < splt.Length; i++)
                 {
                     if (ToLower)
                         splt[i] = splt[i].ToLower();
@@ -1856,14 +1856,14 @@ namespace AITool
                     string ST = ThisEX.StackTrace;
                     string[] SpltStr = new string[1] { " at " };
                     string[] Splt = ST.Split(SpltStr, StringSplitOptions.None);
-                    string Lst = Splt[Splt.Count() - 1].Replace(".MoveNext()", "").Trim();
+                    string Lst = Splt[Splt.Length - 1].Replace(".MoveNext()", "").Trim();
                     Lst = GetWordBetween(Lst, "", " in ");
                     string[] Splt2 = Lst.Split('.');
-                    string LastMod = Splt2[Splt2.Count() - 1].Trim();
+                    string LastMod = Splt2[Splt2.Length - 1].Trim();
                     StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
 
 
-                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Count() - 1].GetFileLineNumber()}";
+                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Length - 1].GetFileLineNumber()}";
                 }
             }
             catch { }
@@ -2453,7 +2453,7 @@ namespace AITool
                     {
                         cnt++;
                         LastMem = prc.PrivateMemorySize64;
-                        System.Threading.Thread.Sleep(AppSettings.Settings.file_access_delay_ms);
+                        System.Threading.Thread.Sleep(AppSettings.Settings.loop_delay_ms);
                         prc.Refresh();
                     }
                     sw.Stop();

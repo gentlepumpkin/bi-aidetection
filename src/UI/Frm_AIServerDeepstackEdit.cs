@@ -47,14 +47,32 @@ namespace AITool
             this.cb_RefinementServer.Checked = this.CurURL.UseAsRefinementServer;
             this.tb_RefinementObjects.Text = this.CurURL.RefinementObjects;
 
-            foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
+            this.cb_LinkedServers.Checked = this.CurURL.LinkServerResults;
+
+            List<string> linked = Global.Split(this.CurURL.LinkedResultsServerList,",;|");
+
+            //Add all servers except current one and refinement server
+            int idx = 0;
+            foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
             {
-                this.cb_ImageAdjustProfile.Items.Add(ia.Name);
+                if (!url.UseAsRefinementServer && !string.Equals(this.CurURL.ToString(), url.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    this.checkedComboBoxLinked.Items.Add(url);
+                    if (Global.IsInList(url.ToString(), this.CurURL.LinkedResultsServerList, TrueIfEmpty:false))
+                        this.checkedComboBoxLinked.SetItemChecked(idx, true);
+                    idx++;
+                }
+                
             }
+
+            foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
+                this.cb_ImageAdjustProfile.Items.Add(ia.Name);
 
             this.cb_ImageAdjustProfile.SelectedIndex = this.cb_ImageAdjustProfile.Items.IndexOf(this.CurURL.DefaultURL);
 
             Global_GUI.GroupboxEnableDisable(groupBox1, chk_Enabled);
+            Global_GUI.GroupboxEnableDisable(groupBoxRefine, cb_RefinementServer);
+            Global_GUI.GroupboxEnableDisable(groupBoxLinked, cb_LinkedServers);
 
 
         }
@@ -116,6 +134,14 @@ namespace AITool
             this.CurURL.RefinementObjects = this.tb_RefinementObjects.Text.Trim();
             this.CurURL.UseAsRefinementServer = this.cb_RefinementServer.Checked;
 
+            this.CurURL.LinkServerResults = this.cb_LinkedServers.Checked;
+            this.CurURL.LinkedResultsServerList = "";
+            foreach (ClsURLItem url in checkedComboBoxLinked.CheckedItems)
+            {
+                this.CurURL.LinkedResultsServerList += url.ToString() + ", ";
+            }
+            this.CurURL.LinkedResultsServerList = this.CurURL.LinkedResultsServerList.Trim(" ,".ToCharArray());
+
             this.CurURL.HttpClientTimeoutSeconds = Convert.ToInt32(this.tb_timeout.Text.Trim());
 
 
@@ -169,8 +195,11 @@ namespace AITool
                     btTest.Text = "Working...";
                     this.Update();
                     ClsImageQueueItem CurImg = new ClsImageQueueItem(tpth, 0);
-                    Camera cam = new Camera("TEST_CAM");
-                    bool ret = await AITOOL.DetectObjects(CurImg, this.CurURL, cam);
+                    Camera cam = AITOOL.GetCamera("default", true);
+                    if (cam==null)
+                       cam = new Camera("TEST_CAM");
+
+                    bool ret = await AITOOL.DetectObjects(CurImg, new List<ClsURLItem> { this.CurURL }, cam);
                     btTest.Enabled = true;
                     bt_Save.Enabled = true;
                     btTest.Text = "Test";
@@ -206,12 +235,17 @@ namespace AITool
 
         private void cb_RefinementServer_CheckedChanged(object sender, EventArgs e)
         {
-            tb_RefinementObjects.Enabled = cb_RefinementServer.Checked;
+            Global_GUI.GroupboxEnableDisable(groupBoxRefine, cb_RefinementServer);
         }
 
         private void chk_Enabled_CheckedChanged(object sender, EventArgs e)
         {
             Global_GUI.GroupboxEnableDisable(groupBox1, chk_Enabled);
+        }
+
+        private void cb_LinkedServers_CheckedChanged(object sender, EventArgs e)
+        {
+            Global_GUI.GroupboxEnableDisable(groupBoxLinked, cb_LinkedServers);
         }
     }
 }

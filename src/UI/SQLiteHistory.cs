@@ -466,7 +466,7 @@ namespace AITool
                             //this.DeletedCount.AtomicAddAndGet(removed);
 
                             //try to get a better feel how much time this function consumes - Vorlon
-                            Log($"Debug: ...Added {added} out of {result.Count} history items ({removed} removed) in {SW.ElapsedMilliseconds}ms, {this.HistoryDic.Count()} lines.");
+                            Log($"Debug: ...Added {added} out of {result.Count} history items ({removed} removed) in {SW.ElapsedMilliseconds}ms, {this.HistoryDic.Count} lines.");
 
                         }
                         else

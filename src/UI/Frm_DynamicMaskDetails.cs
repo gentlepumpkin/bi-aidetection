@@ -369,7 +369,7 @@ namespace AITool
                         absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
-                    bool showkey = this.CurObjPosLst.Count() > 1;
+                    bool showkey = this.CurObjPosLst.Count > 1;
 
                     foreach (ObjectPosition op in this.CurObjPosLst)
                     {

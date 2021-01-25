@@ -63,7 +63,7 @@ namespace AITool
         public ThreadSafe.Datetime last_Pushover_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ThreadSafe.Datetime TelegramRetryTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ThreadSafe.Datetime PushoverRetryTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
-        public ClsURLItem _url { get; set; } = null;
+        //public ClsURLItem _url { get; set; } = null;
         private String CurSrv = "";
         string ImgPath = "NoImage";
         public ThreadSafe.Integer Count { get; set; } = new ThreadSafe.Integer(0);
@@ -77,16 +77,13 @@ namespace AITool
             Task.Run(this.CancelActionJobQueueLoop);
         }
 
-        public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, ClsURLItem ds_url, string Text)
+        public async Task<bool> AddTriggerActionAsync(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, bool Wait, string CurSrv, string Text)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
-            this._url = ds_url;
-            if (ds_url == null)
-            {
-                this.CurSrv = "None";
-            }
+            this.CurSrv = CurSrv;
+
             if (CurImg != null)
             {
                 this.ImgPath = CurImg.image_path;
@@ -100,9 +97,9 @@ namespace AITool
             //Make sure not to put cancel items in the queue if no cancel triggers are defined...
 
             bool NeedsToCancel = (cam.Action_mqtt_enabled && string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel) ||
-                                  Trigger && cam.cancel_urls.Count() > 0);
+                                  Trigger && cam.cancel_urls.Length > 0);
 
-            //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count() > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
+            //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
             bool DoIt = (Trigger || (!NeedsToCancel) || ttype == TriggerType.TelegramText || ttype == TriggerType.Pushover);
 
             if (DoIt)
@@ -121,7 +118,7 @@ namespace AITool
                         }
                         else
                         {
-                            this.Count.WriteFullFence(this.TriggerActionQueue.Count());
+                            this.Count.WriteFullFence(this.TriggerActionQueue.Count);
                             AQI.QueueCount = this.Count.ReadFullFence();
 
                             ret = true;
@@ -258,7 +255,7 @@ namespace AITool
                 }
 
 
-                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && string.IsNullOrEmpty(AQI.cam.Action_mqtt_payload_cancel)) || (AQI.cam.cancel_urls.Count() > 0));
+                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && string.IsNullOrEmpty(AQI.cam.Action_mqtt_payload_cancel)) || (AQI.cam.cancel_urls.Length > 0));
 
                 if (HasCancelAction)
                 {
@@ -376,7 +373,7 @@ namespace AITool
                     }
 
                     //call trigger urls
-                    if (AQI.Trigger && AQI.cam.trigger_urls.Count() > 0)
+                    if (AQI.Trigger && AQI.cam.trigger_urls.Length > 0)
                     {
                         //replace url paramters with according values
                         List<string> urls = new List<string>();
@@ -390,7 +387,7 @@ namespace AITool
 
                         bool result = await this.CallTriggerURLs(urls, AQI.Trigger);
                     }
-                    else if (!AQI.Trigger && AQI.cam.cancel_urls.Count() > 0)
+                    else if (!AQI.Trigger && AQI.cam.cancel_urls.Length > 0)
                     {
                         //replace url paramters with according values
                         List<string> urls = new List<string>();
@@ -624,8 +621,9 @@ namespace AITool
 
                                 predictions = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
 
-                                foreach (var pred in predictions)
+                                for (int i = predictions.Count - 1; i >= 0; i--)
                                 {
+                                    ClsPrediction pred = predictions[i];
                                     bool Merge = false;
 
                                     if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
@@ -679,6 +677,7 @@ namespace AITool
                                         countr++;
                                     }
 
+
                                 }
 
                             }
@@ -710,7 +709,7 @@ namespace AITool
                                 }
 
                                 //List<string> detectlist = Global.Split(detections, "|;");
-                                countr = AQI.cam.last_detections.Count();
+                                countr = AQI.cam.last_detections.Count;
 
                                 //display a rectangle around each relevant object
 

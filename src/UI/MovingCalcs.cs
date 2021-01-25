@@ -43,6 +43,9 @@ namespace AITool
         }
         public double ItemsPerMinute()
         {
+
+            this.UpdateDate(false);
+
             if (this.CountToday == 0)
                 return 0;
 
@@ -50,6 +53,8 @@ namespace AITool
         }
         public double ItemsPerSecond()
         {
+            this.UpdateDate(false);
+
             if (this.CountToday == 0)
                 return 0;
 
@@ -79,6 +84,7 @@ namespace AITool
                     this.CountToday = 1;
 
                 this.lastDayOfYear = DateTime.Now.DayOfYear;
+
                 if (DateTime.Now.Month != this.lastMonth)
                 {
                     if (init)

@@ -38,7 +38,7 @@ namespace AITool
             if (bir == BlueIrisResult.Valid)
             {
                 lblStatus.ForeColor = Color.DodgerBlue;
-                lblStatus.Text = $"Validated.  Result={bir}.  {bi.ClipPaths.Count} clip paths, {bi.Users.Count()} users, {bi.Cameras} cameras.";
+                lblStatus.Text = $"Validated.  Result={bir}.  {bi.ClipPaths.Count} clip paths, {bi.Users.Count} users, {bi.Cameras} cameras.";
                 BlueIrisInfo = bi;
                 this.Valid = true;
             }

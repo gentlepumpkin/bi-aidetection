@@ -96,6 +96,8 @@ namespace AITool
 
         public static string srv = "";
 
+        public static int AIURLListRefineServerCount = 0;
+
         public static async Task InitializeBackend()
         {
 
@@ -197,7 +199,7 @@ namespace AITool
 
                 if (BlueIrisInfo.Result == BlueIrisResult.Valid)
                 {
-                    Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Users.Count} users, {BlueIrisInfo.Cameras.Count()} cameras and {BlueIrisInfo.ClipPaths.Count()} clip folder paths configured.");
+                    Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Users.Count} users, {BlueIrisInfo.Cameras.Count} cameras and {BlueIrisInfo.ClipPaths.Count} clip folder paths configured.");
                     if (BlueIrisInfo.Users.Count > 0 && string.IsNullOrEmpty(AppSettings.Settings.DefaultUserName) || string.Equals(AppSettings.Settings.DefaultUserName, "username", StringComparison.OrdinalIgnoreCase))
                     {
                         AppSettings.Settings.DefaultUserName = BlueIrisInfo.Users[0].Name;
@@ -511,15 +513,20 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            AIURLListRefineServerCount = 0;
             //double check all the URL's have a new httpclient
             foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
             {
                 url.UpdateIsValid();
+                if (url.IsValid && url.UseAsRefinementServer)
+                    AIURLListRefineServerCount++;
+
                 if (url.Type != URLTypeEnum.AWSRekognition && url.HttpClient == null)
                 {
                     url.HttpClient = new HttpClient();
                     url.HttpClient.Timeout = url.GetTimeout();
                 }
+                
             }
 
             //remove dupes
@@ -626,170 +633,328 @@ namespace AITool
 
         }
 
-        public static async Task<ClsURLItem> WaitForNextURL(Camera cam, bool AllowRefinementServer)
+        public static async Task<List<ClsURLItem>> WaitForNextURL(Camera cam, bool GetRefinementServer, List<ClsPrediction> predictions = null, string RequiredURLList = "", List<ClsURLItem> MainURLs = null)
         {
-            //lets wait in here forever until a URL is available...
+            //lets wait in here forever until a URL is available...  Unless trying to get a refinement server
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            ClsURLItem ret = null;
+            List<ClsURLItem> ret = new List<ClsURLItem>();
 
             DateTime LastWaitingLog = DateTime.MinValue;
             bool displayedbad = false;
             bool displayedretry = false;
+            List<string> CurrentURLs = new List<string>();
+            List<string> RequiredURLs = Global.Split(RequiredURLList, ",;|", ToLower: true);
+            bool HasRequiredList = RequiredURLs.Count > 0;
+            int FoundRequiredCount = 0;
+            int FoundRefinementCount = 0;
+            int RefineNoMatchCount = 0;
+            int RefineMatchCount = 0;
 
-            while (ret == null)
+            Stopwatch sw = Stopwatch.StartNew();
+
+            try
             {
-                int disabled = 0;
-                int inuse = 0;
-                int incorrectcam = 0;
-                int notintimerange = 0;
-                int maxpermonth = 0;
-                int notrefined = 0;
-                try
+                AIURLListRefineServerCount = 0;
+
+                //preprocess a few things...
+                for (int i = 0; i < AppSettings.Settings.AIURLList.Count; i++)
                 {
+                    if (!AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence())
+                        continue;
 
-                    UpdateAIURLList();
 
-                    List<ClsURLItem> sorted = new List<ClsURLItem>();
-
-                    if (AppSettings.Settings.deepstack_urls_are_queued)
+                    if (AppSettings.Settings.AIURLList[i].UseAsRefinementServer)
                     {
-                        //always use oldest first
-                        sorted = AppSettings.Settings.AIURLList.OrderBy((d) => d.LastUsedTime).ToList();
-                    }
-                    else
-                    {
-                        //use original order
-                        sorted.AddRange(AppSettings.Settings.AIURLList);
-                    }
-                    //sort by oldest last used
+                        AIURLListRefineServerCount++;
 
-                    for (int i = 0; i < sorted.Count; i++)
-                    {
-                        if (!sorted[i].Enabled.ReadFullFence())
-                            continue;
-
-                        if (!sorted[i].ErrDisabled.ReadFullFence())
+                        //dont let a refinement server be the same as the main server
+                        if (MainURLs != null && MainURLs.Count > 0)
                         {
-                            if (!sorted[i].InUse.ReadFullFence())
+                            bool fnd = false;
+                            foreach (ClsURLItem url in MainURLs)
                             {
-                                if (Global.IsInList(cam.Name, sorted[i].Cameras, TrueIfEmpty: true))
+                                if (string.Equals(AppSettings.Settings.AIURLList[i].ToString(), url.ToString(), StringComparison.OrdinalIgnoreCase))
                                 {
-                                    if (AllowRefinementServer && sorted[i].UseAsRefinementServer || !sorted[i].UseAsRefinementServer)
-                                    {
-                                        if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
-                                        {
-                                            DateTime now = DateTime.Now;
+                                    fnd = true;
+                                    break;
+                                }
+                            }
+                            if (fnd)
+                                continue;
+                        }
 
-                                            if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
+                        if (GetRefinementServer && predictions != null)
+                        {
+                            //set temp flag to indicate if the server can be CURRENTLY used as a refinement server
+                            AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = false;
+                            foreach (ClsPrediction pred in predictions)
+                            {
+                                if (pred.Result == ResultType.Relevant && Global.IsInList(pred.Label, AppSettings.Settings.AIURLList[i].RefinementObjects))
+                                {
+                                    RefineMatchCount++;
+                                    AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = true;
+                                    break;
+                                }
+                            }
+
+
+                            if (!AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid)
+                                RefineNoMatchCount++;  //count number of failed tries to match refinement server objects
+
+                        }
+
+                    }
+                }
+
+                while (ret.Count == 0 || ((GetRefinementServer || HasRequiredList) && sw.ElapsedMilliseconds <= AppSettings.Settings.MaxWaitForAIServerMS))
+                {
+                    int disabled = 0;
+                    int inuse = 0;
+                    int incorrectcam = 0;
+                    int notintimerange = 0;
+                    int maxpermonth = 0;
+                    int notrefined = 0;
+                    int notrequired = 0;
+
+                    //If no refinement servers or less than should be available were returned
+                    if (GetRefinementServer && RefineMatchCount == 0)
+                    {
+                        Log($"Warn: ---- Refinement server requested, but none were available. ({sw.ElapsedMilliseconds}ms)");
+                        break;
+                    }
+
+                    try
+                    {
+
+                        UpdateAIURLList();
+
+                        List<ClsURLItem> sorted = new List<ClsURLItem>();
+
+                        if (AppSettings.Settings.deepstack_urls_are_queued)
+                        {
+                            //always use oldest first
+                            sorted = AppSettings.Settings.AIURLList.OrderBy((d) => d.LastUsedTime).ToList();
+                        }
+                        else
+                        {
+                            //use original order
+                            sorted.AddRange(AppSettings.Settings.AIURLList);
+                        }
+                        //sort by oldest last used
+
+                        for (int i = 0; i < sorted.Count; i++)
+                        {
+                            if (!sorted[i].Enabled.ReadFullFence())
+                                continue;
+
+                            if (!sorted[i].ErrDisabled.ReadFullFence())
+                            {
+                                if (!sorted[i].InUse.ReadFullFence())
+                                {
+                                    if (Global.IsInList(cam.Name, sorted[i].Cameras, TrueIfEmpty: true))
+                                    {
+                                        if (GetRefinementServer && sorted[i].UseAsRefinementServer || !sorted[i].UseAsRefinementServer)
+                                        {
+                                            if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
                                             {
-                                                if (sorted[i].CurErrCount.ReadFullFence() == 0)
+                                                DateTime now = DateTime.Now;
+
+                                                if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
                                                 {
-                                                    ret = sorted[i];
-                                                    ret.CurOrder = i + 1;
-                                                    break;
-                                                }
-                                                else
-                                                {
-                                                    double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
-                                                    if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
+                                                    if (sorted[i].CurErrCount.ReadFullFence() == 0)
                                                     {
-                                                        ret = sorted[i];
-                                                        ret.CurOrder = i + 1;
-                                                        if (!displayedretry)  //if we get in a long loop waiting for URL
+                                                        if (GetRefinementServer)
                                                         {
-                                                            Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                            displayedretry = true;
+                                                            if (sorted[i].RefinementUseCurrentlyValid)
+                                                            {
+                                                                sorted[i].CurOrder = i + 1;
+                                                                sorted[i].InUse.WriteFullFence(true);
+                                                                sorted[i].LastUsedTime = DateTime.Now;
+                                                                FoundRefinementCount++;
+                                                                ret.Add(sorted[i]);
+                                                                // Dont break out of loop since we may need more than one refinement server
+                                                            }
                                                         }
-                                                        break;
+                                                        else if (HasRequiredList)
+                                                        {
+                                                            if (Global.IsInList(RequiredURLs, CurrentURLs))
+                                                            {
+                                                                sorted[i].CurOrder = i + 1;
+                                                                sorted[i].InUse.WriteFullFence(true);
+                                                                sorted[i].LastUsedTime = DateTime.Now;
+                                                                FoundRequiredCount++;
+                                                                ret.Add(sorted[i]);
+                                                                //dont break out of loop since we may need more than one linked/required URL
+                                                            }
+                                                            else
+                                                            {
+                                                                notrequired++;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            sorted[i].CurOrder = i + 1;
+                                                            sorted[i].InUse.WriteFullFence(true);
+                                                            sorted[i].LastUsedTime = DateTime.Now;
+                                                            ret.Add(sorted[i]);
+                                                            break;
+                                                        }
                                                     }
                                                     else
                                                     {
-                                                        if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                        double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                                        if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
                                                         {
-                                                            Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
-                                                            displayedbad = true;
+                                                            sorted[i].CurOrder = i + 1;
+                                                            sorted[i].InUse.WriteFullFence(true);
+                                                            sorted[i].LastUsedTime = DateTime.Now;
+                                                            ret.Add(sorted[i]);
+                                                            if (!displayedretry)  //if we get in a long loop waiting for URL
+                                                            {
+                                                                Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                                displayedretry = true;
+                                                            }
+                                                            break;
                                                         }
-                                                    }
+                                                        else
+                                                        {
+                                                            if (!displayedbad)  //if we get in a long loop waiting for URL
+                                                            {
+                                                                Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                                displayedbad = true;
+                                                            }
+                                                        }
 
+                                                    }
                                                 }
+                                                else
+                                                {
+                                                    notintimerange++;
+                                                }
+
                                             }
                                             else
                                             {
-                                                notintimerange++;
+                                                maxpermonth++;
                                             }
 
                                         }
                                         else
                                         {
-                                            maxpermonth++;
+                                            notrefined++;
                                         }
 
                                     }
                                     else
                                     {
-                                        notrefined++;
+                                        incorrectcam++;
                                     }
 
                                 }
                                 else
                                 {
-                                    incorrectcam++;
+                                    inuse++;
                                 }
-
                             }
+                            //disabled, but check to see if we need to reenable
                             else
                             {
-                                inuse++;
+                                disabled++;
+                                if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                                {
+                                    //check to see if can be re-enabled yet
+                                    sorted[i].ErrDisabled.WriteFullFence(false);
+                                    sorted[i].CurErrCount.WriteFullFence(0);
+                                    sorted[i].InUse.WriteFullFence(false);
+                                    Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
+                                    sorted[i].CurOrder = i + 1;
+                                    sorted[i].InUse.WriteFullFence(true);
+                                    sorted[i].LastUsedTime = DateTime.Now;
+                                    ret.Add(sorted[i]);
+                                    break;
+                                }
                             }
                         }
-                        //disabled, but check to see if we need to reenable
-                        else
-                        {
-                            disabled++;
-                            if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
-                            {
-                                //check to see if can be re-enabled yet
-                                sorted[i].ErrDisabled.WriteFullFence(false);
-                                sorted[i].CurErrCount.WriteFullFence(0);
-                                sorted[i].InUse.WriteFullFence(false);
-                                //if (sorted[i].HttpClient != null)
-                                //{
-                                //    sorted[i].HttpClient.Dispose();
-                                //    sorted[i].HttpClient = new HttpClient();
-                                //    sorted[i].HttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientTimeoutSeconds);
-                                //}
-                                Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
-                                ret = sorted[i];
-                                ret.CurOrder = i + 1;
-                                break;
-                            }
-                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Log("Error: getting next URL: " + ex.ToString());
                     }
 
-                }
-                catch (Exception ex)
-                {
-                    Log("Error: getting next URL: " + ex.ToString());
+
+                    if (HasRequiredList && FoundRequiredCount == RequiredURLs.Count)
+                    {
+                        break;
+                    }
+                    //otherwise
+                    if (ret.Count > 0)
+                    {
+                        break;
+                    }
+
+                    if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
+                    {
+                        Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit, {notrefined} not refinement server) Waiting...");
+                        LastWaitingLog = DateTime.Now;
+                    }
+
+
+                    //short wait
+                    await Task.Delay(AppSettings.Settings.loop_delay_ms);
+
                 }
 
-                if (ret != null)
+                //=====================================================================================================
+
+                sw.Stop();
+
+                if (sw.ElapsedMilliseconds >= AppSettings.Settings.MaxWaitForAIServerMS)
                 {
-                    ret.InUse.WriteFullFence(true);
-                    ret.LastUsedTime = DateTime.Now;
-                    break;
+                    if (GetRefinementServer)
+                    {
+                        Log($"Error: ---- URL request for REFINEMENT AI Server timed out, but only '{ret.Count}' of '{RefineMatchCount}' available. ({sw.ElapsedMilliseconds}ms - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                    }
+                    else if (HasRequiredList)
+                    {
+                        Log($"Error: ---- URL request for LINKED AI Server timed out, but '{ret.Count}' of '{RequiredURLs.Count}' available. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                    }
+                    else  //I dont think we would ever get here but just in case
+                    {
+                        Log($"Warn: ---- URL request timed out. '{ret.Count}' found. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                    }
                 }
 
-                if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
+                //see if any servers have 'linked' servers
+                if (!GetRefinementServer && !HasRequiredList && ret.Count > 0)
                 {
-                    Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit, {notrefined} not refinement server) Waiting...");
-                    LastWaitingLog = DateTime.Now;
+                    List<ClsURLItem> linked = new List<ClsURLItem>();
+                    foreach (ClsURLItem url in ret)
+                    {
+                        if (url.LinkServerResults && !string.IsNullOrEmpty(url.LinkedResultsServerList))
+                        {
+                            linked.AddRange(await WaitForNextURL(cam, false, null, url.LinkedResultsServerList));
+                        }
+                    }
+                    if (linked.Count > 0)
+                    {
+                        Log($"Debug: ---- Found '{linked.Count}' linked AI URL's.");
+                        ret.AddRange(linked);
+                    }
                 }
 
-                //short wait
-                await Task.Delay(50);
 
             }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            //remove any dupes just in case
+            ret = ret.Distinct().ToList();
+
 
             return ret;
 
@@ -823,7 +988,7 @@ namespace AITool
                         int ProcImgCnt = 0;
                         int ErrCnt = 0;
                         int TskCnt = 0;
-                        ThreadSafe.Datetime LastDeepstackRestartTime = new ThreadSafe.Datetime(DateTime.MinValue);
+                        ThreadSafe.Datetime NextDeepstackRestartTime = new ThreadSafe.Datetime(DateTime.MinValue);
 
                         while (!ImageProcessQueue.IsEmpty)
                         {
@@ -852,99 +1017,107 @@ namespace AITool
                                 Stopwatch sw = Stopwatch.StartNew();
 
                                 //wait for the next url to become available...
-                                ClsURLItem url = await WaitForNextURL(cam, false);
+                                List<ClsURLItem> urls = await WaitForNextURL(cam, false);
 
                                 sw.Stop();
 
-                                double lastsecs = Math.Round((DateTime.Now - url.LastUsedTime).TotalSeconds, 0);
+                                //If we have any linked servers there may be more than one server that we send at the same time
+                                foreach (ClsURLItem url in urls)
+                                {
+                                    Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam, CurImg);
 
-                                Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam, CurImg);
+                                    Interlocked.Increment(ref TskCnt);
 
-                                Interlocked.Increment(ref TskCnt);
+                                }
 
                                 Task.Run(async () =>
                                 {
 
-
                                     Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
 
-                                    bool success = await DetectObjects(CurImg, url); //ai process image
+                                    bool success = await DetectObjects(CurImg, urls); //ai process image
 
                                     Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
 
-
-                                    if (!success)
+                                    foreach (ClsURLItem url in urls)
                                     {
-                                        Interlocked.Increment(ref ErrCnt);
-                                        url.ErrsInRowCount.AtomicIncrementAndGet();
-
-                                        if (url.CurErrCount.ReadFullFence() > 0)
+                                        if (!url.LastResultSuccess)
                                         {
-                                            if (url.CurErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
+                                            Interlocked.Increment(ref ErrCnt);
+                                            url.ErrsInRowCount.AtomicIncrementAndGet();
+
+                                            if (url.CurErrCount.ReadFullFence() > 0)
                                             {
-                                                //put url back in queue when done
-                                                Log($"...Problem with AI URL: '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam);
+                                                if (url.CurErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
+                                                {
+                                                    //put url back in queue when done
+                                                    Log($"...Problem with AI URL: '{url.LastResultMessage}' - '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam);
+                                                }
+                                                else
+                                                {
+                                                    url.ErrDisabled.WriteFullFence(false);
+                                                    Log($"...Error: AI URL failed with '{url.LastResultMessage}' - for '{url.Type}' failed '{url.CurErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam);
+                                                }
+
+                                            }
+
+                                            if (url.ErrsInRowCount.ReadUnfenced() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
+                                                AppSettings.Settings.deepstack_autostart &&
+                                                DeepStackServerControl.IsInstalled &&
+                                                DeepStackServerControl.URLS.IndexOf(url.ToString(), StringComparison.OrdinalIgnoreCase) >= 0)
+
+                                            {
+                                                if (NextDeepstackRestartTime.Read() == DateTime.MinValue)
+                                                    NextDeepstackRestartTime.Write(DateTime.Now);
+
+                                                double mins = (DateTime.Now - NextDeepstackRestartTime.Read()).TotalMinutes;
+                                                double togo = (AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts - mins);
+                                                if (!DeepStackServerControl.Starting.ReadFullFence() &&
+                                                   DateTime.Now >= NextDeepstackRestartTime.Read())
+                                                {
+                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Restarting Deepstack...");
+                                                    //dont wait for it
+                                                    await DeepStackServerControl.StartDeepstackAsync(true);
+                                                    url.ErrsInRowCount.WriteFullFence(0);
+                                                    NextDeepstackRestartTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts));
+                                                }
+                                                else
+                                                {
+                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Waiting {togo.ToString("##0.0")} mins before attempting restart...");
+                                                }
+
+                                            }
+
+                                            CurImg.RetryCount.AtomicIncrementAndGet();  //even if there was not an error directly accessing the image
+
+                                            if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
+                                            {
+                                                //put back in queue to be processed by another deepstack server
+                                                Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.CurErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam, CurImg);
+                                                ImageProcessQueue.Enqueue(CurImg);
                                             }
                                             else
                                             {
-                                                url.ErrDisabled.WriteFullFence(false);
-                                                Log($"...Error: AI URL for '{url.Type}' failed '{url.CurErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam);
+                                                cam.stats_skipped_images++;
+                                                cam.stats_skipped_images_session++;
+
+                                                Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam, CurImg);
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv));
+
                                             }
-
-                                        }
-
-                                        if (url.ErrsInRowCount.ReadUnfenced() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
-                                            AppSettings.Settings.deepstack_autostart &&
-                                            DeepStackServerControl.IsInstalled &&
-                                            DeepStackServerControl.URLS.IndexOf(url.ToString(), StringComparison.OrdinalIgnoreCase) >= 0) 
-                                            
-                                        {
-                                            double mins = (DateTime.Now - LastDeepstackRestartTime.Read()).TotalMinutes;
-                                            double togo = (AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts - mins);
-                                            if (!DeepStackServerControl.Starting.ReadFullFence() && 
-                                               mins >= AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts)
-                                            {
-                                                Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Restarting Deepstack...");
-                                                //dont wait for it
-                                                await DeepStackServerControl.StartDeepstackAsync(true);
-                                                url.ErrsInRowCount.WriteFullFence(0);
-                                                LastDeepstackRestartTime.Write(DateTime.Now);
-                                            }
-                                            else
-                                            {
-                                                Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Waiting {togo.ToString("##0.0")} mins before attempting restart...");
-                                            }
-
-                                        }
-
-                                        CurImg.RetryCount.AtomicIncrementAndGet();  //even if there was not an error directly accessing the image
-
-                                        if (CurImg.ErrCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries && CurImg.RetryCount.ReadFullFence() <= AppSettings.Settings.MaxQueueItemRetries)
-                                        {
-                                            //put back in queue to be processed by another deepstack server
-                                            Log($"...Putting image back in queue due to URL '{url}' problem (QueueTime={(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}, Image ErrCount={CurImg.ErrCount}, Image RetryCount={CurImg.RetryCount}, URL ErrCount={url.CurErrCount}): '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}", url.CurSrv, cam, CurImg);
-                                            ImageProcessQueue.Enqueue(CurImg);
                                         }
                                         else
                                         {
-                                            cam.stats_skipped_images++;
-                                            cam.stats_skipped_images_session++;
-
-                                            Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam, CurImg);
-                                            Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv));
-
+                                            Interlocked.Increment(ref ProcImgCnt);
+                                            //reset error count
+                                            url.CurErrCount.WriteFullFence(0);
+                                            url.ErrsInRowCount.WriteFullFence(0);
                                         }
-                                    }
-                                    else
-                                    {
-                                        Interlocked.Increment(ref ProcImgCnt);
-                                        //reset error count
-                                        url.CurErrCount.WriteFullFence(0);
-                                        url.ErrsInRowCount.WriteFullFence(0);
-                                    }
 
-                                    url.InUse.WriteFullFence(false);
+                                        url.InUse.WriteFullFence(false);
 
+
+                                    }
                                     Interlocked.Decrement(ref TskCnt);
 
                                 });
@@ -986,7 +1159,7 @@ namespace AITool
                         break;
 
                     //Only loop 10 times a second conserve cpu
-                    await Task.Delay(100);
+                    await Task.Delay(AppSettings.Settings.loop_delay_ms);
                 }
 
                 Log("Debug: ImageQueueLoop canceled.");
@@ -1284,7 +1457,7 @@ namespace AITool
 
                 }
 
-                if (watchers.Count() == 0)
+                if (watchers.Count == 0)
                 {
                     Log("Debug: No FileSystemWatcher input folders defined yet.");
                 }
@@ -1568,6 +1741,7 @@ namespace AITool
             public string Error = "";
             public long SWPostTime = 0;
             public HttpStatusCode StatusCode = HttpStatusCode.Unused;
+            public ClsURLItem AIURL = null;
         }
 
         public static async Task<ClsAIServerResponse> GetDetectionsFromAIServer(ClsImageQueueItem CurImg, ClsURLItem AiUrl, Camera cam)
@@ -1575,6 +1749,8 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             ClsAIServerResponse ret = new ClsAIServerResponse();
+
+            ret.AIURL = AiUrl;
 
             bool OverrideThreshold = AiUrl.Threshold_Lower > 0 || (AiUrl.Threshold_Upper > 0 && AiUrl.Threshold_Upper < 100);
 
@@ -1671,7 +1847,7 @@ namespace AITool
                                     else
                                     {
 
-                                        if (response.predictions.Count() > 0)
+                                        if (response.predictions.Length > 0)
                                         {
 
                                             foreach (ClsDeepstackDetection DSObj in response.predictions)
@@ -1686,7 +1862,7 @@ namespace AITool
                                         }
 
                                         ret.Success = true;
-                                        AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+                                        AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
 
                                     }
 
@@ -1747,7 +1923,10 @@ namespace AITool
                 }
                 finally
                 {
+                    AiUrl.LastTimeMS = swposttime.ElapsedMilliseconds;
                     ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    AiUrl.AITimeCalcs.AddToCalc(AiUrl.LastTimeMS);
+
                     if (!string.IsNullOrEmpty(ret.Error))
                         DeepStackServerControl.PrintDeepStackError();  //only prints error if we have locally installed windows deepstack and there is a new entry in stderr.txt
 
@@ -1834,7 +2013,7 @@ namespace AITool
                                         {
 
 
-                                            if (SHObj.Objects.Count() > 0)
+                                            if (SHObj.Objects.Count > 0)
                                             {
                                                 foreach (SightHoundVehicleObject DSObj in SHObj.Objects)
                                                 {
@@ -1844,7 +2023,7 @@ namespace AITool
                                             }
 
                                             ret.Success = true;
-                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} Vehicle predictions found.";
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count} Vehicle predictions found.";
                                         }
                                         else
                                         {
@@ -1875,7 +2054,7 @@ namespace AITool
                                     {
                                         if (SHObj.Objects != null)
                                         {
-                                            if (SHObj.Objects.Count() > 0)
+                                            if (SHObj.Objects.Count > 0)
                                             {
                                                 foreach (SightHoundPersonObject DSObj in SHObj.Objects)
                                                 {
@@ -1885,7 +2064,7 @@ namespace AITool
                                             }
 
                                             ret.Success = true;
-                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} Person predictions found.";
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count} Person predictions found.";
 
                                         }
                                         else
@@ -1952,6 +2131,9 @@ namespace AITool
                 finally
                 {
                     ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    AiUrl.LastTimeMS = swposttime.ElapsedMilliseconds;
+                    AiUrl.AITimeCalcs.AddToCalc(AiUrl.LastTimeMS);
+
                 }
             }
 
@@ -2023,7 +2205,7 @@ namespace AITool
                                     {
                                         if (response.Detections != null)
                                         {
-                                            if (response.Detections.Count() > 0)
+                                            if (response.Detections.Count > 0)
                                             {
 
                                                 foreach (ClsDoodsDetection DSObj in response.Detections)
@@ -2038,7 +2220,7 @@ namespace AITool
                                             }
 
                                             ret.Success = true;
-                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+                                            AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
 
 
                                         }
@@ -2109,6 +2291,9 @@ namespace AITool
                 finally
                 {
                     ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    AiUrl.LastTimeMS = swposttime.ElapsedMilliseconds;
+                    AiUrl.AITimeCalcs.AddToCalc(AiUrl.LastTimeMS);
+
                 }
 
             }
@@ -2170,7 +2355,7 @@ namespace AITool
                         ret.StatusCode = response.HttpStatusCode;
                         if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
                         {
-                            if (response.Labels.Count() > 0)
+                            if (response.Labels.Count > 0)
                             {
 
                                 foreach (Amazon.Rekognition.Model.Label lbl in response.Labels)
@@ -2190,7 +2375,7 @@ namespace AITool
                             }
 
                             ret.Success = true;
-                            AiUrl.LastResultMessage = $"{ret.Predictions.Count()} predictions found.";
+                            AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
                         }
                         else
                         {
@@ -2219,6 +2404,8 @@ namespace AITool
                 finally
                 {
                     ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    AiUrl.LastTimeMS = swposttime.ElapsedMilliseconds;
+                    AiUrl.AITimeCalcs.AddToCalc(AiUrl.LastTimeMS);
                 }
 
             }
@@ -2231,8 +2418,77 @@ namespace AITool
             return ret;
 
         }
+
+
+        public static List<ClsPrediction> RemovePredictionDuplicates(List<ClsPrediction> items, Camera cam)
+        {
+            List<ClsPrediction> result = new List<ClsPrediction>();
+            for (int i = 0; i < items.Count; i++)
+            {
+                // Assume not duplicate.
+                bool duplicate = false;
+                for (int z = 0; z < i; z++)
+                {
+                    if (items[z] == items[i] && items[z].ConfidenceString() == items[i].ConfidenceString())
+                    {
+                        ObjectPosition op1 = new ObjectPosition(items[z].XMin, items[z].XMax, items[z].YMin, items[z].YMax, items[z].Label, items[z].ImageWidth, items[z].ImageHeight, items[z].Camera, items[z].Filename);
+                        op1.ScaleConfig = cam.maskManager.ScaleConfig;
+                        op1.PercentMatch = cam.maskManager.PercentMatch;
+                        ObjectPosition op2 = new ObjectPosition(items[i].XMin, items[i].XMax, items[i].YMin, items[i].YMax, items[i].Label, items[i].ImageWidth, items[i].ImageHeight, items[i].Camera, items[i].Filename);
+                        op2.ScaleConfig = cam.maskManager.ScaleConfig;
+                        op2.PercentMatch = cam.maskManager.PercentMatch;
+
+                        if (op1 == op2)
+                        {
+                            // This is a duplicate.
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                }
+                // If not duplicate, add to result.
+                if (!duplicate)
+                {
+                    result.Add(items[i]);
+                }
+            }
+            return result;
+        }
+
+        //search for position based on object position
+        public static int ContainsPrediction(ClsPrediction pred, List<ClsPrediction> items, Camera cam)
+        {
+            int ret = -1;
+            if (items.Count == 0)
+                return ret;
+
+            //first match name
+            if (!items.Contains(pred))
+                return ret;
+
+            ObjectPosition op1 = new ObjectPosition(pred.XMin, pred.XMax, pred.YMin, pred.YMax, pred.Label, pred.ImageWidth, pred.ImageHeight, pred.Camera, pred.Filename);
+            op1.ScaleConfig = cam.maskManager.ScaleConfig;
+            op1.PercentMatch = cam.maskManager.PercentMatch;
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                //now match position using the maskmanager's technique of matching roughly the same size
+                ObjectPosition op2 = new ObjectPosition(items[i].XMin, items[i].XMax, items[i].YMin, items[i].YMax, items[i].Label, items[i].ImageWidth, items[i].ImageHeight, items[i].Camera, items[i].Filename);
+                op2.ScaleConfig = cam.maskManager.ScaleConfig;
+                op2.PercentMatch = cam.maskManager.PercentMatch;
+                {
+                    if (op1 == op2)
+                    {
+                        ret = i;
+                        break;
+                    }
+                }
+            }
+            return ret;
+        }
+
         //analyze image with AI
-        public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, ClsURLItem AiUrl, Camera cam = null)
+        public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, List<ClsURLItem> AiUrls, Camera cam = null)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -2245,6 +2501,8 @@ namespace AITool
 
             Stopwatch sw = Stopwatch.StartNew();
 
+            long TotalSWPostTime = 0;
+
             if (cam == null)
                 cam = AITOOL.GetCamera(CurImg.image_path);
 
@@ -2256,20 +2514,29 @@ namespace AITool
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double secs = (DateTime.Now - cam.last_trigger_time.Read()).TotalSeconds;
             double halfcool = cam.cooldown_time_seconds / 2;
-            ClsAIServerResponse asr = new ClsAIServerResponse();
+            //ClsAIServerResponse asr = new ClsAIServerResponse();
+            ClsAIServerResponse[] asrs = new ClsAIServerResponse[] { };
+            string AISRV = "";
+
+            foreach (var url in AiUrls)
+                AISRV += url.CurSrv + ";";
+
+            AISRV = AISRV.Trim(";".ToCharArray());
+
+            ClsURLItem AiUrl = AiUrls[0];  //default to first one just to have something set
 
             if (secs >= halfcool)
             {
                 try
                 {
 
-                    Log($"Debug: Starting analysis of {CurImg.image_path}...", AiUrl.CurSrv, cam, CurImg);
+                    Log($"Debug: Starting analysis of {CurImg.image_path}...", AISRV, cam, CurImg);
 
                     if (CurImg.IsValid())  //Waits for access and loads into memory if not already loaded
                     {
                         cam.UpdateImageResolutions(CurImg);
 
-                        Log($"Debug: (Image resolution={CurImg.Width}x{CurImg.Height} @ {CurImg.DPI} DPI and {Global.FormatBytes(CurImg.FileSize)})", AiUrl.CurSrv, cam, CurImg);
+                        Log($"Debug: (Image resolution={CurImg.Width}x{CurImg.Height} @ {CurImg.DPI} DPI and {Global.FormatBytes(CurImg.FileSize)})", AISRV, cam, CurImg);
 
                         string fldr = Path.Combine(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName), "LastCamImages");
                         string file = Path.Combine(fldr, $"{cam.Name}-Last.jpg");
@@ -2281,15 +2548,124 @@ namespace AITool
                             LastImageBackupTime.Write(DateTime.Now);
                         }
 
-                        asr = await GetDetectionsFromAIServer(CurImg, AiUrl, cam);
+                        //Start processing all urls that may be linked at the same time in separate threads
+                        List<Task<ClsAIServerResponse>> urltasks = new List<Task<ClsAIServerResponse>>();
+                        
 
-                        if (asr.Success)  //returns success if we get a valid response back from AI server EVEN if no detections
+                        //IN USE BLAH
+
+                        foreach (ClsURLItem url in AiUrls)
+                            urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));
+
+                        asrs = await Task.WhenAll(urltasks);
+
+                        //combine all the predictions
+                        List<ClsPrediction> predictions = new List<ClsPrediction>();
+
+                        int RelevantPredictionCount = 0;
+
+                        foreach (ClsAIServerResponse asr in asrs)
                         {
+                            AiUrl = asr.AIURL;
+                            AiUrl.LastResultSuccess = asr.Success;
+                            TotalSWPostTime += asr.SWPostTime;
 
-                            Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
-                            Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
+                            if (asr.Success)
+                            {
+                                Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                                Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
+                                foreach (ClsPrediction pred in asr.Predictions)
+                                {
+                                    if (ContainsPrediction(pred, predictions, cam) == -1)
+                                    {
+                                        pred.AnalyzePrediction();
+                                        if (pred.Result == ResultType.Relevant)
+                                            RelevantPredictionCount++;
+                                        predictions.Add(pred);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                error = asr.Error;
+                                AiUrl.IncrementError();
+                                AiUrl.LastResultMessage = error;
+                                Log(error, AiUrl.CurSrv, cam, CurImg);
+                            }
+                        }
 
 
+                        // check to see if we can get a refinement server URL to postprocess 
+                        //wait for the next url to become available...
+
+                        if (AIURLListRefineServerCount > 0 && RelevantPredictionCount > 0)
+                        {
+                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions,"", AiUrls);
+                            if (PostProcessURLs.Count > 0)
+                            {
+                                //Start processing all refinement urls
+                                urltasks = new List<Task<ClsAIServerResponse>>();
+
+                                foreach (ClsURLItem url in PostProcessURLs)
+                                    urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));
+
+                                asrs = await Task.WhenAll(urltasks);
+
+                                foreach (ClsAIServerResponse asr in asrs)
+                                {
+                                    AiUrl = asr.AIURL;
+                                    AiUrl.LastResultSuccess = asr.Success;
+                                    
+                                    //add to the list of url's we called
+                                    if (!AiUrls.Contains(AiUrl))
+                                        AiUrls.Add(AiUrl);
+
+                                    if (asr.Success)
+                                    {
+                                        Log($"Debug: (2.1/6) [Refinement Server] Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                                        Log($"Debug: (3.1/6) [Refinement Server] Processing results...", AiUrl.CurSrv, cam, CurImg);
+
+                                        //try to remove duplicates and prefer results from refinement sever
+                                        //note dupe detection works only on label name and position
+                                        foreach (ClsPrediction pred in asr.Predictions)
+                                        {
+                                            int idx = ContainsPrediction(pred, predictions, cam);
+                                            if (idx == -1)  //does not contain
+                                            {
+                                                pred.AnalyzePrediction();
+                                                if (pred.Result == ResultType.Relevant)
+                                                    RelevantPredictionCount++;
+                                                predictions.Add(pred);
+                                            }
+                                            else  //already in list, replace it - it may be a different confidence
+                                            {
+                                                pred.AnalyzePrediction();
+                                                predictions.RemoveAt(idx);
+                                                predictions.Insert(idx, pred);
+                                            }
+
+                                            //asdfasdf
+                                        }
+                                    }
+                                    else
+                                    {
+                                        error = asr.Error;
+                                        AiUrl.IncrementError();
+                                        AiUrl.LastResultMessage = error;
+                                        Log(error, AiUrl.CurSrv, cam, CurImg);
+                                    }
+                                }
+                            }
+                        }
+
+                        //sort predictions so most important are at the top
+                        predictions = predictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
+
+                        string PredictionsJSON = Global.GetJSONString(predictions);
+
+                        //process the combined predictions
+                        if (predictions.Count > 0)
+                        {
                             List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
                             List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
@@ -2307,228 +2683,205 @@ namespace AITool
                             //if we are not using the local deepstack windows version, this means nothing:
                             DeepStackServerControl.IsActivated = true;
 
-                            if (asr.Predictions.Count() > 0)
+                            //print every detected object with the according confidence-level
+                            Log($"Debug:    Detected objects:", AISRV, cam, CurImg);
+
+                            foreach (ClsPrediction pred in predictions)
                             {
-                                //print every detected object with the according confidence-level
-                                Log($"Debug:    Detected objects:", AiUrl.CurSrv, cam, CurImg);
 
-                                foreach (ClsPrediction pred in asr.Predictions)
+                                string clr = "";
+                                if (pred.Result != ResultType.Error)
+                                    DeepStackServerControl.VisionDetectionRunning = true;
+
+                                if (pred.Result == ResultType.Relevant)
                                 {
-                                    pred.AnalyzePrediction();
+                                    objects.Add(pred.Label);
+                                    objects_confidence.Add(pred.Confidence);
+                                    objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
+                                    clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
+                                }
+                                else
+                                {
+                                    clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
+                                    irrelevant_objects.Add(pred.Label);
+                                    irrelevant_objects_confidence.Add(pred.Confidence);
+                                    string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
+                                    irrelevant_objects_position.Add(position);
 
-                                    string clr = "";
-                                    if (pred.Result != ResultType.Error)
-                                        DeepStackServerControl.VisionDetectionRunning = true;
-
-                                    if (pred.Result == ResultType.Relevant)
+                                    if (pred.Result == ResultType.NoConfidence)
                                     {
-                                        objects.Add(pred.Label);
-                                        objects_confidence.Add(pred.Confidence);
-                                        objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
-                                        clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
+                                        threshold_counter++;
                                     }
-                                    else
+                                    else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked)
                                     {
-                                        clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
-                                        irrelevant_objects.Add(pred.Label);
-                                        irrelevant_objects_confidence.Add(pred.Confidence);
-                                        string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
-                                        irrelevant_objects_position.Add(position);
-
-                                        if (pred.Result == ResultType.NoConfidence)
-                                        {
-                                            threshold_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.ImageMasked || pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.StaticMasked)
-                                        {
-                                            clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
-                                            masked_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.UnwantedObject)
-                                        {
-                                            irrelevant_counter++;
-                                        }
-                                        else if (pred.Result == ResultType.Error)
-                                        {
-                                            clr = "{red}";
-                                            error_counter++;
-                                        }
+                                        clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
+                                        masked_counter++;
                                     }
-
-                                    if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                        Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam, CurImg);
-                                    else
-                                        Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", AiUrl.CurSrv, cam, CurImg);
-
+                                    else if (pred.Result == ResultType.UnwantedObject)
+                                    {
+                                        irrelevant_counter++;
+                                    }
+                                    else if (pred.Result == ResultType.Error)
+                                    {
+                                        clr = "{red}";
+                                        error_counter++;
+                                    }
                                 }
 
-                                // check to see if we can get a refinement server URL to postprocess 
-                                //wait for the next url to become available...
+                                if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
+                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}", pred.Server, cam, CurImg);
+                                else
+                                    Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", pred.Server, cam, CurImg);
 
-
-                                //ClsURLItem PostProcessURL = await WaitForNextURL(cam, false);
-
-                                //asdfasdf
-
-                                //mark the end of AI detection for the current image
-                                cam.maskManager.LastDetectionDate = DateTime.Now;
-
-                                //sort predictions so most important are at the top
-                                asr.Predictions = asr.Predictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
-
-                                string PredictionsJSON = Global.GetJSONString(asr.Predictions);
-
-                                //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                                if (objects.Count() > 0)
-                                {
-                                    //store these last detections for the specific camera
-                                    cam.last_detections = objects;
-                                    cam.last_confidences = objects_confidence;
-                                    cam.last_positions = objects_position;
-                                    cam.last_image_file_with_detections = CurImg.image_path;
-
-                                    //the new way
-
-
-                                    //create summary string for this detection
-                                    StringBuilder detectionsTextSb = new StringBuilder();
-                                    for (int i = 0; i < objects.Count(); i++)
-                                    {
-                                        detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
-                                    }
-
-                                    cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
-
-                                    //create text string objects and confidences
-                                    string objects_and_confidences = "";
-                                    string object_positions_as_string = "";
-                                    //for (int i = 0; i < objects.Count; i++)
-                                    //{
-                                    //    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
-                                    //    object_positions_as_string += $"{objects_position[i]};";
-                                    //}
-
-                                    foreach (ClsPrediction pred in asr.Predictions)
-                                    {
-                                        if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
-                                            continue;
-
-                                        objects_and_confidences += $"{pred.ToString()}; ";
-                                        object_positions_as_string += $"{pred.PositionString()};";
-                                    }
-
-                                    objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
-
-                                    Log($"Debug: The summary:" + cam.last_detections_summary, AiUrl.CurSrv, cam, CurImg);
-
-                                    Log($"Debug: (5/6) Performing alert actions:", AiUrl.CurSrv, cam, CurImg);
-
-                                    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AiUrl.CurSrv);
-
-                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AiUrl, ""); //make TRIGGER
-
-                                    cam.IncrementAlerts(); //stats update
-                                    Log($"Debug: (6/6) SUCCESS.", AiUrl.CurSrv, cam, CurImg);
-
-                                    //add to history list
-                                    //Log($"Debug: Adding detection to history list.", AiUrl.CurSrv, cam.name);
-                                    Global.CreateHistoryItem(hist);
-
-                                }
-                                //if no object fulfills all 3 requirements but there are other objects: 
-                                else if (irrelevant_objects.Count() > 0)
-                                {
-                                    //IRRELEVANT ALERT
-
-                                    //retrieve confidences and positions
-                                    string objects_and_confidences = "";
-                                    string object_positions_as_string = "";
-
-                                    //for (int i = 0; i < irrelevant_objects.Count; i++)
-                                    //{
-                                    //    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
-                                    //    object_positions_as_string += $"{irrelevant_objects_position[i]};";
-                                    //}
-
-                                    foreach (ClsPrediction pred in asr.Predictions)
-                                    {
-                                        //if (pred.Result != ResultType.Relevant)
-                                        //{
-                                        objects_and_confidences += $"{pred.ToString()}; ";
-                                        object_positions_as_string += $"{pred.PositionString()};";
-                                        //}
-                                    }
-
-
-                                    objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
-
-                                    //string text contains what is written in the log and in the history list
-                                    string text = "";
-                                    if (masked_counter > 0)//if masked objects, add them
-                                    {
-                                        text += $"{masked_counter}x masked; ";
-                                    }
-                                    if (threshold_counter > 0)//if objects out of confidence range, add them
-                                    {
-                                        text += $"{threshold_counter}x not in confidence range; ";
-                                    }
-                                    if (irrelevant_counter > 0) //if other irrelevant objects, add them
-                                    {
-                                        text += $"{irrelevant_counter}x irrelevant; ";
-                                    }
-                                    if (error_counter > 0) //if other irrelevant objects, add them
-                                    {
-                                        text += $"{error_counter}x errors; ";
-                                    }
-
-                                    if (text != "") //remove last ";"
-                                    {
-                                        text = text.Remove(text.Length - 2);
-                                    }
-
-                                    Log($"Debug: {text}, so it's an irrelevant alert.", AiUrl.CurSrv, cam, CurImg);
-
-                                    Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam, CurImg);
-
-                                    hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AiUrl.CurSrv);
-
-                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
-
-                                    cam.IncrementIrrelevantAlerts(); //stats update
-                                    Log($"Debug: (6/6) Camera {cam.Name} caused an irrelevant alert.", AiUrl.CurSrv, cam, CurImg);
-
-                                    //add to history list
-                                    Global.CreateHistoryItem(hist);
-                                }
                             }
-                            else
+
+
+                            //mark the end of AI detection for the current image
+                            cam.maskManager.LastDetectionDate = DateTime.Now;
+
+
+                            //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
+                            if (objects.Count > 0)
                             {
-                                Log($"Debug:      ((NO DETECTED OBJECTS))", AiUrl.CurSrv, cam, CurImg);
-                                // FALSE ALERT
+                                //store these last detections for the specific camera
+                                cam.last_detections = objects;
+                                cam.last_confidences = objects_confidence;
+                                cam.last_positions = objects_position;
+                                cam.last_image_file_with_detections = CurImg.image_path;
 
-                                cam.IncrementFalseAlerts(); //stats update
+                                //the new way
 
-                                Log($"Debug: (5/6) Performing CANCEL actions:", AiUrl.CurSrv, cam, CurImg);
 
-                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "false alert", "", false, "", AiUrl.CurSrv);
+                                //create summary string for this detection
+                                StringBuilder detectionsTextSb = new StringBuilder();
+                                for (int i = 0; i < objects.Count; i++)
+                                {
+                                    detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                }
 
-                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, ""); //make TRIGGER
+                                cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
 
-                                Log($"Debug: (6/6) Camera {cam.Name} caused a false alert, nothing detected.", AiUrl.CurSrv, cam, CurImg);
+                                //create text string objects and confidences
+                                string objects_and_confidences = "";
+                                string object_positions_as_string = "";
+                                //for (int i = 0; i < objects.Count; i++)
+                                //{
+                                //    objects_and_confidences += $"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; ";
+                                //    object_positions_as_string += $"{objects_position[i]};";
+                                //}
+
+                                foreach (ClsPrediction pred in predictions)
+                                {
+                                    if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                        continue;
+
+                                    objects_and_confidences += $"{pred.ToString()}; ";
+                                    object_positions_as_string += $"{pred.PositionString()};";
+                                }
+
+                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+
+                                Log($"Debug: The summary:" + cam.last_detections_summary, AISRV, cam, CurImg);
+
+                                Log($"Debug: (5/6) Performing alert actions:", AISRV, cam, CurImg);
+
+                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AISRV);
+
+                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AISRV, ""); //make TRIGGER
+
+                                cam.IncrementAlerts(); //stats update
+                                Log($"Debug: (6/6) SUCCESS.", AISRV, cam, CurImg);
+
+                                //add to history list
+                                //Log($"Debug: Adding detection to history list.", AiUrl.CurSrv, cam.name);
+                                Global.CreateHistoryItem(hist);
+
+                            }
+                            //if no object fulfills all 3 requirements but there are other objects: 
+                            else if (irrelevant_objects.Count > 0)
+                            {
+                                //IRRELEVANT ALERT
+
+                                //retrieve confidences and positions
+                                string objects_and_confidences = "";
+                                string object_positions_as_string = "";
+
+                                //for (int i = 0; i < irrelevant_objects.Count; i++)
+                                //{
+                                //    objects_and_confidences += $"{irrelevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, irrelevant_objects_confidence[i])}; "; // ({Math.Round((irrelevant_objects_confidence[i] * 100), 0)}%); ";
+                                //    object_positions_as_string += $"{irrelevant_objects_position[i]};";
+                                //}
+
+                                foreach (ClsPrediction pred in predictions)
+                                {
+                                    //if (pred.Result != ResultType.Relevant)
+                                    //{
+                                    objects_and_confidences += $"{pred.ToString()}; ";
+                                    object_positions_as_string += $"{pred.PositionString()};";
+                                    //}
+                                }
+
+
+                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+
+                                //string text contains what is written in the log and in the history list
+                                string text = "";
+                                if (masked_counter > 0)//if masked objects, add them
+                                {
+                                    text += $"{masked_counter}x masked; ";
+                                }
+                                if (threshold_counter > 0)//if objects out of confidence range, add them
+                                {
+                                    text += $"{threshold_counter}x not in confidence range; ";
+                                }
+                                if (irrelevant_counter > 0) //if other irrelevant objects, add them
+                                {
+                                    text += $"{irrelevant_counter}x irrelevant; ";
+                                }
+                                if (error_counter > 0) //if other irrelevant objects, add them
+                                {
+                                    text += $"{error_counter}x errors; ";
+                                }
+
+                                if (text != "") //remove last ";"
+                                {
+                                    text = text.Remove(text.Length - 2);
+                                }
+
+                                Log($"Debug: {text}, so it's an irrelevant alert.", AISRV, cam, CurImg);
+
+                                Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
+
+                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AISRV);
+
+                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+
+                                cam.IncrementIrrelevantAlerts(); //stats update
+                                Log($"Debug: (6/6) Camera {cam.Name} caused an irrelevant alert.", AISRV, cam, CurImg);
 
                                 //add to history list
                                 Global.CreateHistoryItem(hist);
                             }
-
-
                         }
                         else
                         {
-                            error = asr.Error;
-                            AiUrl.IncrementError();
-                            AiUrl.LastResultMessage = error;
-                            Log(error, AiUrl.CurSrv, cam, CurImg);
+                            Log($"Debug:      ((NO DETECTED OBJECTS))", AISRV, cam, CurImg);
+                            // FALSE ALERT
+
+                            cam.IncrementFalseAlerts(); //stats update
+
+                            Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
+
+                            hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "false alert", "", false, "", AISRV);
+
+                            await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+
+                            Log($"Debug: (6/6) Camera {cam.Name} caused a false alert, nothing detected.", AISRV, cam, CurImg);
+
+                            //add to history list
+                            Global.CreateHistoryItem(hist);
                         }
+
 
                     }
                     else
@@ -2537,7 +2890,7 @@ namespace AITool
                         error = $"Error: Image is not valid or inaccessible for {CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries, giving up: {CurImg.image_path}";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = error;
-                        Log(error, AiUrl.CurSrv, cam, CurImg);
+                        Log(error, AISRV, cam, CurImg);
                     }
 
                 }
@@ -2547,7 +2900,7 @@ namespace AITool
                     error = $"ERROR: {Global.ExMsg(ex)}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = error;
-                    Log(error, AiUrl.CurSrv, cam, CurImg);
+                    Log(error, AISRV, cam, CurImg);
                 }
                 //exitfunction:
                 if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_telegram_errors == true && cam.telegram_enabled)
@@ -2557,17 +2910,15 @@ namespace AITool
                     {
                         hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "error", "", false, "", AiUrl.CurSrv);
                     }
-                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, hist, false, !cam.Action_queued, AiUrl, "Error"); //make TRIGGER
+                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, hist, false, !cam.Action_queued, AiUrl.CurSrv, "Error"); //make TRIGGER
                 }
 
 
                 //I notice deepstack takes a lot longer the very first run?
 
                 CurImg.TotalTimeMS = (long)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds; //sw.ElapsedMilliseconds + CurImg.QueueWaitMS + CurImg.FileLockMS;
-                CurImg.DeepStackTimeMS = asr.SWPostTime;
+                CurImg.DeepStackTimeMS = TotalSWPostTime;
                 CurImg.LifeTimeMS = (long)(DateTime.Now - CurImg.TimeCreated).TotalMilliseconds;
-                AiUrl.LastTimeMS = asr.SWPostTime;
-                AiUrl.AITimeCalcs.AddToCalc(CurImg.DeepStackTimeMS);
                 tcalc.AddToCalc(CurImg.TotalTimeMS);
                 qcalc.AddToCalc(CurImg.QueueWaitMS);
                 fcalc.AddToCalc(CurImg.FileLockMS);
@@ -2575,7 +2926,12 @@ namespace AITool
                 icalc.AddToCalc(CurImg.LifeTimeMS);
 
                 Log($"Debug:          Total Time: {CurImg.TotalTimeMS.ToString().PadLeft(6)} ms (Count={tcalc.Count.ToString().PadLeft(6)}, Min={tcalc.MinS.PadLeft(6)} ms, Max={tcalc.MaxS.PadLeft(6)} ms, Avg={tcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
-                Log($"Debug:       AI (URL) Time: {CurImg.DeepStackTimeMS.ToString().PadLeft(6)} ms (Count={AiUrl.AITimeCalcs.Count.ToString().PadLeft(6)}, Min={AiUrl.AITimeCalcs.MinS.PadLeft(6)} ms, Max={AiUrl.AITimeCalcs.MaxS.PadLeft(6)} ms, Avg={AiUrl.AITimeCalcs.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
+
+                foreach (ClsURLItem url in AiUrls)
+                {
+                    Log($"Debug:       AI (URL) Time: {url.LastTimeMS.ToString().PadLeft(6)} ms (Count={url.AITimeCalcs.Count.ToString().PadLeft(6)}, Min={url.AITimeCalcs.MinS.PadLeft(6)} ms, Max={url.AITimeCalcs.MaxS.PadLeft(6)} ms, Avg={url.AITimeCalcs.AvgS.PadLeft(6)} ms)", url.CurSrv, cam, CurImg);
+                }
+
                 Log($"Debug:      File lock Time: {CurImg.FileLockMS.ToString().PadLeft(6)} ms (Count={fcalc.Count.ToString().PadLeft(6)}, Min={fcalc.MinS.PadLeft(6)} ms, Max={fcalc.MaxS.PadLeft(6)} ms, Avg={fcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
                 Log($"Debug:      File load Time: {CurImg.FileLoadMS.ToString().PadLeft(6)} ms (Count={lcalc.Count.ToString().PadLeft(6)}, Min={lcalc.MinS.PadLeft(6)} ms, Max={lcalc.MaxS.PadLeft(6)} ms, Avg={lcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
                 Log($"Debug:    Image Queue Time: {CurImg.QueueWaitMS.ToString().PadLeft(6)} ms (Count={qcalc.Count.ToString().PadLeft(6)}, Min={qcalc.MinS.PadLeft(6)} ms, Max={qcalc.MaxS.PadLeft(6)} ms, Avg={qcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
@@ -2860,6 +3216,37 @@ namespace AITool
 
         }
 
+        public static ClsURLItem GetURL(string urlstring)
+        {
+            ClsURLItem ret = null;
+
+            //first look for exact match - where more than just the URL should match
+            ClsURLItem test = new ClsURLItem(urlstring, 0, URLTypeEnum.Unknown);
+
+            int fnd = AppSettings.Settings.AIURLList.IndexOf(test);
+
+            if (fnd > -1)
+            {
+                ret = AppSettings.Settings.AIURLList[fnd];
+            }
+            else  //lets do a loose search for just the URL string 
+            {
+                for (int i = 0; i < AppSettings.Settings.AIURLList.Count; i++)
+                {
+                    if (!AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence())
+                        continue;
+
+                    if (string.Equals(AppSettings.Settings.AIURLList[i].ToString(), test.ToString(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        ret = AppSettings.Settings.AIURLList[i];
+                        break;
+                    }
+                }
+            }
+
+            return ret;
+
+        }
 
         public static Camera GetCamera(String ImageOrNameOrPrefix, bool ReturnDefault = true)
         {
@@ -3013,7 +3400,7 @@ namespace AITool
 
 
                 //if we didnt find a camera see if there is a default camera name we can use without a prefix
-                if (cams.Count() == 0)
+                if (cams.Count == 0)
                 {
                     Log($"Debug: No enabled camera with the same filename, cameraname, or prefix found for '{ImageOrNameOrPrefix}'");
                     //check if there is a default camera which accepts any prefix, select it
@@ -3048,14 +3435,14 @@ namespace AITool
 
             Camera cam = null;
 
-            if (cams.Count() == 0)
+            if (cams.Count == 0)
             {
                 Log($"Debug: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
             }
             else
             {
                 cam = cams[0];
-                if (cams.Count() > 1)
+                if (cams.Count > 1)
                 {
                     Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched ***");
                     for (int i = 0; i < cams.Count; i++)

@@ -35,7 +35,10 @@ namespace AITool
             {
                 if (!cont.Equals(MasterCheckBox))
                 {
-                    if (cont.Enabled && (cont.Tag == null || !(cont.Tag is Color)))
+                    if (cont.Enabled )
+                        cont.Tag = cont.ForeColor;
+                    
+                    if (cont.Tag == null || !(cont.Tag is Color))
                         cont.Tag = cont.ForeColor;
 
                     cont.Enabled = MasterCheckBox.Checked;

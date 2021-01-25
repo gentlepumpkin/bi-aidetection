@@ -21,7 +21,7 @@ namespace AITool
 
             if (show_textbox)
             {
-                if (cbitems == null || cbitems.Count() == 0)
+                if (cbitems == null || cbitems.Count == 0)
                 {
                     this.tb_1.Show();
                     this.tb_1.BringToFront();

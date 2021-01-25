@@ -95,7 +95,7 @@ namespace AITool
         public string BICamName = "";
         public string MaskFileName = "";
         public string triggering_objects_as_string = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
-        public string additional_triggering_objects_as_string = "Chicken Turtle, Hummingbird Hawk-moth, Goblin Shark";
+        public string additional_triggering_objects_as_string = "Face, SUV, VAN, Chicken Turtle, Hummingbird Hawk-moth, Goblin Shark";
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "";
         public string[] trigger_urls = new string[0];
@@ -435,7 +435,7 @@ namespace AITool
             if (string.IsNullOrEmpty(this.last_image_file) && files.Count > 0)
                 this.last_image_file = files[0].FullName;
 
-            AITOOL.Log($"Debug: {cnt} of {files.Count} image files processed, {updated} new resolutions found ({invalid} invalid) in {sw.ElapsedMilliseconds} ms (Max={MaxTimeScanningMS} ms), {this.ImageResolutions.Count()} different image resolutions found: {reseseses}");
+            AITOOL.Log($"Debug: {cnt} of {files.Count} image files processed, {updated} new resolutions found ({invalid} invalid) in {sw.ElapsedMilliseconds} ms (Max={MaxTimeScanningMS} ms), {this.ImageResolutions.Count} different image resolutions found: {reseseses}");
 
         }
 

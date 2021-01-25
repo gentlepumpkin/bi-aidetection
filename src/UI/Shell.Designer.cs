@@ -223,7 +223,10 @@
             this.cbMinimizeToTray = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
+            this.label34 = new System.Windows.Forms.Label();
+            this.label33 = new System.Windows.Forms.Label();
             this.label32 = new System.Windows.Forms.Label();
+            this.txt_DeepstackNoMoreOftenThanMins = new System.Windows.Forms.TextBox();
             this.txt_DeepstackRestartFailCount = new System.Windows.Forms.TextBox();
             this.Chk_AutoReStart = new System.Windows.Forms.CheckBox();
             this.Btn_ViewLog = new System.Windows.Forms.Button();
@@ -312,9 +315,6 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
-            this.label33 = new System.Windows.Forms.Label();
-            this.txt_DeepstackNoMoreOftenThanMins = new System.Windows.Forms.TextBox();
-            this.label34 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -1207,7 +1207,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(790, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(792, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1220,7 +1220,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(787, 377);
+            this.pictureBox1.Size = new System.Drawing.Size(723, 377);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2767,7 +2767,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 27F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 252);
@@ -2855,6 +2855,24 @@
             this.tabDeepStack.Text = "DeepStack";
             this.tabDeepStack.UseVisualStyleBackColor = true;
             // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(461, 364);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(29, 13);
+            this.label34.TabIndex = 26;
+            this.label34.Text = "Mins";
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(309, 365);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(98, 13);
+            this.label33.TabIndex = 25;
+            this.label33.Text = "No more often than";
+            // 
             // label32
             // 
             this.label32.AutoSize = true;
@@ -2863,6 +2881,13 @@
             this.label32.Size = new System.Drawing.Size(111, 13);
             this.label32.TabIndex = 24;
             this.label32.Text = "URL Failures in a row.";
+            // 
+            // txt_DeepstackNoMoreOftenThanMins
+            // 
+            this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(413, 361);
+            this.txt_DeepstackNoMoreOftenThanMins.Name = "txt_DeepstackNoMoreOftenThanMins";
+            this.txt_DeepstackNoMoreOftenThanMins.Size = new System.Drawing.Size(42, 20);
+            this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 23;
             // 
             // txt_DeepstackRestartFailCount
             // 
@@ -3797,31 +3822,6 @@
             // 
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
-            // 
-            // label33
-            // 
-            this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(309, 365);
-            this.label33.Name = "label33";
-            this.label33.Size = new System.Drawing.Size(98, 13);
-            this.label33.TabIndex = 25;
-            this.label33.Text = "No more often than";
-            // 
-            // txt_DeepstackNoMoreOftenThanMins
-            // 
-            this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(413, 361);
-            this.txt_DeepstackNoMoreOftenThanMins.Name = "txt_DeepstackNoMoreOftenThanMins";
-            this.txt_DeepstackNoMoreOftenThanMins.Size = new System.Drawing.Size(42, 20);
-            this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 23;
-            // 
-            // label34
-            // 
-            this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(461, 364);
-            this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(29, 13);
-            this.label34.TabIndex = 26;
-            this.label34.Text = "Mins";
             // 
             // Shell
             // 
