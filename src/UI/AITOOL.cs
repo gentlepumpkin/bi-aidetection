@@ -332,7 +332,7 @@ namespace AITool
         {
 
 
-            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition_Objects) != null || AppSettings.GetURL(type: URLTypeEnum.AWSRekognition_Faces) != null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
             {
                 string error = AITOOL.UpdateAmazonSettings();
 
@@ -446,7 +446,7 @@ namespace AITool
 
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition) == null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            if (AppSettings.GetURL(type: URLTypeEnum.AWSRekognition_Objects) == null && AppSettings.GetURL(type: URLTypeEnum.AWSRekognition_Faces) == null) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
                 return "";
 
             string error = "";
@@ -521,12 +521,12 @@ namespace AITool
                 if (url.IsValid && url.UseAsRefinementServer)
                     AIURLListRefineServerCount++;
 
-                if (url.Type != URLTypeEnum.AWSRekognition && url.HttpClient == null)
+                if (url.Type != URLTypeEnum.AWSRekognition_Objects && url.Type != URLTypeEnum.AWSRekognition_Faces && url.HttpClient == null)
                 {
                     url.HttpClient = new HttpClient();
                     url.HttpClient.Timeout = url.GetTimeout();
                 }
-                
+
             }
 
             //remove dupes
@@ -792,7 +792,7 @@ namespace AITool
                                                                 notrequired++;
                                                             }
                                                         }
-                                                        else
+                                                        else if (!sorted[i].UseAsRefinementServer)
                                                         {
                                                             sorted[i].CurOrder = i + 1;
                                                             sorted[i].InUse.WriteFullFence(true);
@@ -2300,7 +2300,7 @@ namespace AITool
             //==============================================================================================================
             //==============================================================================================================
             //==============================================================================================================
-            else if (AiUrl.Type == URLTypeEnum.AWSRekognition)
+            else if (AiUrl.Type == URLTypeEnum.AWSRekognition_Objects)
             {
                 Stopwatch swposttime = new Stopwatch();
 
@@ -2327,7 +2327,7 @@ namespace AITool
                     if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
                         dlr.MinConfidence = AiUrl.Threshold_Lower;
 
-                    Amazon.Rekognition.Model.Image rekognitionImgage = new Amazon.Rekognition.Model.Image();
+                    Amazon.Rekognition.Model.Image rekognitionImage = new Amazon.Rekognition.Model.Image();
 
                     //byte[] data = null;
 
@@ -2337,9 +2337,9 @@ namespace AITool
                     //    await fileStream.ReadAsync(data, 0, (int)fileStream.Length);
                     //}
 
-                    rekognitionImgage.Bytes = CurImg.ToStream();
+                    rekognitionImage.Bytes = CurImg.ToStream();
 
-                    dlr.Image = rekognitionImgage;
+                    dlr.Image = rekognitionImage;
 
 
                     Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
@@ -2368,6 +2368,110 @@ namespace AITool
                                         ret.Predictions.Add(pred);
 
                                     }
+
+                                }
+
+
+                            }
+
+                            ret.Success = true;
+                            AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
+                        }
+                        else
+                        {
+                            ret.Error = $"ERROR: Amazon Rekognition 'HttpStatusCode' is '{response.HttpStatusCode}' ({Convert.ToInt32(response.HttpStatusCode)}).";
+                            AiUrl.IncrementError();
+                            AiUrl.LastResultMessage = ret.Error;
+                        }
+                    }
+                    else
+                    {
+                        ret.Error = $"ERROR: Amazon Rekognition 'Response' is null.";
+                        AiUrl.IncrementError();
+                        AiUrl.LastResultMessage = ret.Error;
+                    }
+
+
+                }
+                catch (Exception ex)
+                {
+                    swposttime.Stop();
+
+                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    AiUrl.IncrementError();
+                    AiUrl.LastResultMessage = ret.Error;
+                }
+                finally
+                {
+                    ret.SWPostTime = swposttime.ElapsedMilliseconds;
+                    AiUrl.LastTimeMS = swposttime.ElapsedMilliseconds;
+                    AiUrl.AITimeCalcs.AddToCalc(AiUrl.LastTimeMS);
+                }
+
+            }
+            else if (AiUrl.Type == URLTypeEnum.AWSRekognition_Faces)
+            {
+                Stopwatch swposttime = new Stopwatch();
+
+                try
+                {
+
+                    //string testjson = JsonConvert.SerializeObject(cdr);
+
+                    long FileSize = new FileInfo(CurImg.image_path).Length;
+                    //https://docs.aws.amazon.com/general/latest/gr/rande.html
+
+
+                    RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(AppSettings.Settings.AmazonRegionEndpoint);
+                    AmazonRekognitionClient rekognitionClient = new AmazonRekognitionClient(new BasicAWSCredentials(AppSettings.Settings.AmazonAccessKeyId, AppSettings.Settings.AmazonSecretKey), endpoint);
+
+                    DetectFacesRequest dlr = new DetectFacesRequest();
+
+                    //dlr.MaxLabels = AppSettings.Settings.AmazonMaxLabels;
+                    //dlr.MinConfidence = AppSettings.Settings.AmazonMinConfidence;
+
+                    //if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && !OverrideThreshold)
+                    //    dlr.MinConfidence = cam.threshold_lower;
+
+                    //if (AppSettings.Settings.HistoryRestrictMinThresholdAtSource && OverrideThreshold)
+                    //    dlr.MinConfidence = AiUrl.Threshold_Lower;
+
+                    Amazon.Rekognition.Model.Image rekognitionImage = new Amazon.Rekognition.Model.Image();
+
+                    //byte[] data = null;
+
+                    //using (FileStream fileStream = new FileStream(CurImg.image_path, FileMode.Open, FileAccess.Read))
+                    //{
+                    //    data = new byte[fileStream.Length];
+                    //    await fileStream.ReadAsync(data, 0, (int)fileStream.Length);
+                    //}
+
+                    rekognitionImage.Bytes = CurImg.ToStream();
+
+                    dlr.Image = rekognitionImage;
+                    dlr.Attributes.Add("ALL");
+
+                    Log($"Debug: (1/6) Uploading a {Global.FormatBytes(FileSize)} image to '{AiUrl.Type}' AI Server at {AiUrl}", AiUrl.CurSrv, cam, CurImg);
+
+                    swposttime.Restart();
+
+                    DetectFacesResponse response = await rekognitionClient.DetectFacesAsync(dlr);
+
+                    swposttime.Stop();
+
+                    if (response != null)
+                    {
+                        ret.StatusCode = response.HttpStatusCode;
+                        if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            if (response.FaceDetails.Count > 0)
+                            {
+
+                                foreach (Amazon.Rekognition.Model.FaceDetail face in response.FaceDetails)
+                                {
+                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, face, CurImg, AiUrl);
+
+                                    ret.Predictions.Add(pred);
 
                                 }
 
@@ -2550,7 +2654,7 @@ namespace AITool
 
                         //Start processing all urls that may be linked at the same time in separate threads
                         List<Task<ClsAIServerResponse>> urltasks = new List<Task<ClsAIServerResponse>>();
-                        
+
 
                         //IN USE BLAH
 
@@ -2576,12 +2680,20 @@ namespace AITool
                                 Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
                                 foreach (ClsPrediction pred in asr.Predictions)
                                 {
-                                    if (ContainsPrediction(pred, predictions, cam) == -1)
+                                    int idx = ContainsPrediction(pred, predictions, cam);
+                                    if (idx == -1)  //does not contain
                                     {
                                         pred.AnalyzePrediction();
                                         if (pred.Result == ResultType.Relevant)
                                             RelevantPredictionCount++;
                                         predictions.Add(pred);
+                                    }
+                                    else  //already in list, replace it - it may be a different confidence
+                                    {
+                                        pred.AnalyzePrediction();
+                                        Log($"Debug: [Linked Server] Replacing prediction with new one: Old={predictions[idx].ToString()}, New={pred.ToString()}");
+                                        predictions.RemoveAt(idx);
+                                        predictions.Insert(idx, pred);
                                     }
                                 }
                             }
@@ -2600,7 +2712,7 @@ namespace AITool
 
                         if (AIURLListRefineServerCount > 0 && RelevantPredictionCount > 0)
                         {
-                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions,"", AiUrls);
+                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions, "", AiUrls);
                             if (PostProcessURLs.Count > 0)
                             {
                                 //Start processing all refinement urls
@@ -2615,7 +2727,7 @@ namespace AITool
                                 {
                                     AiUrl = asr.AIURL;
                                     AiUrl.LastResultSuccess = asr.Success;
-                                    
+
                                     //add to the list of url's we called
                                     if (!AiUrls.Contains(AiUrl))
                                         AiUrls.Add(AiUrl);
@@ -2633,13 +2745,43 @@ namespace AITool
                                             if (idx == -1)  //does not contain
                                             {
                                                 pred.AnalyzePrediction();
+
+                                                //sighthound face is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
+                                                bool matched = false;
+                                                if (pred.Label.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
+                                                {
+                                                    //search existing predictions for person's's
+                                                    foreach (ClsPrediction fpred in predictions)
+                                                    {
+                                                        if (!fpred.Label.Contains("[") && fpred.Label.IndexOf("person", StringComparison.OrdinalIgnoreCase) >= 0)
+                                                        {
+                                                            Rectangle personRect = Rectangle.FromLTRB(fpred.XMin, fpred.YMin, fpred.XMax, fpred.YMax);
+                                                            Rectangle newRect = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
+
+                                                            if (personRect.Contains(newRect))
+                                                            {
+                                                                //change person to "person [details]"
+                                                                string det = Global.GetWordBetween(pred.Label, "[", "]");
+                                                                if (!string.IsNullOrWhiteSpace(det))
+                                                                {
+                                                                    matched = true;
+                                                                    fpred.Label = $"{fpred.Label} [{det}]";
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
                                                 if (pred.Result == ResultType.Relevant)
                                                     RelevantPredictionCount++;
+
+                                                //add it anyway
                                                 predictions.Add(pred);
                                             }
                                             else  //already in list, replace it - it may be a different confidence
                                             {
                                                 pred.AnalyzePrediction();
+                                                Log($"Debug: [Refinement Server] Replacing prediction with new one: Old={predictions[idx].ToString()}, New={pred.ToString()}");
                                                 predictions.RemoveAt(idx);
                                                 predictions.Insert(idx, pred);
                                             }

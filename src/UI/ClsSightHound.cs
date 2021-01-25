@@ -237,8 +237,53 @@ namespace AITool
         public int Age { get; set; } = 0;
         [JsonProperty("emotion")]
         public string Emotion { get; set; } = "";
+        [JsonProperty("emotionsAll")]
+        public SightHoundEmotionsAll EmotionsAll { get; set; }
         [JsonProperty("frontal")]
         public bool Frontal { get; set; } = false;
 
     }
+
+    public class SightHoundEmotionsAll
+    {
+        [JsonProperty("neutral")]
+        public double Neutral { get; set; }
+
+        [JsonProperty("sadness")]
+        public double Sadness { get; set; }
+
+        [JsonProperty("disgust")]
+        public double Disgust { get; set; }
+
+        [JsonProperty("anger")]
+        public double Anger { get; set; }
+
+        [JsonProperty("surprise")]
+        public double Surprise { get; set; }
+
+        [JsonProperty("fear")]
+        public double Fear { get; set; }
+
+        [JsonProperty("happiness")]
+        public double Happiness { get; set; }
+
+    }
+
+    public class SightHoundEmotionItem
+    {
+        public SightHoundEmotionItem(string name, double confidence)
+        {
+            Name = name;
+            Confidence = confidence;
+        }
+
+        public string Name { get; set; } = "";
+        public double Confidence { get; set; } = 0;
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using static AITool.AITOOL;
 
 namespace AITool
@@ -65,6 +66,90 @@ namespace AITool
         //private ClsDeepstackObject _imageObject;
 
         public ClsPrediction() { }
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, Amazon.Rekognition.Model.FaceDetail AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
+        {
+            this._defaultObjType = defaultObjType;
+            this._cam = cam;
+            this._cururl = curURL;
+            this._curimg = curImg;
+            this.Camera = cam.Name;
+            this.BICamName = cam.BICamName;
+            this.ImageHeight = curImg.Height;
+            this.ImageWidth = curImg.Width;
+            this.Server = curURL.CurSrv;
+            this.Time = DateTime.Now;
+            this.Filename = curImg.image_path;
+
+            if (AiDetectionObject == null || cam == null)
+            {
+                Log("Error: Prediction or Camera was null?", "", this._cam.Name);
+                this.Result = ResultType.Error;
+                return;
+            }
+
+            this.RectHeight = Convert.ToInt32(Math.Round(curImg.Height * AiDetectionObject.BoundingBox.Height));
+            this.RectWidth = Convert.ToInt32(Math.Round(curImg.Width * AiDetectionObject.BoundingBox.Width));
+
+            double right = (curImg.Width * AiDetectionObject.BoundingBox.Left) + this.RectWidth;
+            double left = curImg.Width * AiDetectionObject.BoundingBox.Left;
+
+            double top = curImg.Height * AiDetectionObject.BoundingBox.Top;
+            double bottom = (curImg.Height * AiDetectionObject.BoundingBox.Top) + this.RectHeight;
+
+            this.XMin = Convert.ToInt32(Math.Round(left));
+            this.YMin = Convert.ToInt32(Math.Round(top));
+
+            this.XMax = Convert.ToInt32(Math.Round(right));
+            this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+            //[{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {Global.UpperFirst(AiDetectionObject.Attributes.Emotion)}] 
+            string emotions = "UnknownEmotion";
+            List<Emotion> emotionslist = new List<Emotion>();
+
+            if (AiDetectionObject.Emotions != null && AiDetectionObject.Emotions.Count > 0)
+            {
+                foreach (Emotion em in AiDetectionObject.Emotions)
+                {
+                    if (em.Confidence > .5)
+                        emotionslist.Add(em);
+                }
+                if (emotionslist.Count > 0)
+                {
+                    //sort so highest conf is first
+                    emotionslist = emotionslist.OrderByDescending(a => a.Confidence).ToList();
+                    emotions = "";
+                    int cnt = 0;
+                    foreach (Emotion em in emotionslist)
+                    {
+                        if (em.Confidence > 10)
+                           emotions += $"{em.Type};";
+                        cnt++;
+                        if (cnt > 3)
+                            break;
+                    }
+                    emotions = emotions.Trim(" ;".ToCharArray());
+                    if (string.IsNullOrEmpty(emotions))
+                        emotions = "UnknownEmotions";
+                }
+            }
+
+            string gender = "UnknownGender";
+            if (AiDetectionObject.Gender != null)
+                gender = AiDetectionObject.Gender.Value;
+
+            string age = "UnknownAge";
+            if (AiDetectionObject.AgeRange != null)
+                age = $"{AiDetectionObject.AgeRange.Low}-{AiDetectionObject.AgeRange.High}";
+
+            if (!gender.Contains("Unknown") || !emotions.Contains("Unknown") || !age.Contains("Unknown"))
+                this.Label = $"Face [{gender}, {age}, {emotions}]";
+            else
+                this.Label = $"Face";
+
+            this.Confidence = AiDetectionObject.Confidence;
+
+            this.GetObjectType();
+        }
 
         public ClsPrediction(ObjectType defaultObjType, Camera cam, Amazon.Rekognition.Model.Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
@@ -467,7 +552,43 @@ namespace AITool
 
             if (AiDetectionObject.Attributes != null && !string.IsNullOrEmpty(AiDetectionObject.Attributes.Gender))
             {
-                this.Label += $" [{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {Global.UpperFirst(AiDetectionObject.Attributes.Emotion)}]";
+                string emotions = Global.UpperFirst(AiDetectionObject.Attributes.Emotion);  //this is the highest confidence emotion 
+                
+                if (AiDetectionObject.Attributes.EmotionsAll != null)
+                {
+                    List<SightHoundEmotionItem> emotionslist = new List<SightHoundEmotionItem>();
+                    if (AiDetectionObject.Attributes.EmotionsAll.Anger > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Anger", AiDetectionObject.Attributes.EmotionsAll.Anger));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Disgust > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Disgust", AiDetectionObject.Attributes.EmotionsAll.Disgust));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Fear > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Fear", AiDetectionObject.Attributes.EmotionsAll.Fear));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Happiness > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Happiness", AiDetectionObject.Attributes.EmotionsAll.Happiness));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Neutral > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Neutral", AiDetectionObject.Attributes.EmotionsAll.Neutral));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Sadness > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Sadness", AiDetectionObject.Attributes.EmotionsAll.Sadness));
+                    if (AiDetectionObject.Attributes.EmotionsAll.Surprise > .1)
+                        emotionslist.Add(new SightHoundEmotionItem("Surprise", AiDetectionObject.Attributes.EmotionsAll.Surprise));
+
+                    //sort so highest conf is first
+                    emotionslist = emotionslist.OrderByDescending(a => a.Confidence).ToList();
+                    emotions = "";
+                    int cnt = 0;
+                    foreach (SightHoundEmotionItem em in emotionslist)
+                    {
+                        emotions += $"{em.ToString()};";
+                        cnt++;
+                        if (cnt > 3)
+                            break;
+                    }
+                    emotions = emotions.Trim(" ;".ToCharArray());
+                    if (string.IsNullOrEmpty(emotions))
+                        emotions = "UnknownEmotions";
+                }
+
+                this.Label += $" [{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {emotions}]";
 
                 //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
                 this.Confidence = AiDetectionObject.Attributes.GenderConfidence * 100;

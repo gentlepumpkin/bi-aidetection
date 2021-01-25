@@ -897,7 +897,7 @@ namespace AITool
                 string png = ".png";  //make empty string to avoid using the png version of the images
 
                 ClsURLItem url = (ClsURLItem)row;
-                if (url.Type == URLTypeEnum.AWSRekognition)
+                if (url.Type == URLTypeEnum.AWSRekognition_Objects)
                 {
                     RetKey = "AWSRekognition" + png;
                 }

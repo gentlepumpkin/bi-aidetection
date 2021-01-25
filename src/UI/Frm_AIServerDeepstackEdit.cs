@@ -28,7 +28,7 @@ namespace AITool
             this.tb_URL.Text = this.CurURL.url;
             this.lbl_type.Text = this.CurURL.Type.ToString();
 
-            if (this.CurURL.Type == URLTypeEnum.AWSRekognition)
+            if (this.CurURL.Type == URLTypeEnum.AWSRekognition_Objects || this.CurURL.Type == URLTypeEnum.AWSRekognition_Faces)
                 this.tb_URL.Enabled = false;
             else
                 this.tb_URL.Enabled = true;

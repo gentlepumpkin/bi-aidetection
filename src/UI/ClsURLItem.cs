@@ -11,7 +11,8 @@ namespace AITool
     {
         DeepStack,
         DOODS,
-        AWSRekognition,
+        AWSRekognition_Objects,
+        AWSRekognition_Faces,
         SightHound_Vehicle,
         SightHound_Person,
         Other,
@@ -106,9 +107,14 @@ namespace AITool
                     this.DefaultURL = "http://127.0.0.1:8080/detect";
                     url = this.DefaultURL;
                 }
-                else if (type == URLTypeEnum.AWSRekognition) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+                else if (type == URLTypeEnum.AWSRekognition_Objects)
                 {
-                    this.DefaultURL = "Amazon";
+                    this.DefaultURL = "Amazon_Objects";
+                    url = this.DefaultURL;
+                }
+                else if (type == URLTypeEnum.AWSRekognition_Faces)
+                {
+                    this.DefaultURL = "Amazon_Faces";
                     url = this.DefaultURL;
                 }
                 else if (type == URLTypeEnum.SightHound_Vehicle)
@@ -161,20 +167,49 @@ namespace AITool
                 this.IsValid = true;
                 this.Enabled.WriteFullFence(true);
             }
-            else if (this.Type == URLTypeEnum.AWSRekognition || this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase)) // || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            else if (this.Type == URLTypeEnum.AWSRekognition_Objects || this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase) || this.url.Equals("amazon_objects", StringComparison.OrdinalIgnoreCase))// || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
             {
 
-                this.DefaultURL = "Amazon";
+                this.DefaultURL = "Amazon_Objects";
 
                 this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
-                this.Type = URLTypeEnum.AWSRekognition;
+                this.Type = URLTypeEnum.AWSRekognition_Objects;
                 this.IsLocalHost = false;
                 this.IsLocalNetwork = false;
                 string error = AITOOL.UpdateAmazonSettings();
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    this.CurSrv = "Amazon:" + AppSettings.Settings.AmazonRegionEndpoint;
+                    this.CurSrv = "Amazon_Objects:" + AppSettings.Settings.AmazonRegionEndpoint;
+                    this.IsValid = true;
+                    this.Enabled.WriteFullFence(true);
+                    this.MaxImagesPerMonth = 5000;
+                }
+                else
+                {
+                    AITOOL.Log($"Error: {error}");
+                    this.IsValid = false;
+                    this.Enabled.WriteFullFence(false);
+                }
+
+            }
+            else if (this.Type == URLTypeEnum.AWSRekognition_Faces || this.url.Equals("amazon_faces", StringComparison.OrdinalIgnoreCase))// || this.url.Equals("aws", StringComparison.OrdinalIgnoreCase) || this.url.Equals("rekognition", StringComparison.OrdinalIgnoreCase))
+            {
+
+                this.DefaultURL = "Amazon_Faces";
+
+                this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
+                this.Type = URLTypeEnum.AWSRekognition_Faces;
+                this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
+                this.UseAsRefinementServer = true;
+                this.RefinementObjects = "person";
+
+                string error = AITOOL.UpdateAmazonSettings();
+
+                if (string.IsNullOrEmpty(error))
+                {
+                    this.CurSrv = "Amazon_Faces:" + AppSettings.Settings.AmazonRegionEndpoint;
                     this.IsValid = true;
                     this.Enabled.WriteFullFence(true);
                     this.MaxImagesPerMonth = 5000;
@@ -325,12 +360,23 @@ namespace AITool
                     }
                 }
             }
-            else if (this.Type == URLTypeEnum.AWSRekognition)
+            else if (this.Type == URLTypeEnum.AWSRekognition_Objects)
             {
 
                 this.IsLocalHost = false;
                 this.IsLocalNetwork = false;
-                if (this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase))
+                if (this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase) || this.url.Equals("amazon_objects", StringComparison.OrdinalIgnoreCase))
+                {
+                    ret = true;
+                }
+
+            }
+            else if (this.Type == URLTypeEnum.AWSRekognition_Faces)
+            {
+
+                this.IsLocalHost = false;
+                this.IsLocalNetwork = false;
+                if (this.url.Equals("amazon_faces", StringComparison.OrdinalIgnoreCase))
                 {
                     ret = true;
                 }
