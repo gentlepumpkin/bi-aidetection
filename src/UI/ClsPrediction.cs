@@ -38,6 +38,7 @@ namespace AITool
         private ClsURLItem _cururl;
 
         public string Label { get; set; } = "";
+        public string Detail { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
@@ -103,48 +104,69 @@ namespace AITool
             this.YMax = Convert.ToInt32(Math.Round(bottom));
 
             //[{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {Global.UpperFirst(AiDetectionObject.Attributes.Emotion)}] 
-            string emotions = "UnknownEmotion";
+            string emotions = "";
             List<Emotion> emotionslist = new List<Emotion>();
 
             if (AiDetectionObject.Emotions != null && AiDetectionObject.Emotions.Count > 0)
             {
                 foreach (Emotion em in AiDetectionObject.Emotions)
                 {
-                    if (em.Confidence > .5)
+                    if (em.Confidence >= 25)
                         emotionslist.Add(em);
                 }
                 if (emotionslist.Count > 0)
                 {
                     //sort so highest conf is first
                     emotionslist = emotionslist.OrderByDescending(a => a.Confidence).ToList();
-                    emotions = "";
+                    emotions = ", ";
                     int cnt = 0;
                     foreach (Emotion em in emotionslist)
                     {
-                        if (em.Confidence > 10)
-                           emotions += $"{em.Type};";
+                        emotions += $"{Global.UpperFirst(em.Type.ToString().ToLower())};";
                         cnt++;
                         if (cnt > 3)
                             break;
                     }
                     emotions = emotions.Trim(" ;".ToCharArray());
-                    if (string.IsNullOrEmpty(emotions))
-                        emotions = "UnknownEmotions";
                 }
             }
 
-            string gender = "UnknownGender";
+            string gender = "";
             if (AiDetectionObject.Gender != null)
-                gender = AiDetectionObject.Gender.Value;
+                gender = $", {AiDetectionObject.Gender.Value}";
 
-            string age = "UnknownAge";
+            string age = "";
             if (AiDetectionObject.AgeRange != null)
-                age = $"{AiDetectionObject.AgeRange.Low}-{AiDetectionObject.AgeRange.High}";
+                age = $", {AiDetectionObject.AgeRange.Low}-{AiDetectionObject.AgeRange.High}";
 
-            if (!gender.Contains("Unknown") || !emotions.Contains("Unknown") || !age.Contains("Unknown"))
-                this.Label = $"Face [{gender}, {age}, {emotions}]";
-            else
-                this.Label = $"Face";
+            string smile = "";
+            if (AiDetectionObject.Smile.Value)
+                smile = ", Smile";
+
+            string eyeglasses = "";
+            if (AiDetectionObject.Eyeglasses.Value)
+                eyeglasses = ", Eyeglasses";
+
+            string sunglasses = "";
+            if (AiDetectionObject.Sunglasses.Value)
+                sunglasses = ", Sunglasses";
+
+            string beard = "";
+            if (AiDetectionObject.Beard.Value)
+                beard = ", Beard";
+
+            string mustache = "";
+            if (AiDetectionObject.Mustache.Value)
+                mustache = ", Mustache";
+
+            string mouthopen = "";
+            if (AiDetectionObject.MouthOpen.Value)
+                mouthopen = ", MouthOpen";
+
+
+            this.Label = "Face";
+
+            this.Detail = $"{gender}{age}{emotions}{smile}{eyeglasses}{sunglasses}{beard}{mustache}{mouthopen}".Trim(", ".ToCharArray());
 
             this.Confidence = AiDetectionObject.Confidence;
 
@@ -204,6 +226,14 @@ namespace AITool
 
             //force first letter to always be capitalized 
             this.Label = Global.UpperFirst(AiDetectionObject.Name);
+            if (AiDetectionObject.Parents != null && AiDetectionObject.Parents.Count > 0)
+            {
+                foreach (var parent in AiDetectionObject.Parents)
+                {
+                    this.Detail += $", {Global.UpperFirst(parent.Name)}";
+                }
+                this.Detail = this.Detail.Trim(", ".ToCharArray());
+            }
 
             this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
 
@@ -376,7 +406,7 @@ namespace AITool
 
 
             // get the bounding box from vertices 
-            List< System.Drawing.Point> pts = new List<System.Drawing.Point>();
+            List<System.Drawing.Point> pts = new List<System.Drawing.Point>();
             foreach (var pt in AiDetectionObject.VehicleAnnotation.Bounding.Vertices)
                 pts.Add(new System.Drawing.Point(pt.X, pt.Y));
 
@@ -410,7 +440,8 @@ namespace AITool
                     plate = $"{AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.Region.Name} {AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name}";
                 }
 
-                this.Label += $"{type} [{color}, {make}, {model}, Plate={plate}]";
+                this.Label = type;
+                this.Detail = $"{color}, {make}, {model}, Plate={plate}";
 
                 //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
                 this.Confidence = AiDetectionObject.VehicleAnnotation.RecognitionConfidence * 100;
@@ -444,8 +475,8 @@ namespace AITool
                 return;
             }
 
-                this.ImageHeight = SHImg.Height; //curImg.Height;
-                this.ImageWidth = SHImg.Width; //curImg.Width;
+            this.ImageHeight = SHImg.Height; //curImg.Height;
+            this.ImageWidth = SHImg.Width; //curImg.Width;
 
             if (curImg.Height != SHImg.Height)
             {
@@ -553,23 +584,23 @@ namespace AITool
             if (AiDetectionObject.Attributes != null && !string.IsNullOrEmpty(AiDetectionObject.Attributes.Gender))
             {
                 string emotions = Global.UpperFirst(AiDetectionObject.Attributes.Emotion);  //this is the highest confidence emotion 
-                
+
                 if (AiDetectionObject.Attributes.EmotionsAll != null)
                 {
                     List<SightHoundEmotionItem> emotionslist = new List<SightHoundEmotionItem>();
-                    if (AiDetectionObject.Attributes.EmotionsAll.Anger > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Anger > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Anger", AiDetectionObject.Attributes.EmotionsAll.Anger));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Disgust > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Disgust > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Disgust", AiDetectionObject.Attributes.EmotionsAll.Disgust));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Fear > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Fear > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Fear", AiDetectionObject.Attributes.EmotionsAll.Fear));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Happiness > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Happiness > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Happiness", AiDetectionObject.Attributes.EmotionsAll.Happiness));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Neutral > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Neutral > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Neutral", AiDetectionObject.Attributes.EmotionsAll.Neutral));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Sadness > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Sadness > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Sadness", AiDetectionObject.Attributes.EmotionsAll.Sadness));
-                    if (AiDetectionObject.Attributes.EmotionsAll.Surprise > .1)
+                    if (AiDetectionObject.Attributes.EmotionsAll.Surprise > .25)
                         emotionslist.Add(new SightHoundEmotionItem("Surprise", AiDetectionObject.Attributes.EmotionsAll.Surprise));
 
                     //sort so highest conf is first
@@ -588,7 +619,12 @@ namespace AITool
                         emotions = "UnknownEmotions";
                 }
 
-                this.Label += $" [{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {emotions}]";
+                string frontal = "";
+                if (AiDetectionObject.Attributes.Frontal)
+                    frontal = ", Frontal";
+
+                this.Label = Global.UpperFirst(AiDetectionObject.Type);
+                this.Detail = $"{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {emotions}{frontal}";
 
                 //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
                 this.Confidence = AiDetectionObject.Attributes.GenderConfidence * 100;
@@ -619,15 +655,31 @@ namespace AITool
             this.ImageWidth = curImg.Width;
             this.Filename = curImg.image_path;
 
-            if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.label))
+            if (AiDetectionObject == null || cam == null || (string.IsNullOrWhiteSpace(AiDetectionObject.label) && string.IsNullOrWhiteSpace(AiDetectionObject.UserID)))
             {
                 Log("Error: Prediction or Camera was null?", "", this._cam.Name);
                 this.Result = ResultType.Error;
                 return;
             }
 
-            //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(AiDetectionObject.label);
+            //if running face detection:
+            if (!string.IsNullOrWhiteSpace(AiDetectionObject.UserID))
+            {
+                if (string.IsNullOrWhiteSpace(AiDetectionObject.label))
+                    AiDetectionObject.label = "Face";
+
+                this.Label = AiDetectionObject.label.Trim();
+                this.Detail = Global.UpperFirst(AiDetectionObject.UserID);
+            }
+            else
+            {
+                //force first letter to always be capitalized 
+                this.Label = Global.UpperFirst(AiDetectionObject.label);
+            }
+
+            if (!string.IsNullOrEmpty(AiDetectionObject.Detail))
+                this.Detail = Global.UpperFirst(AiDetectionObject.Detail);
+
             this.XMax = AiDetectionObject.x_max;
             this.YMax = AiDetectionObject.y_max;
             this.XMin = AiDetectionObject.x_min;
@@ -705,7 +757,7 @@ namespace AITool
             this.GetObjectType();
         }
 
-        public void AnalyzePrediction()
+        public void AnalyzePrediction(bool SkipDynamicMaskCheck)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -722,7 +774,7 @@ namespace AITool
                             // -> OBJECT IS RELEVANT
 
                             //if confidence limits are satisfied
-                            bool OverrideThreshold = this._cururl !=null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
+                            bool OverrideThreshold = this._cururl != null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
 
                             if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
                                 (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
@@ -752,7 +804,7 @@ namespace AITool
                                 if (!result.IsMasked)
                                 {
                                     //check the dynamic or static masks
-                                    if (this._cam.maskManager.MaskingEnabled)
+                                    if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)
                                     {
                                         ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
                                                                                           this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
@@ -762,12 +814,21 @@ namespace AITool
                                         this.DynMaskType = result.MaskType;
                                         this.DynamicThresholdCount = result.DynamicThresholdCount;
                                         this.PercentMatch = result.PercentMatch;
-
                                         //there is a dynamic or static mask
                                         if (result.MaskType == MaskType.Dynamic)
                                             this.Result = ResultType.DynamicMasked;
                                         else if (result.MaskType == MaskType.Static)
                                             this.Result = ResultType.StaticMasked;
+                                    }
+                                    else if (SkipDynamicMaskCheck)
+                                    {
+                                        this.DynMaskResult = MaskResult.SkippedDynamicMaskCheck;
+                                        this.DynMaskType = MaskType.None;
+
+                                    }
+                                    else
+                                    {
+                                        this.DynMaskResult = MaskResult.NotEnabled;
                                     }
 
                                 }
@@ -815,7 +876,26 @@ namespace AITool
 
         public override string ToString()
         {
-            return $"{this.Label} {String.Format(AppSettings.Settings.DisplayPercentageFormat, this.Confidence)}";
+            //LabelDisplayFormat = "[Detection] [[Detail]] ({0:0}%)"
+
+            if (this._cam == null)
+                this._cam = AITOOL.GetCamera(this.Camera);
+
+            //Dont call this or we get a stack overflow!
+            //string ret = AITOOL.ReplaceParams(this._cam, null, this._curimg, this._cam.DetectionDisplayFormat, this);
+
+            string ret = this._cam.DetectionDisplayFormat;
+
+            ret = Global.ReplaceCaseInsensitive(ret, "[label]", this.Label); //only gives first detection 
+            ret = Global.ReplaceCaseInsensitive(ret, "[detail]", this.Detail);
+            ret = Global.ReplaceCaseInsensitive(ret, "[result]", this.Result.ToString());
+            ret = Global.ReplaceCaseInsensitive(ret, "[position]", this.PositionString());
+            ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", this.ConfidenceString());
+            //if there was no detail string, clean up:
+            ret = ret.Replace("[]", "").Replace("()", "").Replace("   ", " ").Replace("  ", " ");
+
+            return ret;
+
         }
         public string PositionString()
         {
@@ -829,9 +909,6 @@ namespace AITool
         private void GetObjectType()
         {
             string tmp = this.Label.Trim().ToLower();
-
-            if (tmp.Contains("["))
-                tmp = Global.GetWordBetween(tmp, "", "[").Trim();
 
             List<string> pris = Global.Split(AppSettings.Settings.ObjectPriority, ",", ToLower: true);
             this.ObjectPriority = pris.IndexOf(tmp);
@@ -864,7 +941,7 @@ namespace AITool
                      tmp.Equals("giraffe"))
                 this.ObjType = ObjectType.Animal;
             else if (tmp.Equals("car") ||
-                     tmp.Equals("truck") ||
+                     tmp.Contains("truck") ||
                      tmp.Equals("bus") ||
                      tmp.Equals("van") ||
                      tmp.Equals("suv") ||
@@ -892,11 +969,11 @@ namespace AITool
             string tmp1 = this.Label.Trim().ToLower();
             string tmp2 = other.Label.Trim().ToLower();
 
-            if (tmp1.Contains("["))
-                tmp1 = Global.GetWordBetween(tmp1, "", "[").Trim();
+            //if (tmp1.Contains("["))
+            //    tmp1 = Global.GetWordBetween(tmp1, "", "[").Trim();
 
-            if (tmp2.Contains("["))
-                tmp2 = Global.GetWordBetween(tmp2, "", "[").Trim();
+            //if (tmp2.Contains("["))
+            //    tmp2 = Global.GetWordBetween(tmp2, "", "[").Trim();
 
             return tmp1 == tmp2;
         }

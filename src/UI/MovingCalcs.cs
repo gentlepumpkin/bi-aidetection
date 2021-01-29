@@ -34,6 +34,7 @@ namespace AITool
         public DateTime TimeInitialized { get; set; } = DateTime.Now;
         public string ItemName { get; set; } = "Items";
         public bool IsTime { get; set; } = false;
+        [JsonConstructor]
         public MovingCalcs() { this.UpdateDate(true); }
         public MovingCalcs(int windowSize, string itemName, bool IsTime)
         {
@@ -74,7 +75,7 @@ namespace AITool
         {
             this.AddToCalc(Convert.ToDecimal(newSample));
         }
-        private void UpdateDate(bool init)
+        public void UpdateDate(bool init)
         {
             if (DateTime.Now.DayOfYear != this.lastDayOfYear)
             {

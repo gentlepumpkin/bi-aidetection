@@ -58,6 +58,8 @@ namespace AITool
             public string deepstack_port = "81";
             public string deepstack_mode = "Medium";
             public string deepstack_customModelPath = "";
+            public string deepstack_customModelName = "";
+            public string deepstack_customModelPort = "82";
             public bool deepstack_stopbeforestart = true;
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
@@ -66,6 +68,7 @@ namespace AITool
             public bool deepstack_sceneapienabled = false;
             public bool deepstack_faceapienabled = false;
             public bool deepstack_detectionapienabled = false;
+            public bool deepstack_customModelApiEnabled = false;
             public bool deepstack_autorestart = true;
             public int deepstack_autorestart_fail_count = 3;  //this many fails in a row will trigger restart
             public double deepstack_autorestart_minutes_between_restart_attempts = 10.0;
@@ -120,8 +123,8 @@ namespace AITool
             public bool log_mnu_Filter = true;
             public bool log_mnu_Highlight = false;
             public int MaxGUILogItems = 5000; //makes to slow to work with if too high
-            public string DisplayPercentageFormat = "({0:0}%)";
             public string DateFormat = "dd.MM.yy, HH:mm:ss";
+            public string DisplayPercentageFormat = "({0:0}%)";
             public int TimeBetweenListRefreshsMS = 5000;
 
             public bool HistoryShowMask = true;
@@ -165,6 +168,7 @@ namespace AITool
             public bool MinimizeToTray = true;
 
             public int MaxWaitForAIServerMS = 5000;
+            public bool MaxWaitForAIServerTimeoutError = true;
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
@@ -593,23 +597,21 @@ namespace AITool
 
                     UpdateSettingsLocation();  //save to \settings folder or appdata\settings
 
-                    //Ive had a case where MaskManager was null/corrupt to double check:
+
                     foreach (Camera cam in Settings.CameraList)
                     {
 
+                        if (string.IsNullOrEmpty(cam.DetectionDisplayFormat))
+                            cam.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
+
                         if (string.IsNullOrEmpty(cam.BICamName))
-                        {
-                            //if (!string.IsNullOrEmpty(cam.Prefix) && !cam.Prefix.Contains("*"))
-                            //    cam.BICamName = cam.Prefix.Trim(".-".ToCharArray());
-                            //else
                             cam.BICamName = cam.Name;
-                        }
 
                         if (string.IsNullOrEmpty(cam.MaskFileName))
                             cam.MaskFileName = $"{cam.Name}.bmp";
 
                         if (cam.ImageResolutions.Count == 0)
-                            cam.ScanImages(10,500,-1);//run a quick scan to get resolutions
+                            cam.ScanImages(10, 500, -1);//run a quick scan to get resolutions
 
                         if (cam.cooldown_time > -1)
                         {
@@ -636,9 +638,9 @@ namespace AITool
                         cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
                         cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
 
-                        if (cam.Action_image_copy_enabled && 
-                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) && 
-                            cam.Action_network_folder_purge_older_than_days > 0 && 
+                        if (cam.Action_image_copy_enabled &&
+                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) &&
+                            cam.Action_network_folder_purge_older_than_days > 0 &&
                             LastJPGCleanDay != DateTime.Now.DayOfYear &&
                             Directory.Exists(cam.Action_network_folder))
                         {
@@ -728,7 +730,7 @@ namespace AITool
 
                     //clean up image adjust list
                     List<ClsImageAdjust> iaps = AppSettings.Settings.ImageAdjustProfiles;
-                    
+
                     AppSettings.Settings.ImageAdjustProfiles.Clear();
 
                     for (int i = 0; i < iaps.Count; i++)

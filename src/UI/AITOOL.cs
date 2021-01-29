@@ -96,7 +96,7 @@ namespace AITool
 
         public static string srv = "";
 
-        public static int AIURLListRefineServerCount = 0;
+        public static ThreadSafe.Integer AIURLListAvailableRefineServerCount = new ThreadSafe.Integer(0);
 
         public static async Task InitializeBackend()
         {
@@ -214,7 +214,7 @@ namespace AITool
 
                 //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
                 //allows for stopping and starting of its service
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
 
                 if (DeepStackServerControl.IsInstalled && AppSettings.Settings.deepstack_autostart)
                 {
@@ -513,13 +513,15 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            AIURLListRefineServerCount = 0;
+            AIURLListAvailableRefineServerCount.WriteFullFence(0);
             //double check all the URL's have a new httpclient
             foreach (ClsURLItem url in AppSettings.Settings.AIURLList)
             {
-                url.UpdateIsValid();
+                url.Update(false);
+                url.AITimeCalcs.UpdateDate(true);
+
                 if (url.IsValid && url.UseAsRefinementServer)
-                    AIURLListRefineServerCount++;
+                    AIURLListAvailableRefineServerCount.AtomicIncrementAndGet();
 
                 if (url.Type != URLTypeEnum.AWSRekognition_Objects && url.Type != URLTypeEnum.AWSRekognition_Faces && url.HttpClient == null)
                 {
@@ -650,23 +652,26 @@ namespace AITool
             int FoundRefinementCount = 0;
             int RefineNoMatchCount = 0;
             int RefineMatchCount = 0;
+            string refinepreds = "";
+            DateTime now = DateTime.Now;
 
             Stopwatch sw = Stopwatch.StartNew();
 
             try
             {
-                AIURLListRefineServerCount = 0;
+                AIURLListAvailableRefineServerCount.WriteFullFence(0);
 
                 //preprocess a few things...
                 for (int i = 0; i < AppSettings.Settings.AIURLList.Count; i++)
                 {
-                    if (!AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence())
-                        continue;
-
+                    AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = false;  //assume false at start of each loop
 
                     if (AppSettings.Settings.AIURLList[i].UseAsRefinementServer)
                     {
-                        AIURLListRefineServerCount++;
+                        if (!AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence() ||
+                            !Global.IsTimeBetween(now, AppSettings.Settings.AIURLList[i].ActiveTimeRange) ||
+                            !Global.IsInList(cam.Name, AppSettings.Settings.AIURLList[i].Cameras, TrueIfEmpty: true))
+                            continue;
 
                         //dont let a refinement server be the same as the main server
                         if (MainURLs != null && MainURLs.Count > 0)
@@ -684,17 +689,22 @@ namespace AITool
                                 continue;
                         }
 
+                        AIURLListAvailableRefineServerCount.AtomicIncrementAndGet();
+
                         if (GetRefinementServer && predictions != null)
                         {
                             //set temp flag to indicate if the server can be CURRENTLY used as a refinement server
-                            AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = false;
                             foreach (ClsPrediction pred in predictions)
                             {
-                                if (pred.Result == ResultType.Relevant && Global.IsInList(pred.Label, AppSettings.Settings.AIURLList[i].RefinementObjects))
+                                if (pred.Result == ResultType.Relevant)
                                 {
-                                    RefineMatchCount++;
-                                    AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = true;
-                                    break;
+                                    refinepreds += pred.Label + ",";
+                                    if (Global.IsInList(pred.Label, AppSettings.Settings.AIURLList[i].RefinementObjects))
+                                    {
+                                        RefineMatchCount++;
+                                        AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = true;
+                                        break;
+                                    }
                                 }
                             }
 
@@ -707,7 +717,7 @@ namespace AITool
                     }
                 }
 
-                while (ret.Count == 0 || ((GetRefinementServer || HasRequiredList) && sw.ElapsedMilliseconds <= AppSettings.Settings.MaxWaitForAIServerMS))
+                while (ret.Count == 0)
                 {
                     int disabled = 0;
                     int inuse = 0;
@@ -720,7 +730,7 @@ namespace AITool
                     //If no refinement servers or less than should be available were returned
                     if (GetRefinementServer && RefineMatchCount == 0)
                     {
-                        Log($"Warn: ---- Refinement server requested, but none were available. ({sw.ElapsedMilliseconds}ms)");
+                        Log($"Debug: ---- Refinement server requested, but none were available for predictions '{refinepreds}'. ({sw.ElapsedMilliseconds}ms)");
                         break;
                     }
 
@@ -758,7 +768,7 @@ namespace AITool
                                         {
                                             if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
                                             {
-                                                DateTime now = DateTime.Now;
+                                                now = DateTime.Now;
 
                                                 if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
                                                 {
@@ -778,7 +788,8 @@ namespace AITool
                                                         }
                                                         else if (HasRequiredList)
                                                         {
-                                                            if (Global.IsInList(RequiredURLs, CurrentURLs))
+
+                                                            if (Global.IsInList(sorted[i].ToString(), RequiredURLs, TrueIfEmpty: false))
                                                             {
                                                                 sorted[i].CurOrder = i + 1;
                                                                 sorted[i].InUse.WriteFullFence(true);
@@ -884,17 +895,31 @@ namespace AITool
                     }
 
 
-                    if (HasRequiredList && FoundRequiredCount == RequiredURLs.Count)
+                    if (HasRequiredList && FoundRequiredCount >= RequiredURLs.Count)
                     {
                         break;
                     }
+
+                    if ((GetRefinementServer || HasRequiredList) && sw.ElapsedMilliseconds >= AppSettings.Settings.MaxWaitForAIServerMS)
+                    {
+                        string ew = "Debug:";
+                        if (AppSettings.Settings.MaxWaitForAIServerTimeoutError)
+                            ew = "Error:";
+
+                        if (GetRefinementServer)
+                            Log($"{ew} ---- URL request for REFINEMENT AI Server timed out, but only '{ret.Count}' of '{RefineMatchCount}' available. ({sw.ElapsedMilliseconds}ms - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                        else if (HasRequiredList)
+                            Log($"{ew} ---- URL request for LINKED AI Server timed out, but only '{ret.Count}' of '{RequiredURLs.Count}' available. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                        break;
+                    }
+
                     //otherwise
                     if (ret.Count > 0)
                     {
                         break;
                     }
 
-                    if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 10)
+                    if ((DateTime.Now - LastWaitingLog).TotalMinutes >= 5)
                     {
                         Log($"---- All URL's are in use, disabled, camera name doesnt match or time range was not met.  ({inuse} inuse, {disabled} disabled, {incorrectcam} wrong camera, {notintimerange} not in time range, {maxpermonth} at max per month limit, {notrefined} not refinement server) Waiting...");
                         LastWaitingLog = DateTime.Now;
@@ -910,23 +935,8 @@ namespace AITool
 
                 sw.Stop();
 
-                if (sw.ElapsedMilliseconds >= AppSettings.Settings.MaxWaitForAIServerMS)
-                {
-                    if (GetRefinementServer)
-                    {
-                        Log($"Error: ---- URL request for REFINEMENT AI Server timed out, but only '{ret.Count}' of '{RefineMatchCount}' available. ({sw.ElapsedMilliseconds}ms - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
-                    }
-                    else if (HasRequiredList)
-                    {
-                        Log($"Error: ---- URL request for LINKED AI Server timed out, but '{ret.Count}' of '{RequiredURLs.Count}' available. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
-                    }
-                    else  //I dont think we would ever get here but just in case
-                    {
-                        Log($"Warn: ---- URL request timed out. '{ret.Count}' found. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
-                    }
-                }
 
-                //see if any servers have 'linked' servers
+                //see if any servers have 'LINKED' servers
                 if (!GetRefinementServer && !HasRequiredList && ret.Count > 0)
                 {
                     List<ClsURLItem> linked = new List<ClsURLItem>();
@@ -1035,7 +1045,7 @@ namespace AITool
 
                                     Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
 
-                                    bool success = await DetectObjects(CurImg, urls); //ai process image
+                                    DetectObjectsResult result = await DetectObjects(CurImg, urls); //ai process image
 
                                     Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
 
@@ -1757,7 +1767,7 @@ namespace AITool
             //==============================================================================================================
             //==============================================================================================================
             //==============================================================================================================
-            if (AiUrl.Type == URLTypeEnum.DeepStack)
+            if (AiUrl.Type == URLTypeEnum.DeepStack || AiUrl.Type == URLTypeEnum.DeepStack_Custom || AiUrl.Type == URLTypeEnum.DeepStack_Faces || AiUrl.Type == URLTypeEnum.DeepStack_Scene)
             {
                 Stopwatch swposttime = new Stopwatch();
 
@@ -1799,6 +1809,7 @@ namespace AITool
 
                     swposttime.Restart();
 
+
                     using HttpResponseMessage output = await AiUrl.HttpClient.PostAsync(AiUrl.ToString(), request, MasterCTS.Token);
 
                     swposttime.Stop();
@@ -1818,7 +1829,7 @@ namespace AITool
                         {
                             //deserialization did not cause exception, it just gave a null response in the object?
                             //probably wont happen but just making sure
-                            ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. response is null. JSON: '{cleanjsonString}'";
+                            ret.Error = $"ERROR: Deserialization of 'Response' from DeepStack failed. JSON: '{cleanjsonString}': {ex.Message}";
                             AiUrl.IncrementError();
                             AiUrl.LastResultMessage = ret.Error;
                         }
@@ -1836,44 +1847,52 @@ namespace AITool
                         {
                             if (response != null)
                             {
-                                if (response.predictions != null)
+                                if (!response.success || !string.IsNullOrWhiteSpace(response.error))
                                 {
-                                    if (!response.success)
-                                    {
-                                        ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. JSON: '{cleanjsonString}'";
-                                        AiUrl.IncrementError();
-                                        AiUrl.LastResultMessage = ret.Error;
-                                    }
-                                    else
-                                    {
-
-                                        if (response.predictions.Length > 0)
-                                        {
-
-                                            foreach (ClsDeepstackDetection DSObj in response.predictions)
-                                            {
-                                                ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
-
-                                                ret.Predictions.Add(pred);
-
-                                            }
-
-
-                                        }
-
-                                        ret.Success = true;
-                                        AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
-
-                                    }
-
-                                }
-                                else
-                                {
-                                    ret.Error = $"ERROR: No predictions?  JSON: '{cleanjsonString}')";
+                                    string err = "";
+                                    if (!string.IsNullOrWhiteSpace(response.error))
+                                        err = response.error;
+                                    ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. Error='{err}'. JSON: '{cleanjsonString}'";
                                     AiUrl.IncrementError();
                                     AiUrl.LastResultMessage = ret.Error;
                                 }
+                                else
+                                {
+                                    List<ClsDeepstackDetection> addto = new List<ClsDeepstackDetection>();
 
+                                    //intialize array if none returned so we can add a scene if needed
+                                    if (response.predictions != null)
+                                        addto = response.predictions.ToList();
+
+                                    //check to see if we have a scene rather than normal detection and create a prediction from it
+                                    if (!string.IsNullOrEmpty(response.label) && response.confidence > 0)
+                                    {
+                                        //{'success': True, 'confidence': 0.7373981, 'label': 'conference_room'
+                                        ClsDeepstackDetection spred = new ClsDeepstackDetection();
+                                        spred.label = $"Scene";
+                                        spred.Detail = response.label;
+                                        spred.confidence = response.confidence;
+                                        //try to create a rectangle smaller than the image so the label will fit
+                                        spred.x_min = 5;
+                                        spred.y_min = 5;
+                                        spred.x_max = CurImg.Width - 5;
+                                        spred.y_max = CurImg.Height - 40;
+                                        addto.Add(spred);
+                                    }
+
+                                    foreach (ClsDeepstackDetection DSObj in addto)
+                                    {
+                                        ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl);
+
+                                        ret.Predictions.Add(pred);
+
+                                    }
+
+
+                                    ret.Success = true;
+                                    AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
+
+                                }
 
                             }
                             else if (string.IsNullOrEmpty(ret.Error))
@@ -2591,13 +2610,28 @@ namespace AITool
             return ret;
         }
 
-        //analyze image with AI
-        public static async Task<bool> DetectObjects(ClsImageQueueItem CurImg, List<ClsURLItem> AiUrls, Camera cam = null)
+        public class DetectObjectsResult
         {
+            public bool Success = false;
+            public string Error = "";
+            public List<ClsURLItem> OutURLs = new List<ClsURLItem>();
+            public List<ClsPrediction> OutPredictions = new List<ClsPrediction>();
+        }
+        //analyze image with AI
+        public static async Task<DetectObjectsResult> DetectObjects(ClsImageQueueItem CurImg, List<ClsURLItem> InAiUrls, Camera cam = null)
+        {
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            DetectObjectsResult ret = new DetectObjectsResult();
+            ret.OutURLs = InAiUrls;
+
+            foreach (var url in ret.OutURLs)
+            {
+                url.InUse.WriteFullFence(true);
+            }
+
             //Only set error when there IS an error...
-            string error = ""; //if code fails at some point, the last text of the error string will be posted in the log
 
             string filename = Path.GetFileName(CurImg.image_path);
 
@@ -2622,12 +2656,12 @@ namespace AITool
             ClsAIServerResponse[] asrs = new ClsAIServerResponse[] { };
             string AISRV = "";
 
-            foreach (var url in AiUrls)
+            foreach (var url in ret.OutURLs)
                 AISRV += url.CurSrv + ";";
 
             AISRV = AISRV.Trim(";".ToCharArray());
 
-            ClsURLItem AiUrl = AiUrls[0];  //default to first one just to have something set
+            ClsURLItem AiUrl = ret.OutURLs[0];  //default to first one just to have something set
 
             if (secs >= halfcool)
             {
@@ -2656,9 +2690,10 @@ namespace AITool
                         List<Task<ClsAIServerResponse>> urltasks = new List<Task<ClsAIServerResponse>>();
 
 
-                        //IN USE BLAH
+                        //===================================================================================================
+                        //===================================================================================================
 
-                        foreach (ClsURLItem url in AiUrls)
+                        foreach (ClsURLItem url in ret.OutURLs)
                             urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));
 
                         asrs = await Task.WhenAll(urltasks);
@@ -2683,15 +2718,15 @@ namespace AITool
                                     int idx = ContainsPrediction(pred, predictions, cam);
                                     if (idx == -1)  //does not contain
                                     {
-                                        pred.AnalyzePrediction();
+                                        pred.AnalyzePrediction(false);
                                         if (pred.Result == ResultType.Relevant)
                                             RelevantPredictionCount++;
                                         predictions.Add(pred);
                                     }
                                     else  //already in list, replace it - it may be a different confidence
                                     {
-                                        pred.AnalyzePrediction();
-                                        Log($"Debug: [Linked Server] Replacing prediction with new one: Old={predictions[idx].ToString()}, New={pred.ToString()}");
+                                        pred.AnalyzePrediction(true); //skip re-detecting dynamic mask so the count does not increase
+                                        Log($"Debug: [Linked Server] Replacing prediction with new one: Old={predictions[idx].ToString()}, New={pred.ToString()}", AiUrl.CurSrv, cam, CurImg);
                                         predictions.RemoveAt(idx);
                                         predictions.Insert(idx, pred);
                                     }
@@ -2699,10 +2734,10 @@ namespace AITool
                             }
                             else
                             {
-                                error = asr.Error;
+                                ret.Error = asr.Error;
                                 AiUrl.IncrementError();
-                                AiUrl.LastResultMessage = error;
-                                Log(error, AiUrl.CurSrv, cam, CurImg);
+                                AiUrl.LastResultMessage = ret.Error;
+                                Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
                             }
                         }
 
@@ -2710,9 +2745,9 @@ namespace AITool
                         // check to see if we can get a refinement server URL to postprocess 
                         //wait for the next url to become available...
 
-                        if (AIURLListRefineServerCount > 0 && RelevantPredictionCount > 0)
+                        if (AIURLListAvailableRefineServerCount.ReadFullFence() > 0 && RelevantPredictionCount > 0)
                         {
-                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions, "", AiUrls);
+                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions, "", ret.OutURLs);
                             if (PostProcessURLs.Count > 0)
                             {
                                 //Start processing all refinement urls
@@ -2729,8 +2764,8 @@ namespace AITool
                                     AiUrl.LastResultSuccess = asr.Success;
 
                                     //add to the list of url's we called
-                                    if (!AiUrls.Contains(AiUrl))
-                                        AiUrls.Add(AiUrl);
+                                    if (!ret.OutURLs.Contains(AiUrl))
+                                        ret.OutURLs.Add(AiUrl);
 
                                     if (asr.Success)
                                     {
@@ -2744,16 +2779,14 @@ namespace AITool
                                             int idx = ContainsPrediction(pred, predictions, cam);
                                             if (idx == -1)  //does not contain
                                             {
-                                                pred.AnalyzePrediction();
+                                                pred.AnalyzePrediction(false);
 
-                                                //sighthound face is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
-                                                bool matched = false;
+                                                //sighthound and deepstack face detection is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
                                                 if (pred.Label.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
                                                 {
-                                                    //search existing predictions for person's's
                                                     foreach (ClsPrediction fpred in predictions)
                                                     {
-                                                        if (!fpred.Label.Contains("[") && fpred.Label.IndexOf("person", StringComparison.OrdinalIgnoreCase) >= 0)
+                                                        if (string.IsNullOrEmpty(fpred.Detail) && fpred.Label.IndexOf("person", StringComparison.OrdinalIgnoreCase) >= 0)
                                                         {
                                                             Rectangle personRect = Rectangle.FromLTRB(fpred.XMin, fpred.YMin, fpred.XMax, fpred.YMax);
                                                             Rectangle newRect = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
@@ -2761,12 +2794,25 @@ namespace AITool
                                                             if (personRect.Contains(newRect))
                                                             {
                                                                 //change person to "person [details]"
-                                                                string det = Global.GetWordBetween(pred.Label, "[", "]");
-                                                                if (!string.IsNullOrWhiteSpace(det))
-                                                                {
-                                                                    matched = true;
-                                                                    fpred.Label = $"{fpred.Label} [{det}]";
-                                                                }
+                                                                fpred.Detail = pred.Detail;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (pred.ObjType == ObjectType.Vehicle)
+                                                {
+                                                    foreach (ClsPrediction fpred in predictions)
+                                                    {
+                                                        if (string.IsNullOrEmpty(fpred.Detail) && fpred.ObjType == ObjectType.Vehicle)
+                                                        {
+                                                            Rectangle personRect = Rectangle.FromLTRB(fpred.XMin, fpred.YMin, fpred.XMax, fpred.YMax);
+                                                            Rectangle newRect = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
+
+                                                            if (personRect.Contains(newRect))
+                                                            {
+                                                                //change Truck to "Truck [Model,etc]"
+                                                                fpred.Detail = pred.Detail;
                                                             }
                                                         }
                                                     }
@@ -2780,7 +2826,7 @@ namespace AITool
                                             }
                                             else  //already in list, replace it - it may be a different confidence
                                             {
-                                                pred.AnalyzePrediction();
+                                                pred.AnalyzePrediction(true);  //skip re-detecting dynamic mask so the count does not increase
                                                 Log($"Debug: [Refinement Server] Replacing prediction with new one: Old={predictions[idx].ToString()}, New={pred.ToString()}");
                                                 predictions.RemoveAt(idx);
                                                 predictions.Insert(idx, pred);
@@ -2791,10 +2837,10 @@ namespace AITool
                                     }
                                     else
                                     {
-                                        error = asr.Error;
+                                        ret.Error = asr.Error;
                                         AiUrl.IncrementError();
-                                        AiUrl.LastResultMessage = error;
-                                        Log(error, AiUrl.CurSrv, cam, CurImg);
+                                        AiUrl.LastResultMessage = ret.Error;
+                                        Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
                                     }
                                 }
                             }
@@ -2805,15 +2851,19 @@ namespace AITool
 
                         string PredictionsJSON = Global.GetJSONString(predictions);
 
+                        ret.OutPredictions = predictions;
+
                         //process the combined predictions
                         if (predictions.Count > 0)
                         {
                             List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
                             List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                            List<string> objects_details = new List<string>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
 
                             List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
                             List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                            List<string> irrelevant_objects_details = new List<string>(); //list containing ai confidence value of irrelevant object at same position in List objects
                             List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
 
 
@@ -2839,6 +2889,7 @@ namespace AITool
                                 {
                                     objects.Add(pred.Label);
                                     objects_confidence.Add(pred.Confidence);
+                                    objects_details.Add(pred.Detail);
                                     objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
                                     clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
                                 }
@@ -2846,6 +2897,7 @@ namespace AITool
                                 {
                                     clr = "{" + AppSettings.Settings.RectIrrelevantColor.Name + "}";
                                     irrelevant_objects.Add(pred.Label);
+                                    irrelevant_objects_details.Add(pred.Detail);
                                     irrelevant_objects_confidence.Add(pred.Confidence);
                                     string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
                                     irrelevant_objects_position.Add(position);
@@ -2888,6 +2940,7 @@ namespace AITool
                                 //store these last detections for the specific camera
                                 cam.last_detections = objects;
                                 cam.last_confidences = objects_confidence;
+                                cam.last_details = objects_details;
                                 cam.last_positions = objects_position;
                                 cam.last_image_file_with_detections = CurImg.image_path;
 
@@ -3029,23 +3082,23 @@ namespace AITool
                     else
                     {
                         //could not access the file for 30 seconds??   Or unexpected error
-                        error = $"Error: Image is not valid or inaccessible for {CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries, giving up: {CurImg.image_path}";
+                        ret.Error = $"Error: Image is not valid or inaccessible for {CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries, giving up: {CurImg.image_path}";
                         CurImg.ErrCount.AtomicIncrementAndGet();
-                        CurImg.ResultMessage = error;
-                        Log(error, AISRV, cam, CurImg);
+                        CurImg.ResultMessage = ret.Error;
+                        Log(ret.Error, AISRV, cam, CurImg);
                     }
 
                 }
                 catch (Exception ex)
                 {
 
-                    error = $"ERROR: {Global.ExMsg(ex)}";
+                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
                     AiUrl.IncrementError();
-                    AiUrl.LastResultMessage = error;
-                    Log(error, AISRV, cam, CurImg);
+                    AiUrl.LastResultMessage = ret.Error;
+                    Log(ret.Error, AISRV, cam, CurImg);
                 }
                 //exitfunction:
-                if (!string.IsNullOrEmpty(error) && AppSettings.Settings.send_telegram_errors == true && cam.telegram_enabled)
+                if (!string.IsNullOrEmpty(ret.Error) && AppSettings.Settings.send_telegram_errors == true && cam.telegram_enabled)
                 {
                     //bool success = await TelegramUpload(CurImg, "Error");
                     if (hist == null)
@@ -3069,7 +3122,7 @@ namespace AITool
 
                 Log($"Debug:          Total Time: {CurImg.TotalTimeMS.ToString().PadLeft(6)} ms (Count={tcalc.Count.ToString().PadLeft(6)}, Min={tcalc.MinS.PadLeft(6)} ms, Max={tcalc.MaxS.PadLeft(6)} ms, Avg={tcalc.AvgS.PadLeft(6)} ms)", AiUrl.CurSrv, cam, CurImg);
 
-                foreach (ClsURLItem url in AiUrls)
+                foreach (ClsURLItem url in ret.OutURLs)
                 {
                     Log($"Debug:       AI (URL) Time: {url.LastTimeMS.ToString().PadLeft(6)} ms (Count={url.AITimeCalcs.Count.ToString().PadLeft(6)}, Min={url.AITimeCalcs.MinS.PadLeft(6)} ms, Max={url.AITimeCalcs.MaxS.PadLeft(6)} ms, Avg={url.AITimeCalcs.AvgS.PadLeft(6)} ms)", url.CurSrv, cam, CurImg);
                 }
@@ -3089,7 +3142,14 @@ namespace AITool
                 Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, cooldown was '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds.", "", false, "", AiUrl.CurSrv));
             }
 
-            return (error == "");
+            ret.Success = (ret.Error == "");
+
+            foreach (var url in ret.OutURLs)
+            {
+                url.InUse.WriteFullFence(false);
+            }
+
+            return ret;
 
         }
 
@@ -3235,7 +3295,7 @@ namespace AITool
 
         }
 
-        public static string ReplaceParams(Camera cam, History hist, ClsImageQueueItem CurImg, string instr)
+        public static string ReplaceParams(Camera cam, History hist, ClsImageQueueItem CurImg, string instr, ClsPrediction curpred = null)
         {
             string ret = instr;
 
@@ -3244,11 +3304,13 @@ namespace AITool
                 string camname = "TESTCAMERANAME";
                 string prefix = "TESTCAMERANAMEPREFIX";
                 string imgpath = "C:\\TESTFILE.jpg";
+                string caminputfolder = "C:\\TESTFOLDER";
 
                 if (cam != null)
                 {
                     camname = cam.BICamName;
                     prefix = cam.Prefix;
+                    caminputfolder = cam.input_path;
                 }
 
                 if (CurImg != null)
@@ -3276,6 +3338,8 @@ namespace AITool
                 //handle custom variables
                 ret = Global.ReplaceCaseInsensitive(ret, "[camera]", camname);
                 ret = Global.ReplaceCaseInsensitive(ret, "[prefix]", prefix);
+                ret = Global.ReplaceCaseInsensitive(ret, "[caminputfolder]", caminputfolder);
+                ret = Global.ReplaceCaseInsensitive(ret, "[inputfolder]", AppSettings.Settings.input_path);
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagepath]", imgpath); //gives the full path of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagepathescaped]", Uri.EscapeUriString(imgpath)); //gives the full path of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
@@ -3287,9 +3351,14 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[blueirisurl]", BlueIrisInfo.URL); //gives the image name of the image that caused the trigger
 
 
-                if (hist != null)
+                if (hist != null || curpred != null)
                 {
-                    List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+                    List<ClsPrediction> preds = new List<ClsPrediction>();
+
+                    if (hist != null)
+                        preds = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+                    else if (curpred != null)
+                        preds.Add(curpred);
 
                     if (preds != null && preds.Count > 0)
                     {
@@ -3305,21 +3374,27 @@ namespace AITool
                         }
                         ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", hist.Detections); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[summary]", Uri.EscapeUriString(hist.Detections)); //summary text including all detections and confidences, p.e."person (91,53%)"
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].Label); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].ToString()); //only gives first detection 
+                        ret = Global.ReplaceCaseInsensitive(ret, "[label]", preds[0].Label); //only gives first detection 
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detail]", preds[0].Detail);
+                        ret = Global.ReplaceCaseInsensitive(ret, "[result]", preds[0].Result.ToString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", preds[0].PositionString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", preds[0].ConfidenceString());
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections);
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", confidences);
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections.Trim(",".ToCharArray()));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", confidences.Trim(",".ToCharArray()));
                     }
                     else
                     {
-                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", "No Summary Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "No Summary Found"); //summary text including all detections and confidences, p.e."person (91,53%)"
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "No Detection Found"); //only gives first detection (maybe not most relevant one)
-                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", "No Position Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", "No Confidence Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "No Detections Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", "No Confidences Found");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", "Test Summary");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "Test Summary"); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "Test Detection");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[label]", "Person");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", "0,0,0,0");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "Detection1, Detection2");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123) + ", " + string.Format(AppSettings.Settings.DisplayPercentageFormat, 90.01));
                     }
                 }
                 else if (cam != null)
@@ -3329,20 +3404,26 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", cam.last_detections_summary); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[summary]", Uri.EscapeUriString(cam.last_detections_summary)); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[label]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detail]", cam.last_details.ElementAt(0)); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", cam.last_positions.ElementAt(0));
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", cam.last_confidences.ElementAt(0).ToString());
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, cam.last_confidences.ElementAt(0)));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Unknown");
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", string.Join(",", cam.last_detections));
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Join(",", cam.last_confidences));
                     }
                     else
                     {
-                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", "No Summary Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "No Summary Found"); //summary text including all detections and confidences, p.e."person (91,53%)"
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "No Detection Found"); //only gives first detection (maybe not most relevant one)
-                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", "No Position Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", "No Confidence Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "No Detections Found");
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", "No Confidences Found");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summarynonescaped]", "Test Summary");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "Test Summary"); //summary text including all detections and confidences, p.e."person (91,53%)"
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "Test Detection"); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[label]", "Person");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[position]", "0,0,0,0");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "Detection1, Detection2");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123) + ", " + string.Format(AppSettings.Settings.DisplayPercentageFormat, 90.01));
                     }
 
                 }
@@ -3361,6 +3442,18 @@ namespace AITool
         public static ClsURLItem GetURL(string urlstring)
         {
             ClsURLItem ret = null;
+
+            if (!urlstring.Contains("//"))
+            {
+                foreach (var url in AppSettings.Settings.AIURLList)
+                {
+                    if (urlstring.IndexOf(url.CurSrv, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return url;
+                    }
+                }
+                return ret;
+            }
 
             //first look for exact match - where more than just the URL should match
             ClsURLItem test = new ClsURLItem(urlstring, 0, URLTypeEnum.Unknown);

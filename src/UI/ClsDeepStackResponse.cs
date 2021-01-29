@@ -24,6 +24,8 @@
         public bool success { get; set; }
         public string error { get; set; }
         public int code { get; set; }
+        public string label { get; set; }  //this is used for scene detection  {'success': True, 'confidence': 0.7373981, 'label': 'conference_room'
+        public float confidence { get; set; }  //this is used for scene detection  {'success': True, 'confidence': 0.7373981, 'label': 'conference_room'
         public ClsDeepstackDetection[] predictions { get; set; }
 
     }

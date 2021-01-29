@@ -43,6 +43,8 @@ namespace AITool
         public bool DetectionAPIEnabled = true;
         public bool CustomModelEnabled = false;
         public string CustomModelPath = "";
+        public string CustomModelName = "";
+        public string CustomModelPort = "";
         public bool IsStarted = false;
         public bool HasError = false;
         public bool IsInstalled = false;
@@ -60,15 +62,16 @@ namespace AITool
 
         public ThreadSafe.Boolean Starting = new ThreadSafe.Boolean(false);
         public ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
+        public int ExpectedPythonCnt = 0;
 
-        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart)
+        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, bool CustomModelEnabled)
         {
 
-            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath, StopBeforeStart);
+            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath, StopBeforeStart, CustomModelName, CustomModelPort, CustomModelEnabled);
 
         }
 
-        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart)
+        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, bool CustomModelEnabled)
         {
             this.AdminKey = AdminKey.Trim();
             this.APIKey = APIKey.Trim();
@@ -76,7 +79,9 @@ namespace AITool
             this.FaceAPIEnabled = FaceAPIEnabled;
             this.DetectionAPIEnabled = DetectionAPIEnabled;
             this.CustomModelPath = CustomModelPath.Trim();
-            this.CustomModelEnabled = !string.IsNullOrEmpty(this.CustomModelPath) && Directory.Exists(this.CustomModelPath);
+            this.CustomModelName = CustomModelName.Trim();
+            this.CustomModelEnabled = CustomModelEnabled;
+            this.CustomModelPort = CustomModelPort;
             this.Port = Port;
             this.Mode = Mode;
             this.Count = Global.Split(this.Port, ",|").Count;
@@ -93,7 +98,7 @@ namespace AITool
 
             if (this.IsNewVersion)
             {
-                this.Count = Global.Split(this.Port, ",|").Count;
+                this.Count = Global.GetProcessesByPath(this.ServerEXE).Count;
 
 
                 if (!Global.ProcessValid(this.ServerProc))
@@ -109,10 +114,20 @@ namespace AITool
                 bool redvalid = Global.ProcessValid(this.RedisProc);
                 bool pytvalid = false;
 
-                if (this.FaceAPIEnabled)
-                    pytvalid = srvvalid && montys.Count == this.Count * 5;  //face runs 5 copies of python.exe
-                else
-                    pytvalid = srvvalid && montys.Count == this.Count * 2;  //normal detection runs 2 copies
+                if (this.ExpectedPythonCnt == 0)
+                {
+                    if (this.FaceAPIEnabled)
+                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 3);
+                    if (this.CustomModelEnabled)
+                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+                    if (this.DetectionAPIEnabled)
+                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+                    if (this.SceneAPIEnabled)
+                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+
+                }
+
+                pytvalid = srvvalid && montys.Count >= ExpectedPythonCnt;
 
 
                 bool allvalid = srvvalid && redvalid && pytvalid;
@@ -123,13 +138,13 @@ namespace AITool
                 {
                     this.HasError = false;
                     this.IsStarted = true;
-                    Log("Debug: DeepStack Desktop IS running from " + this.ServerEXE);
+                    Log("Debug: DeepStack Desktop IS running from " + this.ServerEXE + $": {this.Count} copies + {montys.Count} copies of python.exe");
                 }
                 else if (partvalid)
                 {
                     this.HasError = true;
                     this.IsStarted = true;
-                    Log("Deepstack partially running.");
+                    Log($"Deepstack partially running. Only {montys.Count} out of {ExpectedPythonCnt} copies of python.exe are running.");
 
                 }
                 else
@@ -142,123 +157,6 @@ namespace AITool
             else
             {
                 Log("Error: Deepstack v3.4 not supported.  Install version 2020. https://docs.deepstack.cc/windows/index.html");
-                ////Note - deepstack.exe does NOT need to be running
-                //if (!Global.ProcessValid(this.DeepStackProc))
-                //    this.DeepStackProc = Global.GetaProcessByPath(this.DeepStackEXE);
-                //if (!Global.ProcessValid(this.ServerProc))
-                //    this.ServerProc = Global.GetaProcessByPath(this.ServerEXE);
-                //if (!Global.ProcessValid(this.PythonProc))
-                //    this.PythonProc = Global.GetaProcessByPath(this.PythonEXE);
-                //if (!Global.ProcessValid(this.RedisProc))
-                //    this.RedisProc = Global.GetaProcessByPath(this.RedisEXE);
-
-                //if (Global.ProcessValid(this.ServerProc) && Global.ProcessValid(this.PythonProc) && Global.ProcessValid(this.RedisProc))
-                //{
-                //    this.IsInstalled = true;
-                //    this.HasError = false;
-                //    Log("Debug: DeepStack Desktop IS running from " + this.ServerProc.FileName);
-
-                //    this.IsStarted = true;
-                //    //C:\DeepStack\server\server.exe
-                //    //check to see if it is a different path than default
-                //    if (!this.ServerProc.FileName.StartsWith(this.DeepStackFolder, StringComparison.OrdinalIgnoreCase))
-                //    {
-                //        string dspath = this.ServerProc.FileName.ToLower().Replace(@"server\server.exe", "");
-                //        Log("Debug: Deepstack running from non-default path: " + dspath);
-                //        this.DeepStackFolder = dspath;
-                //        this.DeepStackEXE = Path.Combine(this.DeepStackFolder, @"DeepStack.exe");
-                //        this.PythonEXE = Path.Combine(this.DeepStackFolder, @"interpreter\python.exe");
-                //        this.RedisEXE = Path.Combine(this.DeepStackFolder, @"redis\redis-server.exe");
-                //        this.ServerEXE = Path.Combine(this.DeepStackFolder, @"server\server.exe");
-                //        this.NeedsSaving = true;
-                //    }
-
-                //    //Try to get command line params to fill in correct running port, etc
-                //    //"C:\DeepStack\server\server.exe" -VISION-FACE=False -VISION-SCENE=True -VISION-DETECTION=True -ADMIN-KEY= -API-KEY= -PORT=84
-
-                //    string face = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-FACE=", " |-");
-                //    if (!string.IsNullOrEmpty(face))
-                //        if (this.FaceAPIEnabled != Convert.ToBoolean(face))
-                //        {
-                //            Log($"Debug: ...Face API detection setting found in running server.exe process changed from '{this.FaceAPIEnabled}' to '{Convert.ToBoolean(face)}'");
-                //            this.FaceAPIEnabled = Convert.ToBoolean(face);
-                //            this.NeedsSaving = true;
-                //        }
-
-                //    string scene = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-SCENE=", " |-");
-                //    if (!string.IsNullOrEmpty(scene))
-                //        if (Convert.ToBoolean(scene) != this.SceneAPIEnabled)
-                //        {
-                //            Log($"Debug: ...Scene API detection setting found in running server.exe process changed from '{this.SceneAPIEnabled}' to '{Convert.ToBoolean(scene)}'");
-                //            this.SceneAPIEnabled = Convert.ToBoolean(scene);
-                //            this.NeedsSaving = true;
-                //        };
-
-                //    string detect = Global.GetWordBetween(this.ServerProc.CommandLine, "-VISION-DETECTION=", " |-");
-                //    if (!string.IsNullOrEmpty(detect))
-                //        if (this.DetectionAPIEnabled != Convert.ToBoolean(detect))
-                //        {
-                //            Log($"Debug: ...Detection API detection setting found in running server.exe process changed from '{this.DetectionAPIEnabled}' to '{Convert.ToBoolean(detect)}'");
-                //            this.DetectionAPIEnabled = Convert.ToBoolean(detect);
-                //            this.NeedsSaving = true;
-                //        }
-
-                //    string admin = Global.GetWordBetween(this.ServerProc.CommandLine, "-ADMIN-KEY=", " |-");
-                //    if (!string.IsNullOrEmpty(admin))
-                //        if (this.AdminKey != admin)
-                //        {
-                //            Log($"Debug: ...Admin key setting found in running server.exe process changed from '{this.AdminKey}' to '{admin}'");
-                //            this.AdminKey = admin;
-                //            this.NeedsSaving = true;
-                //        }
-
-                //    string api = Global.GetWordBetween(this.ServerProc.CommandLine, "-API-KEY=", " |-");
-                //    if (!string.IsNullOrEmpty(api))
-                //        if (this.APIKey != api)
-                //        {
-                //            Log($"Debug: ...API key setting found in running server.exe process changed from '{this.APIKey}' to '{api}'");
-                //            this.APIKey = api;
-                //            this.NeedsSaving = true;
-                //        }
-
-                //    string port = Global.GetWordBetween(this.ServerProc.CommandLine, "-PORT=", " |-");
-                //    if (!string.IsNullOrEmpty(port))
-                //        if (this.Port != port)
-                //        {
-                //            Log($"Debug: ...Port setting found in running server.exe process changed from '{this.Port}' to '{port}'");
-                //            this.Port = port;
-                //            this.NeedsSaving = true;
-                //        }
-
-                //    //Get mode:
-                //    //"C:\DeepStack\interpreter\python.exe" ../intelligence.py -MODE=Medium -VFACE=False -VSCENE=True -VDETECTION=True
-
-                //    string mode = Global.GetWordBetween(this.PythonProc.CommandLine, "-MODE=", " |-");
-                //    if (!string.IsNullOrEmpty(port))
-                //        if (this.Mode != mode)
-                //        {
-                //            Log($"Debug: ...Mode setting found in running python.exe process changed from '{this.Mode}' to '{mode}'");
-                //            this.Mode = mode;
-                //            this.NeedsSaving = true;
-                //        }
-
-
-                //    //"C:\DeepStack\interpreter\python.exe" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=17744, pipe_handle=328)" "--multiprocessing-fork"
-
-                //}
-                //else if (Global.ProcessValid(this.ServerProc) || Global.ProcessValid(this.PythonProc) || Global.ProcessValid(this.RedisProc))
-                //{
-                //    Log("Error: Deepstack partially running.  You many need to manually kill server.exe, python.exe, redis-server.exe");
-                //    this.HasError = true;
-                //    this.IsStarted = true;
-                //}
-                //else
-                //{
-                //    Log("Debug: DeepStack Desktop NOT running.");
-                //    this.IsStarted = false;
-                //    this.HasError = false;
-                //}
-
             }
 
             return Ret;
@@ -579,33 +477,126 @@ namespace AITool
 
                 Stopwatch SW = Stopwatch.StartNew();
                 this.URLS = "";
+                this.CommandLine = "";
+                int ccnt = 0;
+                int dcnt = 0;
+                ExpectedPythonCnt = 0;
 
                 if (this.IsNewVersion)
                 {
-                    List<string> ports = Global.Split(this.Port, ",|");
-                    this.Count = ports.Count;
-
-                    this.CommandLine = "";
-                    int pcnt = 0;
-                    foreach (string CurPort in ports)
+                    //start the custom model(s)
+                    if (this.CustomModelEnabled)
                     {
+                        List<string> cports = Global.Split(this.CustomModelPort, ",;|");
+                        List<string> cpaths = Global.Split(this.CustomModelPath, ",;|");
+                        List<string> cnames = Global.Split(this.CustomModelName, ",;|");
 
-                        if (Global.IsLocalPortInUse(Convert.ToInt32(CurPort)))
+                        this.Count = cports.Count;
+
+                        if (cports.Count > 0 && cpaths.Count > 0 && cnames.Count > 0 && cports.Count == cpaths.Count && cports.Count == cnames.Count)
                         {
-                            Log($"Error: Port {CurPort} is already open, so cannot start deepstack.exe using that port.");
-                            continue;
-                        }
+                            for (int i = 0; i < cports.Count; i++)
+                            {
+
+                                if (!Directory.Exists(cpaths[i]))
+                                {
+                                    Log($"Error: Path '{cpaths[i]}' does not exist.");
+                                    continue;
+                                }
+
+                                if (Global.IsLocalPortInUse(Convert.ToInt32(cports[i])))
+                                {
+                                    Log($"Error: Port {cports[i]} is already open, so cannot start deepstack.exe using that port.");
+                                    continue;
+                                }
 
 
-                        Global.ClsProcess prc = new Global.ClsProcess();
-                        prc.process.StartInfo.FileName = this.DeepStackEXE;
-                        prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
-                        if (this.CustomModelEnabled)
-                        {
-                            prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{this.CustomModelPath}\" --PORT {CurPort}";
+                                Global.ClsProcess prc = new Global.ClsProcess();
+                                prc.process.StartInfo.FileName = this.DeepStackEXE;
+                                prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
+                                prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{cpaths[i].Replace("\\", "/")}\" --PORT {cports[i]}";
+
+                                if (!AppSettings.Settings.deepstack_debug)
+                                {
+                                    prc.process.StartInfo.CreateNoWindow = true;
+                                    prc.process.StartInfo.UseShellExecute = false;
+                                    prc.process.StartInfo.RedirectStandardOutput = true;
+                                    prc.process.StartInfo.RedirectStandardError = true;
+                                    prc.process.EnableRaisingEvents = true;
+                                    prc.process.OutputDataReceived += this.DSHandleServerProcMSG;
+                                    prc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
+                                }
+                                else
+                                {
+                                    prc.process.StartInfo.UseShellExecute = false;
+                                }
+
+
+                                prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
+                                prc.FileName = this.DeepStackEXE;
+                                prc.CommandLine = prc.process.StartInfo.Arguments;
+
+                                ccnt++;
+                                Log($"Starting Deepstack process Type='DeepStack_Custom' - {ccnt} of {this.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
+                                prc.process.Start();
+
+                                Global.WaitForProcessToStart(prc.process, 4000, this.DeepStackEXE);
+
+                                if (AppSettings.Settings.deepstack_highpriority)
+                                {
+                                    prc.process.PriorityClass = ProcessPriorityClass.High;
+                                }
+
+                                if (!AppSettings.Settings.deepstack_debug)
+                                {
+                                    prc.process.BeginOutputReadLine();
+                                    prc.process.BeginErrorReadLine();
+                                }
+
+                                this.ServerProc.Add(prc);
+
+                                this.CommandLine += $"{prc.FileName} {prc.CommandLine}\r\n";
+
+                                ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{cports[i]}/v1/vision/custom/{cnames[i]}", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Custom);
+                                this.URLS += $"{url.ToString()}\r\n";
+                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                {
+                                    Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
+                                    AppSettings.Settings.AIURLList.Add(url);
+                                }
+
+                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+
+                                Thread.Sleep(100);
+
+                            }
                         }
                         else
                         {
+                            this.CustomModelEnabled = false;
+                            Log($"Error: Invalid custom model configuration.  All settings must be configured and have same number of items.");
+                        }
+
+                    }
+
+                    List<string> ports = Global.Split(this.Port, ",;|");
+                    this.Count = ports.Count;
+
+                    if (this.FaceAPIEnabled || this.SceneAPIEnabled || this.DetectionAPIEnabled && ports.Count > 0)
+                    {
+                        foreach (string CurPort in ports)
+                        {
+
+                            if (Global.IsLocalPortInUse(Convert.ToInt32(CurPort)))
+                            {
+                                Log($"Error: Port {CurPort} is already open, so cannot start deepstack.exe using that port.");
+                                continue;
+                            }
+
+
+                            Global.ClsProcess prc = new Global.ClsProcess();
+                            prc.process.StartInfo.FileName = this.DeepStackEXE;
+                            prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
                             string face = "";
                             string scene = "";
                             string detect = "";
@@ -628,167 +619,195 @@ namespace AITool
                                 mode = $"--MODE {this.Mode} ";
 
                             prc.process.StartInfo.Arguments = $"{face}{scene}{detect}{admin}{api}{mode}--PORT {CurPort}";
-                        }
-                        if (!AppSettings.Settings.deepstack_debug)
-                        {
-                            prc.process.StartInfo.CreateNoWindow = true;
-                            prc.process.StartInfo.UseShellExecute = false;
-                            prc.process.StartInfo.RedirectStandardOutput = true;
-                            prc.process.StartInfo.RedirectStandardError = true;
-                            prc.process.EnableRaisingEvents = true;
-                            prc.process.OutputDataReceived += this.DSHandleServerProcMSG;
-                            prc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
-                        }
-                        else
-                        {
-                            prc.process.StartInfo.UseShellExecute = false;
-                        }
 
-                        if (this.DisplayVersion.Contains("2020") && !string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
-                            prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
-
-                        prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
-                        prc.FileName = this.DeepStackEXE;
-                        prc.CommandLine = prc.process.StartInfo.Arguments;
-
-                        pcnt++;
-                        Log($"Starting {pcnt} of {ports.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
-                        prc.process.Start();
-
-                        Global.WaitForProcessToStart(prc.process, 3000, this.DeepStackEXE);
-
-                        if (AppSettings.Settings.deepstack_highpriority)
-                        {
-                            prc.process.PriorityClass = ProcessPriorityClass.High;
-                        }
-
-                        if (!AppSettings.Settings.deepstack_debug)
-                        {
-                            prc.process.BeginOutputReadLine();
-                            prc.process.BeginErrorReadLine();
-                        }
-
-                        this.ServerProc.Add(prc);
-
-                        ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/detection", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
-
-                        this.CommandLine += $"{prc.FileName} {prc.CommandLine}\r\n";
-
-                        this.URLS += $"{url.ToString()}\r\n";
-
-
-                        if (!AppSettings.Settings.AIURLList.Contains(url))
-                        {
-                            Log("Automatically adding local Windows Deepstack URL: " + url.ToString());
-                            AppSettings.Settings.AIURLList.Add(url);
-                        }
-
-                        Thread.Sleep(250);
-                    }
-
-                    this.Count = pcnt;
-
-                    this.IsStarted = true;
-                    this.HasError = false;
-                    Ret = true;
-
-                    //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
-
-                    int PythonCnt = 0;
-                    int cc = 0;
-                    int ExpectedPythonCnt = 0;
-                    if (this.FaceAPIEnabled)
-                        ExpectedPythonCnt = this.Count * 5;  //face runs 5 copies of python.exe
-                    else
-                        ExpectedPythonCnt = this.Count * 2;  //normal detection runs 2 copies
-
-                    do
-                    {
-
-                        List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
-                        PythonCnt = montys.Count;
-
-
-                        if (montys.Count >= ExpectedPythonCnt)
-                        {
-                            //when deepstack is running normaly there will be 2 python.exe processes running for each deepstack.exe
-                            //Set priority for each this way since we didnt start them in the first place...
-                            if (AppSettings.Settings.deepstack_highpriority)
+                            if (!AppSettings.Settings.deepstack_debug)
                             {
-                                foreach (Global.ClsProcess prc in montys)
-                                {
-                                    cc++;
-                                    if (Global.ProcessValid(prc))
-                                    {
-                                        try
-                                        {
-                                            prc.process.PriorityClass = ProcessPriorityClass.High;
-                                            prc.process.StartInfo.UseShellExecute = false;
-                                            prc.process.StartInfo.RedirectStandardOutput = true;
-                                            prc.process.StartInfo.RedirectStandardError = true;
-                                            prc.process.EnableRaisingEvents = true;
-                                            prc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
-                                            prc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
-                                            prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "python.exe"); //new EventHandler(myProcess_Exited);
-                                        }
-                                        catch { }
-
-                                    }
-                                }
+                                prc.process.StartInfo.CreateNoWindow = true;
+                                prc.process.StartInfo.UseShellExecute = false;
+                                prc.process.StartInfo.RedirectStandardOutput = true;
+                                prc.process.StartInfo.RedirectStandardError = true;
+                                prc.process.EnableRaisingEvents = true;
+                                prc.process.OutputDataReceived += this.DSHandleServerProcMSG;
+                                prc.process.ErrorDataReceived += this.DSHandleServerProcERROR;
+                            }
+                            else
+                            {
+                                prc.process.StartInfo.UseShellExecute = false;
                             }
 
-                            this.PythonProc = montys;
+                            if (this.DisplayVersion.Contains("2020") && !string.Equals(this.Mode, "medium", StringComparison.OrdinalIgnoreCase))
+                                prc.process.StartInfo.EnvironmentVariables["MODE"] = this.Mode;
 
-                            break;
+                            prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "deepstack.exe"); //new EventHandler(myProcess_Exited);
+                            prc.FileName = this.DeepStackEXE;
+                            prc.CommandLine = prc.process.StartInfo.Arguments;
+
+                            dcnt++;
+                            Log($"Starting {dcnt} of {ports.Count}: {prc.process.StartInfo.FileName} {prc.process.StartInfo.Arguments}...");
+                            prc.process.Start();
+
+                            Global.WaitForProcessToStart(prc.process, 4000, this.DeepStackEXE);
+
+                            if (AppSettings.Settings.deepstack_highpriority)
+                            {
+                                prc.process.PriorityClass = ProcessPriorityClass.High;
+                            }
+
+                            if (!AppSettings.Settings.deepstack_debug)
+                            {
+                                prc.process.BeginOutputReadLine();
+                                prc.process.BeginErrorReadLine();
+                            }
+
+                            this.ServerProc.Add(prc);
+
+                            this.CommandLine += $"{prc.FileName} {prc.CommandLine}\r\n";
+
+                            if (this.DetectionAPIEnabled)
+                            {
+                                ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/detection", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
+                                this.URLS += $"{url.ToString()}\r\n";
+                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                {
+                                    Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
+                                    AppSettings.Settings.AIURLList.Add(url);
+                                }
+                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+
+                            }
+
+                            if (this.FaceAPIEnabled)
+                            {
+                                ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/face/recognize", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Faces);
+                                this.URLS += $"{url.ToString()}\r\n";
+                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                {
+                                    Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
+                                    AppSettings.Settings.AIURLList.Add(url);
+                                }
+                                ExpectedPythonCnt = ExpectedPythonCnt + 3;
+
+                            }
+
+                            if (this.SceneAPIEnabled)
+                            {
+                                ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/scene", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Scene);
+                                this.URLS += $"{url.ToString()}\r\n";
+                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                {
+                                    Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
+                                    AppSettings.Settings.AIURLList.Add(url);
+                                }
+                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+                            }
+
+                            Thread.Sleep(100);
+                        }
+
+                        this.Count = this.ServerProc.Count;
+
+                        this.IsStarted = true;
+                        this.HasError = false;
+                        Ret = true;
+
+                        //Lets wait for the rest of the python.exe processes to spawn and set their priority too (otherwise they are normal)
+
+                        int PythonCnt = 0;
+                        int cc = 0;
+
+                        do
+                        {
+
+                            List<Global.ClsProcess> montys = Global.GetProcessesByPath(this.PythonEXE);
+                            PythonCnt = montys.Count;
+
+
+                            if (montys.Count >= ExpectedPythonCnt)
+                            {
+                                //when deepstack is running normaly there will be 2 python.exe processes running for each deepstack.exe
+                                //Set priority for each this way since we didnt start them in the first place...
+                                if (AppSettings.Settings.deepstack_highpriority)
+                                {
+                                    foreach (Global.ClsProcess prc in montys)
+                                    {
+                                        cc++;
+                                        if (Global.ProcessValid(prc))
+                                        {
+                                            try
+                                            {
+                                                prc.process.PriorityClass = ProcessPriorityClass.High;
+                                                prc.process.StartInfo.UseShellExecute = false;
+                                                prc.process.StartInfo.RedirectStandardOutput = true;
+                                                prc.process.StartInfo.RedirectStandardError = true;
+                                                prc.process.EnableRaisingEvents = true;
+                                                prc.process.OutputDataReceived += this.DSHandlePythonProcMSG;
+                                                prc.process.ErrorDataReceived += this.DSHandlePythonProcERROR;
+                                                prc.process.Exited += (sender, e) => this.DSProcess_Exited(sender, e, "python.exe"); //new EventHandler(myProcess_Exited);
+                                            }
+                                            catch { }
+
+                                        }
+                                    }
+                                }
+
+                                this.PythonProc = montys;
+
+                                break;
+                            }
+                            else
+                            {
+                                Log($"Debug: ...Waiting for {ExpectedPythonCnt} copies of {this.PythonEXE} to start (now={montys.Count})...");
+                                Thread.Sleep(250);
+                            }
+
+                        } while (SW.ElapsedMilliseconds < 30000);  //wait 30 seconds max
+
+                        this.RedisProc = Global.GetProcessesByPath(this.RedisEXE);
+
+                        if (Global.ProcessValid(this.RedisProc))
+                        {
+                            if (AppSettings.Settings.deepstack_highpriority)
+                            {
+
+                                this.RedisProc[0].process.PriorityClass = ProcessPriorityClass.High;
+
+                            }
                         }
                         else
                         {
-                            Log($"Debug: ...Waiting for {ExpectedPythonCnt} copies of {this.PythonEXE} to start (now={montys.Count})...");
-                            Thread.Sleep(250);
+                            this.HasError = true;
+                            Log($"Error: 1 'redis-server.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
                         }
 
-                    } while (SW.ElapsedMilliseconds < 30000);  //wait 30 seconds max
-
-                    this.RedisProc = Global.GetProcessesByPath(this.RedisEXE);
-
-                    if (Global.ProcessValid(this.RedisProc))
-                    {
-                        if (AppSettings.Settings.deepstack_highpriority)
+                        if (PythonCnt >= ExpectedPythonCnt)
                         {
 
-                            this.RedisProc[0].process.PriorityClass = ProcessPriorityClass.High;
-
+                            Log("Started in " + SW.ElapsedMilliseconds + "ms");
                         }
+                        else
+                        {
+                            this.HasError = true;
+                            Log($"Error: Only {PythonCnt} out of {ExpectedPythonCnt} 'python.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
+                        }
+
+                        if (!this.HasError)
+                        {
+                            this.IsActivated = true;
+                            this.IsStarted = true;
+                        }
+
                     }
                     else
                     {
-                        this.HasError = true;
-                        Log($"Error: 1 'redis-server.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
-                    }
+                        //nothing to enable
+                        Log("Debug: DeepStack config is invalid, or only a custom model is enabled.");
 
-                    if (PythonCnt >= ExpectedPythonCnt)
-                    {
-
-                        Log("Started in " + SW.ElapsedMilliseconds + "ms");
                     }
-                    else
-                    {
-                        this.HasError = true;
-                        Log($"Error: {ExpectedPythonCnt} 'python.exe' processes did not start within " + SW.ElapsedMilliseconds + "ms");
-                    }
-
-                    if (!this.HasError)
-                    {
-                        this.IsActivated = true;
-                        this.IsStarted = true;
-                    }
-
                 }
                 else
                 {
                     Log("Error: DeepStack for Windows v2020 or higher is not installed. https://github.com/johnolafenwa/DeepStack/releases");
                 }
-
             }
             catch (Exception ex)
             {

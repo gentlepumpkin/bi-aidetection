@@ -82,7 +82,7 @@ namespace AITool
         private async void Shell_Load(object sender, EventArgs e)
         {
 
-           
+
 
             //ClsDoodsRequest cdr = new ClsDoodsRequest();
 
@@ -1202,7 +1202,7 @@ namespace AITool
                     int halfhour; //stores the half hour in which the alert occurred
 
                     //add +1 to counter for corresponding half-hour
-                    if (minute > 30) //if alert occurred after half o clock
+                    if (minute >= 30) //if alert occurred after half o clock
                     {
                         halfhour = hour * 2 + 1;
                     }
@@ -2698,6 +2698,10 @@ namespace AITool
                                             icam.cancel_urls_as_string = cam.cancel_urls_as_string;
                                             icam.cancel_urls = cam.cancel_urls;
                                             icam.cooldown_time_seconds = cam.cooldown_time_seconds;
+
+                                            icam.DetectionDisplayFormat = cam.DetectionDisplayFormat;
+
+
                                             icam.telegram_enabled = cam.telegram_enabled;
                                             icam.telegram_caption = cam.telegram_caption;
                                             icam.telegram_chatid = cam.telegram_chatid;
@@ -2711,16 +2715,16 @@ namespace AITool
                                             icam.Action_RunProgramArgsString = cam.Action_RunProgramArgsString;
                                             icam.Action_PlaySounds = cam.Action_PlaySounds;
                                             icam.Action_Sounds = cam.Action_Sounds;
-                                            
+
                                             icam.Action_mqtt_enabled = cam.Action_mqtt_enabled;
                                             icam.Action_mqtt_payload = cam.Action_mqtt_payload;
                                             icam.Action_mqtt_topic = cam.Action_mqtt_topic;
                                             icam.Action_mqtt_payload_cancel = cam.Action_mqtt_payload_cancel;
                                             icam.Action_mqtt_topic_cancel = cam.Action_mqtt_topic_cancel;
-                                            
+
                                             icam.Action_image_merge_detections = cam.Action_image_merge_detections;
                                             icam.Action_image_merge_jpegquality = cam.Action_image_merge_jpegquality;
-                                            
+
                                             icam.Action_pushover_enabled = cam.Action_pushover_enabled;
                                             icam.Action_pushover_title = cam.Action_pushover_title;
                                             icam.Action_pushover_message = cam.Action_pushover_message;
@@ -2863,7 +2867,7 @@ namespace AITool
         //SETTING TAB
         //----------------------------------------------------------------------------------------------------------
 
-        
+
 
         //settings save button
         private async void BtnSettingsSave_Click_1(object sender, EventArgs e)
@@ -3036,7 +3040,7 @@ namespace AITool
         {
 
             if (DeepStackServerControl == null)
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
 
             DeepStackServerControl.GetDeepStackRun();
 
@@ -3053,11 +3057,14 @@ namespace AITool
             AppSettings.Settings.deepstack_autostart = this.Chk_AutoStart.Checked;
             AppSettings.Settings.deepstack_debug = this.Chk_DSDebug.Checked;
             AppSettings.Settings.deepstack_highpriority = this.chk_HighPriority.Checked;
-            AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
-            AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
+            //AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
+            //AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
             AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
             AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
             AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
+            AppSettings.Settings.deepstack_customModelName = this.Txt_CustomModelName.Text.Trim();
+            AppSettings.Settings.deepstack_customModelPort = this.Txt_CustomModelPort.Text.Trim();
+            AppSettings.Settings.deepstack_customModelApiEnabled = this.Chk_CustomModelAPI.Checked;
 
             AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
 
@@ -3069,7 +3076,7 @@ namespace AITool
             {
                 MessageBox.Show($"Note: Deepstack restart fail count is '{AppSettings.Settings.deepstack_autorestart_fail_count}' but the maximum \r\nnumber of times a URL can fail before being disabled is '{AppSettings.Settings.MaxQueueItemRetries}'\r\nTo change, see 'MaxQueueItemRetries' in AITOOL.SETTINGS.JSON file.");
             }
-            
+
             AppSettings.SaveAsync();
 
 
@@ -3150,7 +3157,7 @@ namespace AITool
 
             }
 
-            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
+            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
 
         }
 
@@ -3160,7 +3167,7 @@ namespace AITool
             try
             {
                 if (DeepStackServerControl == null)
-                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart);
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
 
 
                 //first update the port in the deepstack_url if found
@@ -3183,6 +3190,9 @@ namespace AITool
                 this.Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
                 this.Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
                 this.Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
+                this.Chk_CustomModelAPI.Checked = DeepStackServerControl.CustomModelEnabled;
+
+                Global_GUI.GroupboxEnableDisable(groupBoxCustomModel, Chk_CustomModelAPI);
 
                 //have seen a few cases nothing is checked but it is required
                 if (!this.Chk_DetectionAPI.Checked && !this.Chk_FaceAPI.Checked && !this.Chk_SceneAPI.Checked)
@@ -3194,11 +3204,13 @@ namespace AITool
                 this.Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
                 this.Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
                 this.chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
-                this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
-                this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
+                //this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
+                //this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
                 this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
                 this.Txt_Port.Text = DeepStackServerControl.Port;
                 this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
+                this.Txt_CustomModelName.Text = AppSettings.Settings.deepstack_customModelName;
+                this.Txt_CustomModelPort.Text = AppSettings.Settings.deepstack_customModelPort;
                 this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
 
                 this.Chk_AutoReStart.Checked = AppSettings.Settings.deepstack_autorestart;
@@ -3206,7 +3218,11 @@ namespace AITool
                 this.txt_DeepstackNoMoreOftenThanMins.Text = AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts.ToString();
 
                 if (!DeepStackServerControl.IsNewVersion)
+                {
                     this.Txt_CustomModelPath.Enabled = false;
+                    this.Txt_CustomModelName.Enabled = false;
+                    this.Txt_CustomModelPort.Enabled = false;
+                }
 
                 this.tb_DeepstackCommandLine.Text = DeepStackServerControl.CommandLine;
                 this.tb_DeepStackURLs.Text = DeepStackServerControl.URLS;
@@ -3232,7 +3248,7 @@ namespace AITool
 
                     if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
                     {
-                        if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled))
+                        if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled || DeepStackServerControl.CustomModelEnabled || DeepStackServerControl.FaceAPIEnabled))
                         {
 
                             MethodInvoker LabelUpdate = delegate
@@ -3575,6 +3591,12 @@ namespace AITool
 
                 frm.cam = cam;
 
+                frm.tb_DetectionFormat.Text = cam.DetectionDisplayFormat;
+                frm.lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, frm.tb_DetectionFormat.Text);
+
+                frm.tb_ConfidenceFormat.Text = AppSettings.Settings.DisplayPercentageFormat;
+                frm.lbl_Confidence.Text = string.Format(frm.tb_ConfidenceFormat.Text, 99.123);
+
                 frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
                 frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|;,"));
                 frm.tb_cooldown.Text = cam.cooldown_time_seconds.ToString(); //load cooldown time
@@ -3635,6 +3657,9 @@ namespace AITool
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
+                    cam.DetectionDisplayFormat = frm.tb_DetectionFormat.Text.Trim();
+                    AppSettings.Settings.DisplayPercentageFormat = frm.tb_ConfidenceFormat.Text.Trim();
+
                     cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
                     cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
                     cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|;,"));
@@ -3738,6 +3763,7 @@ namespace AITool
 
                     this.toolStripButtonEditImageMask.Enabled = true;
                     this.toolStripButtonMaskDetails.Enabled = true;
+                    this.toolStripButtonEditURL.Enabled = true;
 
                 }
                 else
@@ -3747,6 +3773,7 @@ namespace AITool
                     this.toolStripButtonDetails.Enabled = false;
                     this.toolStripButtonEditImageMask.Enabled = false;
                     this.toolStripButtonMaskDetails.Enabled = false;
+                    this.toolStripButtonEditURL.Enabled = false;
                 }
 
             }
@@ -5006,6 +5033,30 @@ namespace AITool
             else
             {
                 MessageBox.Show("Cannot find " + errfile);
+            }
+        }
+
+        private void Txt_CustomModelName_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Chk_CustomModelAPI_CheckedChanged(object sender, EventArgs e)
+        {
+            Global_GUI.GroupboxEnableDisable(groupBoxCustomModel, Chk_CustomModelAPI);
+        }
+
+        private void toolStripButtonEditURL_Click(object sender, EventArgs e)
+        {
+            using (Frm_AIServerDeepstackEdit frm = new Frm_AIServerDeepstackEdit())
+            {
+                string srv = ((History)this.folv_history.SelectedObjects[0]).AIServer;
+                ClsURLItem url = AITOOL.GetURL(srv);
+                if (url != null)
+                {
+                    frm.CurURL = url;
+                    frm.ShowDialog();
+                }
             }
         }
     }

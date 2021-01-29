@@ -23,6 +23,8 @@
         NoMaskImageFile,
         Unwanted,
         Error,
+        SkippedDynamicMaskCheck,
+        NotEnabled,
         Unknown
     }
     public class MaskResultInfo

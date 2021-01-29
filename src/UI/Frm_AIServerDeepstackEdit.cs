@@ -49,7 +49,10 @@ namespace AITool
 
             this.cb_LinkedServers.Checked = this.CurURL.LinkServerResults;
 
-            List<string> linked = Global.Split(this.CurURL.LinkedResultsServerList,",;|");
+            this.cb_TimeoutError.Checked = AppSettings.Settings.MaxWaitForAIServerTimeoutError;
+            this.tb_LinkedRefineTimeout.Text = AppSettings.Settings.MaxWaitForAIServerMS.ToString();
+
+            List<string> linked = Global.Split(this.CurURL.LinkedResultsServerList, ",;|");
 
             //Add all servers except current one and refinement server
             int idx = 0;
@@ -58,11 +61,11 @@ namespace AITool
                 if (!url.UseAsRefinementServer && !string.Equals(this.CurURL.ToString(), url.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     this.checkedComboBoxLinked.Items.Add(url);
-                    if (Global.IsInList(url.ToString(), this.CurURL.LinkedResultsServerList, TrueIfEmpty:false))
+                    if (Global.IsInList(url.ToString(), this.CurURL.LinkedResultsServerList, TrueIfEmpty: false))
                         this.checkedComboBoxLinked.SetItemChecked(idx, true);
                     idx++;
                 }
-                
+
             }
 
             foreach (ClsImageAdjust ia in AppSettings.Settings.ImageAdjustProfiles)
@@ -82,7 +85,7 @@ namespace AITool
             Global_GUI.SaveWindowState(this);
         }
 
-        
+
         private void tb_URL_TextChanged(object sender, EventArgs e)
         {
             ValidateForm();
@@ -91,7 +94,7 @@ namespace AITool
         private void ValidateForm()
         {
             this.CurURL.url = tb_URL.Text.Trim();
-            if (!this.CurURL.UpdateIsValid())
+            if (!this.CurURL.Update(false))
             {
                 tb_URL.ForeColor = Color.White;
                 tb_URL.BackColor = Color.Red;
@@ -115,6 +118,7 @@ namespace AITool
         {
             this.Update();
             AITOOL.UpdateAIURLs();
+            AppSettings.SaveAsync();
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -144,6 +148,12 @@ namespace AITool
 
             this.CurURL.HttpClientTimeoutSeconds = Convert.ToInt32(this.tb_timeout.Text.Trim());
 
+            if (!string.IsNullOrWhiteSpace(this.tb_LinkedRefineTimeout.Text) && Convert.ToInt32(this.tb_LinkedRefineTimeout.Text.Trim()) >= 20)
+                AppSettings.Settings.MaxWaitForAIServerMS = Convert.ToInt32(this.tb_LinkedRefineTimeout.Text.Trim());
+
+            AppSettings.Settings.MaxWaitForAIServerTimeoutError = this.cb_TimeoutError.Checked;
+
+
 
         }
         private void linkHelpURL_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -158,6 +168,8 @@ namespace AITool
 
         private async void btTest_Click(object sender, EventArgs e)
         {
+
+            this.Update();
 
             AITOOL.UpdateAIURLs();
 
@@ -187,7 +199,11 @@ namespace AITool
                 if (File.Exists(pth))
                 {
                     //must create a temp unique file every time because database key is the filename
-                    string tpth = Path.Combine(Path.GetTempPath(), $"TEST_CAM.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}");
+                    Camera cam = AITOOL.GetCamera("default", true);
+                    if (cam == null)
+                        cam = new Camera("TEST_CAM");
+
+                    string tpth = Path.Combine(Path.GetTempPath(), $"{cam.Name}.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}");
                     File.Copy(pth, tpth, true);
 
                     btTest.Enabled = false;
@@ -195,22 +211,41 @@ namespace AITool
                     btTest.Text = "Working...";
                     this.Update();
                     ClsImageQueueItem CurImg = new ClsImageQueueItem(tpth, 0);
-                    Camera cam = AITOOL.GetCamera("default", true);
-                    if (cam==null)
-                       cam = new Camera("TEST_CAM");
 
-                    bool ret = await AITOOL.DetectObjects(CurImg, new List<ClsURLItem> { this.CurURL }, cam);
+                    List<ClsURLItem> linked = new List<ClsURLItem> { this.CurURL };
+
+                    if (this.CurURL.LinkServerResults && !string.IsNullOrEmpty(this.CurURL.LinkedResultsServerList))
+                    {
+                        linked.AddRange(await AITOOL.WaitForNextURL(cam, false, null, this.CurURL.LinkedResultsServerList));
+                    }
+                    if (linked.Count > 1)
+                    {
+                        AITOOL.Log($"Debug: ---- Found '{linked.Count}' linked AI URL's.");
+                    }
+
+                    AITOOL.DetectObjectsResult result = await AITOOL.DetectObjects(CurImg, linked, cam);
+
+                    //make sure not stuck in use for the test:
+                    foreach (var url in result.OutURLs)
+                        url.InUse.WriteFullFence(false);
+
                     btTest.Enabled = true;
                     bt_Save.Enabled = true;
                     btTest.Text = "Test";
-                    if (ret)
+                    if (result.Success)
                     {
-                        this.CurURL.ErrCount.WriteUnfenced(0);
-                        this.CurURL.CurErrCount.WriteUnfenced(0);
+
+                        Frm_ObjectDetail frm = new Frm_ObjectDetail();
+                        frm.PredictionObjectDetail = result.OutPredictions;
+                        frm.Show();
+
                         MessageBox.Show($"Success! {this.CurURL.LastResultMessage}", "Success");
                     }
                     else
                         MessageBox.Show($"Error! {this.CurURL.LastResultMessage}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    this.CurURL.ErrCount.WriteUnfenced(0);
+                    this.CurURL.CurErrCount.WriteUnfenced(0);
 
                 }
                 else
@@ -230,6 +265,10 @@ namespace AITool
             this.CurURL.LastResultMessage = "";
             this.CurURL.LastTimeMS = 0;
             this.CurURL.LastUsedTime = DateTime.MinValue;
+            this.CurURL.LastResultSuccess = false;
+            this.CurURL.InUse.WriteFullFence(false);
+
+            MessageBox.Show("Cleared error counts and stats.");
 
         }
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using static AITool.AITOOL;
@@ -124,7 +126,7 @@ namespace AITool
 
         private void label3_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, null, this.label3.Text));
+            //MessageBox.Show(AITOOL.ReplaceParams(this.cam, null, null, this.label3.Text));
         }
 
         private void cb_mergeannotations_CheckedChanged(object sender, EventArgs e)
@@ -166,6 +168,65 @@ namespace AITool
         {
             tb_network_folder.Enabled = cb_copyAlertImages.Checked;
             tb_network_folder_filename.Enabled = cb_copyAlertImages.Checked;
+        }
+
+        private void tb_DetectionFormat_TextChanged(object sender, EventArgs e)
+        {
+            Updateformat();
+        }
+
+        private void tb_ConfidenceFormat_TextChanged(object sender, EventArgs e)
+        {
+            Updateformat();
+        }
+
+        private void Updateformat()
+        {
+            try
+            {
+                lbl_Confidence.Text = string.Format(tb_ConfidenceFormat.Text.Trim(), 99.123);
+                if (!string.IsNullOrEmpty(tb_ConfidenceFormat.Text.Trim()))
+                    AppSettings.Settings.DisplayPercentageFormat = tb_ConfidenceFormat.Text.Trim();
+
+                lbl_Confidence.ForeColor = Color.DarkGreen;
+                lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, tb_DetectionFormat.Text);
+                lbl_DetectionFormat.Text = lbl_DetectionFormat.Text.Replace("[]", "").Replace("()", "").Replace("   ", " ").Replace("  ", " ");
+            }
+            catch (Exception)
+            {
+                lbl_Confidence.ForeColor = Color.Red;
+            }
+        }
+
+        private void bt_variables_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
+                List<string> varlist = Global.Split(vars, ";");
+                List<ClsProp> props = new List<ClsProp>();
+                foreach (var varitm in varlist)
+                {
+                    string value = AITOOL.ReplaceParams(cam, null, null, varitm);
+                    props.Add(new ClsProp(varitm, value));
+                }
+                using (Frm_Variables frm = new Frm_Variables())
+                {
+                    frm.props = props;
+                    frm.ShowDialog();
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private void lbl_DetectionFormat_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

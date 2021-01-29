@@ -32,7 +32,7 @@ namespace AITool
         {
             Global_GUI.SaveWindowState(this);
         }
-               
+
 
         private void FOLV_AIServers_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -67,7 +67,7 @@ namespace AITool
         {
             if (this.CurURL != null)
             {
-                
+
                 toolStripButtonDelete.Enabled = true;
                 toolStripButtonDown.Enabled = true;
                 toolStripButtonEdit.Enabled = true;
@@ -86,16 +86,9 @@ namespace AITool
         private void deepstackToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
-            //if (!AppSettings.Settings.AIURLList.Contains(url))
-            //{
-                this.CurURL = url;
-                AppSettings.Settings.AIURLList.Add(url);
-                Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Already exists");
-            //}
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
             UpdateButtons();
 
         }
@@ -233,7 +226,7 @@ namespace AITool
                 // If SPI IsNot Nothing Then
                 if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && !url.UseAsRefinementServer)
                     e.Item.ForeColor = Color.Green;
-                
+
                 else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && url.UseAsRefinementServer)
                     e.Item.ForeColor = Color.DarkOrange;
 
@@ -313,6 +306,35 @@ namespace AITool
                 MessageBox.Show("Already exists");
             }
             UpdateButtons();
+        }
+
+        private void deepstackCustomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Custom);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+        }
+
+        private void deepstackFacesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Faces);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void deepstackSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Scene);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
         }
     }
 }

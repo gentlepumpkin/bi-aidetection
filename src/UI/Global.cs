@@ -316,7 +316,12 @@ namespace AITool
             try
             {
                 Uri url = new Uri(InURL);
-                if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "/" && !url.PathAndQuery.Contains("|") && !url.PathAndQuery.Contains(";"))
+                if (url != null &&
+                    !string.IsNullOrEmpty(url.PathAndQuery) &&
+                    url.PathAndQuery != "/" &&
+                    !url.PathAndQuery.Contains("|") &&
+                    !url.PathAndQuery.Contains(";") &&
+                    url.Port != 0)
                     ret = true;
             }
             catch (Exception ex)
@@ -608,7 +613,7 @@ namespace AITool
 
         public static bool IsLocalNetwork(string HostNameOrIPAddress)
         {
-            
+
             return IsLocalHost(HostNameOrIPAddress) ||
                    HostNameOrIPAddress.StartsWith("10.") ||
                    HostNameOrIPAddress.StartsWith("192.168.") ||
@@ -642,13 +647,19 @@ namespace AITool
 
         }
 
+        static Dictionary<string, string> DNSErrCache = new Dictionary<string, string>();
         public static IPAddress GetIPAddressFromHostname(string HostNameOrIPAddress = "")
         {
-            IPAddress ret = default(IPAddress);
+            IPAddress ret = IPAddress.None;
             try
             {
+                //stop any errors from happening more than once:
+                if (DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
+                    return ret;
+
                 if (IsValidIPAddress(HostNameOrIPAddress))
                     return GetIPAddressFromIPString(HostNameOrIPAddress);
+
 
                 IPHostEntry Host;
                 if (string.IsNullOrWhiteSpace(HostNameOrIPAddress))
@@ -681,24 +692,32 @@ namespace AITool
             }
             catch (Exception ex)
             {
+                ret = IPAddress.None;
+                if (!DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
+                    DNSErrCache.Add(HostNameOrIPAddress.ToLower(), ex.Message);
+
                 Log($"Error: Hostname '{HostNameOrIPAddress}': {ExMsg(ex)}");
             }
 
             return ret;
         }
-        public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddres = "")
+        public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddress = "")
         {
-            IPAddress ret = default(IPAddress);
+            IPAddress ret = IPAddress.None;
             try
             {
-                if (IsValidIPAddress(HostNameOrIPAddres))
-                    return GetIPAddressFromIPString(HostNameOrIPAddres);
+                //stop any errors from happening more than once:
+                if (DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
+                    return ret;
+
+                if (IsValidIPAddress(HostNameOrIPAddress))
+                    return GetIPAddressFromIPString(HostNameOrIPAddress);
 
                 IPHostEntry Host;
-                if (string.IsNullOrWhiteSpace(HostNameOrIPAddres))
+                if (string.IsNullOrWhiteSpace(HostNameOrIPAddress))
                     Host = await Dns.GetHostEntryAsync(Dns.GetHostName());
                 else
-                    Host = await Dns.GetHostEntryAsync(HostNameOrIPAddres);
+                    Host = await Dns.GetHostEntryAsync(HostNameOrIPAddress);
 
                 foreach (IPAddress IP in Host.AddressList)
                 {
@@ -725,14 +744,18 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: Hostname '{HostNameOrIPAddres}': {ExMsg(ex)}");
+                ret = IPAddress.None;
+                if (!DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
+                    DNSErrCache.Add(HostNameOrIPAddress.ToLower(), ex.Message);
+
+                Log($"Error: Hostname '{HostNameOrIPAddress}': {ExMsg(ex)}");
             }
 
             return ret;
         }
         public static IPAddress GetIPAddressFromIPString(string IP)
         {
-            IPAddress ret = default(IPAddress);
+            IPAddress ret = IPAddress.None;
             if (!string.IsNullOrEmpty(IP))
             {
                 IPAddress IPTst;
@@ -1043,7 +1066,7 @@ namespace AITool
                         bool Found = false;
                         string[] Values = reg.GetValueNames();
                         foreach (string valu in Values)
-                            if (valu.ToLower() == Name.ToLower())
+                            if (string.Equals(valu, Name, StringComparison.OrdinalIgnoreCase))
                             {
                                 Found = true;
                                 RetVal = reg.GetValue(Name, DefaultValue);
@@ -1527,7 +1550,7 @@ namespace AITool
 
                 if (FI.Exists)
                 {
-                    
+
                     if (NeedsToWrite && FI.IsReadOnly)
                     {
                         ret.Success = false;
@@ -1571,7 +1594,7 @@ namespace AITool
                                 if (NeedsToWrite)
                                 {
                                     //make sure we can read a byte and write the same byte back to verify access
-                                    if (IsFileWritable(filename,ref ret.Handle, ref FI, out LastFailReason))
+                                    if (IsFileWritable(filename, ref ret.Handle, ref FI, out LastFailReason))
                                     {
                                         ret.Success = true;
                                         break;
@@ -1732,9 +1755,6 @@ namespace AITool
             if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
 
-            //remove face details
-            if (FindStr.Contains("["))
-                FindStr = Global.GetWordBetween(FindStr, "", "[").Trim();
 
             return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
         }
@@ -2449,6 +2469,7 @@ namespace AITool
                     long LastMem = 0;
                     int cnt = 0;
                     //prc.WaitForInputIdle(TimeoutMS); //I think this only works with GUI app
+                    prc.Refresh();
                     while (sw.ElapsedMilliseconds <= TimeoutMS && !prc.HasExited && LastMem != prc.PrivateMemorySize64)
                     {
                         cnt++;

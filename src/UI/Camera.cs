@@ -95,7 +95,7 @@ namespace AITool
         public string BICamName = "";
         public string MaskFileName = "";
         public string triggering_objects_as_string = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
-        public string additional_triggering_objects_as_string = "Face, SUV, VAN, Chicken Turtle, Hummingbird Hawk-moth, Goblin Shark";
+        public string additional_triggering_objects_as_string = "Face, SUV, VAN, Pickup Truck, Meat Popsicle";
         public string[] triggering_objects = new string[0];
         public string trigger_urls_as_string = "";
         public string[] trigger_urls = new string[0];
@@ -180,6 +180,8 @@ namespace AITool
 
         public string ImageAdjustProfile = "Default";
 
+        public string DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
+
         //Keep a list of image resolutions and the last image file name with that resolution.  This will help us keep track of which image mask to use
         public List<ImageResItem> ImageResolutions = new List<ImageResItem>();
 
@@ -192,6 +194,8 @@ namespace AITool
         [JsonIgnore]
         public List<string> last_detections = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
+        public List<string> last_details = new List<string>(); //stores objects that were detected last
+        [JsonIgnore]
         public List<float> last_confidences = new List<float>(); //stores last objects confidences
         [JsonIgnore]
         public List<string> last_positions = new List<string>(); //stores last objects positions
@@ -199,7 +203,7 @@ namespace AITool
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
         private object CamLock = new object();
-        
+
 
         public string GetMaskFile(bool MustExist, ClsImageQueueItem CurImg = null, ImageResItem ir = null)
         {
@@ -340,7 +344,7 @@ namespace AITool
         }
         public async Task ScanImagesAsync(int MaxFiles = 3000, int MaxTimeScanningMS = 60000, int MaxDaysOld = -4)
         {
-            await Task.Run(() => ScanImages(MaxFiles,MaxTimeScanningMS,MaxDaysOld));
+            await Task.Run(() => ScanImages(MaxFiles, MaxTimeScanningMS, MaxDaysOld));
         }
         public void ScanImages(int MaxFiles = 3000, int MaxTimeScanningMS = 60000, int MaxDaysOld = -4)
         {
@@ -364,7 +368,7 @@ namespace AITool
                 AITOOL.Log($"Debug: Found {newfiles.Count} {this.Prefix}*.jpg files in {AppSettings.Settings.input_path}");
             }
 
-            if (files.Count < MaxFiles && !string.IsNullOrEmpty(this.Action_network_folder) && Directory.Exists(this.Action_network_folder)) 
+            if (files.Count < MaxFiles && !string.IsNullOrEmpty(this.Action_network_folder) && Directory.Exists(this.Action_network_folder))
             {
                 List<FileInfo> newfiles = Global.GetFiles(this.Action_network_folder, $"{this.Prefix}*.jpg", SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(MaxDaysOld), DateTime.Now, MaxFiles);
                 files.AddRange(newfiles);
@@ -410,7 +414,7 @@ namespace AITool
                         invalid++;
                     }
                 }
-                catch (Exception ex) 
+                catch (Exception ex)
                 {
                     invalid++;
                     AITOOL.Log($"Debug: {fi.Name}: {ex.Message}");
