@@ -5,6 +5,7 @@ using NPushover.RequestObjects;
 using NPushover.ResponseObjects;
 using NPushover.Validators;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -192,7 +193,9 @@ namespace NPushover
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
         public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, string deviceName, ClsImageQueueItem CurImg)
         {
-            return await this.SendPushoverMessageAsync(message, userOrGroup, new[] { deviceName }, CurImg).ConfigureAwait(false);
+            List<string> devices = Global.Split(deviceName, ";");
+
+            return await this.SendPushoverMessageAsync(message, userOrGroup, devices.ToArray(), CurImg).ConfigureAwait(false);
         }
 
         /// <summary>

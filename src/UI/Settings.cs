@@ -144,7 +144,7 @@ namespace AITool
             public bool HistoryFilterMasked = false;
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, face, bear, elephant, car, truck, suv, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+            public string ObjectPriority = "person, face, bear, elephant, car, truck, pickup truck, suv, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -173,6 +173,7 @@ namespace AITool
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
             public List<ClsImageAdjust> ImageAdjustProfiles = new List<ClsImageAdjust> { new ClsImageAdjust("Default") };
+
 
         }
 
@@ -236,7 +237,7 @@ namespace AITool
                     Ret = true;
                     AppSettings.LastSettingsJSON = CurSettingsJSON;
                     //save a backup of settings to the registry since I've had a few times my raid array was going bad and I lost both backup and json files
-                    Global.SaveSetting("BackupSettingsJSON", CurSettingsJSON);
+                    Global.SaveRegSetting("BackupSettingsJSON", CurSettingsJSON);
                     Log($"Debug: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
                 }
                 else
@@ -489,9 +490,10 @@ namespace AITool
 
                 //get backup json from registry
 
-                AppSettings.LastSettingsJSON = Global.GetSetting("BackupSettingsJSON", "");
+                AppSettings.LastSettingsJSON = Global.GetRegSetting("BackupSettingsJSON", "");
 
                 bool IsSettingsFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName);
+                bool SettingsFileExists = File.Exists(AppSettings.Settings.SettingsFileName);
                 bool IsSettingsBakFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName + ".bak");
                 //read the old configuration file
                 if (!IsSettingsFileValid && !IsSettingsBakFileValid && string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
@@ -565,7 +567,7 @@ namespace AITool
                     Log("Loading settings from " + AppSettings.Settings.SettingsFileName + ".bak");
                     Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName + ".bak");
                 }
-                else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON) && !File.Exists(AppSettings.Settings.SettingsFileName))
+                else if (!string.IsNullOrEmpty(AppSettings.LastSettingsJSON) && SettingsFileExists)
                 {
                     //revert to REGISTRY backup if its good AND the main settings file doesnt exist at all (so someone can delete the settings file to reset settings)
                     Log("Error: Reverting to REGISTRY backup settings...");
@@ -597,77 +599,6 @@ namespace AITool
 
                     UpdateSettingsLocation();  //save to \settings folder or appdata\settings
 
-
-                    foreach (Camera cam in Settings.CameraList)
-                    {
-
-                        if (string.IsNullOrEmpty(cam.DetectionDisplayFormat))
-                            cam.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
-
-                        if (string.IsNullOrEmpty(cam.BICamName))
-                            cam.BICamName = cam.Name;
-
-                        if (string.IsNullOrEmpty(cam.MaskFileName))
-                            cam.MaskFileName = $"{cam.Name}.bmp";
-
-                        if (cam.ImageResolutions.Count == 0)
-                            cam.ScanImages(10, 500, -1);//run a quick scan to get resolutions
-
-                        if (cam.cooldown_time > -1)
-                        {
-                            cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));
-                            cam.cooldown_time = -1;
-                        }
-
-                        if (cam.maskManager == null)
-                        {
-                            cam.maskManager = new MaskManager();
-                            Log("Warning: Had to reset MaskManager for camera " + cam.Name);
-                        }
-
-                        //update threshold in all masks if changed during session
-                        cam.maskManager.Update(cam);
-
-                        ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
-                        if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
-                        {
-                            cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                            cam.trigger_url_cancels = false;
-                        }
-
-                        cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
-                        cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
-
-                        if (cam.Action_image_copy_enabled &&
-                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) &&
-                            cam.Action_network_folder_purge_older_than_days > 0 &&
-                            LastJPGCleanDay != DateTime.Now.DayOfYear &&
-                            Directory.Exists(cam.Action_network_folder))
-                        {
-                            Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
-
-                            List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
-                            int deleted = 0;
-                            int errs = 0;
-                            foreach (FileInfo fi in filist)
-                            {
-                                if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
-                                {
-                                    try { fi.Delete(); deleted++; }
-                                    catch { errs++; }
-                                }
-                            }
-                            if (errs == 0)
-                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
-                            else
-                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
-
-                            LastJPGCleanDay = DateTime.Now.DayOfYear;
-
-
-                        }
-
-                    }
 
                     //load cameras the old way if needed
                     if (Settings.CameraList.Count == 0)
@@ -722,6 +653,86 @@ namespace AITool
                         Resave = (cnt > 1);
 
                     }
+
+                    if (GetCamera("default", ReturnDefault: true) == null)
+                    {
+                        //add a default camera
+                        Camera cam = new Camera("Default");
+                        Settings.CameraList.Add(cam);
+                    }
+
+                    //make sure everything in the cameras look correct:
+                    foreach (Camera cam in Settings.CameraList)
+                    {
+
+                        if (string.IsNullOrEmpty(cam.DetectionDisplayFormat))
+                            cam.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
+
+                        if (string.IsNullOrEmpty(cam.BICamName))
+                            cam.BICamName = cam.Name;
+
+                        if (string.IsNullOrEmpty(cam.MaskFileName))
+                            cam.MaskFileName = $"{cam.Name}.bmp";
+
+                        if (cam.ImageResolutions.Count == 0)
+                            cam.ScanImages(10, 500, -1);//run a quick scan to get resolutions
+
+                        if (cam.cooldown_time > -1)
+                        {
+                            cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));
+                            cam.cooldown_time = -1;
+                        }
+
+                        if (cam.maskManager == null)
+                        {
+                            cam.maskManager = new MaskManager();
+                            Log("Debug: Had to reset MaskManager for camera " + cam.Name);
+                        }
+
+                        //update threshold in all masks if changed during session
+                        cam.maskManager.Update(cam);
+
+                        ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
+                        if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
+                        {
+                            cam.cancel_urls_as_string = cam.trigger_urls_as_string;
+                            cam.trigger_url_cancels = false;
+                        }
+
+                        cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
+                        cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+
+                        if (cam.Action_image_copy_enabled &&
+                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) &&
+                            cam.Action_network_folder_purge_older_than_days > 0 &&
+                            LastJPGCleanDay != DateTime.Now.DayOfYear &&
+                            Directory.Exists(cam.Action_network_folder))
+                        {
+                            Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
+
+                            List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
+                            int deleted = 0;
+                            int errs = 0;
+                            foreach (FileInfo fi in filist)
+                            {
+                                if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
+                                {
+                                    try { fi.Delete(); deleted++; }
+                                    catch { errs++; }
+                                }
+                            }
+                            if (errs == 0)
+                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+                            else
+                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+                            LastJPGCleanDay = DateTime.Now.DayOfYear;
+
+
+                        }
+
+                    }
+
 
                     //sort the camera list:
                     AppSettings.Settings.CameraList = AppSettings.Settings.CameraList.OrderBy((d) => d.Name).ToList();

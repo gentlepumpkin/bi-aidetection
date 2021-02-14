@@ -41,7 +41,7 @@ namespace AITool
         public ThreadSafe.Integer DeletedCount { get; set; } = new ThreadSafe.Integer(0);
         //private ThreadSafe.Boolean IsUpdating { get; set; } = new ThreadSafe.Boolean(false);
         private BlockingCollection<DBQueueHistoryItem> DBQueueHistory = new BlockingCollection<DBQueueHistoryItem>();
-        public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items",true);
+        public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
         public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
 
         public static object DBLock = new object();
@@ -85,36 +85,46 @@ namespace AITool
         {
             //this runs forever and blocks if nothing is in the queue
 
-            foreach (DBQueueHistoryItem hitm in this.DBQueueHistory.GetConsumingEnumerable())
+            try
             {
-                if (MasterCTS.IsCancellationRequested)
-                    break;
-
-                string file = "";
-                try
+                foreach (DBQueueHistoryItem hitm in this.DBQueueHistory.GetConsumingEnumerable(MasterCTS.Token))
                 {
-                    if (hitm == null || hitm.hist == null || string.IsNullOrEmpty(hitm.hist.Filename))
+                    if (MasterCTS.IsCancellationRequested)
+                        break;
+
+                    string file = "";
+                    try
                     {
-                        Log("Error: hist should not be null?");
-                    }
-                    else
-                    {
-                        file = hitm.hist.Filename;
-                        if (hitm.add)
-                            this.InsertHistoryItem(hitm.hist);
+                        if (hitm == null || hitm.hist == null || string.IsNullOrEmpty(hitm.hist.Filename))
+                        {
+                            Log("Error: hist should not be null?");
+                        }
                         else
-                            this.DeleteHistoryItem(hitm.hist);  //Getting nullreferenceexception here and cant figure out why
+                        {
+                            file = hitm.hist.Filename;
+                            if (hitm.add)
+                                this.InsertHistoryItem(hitm.hist);
+                            else
+                                this.DeleteHistoryItem(hitm.hist);  //Getting nullreferenceexception here and cant figure out why
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
+                    catch (Exception ex)
+                    {
 
-                    Log($"Error: ({file})" + ex.ToString());
-                }
+                        Log($"Error: ({file})" + ex.ToString());
+                    }
 
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Debug: HistoryJobQueueLoop canceled: {ex.Message}");
             }
 
-            Log($"Debug: HistoryJobQueueLoop canceled.");
+            Log($"Debug: HistoryJobQueueLoop exited.");
+
+            this.Dispose();
 
         }
 
@@ -162,6 +172,7 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
+            string sflags = "SharedCache";
 
             try
             {
@@ -175,7 +186,6 @@ namespace AITool
 
                 //https://www.sqlite.org/threadsafe.html
                 SQLiteOpenFlags flags = SQLiteOpenFlags.SharedCache; // SQLiteOpenFlags.Create; // | SQLiteOpenFlags.NoMutex;  //| SQLiteOpenFlags.FullMutex;
-                string sflags = "SharedCache";
 
                 if (this.ReadOnly)
                 {
@@ -192,6 +202,11 @@ namespace AITool
                 {
                     this.DisposeConnection();
                 }
+
+                string fldr = Path.GetDirectoryName(this.Filename);
+
+                if (!Directory.Exists(fldr))
+                    Directory.CreateDirectory(fldr);
 
                 //If the database file doesn't exist, the default behaviour is to create a new file
                 this.sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
@@ -219,7 +234,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex), "None", "None", "None");
+                Log($"Error: Flags='{sflags}', Error=" + Global.ExMsg(ex), "None", "None", "None");
             }
 
 
@@ -590,6 +605,7 @@ namespace AITool
             {
                 try
                 {
+
                     Global.UpdateProgressBar("Reading database...", 1, 1, 1);
 
                     Stopwatch sw = Stopwatch.StartNew();

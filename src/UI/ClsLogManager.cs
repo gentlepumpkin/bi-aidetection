@@ -427,14 +427,15 @@ namespace AITool
 
                 //Send telegram error message
                 if (AppSettings.Settings.send_telegram_errors &&
-                    (HasError) && 
+                    (HasError) &&
                     AppSettings.Settings.telegram_chatids.Count > 0 &&
                     AITOOL.TriggerActionQueue != null &&
                     !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) &&
                     !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
-                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, null, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                    Camera cam = AITOOL.GetCamera(this._LastCamera);
+                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
                 }
 
                 //Send pushover error message
@@ -446,7 +447,8 @@ namespace AITool
                     !(itm.IndexOf("pushover", StringComparison.OrdinalIgnoreCase) >= 0) &&
                     !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
-                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.Pushover, null, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                    Camera cam = AITOOL.GetCamera(this._LastCamera);
+                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.Pushover, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
                 }
 
                 if (HasError)

@@ -99,6 +99,8 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btTest = new System.Windows.Forms.Button();
             this.bt_variables = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tb_sound_cooldown = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBoxMQTT.SuspendLayout();
             this.groupBoxTelegram.SuspendLayout();
@@ -144,6 +146,7 @@
             this.groupBox1.Controls.Add(this.label15);
             this.groupBox1.Controls.Add(this.tb_network_folder);
             this.groupBox1.Controls.Add(this.groupBoxPushover);
+            this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label14);
             this.groupBox1.Controls.Add(this.tb_jpeg_merge_quality);
             this.groupBox1.Controls.Add(this.label2);
@@ -167,12 +170,13 @@
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.tb_ConfidenceFormat);
             this.groupBox1.Controls.Add(this.tb_DetectionFormat);
+            this.groupBox1.Controls.Add(this.tb_sound_cooldown);
             this.groupBox1.Controls.Add(this.tb_cooldown);
             this.groupBox1.Location = new System.Drawing.Point(8, 13);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.groupBox1.Size = new System.Drawing.Size(864, 636);
+            this.groupBox1.Size = new System.Drawing.Size(864, 632);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             // 
@@ -492,7 +496,8 @@
             this.tb_pushover_triggering_objects.Name = "tb_pushover_triggering_objects";
             this.tb_pushover_triggering_objects.Size = new System.Drawing.Size(219, 20);
             this.tb_pushover_triggering_objects.TabIndex = 45;
-            this.toolTip1.SetToolTip(this.tb_pushover_triggering_objects, "A list of objects that trigger send to pushover");
+            this.toolTip1.SetToolTip(this.tb_pushover_triggering_objects, "A list of objects that trigger send to pushover. Leave empty for default camera o" +
+        "bjects.\r\n");
             // 
             // label21
             // 
@@ -691,7 +696,7 @@
             this.tb_Sounds.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_Sounds.Location = new System.Drawing.Point(191, 444);
             this.tb_Sounds.Name = "tb_Sounds";
-            this.tb_Sounds.Size = new System.Drawing.Size(654, 20);
+            this.tb_Sounds.Size = new System.Drawing.Size(500, 20);
             this.tb_Sounds.TabIndex = 34;
             this.toolTip1.SetToolTip(this.tb_Sounds, resources.GetString("tb_Sounds.ToolTip"));
             // 
@@ -749,11 +754,11 @@
             this.tbCancelUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbCancelUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbCancelUrl.Location = new System.Drawing.Point(16, 575);
+            this.tbCancelUrl.Location = new System.Drawing.Point(9, 575);
             this.tbCancelUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbCancelUrl.Multiline = true;
             this.tbCancelUrl.Name = "tbCancelUrl";
-            this.tbCancelUrl.Size = new System.Drawing.Size(829, 54);
+            this.tbCancelUrl.Size = new System.Drawing.Size(836, 50);
             this.tbCancelUrl.TabIndex = 22;
             this.toolTip1.SetToolTip(this.tbCancelUrl, "URLs that cancel the alert - For BI, use ");
             // 
@@ -762,11 +767,11 @@
             this.tbTriggerUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbTriggerUrl.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbTriggerUrl.Location = new System.Drawing.Point(16, 494);
+            this.tbTriggerUrl.Location = new System.Drawing.Point(9, 496);
             this.tbTriggerUrl.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tbTriggerUrl.Multiline = true;
             this.tbTriggerUrl.Name = "tbTriggerUrl";
-            this.tbTriggerUrl.Size = new System.Drawing.Size(829, 54);
+            this.tbTriggerUrl.Size = new System.Drawing.Size(836, 50);
             this.tbTriggerUrl.TabIndex = 22;
             this.tbTriggerUrl.Text = "test\r\ntest2\r\ntest3";
             this.toolTip1.SetToolTip(this.tbTriggerUrl, "A list of URLs each on their own line OR seperated with commas that will be trigg" +
@@ -777,7 +782,7 @@
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.label11.ForeColor = System.Drawing.Color.DarkRed;
-            this.label11.Location = new System.Drawing.Point(13, 554);
+            this.label11.Location = new System.Drawing.Point(5, 556);
             this.label11.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label11.MinimumSize = new System.Drawing.Size(158, 0);
             this.label11.Name = "label11";
@@ -789,7 +794,7 @@
             // 
             this.lblTriggerUrl.AutoSize = true;
             this.lblTriggerUrl.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblTriggerUrl.Location = new System.Drawing.Point(13, 473);
+            this.lblTriggerUrl.Location = new System.Drawing.Point(5, 477);
             this.lblTriggerUrl.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.lblTriggerUrl.MinimumSize = new System.Drawing.Size(158, 0);
             this.lblTriggerUrl.Name = "lblTriggerUrl";
@@ -921,6 +926,26 @@
             this.bt_variables.UseVisualStyleBackColor = false;
             this.bt_variables.Click += new System.EventHandler(this.bt_variables_Click);
             // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(697, 447);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(91, 15);
+            this.label3.TabIndex = 40;
+            this.label3.Text = "Cooldown Secs:";
+            // 
+            // tb_sound_cooldown
+            // 
+            this.tb_sound_cooldown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_sound_cooldown.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_sound_cooldown.Location = new System.Drawing.Point(801, 444);
+            this.tb_sound_cooldown.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.tb_sound_cooldown.Name = "tb_sound_cooldown";
+            this.tb_sound_cooldown.Size = new System.Drawing.Size(44, 20);
+            this.tb_sound_cooldown.TabIndex = 21;
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
@@ -1024,5 +1049,7 @@
         public System.Windows.Forms.Label lbl_Confidence;
         public System.Windows.Forms.TextBox tb_ConfidenceFormat;
         private System.Windows.Forms.Button bt_variables;
+        private System.Windows.Forms.Label label3;
+        public System.Windows.Forms.TextBox tb_sound_cooldown;
     }
 }

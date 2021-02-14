@@ -80,8 +80,8 @@ namespace AITool
 
                     if (FullRefresh)
                     {
-                        olv.ClearCachedInfo();
-                        olv.ClearObjects();
+                        //olv.ClearCachedInfo();
+                        //olv.ClearObjects();
                     }
 
                     if (FullRefresh || olv.Items.Count == 0)  //full refresh of new objects
@@ -116,11 +116,13 @@ namespace AITool
                         }
                         else
                         {
-                            //if (SelectObject != null && UseSelected)
-                            //{
-                            //    //use the given object as selected
-                            //    olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
-                            //}
+                            //only select something if nothing is already selected 
+                            if (SelectObject != null && UseSelected && olv.SelectedObject == null)
+                            {
+                                //use the given object as selected
+                                olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
+                                olv.EnsureModelVisible(olv.SelectedObject);
+                            }
                             //else if (SelectObject == null && UseSelected && olv.IsFiltering && olv.GetItemCount() > 0)
                             //{
                             //    //use the last filtered object as the selected object
@@ -190,7 +192,7 @@ namespace AITool
                     brush.Color = System.Drawing.Color.FromArgb(100, Color.LightSeaGreen); //
                     renderererer.FillBrush = brush;
                     OLV.DefaultRenderer = renderererer;
-                    Global.SaveSetting("SearchText", FilterText);
+                    Global.SaveRegSetting("SearchText", FilterText);
 
                 }
                 else
@@ -268,8 +270,10 @@ namespace AITool
                     FOLV.ForeColor = Clr;
                 }
 
-                PropertyInfo[] IIProps2 = Cls.GetProperties(); //Cls.GetType().GetProperties
+                object[] IIProps2 = Cls.GetProperties(); //Cls.GetType().GetProperties
 
+                //if (IIProps2.Length == 0)
+                //    IIProps2 = Cls.GetFields();
 
                 // Uncomment this to see a fancy cell highlighting while editing
                 EditingCellBorderDecoration EC = new EditingCellBorderDecoration(true);
@@ -278,6 +282,12 @@ namespace AITool
                 FOLV.AddDecoration(EC);
                 FOLV.BuildList();
                 int colcnt = 0;
+
+                //for (int i = 0; i < IIProps2.Length; i++)
+                //{
+                //    object ei = IIProps2[i];
+
+                //}
 
                 foreach (PropertyInfo ei in IIProps2)
                 {
@@ -604,14 +614,14 @@ namespace AITool
                 //    Properties.Settings.Default.Save();
                 //}
 
-                Point SavLocation = (Point)(Global.GetSetting(Frm.Name + "_Location", new Point())); //Frm.RestoreBounds.Location
+                Point SavLocation = (Point)(Global.GetRegSetting(Frm.Name + "_Location", new Point())); //Frm.RestoreBounds.Location
 
                 if (SavLocation.IsEmpty)
                     goto endOfTry; //we did not previously save settings
 
-                bool SavMaximized = System.Convert.ToBoolean(Global.GetSetting(Frm.Name + "_Maximized", false));
-                bool SavMinimized = System.Convert.ToBoolean(Global.GetSetting(Frm.Name + "_Minimized", false));
-                object ObjSize = Global.GetSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+                bool SavMaximized = System.Convert.ToBoolean(Global.GetRegSetting(Frm.Name + "_Maximized", false));
+                bool SavMinimized = System.Convert.ToBoolean(Global.GetRegSetting(Frm.Name + "_Minimized", false));
+                object ObjSize = Global.GetRegSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
                 Size SavSize = (Size)ObjSize; //CType(ObjSize, System.Drawing.Size)
 
                 //Debug.Print("Size before: " & Me.Size.ToString)
@@ -649,12 +659,12 @@ namespace AITool
                         if (ctl is SplitContainer)
                         {
                             SplitContainer sc = (SplitContainer)ctl;
-                            sc.SplitterDistance = System.Convert.ToInt32(Global.GetSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
+                            sc.SplitterDistance = System.Convert.ToInt32(Global.GetRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
                         }
                         else if (ctl is TabControl)
                         {
                             TabControl tc = (TabControl)ctl;
-                            tc.SelectedIndex = System.Convert.ToInt32(Global.GetSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex));
+                            tc.SelectedIndex = System.Convert.ToInt32(Global.GetRegSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex));
                         }
                     //else if (ctl is ComboBox)
                     //{
@@ -718,24 +728,24 @@ namespace AITool
 
                 if (Frm.WindowState == FormWindowState.Maximized)
                 {
-                    Global.SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
-                    Global.SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
-                    Global.SaveSetting(Frm.Name + "_Maximized", true);
-                    Global.SaveSetting(Frm.Name + "_Minimized", false);
+                    Global.SaveRegSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
+                    Global.SaveRegSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+                    Global.SaveRegSetting(Frm.Name + "_Maximized", true);
+                    Global.SaveRegSetting(Frm.Name + "_Minimized", false);
                 }
                 else if (Frm.WindowState == FormWindowState.Normal)
                 {
-                    Global.SaveSetting(Frm.Name + "_Location", Frm.Location);
-                    Global.SaveSetting(Frm.Name + "_Size", Frm.Size);
-                    Global.SaveSetting(Frm.Name + "_Maximized", false);
-                    Global.SaveSetting(Frm.Name + "_Minimized", false);
+                    Global.SaveRegSetting(Frm.Name + "_Location", Frm.Location);
+                    Global.SaveRegSetting(Frm.Name + "_Size", Frm.Size);
+                    Global.SaveRegSetting(Frm.Name + "_Maximized", false);
+                    Global.SaveRegSetting(Frm.Name + "_Minimized", false);
                 }
                 else
                 {
-                    Global.SaveSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
-                    Global.SaveSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
-                    Global.SaveSetting(Frm.Name + "_Maximized", false);
-                    Global.SaveSetting(Frm.Name + "_Minimized", true);
+                    Global.SaveRegSetting(Frm.Name + "_Location", Frm.RestoreBounds.Location);
+                    Global.SaveRegSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
+                    Global.SaveRegSetting(Frm.Name + "_Maximized", false);
+                    Global.SaveRegSetting(Frm.Name + "_Minimized", true);
                 }
 
                 if (Frm.Tag != null && string.Equals(Frm.Tag.ToString(), "SAVE", StringComparison.OrdinalIgnoreCase))
@@ -747,12 +757,12 @@ namespace AITool
                         if (ctl is SplitContainer)
                         {
                             SplitContainer sc = (SplitContainer)ctl;
-                            Global.SaveSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
+                            Global.SaveRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
                         }
                         else if (ctl is TabControl)
                         {
                             TabControl tc = (TabControl)ctl;
-                            Global.SaveSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex);
+                            Global.SaveRegSetting($"{Frm.Name}.TabControl.{tc.Name}.SelectedIndex", tc.SelectedIndex);
                         }
                         else if (ctl is FastObjectListView)
                         {

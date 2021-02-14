@@ -46,6 +46,7 @@ namespace AITool
         public string RefinementObjects { get; set; } = "";
         [JsonIgnore]
         public bool RefinementUseCurrentlyValid { get; set; } = false;
+        public bool UseOnlyAsLinkedServer { get; set; } = false;
         public bool LinkServerResults { get; set; } = false;
         public string LinkedResultsServerList { get; set; } = "";
         [JsonIgnore]
@@ -113,6 +114,8 @@ namespace AITool
         {
             bool ret = false;
             this.UrlFixed = false;
+            bool WasFixed = false;
+            bool HadError = false;
 
             Uri uri = null;
 
@@ -199,6 +202,7 @@ namespace AITool
                     this.DefaultURL = "http://127.0.0.1:80/v1/vision/custom/YOUR_CUSTOM_MODEL_NAME_HERE";
                     this.HelpURL = "https://docs.deepstack.cc/custom-models/index.html";
                     this.Type = URLTypeEnum.DeepStack_Custom;
+                    this.UseOnlyAsLinkedServer = true;
                 }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -223,27 +227,15 @@ namespace AITool
             HasDSDet = this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0;
             HasDSScn = this.url.IndexOf("/v1/vision/scene", StringComparison.OrdinalIgnoreCase) >= 0;
 
-
             //================================================================================
             // Try to correct any servers without a full URL
             //================================================================================
             if (this.Type == URLTypeEnum.DOODS || HasDoods)
             {
 
-                if (!this.url.Contains("://"))
-                {
-                    this.UrlFixed = true;
-                    this.url = "http://" + this.url;
-                }
 
+                this.url = Global.UpdateURL(this.url, 0, "/detect", "", ref WasFixed, ref HadError);
                 this.Type = URLTypeEnum.DOODS;
-
-                if (!HasDoods)
-                {
-                    this.UrlFixed = true;
-                    this.url = this.url + "/detect";
-                }
-
             }
             else if (this.Type == URLTypeEnum.AWSRekognition_Objects || HasAWSObj)
             {
@@ -263,67 +255,26 @@ namespace AITool
             else if (this.Type == URLTypeEnum.SightHound_Vehicle || HasSHVeh)
             {
 
-                if (!this.url.Contains("://"))
-                {
-                    this.UrlFixed = true;
-                    this.url = "https://" + this.url;
-                }
+                this.url = Global.UpdateURL(this.url, 443, "/v1/recognition", "", ref WasFixed, ref HadError);
                 this.Type = URLTypeEnum.SightHound_Vehicle;
-
-                if (!HasSHVeh)
-                {
-                    this.UrlFixed = true;
-                    this.url = this.url + "/v1/recognition?objectType=vehicle,licenseplate";
-                }
 
             }
             else if (this.Type == URLTypeEnum.SightHound_Person || HasSHPer)
             {
-                if (!this.url.Contains("://"))
-                {
-                    this.UrlFixed = true;
-                    this.url = "https://" + this.url;
-                }
-
+                this.url = Global.UpdateURL(this.url, 443, "/v1/detections", "", ref WasFixed, ref HadError);
                 this.Type = URLTypeEnum.SightHound_Person;
-
-                if (!HasSHPer)
-                {
-                    this.UrlFixed = true;
-                    this.url = this.url + "/v1/detections?type=face,person&faceOption=gender,age,emotion";
-                }
             }
             else  // assume deepstack, default to detection
             {
-                if (!this.url.Contains("://"))
-                {
-                    this.UrlFixed = true;
-                    this.url = "http://" + this.url.Trim();
-                }
 
                 if (!HasDSCus && !HasDSDet && !HasDSScn && !HasDSFacRec && !HasDSFacDet)  //default to regular detection
                 {
-                    if (this.url.IsLike("*:#*"))
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + "/v1/vision/detection"; this.UrlFixed = true;
-                    }
-                    else
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + ":80/v1/vision/detection"; this.UrlFixed = true;
-                    }
-
+                    this.url = Global.UpdateURL(this.url, 0, "/v1/vision/detection", "", ref WasFixed, ref HadError);
                     this.Type = URLTypeEnum.DeepStack;
                 }
                 else if (this.Type == URLTypeEnum.DeepStack_Custom && !HasDSCus)
                 {
-                    if (this.url.IsLike("*:#*"))
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + "/v1/vision/custom/YOUR_CUSTOM_MODEL_NAME_HERE"; this.UrlFixed = true;
-                    }
-                    else
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + ":80/v1/vision/custom/YOUR_CUSTOM_MODEL_NAME_HERE"; this.UrlFixed = true;
-                    }
+                    this.url = Global.UpdateURL(this.url, 0, "/v1/vision/custom/", "", ref WasFixed, ref HadError);
                 }
                 else if (this.Type != URLTypeEnum.DeepStack_Custom && HasDSCus)
                 {
@@ -331,14 +282,7 @@ namespace AITool
                 }
                 else if (this.Type == URLTypeEnum.DeepStack_Faces && !HasDSFacRec && !HasDSFacDet)
                 {
-                    if (this.url.IsLike("*:#*"))
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + "/v1/vision/face/recognize"; this.UrlFixed = true;
-                    }
-                    else
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + ":80/v1/vision/face/recognize"; this.UrlFixed = true;
-                    }
+                    this.url = Global.UpdateURL(this.url, 0, "/v1/vision/face/recognize", "", ref WasFixed, ref HadError);
                 }
                 else if (this.Type != URLTypeEnum.DeepStack_Faces && HasDSFacRec)
                 {
@@ -346,14 +290,7 @@ namespace AITool
                 }
                 else if (this.Type == URLTypeEnum.DeepStack && !HasDSDet)
                 {
-                    if (this.url.IsLike("*:#*"))
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + "/v1/vision/detection"; this.UrlFixed = true;
-                    }
-                    else
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + ":80/v1/vision/detection"; this.UrlFixed = true;
-                    }
+                    this.url = Global.UpdateURL(this.url, 0, "/v1/vision/detection", "", ref WasFixed, ref HadError);
                 }
                 else if (this.Type != URLTypeEnum.DeepStack && HasDSDet)
                 {
@@ -362,14 +299,7 @@ namespace AITool
 
                 else if (this.Type == URLTypeEnum.DeepStack_Scene && !HasDSScn)
                 {
-                    if (this.url.IsLike("*:#*"))
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + "/v1/vision/scene"; this.UrlFixed = true;
-                    }
-                    else
-                    {
-                        this.url = this.url.Trim(" /:".ToCharArray()) + ":80/v1/vision/scene"; this.UrlFixed = true;
-                    }
+                    this.url = Global.UpdateURL(this.url, 0, "/v1/vision/scene", "", ref WasFixed, ref HadError);
                 }
                 else if (this.Type != URLTypeEnum.DeepStack_Scene && HasDSScn)
                 {
@@ -388,7 +318,7 @@ namespace AITool
 
             if (!IsAWS)
             {
-                if (Global.IsValidURL(this.url))
+                if (Global.IsValidURL(this.url) && !HadError)
                 {
                     uri = new Uri(this.url);
 
@@ -401,8 +331,7 @@ namespace AITool
                     {
                         //force it to always be 127.0.0.1 for localhost
                         AITOOL.Log($"Debug: Converting localhost from '{uri.Host}' to '127.0.0.1'.  Localhost and 0.0.0.0 do not seem to be reliable.");
-                        uri = new Uri($"{uri.Scheme}://127.0.0.1:{uri.Port}{uri.PathAndQuery}");
-                        this.url = uri.ToString();
+                        this.url = Global.UpdateURL(this.url, 0, "", "127.0.0.1", ref WasFixed, ref HadError);
                     }
 
                     if (this.Type == URLTypeEnum.DeepStack)
@@ -492,6 +421,10 @@ namespace AITool
                 this.HttpClient = new HttpClient();
                 this.HttpClient.Timeout = this.GetTimeout();
             }
+
+            if (WasFixed)
+                this.UrlFixed = true;
+
 
             return ret;
         }

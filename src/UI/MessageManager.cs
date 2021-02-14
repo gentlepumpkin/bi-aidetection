@@ -73,8 +73,8 @@ namespace AITool
             }
             msg.Description = $"{mn}{Message}";
 
-            Global.SaveSetting("LastLogEntry", msg.Description);
-            Global.SaveSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
+            Global.SaveRegSetting("LastLogEntry", msg.Description);
+            Global.SaveRegSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
 
 
             this.progress.Report(msg);

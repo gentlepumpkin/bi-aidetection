@@ -15,6 +15,34 @@ namespace AITool
     //                                 SHARED
     //==========================================================================
 
+
+    public class SightHoundError
+    {
+        [JsonProperty("error")]
+        public string Error { get; set; } = "";
+
+        [JsonProperty("reason")]
+        public string Reason { get; set; } = "";
+
+        [JsonProperty("reasonCode")]
+        public int ReasonCode { get; set; } = 0;
+
+        [JsonProperty("details")]
+        public SightHoundErrorDetails Details { get; set; } = new SightHoundErrorDetails();
+    }
+
+    public class SightHoundErrorDetails
+    {
+        [JsonProperty("statusCode")]
+        public int StatusCode { get; set; } = 0;
+
+        [JsonProperty("statusMessage")]
+        public string StatusMessage { get; set; } = "";
+
+        [JsonProperty("body")]
+        public string Body { get; set; } = "";
+    }
+
     public class SightHoundImage
     {
         [JsonProperty("width")]
@@ -25,7 +53,7 @@ namespace AITool
         public int Orientation { get; set; } = 0;
     }
 
-    
+
     //==========================================================================
     //                                 VEHICLE
     //==========================================================================
@@ -193,7 +221,7 @@ namespace AITool
         public SightHoundImage Image { get; set; }
 
         [JsonProperty("objects")]
-        
+
         public List<SightHoundPersonObject> Objects { get; set; }
         [JsonProperty("requestId")]
         public string RequestId { get; set; } = "";

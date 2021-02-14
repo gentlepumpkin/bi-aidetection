@@ -105,12 +105,13 @@
             this.dynamicMaskDetailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.locateInLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manuallyAddImagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.jumpToImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lbl_objects = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabCameras = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanel2 = new AITool.DBLayoutPanel(this.components);
-            this.tableLayoutPanel3 = new AITool.DBLayoutPanel(this.components);
-            this.list2 = new System.Windows.Forms.ListView();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.FOLV_Cameras = new BrightIdeasSoftware.FastObjectListView();
             this.tableLayoutPanel6 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel11 = new AITool.DBLayoutPanel(this.components);
             this.btnCameraSave = new System.Windows.Forms.Button();
@@ -131,7 +132,6 @@
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.tbName = new System.Windows.Forms.TextBox();
             this.lblRelevantObjects = new System.Windows.Forms.Label();
-            this.lbl_threshold = new System.Windows.Forms.Label();
             this.tableLayoutPanel26 = new System.Windows.Forms.TableLayoutPanel();
             this.cmbcaminput = new System.Windows.Forms.ComboBox();
             this.cb_monitorCamInputfolder = new System.Windows.Forms.CheckBox();
@@ -144,13 +144,6 @@
             this.btnCustomMask = new System.Windows.Forms.Button();
             this.lblDrawMask = new System.Windows.Forms.Label();
             this.btnActions = new System.Windows.Forms.Button();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.lbl_threshold_lower = new System.Windows.Forms.Label();
-            this.tb_threshold_lower = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.lbl_threshold_upper = new System.Windows.Forms.Label();
-            this.tb_threshold_upper = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
             this.tableLayoutPanel8 = new AITool.DBLayoutPanel(this.components);
             this.cb_person = new System.Windows.Forms.CheckBox();
             this.cb_bicycle = new System.Windows.Forms.CheckBox();
@@ -176,9 +169,10 @@
             this.tb_camera_telegram_chatid = new System.Windows.Forms.TextBox();
             this.tbCustomMaskFile = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
+            this.label39 = new System.Windows.Forms.Label();
+            this.BtnPredictionSize = new System.Windows.Forms.Button();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new AITool.DBLayoutPanel(this.components);
-            this.BtnSettingsSave = new System.Windows.Forms.Button();
             this.tableLayoutPanel5 = new AITool.DBLayoutPanel(this.components);
             this.lbl_input = new System.Windows.Forms.Label();
             this.lbl_telegram_token = new System.Windows.Forms.Label();
@@ -224,6 +218,9 @@
             this.cbStartWithWindows = new System.Windows.Forms.CheckBox();
             this.cbMinimizeToTray = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
+            this.dbLayoutPanel10 = new AITool.DBLayoutPanel(this.components);
+            this.BtnSettingsSave = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
             this.tabDeepStack = new System.Windows.Forms.TabPage();
             this.label34 = new System.Windows.Forms.Label();
             this.label33 = new System.Windows.Forms.Label();
@@ -320,6 +317,7 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -343,8 +341,11 @@
             this.contextMenuStripHistory.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabCameras.SuspendLayout();
-            this.tableLayoutPanel2.SuspendLayout();
-            this.tableLayoutPanel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.FOLV_Cameras)).BeginInit();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
             this.tableLayoutPanel7.SuspendLayout();
@@ -352,7 +353,6 @@
             this.tableLayoutPanel13.SuspendLayout();
             this.tableLayoutPanel26.SuspendLayout();
             this.tableLayoutPanel27.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel8.SuspendLayout();
             this.dbLayoutPanel6.SuspendLayout();
             this.dbLayoutPanel7.SuspendLayout();
@@ -367,6 +367,7 @@
             this.dbLayoutPanel5.SuspendLayout();
             this.dbLayoutPanel8.SuspendLayout();
             this.dbLayoutPanel9.SuspendLayout();
+            this.dbLayoutPanel10.SuspendLayout();
             this.tabDeepStack.SuspendLayout();
             this.groupBox11.SuspendLayout();
             this.groupBox10.SuspendLayout();
@@ -1170,9 +1171,11 @@
             this.refreshToolStripMenuItem,
             this.dynamicMaskDetailsToolStripMenuItem,
             this.locateInLogToolStripMenuItem,
-            this.manuallyAddImagesToolStripMenuItem});
+            this.manuallyAddImagesToolStripMenuItem,
+            this.viewImageToolStripMenuItem,
+            this.jumpToImageToolStripMenuItem});
             this.contextMenuStripHistory.Name = "contextMenuStripHistory";
-            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 136);
+            this.contextMenuStripHistory.Size = new System.Drawing.Size(191, 180);
             // 
             // testDetectionAgainToolStripMenuItem
             // 
@@ -1216,6 +1219,20 @@
             this.manuallyAddImagesToolStripMenuItem.Text = "Manually Add Images";
             this.manuallyAddImagesToolStripMenuItem.Click += new System.EventHandler(this.manuallyAddImagesToolStripMenuItem_Click);
             // 
+            // viewImageToolStripMenuItem
+            // 
+            this.viewImageToolStripMenuItem.Name = "viewImageToolStripMenuItem";
+            this.viewImageToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.viewImageToolStripMenuItem.Text = "View Image";
+            this.viewImageToolStripMenuItem.Click += new System.EventHandler(this.viewImageToolStripMenuItem_Click);
+            // 
+            // jumpToImageToolStripMenuItem
+            // 
+            this.jumpToImageToolStripMenuItem.Name = "jumpToImageToolStripMenuItem";
+            this.jumpToImageToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.jumpToImageToolStripMenuItem.Text = "Jump To Image";
+            this.jumpToImageToolStripMenuItem.Click += new System.EventHandler(this.jumpToImageToolStripMenuItem_Click);
+            // 
             // lbl_objects
             // 
             this.lbl_objects.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -1226,7 +1243,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(724, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(728, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1249,7 +1266,7 @@
             // tabCameras
             // 
             this.tabCameras.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabCameras.Controls.Add(this.tableLayoutPanel2);
+            this.tabCameras.Controls.Add(this.splitContainer1);
             this.tabCameras.Location = new System.Drawing.Point(4, 22);
             this.tabCameras.Name = "tabCameras";
             this.tabCameras.Padding = new System.Windows.Forms.Padding(3);
@@ -1257,73 +1274,56 @@
             this.tabCameras.TabIndex = 2;
             this.tabCameras.Text = "Cameras";
             // 
-            // tableLayoutPanel2
+            // splitContainer1
             // 
-            this.tableLayoutPanel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel2.ColumnCount = 2;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 19.05679F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80.94321F));
-            this.tableLayoutPanel2.Controls.Add(this.tableLayoutPanel3, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.tableLayoutPanel6, 1, 0);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 1;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(1014, 452);
-            this.tableLayoutPanel2.TabIndex = 0;
+            this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer1.Location = new System.Drawing.Point(3, 3);
+            this.splitContainer1.Name = "splitContainer1";
             // 
-            // tableLayoutPanel3
+            // splitContainer1.Panel1
             // 
-            this.tableLayoutPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel3.ColumnCount = 1;
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.Controls.Add(this.list2, 0, 0);
-            this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 1;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 446F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(187, 446);
-            this.tableLayoutPanel3.TabIndex = 0;
+            this.splitContainer1.Panel1.Controls.Add(this.FOLV_Cameras);
             // 
-            // list2
+            // splitContainer1.Panel2
             // 
-            this.list2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.list2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.list2.GridLines = true;
-            this.list2.HideSelection = false;
-            this.list2.Location = new System.Drawing.Point(3, 3);
-            this.list2.Name = "list2";
-            this.list2.Size = new System.Drawing.Size(181, 440);
-            this.list2.TabIndex = 1;
-            this.list2.UseCompatibleStateImageBehavior = false;
-            this.list2.View = System.Windows.Forms.View.Details;
-            this.list2.SelectedIndexChanged += new System.EventHandler(this.list2_SelectedIndexChanged);
-            this.list2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.list2_KeyDown);
+            this.splitContainer1.Panel2.Controls.Add(this.tableLayoutPanel6);
+            this.splitContainer1.Size = new System.Drawing.Size(1014, 452);
+            this.splitContainer1.SplitterDistance = 153;
+            this.splitContainer1.TabIndex = 1;
+            // 
+            // FOLV_Cameras
+            // 
+            this.FOLV_Cameras.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FOLV_Cameras.HideSelection = false;
+            this.FOLV_Cameras.Location = new System.Drawing.Point(0, 0);
+            this.FOLV_Cameras.Name = "FOLV_Cameras";
+            this.FOLV_Cameras.ShowGroups = false;
+            this.FOLV_Cameras.Size = new System.Drawing.Size(149, 448);
+            this.FOLV_Cameras.TabIndex = 0;
+            this.FOLV_Cameras.UseCompatibleStateImageBehavior = false;
+            this.FOLV_Cameras.View = System.Windows.Forms.View.Details;
+            this.FOLV_Cameras.VirtualMode = true;
+            this.FOLV_Cameras.SelectionChanged += new System.EventHandler(this.FOLV_Cameras_SelectionChanged);
             // 
             // tableLayoutPanel6
             // 
-            this.tableLayoutPanel6.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel6.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tableLayoutPanel6.ColumnCount = 1;
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel11, 0, 2);
             this.tableLayoutPanel6.Controls.Add(this.lbl_camstats, 0, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel7, 0, 1);
+            this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tableLayoutPanel6.Location = new System.Drawing.Point(196, 3);
+            this.tableLayoutPanel6.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 3;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 6.82557F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 93.17443F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(815, 446);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(853, 448);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
             // tableLayoutPanel11
@@ -1339,11 +1339,11 @@
             this.tableLayoutPanel11.Controls.Add(this.btnCameraDel, 1, 0);
             this.tableLayoutPanel11.Controls.Add(this.btnSaveTo, 2, 0);
             this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel11.Location = new System.Drawing.Point(3, 408);
+            this.tableLayoutPanel11.Location = new System.Drawing.Point(3, 410);
             this.tableLayoutPanel11.Name = "tableLayoutPanel11";
             this.tableLayoutPanel11.RowCount = 1;
             this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel11.Size = new System.Drawing.Size(809, 35);
+            this.tableLayoutPanel11.Size = new System.Drawing.Size(847, 35);
             this.tableLayoutPanel11.TabIndex = 3;
             // 
             // btnCameraSave
@@ -1351,7 +1351,7 @@
             this.btnCameraSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnCameraSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnCameraSave.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCameraSave.Location = new System.Drawing.Point(663, 3);
+            this.btnCameraSave.Location = new System.Drawing.Point(695, 3);
             this.btnCameraSave.Name = "btnCameraSave";
             this.btnCameraSave.Size = new System.Drawing.Size(70, 30);
             this.btnCameraSave.TabIndex = 26;
@@ -1363,7 +1363,7 @@
             // 
             this.btnCameraAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnCameraAdd.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCameraAdd.Location = new System.Drawing.Point(37, 3);
+            this.btnCameraAdd.Location = new System.Drawing.Point(41, 3);
             this.btnCameraAdd.Name = "btnCameraAdd";
             this.btnCameraAdd.Size = new System.Drawing.Size(70, 30);
             this.btnCameraAdd.TabIndex = 24;
@@ -1375,7 +1375,7 @@
             // 
             this.btnCameraDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnCameraDel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCameraDel.Location = new System.Drawing.Point(220, 3);
+            this.btnCameraDel.Location = new System.Drawing.Point(232, 3);
             this.btnCameraDel.Name = "btnCameraDel";
             this.btnCameraDel.Size = new System.Drawing.Size(70, 30);
             this.btnCameraDel.TabIndex = 25;
@@ -1388,7 +1388,7 @@
             this.btnSaveTo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnSaveTo.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnSaveTo.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSaveTo.Location = new System.Drawing.Point(441, 3);
+            this.btnSaveTo.Location = new System.Drawing.Point(463, 3);
             this.btnSaveTo.Name = "btnSaveTo";
             this.btnSaveTo.Size = new System.Drawing.Size(70, 30);
             this.btnSaveTo.TabIndex = 27;
@@ -1425,32 +1425,33 @@
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel12, 1, 2);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel13, 1, 0);
             this.tableLayoutPanel7.Controls.Add(this.lblRelevantObjects, 0, 4);
-            this.tableLayoutPanel7.Controls.Add(this.lbl_threshold, 0, 6);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel26, 1, 3);
             this.tableLayoutPanel7.Controls.Add(this.label15, 0, 8);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel27, 1, 8);
             this.tableLayoutPanel7.Controls.Add(this.btnActions, 1, 7);
-            this.tableLayoutPanel7.Controls.Add(this.flowLayoutPanel1, 1, 6);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel8, 1, 4);
             this.tableLayoutPanel7.Controls.Add(this.label20, 0, 5);
             this.tableLayoutPanel7.Controls.Add(this.tbAdditionalRelevantObjects, 1, 5);
             this.tableLayoutPanel7.Controls.Add(this.label25, 0, 1);
             this.tableLayoutPanel7.Controls.Add(this.dbLayoutPanel6, 1, 1);
             this.tableLayoutPanel7.Controls.Add(this.dbLayoutPanel7, 1, 9);
+            this.tableLayoutPanel7.Controls.Add(this.label39, 0, 6);
+            this.tableLayoutPanel7.Controls.Add(this.BtnPredictionSize, 1, 6);
             this.tableLayoutPanel7.Location = new System.Drawing.Point(3, 30);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
             this.tableLayoutPanel7.RowCount = 10;
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.793179F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.797141F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.793597F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.793597F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.84483F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.796239F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.793179F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.79696F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.795036F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.796247F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(809, 372);
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.792577F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.79654F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.792996F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.792996F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.84341F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.795638F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.799398F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.796359F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.794436F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 8.795647F));
+            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel7.Size = new System.Drawing.Size(847, 374);
             this.tableLayoutPanel7.TabIndex = 2;
             this.tableLayoutPanel7.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel7_Paint);
             // 
@@ -1459,7 +1460,7 @@
             this.label26.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label26.AutoSize = true;
             this.label26.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label26.Location = new System.Drawing.Point(37, 344);
+            this.label26.Location = new System.Drawing.Point(44, 345);
             this.label26.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(103, 15);
@@ -1472,7 +1473,7 @@
             this.label14.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label14.Location = new System.Drawing.Point(64, 105);
+            this.label14.Location = new System.Drawing.Point(71, 105);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(75, 15);
             this.label14.TabIndex = 17;
@@ -1483,7 +1484,7 @@
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label1.Location = new System.Drawing.Point(91, 277);
+            this.label1.Location = new System.Drawing.Point(98, 277);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(48, 15);
             this.label1.TabIndex = 9;
@@ -1494,7 +1495,7 @@
             this.lblPrefix.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblPrefix.AutoSize = true;
             this.lblPrefix.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblPrefix.Location = new System.Drawing.Point(14, 73);
+            this.lblPrefix.Location = new System.Drawing.Point(21, 73);
             this.lblPrefix.Name = "lblPrefix";
             this.lblPrefix.Size = new System.Drawing.Size(125, 15);
             this.lblPrefix.TabIndex = 2;
@@ -1506,7 +1507,7 @@
             this.lblName.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblName.AutoSize = true;
             this.lblName.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblName.Location = new System.Drawing.Point(13, 9);
+            this.lblName.Location = new System.Drawing.Point(20, 9);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(126, 15);
             this.lblName.TabIndex = 10;
@@ -1520,19 +1521,19 @@
             this.tableLayoutPanel12.Controls.Add(this.lbl_prefix, 1, 0);
             this.tableLayoutPanel12.Controls.Add(this.tbPrefix, 0, 0);
             this.tableLayoutPanel12.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel12.Location = new System.Drawing.Point(145, 66);
+            this.tableLayoutPanel12.Location = new System.Drawing.Point(152, 66);
             this.tableLayoutPanel12.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.tableLayoutPanel12.Name = "tableLayoutPanel12";
             this.tableLayoutPanel12.RowCount = 1;
             this.tableLayoutPanel12.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel12.Size = new System.Drawing.Size(661, 29);
+            this.tableLayoutPanel12.Size = new System.Drawing.Size(692, 29);
             this.tableLayoutPanel12.TabIndex = 12;
             // 
             // lbl_prefix
             // 
             this.lbl_prefix.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lbl_prefix.AutoSize = true;
-            this.lbl_prefix.Location = new System.Drawing.Point(495, 7);
+            this.lbl_prefix.Location = new System.Drawing.Point(519, 7);
             this.lbl_prefix.Name = "lbl_prefix";
             this.lbl_prefix.Size = new System.Drawing.Size(0, 15);
             this.lbl_prefix.TabIndex = 6;
@@ -1544,7 +1545,7 @@
             this.tbPrefix.Location = new System.Drawing.Point(21, 3);
             this.tbPrefix.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbPrefix.Name = "tbPrefix";
-            this.tbPrefix.Size = new System.Drawing.Size(288, 23);
+            this.tbPrefix.Size = new System.Drawing.Size(304, 23);
             this.tbPrefix.TabIndex = 3;
             this.tbPrefix.TextChanged += new System.EventHandler(this.tbPrefix_TextChanged);
             // 
@@ -1556,12 +1557,12 @@
             this.tableLayoutPanel13.Controls.Add(this.cb_enabled, 1, 0);
             this.tableLayoutPanel13.Controls.Add(this.tbName, 0, 0);
             this.tableLayoutPanel13.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel13.Location = new System.Drawing.Point(146, 2);
+            this.tableLayoutPanel13.Location = new System.Drawing.Point(153, 2);
             this.tableLayoutPanel13.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
             this.tableLayoutPanel13.Name = "tableLayoutPanel13";
             this.tableLayoutPanel13.RowCount = 1;
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel13.Size = new System.Drawing.Size(659, 29);
+            this.tableLayoutPanel13.Size = new System.Drawing.Size(690, 29);
             this.tableLayoutPanel13.TabIndex = 13;
             // 
             // cb_enabled
@@ -1569,7 +1570,7 @@
             this.cb_enabled.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_enabled.AutoSize = true;
             this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_enabled.Location = new System.Drawing.Point(350, 5);
+            this.cb_enabled.Location = new System.Drawing.Point(366, 5);
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(211, 19);
@@ -1584,7 +1585,7 @@
             this.tbName.Location = new System.Drawing.Point(21, 3);
             this.tbName.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbName.Name = "tbName";
-            this.tbName.Size = new System.Drawing.Size(287, 23);
+            this.tbName.Size = new System.Drawing.Size(303, 23);
             this.tbName.TabIndex = 1;
             // 
             // lblRelevantObjects
@@ -1592,22 +1593,11 @@
             this.lblRelevantObjects.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblRelevantObjects.AutoSize = true;
             this.lblRelevantObjects.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblRelevantObjects.Location = new System.Drawing.Point(37, 159);
+            this.lblRelevantObjects.Location = new System.Drawing.Point(44, 159);
             this.lblRelevantObjects.Name = "lblRelevantObjects";
             this.lblRelevantObjects.Size = new System.Drawing.Size(102, 15);
             this.lblRelevantObjects.TabIndex = 1;
             this.lblRelevantObjects.Text = "Relevant Objects";
-            // 
-            // lbl_threshold
-            // 
-            this.lbl_threshold.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.lbl_threshold.AutoSize = true;
-            this.lbl_threshold.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lbl_threshold.Location = new System.Drawing.Point(36, 245);
-            this.lbl_threshold.Name = "lbl_threshold";
-            this.lbl_threshold.Size = new System.Drawing.Size(103, 15);
-            this.lbl_threshold.TabIndex = 15;
-            this.lbl_threshold.Text = "Confidence limits";
             // 
             // tableLayoutPanel26
             // 
@@ -1619,13 +1609,13 @@
             this.tableLayoutPanel26.Controls.Add(this.cb_monitorCamInputfolder, 1, 0);
             this.tableLayoutPanel26.Controls.Add(this.button2, 2, 0);
             this.tableLayoutPanel26.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel26.Location = new System.Drawing.Point(145, 98);
+            this.tableLayoutPanel26.Location = new System.Drawing.Point(152, 98);
             this.tableLayoutPanel26.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.tableLayoutPanel26.Name = "tableLayoutPanel26";
             this.tableLayoutPanel26.RowCount = 1;
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel26.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.tableLayoutPanel26.Size = new System.Drawing.Size(661, 29);
+            this.tableLayoutPanel26.Size = new System.Drawing.Size(692, 29);
             this.tableLayoutPanel26.TabIndex = 18;
             // 
             // cmbcaminput
@@ -1638,7 +1628,7 @@
             this.cmbcaminput.Location = new System.Drawing.Point(21, 3);
             this.cmbcaminput.Margin = new System.Windows.Forms.Padding(21, 2, 21, 2);
             this.cmbcaminput.Name = "cmbcaminput";
-            this.cmbcaminput.Size = new System.Drawing.Size(371, 23);
+            this.cmbcaminput.Size = new System.Drawing.Size(390, 23);
             this.cmbcaminput.TabIndex = 7;
             // 
             // cb_monitorCamInputfolder
@@ -1646,7 +1636,7 @@
             this.cb_monitorCamInputfolder.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cb_monitorCamInputfolder.AutoSize = true;
             this.cb_monitorCamInputfolder.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_monitorCamInputfolder.Location = new System.Drawing.Point(431, 5);
+            this.cb_monitorCamInputfolder.Location = new System.Drawing.Point(454, 5);
             this.cb_monitorCamInputfolder.Margin = new System.Windows.Forms.Padding(2);
             this.cb_monitorCamInputfolder.Name = "cb_monitorCamInputfolder";
             this.cb_monitorCamInputfolder.Size = new System.Drawing.Size(128, 19);
@@ -1658,7 +1648,7 @@
             // 
             this.button2.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.button2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.button2.Location = new System.Drawing.Point(584, 4);
+            this.button2.Location = new System.Drawing.Point(613, 4);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(70, 21);
             this.button2.TabIndex = 6;
@@ -1671,7 +1661,7 @@
             this.label15.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label15.AutoSize = true;
             this.label15.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label15.Location = new System.Drawing.Point(87, 309);
+            this.label15.Location = new System.Drawing.Point(94, 309);
             this.label15.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(53, 15);
@@ -1695,12 +1685,12 @@
             this.tableLayoutPanel27.Controls.Add(this.btnDetails, 2, 0);
             this.tableLayoutPanel27.Controls.Add(this.btnCustomMask, 4, 0);
             this.tableLayoutPanel27.Controls.Add(this.lblDrawMask, 3, 0);
-            this.tableLayoutPanel27.Location = new System.Drawing.Point(145, 302);
+            this.tableLayoutPanel27.Location = new System.Drawing.Point(152, 302);
             this.tableLayoutPanel27.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.tableLayoutPanel27.Name = "tableLayoutPanel27";
             this.tableLayoutPanel27.RowCount = 1;
             this.tableLayoutPanel27.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel27.Size = new System.Drawing.Size(661, 29);
+            this.tableLayoutPanel27.Size = new System.Drawing.Size(692, 29);
             this.tableLayoutPanel27.TabIndex = 20;
             // 
             // cb_masking_enabled
@@ -1720,10 +1710,10 @@
             // 
             this.BtnDynamicMaskingSettings.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.BtnDynamicMaskingSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(200, 1);
+            this.BtnDynamicMaskingSettings.Location = new System.Drawing.Point(209, 2);
             this.BtnDynamicMaskingSettings.Margin = new System.Windows.Forms.Padding(5, 1, 5, 1);
             this.BtnDynamicMaskingSettings.Name = "BtnDynamicMaskingSettings";
-            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 26);
+            this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 25);
             this.BtnDynamicMaskingSettings.TabIndex = 22;
             this.BtnDynamicMaskingSettings.Text = "Settings";
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
@@ -1732,10 +1722,10 @@
             // btnDetails
             // 
             this.btnDetails.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.btnDetails.Location = new System.Drawing.Point(289, 2);
+            this.btnDetails.Location = new System.Drawing.Point(302, 3);
             this.btnDetails.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
             this.btnDetails.Name = "btnDetails";
-            this.btnDetails.Size = new System.Drawing.Size(70, 24);
+            this.btnDetails.Size = new System.Drawing.Size(70, 23);
             this.btnDetails.TabIndex = 23;
             this.btnDetails.Text = "Details";
             this.btnDetails.UseVisualStyleBackColor = true;
@@ -1744,10 +1734,10 @@
             // btnCustomMask
             // 
             this.btnCustomMask.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.btnCustomMask.Location = new System.Drawing.Point(456, 2);
+            this.btnCustomMask.Location = new System.Drawing.Point(477, 3);
             this.btnCustomMask.Margin = new System.Windows.Forms.Padding(1, 2, 5, 2);
             this.btnCustomMask.Name = "btnCustomMask";
-            this.btnCustomMask.Size = new System.Drawing.Size(70, 24);
+            this.btnCustomMask.Size = new System.Drawing.Size(70, 23);
             this.btnCustomMask.TabIndex = 24;
             this.btnCustomMask.Text = "Custom";
             this.btnCustomMask.UseVisualStyleBackColor = true;
@@ -1757,7 +1747,7 @@
             // 
             this.lblDrawMask.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblDrawMask.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblDrawMask.Location = new System.Drawing.Point(388, 6);
+            this.lblDrawMask.Location = new System.Drawing.Point(409, 6);
             this.lblDrawMask.Margin = new System.Windows.Forms.Padding(0);
             this.lblDrawMask.Name = "lblDrawMask";
             this.lblDrawMask.Size = new System.Drawing.Size(67, 16);
@@ -1768,100 +1758,14 @@
             // btnActions
             // 
             this.btnActions.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.btnActions.Location = new System.Drawing.Point(164, 271);
+            this.btnActions.Location = new System.Drawing.Point(171, 272);
             this.btnActions.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
             this.btnActions.Name = "btnActions";
-            this.btnActions.Size = new System.Drawing.Size(70, 26);
+            this.btnActions.Size = new System.Drawing.Size(70, 25);
             this.btnActions.TabIndex = 21;
             this.btnActions.Text = "Settings";
             this.btnActions.UseVisualStyleBackColor = true;
             this.btnActions.Click += new System.EventHandler(this.btnActions_Click_1);
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.flowLayoutPanel1.Controls.Add(this.lbl_threshold_lower);
-            this.flowLayoutPanel1.Controls.Add(this.tb_threshold_lower);
-            this.flowLayoutPanel1.Controls.Add(this.label9);
-            this.flowLayoutPanel1.Controls.Add(this.lbl_threshold_upper);
-            this.flowLayoutPanel1.Controls.Add(this.tb_threshold_upper);
-            this.flowLayoutPanel1.Controls.Add(this.label10);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(146, 238);
-            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(659, 29);
-            this.flowLayoutPanel1.TabIndex = 22;
-            // 
-            // lbl_threshold_lower
-            // 
-            this.lbl_threshold_lower.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.lbl_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_threshold_lower.Location = new System.Drawing.Point(21, 6);
-            this.lbl_threshold_lower.Margin = new System.Windows.Forms.Padding(21, 0, 3, 0);
-            this.lbl_threshold_lower.Name = "lbl_threshold_lower";
-            this.lbl_threshold_lower.Size = new System.Drawing.Size(40, 16);
-            this.lbl_threshold_lower.TabIndex = 24;
-            this.lbl_threshold_lower.Text = "Lower limit";
-            // 
-            // tb_threshold_lower
-            // 
-            this.tb_threshold_lower.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.tb_threshold_lower.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_threshold_lower.Location = new System.Drawing.Point(67, 3);
-            this.tb_threshold_lower.Margin = new System.Windows.Forms.Padding(3, 1, 1, 1);
-            this.tb_threshold_lower.MaxLength = 3;
-            this.tb_threshold_lower.Name = "tb_threshold_lower";
-            this.tb_threshold_lower.Size = new System.Drawing.Size(34, 23);
-            this.tb_threshold_lower.TabIndex = 23;
-            this.tb_threshold_lower.Leave += new System.EventHandler(this.tb_threshold_lower_Leave);
-            // 
-            // label9
-            // 
-            this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(103, 6);
-            this.label9.Margin = new System.Windows.Forms.Padding(1, 0, 3, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(19, 17);
-            this.label9.TabIndex = 28;
-            this.label9.Text = "%";
-            // 
-            // lbl_threshold_upper
-            // 
-            this.lbl_threshold_upper.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.lbl_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_threshold_upper.Location = new System.Drawing.Point(146, 6);
-            this.lbl_threshold_upper.Margin = new System.Windows.Forms.Padding(21, 0, 1, 0);
-            this.lbl_threshold_upper.Name = "lbl_threshold_upper";
-            this.lbl_threshold_upper.Size = new System.Drawing.Size(40, 16);
-            this.lbl_threshold_upper.TabIndex = 27;
-            this.lbl_threshold_upper.Text = "Upper limit";
-            // 
-            // tb_threshold_upper
-            // 
-            this.tb_threshold_upper.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_threshold_upper.Location = new System.Drawing.Point(190, 3);
-            this.tb_threshold_upper.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
-            this.tb_threshold_upper.MaxLength = 3;
-            this.tb_threshold_upper.Name = "tb_threshold_upper";
-            this.tb_threshold_upper.Size = new System.Drawing.Size(34, 23);
-            this.tb_threshold_upper.TabIndex = 26;
-            this.tb_threshold_upper.Leave += new System.EventHandler(this.tb_threshold_upper_Leave);
-            // 
-            // label10
-            // 
-            this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label10.Location = new System.Drawing.Point(226, 7);
-            this.label10.Margin = new System.Windows.Forms.Padding(1, 0, 3, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(17, 15);
-            this.label10.TabIndex = 29;
-            this.label10.Text = "%";
             // 
             // tableLayoutPanel8
             // 
@@ -1889,14 +1793,14 @@
             this.tableLayoutPanel8.Controls.Add(this.cb_bus, 1, 2);
             this.tableLayoutPanel8.Controls.Add(this.cb_truck, 1, 1);
             this.tableLayoutPanel8.Controls.Add(this.cb_car, 1, 0);
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(146, 132);
+            this.tableLayoutPanel8.Location = new System.Drawing.Point(153, 132);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
             this.tableLayoutPanel8.RowCount = 3;
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(659, 69);
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(690, 69);
             this.tableLayoutPanel8.TabIndex = 14;
             // 
             // cb_person
@@ -1944,7 +1848,7 @@
             this.cb_bear.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bear.AutoSize = true;
             this.cb_bear.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bear.Location = new System.Drawing.Point(545, 49);
+            this.cb_bear.Location = new System.Drawing.Point(573, 49);
             this.cb_bear.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bear.Name = "cb_bear";
             this.cb_bear.Size = new System.Drawing.Size(49, 17);
@@ -1957,7 +1861,7 @@
             this.cb_cow.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cow.AutoSize = true;
             this.cb_cow.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_cow.Location = new System.Drawing.Point(545, 26);
+            this.cb_cow.Location = new System.Drawing.Point(573, 26);
             this.cb_cow.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cow.Name = "cb_cow";
             this.cb_cow.Size = new System.Drawing.Size(50, 17);
@@ -1970,7 +1874,7 @@
             this.cb_sheep.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_sheep.AutoSize = true;
             this.cb_sheep.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_sheep.Location = new System.Drawing.Point(545, 3);
+            this.cb_sheep.Location = new System.Drawing.Point(573, 3);
             this.cb_sheep.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_sheep.Name = "cb_sheep";
             this.cb_sheep.Size = new System.Drawing.Size(58, 17);
@@ -1983,7 +1887,7 @@
             this.cb_horse.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_horse.AutoSize = true;
             this.cb_horse.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_horse.Location = new System.Drawing.Point(414, 49);
+            this.cb_horse.Location = new System.Drawing.Point(435, 49);
             this.cb_horse.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_horse.Name = "cb_horse";
             this.cb_horse.Size = new System.Drawing.Size(57, 17);
@@ -1996,7 +1900,7 @@
             this.cb_bird.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bird.AutoSize = true;
             this.cb_bird.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bird.Location = new System.Drawing.Point(414, 26);
+            this.cb_bird.Location = new System.Drawing.Point(435, 26);
             this.cb_bird.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bird.Name = "cb_bird";
             this.cb_bird.Size = new System.Drawing.Size(47, 17);
@@ -2009,7 +1913,7 @@
             this.cb_dog.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_dog.AutoSize = true;
             this.cb_dog.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_dog.Location = new System.Drawing.Point(414, 3);
+            this.cb_dog.Location = new System.Drawing.Point(435, 3);
             this.cb_dog.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_dog.Name = "cb_dog";
             this.cb_dog.Size = new System.Drawing.Size(48, 17);
@@ -2022,7 +1926,7 @@
             this.cb_cat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_cat.AutoSize = true;
             this.cb_cat.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_cat.Location = new System.Drawing.Point(283, 49);
+            this.cb_cat.Location = new System.Drawing.Point(297, 49);
             this.cb_cat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cat.Name = "cb_cat";
             this.cb_cat.Size = new System.Drawing.Size(44, 17);
@@ -2035,7 +1939,7 @@
             this.cb_airplane.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_airplane.AutoSize = true;
             this.cb_airplane.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_airplane.Location = new System.Drawing.Point(283, 26);
+            this.cb_airplane.Location = new System.Drawing.Point(297, 26);
             this.cb_airplane.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_airplane.Name = "cb_airplane";
             this.cb_airplane.Size = new System.Drawing.Size(70, 17);
@@ -2048,7 +1952,7 @@
             this.cb_boat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_boat.AutoSize = true;
             this.cb_boat.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_boat.Location = new System.Drawing.Point(283, 3);
+            this.cb_boat.Location = new System.Drawing.Point(297, 3);
             this.cb_boat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_boat.Name = "cb_boat";
             this.cb_boat.Size = new System.Drawing.Size(50, 17);
@@ -2061,7 +1965,7 @@
             this.cb_bus.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_bus.AutoSize = true;
             this.cb_bus.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_bus.Location = new System.Drawing.Point(152, 49);
+            this.cb_bus.Location = new System.Drawing.Point(159, 49);
             this.cb_bus.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bus.Name = "cb_bus";
             this.cb_bus.Size = new System.Drawing.Size(45, 17);
@@ -2074,7 +1978,7 @@
             this.cb_truck.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_truck.AutoSize = true;
             this.cb_truck.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_truck.Location = new System.Drawing.Point(152, 26);
+            this.cb_truck.Location = new System.Drawing.Point(159, 26);
             this.cb_truck.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_truck.Name = "cb_truck";
             this.cb_truck.Size = new System.Drawing.Size(54, 17);
@@ -2087,7 +1991,7 @@
             this.cb_car.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cb_car.AutoSize = true;
             this.cb_car.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.cb_car.Location = new System.Drawing.Point(152, 3);
+            this.cb_car.Location = new System.Drawing.Point(159, 3);
             this.cb_car.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_car.Name = "cb_car";
             this.cb_car.Size = new System.Drawing.Size(44, 17);
@@ -2100,7 +2004,7 @@
             this.label20.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label20.AutoSize = true;
             this.label20.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label20.Location = new System.Drawing.Point(23, 205);
+            this.label20.Location = new System.Drawing.Point(30, 205);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(116, 30);
             this.label20.TabIndex = 1;
@@ -2110,9 +2014,9 @@
             // tbAdditionalRelevantObjects
             // 
             this.tbAdditionalRelevantObjects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbAdditionalRelevantObjects.Location = new System.Drawing.Point(146, 209);
+            this.tbAdditionalRelevantObjects.Location = new System.Drawing.Point(153, 209);
             this.tbAdditionalRelevantObjects.Name = "tbAdditionalRelevantObjects";
-            this.tbAdditionalRelevantObjects.Size = new System.Drawing.Size(659, 23);
+            this.tbAdditionalRelevantObjects.Size = new System.Drawing.Size(690, 23);
             this.tbAdditionalRelevantObjects.TabIndex = 23;
             this.toolTip1.SetToolTip(this.tbAdditionalRelevantObjects, "comma separated list of custom object names to be accepted as relevant.");
             // 
@@ -2121,7 +2025,7 @@
             this.label25.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label25.AutoSize = true;
             this.label25.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label25.Location = new System.Drawing.Point(39, 41);
+            this.label25.Location = new System.Drawing.Point(46, 41);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(100, 15);
             this.label25.TabIndex = 10;
@@ -2134,12 +2038,12 @@
             this.dbLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.dbLayoutPanel6.Controls.Add(this.tbBiCamName, 0, 0);
             this.dbLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dbLayoutPanel6.Location = new System.Drawing.Point(146, 34);
+            this.dbLayoutPanel6.Location = new System.Drawing.Point(153, 34);
             this.dbLayoutPanel6.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
             this.dbLayoutPanel6.Name = "dbLayoutPanel6";
             this.dbLayoutPanel6.RowCount = 1;
             this.dbLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.dbLayoutPanel6.Size = new System.Drawing.Size(659, 29);
+            this.dbLayoutPanel6.Size = new System.Drawing.Size(690, 29);
             this.dbLayoutPanel6.TabIndex = 24;
             // 
             // tbBiCamName
@@ -2149,7 +2053,7 @@
             this.tbBiCamName.Location = new System.Drawing.Point(21, 3);
             this.tbBiCamName.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbBiCamName.Name = "tbBiCamName";
-            this.tbBiCamName.Size = new System.Drawing.Size(287, 23);
+            this.tbBiCamName.Size = new System.Drawing.Size(303, 23);
             this.tbBiCamName.TabIndex = 1;
             // 
             // dbLayoutPanel7
@@ -2162,42 +2066,65 @@
             this.dbLayoutPanel7.Controls.Add(this.tbCustomMaskFile, 0, 0);
             this.dbLayoutPanel7.Controls.Add(this.label21, 1, 0);
             this.dbLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dbLayoutPanel7.Location = new System.Drawing.Point(146, 334);
+            this.dbLayoutPanel7.Location = new System.Drawing.Point(153, 334);
             this.dbLayoutPanel7.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
             this.dbLayoutPanel7.Name = "dbLayoutPanel7";
             this.dbLayoutPanel7.RowCount = 1;
             this.dbLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.dbLayoutPanel7.Size = new System.Drawing.Size(659, 36);
+            this.dbLayoutPanel7.Size = new System.Drawing.Size(690, 38);
             this.dbLayoutPanel7.TabIndex = 25;
             // 
             // tb_camera_telegram_chatid
             // 
             this.tb_camera_telegram_chatid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_camera_telegram_chatid.Location = new System.Drawing.Point(394, 6);
+            this.tb_camera_telegram_chatid.Location = new System.Drawing.Point(413, 7);
             this.tb_camera_telegram_chatid.Name = "tb_camera_telegram_chatid";
-            this.tb_camera_telegram_chatid.Size = new System.Drawing.Size(262, 23);
+            this.tb_camera_telegram_chatid.Size = new System.Drawing.Size(274, 23);
             this.tb_camera_telegram_chatid.TabIndex = 23;
             this.toolTip1.SetToolTip(this.tb_camera_telegram_chatid, "This overrides the chatid in the settings tab.");
             // 
             // tbCustomMaskFile
             // 
             this.tbCustomMaskFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbCustomMaskFile.Location = new System.Drawing.Point(3, 6);
+            this.tbCustomMaskFile.Location = new System.Drawing.Point(3, 7);
             this.tbCustomMaskFile.Name = "tbCustomMaskFile";
-            this.tbCustomMaskFile.Size = new System.Drawing.Size(274, 23);
+            this.tbCustomMaskFile.Size = new System.Drawing.Size(288, 23);
             this.tbCustomMaskFile.TabIndex = 23;
             // 
             // label21
             // 
             this.label21.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label21.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.label21.Location = new System.Drawing.Point(282, 8);
+            this.label21.Location = new System.Drawing.Point(296, 9);
             this.label21.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(107, 19);
+            this.label21.Size = new System.Drawing.Size(112, 19);
             this.label21.TabIndex = 19;
             this.label21.Text = "Telegram Chat ID Override";
             this.label21.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label39
+            // 
+            this.label39.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.label39.AutoSize = true;
+            this.label39.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.label39.Location = new System.Drawing.Point(17, 245);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(129, 15);
+            this.label39.TabIndex = 15;
+            this.label39.Text = "Prediction Tolerances:";
+            // 
+            // BtnPredictionSize
+            // 
+            this.BtnPredictionSize.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.BtnPredictionSize.Location = new System.Drawing.Point(171, 240);
+            this.BtnPredictionSize.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
+            this.BtnPredictionSize.Name = "BtnPredictionSize";
+            this.BtnPredictionSize.Size = new System.Drawing.Size(70, 25);
+            this.BtnPredictionSize.TabIndex = 21;
+            this.BtnPredictionSize.Text = "Settings";
+            this.BtnPredictionSize.UseVisualStyleBackColor = true;
+            this.BtnPredictionSize.Click += new System.EventHandler(this.BtnPredictionSize_Click);
             // 
             // tabSettings
             // 
@@ -2218,8 +2145,8 @@
             this.tableLayoutPanel4.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tableLayoutPanel4.ColumnCount = 1;
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel4.Controls.Add(this.BtnSettingsSave, 0, 1);
             this.tableLayoutPanel4.Controls.Add(this.tableLayoutPanel5, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this.dbLayoutPanel10, 0, 1);
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 2;
@@ -2227,18 +2154,6 @@
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.tableLayoutPanel4.Size = new System.Drawing.Size(1022, 458);
             this.tableLayoutPanel4.TabIndex = 5;
-            // 
-            // BtnSettingsSave
-            // 
-            this.BtnSettingsSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.BtnSettingsSave.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BtnSettingsSave.Location = new System.Drawing.Point(476, 421);
-            this.BtnSettingsSave.Name = "BtnSettingsSave";
-            this.BtnSettingsSave.Size = new System.Drawing.Size(70, 34);
-            this.BtnSettingsSave.TabIndex = 2;
-            this.BtnSettingsSave.Text = "Save";
-            this.BtnSettingsSave.UseVisualStyleBackColor = true;
-            this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
             // 
             // tableLayoutPanel5
             // 
@@ -2788,7 +2703,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 38F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 56F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 258);
@@ -2814,7 +2729,7 @@
             // 
             this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbMinimizeToTray.AutoSize = true;
-            this.cbMinimizeToTray.Location = new System.Drawing.Point(222, 13);
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(217, 13);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
             this.cbMinimizeToTray.TabIndex = 18;
@@ -2831,6 +2746,45 @@
             this.label13.Size = new System.Drawing.Size(90, 17);
             this.label13.TabIndex = 13;
             this.label13.Text = "Misc Settings";
+            // 
+            // dbLayoutPanel10
+            // 
+            this.dbLayoutPanel10.ColumnCount = 2;
+            this.dbLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.dbLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.dbLayoutPanel10.Controls.Add(this.BtnSettingsSave, 1, 0);
+            this.dbLayoutPanel10.Controls.Add(this.button3, 0, 0);
+            this.dbLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dbLayoutPanel10.Location = new System.Drawing.Point(3, 421);
+            this.dbLayoutPanel10.Name = "dbLayoutPanel10";
+            this.dbLayoutPanel10.RowCount = 1;
+            this.dbLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.dbLayoutPanel10.Size = new System.Drawing.Size(1016, 34);
+            this.dbLayoutPanel10.TabIndex = 4;
+            // 
+            // BtnSettingsSave
+            // 
+            this.BtnSettingsSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.BtnSettingsSave.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtnSettingsSave.Location = new System.Drawing.Point(727, 3);
+            this.BtnSettingsSave.Name = "BtnSettingsSave";
+            this.BtnSettingsSave.Size = new System.Drawing.Size(69, 28);
+            this.BtnSettingsSave.TabIndex = 2;
+            this.BtnSettingsSave.Text = "Save";
+            this.BtnSettingsSave.UseVisualStyleBackColor = true;
+            this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
+            // 
+            // button3
+            // 
+            this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.button3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button3.Location = new System.Drawing.Point(219, 3);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(69, 28);
+            this.button3.TabIndex = 2;
+            this.button3.Text = "Reset";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // tabDeepStack
             // 
@@ -3928,8 +3882,11 @@
             this.contextMenuStripHistory.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabCameras.ResumeLayout(false);
-            this.tableLayoutPanel2.ResumeLayout(false);
-            this.tableLayoutPanel3.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.FOLV_Cameras)).EndInit();
             this.tableLayoutPanel6.ResumeLayout(false);
             this.tableLayoutPanel6.PerformLayout();
             this.tableLayoutPanel11.ResumeLayout(false);
@@ -3943,8 +3900,6 @@
             this.tableLayoutPanel26.PerformLayout();
             this.tableLayoutPanel27.ResumeLayout(false);
             this.tableLayoutPanel27.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
             this.tableLayoutPanel8.ResumeLayout(false);
             this.tableLayoutPanel8.PerformLayout();
             this.dbLayoutPanel6.ResumeLayout(false);
@@ -3971,6 +3926,7 @@
             this.dbLayoutPanel8.PerformLayout();
             this.dbLayoutPanel9.ResumeLayout(false);
             this.dbLayoutPanel9.PerformLayout();
+            this.dbLayoutPanel10.ResumeLayout(false);
             this.tabDeepStack.ResumeLayout(false);
             this.tabDeepStack.PerformLayout();
             this.groupBox11.ResumeLayout(false);
@@ -4010,15 +3966,12 @@
         private System.Windows.Forms.Label lbl_deepstackurl;
         private System.Windows.Forms.Label lbl_input;
         private System.Windows.Forms.Button BtnSettingsSave;
-        private DBLayoutPanel tableLayoutPanel2;
-        private DBLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.Button btnCameraAdd;
         private DBLayoutPanel tableLayoutPanel7;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label lblPrefix;
         private System.Windows.Forms.Label lblRelevantObjects;
         private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.ListView list2;
         private DBLayoutPanel tableLayoutPanel11;
         private System.Windows.Forms.Button btnCameraSave;
         private System.Windows.Forms.Button btnCameraDel;
@@ -4068,7 +4021,6 @@
         private System.Windows.Forms.CheckBox cb_bus;
         private System.Windows.Forms.CheckBox cb_truck;
         private System.Windows.Forms.CheckBox cb_car;
-        private System.Windows.Forms.Label lbl_threshold;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.CheckBox cb_send_telegram_errors;
         private System.Windows.Forms.Label lbl_objects;
@@ -4115,13 +4067,6 @@
         private System.Windows.Forms.Button btnCustomMask;
         private System.Windows.Forms.Label lblDrawMask;
         private System.Windows.Forms.Button btnActions;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Label lbl_threshold_lower;
-        private System.Windows.Forms.TextBox tb_threshold_upper;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label lbl_threshold_upper;
-        private System.Windows.Forms.TextBox tb_threshold_lower;
-        private System.Windows.Forms.Label label10;
         private DBLayoutPanel dbLayoutPanel1;
         private System.Windows.Forms.CheckBox cb_DeepStackURLsQueued;
         private DBLayoutPanel dbLayoutPanel2;
@@ -4274,6 +4219,15 @@
         private System.Windows.Forms.CheckBox Chk_CustomModelAPI;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
         private System.Windows.Forms.ToolStripButton toolStripButtonEditURL;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private DBLayoutPanel dbLayoutPanel10;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.ToolStripMenuItem viewImageToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem jumpToImageToolStripMenuItem;
+        private System.Windows.Forms.Label label39;
+        private System.Windows.Forms.Button BtnPredictionSize;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private BrightIdeasSoftware.FastObjectListView FOLV_Cameras;
     }
 }
 

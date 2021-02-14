@@ -224,11 +224,14 @@ namespace AITool
                 ClsURLItem url = (ClsURLItem)e.Model;
 
                 // If SPI IsNot Nothing Then
-                if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && !url.UseAsRefinementServer)
+                if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && !url.UseAsRefinementServer && !url.UseOnlyAsLinkedServer)
                     e.Item.ForeColor = Color.Green;
 
                 else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && url.UseAsRefinementServer)
                     e.Item.ForeColor = Color.DarkOrange;
+
+                else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() == 0 && url.UseOnlyAsLinkedServer)
+                    e.Item.ForeColor = Color.DarkCyan;
 
                 else if (url.Enabled.ReadFullFence() && url.CurErrCount.ReadFullFence() > 0)
                 {

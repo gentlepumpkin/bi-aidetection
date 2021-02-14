@@ -52,6 +52,8 @@ namespace AITool
             this.cb_TimeoutError.Checked = AppSettings.Settings.MaxWaitForAIServerTimeoutError;
             this.tb_LinkedRefineTimeout.Text = AppSettings.Settings.MaxWaitForAIServerMS.ToString();
 
+            this.cb_OnlyLinked.Checked = this.CurURL.UseOnlyAsLinkedServer;
+
             List<string> linked = Global.Split(this.CurURL.LinkedResultsServerList, ",;|");
 
             //Add all servers except current one and refinement server
@@ -116,14 +118,14 @@ namespace AITool
 
         private void bt_Save_Click(object sender, EventArgs e)
         {
-            this.Update();
+            this.UpdateURL();
             AITOOL.UpdateAIURLs();
             AppSettings.SaveAsync();
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
-        private void Update()
+        private void UpdateURL()
         {
             this.CurURL.url = this.tb_URL.Text.Trim();
             this.CurURL.ActiveTimeRange = this.tb_ActiveTimeRange.Text.Trim();
@@ -143,8 +145,11 @@ namespace AITool
             foreach (ClsURLItem url in checkedComboBoxLinked.CheckedItems)
             {
                 this.CurURL.LinkedResultsServerList += url.ToString() + ", ";
+                url.UseOnlyAsLinkedServer = true;
             }
             this.CurURL.LinkedResultsServerList = this.CurURL.LinkedResultsServerList.Trim(" ,".ToCharArray());
+
+            this.CurURL.UseOnlyAsLinkedServer = this.cb_OnlyLinked.Checked;
 
             this.CurURL.HttpClientTimeoutSeconds = Convert.ToInt32(this.tb_timeout.Text.Trim());
 
@@ -169,11 +174,11 @@ namespace AITool
         private async void btTest_Click(object sender, EventArgs e)
         {
 
-            this.Update();
+            this.UpdateURL();
 
             AITOOL.UpdateAIURLs();
 
-            string pth = Global.GetSetting("TestImage", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestImage.jpg"));
+            string pth = Global.GetRegSetting("TestImage", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestImage.jpg"));
 
             OpenFileDialog ofd = new OpenFileDialog
             {
@@ -194,7 +199,7 @@ namespace AITool
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 pth = ofd.FileName;
-                Global.SaveSetting("TestImage", pth);
+                Global.SaveRegSetting("TestImage", pth);
 
                 if (File.Exists(pth))
                 {
@@ -203,13 +208,14 @@ namespace AITool
                     if (cam == null)
                         cam = new Camera("TEST_CAM");
 
-                    string tpth = Path.Combine(Path.GetTempPath(), $"{cam.Name}.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}");
+                    string ext = Path.GetExtension(pth);
+                    string tpth = Path.Combine(Path.GetTempPath(), $"{cam.Name}.URLTEST.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}{ext}");
                     File.Copy(pth, tpth, true);
 
                     btTest.Enabled = false;
                     bt_Save.Enabled = false;
                     btTest.Text = "Working...";
-                    this.Update();
+                    this.UpdateURL();
                     ClsImageQueueItem CurImg = new ClsImageQueueItem(tpth, 0);
 
                     List<ClsURLItem> linked = new List<ClsURLItem> { this.CurURL };
@@ -236,7 +242,8 @@ namespace AITool
                     {
 
                         Frm_ObjectDetail frm = new Frm_ObjectDetail();
-                        frm.PredictionObjectDetail = result.OutPredictions;
+                        frm.PredictionObjectDetails = result.OutPredictions;
+                        frm.ImageFileName = tpth;
                         frm.Show();
 
                         MessageBox.Show($"Success! {this.CurURL.LastResultMessage}", "Success");
@@ -285,6 +292,12 @@ namespace AITool
         private void cb_LinkedServers_CheckedChanged(object sender, EventArgs e)
         {
             Global_GUI.GroupboxEnableDisable(groupBoxLinked, cb_LinkedServers);
+        }
+
+        private void cb_OnlyLinked_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_OnlyLinked.Checked && cb_LinkedServers.Checked)
+                cb_LinkedServers.Checked = false;
         }
     }
 }

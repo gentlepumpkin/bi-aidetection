@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -18,15 +19,20 @@ namespace AITool
         {
 
             //To prevent more than one copy running in memory, all trying to access same log and settings files
-            if (Process.GetProcessesByName(Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location)).Length > 1)
+            List<Global.ClsProcess> prcs = Global.GetProcessesByPath(Assembly.GetEntryAssembly().Location, true);
+
+            if (prcs.Count > 0)
             {
-                //MessageBox.Show("Another instance of this program is already running.", "Warning!");
-                //return;
-                AppSettings.AlreadyRunning = true;
+                //wait for just a bit to see if it closes by itself - for example if we had just reset/restarted:
+                if (!Global.WaitForProcessToClose(prcs[0].process, 500, Assembly.GetEntryAssembly().Location))
+                {
+                    AppSettings.AlreadyRunning = true;
+                }
+
             }
 
-            AppSettings.LastShutdownState = Global.GetSetting("LastShutdownState", "not set");
-            AppSettings.LastLogEntry = Global.GetSetting("LastLogEntry", "not set");
+            AppSettings.LastShutdownState = Global.GetRegSetting("LastShutdownState", "not set");
+            AppSettings.LastLogEntry = Global.GetRegSetting("LastLogEntry", "not set");
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

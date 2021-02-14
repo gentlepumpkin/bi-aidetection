@@ -156,6 +156,7 @@ namespace AITool
         private void cb_PlaySound_CheckedChanged(object sender, EventArgs e)
         {
             tb_Sounds.Enabled = cb_PlaySound.Checked;
+            tb_sound_cooldown.Enabled = cb_PlaySound.Checked;
         }
 
         private void cb_RunProgram_CheckedChanged(object sender, EventArgs e)
@@ -189,7 +190,7 @@ namespace AITool
                     AppSettings.Settings.DisplayPercentageFormat = tb_ConfidenceFormat.Text.Trim();
 
                 lbl_Confidence.ForeColor = Color.DarkGreen;
-                lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, tb_DetectionFormat.Text);
+                lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, tb_DetectionFormat.Text, Global.IPType.Path);
                 lbl_DetectionFormat.Text = lbl_DetectionFormat.Text.Replace("[]", "").Replace("()", "").Replace("   ", " ").Replace("  ", " ");
             }
             catch (Exception)
@@ -207,7 +208,7 @@ namespace AITool
                 List<ClsProp> props = new List<ClsProp>();
                 foreach (var varitm in varlist)
                 {
-                    string value = AITOOL.ReplaceParams(cam, null, null, varitm);
+                    string value = AITOOL.ReplaceParams(cam, null, null, varitm, Global.IPType.URL);
                     props.Add(new ClsProp(varitm, value));
                 }
                 using (Frm_Variables frm = new Frm_Variables())

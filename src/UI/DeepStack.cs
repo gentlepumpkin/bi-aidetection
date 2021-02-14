@@ -298,24 +298,28 @@ namespace AITool
                             //2020 version - server.go file
                             //   os.Setenv("CUDA_MODE", "True")
                             string gocontents = File.ReadAllText(servergofile);
-                            if (gocontents.IndexOf("\"CUDA_MODE\", \"True\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                            if (gocontents.IndexOf("\"CUDA_MODE\", \"True\"", StringComparison.OrdinalIgnoreCase) >= 0 || gocontents.IndexOf("\"CUDA_MODE\",\"True\"", StringComparison.OrdinalIgnoreCase) >= 0)
                                 this.Type = DeepStackTypeEnum.GPU;
                             else
                                 this.Type = DeepStackTypeEnum.CPU;
                         }
 
 
-                        //get the version
-                        List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.iss", SearchOption.TopDirectoryOnly);
-                        if (files.Count > 0)
+                        //get the version if not already found  (Not always in sync with the registry installer key?):
+                        if (string.IsNullOrWhiteSpace(this.DisplayVersion))
                         {
-                            string isscontents = File.ReadAllText(files[0].FullName);
-                            //#define MyAppVersion "2020.12.beta"
-                            this.DisplayVersion = Global.GetWordBetween(isscontents, "MyAppVersion \"", "\"");
-                        }
-                        else
-                        {
-                            Log($"Error: Could not find .ISS file in Deepstack folder?");
+                            List<FileInfo> files = Global.GetFiles(this.DeepStackFolder, "*.iss", SearchOption.TopDirectoryOnly);
+                            if (files.Count > 0)
+                            {
+                                string isscontents = File.ReadAllText(files[0].FullName);
+                                //#define MyAppVersion "2020.12.beta"
+                                this.DisplayVersion = Global.GetWordBetween(isscontents, "MyAppVersion \"", "\"");
+                            }
+                            else
+                            {
+                                Log($"Error: Could not find .ISS file in Deepstack folder?");
+                            }
+
                         }
 
                         Log($"Debug: DeepStack v'{this.DisplayVersion}' ({this.Type}) is installed: " + this.DeepStackEXE);

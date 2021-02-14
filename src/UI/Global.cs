@@ -293,13 +293,115 @@ namespace AITool
             list[newIndex] = tmp;
         }
 
+
+        public static string UpdateURL(string InURL, int DefaultPort, string DefaultPath, string Host, ref bool WasFixed, ref bool HadError)
+        {
+            string ret = InURL;
+            UriBuilder uriBuilder = new UriBuilder();
+            try
+            {
+                Uri url = new Uri(InURL);
+
+                if (url != null)
+                {
+
+                    uriBuilder.Scheme = url.Scheme;
+                    uriBuilder.Host = url.Host;
+                    uriBuilder.Path = url.PathAndQuery;
+                    uriBuilder.Port = url.Port;
+
+                    if (url.HostNameType == UriHostNameType.IPv6 && url.Host.Contains("[") && !InURL.Contains("["))
+                    {
+                        //it adds [ ] around an ipv6 address
+                        Log($"Debug: Placed square brackets around IPV6 address: '{url.Host}' for {InURL}");
+                        WasFixed = true;
+                    }
+
+
+                    if (!string.IsNullOrEmpty(Host) && !Host.Equals(url.Host, StringComparison.OrdinalIgnoreCase))
+                    {
+                        uriBuilder.Host = Host;
+                        Log($"Debug: Changed host from '{url.Host}' to '{Host}' for {InURL}");
+                        WasFixed = true;
+                    }
+
+                    if (DefaultPort > 0 && url.Port != DefaultPort)
+                    {
+                        uriBuilder.Port = DefaultPort;
+                        Log($"Debug: Changed port from '{url.Port}' to '{DefaultPort}' for {InURL}");
+                        WasFixed = true;
+                    }
+
+                    //scheme=http or https
+                    if (DefaultPort == 443 && url.Scheme != "https")
+                    {
+                        Log($"Debug: Changed scheme from '{url.Scheme}' to 'https' for {InURL}");
+                        uriBuilder.Scheme = "https";
+                        WasFixed = true;
+                    }
+                    else if (DefaultPort == 80 && url.Scheme == "https")
+                    {
+                        Log($"Debug: Changed scheme from '{url.Scheme}' to 'http' for {InURL}");
+                        uriBuilder.Scheme = "http";
+                        WasFixed = true;
+                    }
+
+                    //if (!InURL.Contains($":{uriBuilder.Port}"))
+                    //{
+                    //    //this doesnt work because URI.ToString does not include the port if it is the default port for the scheme
+                    //    Log($"Debug: Port added to URL: '{uriBuilder.Port}' for {InURL}");
+                    //    WasFixed = true;
+                    //}
+
+                    if (!string.IsNullOrEmpty(DefaultPath) && string.IsNullOrEmpty(url.PathAndQuery) || url.PathAndQuery == "/" || url.PathAndQuery == "\\" || !url.PathAndQuery.StartsWith(DefaultPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Log($"Debug: Added correct path of '{DefaultPath}' to {InURL}");
+                        uriBuilder.Path = DefaultPath;
+                        WasFixed = true;
+                    }
+
+
+                    if (!WasFixed)
+                    {
+                        string newurl = uriBuilder.Uri.GetComponents(UriComponents.AbsoluteUri, UriFormat.Unescaped);
+                        if (!newurl.Equals(ret, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Log($"Debug: Updated URL '{InURL}' to '{newurl}'");
+                            WasFixed = true;
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    HadError = true;
+                    Log($"Error: Bad url '{InURL}'");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                HadError = true;
+                Log($"Error: {InURL}: {ex.Message}");
+            }
+
+            if (WasFixed)
+            {
+                //ret = uriBuilder.Uri.ToString();
+                ret = uriBuilder.Uri.GetComponents(UriComponents.AbsoluteUri, UriFormat.SafeUnescaped);
+            }
+
+            return ret;
+        }
+
         public static string GetURLPath(string InURL)
         {
             string ret = "";
             try
             {
                 Uri url = new Uri(InURL);
-                if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "\\")
+                if (url != null && !string.IsNullOrEmpty(url.PathAndQuery) && url.PathAndQuery != "\\" && url.PathAndQuery != "/")
                     ret = url.PathAndQuery;
             }
             catch (Exception ex)
@@ -408,7 +510,7 @@ namespace AITool
             {
                 //Make sure we have the IP address
                 IPAddress ipa = await GetIPAddressFromHostnameAsync(RemoteMachineNameOrIP);
-                ip = ipa.ToString();
+                ip = Global.IP2Str(ipa, IPType.Path);
                 hostname = await GetHostNameAsync(RemoteMachineNameOrIP);
 
                 //first look for a mapped drive letter:
@@ -493,7 +595,7 @@ namespace AITool
                 }
 
 
-                ret = $"\\\\{RemoteMachineNameOrIP}\\{RemoteLocalPath.Replace(":", "$")}";
+                ret = $"\\\\{Global.IP2Str(RemoteMachineNameOrIP, IPType.Path)}\\{RemoteLocalPath.Replace(":", "$")}";
                 //resort to using admin shares (have to be enabled through group policy in newer versions of windows)
                 Log($"Debug: Found ADMIN share in {sw.ElapsedMilliseconds}ms '{RemoteMachineNameOrIP}' for path '{RemoteLocalPath}': {ret}");
 
@@ -568,11 +670,83 @@ namespace AITool
             return false;
         }
 
+        public static void ResponsiveSleep(int SleepMS)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            do
+            {
+                Thread.Sleep(50);
+                //I've seen threading errors happen with doevents calls, so wrap in try/catch...
+                try
+                { Application.DoEvents(); }  //Cover your eyes, nothing to see here.  DoEvents isnt that bad.  Really.  Ok, bye.
+                catch { }
+
+            } while (sw.ElapsedMilliseconds <= SleepMS);
+        }
+
+        public static bool DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs, bool nolog)
+        {
+
+            bool ret = true;
+            try
+            {
+                // Get the subdirectories for the specified directory.
+                DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+                if (!dir.Exists)
+                {
+                    ret = false;
+                    if (!nolog) Log($"Error: Source folder does not exist? {sourceDirName}");
+                    return ret;
+                }
+
+                DirectoryInfo[] dirs = dir.GetDirectories();
+
+                // If the destination directory doesn't exist, create it.       
+                Directory.CreateDirectory(destDirName);
+
+                // Get the files in the directory and copy them to the new location.
+                FileInfo[] files = dir.GetFiles();
+                foreach (FileInfo file in files)
+                {
+                    string tempPath = Path.Combine(destDirName, file.Name);
+                    try
+                    {
+                        file.CopyTo(tempPath, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        ret = false;
+                        if (!nolog) Log($"Error: {tempPath} - {ex.Message}");
+                    }
+                }
+
+                // If copying subdirectories, copy them and their contents to new location.
+                if (copySubDirs)
+                {
+                    foreach (DirectoryInfo subdir in dirs)
+                    {
+                        string tempPath = Path.Combine(destDirName, subdir.Name);
+                        if (!DirectoryCopy(subdir.FullName, tempPath, copySubDirs, nolog))
+                            ret = false;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ret = false;
+                if (!nolog) Log($"Error: {ex.Message}");
+            }
+
+            return ret;
+        }
+
         public static async Task<string> GetHostNameAsync(string IPAddressOrHostName)
         {
             try
             {
-                if (!IsValidIPAddress(IPAddressOrHostName))
+                if (!IsValidIPAddress(IPAddressOrHostName, out IPAddress FoundIP))
                     return IPAddressOrHostName;  //assume valid hostname if it doesnt look like an ip address
 
                 IPHostEntry entry = await Dns.GetHostEntryAsync(IPAddressOrHostName);
@@ -593,13 +767,35 @@ namespace AITool
         {
             try
             {
-                return string.IsNullOrEmpty(HostNameOrIPAddress) ||
-                       HostNameOrIPAddress == "." ||
-                       string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
-                       HostNameOrIPAddress == "127.0.0.1" ||
-                       HostNameOrIPAddress == "0.0.0.0" ||
-                       string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
-                       string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase);
+                bool ret = false;
+
+                if (string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                    HostNameOrIPAddress == "." ||
+                    string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                    HostNameOrIPAddress == "127.0.0.1" ||
+                    HostNameOrIPAddress == "0.0.0.0" ||
+                    HostNameOrIPAddress == "::1:" ||
+                    HostNameOrIPAddress == "[::1:]" ||
+                    HostNameOrIPAddress == "0:0:0:0:0:0:0:1" ||
+                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]")
+                {
+                    ret = true;
+                }
+                else
+                {
+                    IPAddress ip = GetIPAddressFromHostname(HostNameOrIPAddress);
+                    if (IPAddress.IsLoopback(ip))
+                    {
+                        ret = true;
+                    }
+                    else if (string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        ret = true;
+                    }
+                }
+
+                return ret;
 
             }
             catch (Exception ex)
@@ -611,31 +807,40 @@ namespace AITool
 
         }
 
-        public static bool IsLocalNetwork(string HostNameOrIPAddress)
-        {
 
-            return IsLocalHost(HostNameOrIPAddress) ||
-                   HostNameOrIPAddress.StartsWith("10.") ||
-                   HostNameOrIPAddress.StartsWith("192.168.") ||
-                   HostNameOrIPAddress.StartsWith("172.16.") ||
-                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("10.") ||
-                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("172.16.") ||
-                   GetIPAddressFromHostname(HostNameOrIPAddress).ToString().StartsWith("192.168.");
-
-
-
-        }
         public static async Task<bool> IsLocalHostAsync(string HostNameOrIPAddress)
         {
             try
             {
-                return string.IsNullOrEmpty(HostNameOrIPAddress) ||
-                       HostNameOrIPAddress == "." ||
-                       string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
-                       HostNameOrIPAddress == "127.0.0.1" ||
-                       HostNameOrIPAddress == "0.0.0.0" ||
-                       string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase) ||
-                       string.Equals(HostNameOrIPAddress, (await GetIPAddressFromHostnameAsync("")).ToString(), StringComparison.OrdinalIgnoreCase);
+                bool ret = false;
+
+                if (string.IsNullOrEmpty(HostNameOrIPAddress) ||
+                    HostNameOrIPAddress == "." ||
+                    string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                    HostNameOrIPAddress == "127.0.0.1" ||
+                    HostNameOrIPAddress == "0.0.0.0" ||
+                    HostNameOrIPAddress == "::1:" ||
+                    HostNameOrIPAddress == "[::1:]" ||
+                    HostNameOrIPAddress == "0:0:0:0:0:0:0:1" ||
+                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]")
+                {
+                    ret = true;
+                }
+                else
+                {
+                    IPAddress ip = await GetIPAddressFromHostnameAsync(HostNameOrIPAddress);
+                    if (IPAddress.IsLoopback(ip))
+                    {
+                        ret = true;
+                    }
+                    else if (string.Equals(HostNameOrIPAddress, GetIPAddressFromHostnameAsync("").ToString(), StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        ret = true;
+                    }
+                }
+
+                return ret;
 
             }
             catch (Exception ex)
@@ -645,6 +850,124 @@ namespace AITool
             }
 
 
+        }
+
+
+        public static bool IsLocalNetwork(string HostNameOrIPAddress)
+        {
+
+            if (IsLocalHost(HostNameOrIPAddress))
+                return true;
+
+            IPAddress ip = GetIPAddressFromHostname(HostNameOrIPAddress);
+
+            if (ip != IPAddress.None)
+            {
+                if (IPAddress.IsLoopback(ip))
+                    return true;
+
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    byte[] bytes = ip.GetAddressBytes();
+                    switch (bytes[0])
+                    {
+                        case 10:
+                            return true;
+                        case 172:
+                            return bytes[1] < 32 && bytes[1] >= 16;
+                        case 192:
+                            return bytes[1] == 168;
+                        default:
+                            return false;
+                    }
+                }
+                else if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    var addressAsString = ip.ToString();
+                    var firstWord = addressAsString.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
+
+                    // Make sure we are dealing with an IPv6 address
+                    if (ip.AddressFamily != AddressFamily.InterNetworkV6) return false;
+
+                    // The original IPv6 Site Local addresses (fec0::/10) are deprecated. Unfortunately IsIPv6SiteLocal only checks for the original deprecated version:
+                    else if (ip.IsIPv6SiteLocal) return true;
+
+                    // These days Unique Local Addresses (ULA) are used in place of Site Local. 
+                    // ULA has two variants: 
+                    //      fc00::/8 is not defined yet, but might be used in the future for internal-use addresses that are registered in a central place (ULA Central). 
+                    //      fd00::/8 is in use and does not have to registered anywhere.
+                    else if (firstWord.Substring(0, 2) == "fc" && firstWord.Length >= 4) return true;
+                    else if (firstWord.Substring(0, 2) == "fd" && firstWord.Length >= 4) return true;
+
+                    // Link local addresses (prefixed with fe80) are not routable
+                    else if (firstWord == "fe80") return true;
+
+                    // Discard Prefix
+                    else if (firstWord == "100") return true;
+
+                    // Any other IP address is not Unique Local Address (ULA)
+                    else return false;
+                }
+            }
+
+            return false;
+
+
+        }
+
+        public enum IPType
+        {
+            Path,
+            URL
+        }
+
+        public static string IP2Str(IPAddress ip, IPType type)
+        {
+            if (ip == IPAddress.None)
+                return ip.ToString(); //??
+
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+                return ip.ToString();
+
+            if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                if (type == IPType.Path)
+                {
+                    return $"{ip.ToString().Replace(":", "-").Replace("%", "s")}.ipv6-literal.net";  //https://devblogs.microsoft.com/oldnewthing/20100915-00/?p=12863
+
+                }
+                else if (type == IPType.URL)
+                {
+                    return $"[{ip.ToString()}]";  //add square brackets to make the URL valid
+                }
+            }
+
+            return ip.ToString();
+
+        }
+
+        public static string IP2Str(string HostNameOrIPAddress, IPType type)
+        {
+            IPAddress ip = GetIPAddressFromIPString(HostNameOrIPAddress);
+            if (ip == IPAddress.None)
+                return HostNameOrIPAddress;
+
+            return IP2Str(ip, type);
+
+
+        }
+
+        public static string CleanIPV6Address(string IP)
+        {
+            //2600-6c64-6b7f-f8d8--1d4.ipv6-literal.net
+            //2600:6c64:6b7f:f8d8::1d4
+            //[2600:6c64:6b7f:f8d8::1d4]
+            IP = IP.Trim("[] ".ToCharArray());
+            if (IP.IndexOf(".ipv6-literal.net", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                IP = IP.Replace(".ipv6-literal.net", "").Replace("-", ":").Replace("s", "%").Trim();
+            }
+            return IP;
         }
 
         static Dictionary<string, string> DNSErrCache = new Dictionary<string, string>();
@@ -653,13 +976,12 @@ namespace AITool
             IPAddress ret = IPAddress.None;
             try
             {
-                //stop any errors from happening more than once:
+                //stop any errors from happening more than once since it may take a long time to resolve an invalid host:
                 if (DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
                     return ret;
 
-                if (IsValidIPAddress(HostNameOrIPAddress))
-                    return GetIPAddressFromIPString(HostNameOrIPAddress);
-
+                if (IsValidIPAddress(HostNameOrIPAddress, out IPAddress FoundIP))
+                    return FoundIP;
 
                 IPHostEntry Host;
                 if (string.IsNullOrWhiteSpace(HostNameOrIPAddress))
@@ -671,19 +993,19 @@ namespace AITool
                 {
                     if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
-                        // just return the first one
+                        // just return the first one ipv4 address
                         ret = IP;
                         break;
                     }
                 }
-                if (!IsValidIPAddress(ret))
+                if (!IsValidIPAddress(ret, out FoundIP))
                 {
                     // fall back to ipv6
                     foreach (IPAddress IP in Host.AddressList)
                     {
                         if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {
-                            // just return the first one
+                            // just return the first ipv6 address
                             ret = IP;
                             break;
                         }
@@ -701,6 +1023,17 @@ namespace AITool
 
             return ret;
         }
+
+        public static bool IsNull(object obj)
+        {
+            if (obj == null)
+                return true;
+
+            if (obj is string && string.IsNullOrWhiteSpace((string)obj))
+                return true;
+
+            return false;
+        }
         public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddress = "")
         {
             IPAddress ret = IPAddress.None;
@@ -710,8 +1043,8 @@ namespace AITool
                 if (DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
                     return ret;
 
-                if (IsValidIPAddress(HostNameOrIPAddress))
-                    return GetIPAddressFromIPString(HostNameOrIPAddress);
+                if (IsValidIPAddress(HostNameOrIPAddress, out IPAddress FoundIP))
+                    return FoundIP;
 
                 IPHostEntry Host;
                 if (string.IsNullOrWhiteSpace(HostNameOrIPAddress))
@@ -719,23 +1052,24 @@ namespace AITool
                 else
                     Host = await Dns.GetHostEntryAsync(HostNameOrIPAddress);
 
+                //prefer ipv4 address
                 foreach (IPAddress IP in Host.AddressList)
                 {
                     if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
-                        // just return the first one
+                        // just return the first ipv4 found
                         ret = IP;
                         break;
                     }
                 }
-                if (!IsValidIPAddress(ret))
+                if (!IsValidIPAddress(ret, out FoundIP))
                 {
                     // fall back to ipv6
                     foreach (IPAddress IP in Host.AddressList)
                     {
                         if (IP.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {
-                            // just return the first one
+                            // just return the first ipv6
                             ret = IP;
                             break;
                         }
@@ -756,30 +1090,29 @@ namespace AITool
         public static IPAddress GetIPAddressFromIPString(string IP)
         {
             IPAddress ret = IPAddress.None;
-            if (!string.IsNullOrEmpty(IP))
-            {
-                IPAddress IPTst;
-                if (IPAddress.TryParse(IP, out IPTst) && !IPTst.Equals(IPAddress.None))
-                    return IPTst;
-            }
+            if (IsValidIPAddress(IP, out IPAddress FoundIP))
+                return FoundIP;
+
             return ret;
         }
-        public static bool IsValidIPAddress(string IP)
+
+        public static bool IsValidIPAddress(string IP, out IPAddress FoundIP)
         {
+            FoundIP = IPAddress.None;
             if (!string.IsNullOrEmpty(IP))
             {
-                IPAddress IPTst;
-                if (IPAddress.TryParse(IP, out IPTst) && !IPTst.Equals(IPAddress.None))
+                IP = CleanIPV6Address(IP);
+                if (IPAddress.TryParse(IP, out FoundIP) && !FoundIP.Equals(IPAddress.None) && (FoundIP.AddressFamily == AddressFamily.InterNetwork || FoundIP.AddressFamily == AddressFamily.InterNetworkV6))
                     return true;
             }
             return false;
         }
-        public static bool IsValidIPAddress(IPAddress IP)
+        public static bool IsValidIPAddress(IPAddress IP, out IPAddress FoundIP)
         {
+            FoundIP = IPAddress.None;
             if (IP != null && !IP.Equals(IPAddress.None))
             {
-                IPAddress IPTst;
-                if (IPAddress.TryParse(IP.ToString(), out IPTst) && !IPTst.Equals(IPAddress.None))
+                if (IsValidIPAddress(IP.ToString(), out FoundIP))
                     return true;
             }
             return false;
@@ -809,14 +1142,12 @@ namespace AITool
             {
                 IPAddress IP = null;
 
-                if (IsValidIPAddress(HostOrIPToPing))
-                    IP = GetIPAddressFromIPString(HostOrIPToPing);
-                else
+                if (!IsValidIPAddress(HostOrIPToPing, out IP))
                     IP = await GetIPAddressFromHostnameAsync(HostOrIPToPing);
 
                 ret.DNSResolveMS = SW.ElapsedMilliseconds;
 
-                if (!IsValidIPAddress(IP))
+                if (!IsValidIPAddress(IP, out IP))
                     return ret;
 
                 Log($"Debug: Pinging {HostOrIPToPing} ({IP.ToString()}) With timeout:{TimeoutMS}ms And Ping Retry Count:{RetryCount}...");
@@ -1043,7 +1374,7 @@ namespace AITool
             return new string(a);
         }
 
-        public static dynamic GetSetting(string Name, object DefaultValue = null, string SubKey = "")
+        public static bool DeleteRegSetting(string Name)
         {
 
             //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
@@ -1051,6 +1382,76 @@ namespace AITool
             string Cname = System.Windows.Forms.Application.CompanyName;
             string Pname = System.Windows.Forms.Application.ProductName;
             string version = AN.Major + "." + AN.Minor;
+            string SKey = "";
+            bool ret = false;
+            try
+            {
+                string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
+
+                using RegistryKey reg = Registry.CurrentUser.OpenSubKey(RKey, false);
+
+                if (reg != null)
+                {
+                    bool Found = false;
+                    string[] Values = reg.GetValueNames();
+                    foreach (string valu in Values)
+                        if (string.Equals(valu, Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Found = true;
+                            break;
+                        }
+                    if (Found)
+                    {
+                        reg.DeleteValue(Name, false);
+                        ret = true;
+                    }
+                }
+
+
+            }
+            catch (Exception)
+            {
+                //Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+
+        }
+        public static bool DeleteRegSettings()
+        {
+
+            //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
+            Version AN = Assembly.GetExecutingAssembly().GetName().Version;
+            string Cname = System.Windows.Forms.Application.CompanyName;
+            string Pname = System.Windows.Forms.Application.ProductName;
+            string version = AN.Major + "." + AN.Minor;
+            bool ret = false;
+            try
+            {
+                string RKey = $"Software\\{Cname}\\{Pname}\\{version}";
+
+                Registry.CurrentUser.DeleteSubKeyTree(RKey, false);
+
+                ret = true;
+
+            }
+            catch (Exception)
+            {
+                //Log($"Error: {Global.ExMsg(ex)}");
+            }
+
+            return ret;
+
+        }
+
+        public static dynamic GetRegSetting(string Name, object DefaultValue = null, string SubKey = "")
+        {
+
+            //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
+            Version AN = Assembly.GetExecutingAssembly().GetName().Version;
+            string Cname = System.Windows.Forms.Application.CompanyName;
+            string Pname = System.Windows.Forms.Application.ProductName;
+            string version = AN.Major + ".0";
             object RetVal = DefaultValue;
             string SKey = "";
             if (!string.IsNullOrWhiteSpace(SubKey))
@@ -1059,53 +1460,52 @@ namespace AITool
             {
                 string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
 
-                using (RegistryKey reg = Registry.CurrentUser.OpenSubKey(RKey, false))
-
-                    if (reg != null)
-                    {
-                        bool Found = false;
-                        string[] Values = reg.GetValueNames();
-                        foreach (string valu in Values)
-                            if (string.Equals(valu, Name, StringComparison.OrdinalIgnoreCase))
-                            {
-                                Found = true;
-                                RetVal = reg.GetValue(Name, DefaultValue);
-                                break;
-                            }
-                        if (Found)
+                using RegistryKey reg = Registry.CurrentUser.OpenSubKey(RKey, false);
+                if (reg != null)
+                {
+                    bool Found = false;
+                    string[] Values = reg.GetValueNames();
+                    foreach (string valu in Values)
+                        if (string.Equals(valu, Name, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (reg.GetValueKind(Name) == RegistryValueKind.MultiString)
-                            {
-                                if (DefaultValue is List<string>)
-                                    RetVal = ((string[])RetVal).ToList();
-                                else if (DefaultValue is object[])
-                                    RetVal = (string[])RetVal;
-                                else if (DefaultValue is string[])
-                                    RetVal = (string[])RetVal;
-                            }
-                            else if (RetVal is string && DefaultValue is Point)
-                            {
-                                //{X=965,Y=399}
-                                int X = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "X=", ","));
-                                int Y = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Y=", "}"));
-                                RetVal = new Point(X, Y);
-
-                            }
-                            else if (RetVal is string && DefaultValue is Size)
-                            {
-                                //{Width=931, Height=592}
-                                int Wid = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Width=", ","));
-                                int Hei = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Height=", "}"));
-                                RetVal = new Size(Wid, Hei);
-                            }
-                            else if (DefaultValue != null)
-                                RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
-                            //Else
-                            //    RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType)
-
+                            Found = true;
+                            RetVal = reg.GetValue(Name, DefaultValue);
+                            break;
+                        }
+                    if (Found)
+                    {
+                        if (reg.GetValueKind(Name) == RegistryValueKind.MultiString)
+                        {
+                            if (DefaultValue is List<string>)
+                                RetVal = ((string[])RetVal).ToList();
+                            else if (DefaultValue is object[])
+                                RetVal = (string[])RetVal;
+                            else if (DefaultValue is string[])
+                                RetVal = (string[])RetVal;
+                        }
+                        else if (RetVal is string && DefaultValue is Point)
+                        {
+                            //{X=965,Y=399}
+                            int X = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "X=", ","));
+                            int Y = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Y=", "}"));
+                            RetVal = new Point(X, Y);
 
                         }
+                        else if (RetVal is string && DefaultValue is Size)
+                        {
+                            //{Width=931, Height=592}
+                            int Wid = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Width=", ","));
+                            int Hei = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Height=", "}"));
+                            RetVal = new Size(Wid, Hei);
+                        }
+                        else if (DefaultValue != null)
+                            RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
+                        //Else
+                        //    RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType)
+
+
                     }
+                }
 
 
             }
@@ -1140,7 +1540,7 @@ namespace AITool
             return Ret;
 
         }
-        public static bool SaveSetting(string name, object value, string SubKey = "")
+        public static bool SaveRegSetting(string name, object value, string SubKey = "")
         {
             bool ret = false;
             //regkey is built from CompanyName\ProductName\MajorVersion.MinorVersion
@@ -1154,26 +1554,26 @@ namespace AITool
             try
             {
                 string RKey = $"Software\\{Cname}\\{Pname}\\{version}{SKey}";
-                using (RegistryKey reg = Registry.CurrentUser.CreateSubKey(RKey, RegistryKeyPermissionCheck.ReadWriteSubTree))
-                    if (reg != null)
+                using RegistryKey reg = Registry.CurrentUser.CreateSubKey(RKey, RegistryKeyPermissionCheck.ReadWriteSubTree);
+                if (reg != null)
+                {
+                    if (value is List<string>)
                     {
-                        if (value is List<string>)
-                        {
-                            List<string> strlist = (List<string>)value;
-                            reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
-                        }
-                        else if (value is object[])
-                        {
-                            List<string> strlist = new List<string>();
-                            object[] objects = (object[])value;
-                            foreach (object obj in objects)
-                                strlist.Add(obj.ToString());
-                            reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
-                        }
-                        else
-                            reg.SetValue(name, value);
-                        ret = true;
+                        List<string> strlist = (List<string>)value;
+                        reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
                     }
+                    else if (value is object[])
+                    {
+                        List<string> strlist = new List<string>();
+                        object[] objects = (object[])value;
+                        foreach (object obj in objects)
+                            strlist.Add(obj.ToString());
+                        reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
+                    }
+                    else
+                        reg.SetValue(name, value);
+                    ret = true;
+                }
 
 
             }
@@ -1348,8 +1748,8 @@ namespace AITool
             }
             msg.Description = $"{mn}{Message}";
 
-            SaveSetting("LastLogEntry", msg.Description);
-            Global.SaveSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
+            SaveRegSetting("LastLogEntry", msg.Description);
+            Global.SaveRegSetting("LastShutdownState", $"checkpoint: Global.Log: {DateTime.Now}");
 
 
             progress.Report(msg);
@@ -1964,6 +2364,34 @@ namespace AITool
             }
         }
 
+        public static bool IsStringBefore(string teststring, string first, string second)
+        {
+
+            //test something like this - make sure we arnt picking up the semicolon that could be part of a URL:
+            //person, car ; http://URL/;
+            bool ret = false;
+            int firstidx = teststring.IndexOf(first, StringComparison.OrdinalIgnoreCase);
+
+            if (firstidx > -1)
+            {
+                int secondidx = teststring.IndexOf(second, StringComparison.OrdinalIgnoreCase);
+                if (secondidx > -1)
+                {
+                    if (firstidx < secondidx)
+                    {
+                        ret = true;
+                    }
+                }
+                else
+                {
+                    ret = true;
+                }
+            }
+
+            return ret;
+
+        }
+
 
         public static void SerializeJsonIntoStream(object value, Stream stream)
         {
@@ -2029,9 +2457,11 @@ namespace AITool
                 Ret = JsonConvert.SerializeObject(objectToWrite, Formatting.Indented, jset);
                 if (jset.Error == null)
                 {
-
-                    writer = new StreamWriter(filePath, append);
-                    writer.Write(Ret);
+                    if (Directory.Exists(Path.GetDirectoryName(filePath)))
+                    {
+                        writer = new StreamWriter(filePath, append);
+                        writer.Write(Ret);
+                    }
                 }
                 else
                 {
@@ -2493,6 +2923,43 @@ namespace AITool
             return ret;
 
         }
+        public static bool WaitForProcessToClose(Process prc, int TimeoutMS, string fullpath)
+        {
+            bool ret = false;
+            Stopwatch sw = Stopwatch.StartNew();
+            try
+            {
+                if (prc != null && !prc.HasExited)
+                {
+                    int cnt = 0;
+                    //prc.WaitForInputIdle(TimeoutMS); //I think this only works with GUI app
+                    prc.Refresh();
+                    while (sw.ElapsedMilliseconds <= TimeoutMS && !prc.HasExited)
+                    {
+                        cnt++;
+                        System.Threading.Thread.Sleep(AppSettings.Settings.loop_delay_ms);
+                        prc.Refresh();
+                    }
+                    sw.Stop();
+                    ret = prc == null || prc.HasExited;
+                    if (ret)
+                        Log($"Debug: Process closed after {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath} to close.");
+                    else
+                        Log($"Debug: Process was still open after {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath}");
+
+                }
+                else
+                {
+                    ret = true;  //exited or didnt exist
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ExMsg(ex)}");
+            }
+            return ret;
+
+        }
 
         public static bool ProcessValid(List<ClsProcess> prc)
         {
@@ -2532,7 +2999,7 @@ namespace AITool
             return false;
         }
 
-        public static List<ClsProcess> GetProcessesByPath(string processname)
+        public static List<ClsProcess> GetProcessesByPath(string processname, bool ExcludeCurrentProcess = false)
         {
             List<ClsProcess> Ret = new List<ClsProcess>();
             try
@@ -2541,6 +3008,10 @@ namespace AITool
 
                 Process[] aProc = Process.GetProcessesByName(pname);
 
+                Process cprc = null;
+                if (ExcludeCurrentProcess)
+                    cprc = Process.GetCurrentProcess();
+
                 ProcessDetail PD = null;
 
                 if (aProc.Length > 0)
@@ -2548,6 +3019,9 @@ namespace AITool
                 {
                     foreach (Process curproc in aProc)
                     {
+                        if (ExcludeCurrentProcess && cprc.Id == curproc.Id)
+                            continue;
+
                         //accessing 64 bit process from 32 bit app may not allow to get process properties, only name
                         //Stopwatch SW = Stopwatch.StartNew();
                         ClsProcess CurPrc = new ClsProcess();

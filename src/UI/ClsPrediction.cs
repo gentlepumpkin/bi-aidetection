@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using static AITool.AITOOL;
+using Newtonsoft.Json;
 
 namespace AITool
 {
@@ -26,9 +27,18 @@ namespace AITool
         NoMask = 5,
         NoConfidence = 6,
         UnwantedObject = 7,
-        CameraNotEnabled = 8,
-        Error = 9,
-        Unknown = 10
+        DuplicateObject = 8,
+        RefinementObject = 9,
+        CameraNotEnabled = 10,
+        Error = 11,
+        Unknown = 12,
+        TooSmallPercent = 13,
+        TooLargePercent = 14,
+        TooSmallWidth = 15,
+        TooSmallHeight = 16,
+        TooLargeWidth = 17,
+        TooLargeHeight = 18
+
     }
     public class ClsPrediction : IEquatable<ClsPrediction>
     {
@@ -44,6 +54,7 @@ namespace AITool
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
         public float PercentMatch { get; set; } = 0;
+        public float PercentMatchRefinement { get; set; } = 0;
         public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
         public int DynamicThresholdCount { get; set; } = 0;
@@ -60,26 +71,56 @@ namespace AITool
         public int RectHeight { get; set; } = 0;
         public int ImageWidth { get; set; } = 0;
         public int ImageHeight { get; set; } = 0;
+        public int PercentOfImage { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
         public string Server { get; set; } = "";
         public DateTime Time { get; set; } = DateTime.MinValue;
-        //private ClsDeepstackObject _imageObject;
+        private void UpdateImageInfo(ClsImageQueueItem curImg)
+        {
+            this._curimg = curImg;
+            this.ImageHeight = curImg.Height;
+            this.ImageWidth = curImg.Width;
+            this.Filename = curImg.image_path;
+            this.UpdatePercent();
+        }
 
-        public ClsPrediction() { }
+        private void UpdatePercent()
+        {
+            if (this.XMax > 0 && this.YMax > 0 && this.ImageHeight > 0 && this.ImageWidth > 0)
+            {
+
+                //calculate the percentage of the size of the prediction compared to the image size
+
+                double ImageArea = this.ImageWidth * this.ImageHeight;
+                double PredArea = this.RectWidth * this.RectHeight;
+                double diff = Math.Abs(PredArea - ImageArea);
+                double percent = 100 - ((diff / ImageArea) * 100);
+
+                this.PercentOfImage = (int)Math.Round(percent);
+
+            }
+
+        }
+        public Rectangle GetRectangle()
+        {
+            return Rectangle.FromLTRB(this.XMin, this.YMin, this.XMax, this.YMax);
+        }
+        [JsonConstructor]
+        public ClsPrediction()
+        {
+            this.UpdatePercent();
+        }
         public ClsPrediction(ObjectType defaultObjType, Camera cam, Amazon.Rekognition.Model.FaceDetail AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._cururl = curURL;
-            this._curimg = curImg;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
-            this.ImageHeight = curImg.Height;
-            this.ImageWidth = curImg.Width;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-            this.Filename = curImg.image_path;
+            this.UpdateImageInfo(curImg);
 
             if (AiDetectionObject == null || cam == null)
             {
@@ -171,6 +212,7 @@ namespace AITool
             this.Confidence = AiDetectionObject.Confidence;
 
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
         }
 
         public ClsPrediction(ObjectType defaultObjType, Camera cam, Amazon.Rekognition.Model.Label AiDetectionObject, int InstanceIdx, ClsImageQueueItem curImg, ClsURLItem curURL)
@@ -178,14 +220,11 @@ namespace AITool
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._cururl = curURL;
-            this._curimg = curImg;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
-            this.ImageHeight = curImg.Height;
-            this.ImageWidth = curImg.Width;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-            this.Filename = curImg.image_path;
+            this.UpdateImageInfo(curImg);
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Name))
             {
@@ -238,6 +277,8 @@ namespace AITool
             this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
 
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
+
         }
 
         public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundVehicleObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg)
@@ -247,13 +288,11 @@ namespace AITool
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._cururl = curURL;
-            this._curimg = curImg;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-            this.Filename = curImg.image_path;
-
+            this.UpdateImageInfo(curImg);
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.ObjectType))
             {
@@ -451,22 +490,20 @@ namespace AITool
                 this.Confidence = 100;
             }
 
-            this.Filename = curImg.image_path;
-
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
+
         }
         public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundPersonObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
             this._cururl = curURL;
-            this._curimg = curImg;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-            this.Filename = curImg.image_path;
-
+            this.UpdateImageInfo(curImg);
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Type))
             {
@@ -634,26 +671,22 @@ namespace AITool
                 this.Confidence = 100;
             }
 
-            this.Filename = curImg.image_path;
-
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
+
         }
         public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDeepstackDetection AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
-            this._curimg = curImg;
             this._cururl = curURL;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-
-
-            //this._imageObject = AiDetectionObject;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
-            this.ImageHeight = curImg.Height;
-            this.ImageWidth = curImg.Width;
-            this.Filename = curImg.image_path;
+
+            this.UpdateImageInfo(curImg);
+
 
             if (AiDetectionObject == null || cam == null || (string.IsNullOrWhiteSpace(AiDetectionObject.label) && string.IsNullOrWhiteSpace(AiDetectionObject.UserID)))
             {
@@ -686,27 +719,25 @@ namespace AITool
             this.YMin = AiDetectionObject.y_min;
             this.Confidence = AiDetectionObject.confidence * 100;  //store as whole number percent 
             this.Filename = curImg.image_path;
-            this.RectHeight = this.XMax - this.YMin;
+
             this.RectWidth = this.XMax - this.XMin;
+            this.RectHeight = this.YMax - this.YMin;
 
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
+
         }
 
         public ClsPrediction(ObjectType defaultObjType, Camera cam, ClsDoodsDetection AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL)
         {
             this._defaultObjType = defaultObjType;
             this._cam = cam;
-            this._curimg = curImg;
             this._cururl = curURL;
-
-            //this._imageObject = AiDetectionObject;
             this.Camera = cam.Name;
             this.BICamName = cam.BICamName;
-            this.ImageHeight = curImg.Height;
-            this.ImageWidth = curImg.Width;
             this.Server = curURL.CurSrv;
             this.Time = DateTime.Now;
-            this.Filename = curImg.image_path;
+            this.UpdateImageInfo(curImg);
 
 
             if (AiDetectionObject == null || cam == null || string.IsNullOrWhiteSpace(AiDetectionObject.Label))
@@ -748,13 +779,15 @@ namespace AITool
             this.XMax = Convert.ToInt32(Math.Round(right));
             this.YMax = Convert.ToInt32(Math.Round(bottom));
 
-            this.RectHeight = this.XMax - this.YMin;
             this.RectWidth = this.XMax - this.XMin;
+            this.RectHeight = this.YMax - this.YMin;
 
             this.Confidence = Convert.ToSingle(AiDetectionObject.Confidence);
             this.Filename = curImg.image_path;
 
             this.GetObjectType();
+            this.UpdateImageInfo(curImg);
+
         }
 
         public void AnalyzePrediction(bool SkipDynamicMaskCheck)
@@ -769,86 +802,88 @@ namespace AITool
                 {
                     if (!string.IsNullOrWhiteSpace(this._cam.triggering_objects_as_string))
                     {
-                        if (this._cam.IsRelevant(this.Label))
+                        this.Result = this._cam.IsRelevantObject(this);
+                        if (this.Result == ResultType.Relevant)
                         {
-                            // -> OBJECT IS RELEVANT
-
-                            //if confidence limits are satisfied
-                            bool OverrideThreshold = this._cururl != null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
-
-                            if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
-                                (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
+                            this.Result = this._cam.IsRelevantSize(this);
+                            if (this.Result == ResultType.Relevant)
                             {
-                                // -> OBJECT IS WITHIN CONFIDENCE LIMITS
+                                // -> OBJECT IS RELEVANT
 
-                                //only if the object is outside of the masked area
-                                result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
-                                this.ImgMaskResult = result.Result;
-                                this.ImgMaskType = result.MaskType;
-                                this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
+                                //if confidence limits are satisfied
+                                bool OverrideThreshold = this._cururl != null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
 
-                                if (!result.IsMasked)
+                                if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
+                                    (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
                                 {
-                                    this.Result = ResultType.Relevant;
-                                }
-                                else if (result.MaskType == MaskType.None) //if the object is in a masked area
-                                {
-                                    this.Result = ResultType.NoMask;
-                                }
-                                else if (result.MaskType == MaskType.Image) //if the object is in a masked area
-                                {
-                                    this.Result = ResultType.ImageMasked;
-                                }
+                                    // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                //check the mask manager if the image mask didnt flag anything
-                                if (!result.IsMasked)
-                                {
-                                    //check the dynamic or static masks
-                                    if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)
+                                    //only if the object is outside of the masked area
+                                    result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
+                                    this.ImgMaskResult = result.Result;
+                                    this.ImgMaskType = result.MaskType;
+                                    this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
+
+                                    if (!result.IsMasked)
                                     {
-                                        ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
-                                                                                          this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
-                                        //creates history and masked lists for objects returned
-                                        result = this._cam.maskManager.CreateDynamicMask(currentObject);
-                                        this.DynMaskResult = result.Result;
-                                        this.DynMaskType = result.MaskType;
-                                        this.DynamicThresholdCount = result.DynamicThresholdCount;
-                                        this.PercentMatch = result.PercentMatch;
-                                        //there is a dynamic or static mask
-                                        if (result.MaskType == MaskType.Dynamic)
-                                            this.Result = ResultType.DynamicMasked;
-                                        else if (result.MaskType == MaskType.Static)
-                                            this.Result = ResultType.StaticMasked;
+                                        this.Result = ResultType.Relevant;
                                     }
-                                    else if (SkipDynamicMaskCheck)
+                                    else if (result.MaskType == MaskType.None) //if the object is in a masked area
                                     {
-                                        this.DynMaskResult = MaskResult.SkippedDynamicMaskCheck;
-                                        this.DynMaskType = MaskType.None;
-
+                                        this.Result = ResultType.NoMask;
                                     }
-                                    else
+                                    else if (result.MaskType == MaskType.Image) //if the object is in a masked area
                                     {
-                                        this.DynMaskResult = MaskResult.NotEnabled;
+                                        this.Result = ResultType.ImageMasked;
                                     }
 
+                                    //check the mask manager if the image mask didnt flag anything
+                                    if (!result.IsMasked)
+                                    {
+                                        //check the dynamic or static masks
+                                        if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)
+                                        {
+                                            ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
+                                                                                              this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
+                                            //creates history and masked lists for objects returned
+                                            result = this._cam.maskManager.CreateDynamicMask(currentObject);
+                                            this.DynMaskResult = result.Result;
+                                            this.DynMaskType = result.MaskType;
+                                            this.DynamicThresholdCount = result.DynamicThresholdCount;
+                                            this.PercentMatch = result.PercentMatch;
+                                            //there is a dynamic or static mask
+                                            if (result.MaskType == MaskType.Dynamic)
+                                                this.Result = ResultType.DynamicMasked;
+                                            else if (result.MaskType == MaskType.Static)
+                                                this.Result = ResultType.StaticMasked;
+                                        }
+                                        else if (SkipDynamicMaskCheck)
+                                        {
+                                            this.DynMaskResult = MaskResult.SkippedDynamicMaskCheck;
+                                            this.DynMaskType = MaskType.None;
+
+                                        }
+                                        else
+                                        {
+                                            this.DynMaskResult = MaskResult.NotEnabled;
+                                        }
+
+                                    }
+
+                                    if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
+                                    {
+                                        this.Result = ResultType.Error;
+                                        Log($"Error: Masking error? '{this._cam.Name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.Name, this._curimg.image_path);
+                                    }
+
+                                }
+                                else //if confidence limits are not satisfied
+                                {
+                                    this.Result = ResultType.NoConfidence;
                                 }
 
-                                if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
-                                {
-                                    this.Result = ResultType.Error;
-                                    Log($"Error: Masking error? '{this._cam.Name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.Name, this._curimg.image_path);
-                                }
 
                             }
-                            else //if confidence limits are not satisfied
-                            {
-                                this.Result = ResultType.NoConfidence;
-                            }
-
-                        }
-                        else
-                        {
-                            this.Result = ResultType.UnwantedObject;
                         }
 
                     }
@@ -878,13 +913,28 @@ namespace AITool
         {
             //LabelDisplayFormat = "[Detection] [[Detail]] ({0:0}%)"
 
-            if (this._cam == null)
+            if (this._cam == null && !string.IsNullOrEmpty(this.Camera))
                 this._cam = AITOOL.GetCamera(this.Camera);
 
+            string DetectionDisplayFormat = "[label] [confidence]";
+
+            if (this._cam == null)
+            {
+                Log($"Could not match camera '{this.Camera}' to an existing camera. Has it been renamed?");
+            }
+            else
+            {
+                if (!string.Equals(this._cam.Name, this.Camera, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log($"Prediction camera '{this.Camera}' does not match found camera '{this._cam.Name}'.  Has it been renamed?");
+                }
+
+                DetectionDisplayFormat = this._cam.DetectionDisplayFormat;
+            }
             //Dont call this or we get a stack overflow!
             //string ret = AITOOL.ReplaceParams(this._cam, null, this._curimg, this._cam.DetectionDisplayFormat, this);
 
-            string ret = this._cam.DetectionDisplayFormat;
+            string ret = DetectionDisplayFormat;
 
             ret = Global.ReplaceCaseInsensitive(ret, "[label]", this.Label); //only gives first detection 
             ret = Global.ReplaceCaseInsensitive(ret, "[detail]", this.Detail);
@@ -927,8 +977,10 @@ namespace AITool
             //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
             //hair dryer, toothbrush.
 
-            if (tmp.Equals("person") || tmp.Equals("face"))
+            if (tmp.Equals("person"))
                 this.ObjType = ObjectType.Person;
+            else if (tmp.Equals("face"))
+                this.ObjType = ObjectType.Face;
             else if (tmp.Equals("dog") ||
                      tmp.Equals("cat") ||
                      tmp.Equals("bird") ||

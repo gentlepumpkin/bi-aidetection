@@ -140,26 +140,35 @@ namespace AITool
         private async Task TriggerActionJobQueueLoop()
         {
 
-            //this runs forever and blocks if nothing is in the queue
-            foreach (ClsTriggerActionQueueItem AQI in this.TriggerActionQueue.GetConsumingEnumerable())
+            try
             {
-                if (MasterCTS.IsCancellationRequested)
-                    break;
-
-                try
+                //this runs forever and blocks if nothing is in the queue
+                foreach (ClsTriggerActionQueueItem AQI in this.TriggerActionQueue.GetConsumingEnumerable(MasterCTS.Token))
                 {
-                    await this.RunTriggers(AQI);
-                    await Task.Delay(250); //very short wait between trigger events
-                }
-                catch (Exception ex)
-                {
+                    if (MasterCTS.IsCancellationRequested)
+                        break;
 
-                    Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam, AQI.CurImg);
+                    try
+                    {
+                        await this.RunTriggers(AQI);
+                        await Task.Delay(250); //very short wait between trigger events
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Log($"Error: " + ex.ToString(), this.CurSrv, AQI.cam, AQI.CurImg);
+                    }
+
                 }
 
             }
+            catch (Exception ex)
+            {
 
-            Log($"Error: Should not have left ActionQueueLoop?");
+                Log($"Exit ActionQueueLoop: {ex.Message}");
+            }
+
+            Log($"Exit ActionQueueLoop?");
 
         }
 
@@ -380,12 +389,12 @@ namespace AITool
                         //call urls
                         foreach (string url in AQI.cam.trigger_urls)
                         {
-                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url);
+                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
                             urls.Add(tmp);
 
                         }
 
-                        bool result = await this.CallTriggerURLs(urls, AQI.Trigger);
+                        bool result = await this.CallTriggerURLs(urls, AQI);
                     }
                     else if (!AQI.Trigger && AQI.cam.cancel_urls.Length > 0)
                     {
@@ -394,12 +403,12 @@ namespace AITool
                         //call urls
                         foreach (string url in AQI.cam.cancel_urls)
                         {
-                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url);
+                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
                             urls.Add(tmp);
 
                         }
 
-                        bool result = await this.CallTriggerURLs(urls, AQI.Trigger);
+                        bool result = await this.CallTriggerURLs(urls, AQI);
 
                     }
 
@@ -410,8 +419,8 @@ namespace AITool
                         string param = "";
                         try
                         {
-                            run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString);
-                            param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString);
+                            run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString, Global.IPType.Path);
+                            param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString, Global.IPType.Path);
                             Log($"Debug:   Starting external app - Camera={AQI.cam.Name} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
                             Process.Start(run, param);
                         }
@@ -426,52 +435,68 @@ namespace AITool
                     //Play sounds
                     if (AQI.cam.Action_PlaySounds && AQI.Trigger)
                     {
-                        try
+                        double soundcooltime = (DateTime.Now - AQI.cam.last_sound_time.Read()).TotalSeconds;
+
+                        if (soundcooltime >= AQI.cam.sound_cooldown_time_seconds)
                         {
-
-                            //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
-                            string snds = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_Sounds);
-
-                            List<string> items = Global.Split(snds, "|");
-
-                            foreach (string itm in items)
+                            try
                             {
-                                //object1, object2 ; soundfile.wav
-                                int played = 0;
-                                List<string> prms = Global.Split(itm, "|");
-                                foreach (string prm in prms)
+
+                                //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
+                                string snds = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_Sounds, Global.IPType.Path);
+
+                                List<string> items = Global.Split(snds, "|");
+                                bool wasplayed = false;
+
+                                foreach (string itm in items)
                                 {
-                                    //prm0 - object1, object2
-                                    //prm1 - soundfile.wav
-                                    List<string> splt = Global.Split(prm, ";");
-                                    string soundfile = splt[1];
-                                    List<string> objects = Global.Split(splt[0], ",");
-                                    foreach (string objname in objects)
+                                    //object1, object2 ; soundfile.wav
+                                    int played = 0;
+                                    List<string> prms = Global.Split(itm, "|");
+                                    foreach (string prm in prms)
                                     {
-                                        foreach (string detection in AQI.cam.last_detections)
+                                        //prm0 - object1, object2
+                                        //prm1 - soundfile.wav
+                                        List<string> splt = Global.Split(prm, ";");
+                                        string soundfile = splt[1];
+                                        List<string> objects = Global.Split(splt[0], ",");
+                                        foreach (string objname in objects)
                                         {
-                                            if (detection.IndexOf(objname, StringComparison.OrdinalIgnoreCase) >= 0 || (objname == "*"))
+                                            foreach (string detection in AQI.cam.last_detections)
                                             {
-                                                Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
-                                                SoundPlayer sp = new SoundPlayer(soundfile);
-                                                sp.Play();
-                                                played++;
+                                                if (detection.IndexOf(objname, StringComparison.OrdinalIgnoreCase) >= 0 || (objname == "*"))
+                                                {
+                                                    Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                                    SoundPlayer sp = new SoundPlayer(soundfile);
+                                                    sp.Play();
+                                                    played++;
+                                                    wasplayed = true;
+                                                }
                                             }
                                         }
                                     }
+                                    if (played == 0)
+                                    {
+                                        Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam, AQI.CurImg);
+                                    }
                                 }
-                                if (played == 0)
-                                {
-                                    Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam, AQI.CurImg);
-                                }
+
+                                if (wasplayed)
+                                    AQI.cam.last_sound_time.Write(DateTime.Now);
+
+                            }
+                            catch (Exception ex)
+                            {
+
+                                ret = false;
+                                Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                             }
 
                         }
-                        catch (Exception ex)
+                        else
                         {
+                            Log($"   Camera {AQI.cam.Name} is still in SOUND cooldown. Sound was not played. ({soundcooltime} of {AQI.cam.sound_cooldown_time_seconds} seconds - See Cameras 'sound_cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
-                            ret = false;
-                            Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
 
@@ -482,13 +507,13 @@ namespace AITool
 
                         if (AQI.Trigger)
                         {
-                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic);
-                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload);
+                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic, Global.IPType.URL);
+                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload, Global.IPType.URL);
                         }
                         else
                         {
-                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic_cancel);
-                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel);
+                            topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic_cancel, Global.IPType.URL);
+                            payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel, Global.IPType.URL);
                         }
 
                         //Log($"Debug: [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
@@ -617,9 +642,7 @@ namespace AITool
 
                             if (AQI.Hist != null && !string.IsNullOrEmpty(AQI.Hist.PredictionsJSON))
                             {
-                                List<ClsPrediction> predictions = new List<ClsPrediction>();
-
-                                predictions = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
+                                List<ClsPrediction> predictions = AQI.Hist.Predictions();
 
                                 for (int i = predictions.Count - 1; i >= 0; i--)
                                 {
@@ -661,15 +684,49 @@ namespace AITool
                                         //we need this since people can change the border width in the json file
                                         int halfbrd = AppSettings.Settings.RectBorderWidth / 2;
 
+                                        System.Drawing.SizeF TextSize = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+
+                                        int x = xmin - halfbrd;
+                                        int y = ymax + halfbrd;
+
+
+                                        //adjust the x / width label so it doesnt go off screen
+                                        int EndX = x + (int)TextSize.Width;
+                                        if (EndX > xmax)
+                                        {
+                                            //int diffx = x - sclxmax;
+                                            x = xmax - (int)TextSize.Width + halfbrd;
+                                        }
+
+                                        if (x < xmin)
+                                            x = xmin;
+
+                                        if (x < 0)
+                                            x = 0;
+
+                                        //adjust the y / height label so it doesnt go off screen
+                                        int EndY = y + (int)TextSize.Height;
+                                        if (EndY > ymax)
+                                        {
+                                            //float diffy = EndY - sclymax;
+                                            y = ymax - (int)TextSize.Height - halfbrd;
+                                        }
+
+
+                                        if (y < 0)
+                                            y = 0;
+
                                         //object name text below rectangle
-                                        rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, img.Width, img.Height); //sets bounding box for drawn text
+                                        rect = new System.Drawing.Rectangle(x,
+                                                                            y,
+                                                                            img.Width,
+                                                                            img.Height); //sets bounding box for drawn text
 
                                         Brush brush = new SolidBrush(color); //sets background rectangle color
 
                                         lasttext = pred.ToString();
 
-                                        System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-                                        g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
+                                        g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, TextSize.Width, TextSize.Height); //draw grey background rectangle for detection text
                                         g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
 
                                         g.Flush();
@@ -780,9 +837,9 @@ namespace AITool
 
                                 Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
                                 result.Success = true; //assume true
-
-                                if (AQI.cam.Action_image_merge_detections_makecopy)
-                                    OutputImageFile = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(AQI.CurImg.image_path));
+                                string tmpfolder = Path.GetTempPath();
+                                if (AQI.cam.Action_image_merge_detections_makecopy && !(AQI.CurImg.image_path.IndexOf(tmpfolder, StringComparison.OrdinalIgnoreCase) >= 0))
+                                    OutputImageFile = Path.Combine(tmpfolder, Path.GetFileName(AQI.CurImg.image_path));
                                 else
                                     OutputImageFile = AQI.CurImg.image_path;
 
@@ -854,7 +911,7 @@ namespace AITool
                     return false;
                 }
 
-                string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder);
+                string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder, Global.IPType.Path);
 
                 if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\") || netfld.Contains("."))
                 {
@@ -863,7 +920,7 @@ namespace AITool
                 }
 
                 string ext = Path.GetExtension(AQI.CurImg.image_path);
-                string filename = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder_filename).Trim() + ext;
+                string filename = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder_filename, Global.IPType.Path).Trim().Replace(ext, "") + ext;
 
                 dest_path = System.IO.Path.Combine(netfld, filename);
 
@@ -885,14 +942,14 @@ namespace AITool
 
         }
         //call trigger urls
-        public async Task<bool> CallTriggerURLs(List<string> trigger_urls, bool Trigger)
+        public async Task<bool> CallTriggerURLs(List<string> trigger_urls, ClsTriggerActionQueueItem AQI)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = true;
 
             string type = "trigger";
-            if (!Trigger)
+            if (!AQI.Trigger)
                 type = "cancel";
 
             if (AITOOL.triggerHttpClient == null)
@@ -901,8 +958,26 @@ namespace AITool
                 AITOOL.triggerHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds);
             }
 
-            foreach (string url in trigger_urls)
+            for (int i = 0; i < trigger_urls.Count; i++)
             {
+                string url = trigger_urls[i];
+
+                if (Global.IsStringBefore(url, ";", ":"))
+                {
+                    //prm0 - object1, object2
+                    //prm1 - soundfile.wav or URL
+                    string objects = Global.GetWordBetween(url, "", ";");
+                    url = Global.GetWordBetween(url, ";", "");
+                    //make sure it is a matching object
+                    if (!AQI.Hist.PredictionRelevant(objects, "TriggerURL"))
+                        continue;
+
+                }
+                else
+                {
+                    Log($"Debug: No conditional objects found in URL: {url}");
+                }
+
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
@@ -911,11 +986,11 @@ namespace AITool
                     if (response.IsSuccessStatusCode)
                     {
                         string content = await response.Content.ReadAsStringAsync();
-                        Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: '{content.Replace("\r\n", "\n").Replace("\n", " ").Truncate(128,true)}'");
+                        Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: '{Global.CleanString(content).Truncate(128, true)}'");
                     }
                     else
                     {
-                        ret = false;  
+                        ret = false;
                         Log($"ERROR: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
                     }
 
@@ -944,34 +1019,14 @@ namespace AITool
             {
 
                 //make sure it is a matching object
-                if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects))
+                if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects) && AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) == -1)
                 {
-
-                    List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
-                    if (preds != null && preds.Count > 0)
-                    {
-                        //find at least one thing in the triggered objects list in order to send
-                        string bad = "";
-                        bool fnd = false;
-                        foreach (ClsPrediction pred in preds)
-                        {
-                            if (Global.IsInList(pred.Label, AQI.cam.Action_pushover_triggering_objects))
-                                fnd = true;
-                            else
-                                bad += pred.Label + ",";
-                        }
-                        if (!fnd)
-                        {
-                            Log($"Debug: Skipping pushover because object(s) '{bad}' not in trigger objects list '{AQI.cam.Action_pushover_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
-                            return true;  //to avoid error showing
-                        }
-                    }
+                    if (!AQI.Hist.PredictionRelevant(AQI.cam.Action_pushover_triggering_objects, "Pushover"))
+                        return true;
                 }
 
                 if (AppSettings.Settings.pushover_cooldown_seconds < 2)
-                {
                     AppSettings.Settings.pushover_cooldown_seconds = 2;  //force to be at least 2 seconds
-                }
 
                 DateTime now = DateTime.Now;
 
@@ -995,24 +1050,24 @@ namespace AITool
                                     if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
                                         title = "Error";
                                     else
-                                        title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
+                                        title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
 
-                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
 
                                 }
                                 else
                                 {
-                                    title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
-                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
+                                    title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
+                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
                                 }
 
-                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
                             }
                             else  //TODO: Add cancel if requested
                             {
-                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title);
-                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message);
-                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device);
+                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
+                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
                             }
 
 
@@ -1163,42 +1218,18 @@ namespace AITool
                 try
                 {
                     if (AppSettings.Settings.telegram_cooldown_seconds < 2)
-                    {
                         AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 2 seconds
-                    }
 
                     string Caption = "";
 
                     if (!string.IsNullOrEmpty(AQI.Text))
-                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
                     else
-                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.telegram_caption);
-
-
+                        Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.telegram_caption, Global.IPType.Path);
 
                     //make sure it is a matching object
-                    if (!string.IsNullOrEmpty(AQI.cam.telegram_triggering_objects))
-                    {
-                        List<ClsPrediction> preds = Global.SetJSONString<List<ClsPrediction>>(AQI.Hist.PredictionsJSON);
-                        if (preds != null && preds.Count > 0)
-                        {
-                            //find at least one thing in the triggered objects list in order to send
-                            string bad = "";
-                            bool fnd = false;
-                            foreach (ClsPrediction pred in preds)
-                            {
-                                if (Global.IsInList(pred.Label, AQI.cam.telegram_triggering_objects))
-                                    fnd = true;
-                                else
-                                    bad += pred.Label + ",";
-                            }
-                            if (!fnd)
-                            {
-                                Log($"Debug: Skipping telegram because object(s) '{bad}' not in trigger objects list '{AQI.cam.telegram_triggering_objects}'", this.CurSrv, AQI.cam, AQI.CurImg);
-                                return true;  //to avoid error showing
-                            }
-                        }
-                    }
+                    if (!AQI.Hist.PredictionRelevant(AQI.cam.telegram_triggering_objects, "Telegram"))
+                        return true;
 
                     DateTime now = DateTime.Now;
 
@@ -1349,17 +1380,13 @@ namespace AITool
             string lastchatid = "";
             if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
             {
-
-                //telegram upload sometimes fails
                 try
                 {
 
                     if (AppSettings.Settings.telegram_cooldown_seconds < 2)
-                    {
-                        AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 1 second
-                    }
+                        AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 2 second
 
-                    string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text);
+                    string Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
 
                     DateTime now = DateTime.Now;
 

@@ -90,119 +90,131 @@ namespace AITool
     }
     public class Camera : IEquatable<Camera>
     {
-        public string Name = "";
-        public string Prefix = "";
-        public string BICamName = "";
-        public string MaskFileName = "";
-        public string triggering_objects_as_string = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
-        public string additional_triggering_objects_as_string = "Face, SUV, VAN, Pickup Truck, Meat Popsicle";
-        public string[] triggering_objects = new string[0];
-        public string trigger_urls_as_string = "";
-        public string[] trigger_urls = new string[0];
-        public string cancel_urls_as_string = "";
-        public string[] cancel_urls = new string[0];
-        //public List<CameraTriggerAction> trigger_action_list = new List<CameraTriggerAction>();
-        public bool trigger_url_cancels = false;
-        public bool telegram_enabled = false;
-        public string telegram_caption = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
-        public string telegram_triggering_objects = "";
-        public string telegram_chatid = "";
-        public string telegram_active_time_range = "00:00:00-23:59:59";
-        public bool enabled = true;
-        public double cooldown_time = 0;
-        public int cooldown_time_seconds = 5;
-        public int threshold_lower = 1;
-        public int threshold_upper = 100;
+        public string Name { get; set; } = "";
+        public string Prefix { get; set; } = "";
+        public string BICamName { get; set; } = "";
+        public string MaskFileName { get; set; } = "";
+        public string triggering_objects_as_string { get; set; } = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+        public string additional_triggering_objects_as_string { get; set; } = "SUV, VAN, Pickup Truck, Meat Popsicle";
+        public string[] triggering_objects { get; set; } = new string[0];
+        public string trigger_urls_as_string { get; set; } = "";
+        public string[] trigger_urls { get; set; } = new string[0];
+        public string cancel_urls_as_string { get; set; } = "";
+        public string[] cancel_urls { get; set; } = new string[0];
+        //public List<CameraTriggerAction> trigger_action_list { get; set; } = new List<CameraTriggerAction>();
+        public bool trigger_url_cancels { get; set; } = false;
+        public bool telegram_enabled { get; set; } = false;
+        public string telegram_caption { get; set; } = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
+        public string telegram_triggering_objects { get; set; } = "";
+        public string telegram_chatid { get; set; } = "";
+        public string telegram_active_time_range { get; set; } = "00:00:00-23:59:59";
+        public bool enabled { get; set; } = true;
+        public double cooldown_time { get; set; } = 0;
+        public int cooldown_time_seconds { get; set; } = 5;
+        public int sound_cooldown_time_seconds { get; set; } = 5;
+        public int threshold_lower { get; set; } = 1;
+        public int threshold_upper { get; set; } = 100;
 
         //watch folder for each camera
-        public string input_path = "";
-        public bool input_path_includesubfolders = false;
+        public string input_path { get; set; } = "";
+        public bool input_path_includesubfolders { get; set; } = false;
 
-        public bool Action_image_copy_enabled = false;
-        public bool Action_image_merge_detections = false;
-        public bool Action_image_merge_detections_makecopy = true;
-        public long Action_image_merge_jpegquality = 90;
-        public string Action_network_folder = "";
-        public string Action_network_folder_filename = "[ImageFilenameNoExt]";
-        public int Action_network_folder_purge_older_than_days = 30;
-        public bool Action_RunProgram = false;
-        public string Action_RunProgramString = "";
-        public string Action_RunProgramArgsString = "";
-        public bool Action_PlaySounds = false;
-        public string Action_Sounds = @"person ; C:\example\YOYO.WAV | bird ; C:\example\TWEET.WAV";
+        public bool Action_image_copy_enabled { get; set; } = false;
+        public bool Action_image_merge_detections { get; set; } = false;
+        public bool Action_image_merge_detections_makecopy { get; set; } = true;
+        public long Action_image_merge_jpegquality { get; set; } = 90;
+        public string Action_network_folder { get; set; } = "";
+        public string Action_network_folder_filename { get; set; } = "[ImageFilenameNoExt]";
+        public int Action_network_folder_purge_older_than_days { get; set; } = 30;
+        public bool Action_RunProgram { get; set; } = false;
+        public string Action_RunProgramString { get; set; } = "";
+        public string Action_RunProgramArgsString { get; set; } = "";
+        public bool Action_PlaySounds { get; set; } = false;
+        public string Action_Sounds { get; set; } = @"person ; C:\example\YOYO.WAV | bird ; C:\example\TWEET.WAV";
 
-        public bool Action_mqtt_enabled = false;
-        public string Action_mqtt_topic = "ai/[camera]/motion";
-        public string Action_mqtt_payload = "[detections]";
-        public string Action_mqtt_topic_cancel = "ai/[camera]/motioncancel";
-        public string Action_mqtt_payload_cancel = "cancel";
-        public bool Action_mqtt_retain_message = false;
-        public bool Action_mqtt_send_image = false;
-        public bool Action_queued = false;
+        public bool Action_mqtt_enabled { get; set; } = false;
+        public string Action_mqtt_topic { get; set; } = "ai/[camera]/motion";
+        public string Action_mqtt_payload { get; set; } = "[detections]";
+        public string Action_mqtt_topic_cancel { get; set; } = "ai/[camera]/motioncancel";
+        public string Action_mqtt_payload_cancel { get; set; } = "cancel";
+        public bool Action_mqtt_retain_message { get; set; } = false;
+        public bool Action_mqtt_send_image { get; set; } = false;
+        public bool Action_queued { get; set; } = false;
 
-        public bool Action_pushover_enabled = false;
-        public string Action_pushover_title = "AI Detection - [camera]";
-        public string Action_pushover_message = "[SummaryNonEscaped]";
-        public string Action_pushover_device = "";
-        public string Action_pushover_triggering_objects = "";
-        public string Action_pushover_Priority = "Normal";
-        public string Action_pushover_Sound = "pushover";
-        public int Action_pushover_retry_seconds = 60;
-        public int Action_pushover_expire_seconds = 10800;
-        public string Action_pushover_retrycallback_url = "";
-        public string Action_pushover_SupplementaryUrl = "";
-        public string Action_pushover_active_time_range = "00:00:00-23:59:59";
+        public bool Action_pushover_enabled { get; set; } = false;
+        public string Action_pushover_title { get; set; } = "AI Detection - [camera]";
+        public string Action_pushover_message { get; set; } = "[SummaryNonEscaped]";
+        public string Action_pushover_device { get; set; } = "";
+        public string Action_pushover_triggering_objects { get; set; } = "";
+        public string Action_pushover_Priority { get; set; } = "Normal";
+        public string Action_pushover_Sound { get; set; } = "pushover";
+        public int Action_pushover_retry_seconds { get; set; } = 60;
+        public int Action_pushover_expire_seconds { get; set; } = 10800;
+        public string Action_pushover_retrycallback_url { get; set; } = "";
+        public string Action_pushover_SupplementaryUrl { get; set; } = "";
+        public string Action_pushover_active_time_range { get; set; } = "00:00:00-23:59:59";
 
         [JsonIgnore]
-        public bool Action_Cancel_Timer_Enabled = false;
+        public bool Action_Cancel_Timer_Enabled { get; set; } = false;
         [JsonIgnore]
-        public DateTime Action_Cancel_Start_Time = DateTime.MinValue;
+        public DateTime Action_Cancel_Start_Time { get; set; } = DateTime.MinValue;
 
-        public MaskManager maskManager = new MaskManager();
-        public int mask_brush_size = 35;
+        public MaskManager maskManager { get; set; } = new MaskManager();
+        public int mask_brush_size { get; set; } = 35;
 
         //stats
-        public int stats_alerts = 0; //alert image contained relevant object counter
-        public int stats_false_alerts = 0; //alert image contained no object counter
-        public int stats_irrelevant_alerts = 0; //alert image contained irrelevant object counter
+        public int stats_alerts { get; set; } = 0; //alert image contained relevant object counter
+        public int stats_false_alerts { get; set; } = 0; //alert image contained no object counter
+        public int stats_irrelevant_alerts { get; set; } = 0; //alert image contained irrelevant object counter
 
-        public int stats_skipped_images = 0; //Images that were skipped due to cooldown or retry count
+        public int stats_skipped_images { get; set; } = 0; //Images that were skipped due to cooldown or retry count
 
         [JsonIgnore]
-        public int stats_skipped_images_session = 0; //Images that were skipped due to cooldown or retry count
+        public int stats_skipped_images_session { get; set; } = 0; //Images that were skipped due to cooldown or retry count
 
 
-        public string last_image_file = "";
-        public string last_image_file_with_detections = "";
+        public string last_image_file { get; set; } = "";
+        public string last_image_file_with_detections { get; set; } = "";
 
-        public int XOffset = 0;   //these are for when deepstack is having a problem with detection rectangle being in the wrong location
-        public int YOffset = 0;   //  Can be negative numbers
+        public int XOffset { get; set; } = 0;   //these are for when deepstack is having a problem with detection rectangle being in the wrong location
+        public int YOffset { get; set; } = 0;   //  Can be negative numbers
 
-        public string ImageAdjustProfile = "Default";
+        public string ImageAdjustProfile { get; set; } = "Default";
 
-        public string DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
+        public string DetectionDisplayFormat { get; set; } = "[Label] [[Detail]] [confidence]";
 
         //Keep a list of image resolutions and the last image file name with that resolution.  This will help us keep track of which image mask to use
-        public List<ImageResItem> ImageResolutions = new List<ImageResItem>();
+        public List<ImageResItem> ImageResolutions { get; set; } = new List<ImageResItem>();
+
+        public int PredSizeMinPercentOfImage { get; set; } = 1;   //prediction must be at least this % of the image
+        public int PredSizeMaxPercentOfImage { get; set; } = 95;
+        public int PredSizeMinHeight { get; set; } = 0;
+        public int PredSizeMinWidth { get; set; } = 0;
+        public int PredSizeMaxHeight { get; set; } = 0;
+        public int PredSizeMaxWidth { get; set; } = 0;
+
+        public int MergePredictionsMinMatchPercent { get; set; } = 85;   //when combining predictions from multiple sources (deepstack/aws for example) the two objects have to match at least this much to be considered the same
 
         [JsonIgnore]
-        public ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);
+        public ThreadSafe.Datetime last_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
+        [JsonIgnore]
+        public ThreadSafe.Datetime last_sound_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
 
         [JsonIgnore]
-        public string LastGetCameraMatchResult = "";
+        public string LastGetCameraMatchResult { get; set; } = "";
 
         [JsonIgnore]
-        public List<string> last_detections = new List<string>(); //stores objects that were detected last
+        public List<string> last_detections { get; set; } = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
-        public List<string> last_details = new List<string>(); //stores objects that were detected last
+        public List<string> last_details { get; set; } = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
-        public List<float> last_confidences = new List<float>(); //stores last objects confidences
+        public List<float> last_confidences { get; set; } = new List<float>(); //stores last objects confidences
         [JsonIgnore]
-        public List<string> last_positions = new List<string>(); //stores last objects positions
+        public List<string> last_positions { get; set; } = new List<string>(); //stores last objects positions
         [JsonIgnore]
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
-        private object CamLock = new object();
+        private object CamLock { get; set; } = new object();
 
 
         public string GetMaskFile(bool MustExist, ClsImageQueueItem CurImg = null, ImageResItem ir = null)
@@ -443,9 +455,49 @@ namespace AITool
 
         }
 
-        public bool IsRelevant(string ObjectName)
+        public ResultType IsRelevantObject(ClsPrediction pred)
         {
-            return Global.IsInList(ObjectName, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(ObjectName, this.additional_triggering_objects_as_string, TrueIfEmpty: false);
+            if (Global.IsInList(pred.Label, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(pred.Label, this.additional_triggering_objects_as_string, TrueIfEmpty: false))
+                return ResultType.Relevant;
+            else
+                return ResultType.UnwantedObject;
+
+        }
+        public ResultType IsRelevantSize(ClsPrediction pred)
+        {
+            ResultType ret = ResultType.Relevant;
+
+            if (pred.RectWidth == 0 || pred.RectHeight == 0 || pred.ImageHeight == 0 || pred.ImageWidth == 0)
+                return ResultType.Unknown;
+
+            //public int PredSizeMinPercentOfImage = 1;   //prediction must be at least this % of the image
+            //public int PredSizeMaxPercentOfImage = 95;
+            //public int PredSizeMinHeight = 0;
+            //public int PredSizeMinWidth = 0;
+            //public int PredSizeMaxHeight = 0;
+            //public int PredSizeMaxWidth = 0;
+
+            if (this.PredSizeMinPercentOfImage > 0 || this.PredSizeMaxPercentOfImage > 0)
+            {
+                if (pred.PercentOfImage < this.PredSizeMinPercentOfImage)
+                    ret = ResultType.TooSmallPercent;
+                else if (this.PredSizeMaxPercentOfImage > 0 && pred.PercentOfImage > this.PredSizeMaxPercentOfImage)
+                    ret = ResultType.TooLargePercent;
+            }
+
+            if (ret == ResultType.Relevant)
+            {
+                if (pred.RectWidth < this.PredSizeMinWidth)
+                    ret = ResultType.TooSmallWidth;
+                else if (pred.RectHeight < this.PredSizeMinHeight)
+                    ret = ResultType.TooSmallHeight;
+                else if (this.PredSizeMaxWidth > 0 && pred.RectWidth > this.PredSizeMaxWidth)
+                    ret = ResultType.TooLargeWidth;
+                else if (this.PredSizeMaxHeight > 0 && pred.RectHeight > this.PredSizeMaxHeight)
+                    ret = ResultType.TooLargeHeight;
+            }
+
+            return ret;
         }
         public Camera(string Name = "")
         {
@@ -483,7 +535,7 @@ namespace AITool
                 this.trigger_urls_as_string += c;
                 if (i < (this.trigger_urls.Length - 1))
                 {
-                    this.trigger_urls_as_string += ", ";
+                    this.trigger_urls_as_string += " | ";
                 }
                 i++;
             }
@@ -507,14 +559,17 @@ namespace AITool
             {
                 this.enabled = false;
             }
-
-            Double.TryParse(content[5].Split('"')[1], out this.cooldown_time); //read cooldown time
-
+            double outvaldbl = 0;
+            int outvalint = 0;
+            Double.TryParse(content[5].Split('"')[1], out outvaldbl); //read cooldown time
+            this.cooldown_time = outvaldbl;
             //read lower and upper threshold. Only load if line containing threshold values already exists (>version 1.58).
             if (content[6] != "")
             {
-                Int32.TryParse(content[6].Split('"')[1].Split(',')[0], out this.threshold_lower); //read lower threshold
-                Int32.TryParse(content[6].Split('"')[1].Split(',')[1], out this.threshold_upper); //read upper threshold
+                Int32.TryParse(content[6].Split('"')[1].Split(',')[0], out outvalint); //read lower threshold
+                this.threshold_lower = outvalint;
+                Int32.TryParse(content[6].Split('"')[1].Split(',')[1], out outvalint); //read upper threshold
+                this.threshold_upper = outvalint;
             }
             else //if config file from older version, set values to 0% and 100%
             {
@@ -524,9 +579,13 @@ namespace AITool
 
 
             //read stats
-            Int32.TryParse(content[7].Split('"')[1].Split(',')[0], out this.stats_alerts); //bedeutet: Zeile 7 (6+1), aufgetrennt an ", 2tes (1+1) Resultat, aufgeteilt an ',', davon 1. Resultat  
-            Int32.TryParse(content[7].Split('"')[1].Split(',')[1], out this.stats_irrelevant_alerts);
-            Int32.TryParse(content[7].Split('"')[1].Split(',')[2], out this.stats_false_alerts);
+
+            Int32.TryParse(content[7].Split('"')[1].Split(',')[0], out outvalint); //bedeutet: Zeile 7 (6+1), aufgetrennt an ", 2tes (1+1) Resultat, aufgeteilt an ',', davon 1. Resultat  
+            this.stats_alerts = outvalint;
+            Int32.TryParse(content[7].Split('"')[1].Split(',')[1], out outvalint);
+            this.stats_irrelevant_alerts = outvalint;
+            Int32.TryParse(content[7].Split('"')[1].Split(',')[2], out outvalint);
+            this.stats_false_alerts = outvalint;
         }
 
 

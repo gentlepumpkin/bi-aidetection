@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,9 +50,10 @@ namespace AITool
 
         Stopwatch StartupSW = null;
 
-        private bool AllowShowDisplay = false;
 
         private bool CloseImmediately = false;
+
+        private bool ResetSettings = false;
 
         public Shell()
         {
@@ -84,13 +86,17 @@ namespace AITool
 
 
 
+
+            Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
+
+            //Uri pth = new Uri("\\\\[2600:6c64:6b7f:f8d8::1d4]\\c$");
+
             //ClsDoodsRequest cdr = new ClsDoodsRequest();
 
             //cdr.Detect.MinPercentMatch = 50;
 
             //string testjson = JsonConvert.SerializeObject(cdr);
 
-            Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 
             using var cw = new Global_GUI.CursorWait(true);
 
@@ -155,14 +161,8 @@ namespace AITool
                 //---------------------------------------------------------------------------
                 //CAMERAS TAB
 
-                //left list column setup
-                this.list2.Columns.Add("Camera");
+                Global_GUI.ConfigureFOLV(this.FOLV_Cameras, typeof(Camera), new Font("Segoe UI", (float)9.75, FontStyle.Regular), GridLines: false);
 
-                //set left list column width segmentation (because of some bug -4 is necessary to achieve the correct width)
-                this.list2.Columns[0].Width = this.list2.Width - 4;
-                this.list2.FullRowSelect = true; //make all columns clickable
-
-                this.LoadCameras(); //load camera list
 
                 this.comboBox_filter_camera.SelectedIndex = this.comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
 
@@ -257,7 +257,7 @@ namespace AITool
                 this.tmr.Elapsed += new System.Timers.ElapsedEventHandler(this.tmr_Elapsed);
                 this.tmr.Stop();
 
-                this.ToolStripComboBoxSearch.Text = Global.GetSetting("SearchText", "");
+                this.ToolStripComboBoxSearch.Text = Global.GetRegSetting("SearchText", "");
                 this.mnu_Filter.Checked = AppSettings.Settings.log_mnu_Filter;
                 this.mnu_Highlight.Checked = AppSettings.Settings.log_mnu_Highlight;
 
@@ -310,14 +310,16 @@ namespace AITool
 
                 Global_GUI.RestoreWindowState(this);
 
+                this.LoadCameras(); //load camera list
+
                 if (Environment.CommandLine.IndexOf("/min", StringComparison.OrdinalIgnoreCase) == -1)
                 {
-                    ShowForm();
+                    this.ShowForm();
                 }
 
 
-
             });
+
 
         }
 
@@ -925,11 +927,6 @@ namespace AITool
             {
                 HideForm();
             }
-            else
-            {
-                this.ResizeListViews();
-                //Log($"Debug: Form_Resize. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, tryicon={this.notifyIcon.Visible}");
-            }
 
             UpdateErrorIcon();
 
@@ -1007,31 +1004,12 @@ namespace AITool
             this.FilterLogErrors();
         }
 
-        //adapt list views (history tab and cameras tab) to window size while considering scrollbar influence
-        private void ResizeListViews()
-        {
-            //suspend layout of most complex tablelayout elements (gives a few milliseconds)
-            this.tableLayoutPanel7.SuspendLayout();
-            this.tableLayoutPanel8.SuspendLayout();
-            //tableLayoutPanel9.SuspendLayout();
-
-
-            if (this.list2.Columns.Count > 0)
-                this.list2.Columns[0].Width = this.list2.Width - 4; //resize camera list column
-
-            //resume layout again
-            this.tableLayoutPanel7.ResumeLayout();
-            this.tableLayoutPanel8.ResumeLayout();
-            //tableLayoutPanel9.ResumeLayout();
-        }
-
 
         //EVENTS:
 
         //event: mouse click on tab control
         private void tabControl1_MouseDown(object sender, MouseEventArgs e)
         {
-            this.ResizeListViews();
         }
 
         //event: another tab selected (Only load certain things in tabs if they are actually open)
@@ -1046,6 +1024,10 @@ namespace AITool
             else if (this.tabControl1.SelectedIndex == 2)
             {
                 await this.LoadHistoryAsync(true, true);
+            }
+            else if (this.tabControl1.SelectedIndex == 3)
+            {
+                this.LoadCameras();
             }
             else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
             {
@@ -1381,7 +1363,7 @@ namespace AITool
                         foreach (string detection in detections)
                         {
                             int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
-                            if (x_value > 0)
+                            if (x_value > 0 && x_value <= green_values.Count() - 1)
                             {
                                 //example: -> "person (41%)"
                                 //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"
@@ -1487,6 +1469,10 @@ namespace AITool
                     float imgHeight = this.pictureBox1.BackgroundImage.Height;
                     float boxWidth = this.pictureBox1.Width;
                     float boxHeight = this.pictureBox1.Height;
+                    float clnWidth = this.pictureBox1.ClientSize.Width;
+                    float clnHeight = this.pictureBox1.ClientSize.Height;
+                    float rctWidth = this.pictureBox1.ClientRectangle.Width;
+                    float rctHeight = this.pictureBox1.ClientRectangle.Height;
 
                     //these variables store the padding between image border and picturebox border
                     int absX = 0;
@@ -1514,26 +1500,101 @@ namespace AITool
                     int ymin = (int)(scale * _ymin) + absY;
                     int ymax = (int)(scale * _ymax) + absY;
 
+                    int sclWidth = xmax - xmin;
+                    int sclHeight = ymax - ymin;
+
+                    int sclxmax = (int)boxWidth - (absX * 2);
+                    int sclymax = (int)boxHeight - (absY * 2);
+                    int sclxmin = absX;
+                    int sclymin = absY;
 
                     //3. paint rectangle
-                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin,
+                                                                                 ymin,
+                                                                                 sclWidth,
+                                                                                 sclHeight);
                     using (Pen pen = new Pen(color, BorderWidth))
                     {
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                     }
 
+
+                    ///testing=================================================
+                    //3. paint rectangle
+                    //rect = new System.Drawing.Rectangle(absX + 5,
+                    //                                    absY + 5,
+                    //                                    sclxmax - 10,
+                    //                                    sclymax - 10);
+
+                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
+                    //{
+                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+                    //}
+                    ///testing=================================================
+
                     //we need this since people can change the border width in the json file
                     int halfbrd = BorderWidth / 2;
 
-                    //object name text below rectangle
-                    rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
 
                     Brush brush = new SolidBrush(color); //sets background rectangle color
 
-                    System.Drawing.SizeF size = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-                    e.Graphics.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
-                    e.Graphics.DrawString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
 
+
+                    //object name text below rectangle
+
+                    int x = xmin - halfbrd;
+                    int y = ymax + halfbrd;
+
+                    //just for debugging:
+                    //int timgWidth = (int)imgWidth;
+                    //int tboxWidth = (int)boxWidth;
+                    //int tsclWidth = (int)sclWidth;
+
+                    //int timgHeight = (int)imgHeight;
+                    //int tboxHeight = (int)boxHeight;
+                    //int tsclHeight = (int)sclHeight;
+
+
+                    //adjust the x / width label so it doesnt go off screen
+                    int EndX = x + (int)TextSize.Width;
+                    if (EndX > sclxmax)
+                    {
+                        //int diffx = x - sclxmax;
+                        x = xmax - (int)TextSize.Width + halfbrd;
+                    }
+
+                    if (x < sclxmin)
+                        x = sclxmin;
+
+                    if (x < 0)
+                        x = 0;
+
+                    //adjust the y / height label so it doesnt go off screen
+                    int EndY = y + (int)TextSize.Height;
+                    if (EndY > sclymax)
+                    {
+                        //float diffy = EndY - sclymax;
+                        y = ymax - (int)TextSize.Height - halfbrd;
+                    }
+
+                    if (y < 0)
+                        y = 0;
+
+
+                    rect = new System.Drawing.Rectangle(x,
+                                                        y,
+                                                        (int)boxWidth,
+                                                        (int)boxHeight); //sets bounding box for drawn text
+
+
+                    e.Graphics.FillRectangle(brush,
+                                             x,
+                                             y,
+                                             TextSize.Width,
+                                             TextSize.Height); //draw grey background rectangle for detection text
+
+                    e.Graphics.DrawString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
 
 
                 }
@@ -1556,7 +1617,10 @@ namespace AITool
                 History hist = (History)this.folv_history.SelectedObjects[0];
 
                 if (hist == null)
+                {
+                    Log("Warn: Selected history item is null?");
                     return;
+                }
 
                 string positions = hist.Positions;
                 string detections = hist.Detections;
@@ -1577,28 +1641,43 @@ namespace AITool
 
                     if (!string.IsNullOrEmpty(hist.PredictionsJSON))
                     {
-                        List<ClsPrediction> predictions = new List<ClsPrediction>();
+                        List<ClsPrediction> predictions = hist.Predictions();
 
-                        predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
-
-                        //draw in reverse, assuming most important should be on top
-                        for (int i = predictions.Count - 1; i >= 0; i--)
+                        if (predictions.Count > 0)
                         {
-                            ClsPrediction pred = predictions[i];
-                            if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                            //draw in reverse, assuming most important should be on top
+                            for (int i = predictions.Count - 1; i >= 0; i--)
                             {
-                                this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
-                            }
-                            else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
-                            {
-                                this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
-                            }
+                                ClsPrediction pred = predictions[i];
+                                if (pred != null)
+                                {
+                                    if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                                    {
+                                        this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                    }
+                                    else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                    {
+                                        this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                    }
+                                }
+                                else
+                                {
+                                    Log($"Warn: Prediction #{i + 1} of {predictions.Count} is empty?");
 
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            Log("Warn: No predictions for the selected history item.");
                         }
 
                     }
                     else
                     {
+
+                        //we should never get here after all old AITOOL entries have been deleted
                         List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
 
                         int countr = positionssArray.Count;
@@ -2037,12 +2116,13 @@ namespace AITool
             //load updated cameara stats info in camera tab if a camera is selected
             Global_GUI.InvokeIFRequired(this, () =>
             {
-                if (this.list2.SelectedItems.Count > 0)
+                if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
                 {
-                    //load only stats from Camera.cs object
 
+
+                    //load only stats from Camera.cs object
                     //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                    Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
+                    Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
 
                     //load cameras stats
                     string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
@@ -2118,15 +2198,17 @@ namespace AITool
 
             try
             {
-
+                //Global_GUI.InvokeIFRequired(this.FOLV_Cameras, () =>
+                //{
                 //start by getting last selected camera if any
                 string oldnamecameras = "";
-                if (this.list2.SelectedItems != null && this.list2.SelectedItems.Count > 0)
-                    oldnamecameras = this.list2.SelectedItems[0].Text;
+                if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
+                    oldnamecameras = ((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name;
 
                 //if nothing was selected, then select the last saved camera:
                 if (string.IsNullOrEmpty(oldnamecameras))
-                    oldnamecameras = Global.GetSetting("LastSelectedCamera", "");
+                    oldnamecameras = Global.GetRegSetting("LastSelectedCamera", "");
+
 
                 string oldnamefilters = "";
                 if (this.comboBox_filter_camera.Items.Count > 0)
@@ -2136,7 +2218,6 @@ namespace AITool
                 if (this.comboBox1.Items.Count > 0)
                     oldnamestats = this.comboBox1.Text;
 
-                this.list2.Items.Clear();
                 this.comboBox1.Items.Clear();
                 this.comboBox1.Items.Add("All Cameras");
                 this.comboBox_filter_camera.Items.Clear();
@@ -2146,22 +2227,17 @@ namespace AITool
                 int oldidxcameras = 0;
                 int oldidxfilters = 0;
                 int oldidxstats = 0;
+                Camera selectedcam = null;
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
-                    //Add loaded camera to list2
-                    ListViewItem item = new ListViewItem(new string[] { cam.Name });
-                    if (!cam.enabled)
-                    {
-                        item.ForeColor = System.Drawing.Color.Gray;
-                    }
                     //item.Tag = file; //tag is not used anywhere I can see
-                    this.list2.Items.Add(item);
                     //add camera to combobox on overview tab and to camera filter combobox in the History tab 
                     this.comboBox1.Items.Add($"   {cam.Name}");
                     this.comboBox_filter_camera.Items.Add($"   {cam.Name}");
                     if (string.Equals(oldnamecameras.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
                         oldidxcameras = i;
+                        selectedcam = cam;
                     }
                     if (string.Equals(oldnamefilters.Trim(), cam.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
@@ -2175,11 +2251,10 @@ namespace AITool
 
                 }
 
-                //select first camera, or last selected camera
-                if (this.list2.Items.Count > 0 && this.list2.Items.Count >= oldidxcameras)
-                {
-                    this.list2.Items[oldidxcameras].Selected = true;
-                }
+                if (selectedcam == null && AppSettings.Settings.CameraList.Count > 0)
+                    selectedcam = AppSettings.Settings.CameraList[0];
+
+                Global_GUI.UpdateFOLV(FOLV_Cameras, AppSettings.Settings.CameraList, false, ColumnHeaderAutoResizeStyle.ColumnContent, true, true, selectedcam);
 
                 if (this.comboBox_filter_camera.Items.Count > 0)
                     this.comboBox_filter_camera.SelectedIndex = oldidxfilters;
@@ -2187,6 +2262,7 @@ namespace AITool
                 if (this.comboBox1.Items.Count > 0)
                     this.comboBox1.SelectedIndex = oldidxstats;
 
+                //});
 
             }
             catch
@@ -2258,8 +2334,8 @@ namespace AITool
             cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
             //Split by cr/lf or other common delimiters
-            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
-            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
+            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
+            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
 
             cam.BICamName = cam.Name;
 
@@ -2275,81 +2351,13 @@ namespace AITool
 
 
         //remove camera
-        private void RemoveCamera(string name)
+        private void RemoveCamera(Camera cam)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            Log($"Removing camera {name}...");
-            if (this.list2.Items.Count > 0) //if list is empty, nothing can be deleted
-            {
-                if (AppSettings.Settings.CameraList.Exists(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))) //check if camera with specified name exists in list
-                {
+            Log($"Removing camera {cam.Name}...");
 
-                    //find index of specified camera in list
-                    int index = -1;
-
-                    //check for each camera in the cameralist if its name equals the name of the camera that is selected to be deleted
-                    for (int i = 0; i < AppSettings.Settings.CameraList.Count; i++)
-                    {
-                        if (AppSettings.Settings.CameraList[i].Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            index = i;
-
-                        }
-                    }
-
-                    if (index != -1) //only delete camera if index is known (!= its default value -1)
-                    {
-                        //AppSettings.Settings.CameraList[index].Delete(); //delete settings file of specified camera
-
-                        //move all cameras following the specified camera one position forward in the list
-                        //the position of the specified camera is overridden with the following camera, the position of the following camera is overridden with its follower, and so on
-                        for (int i = index; i < AppSettings.Settings.CameraList.Count - 1; i++)
-                        {
-                            AppSettings.Settings.CameraList[i] = AppSettings.Settings.CameraList[i + 1];
-                        }
-
-                        AppSettings.Settings.CameraList.Remove(AppSettings.Settings.CameraList[AppSettings.Settings.CameraList.Count - 1]); //lastly, remove camera from list
-
-                        //remove list2 entry
-                        var item = this.list2.FindItemWithText(name);
-                        this.list2.Items[this.list2.Items.IndexOf(item)].Remove();
-
-                        //remove camera from combobox on overview tab and from camera filter combobox in the History tab 
-                        this.comboBox1.Items.Remove($"   {name}");
-                        this.comboBox_filter_camera.Items.Remove($"   {name}");
-
-                        //select first camera
-                        if (this.list2.Items.Count > 0)
-                        {
-                            this.list2.Items[0].Selected = true;
-                        }
-
-                        //if list2 is empty, clear settings fields (to prevent that values of a deleted camera are shown)
-                        if (this.list2.Items.Count == 0)
-                        {
-                            this.tbName.Text = "";
-                            this.tbPrefix.Text = "";
-                            this.cb_enabled.Checked = false;
-                            CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
-                            foreach (CheckBox c in cbarray)
-                            {
-                                c.Checked = false;
-                            }
-                            //tbTriggerUrl.Text = "";
-                            //cb_telegram.Checked = false;
-                            //disable camera settings if there are no cameras setup yet
-                            //tableLayoutPanel6.Enabled = false;  //this stops us from being able to add a new camera
-                        }
-                    }
-                    else
-                    {
-                        Log("ERROR: Can't find the selected camera, camera wasn't deleted.");
-                    }
-
-
-                }
-            }
+            AppSettings.Settings.CameraList.Remove(cam);
         }
 
         //display camera settings for selected camera
@@ -2357,25 +2365,17 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (this.list2.SelectedItems.Count > 0)
+            if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
             {
+                Camera cam = ((Camera)this.FOLV_Cameras.SelectedObjects[0]);
 
                 this.tableLayoutPanel6.Enabled = true;
 
-                this.tbName.Text = this.list2.SelectedItems[0].Text; //load name textbox from name in list2
-
-
-                //load remaining settings from Camera.cs object
-
-                //all camera objects are stored in the list CameraList, so firstly the position (stored in the second column for each entry) is gathered
-                Camera cam = AITOOL.GetCamera(this.tbName.Text);   //int i = AppSettings.Settings.CameraList.FindIndex(x => x.name.Trim().ToLower() == list2.SelectedItems[0].Text.Trim().ToLower());
-
+                this.tbName.Text = cam.Name; //load name textbox from name in list2
                 this.tbBiCamName.Text = cam.BICamName;
-
                 this.tbCustomMaskFile.Text = cam.MaskFileName;
 
                 //load cameras stats
-
                 string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
 
                 if (cam.maskManager.MaskingEnabled)
@@ -2406,9 +2406,6 @@ namespace AITool
                 this.cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
 
                 this.tb_camera_telegram_chatid.Text = cam.telegram_chatid;
-
-                this.tb_threshold_lower.Text = cam.threshold_lower.ToString(); //load lower threshold value
-                this.tb_threshold_upper.Text = cam.threshold_upper.ToString(); // load upper threshold value
 
                 //load is masking enabled 
                 this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
@@ -2454,15 +2451,7 @@ namespace AITool
 
 
         //event: camera list another item selected
-        private void list2_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (this.list2.SelectedItems.Count > 0)
-            {
-                Global.SaveSetting("LastSelectedCamera", this.list2.SelectedItems[0].Text);
-            }
 
-            this.DisplayCameraSettings(); //display new item's settings
-        }
 
         //event: camera add button
         private void btnCameraAdd_Click(object sender, EventArgs e)
@@ -2505,6 +2494,7 @@ namespace AITool
                             if (camresult.StartsWith("success", StringComparison.OrdinalIgnoreCase))
                             {
                                 added++;
+                                Global.SaveRegSetting("LastSelectedCamera", cam.Name);
                             }
 
                         }
@@ -2551,7 +2541,7 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (this.list2.Items.Count > 0)
+            if (this.FOLV_Cameras.SelectedObjects.Count > 0)
             {
                 //check if name is empty
                 if (String.IsNullOrWhiteSpace(this.tbName.Text))
@@ -2561,7 +2551,7 @@ namespace AITool
                     return;
                 }
 
-                if (!string.Equals(this.list2.SelectedItems[0].Text.Trim(), this.tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name.Trim(), this.tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     //camera renamed, make sure name doesnt exist
                     Camera CamCheck = AITOOL.GetCamera(this.tbName.Text, false);
@@ -2575,12 +2565,12 @@ namespace AITool
                 }
 
 
-                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text, false);
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name, false);
 
                 if (cam == null)
                 {
                     //should not happen, but...
-                    MessageBox.Show($"WARNING: Camera not found???  '{this.list2.SelectedItems[0].Text}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"WARNING: Camera not found???  '{((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     this.DisplayCameraSettings(); //reset displayed settings
                     return;
                 }
@@ -2615,16 +2605,13 @@ namespace AITool
                     }
                 }
 
-                //get lower and upper threshold values from textboxes
-                cam.threshold_lower = Convert.ToInt32(this.tb_threshold_lower.Text.Trim());
-                cam.threshold_upper = Convert.ToInt32(this.tb_threshold_upper.Text.Trim());
 
                 cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
                 cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
 
-                cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();  //all trigger urls in an array
-                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
+                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
 
                 if (cam.Name != this.tbName.Text.Trim())
                 {
@@ -2684,6 +2671,13 @@ namespace AITool
                                         {
                                             icam.threshold_lower = cam.threshold_lower;
                                             icam.threshold_upper = cam.threshold_upper;
+                                            icam.MergePredictionsMinMatchPercent = cam.MergePredictionsMinMatchPercent;
+                                            icam.PredSizeMinHeight = cam.PredSizeMinHeight;
+                                            icam.PredSizeMinWidth = cam.PredSizeMinWidth;
+                                            icam.PredSizeMaxHeight = cam.PredSizeMaxHeight;
+                                            icam.PredSizeMaxWidth = cam.PredSizeMaxWidth;
+                                            icam.PredSizeMaxPercentOfImage = cam.PredSizeMaxPercentOfImage;
+                                            icam.PredSizeMinPercentOfImage = cam.PredSizeMinPercentOfImage;
                                         }
                                         if (frm.cb_apply_objects.Checked)
                                         {
@@ -2810,15 +2804,16 @@ namespace AITool
         //event: delete camera button
         private void btnCameraDel_Click(object sender, EventArgs e)
         {
-            if (this.list2.Items.Count > 0)
+            if (this.FOLV_Cameras.SelectedObjects.Count > 0)
             {
-                using (var form = new InputForm($"Delete camera {this.list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
+                using (var form = new InputForm($"Delete camera {((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name} ?", "Delete Camera?", false))
                 {
                     var result = form.ShowDialog();
                     if (result == DialogResult.OK)
                     {
                         //Log("about to del cam");
-                        this.RemoveCamera(this.list2.SelectedItems[0].Text);
+                        this.RemoveCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]));
+                        this.LoadCameras();
                     }
                 }
             }
@@ -2829,38 +2824,19 @@ namespace AITool
         {
             if (e.KeyCode == Keys.Delete)
             {
-                if (this.list2.Items.Count > 0)
+                if (this.FOLV_Cameras.SelectedObjects.Count > 0)
                 {
-                    using (var form = new InputForm($"Delete camera {this.list2.SelectedItems[0].Text} ?", "Delete Camera?", false))
+                    using (var form = new InputForm($"Delete camera {((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name} ?", "Delete Camera?", false))
                     {
                         var result = form.ShowDialog();
                         if (result == DialogResult.OK)
                         {
-                            this.RemoveCamera(this.list2.SelectedItems[0].Text);
+                            this.RemoveCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]));
                         }
                     }
                 }
             }
         }
-
-        //event: leaving empty lower confidence limit textbox
-        private void tb_threshold_lower_Leave(object sender, EventArgs e)
-        {
-            if (this.tb_threshold_lower.Text == "")
-            {
-                this.tb_threshold_lower.Text = "0";
-            }
-        }
-
-        //event: leaving empty upper confidence limit textbox
-        private void tb_threshold_upper_Leave(object sender, EventArgs e)
-        {
-            if (this.tb_threshold_upper.Text == "")
-            {
-                this.tb_threshold_upper.Text = "100";
-            }
-        }
-
 
 
         //----------------------------------------------------------------------------------------------------------
@@ -2979,6 +2955,9 @@ namespace AITool
         //ask before closing AI Tool to prevent accidentally closing
         private async void Shell_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (IsClosing.ReadFullFence())
+                return;
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             Log($"------Closing------- CloseReason: {e.CloseReason}");
@@ -2986,7 +2965,7 @@ namespace AITool
 
             try
             {
-                if (!this.CloseImmediately && e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+                if (!ResetSettings && !this.CloseImmediately && e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
                 {
                     using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                     {
@@ -3013,21 +2992,49 @@ namespace AITool
                 }
 
 
-                Global_GUI.SaveWindowState(this);
+                if (!e.Cancel)
+                {
 
-                AppSettings.SaveAsync();  //save settings in any case
+                    Global_GUI.SaveWindowState(this);
 
-                //if (AITOOL.DeepStackServerControl.IsInstalled && AITOOL.DeepStackServerControl.IsStarted && AppSettings.Settings.deepstack_autostart)
-                //    await AITOOL.DeepStackServerControl.StopAsync();
+                    AppSettings.SaveAsync();  //save settings in any case
 
-                IsClosing.WriteFullFence(true);
+                    //if (AITOOL.DeepStackServerControl.IsInstalled && AITOOL.DeepStackServerControl.IsStarted && AppSettings.Settings.deepstack_autostart)
+                    //    await AITOOL.DeepStackServerControl.StopAsync();
 
-                if (!AppSettings.AlreadyRunning)
-                    Global.SaveSetting("LastShutdownState", "graceful shutdown");
+                    IsClosing.WriteFullFence(true);
 
-                MasterCTS.Cancel();
+                    if (!AppSettings.AlreadyRunning)
+                        Global.SaveRegSetting("LastShutdownState", "graceful shutdown");
 
+                    MasterCTS.Cancel();
 
+                    //wait a bit for the loops to cancel to avoid other threading errors on shutdown and to allow the logs to finish updating if we need to reset settings
+                    Global.ResponsiveSleep(1000);
+
+                    if (ResetSettings)
+                    {
+                        //make a backup copy:
+                        string cursettingsfolder = Path.GetDirectoryName(AppSettings.Settings.SettingsFileName);
+                        string baksettingsfolder = cursettingsfolder + "_RESET_" + DateTime.Now.ToString("s").Replace(":", "_");
+                        if (Global.DirectoryCopy(cursettingsfolder, baksettingsfolder, true, true))
+                        {
+                            MessageBox.Show($"Reset successful. Backup folder created.  Folder={baksettingsfolder}");
+                            //delete the settings folder
+                            try
+                            { Directory.Delete(cursettingsfolder, true); }
+                            catch { }
+                            //restart so it creates all new settings
+                            Global.DeleteRegSettings();
+                            Application.Restart();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Error: Failed to fully copy to the backup folder.  NOT reset.  Folder={baksettingsfolder}", "Error", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
+                        }
+                    }
+
+                }
 
             }
             catch { }
@@ -3450,7 +3457,7 @@ namespace AITool
         {
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
-                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
                 frm.cam = cam;
                 frm.Text = "Dynamic Masking Settings - " + cam.Name;
 
@@ -3495,7 +3502,7 @@ namespace AITool
 
         private void btnDetails_Click(object sender, EventArgs e)
         {
-            this.ShowMaskDetailsDialog(this.list2.SelectedItems[0].Text);
+            this.ShowMaskDetailsDialog(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
         }
 
         private void ShowMaskDetailsDialog(string cameraname)
@@ -3520,7 +3527,7 @@ namespace AITool
 
         private void btnCustomMask_Click(object sender, EventArgs e)
         {
-            this.ShowEditImageMaskDialog(this.list2.SelectedItems[0].Text);
+            this.ShowEditImageMaskDialog(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
         }
 
         private void ShowEditImageMaskDialog(string cameraname)
@@ -3584,26 +3591,28 @@ namespace AITool
             using (Frm_LegacyActions frm = new Frm_LegacyActions())
             {
 
-                if (this.list2.SelectedItems.Count == 0)
+                if (this.FOLV_Cameras.SelectedObjects.Count == 0)
                     return;
 
-                Camera cam = AITOOL.GetCamera(this.list2.SelectedItems[0].Text);
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
 
                 frm.cam = cam;
 
                 frm.tb_DetectionFormat.Text = cam.DetectionDisplayFormat;
-                frm.lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, frm.tb_DetectionFormat.Text);
+                frm.lbl_DetectionFormat.Text = AITOOL.ReplaceParams(cam, null, null, frm.tb_DetectionFormat.Text, Global.IPType.Path);
 
                 frm.tb_ConfidenceFormat.Text = AppSettings.Settings.DisplayPercentageFormat;
                 frm.lbl_Confidence.Text = string.Format(frm.tb_ConfidenceFormat.Text, 99.123);
 
-                frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|;,"));
-                frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|;,"));
+                frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|"));
+                frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|"));
                 frm.tb_cooldown.Text = cam.cooldown_time_seconds.ToString(); //load cooldown time
+                frm.tb_sound_cooldown.Text = cam.sound_cooldown_time_seconds.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
                 frm.tb_telegram_caption.Text = cam.telegram_caption;
                 frm.tb_telegram_triggering_objects.Text = cam.telegram_triggering_objects;
+
                 frm.cb_telegram_active_time.Text = cam.telegram_active_time_range;
 
                 frm.cb_copyAlertImages.Checked = cam.Action_image_copy_enabled;
@@ -3660,15 +3669,17 @@ namespace AITool
                     cam.DetectionDisplayFormat = frm.tb_DetectionFormat.Text.Trim();
                     AppSettings.Settings.DisplayPercentageFormat = frm.tb_ConfidenceFormat.Text.Trim();
 
-                    cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|;,"));
-                    cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
-                    cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|;,"));
-                    cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
+                    cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|"));
+                    cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();
+                    cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|"));
+                    cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
 
                     cam.cooldown_time_seconds = Convert.ToInt32(frm.tb_cooldown.Text.Trim());
+                    cam.sound_cooldown_time_seconds = Convert.ToInt32(frm.tb_sound_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
                     cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text.Trim();
+
                     cam.telegram_active_time_range = frm.cb_telegram_active_time.Text.Trim();
 
                     cam.Action_image_copy_enabled = frm.cb_copyAlertImages.Checked;
@@ -3877,7 +3888,7 @@ namespace AITool
                 return;
 
             if (!AppSettings.AlreadyRunning)
-                Global.SaveSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
+                Global.SaveRegSetting("LastShutdownState", $"checkpoint: HistoryUpdateTimer: {DateTime.Now}");
 
             await this.UpdateHistoryAddedRemoved();
 
@@ -3892,6 +3903,7 @@ namespace AITool
         private void toolStripStatusErrors_Click(object sender, EventArgs e)
         {
             this.ShowErrors();
+            LogMan.ErrorCount.WriteFullFence(0);
         }
 
         private async void cb_follow_CheckedChanged(object sender, EventArgs e)
@@ -4033,14 +4045,15 @@ namespace AITool
             try
             {
                 List<ClsPrediction> allpredictions = new List<ClsPrediction>();
-
+                string filename = "";
                 foreach (History hist in this.folv_history.SelectedObjects)
                 {
-                    List<ClsPrediction> predictions = Global.SetJSONString<List<ClsPrediction>>(hist.PredictionsJSON);
+                    List<ClsPrediction> predictions = hist.Predictions();
 
-                    if (predictions != null && predictions.Count > 0)
+                    if (predictions.Count > 0)
                     {
                         allpredictions.AddRange(predictions);
+                        filename = hist.Filename;
                     }
                     else
                     {
@@ -4050,7 +4063,8 @@ namespace AITool
                 }
 
                 Frm_ObjectDetail frm = new Frm_ObjectDetail();
-                frm.PredictionObjectDetail = allpredictions;
+                frm.PredictionObjectDetails = allpredictions;
+                frm.ImageFileName = filename;
                 frm.Show();
 
             }
@@ -4747,7 +4761,7 @@ namespace AITool
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
 
-                string LastFile = Global.GetSetting("LastLoadedLogFile", LogMan.GetCurrentLogFileName());
+                string LastFile = Global.GetRegSetting("LastLoadedLogFile", LogMan.GetCurrentLogFileName());
 
                 ofd.InitialDirectory = Path.GetDirectoryName(LastFile);
                 ofd.FileName = LastFile;
@@ -4764,7 +4778,7 @@ namespace AITool
                     using var cw = new Global_GUI.CursorWait();
                     this.toolStripButtonPauseLog.Checked = true;
                     this.chk_filterErrors.Checked = false;
-                    Global.SaveSetting("LastLoadedLogFile", ofd.FileName);
+                    Global.SaveRegSetting("LastLoadedLogFile", ofd.FileName);
                     LogMan.Clear();
                     this.folv_log.ClearObjects();
                     this.folv_log.ModelFilter = null;
@@ -4948,7 +4962,7 @@ namespace AITool
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
 
-                string LastFile = Global.GetSetting("LastLoadedImageFile", "");
+                string LastFile = Global.GetRegSetting("LastLoadedImageFile", "");
 
                 if (!string.IsNullOrEmpty(LastFile))
                     ofd.InitialDirectory = Path.GetDirectoryName(LastFile);
@@ -4968,7 +4982,7 @@ namespace AITool
                     // Read the files
                     foreach (String file in ofd.FileNames)
                     {
-                        Global.SaveSetting("LastLoadedImageFile", ofd.FileName);
+                        Global.SaveRegSetting("LastLoadedImageFile", ofd.FileName);
                         AddImageToQueue(ofd.FileName);
                         //small delay
                         await Task.Delay(AppSettings.Settings.loop_delay_ms);
@@ -5058,6 +5072,102 @@ namespace AITool
                     frm.ShowDialog();
                 }
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+
+            if (MessageBox.Show("Are you sure you want to reset ALL settings?", "RESET?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                ResetSettings = true;
+                this.Close();
+            }
+
+
+        }
+
+        private void viewImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
+            {
+                History hist = (History)this.folv_history.SelectedObjects[0];
+                Process.Start(hist.Filename);
+
+            }
+        }
+
+        private void jumpToImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
+            {
+                History hist = (History)this.folv_history.SelectedObjects[0];
+
+                // combine the arguments together
+                // it doesn't matter if there is a space after ','
+                string argument = "/select, \"" + hist.Filename + "\"";
+
+                Process.Start("explorer.exe", argument);
+            }
+
+        }
+
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void dbLayoutPanel11_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void BtnPredictionSize_Click(object sender, EventArgs e)
+        {
+            using (Frm_PredSizeLimits frm = new Frm_PredSizeLimits())
+            {
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
+
+                frm.tb_ConfidenceLower.Text = cam.threshold_lower.ToString();
+                frm.tb_ConfidenceUpper.Text = cam.threshold_upper.ToString();
+
+                frm.tb_maxheight.Text = cam.PredSizeMaxHeight.ToString();
+                frm.tb_maxwidth.Text = cam.PredSizeMaxWidth.ToString();
+                frm.tb_minwidth.Text = cam.PredSizeMinWidth.ToString();
+                frm.tb_minheight.Text = cam.PredSizeMinHeight.ToString();
+                frm.tb_maxpercent.Text = cam.PredSizeMaxPercentOfImage.ToString();
+                frm.tb_MinPercent.Text = cam.PredSizeMinPercentOfImage.ToString();
+
+                frm.tb_duplicatepercent.Text = cam.MergePredictionsMinMatchPercent.ToString();
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    cam.threshold_lower = Convert.ToInt32(frm.tb_ConfidenceLower.Text);
+                    cam.threshold_upper = Convert.ToInt32(frm.tb_ConfidenceUpper.Text);
+                    cam.PredSizeMaxHeight = Convert.ToInt32(frm.tb_maxheight.Text);
+                    cam.PredSizeMaxWidth = Convert.ToInt32(frm.tb_maxwidth.Text);
+                    cam.PredSizeMinWidth = Convert.ToInt32(frm.tb_minwidth.Text);
+                    cam.PredSizeMinHeight = Convert.ToInt32(frm.tb_minheight.Text);
+                    cam.PredSizeMaxPercentOfImage = Convert.ToInt32(frm.tb_maxpercent.Text);
+                    cam.PredSizeMinPercentOfImage = Convert.ToInt32(frm.tb_MinPercent.Text);
+                    cam.MergePredictionsMinMatchPercent = Convert.ToInt32(frm.tb_duplicatepercent.Text);
+
+                    AppSettings.SaveAsync();
+                }
+            }
+
+        }
+
+        private void tb_threshold_lower_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FOLV_Cameras_SelectionChanged(object sender, EventArgs e)
+        {
+            if (FOLV_Cameras.SelectedObjects.Count > 0)
+                Global.SaveRegSetting("LastSelectedCamera", ((Camera)FOLV_Cameras.SelectedObjects[0]).Name);
+
+            DisplayCameraSettings();
         }
     }
 

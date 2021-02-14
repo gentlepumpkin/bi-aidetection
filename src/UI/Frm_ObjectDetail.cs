@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows.Forms;
 using static AITool.AITOOL;
 
@@ -8,7 +10,13 @@ namespace AITool
 {
     public partial class Frm_ObjectDetail : Form
     {
-        public List<ClsPrediction> PredictionObjectDetail = null;
+        public List<ClsPrediction> PredictionObjectDetails = null;
+        public string ImageFileName = "";
+        // this tracks the transformation applied to the PictureBox's Graphics
+        private Matrix transform = new Matrix();
+        private float m_dZoomscale = 1.0f;
+        public const float s_dScrollValue = 0.1f;
+        private Bitmap OriginalBMP = null;
         public Frm_ObjectDetail()
         {
             this.InitializeComponent();
@@ -24,13 +32,20 @@ namespace AITool
         {
             Global_GUI.RestoreWindowState(this);
 
+
             this.Show();
 
             try
             {
                 Global_GUI.ConfigureFOLV(this.folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV(this.folv_ObjectDetail, this.PredictionObjectDetail);
+                Global_GUI.UpdateFOLV(this.folv_ObjectDetail, this.PredictionObjectDetails);
+
+                if (!String.IsNullOrEmpty(this.ImageFileName) && this.ImageFileName.Contains("\\") && File.Exists(this.ImageFileName))
+                {
+                    OriginalBMP = new Bitmap(this.ImageFileName);
+                    this.pictureBox1.Image = OriginalBMP; //load actual image as background, so that an overlay can be added as the image
+                }
 
             }
             catch (Exception)
@@ -59,7 +74,7 @@ namespace AITool
 
                 // If SPI IsNot Nothing Then
                 if (OP.Result == ResultType.Relevant)
-                    e.Item.ForeColor = AppSettings.Settings.RectRelevantColor;
+                    e.Item.ForeColor = Color.DarkGreen;   //AppSettings.Settings.RectRelevantColor;
                 else if (OP.Result == ResultType.DynamicMasked || OP.Result == ResultType.ImageMasked || OP.Result == ResultType.StaticMasked)
                     e.Item.ForeColor = AppSettings.Settings.RectMaskedColor;
                 else if (OP.Result == ResultType.Error)
@@ -103,5 +118,291 @@ namespace AITool
             }
             Log($"Added/updated {cnt} masks.");
         }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+            if (this.folv_ObjectDetail.SelectedObjects != null && this.folv_ObjectDetail.SelectedObjects.Count > 0) //if checkbox button is enabled
+            {
+
+                try
+                {
+
+                    foreach (ClsPrediction pred in this.folv_ObjectDetail.SelectedObjects)
+                    {
+                        if (pred != null)
+                        {
+                            this.showObject(e, pred); //call rectangle drawing method, calls appropriate detection text
+                            pictureBox2.Image = cropImage(OriginalBMP, Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax));
+
+                        }
+
+                    }
+
+
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+            }
+
+        }
+
+        private void showObject(PaintEventArgs e, ClsPrediction pred)
+        {
+            try
+            {
+                if ((this.pictureBox1 != null) && (this.pictureBox1.Image != null))
+                {
+
+                    e.Graphics.Transform = transform;
+
+                    System.Drawing.Color color = new System.Drawing.Color();
+                    int BorderWidth = AppSettings.Settings.RectBorderWidth
+;
+
+                    if (pred.Result == ResultType.Relevant)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                    }
+                    else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                    }
+                    else
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                    }
+
+                    //1. get the padding between the image and the picturebox border
+
+                    //get dimensions of the image and the picturebox
+                    float imgWidth = this.pictureBox1.Image.Width;
+                    float imgHeight = this.pictureBox1.Image.Height;
+                    float boxWidth = this.pictureBox1.Width;
+                    float boxHeight = this.pictureBox1.Height;
+                    float clnWidth = this.pictureBox1.ClientSize.Width;
+                    float clnHeight = this.pictureBox1.ClientSize.Height;
+                    float rctWidth = this.pictureBox1.ClientRectangle.Width;
+                    float rctHeight = this.pictureBox1.ClientRectangle.Height;
+
+                    //these variables store the padding between image border and picturebox border
+                    int absX = 0;
+                    int absY = 0;
+
+                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
+                    float scale = 1;
+
+
+                    //Comparing the aspect ratio of both the control and the image itself.
+                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+                    {
+                        scale = boxWidth / imgWidth; //get scale factor
+                        absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                    }
+                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+                    {
+                        scale = boxHeight / imgHeight; //get scale factor
+                        absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                    }
+
+                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
+                    int xmin = (int)(scale * pred.XMin) + absX;
+                    int xmax = (int)(scale * pred.XMax) + absX;
+                    int ymin = (int)(scale * pred.YMin) + absY;
+                    int ymax = (int)(scale * pred.YMax) + absY;
+
+                    int sclWidth = xmax - xmin;
+                    int sclHeight = ymax - ymin;
+
+                    int sclxmax = (int)boxWidth - (absX * 2);
+                    int sclymax = (int)boxHeight - (absY * 2);
+                    int sclxmin = absX;
+                    int sclymin = absY;
+
+                    //3. paint rectangle
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin,
+                                                                                 ymin,
+                                                                                 sclWidth,
+                                                                                 sclHeight);
+
+                    pictureBox2.Image = cropImage(OriginalBMP, pred.GetRectangle());
+
+                    using (Pen pen = new Pen(color, BorderWidth))
+                    {
+                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+                    }
+
+
+                    ///testing=================================================
+                    //3. paint rectangle
+                    //rect = new System.Drawing.Rectangle(absX + 5,
+                    //                                    absY + 5,
+                    //                                    sclxmax - 10,
+                    //                                    sclymax - 10);
+
+                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
+                    //{
+                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+                    //}
+                    ///testing=================================================
+
+                    //we need this since people can change the border width in the json file
+                    int halfbrd = BorderWidth / 2;
+
+
+                    Brush brush = new SolidBrush(color); //sets background rectangle color
+
+                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+
+
+                    //object name text below rectangle
+
+                    int x = xmin - halfbrd;
+                    int y = ymax + halfbrd;
+
+                    //just for debugging:
+                    //int timgWidth = (int)imgWidth;
+                    //int tboxWidth = (int)boxWidth;
+                    //int tsclWidth = (int)sclWidth;
+
+                    //int timgHeight = (int)imgHeight;
+                    //int tboxHeight = (int)boxHeight;
+                    //int tsclHeight = (int)sclHeight;
+
+
+                    //adjust the x / width label so it doesnt go off screen
+                    int EndX = x + (int)TextSize.Width;
+                    if (EndX > sclxmax)
+                    {
+                        //int diffx = x - sclxmax;
+                        x = xmax - (int)TextSize.Width + halfbrd;
+                    }
+
+                    if (x < sclxmin)
+                        x = sclxmin;
+
+                    if (x < 0)
+                        x = 0;
+
+                    //adjust the y / height label so it doesnt go off screen
+                    int EndY = y + (int)TextSize.Height;
+                    if (EndY > sclymax)
+                    {
+                        //float diffy = EndY - sclymax;
+                        y = ymax - (int)TextSize.Height - halfbrd;
+                    }
+
+                    if (y < 0)
+                        y = 0;
+
+
+                    rect = new System.Drawing.Rectangle(x,
+                                                        y,
+                                                        (int)boxWidth,
+                                                        (int)boxHeight); //sets bounding box for drawn text
+
+
+                    e.Graphics.FillRectangle(brush,
+                                             x,
+                                             y,
+                                             TextSize.Width,
+                                             TextSize.Height); //draw grey background rectangle for detection text
+
+                    e.Graphics.DrawString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + Global.ExMsg(ex));
+            }
+        }
+
+        private void folv_ObjectDetail_SelectionChanged(object sender, EventArgs e)
+        {
+            this.pictureBox1.Refresh();
+        }
+        protected override void OnMouseWheel(MouseEventArgs mea)
+        {
+            pictureBox1.Focus();
+            if (pictureBox1.Focused == true && mea.Delta != 0)
+            {
+                // Map the Form-centric mouse location to the PictureBox client coordinate system
+                Point pictureBoxPoint = pictureBox1.PointToClient(this.PointToScreen(mea.Location));
+                ZoomScroll(pictureBoxPoint, mea.Delta > 0);
+            }
+        }
+
+        private void ZoomScroll(Point location, bool zoomIn)
+        {
+            // Figure out what the new scale will be. Ensure the scale factor remains between
+            // 1% and 1000%
+            float newScale = Math.Min(Math.Max(m_dZoomscale + (zoomIn ? s_dScrollValue : -s_dScrollValue), 0.1f), 10);
+
+            if (newScale != m_dZoomscale)
+            {
+                float adjust = newScale / m_dZoomscale;
+                m_dZoomscale = newScale;
+
+                // Translate mouse point to origin
+                transform.Translate(-location.X, -location.Y, MatrixOrder.Append);
+
+                // Scale view
+                transform.Scale(adjust, adjust, MatrixOrder.Append);
+
+                // Translate origin back to original mouse point.
+                transform.Translate(location.X, location.Y, MatrixOrder.Append);
+                Size newSize = new Size((int)(OriginalBMP.Width * m_dZoomscale), (int)(OriginalBMP.Height * m_dZoomscale));
+                Bitmap bmp = new Bitmap(OriginalBMP, newSize);
+                this.pictureBox1.Image = bmp; //load actual image as background, so that an overlay can be added as the image
+
+                pictureBox1.Invalidate();
+                pictureBox1.Refresh();
+            }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private static Image cropImage(Image img, Rectangle cropArea)
+        {
+            using Bitmap bmpImage = new Bitmap(img);
+
+            if (cropArea.Right > bmpImage.Width || cropArea.Bottom > bmpImage.Height)
+            {
+                cropArea.Intersect(new Rectangle(0, 0, bmpImage.Width, bmpImage.Height));
+            }
+
+            Bitmap bmpCrop = bmpImage.Clone(cropArea, bmpImage.PixelFormat);
+
+            return (Image)(bmpCrop);
+
+        }
+        //FUNCTION FOR MOUSE SCROL ZOOM-IN
+        //private void ZoomScroll(Point location, bool zoomIn)
+        //{
+        //    // make zoom-point (cursor location) our origin
+        //    transform.Translate(-location.X, -location.Y);
+
+        //    // perform zoom (at origin)
+        //    if (zoomIn)
+        //        transform.Scale(s_dScrollValue, s_dScrollValue);
+        //    else
+        //        transform.Scale(1 / s_dScrollValue, 1 / s_dScrollValue);
+
+        //    // translate origin back to cursor
+        //    transform.Translate(location.X, location.Y);
+        //    this.pictureBox1.Invalidate();
+        //    this.pictureBox1.Refresh();
+        //    //m_Picturebox_Canvas.Invalidate();
+        //}
     }
 }

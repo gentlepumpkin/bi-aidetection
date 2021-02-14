@@ -104,10 +104,16 @@ namespace AITool
                         return this.Result;
                     }
 
+                    //string fixip = ServernameOrIP;
+
+                    //we have to get the hostname if it is an ipv6 ip address:
+                    //fixip = await Global.GetHostNameAsync(fixip);
+
                     Log($"Debug: Ping response={cpo.TotalTimeMS}ms, opening remote registry on '{ServernameOrIP}'...");
 
                     Stopwatch sw = Stopwatch.StartNew();
 
+                    //When the remote registry service is not running we get System.IO.IOException: 'The network path was not found.
                     RemoteKey = await Task.Run(() => RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ServernameOrIP));
 
                     if (RemoteKey != null)
@@ -204,11 +210,11 @@ namespace AITool
                         {
                             if (this.IsHTTPS)  //maybe need to check secureonly setting also??
                             {
-                                this.URL = "https://" + this.ServerName + ":" + this.ServerPort;
+                                this.URL = "https://" + Global.IP2Str(this.ServerName, Global.IPType.URL) + ":" + this.ServerPort;
                             }
                             else
                             {
-                                this.URL = "http://" + this.ServerName + ":" + this.ServerPort;
+                                this.URL = "http://" + Global.IP2Str(this.ServerName, Global.IPType.URL) + ":" + this.ServerPort;
                             }
                             Log("Debug: BlueIris URL found: " + this.URL);
 
