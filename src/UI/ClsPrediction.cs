@@ -85,12 +85,17 @@ namespace AITool
             this.UpdatePercent();
         }
 
-        private void UpdatePercent()
+        public void UpdatePercent()
         {
             if (this.XMax > 0 && this.YMax > 0 && this.ImageHeight > 0 && this.ImageWidth > 0)
             {
 
                 //calculate the percentage of the size of the prediction compared to the image size
+
+                //First update width and height due to past miscalculation
+                Rectangle rect = this.GetRectangle();
+                this.RectWidth = rect.Width;
+                this.RectHeight = rect.Height;
 
                 double ImageArea = this.ImageWidth * this.ImageHeight;
                 double PredArea = this.RectWidth * this.RectHeight;
@@ -698,11 +703,9 @@ namespace AITool
             //if running face detection:
             if (!string.IsNullOrWhiteSpace(AiDetectionObject.UserID))
             {
-                if (string.IsNullOrWhiteSpace(AiDetectionObject.label))
-                    AiDetectionObject.label = "Face";
-
-                this.Label = AiDetectionObject.label.Trim();
-                this.Detail = Global.UpperFirst(AiDetectionObject.UserID);
+                this.ObjType = ObjectType.Face;
+                this.Label = Global.UpperFirst(AiDetectionObject.UserID);
+                this.Detail = "Face, " + Global.UpperFirst(AiDetectionObject.UserID);
             }
             else
             {
@@ -977,9 +980,12 @@ namespace AITool
             //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
             //hair dryer, toothbrush.
 
+            if (this.ObjType != ObjectType.Unknown)  //because we can set this in deepstack face detection for example
+                return;
+
             if (tmp.Equals("person"))
                 this.ObjType = ObjectType.Person;
-            else if (tmp.Equals("face"))
+            else if (tmp.Equals("face") || this.Detail.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
                 this.ObjType = ObjectType.Face;
             else if (tmp.Equals("dog") ||
                      tmp.Equals("cat") ||

@@ -31,6 +31,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.tb_Payload = new System.Windows.Forms.TextBox();
             this.tb_Topic = new System.Windows.Forms.TextBox();
@@ -44,7 +45,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -58,7 +58,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
-            this.btnCancel.TabIndex = 5;
+            this.btnCancel.TabIndex = 8;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -71,7 +71,7 @@
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
-            this.btnSave.TabIndex = 4;
+            this.btnSave.TabIndex = 7;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
@@ -93,6 +93,16 @@
             this.groupBox1.TabIndex = 6;
             this.groupBox1.TabStop = false;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.label6.Location = new System.Drawing.Point(11, 111);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(424, 15);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "Specify more than one topic/payload by using the PIPE | symbol between each.";
+            // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.tb_Payload);
@@ -109,18 +119,18 @@
             // tb_Payload
             // 
             this.tb_Payload.Font = new System.Drawing.Font("Consolas", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_Payload.Location = new System.Drawing.Point(70, 79);
+            this.tb_Payload.Location = new System.Drawing.Point(69, 81);
             this.tb_Payload.Multiline = true;
             this.tb_Payload.Name = "tb_Payload";
             this.tb_Payload.Size = new System.Drawing.Size(395, 51);
-            this.tb_Payload.TabIndex = 1;
+            this.tb_Payload.TabIndex = 5;
             // 
             // tb_Topic
             // 
             this.tb_Topic.Location = new System.Drawing.Point(70, 34);
             this.tb_Topic.Name = "tb_Topic";
             this.tb_Topic.Size = new System.Drawing.Size(395, 23);
-            this.tb_Topic.TabIndex = 0;
+            this.tb_Topic.TabIndex = 4;
             // 
             // label4
             // 
@@ -145,21 +155,21 @@
             this.tb_Password.Location = new System.Drawing.Point(312, 50);
             this.tb_Password.Name = "tb_Password";
             this.tb_Password.Size = new System.Drawing.Size(169, 23);
-            this.tb_Password.TabIndex = 4;
+            this.tb_Password.TabIndex = 2;
             // 
             // tb_Username
             // 
             this.tb_Username.Location = new System.Drawing.Point(79, 51);
             this.tb_Username.Name = "tb_Username";
             this.tb_Username.Size = new System.Drawing.Size(161, 23);
-            this.tb_Username.TabIndex = 3;
+            this.tb_Username.TabIndex = 1;
             // 
             // tb_ServerPort
             // 
             this.tb_ServerPort.Location = new System.Drawing.Point(79, 22);
             this.tb_ServerPort.Name = "tb_ServerPort";
             this.tb_ServerPort.Size = new System.Drawing.Size(402, 23);
-            this.tb_ServerPort.TabIndex = 2;
+            this.tb_ServerPort.TabIndex = 0;
             // 
             // cb_UseTLS
             // 
@@ -167,7 +177,7 @@
             this.cb_UseTLS.Location = new System.Drawing.Point(11, 86);
             this.cb_UseTLS.Name = "cb_UseTLS";
             this.cb_UseTLS.Size = new System.Drawing.Size(66, 19);
-            this.cb_UseTLS.TabIndex = 1;
+            this.cb_UseTLS.TabIndex = 3;
             this.cb_UseTLS.Text = "Use TLS";
             this.cb_UseTLS.UseVisualStyleBackColor = true;
             // 
@@ -204,20 +214,10 @@
             this.btTest.Location = new System.Drawing.Point(280, 294);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
-            this.btTest.TabIndex = 0;
+            this.btTest.TabIndex = 6;
             this.btTest.Text = "Test";
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_ClickAsync);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.label6.Location = new System.Drawing.Point(11, 111);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(424, 15);
-            this.label6.TabIndex = 6;
-            this.label6.Text = "Specify more than one topic/payload by using the PIPE | symbol between each.";
             // 
             // Frm_MQTTSettings
             // 

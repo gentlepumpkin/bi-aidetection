@@ -38,7 +38,12 @@ namespace AITool
             List<ClsPrediction> ret = new List<ClsPrediction>();
             if (!string.IsNullOrEmpty(this.PredictionsJSON))
             {
+                //I think we were storing predictions as json either due to something with sqlite db or for compatibility with original AITOOL
                 ret = Global.SetJSONString<List<ClsPrediction>>(this.PredictionsJSON);
+                foreach (var pred in ret)
+                {
+                    pred.UpdatePercent();
+                }
             }
             return ret;
         }

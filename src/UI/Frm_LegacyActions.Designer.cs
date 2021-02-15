@@ -72,6 +72,7 @@
             this.label16 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.tb_jpeg_merge_quality = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -95,12 +96,11 @@
             this.label6 = new System.Windows.Forms.Label();
             this.tb_ConfidenceFormat = new System.Windows.Forms.TextBox();
             this.tb_DetectionFormat = new System.Windows.Forms.TextBox();
+            this.tb_sound_cooldown = new System.Windows.Forms.TextBox();
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btTest = new System.Windows.Forms.Button();
             this.bt_variables = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.tb_sound_cooldown = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBoxMQTT.SuspendLayout();
             this.groupBoxTelegram.SuspendLayout();
@@ -116,7 +116,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
-            this.btnCancel.TabIndex = 3;
+            this.btnCancel.TabIndex = 37;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -129,7 +129,7 @@
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
-            this.btnSave.TabIndex = 2;
+            this.btnSave.TabIndex = 36;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
@@ -208,7 +208,7 @@
             this.cb_MQTT_enabled.Location = new System.Drawing.Point(6, 0);
             this.cb_MQTT_enabled.Name = "cb_MQTT_enabled";
             this.cb_MQTT_enabled.Size = new System.Drawing.Size(138, 19);
-            this.cb_MQTT_enabled.TabIndex = 35;
+            this.cb_MQTT_enabled.TabIndex = 17;
             this.cb_MQTT_enabled.Text = "Send MQTT Message:";
             this.toolTip1.SetToolTip(this.cb_MQTT_enabled, "For now, see JSON config file for server, port, username, password settings");
             this.cb_MQTT_enabled.UseVisualStyleBackColor = true;
@@ -241,7 +241,7 @@
             this.tb_MQTT_Topic.Location = new System.Drawing.Point(87, 25);
             this.tb_MQTT_Topic.Name = "tb_MQTT_Topic";
             this.tb_MQTT_Topic.Size = new System.Drawing.Size(219, 20);
-            this.tb_MQTT_Topic.TabIndex = 37;
+            this.tb_MQTT_Topic.TabIndex = 18;
             this.tb_MQTT_Topic.Tag = "";
             this.toolTip1.SetToolTip(this.tb_MQTT_Topic, "Specify more than one topic/payload by using the PIPE | symbol between each.");
             // 
@@ -261,7 +261,7 @@
             this.tb_MQTT_Topic_Cancel.Location = new System.Drawing.Point(87, 53);
             this.tb_MQTT_Topic_Cancel.Name = "tb_MQTT_Topic_Cancel";
             this.tb_MQTT_Topic_Cancel.Size = new System.Drawing.Size(219, 20);
-            this.tb_MQTT_Topic_Cancel.TabIndex = 37;
+            this.tb_MQTT_Topic_Cancel.TabIndex = 21;
             this.tb_MQTT_Topic_Cancel.Tag = "";
             this.toolTip1.SetToolTip(this.tb_MQTT_Topic_Cancel, "Specify more than one topic/payload by using the PIPE | symbol between each.");
             // 
@@ -272,7 +272,7 @@
             this.tb_MQTT_Payload.Location = new System.Drawing.Point(392, 25);
             this.tb_MQTT_Payload.Name = "tb_MQTT_Payload";
             this.tb_MQTT_Payload.Size = new System.Drawing.Size(340, 20);
-            this.tb_MQTT_Payload.TabIndex = 38;
+            this.tb_MQTT_Payload.TabIndex = 19;
             this.tb_MQTT_Payload.Tag = "";
             this.toolTip1.SetToolTip(this.tb_MQTT_Payload, "Specify more than one topic/payload by using the PIPE | symbol between each.");
             // 
@@ -283,7 +283,7 @@
             this.cb_MQTT_SendImage.Location = new System.Drawing.Point(757, 27);
             this.cb_MQTT_SendImage.Name = "cb_MQTT_SendImage";
             this.cb_MQTT_SendImage.Size = new System.Drawing.Size(88, 19);
-            this.cb_MQTT_SendImage.TabIndex = 50;
+            this.cb_MQTT_SendImage.TabIndex = 20;
             this.cb_MQTT_SendImage.Text = "Send Image";
             this.toolTip1.SetToolTip(this.cb_MQTT_SendImage, "If one of the topics has /image and the image checkbox is checked, then the actua" +
         "l image with the detection will be sent.\r\n (use | to Separate multiple topics or" +
@@ -297,7 +297,7 @@
             this.tb_MQTT_Payload_cancel.Location = new System.Drawing.Point(392, 53);
             this.tb_MQTT_Payload_cancel.Name = "tb_MQTT_Payload_cancel";
             this.tb_MQTT_Payload_cancel.Size = new System.Drawing.Size(450, 20);
-            this.tb_MQTT_Payload_cancel.TabIndex = 38;
+            this.tb_MQTT_Payload_cancel.TabIndex = 22;
             this.tb_MQTT_Payload_cancel.Tag = "";
             this.toolTip1.SetToolTip(this.tb_MQTT_Payload_cancel, "Specify more than one topic/payload by using the PIPE | symbol between each.");
             // 
@@ -348,7 +348,7 @@
             this.cb_telegram.Margin = new System.Windows.Forms.Padding(10, 6, 5, 6);
             this.cb_telegram.Name = "cb_telegram";
             this.cb_telegram.Size = new System.Drawing.Size(184, 19);
-            this.cb_telegram.TabIndex = 24;
+            this.cb_telegram.TabIndex = 6;
             this.cb_telegram.Text = "Send alert images to Telegram";
             this.cb_telegram.UseVisualStyleBackColor = false;
             this.cb_telegram.CheckedChanged += new System.EventHandler(this.cb_telegram_CheckedChanged);
@@ -368,7 +368,7 @@
             this.tb_telegram_caption.Location = new System.Drawing.Point(55, 25);
             this.tb_telegram_caption.Name = "tb_telegram_caption";
             this.tb_telegram_caption.Size = new System.Drawing.Size(219, 20);
-            this.tb_telegram_caption.TabIndex = 42;
+            this.tb_telegram_caption.TabIndex = 7;
             // 
             // label20
             // 
@@ -397,7 +397,7 @@
             this.cb_telegram_active_time.Location = new System.Drawing.Point(623, 25);
             this.cb_telegram_active_time.Name = "cb_telegram_active_time";
             this.cb_telegram_active_time.Size = new System.Drawing.Size(219, 20);
-            this.cb_telegram_active_time.TabIndex = 45;
+            this.cb_telegram_active_time.TabIndex = 9;
             this.toolTip1.SetToolTip(this.cb_telegram_active_time, "Time range (24 hr) when sending to Telegram is active");
             // 
             // tb_telegram_triggering_objects
@@ -407,7 +407,7 @@
             this.tb_telegram_triggering_objects.Location = new System.Drawing.Point(341, 25);
             this.tb_telegram_triggering_objects.Name = "tb_telegram_triggering_objects";
             this.tb_telegram_triggering_objects.Size = new System.Drawing.Size(219, 20);
-            this.tb_telegram_triggering_objects.TabIndex = 45;
+            this.tb_telegram_triggering_objects.TabIndex = 8;
             this.toolTip1.SetToolTip(this.tb_telegram_triggering_objects, "Leave blank for ALL or list objects you want telegrams to be\r\nsent for - \"Person," +
         " VelociRabbit, etc\".  Not case sensitive.");
             // 
@@ -419,7 +419,7 @@
             this.tb_RunExternalProgram.Location = new System.Drawing.Point(191, 416);
             this.tb_RunExternalProgram.Name = "tb_RunExternalProgram";
             this.tb_RunExternalProgram.Size = new System.Drawing.Size(295, 20);
-            this.tb_RunExternalProgram.TabIndex = 31;
+            this.tb_RunExternalProgram.TabIndex = 27;
             this.toolTip1.SetToolTip(this.tb_RunExternalProgram, "Path to EXE, BAT, etc");
             // 
             // label15
@@ -440,7 +440,7 @@
             this.tb_network_folder.Location = new System.Drawing.Point(191, 385);
             this.tb_network_folder.Name = "tb_network_folder";
             this.tb_network_folder.Size = new System.Drawing.Size(295, 20);
-            this.tb_network_folder.TabIndex = 28;
+            this.tb_network_folder.TabIndex = 24;
             // 
             // groupBoxPushover
             // 
@@ -474,7 +474,7 @@
             this.cb_Pushover_Enabled.Location = new System.Drawing.Point(8, 0);
             this.cb_Pushover_Enabled.Name = "cb_Pushover_Enabled";
             this.cb_Pushover_Enabled.Size = new System.Drawing.Size(185, 19);
-            this.cb_Pushover_Enabled.TabIndex = 35;
+            this.cb_Pushover_Enabled.TabIndex = 10;
             this.cb_Pushover_Enabled.Text = "Send alert images to Pushover";
             this.cb_Pushover_Enabled.UseVisualStyleBackColor = true;
             this.cb_Pushover_Enabled.CheckedChanged += new System.EventHandler(this.cb_Pushover_Enabled_CheckedChanged);
@@ -495,7 +495,7 @@
             this.tb_pushover_triggering_objects.Location = new System.Drawing.Point(623, 50);
             this.tb_pushover_triggering_objects.Name = "tb_pushover_triggering_objects";
             this.tb_pushover_triggering_objects.Size = new System.Drawing.Size(219, 20);
-            this.tb_pushover_triggering_objects.TabIndex = 45;
+            this.tb_pushover_triggering_objects.TabIndex = 16;
             this.toolTip1.SetToolTip(this.tb_pushover_triggering_objects, "A list of objects that trigger send to pushover. Leave empty for default camera o" +
         "bjects.\r\n");
             // 
@@ -514,7 +514,7 @@
             this.tb_Pushover_Title.Location = new System.Drawing.Point(55, 22);
             this.tb_Pushover_Title.Name = "tb_Pushover_Title";
             this.tb_Pushover_Title.Size = new System.Drawing.Size(219, 20);
-            this.tb_Pushover_Title.TabIndex = 37;
+            this.tb_Pushover_Title.TabIndex = 11;
             this.tb_Pushover_Title.Tag = "";
             this.toolTip1.SetToolTip(this.tb_Pushover_Title, "Specify more than one title/message/device by using the PIPE | symbol between eac" +
         "h.");
@@ -535,7 +535,7 @@
             this.tb_Pushover_Message.Location = new System.Drawing.Point(341, 22);
             this.tb_Pushover_Message.Name = "tb_Pushover_Message";
             this.tb_Pushover_Message.Size = new System.Drawing.Size(219, 20);
-            this.tb_Pushover_Message.TabIndex = 38;
+            this.tb_Pushover_Message.TabIndex = 12;
             this.tb_Pushover_Message.Tag = "";
             this.toolTip1.SetToolTip(this.tb_Pushover_Message, "Specify more than one title/message/device by using the PIPE | symbol between eac" +
         "h.");
@@ -547,7 +547,7 @@
             this.tb_Pushover_Device.Location = new System.Drawing.Point(623, 21);
             this.tb_Pushover_Device.Name = "tb_Pushover_Device";
             this.tb_Pushover_Device.Size = new System.Drawing.Size(219, 20);
-            this.tb_Pushover_Device.TabIndex = 38;
+            this.tb_Pushover_Device.TabIndex = 13;
             this.tb_Pushover_Device.Tag = "";
             this.toolTip1.SetToolTip(this.tb_Pushover_Device, "Specify more than one title/message/device by using the PIPE | symbol between eac" +
         "h.");
@@ -568,7 +568,7 @@
             this.tb_Pushover_sound.Location = new System.Drawing.Point(55, 51);
             this.tb_Pushover_sound.Name = "tb_Pushover_sound";
             this.tb_Pushover_sound.Size = new System.Drawing.Size(219, 20);
-            this.tb_Pushover_sound.TabIndex = 38;
+            this.tb_Pushover_sound.TabIndex = 14;
             this.tb_Pushover_sound.Tag = "";
             this.toolTip1.SetToolTip(this.tb_Pushover_sound, "specify a sound name Pushover supports such as bike, bugle, cosmic, etc");
             // 
@@ -579,7 +579,7 @@
             this.tb_Pushover_Priority.Location = new System.Drawing.Point(341, 51);
             this.tb_Pushover_Priority.Name = "tb_Pushover_Priority";
             this.tb_Pushover_Priority.Size = new System.Drawing.Size(219, 20);
-            this.tb_Pushover_Priority.TabIndex = 38;
+            this.tb_Pushover_Priority.TabIndex = 15;
             this.tb_Pushover_Priority.Tag = "";
             this.toolTip1.SetToolTip(this.tb_Pushover_Priority, "Lowest, Low, Normal, High, Emergency");
             // 
@@ -623,6 +623,16 @@
             this.label19.TabIndex = 39;
             this.label19.Text = "Priority:";
             // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(697, 447);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(91, 15);
+            this.label3.TabIndex = 40;
+            this.label3.Text = "Cooldown Secs:";
+            // 
             // label14
             // 
             this.label14.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -639,7 +649,7 @@
             this.tb_jpeg_merge_quality.Location = new System.Drawing.Point(794, 17);
             this.tb_jpeg_merge_quality.Name = "tb_jpeg_merge_quality";
             this.tb_jpeg_merge_quality.Size = new System.Drawing.Size(62, 23);
-            this.tb_jpeg_merge_quality.TabIndex = 49;
+            this.tb_jpeg_merge_quality.TabIndex = 3;
             this.toolTip1.SetToolTip(this.tb_jpeg_merge_quality, "The larger the number, the higher the image quality AND SIZE.   If you lower this" +
         " number to\r\n50 or below, images will be smaller and sent to Telegram faster.");
             // 
@@ -660,7 +670,7 @@
             this.cb_queue_actions.Location = new System.Drawing.Point(263, 19);
             this.cb_queue_actions.Name = "cb_queue_actions";
             this.cb_queue_actions.Size = new System.Drawing.Size(104, 19);
-            this.cb_queue_actions.TabIndex = 47;
+            this.cb_queue_actions.TabIndex = 1;
             this.cb_queue_actions.Text = "Queue Actions";
             this.toolTip1.SetToolTip(this.cb_queue_actions, resources.GetString("cb_queue_actions.ToolTip"));
             this.cb_queue_actions.UseVisualStyleBackColor = true;
@@ -672,7 +682,7 @@
             this.cb_mergeannotations.Location = new System.Drawing.Point(392, 19);
             this.cb_mergeannotations.Name = "cb_mergeannotations";
             this.cb_mergeannotations.Size = new System.Drawing.Size(193, 19);
-            this.cb_mergeannotations.TabIndex = 46;
+            this.cb_mergeannotations.TabIndex = 2;
             this.cb_mergeannotations.Text = "Merge Annotations Into Images";
             this.toolTip1.SetToolTip(this.cb_mergeannotations, "Merge detected object text and rectangles into actual image.");
             this.cb_mergeannotations.UseVisualStyleBackColor = true;
@@ -685,7 +695,7 @@
             this.tb_network_folder_filename.Location = new System.Drawing.Point(550, 385);
             this.tb_network_folder_filename.Name = "tb_network_folder_filename";
             this.tb_network_folder_filename.Size = new System.Drawing.Size(295, 20);
-            this.tb_network_folder_filename.TabIndex = 45;
+            this.tb_network_folder_filename.TabIndex = 25;
             this.toolTip1.SetToolTip(this.tb_network_folder_filename, "The filename to be created in the network folder NOT including file extension.  F" +
         "or example, [camera] would be saved as MYCAMERA.JPG");
             // 
@@ -697,7 +707,7 @@
             this.tb_Sounds.Location = new System.Drawing.Point(191, 444);
             this.tb_Sounds.Name = "tb_Sounds";
             this.tb_Sounds.Size = new System.Drawing.Size(500, 20);
-            this.tb_Sounds.TabIndex = 34;
+            this.tb_Sounds.TabIndex = 30;
             this.toolTip1.SetToolTip(this.tb_Sounds, resources.GetString("tb_Sounds.ToolTip"));
             // 
             // cb_PlaySound
@@ -707,7 +717,7 @@
             this.cb_PlaySound.Location = new System.Drawing.Point(9, 446);
             this.cb_PlaySound.Name = "cb_PlaySound";
             this.cb_PlaySound.Size = new System.Drawing.Size(88, 19);
-            this.cb_PlaySound.TabIndex = 33;
+            this.cb_PlaySound.TabIndex = 29;
             this.cb_PlaySound.Text = "Play Sound:";
             this.cb_PlaySound.UseVisualStyleBackColor = true;
             this.cb_PlaySound.CheckedChanged += new System.EventHandler(this.cb_PlaySound_CheckedChanged);
@@ -719,7 +729,7 @@
             this.tb_RunExternalProgramArgs.Location = new System.Drawing.Point(550, 416);
             this.tb_RunExternalProgramArgs.Name = "tb_RunExternalProgramArgs";
             this.tb_RunExternalProgramArgs.Size = new System.Drawing.Size(295, 20);
-            this.tb_RunExternalProgramArgs.TabIndex = 32;
+            this.tb_RunExternalProgramArgs.TabIndex = 28;
             this.toolTip1.SetToolTip(this.tb_RunExternalProgramArgs, "Command line arguments to run the external app or script");
             // 
             // cb_RunProgram
@@ -729,7 +739,7 @@
             this.cb_RunProgram.Location = new System.Drawing.Point(9, 417);
             this.cb_RunProgram.Name = "cb_RunProgram";
             this.cb_RunProgram.Size = new System.Drawing.Size(144, 19);
-            this.cb_RunProgram.TabIndex = 30;
+            this.cb_RunProgram.TabIndex = 26;
             this.cb_RunProgram.Text = "Run external program:";
             this.cb_RunProgram.UseVisualStyleBackColor = true;
             this.cb_RunProgram.CheckedChanged += new System.EventHandler(this.cb_RunProgram_CheckedChanged);
@@ -743,7 +753,7 @@
             this.cb_copyAlertImages.Margin = new System.Windows.Forms.Padding(40, 8, 7, 8);
             this.cb_copyAlertImages.Name = "cb_copyAlertImages";
             this.cb_copyAlertImages.Size = new System.Drawing.Size(172, 19);
-            this.cb_copyAlertImages.TabIndex = 27;
+            this.cb_copyAlertImages.TabIndex = 23;
             this.cb_copyAlertImages.Text = "Copy alert images to folder:";
             this.toolTip1.SetToolTip(this.cb_copyAlertImages, "When an object in an image is detected, copy the image to the\r\n folder specified");
             this.cb_copyAlertImages.UseVisualStyleBackColor = false;
@@ -759,7 +769,7 @@
             this.tbCancelUrl.Multiline = true;
             this.tbCancelUrl.Name = "tbCancelUrl";
             this.tbCancelUrl.Size = new System.Drawing.Size(836, 50);
-            this.tbCancelUrl.TabIndex = 22;
+            this.tbCancelUrl.TabIndex = 33;
             this.toolTip1.SetToolTip(this.tbCancelUrl, "URLs that cancel the alert - For BI, use ");
             // 
             // tbTriggerUrl
@@ -772,7 +782,7 @@
             this.tbTriggerUrl.Multiline = true;
             this.tbTriggerUrl.Name = "tbTriggerUrl";
             this.tbTriggerUrl.Size = new System.Drawing.Size(836, 50);
-            this.tbTriggerUrl.TabIndex = 22;
+            this.tbTriggerUrl.TabIndex = 32;
             this.tbTriggerUrl.Text = "test\r\ntest2\r\ntest3";
             this.toolTip1.SetToolTip(this.tbTriggerUrl, "A list of URLs each on their own line OR seperated with commas that will be trigg" +
         "ered on an alert");
@@ -879,7 +889,7 @@
             this.tb_ConfidenceFormat.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_ConfidenceFormat.Name = "tb_ConfidenceFormat";
             this.tb_ConfidenceFormat.Size = new System.Drawing.Size(259, 20);
-            this.tb_ConfidenceFormat.TabIndex = 21;
+            this.tb_ConfidenceFormat.TabIndex = 5;
             this.tb_ConfidenceFormat.TextChanged += new System.EventHandler(this.tb_ConfidenceFormat_TextChanged);
             // 
             // tb_DetectionFormat
@@ -889,9 +899,19 @@
             this.tb_DetectionFormat.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_DetectionFormat.Name = "tb_DetectionFormat";
             this.tb_DetectionFormat.Size = new System.Drawing.Size(259, 20);
-            this.tb_DetectionFormat.TabIndex = 21;
+            this.tb_DetectionFormat.TabIndex = 4;
             this.toolTip1.SetToolTip(this.tb_DetectionFormat, "This is the format for each individual detection");
             this.tb_DetectionFormat.TextChanged += new System.EventHandler(this.tb_DetectionFormat_TextChanged);
+            // 
+            // tb_sound_cooldown
+            // 
+            this.tb_sound_cooldown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_sound_cooldown.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_sound_cooldown.Location = new System.Drawing.Point(801, 444);
+            this.tb_sound_cooldown.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.tb_sound_cooldown.Name = "tb_sound_cooldown";
+            this.tb_sound_cooldown.Size = new System.Drawing.Size(44, 20);
+            this.tb_sound_cooldown.TabIndex = 31;
             // 
             // tb_cooldown
             // 
@@ -900,7 +920,7 @@
             this.tb_cooldown.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_cooldown.Name = "tb_cooldown";
             this.tb_cooldown.Size = new System.Drawing.Size(44, 20);
-            this.tb_cooldown.TabIndex = 21;
+            this.tb_cooldown.TabIndex = 0;
             // 
             // btTest
             // 
@@ -908,7 +928,7 @@
             this.btTest.Location = new System.Drawing.Point(647, 654);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
-            this.btTest.TabIndex = 6;
+            this.btTest.TabIndex = 35;
             this.btTest.Text = "Test";
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_Click);
@@ -921,30 +941,12 @@
             this.bt_variables.Location = new System.Drawing.Point(8, 653);
             this.bt_variables.Name = "bt_variables";
             this.bt_variables.Size = new System.Drawing.Size(70, 30);
-            this.bt_variables.TabIndex = 54;
+            this.bt_variables.TabIndex = 34;
             this.bt_variables.Text = "Variables";
+            this.toolTip1.SetToolTip(this.bt_variables, "A list of [variable] names you can use in the settings below.   This list is read" +
+        "-only.");
             this.bt_variables.UseVisualStyleBackColor = false;
             this.bt_variables.Click += new System.EventHandler(this.bt_variables_Click);
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(697, 447);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(91, 15);
-            this.label3.TabIndex = 40;
-            this.label3.Text = "Cooldown Secs:";
-            // 
-            // tb_sound_cooldown
-            // 
-            this.tb_sound_cooldown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_sound_cooldown.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_sound_cooldown.Location = new System.Drawing.Point(801, 444);
-            this.tb_sound_cooldown.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
-            this.tb_sound_cooldown.Name = "tb_sound_cooldown";
-            this.tb_sound_cooldown.Size = new System.Drawing.Size(44, 20);
-            this.tb_sound_cooldown.TabIndex = 21;
             // 
             // Frm_LegacyActions
             // 

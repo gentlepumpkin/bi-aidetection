@@ -136,7 +136,7 @@
             0});
             this.numBrushSize.Name = "numBrushSize";
             this.numBrushSize.Size = new System.Drawing.Size(48, 20);
-            this.numBrushSize.TabIndex = 4;
+            this.numBrushSize.TabIndex = 0;
             this.numBrushSize.Value = new decimal(new int[] {
             20,
             0,
@@ -155,7 +155,7 @@
             this.rbBrush.Margin = new System.Windows.Forms.Padding(55, 6, 6, 6);
             this.rbBrush.Name = "rbBrush";
             this.rbBrush.Size = new System.Drawing.Size(52, 17);
-            this.rbBrush.TabIndex = 5;
+            this.rbBrush.TabIndex = 1;
             this.rbBrush.TabStop = true;
             this.rbBrush.Text = "Brush";
             this.rbBrush.UseVisualStyleBackColor = true;
@@ -168,7 +168,7 @@
             this.rbRectangle.Margin = new System.Windows.Forms.Padding(6, 6, 55, 6);
             this.rbRectangle.Name = "rbRectangle";
             this.rbRectangle.Size = new System.Drawing.Size(74, 17);
-            this.rbRectangle.TabIndex = 6;
+            this.rbRectangle.TabIndex = 2;
             this.rbRectangle.Text = "Rectangle";
             this.rbRectangle.UseVisualStyleBackColor = true;
             // 
@@ -179,7 +179,7 @@
             this.btnClear.Margin = new System.Windows.Forms.Padding(6, 15, 6, 6);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(70, 30);
-            this.btnClear.TabIndex = 7;
+            this.btnClear.TabIndex = 5;
             this.btnClear.Text = "Clear";
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
@@ -226,7 +226,7 @@
             this.cbResolution.Location = new System.Drawing.Point(492, 438);
             this.cbResolution.Name = "cbResolution";
             this.cbResolution.Size = new System.Drawing.Size(100, 21);
-            this.cbResolution.TabIndex = 9;
+            this.cbResolution.TabIndex = 3;
             this.cbResolution.SelectedIndexChanged += new System.EventHandler(this.cbResolution_SelectedIndexChanged);
             this.cbResolution.SelectionChangeCommitted += new System.EventHandler(this.cbResolution_SelectionChangeCommitted);
             // 
@@ -237,7 +237,7 @@
             this.linkLabelScan.Location = new System.Drawing.Point(598, 442);
             this.linkLabelScan.Name = "linkLabelScan";
             this.linkLabelScan.Size = new System.Drawing.Size(32, 13);
-            this.linkLabelScan.TabIndex = 10;
+            this.linkLabelScan.TabIndex = 4;
             this.linkLabelScan.TabStop = true;
             this.linkLabelScan.Text = "Scan";
             this.toolTip1.SetToolTip(this.linkLabelScan, "Scan BI Images folder for this camera to find all image resolutions");

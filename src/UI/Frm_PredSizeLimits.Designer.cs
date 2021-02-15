@@ -100,7 +100,7 @@ namespace AITool
             this.tb_maxpercent.Location = new System.Drawing.Point(199, 41);
             this.tb_maxpercent.Name = "tb_maxpercent";
             this.tb_maxpercent.Size = new System.Drawing.Size(33, 20);
-            this.tb_maxpercent.TabIndex = 1;
+            this.tb_maxpercent.TabIndex = 3;
             this.tb_maxpercent.Text = "100";
             // 
             // label2
@@ -117,7 +117,7 @@ namespace AITool
             this.tb_MinPercent.Location = new System.Drawing.Point(86, 41);
             this.tb_MinPercent.Name = "tb_MinPercent";
             this.tb_MinPercent.Size = new System.Drawing.Size(33, 20);
-            this.tb_MinPercent.TabIndex = 1;
+            this.tb_MinPercent.TabIndex = 2;
             this.tb_MinPercent.Text = "100";
             // 
             // groupBox2
@@ -171,7 +171,7 @@ namespace AITool
             this.tb_maxheight.Location = new System.Drawing.Point(201, 47);
             this.tb_maxheight.Name = "tb_maxheight";
             this.tb_maxheight.Size = new System.Drawing.Size(33, 20);
-            this.tb_maxheight.TabIndex = 1;
+            this.tb_maxheight.TabIndex = 7;
             this.tb_maxheight.Text = "100";
             // 
             // label4
@@ -188,7 +188,7 @@ namespace AITool
             this.tb_maxwidth.Location = new System.Drawing.Point(201, 23);
             this.tb_maxwidth.Name = "tb_maxwidth";
             this.tb_maxwidth.Size = new System.Drawing.Size(33, 20);
-            this.tb_maxwidth.TabIndex = 1;
+            this.tb_maxwidth.TabIndex = 5;
             this.tb_maxwidth.Text = "100";
             // 
             // tb_minheight
@@ -196,7 +196,7 @@ namespace AITool
             this.tb_minheight.Location = new System.Drawing.Point(86, 47);
             this.tb_minheight.Name = "tb_minheight";
             this.tb_minheight.Size = new System.Drawing.Size(33, 20);
-            this.tb_minheight.TabIndex = 1;
+            this.tb_minheight.TabIndex = 6;
             this.tb_minheight.Text = "100";
             // 
             // tb_minwidth
@@ -204,7 +204,7 @@ namespace AITool
             this.tb_minwidth.Location = new System.Drawing.Point(86, 23);
             this.tb_minwidth.Name = "tb_minwidth";
             this.tb_minwidth.Size = new System.Drawing.Size(33, 20);
-            this.tb_minwidth.TabIndex = 1;
+            this.tb_minwidth.TabIndex = 4;
             this.tb_minwidth.Text = "100";
             // 
             // BtnSave
@@ -213,7 +213,7 @@ namespace AITool
             this.BtnSave.Location = new System.Drawing.Point(208, 292);
             this.BtnSave.Name = "BtnSave";
             this.BtnSave.Size = new System.Drawing.Size(70, 30);
-            this.BtnSave.TabIndex = 3;
+            this.BtnSave.TabIndex = 9;
             this.BtnSave.Text = "Save";
             this.BtnSave.UseVisualStyleBackColor = true;
             this.BtnSave.Click += new System.EventHandler(this.BtnSave_Click);
@@ -274,7 +274,7 @@ namespace AITool
             this.tb_ConfidenceLower.Location = new System.Drawing.Point(86, 16);
             this.tb_ConfidenceLower.Name = "tb_ConfidenceLower";
             this.tb_ConfidenceLower.Size = new System.Drawing.Size(33, 20);
-            this.tb_ConfidenceLower.TabIndex = 1;
+            this.tb_ConfidenceLower.TabIndex = 0;
             this.tb_ConfidenceLower.Text = "100";
             // 
             // groupBox4
@@ -295,7 +295,7 @@ namespace AITool
             this.tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
             this.tb_duplicatepercent.Name = "tb_duplicatepercent";
             this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 20);
-            this.tb_duplicatepercent.TabIndex = 1;
+            this.tb_duplicatepercent.TabIndex = 8;
             this.tb_duplicatepercent.Text = "100";
             // 
             // label11

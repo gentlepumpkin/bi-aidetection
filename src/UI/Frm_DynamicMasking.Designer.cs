@@ -32,6 +32,7 @@
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.tableLayoutAdvancedMasking = new System.Windows.Forms.TableLayoutPanel();
+            this.label4 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
@@ -49,14 +50,13 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.label23 = new System.Windows.Forms.Label();
             this.btnAdvanced = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.num_max_unused = new System.Windows.Forms.NumericUpDown();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tb_objects = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.num_max_unused = new System.Windows.Forms.NumericUpDown();
-            this.label4 = new System.Windows.Forms.Label();
             this.tableLayoutAdvancedMasking.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.num_history_mins)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_create)).BeginInit();
@@ -65,8 +65,8 @@
             this.flowLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMaskThreshold)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.num_max_unused)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnSave
@@ -76,7 +76,7 @@
             this.btnSave.Margin = new System.Windows.Forms.Padding(4);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
-            this.btnSave.TabIndex = 0;
+            this.btnSave.TabIndex = 8;
             this.btnSave.Text = "OK";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
@@ -89,7 +89,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
-            this.btnCancel.TabIndex = 1;
+            this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -128,6 +128,18 @@
             this.tableLayoutAdvancedMasking.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutAdvancedMasking.Size = new System.Drawing.Size(776, 212);
             this.tableLayoutAdvancedMasking.TabIndex = 20;
+            // 
+            // label4
+            // 
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label4.Location = new System.Drawing.Point(175, 184);
+            this.label4.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(202, 15);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "days if static mask has not been used";
             // 
             // label16
             // 
@@ -183,7 +195,7 @@
             0});
             this.num_history_mins.Name = "num_history_mins";
             this.num_history_mins.Size = new System.Drawing.Size(49, 23);
-            this.num_history_mins.TabIndex = 6;
+            this.num_history_mins.TabIndex = 0;
             this.num_history_mins.Value = new decimal(new int[] {
             1,
             0,
@@ -208,7 +220,7 @@
             0});
             this.num_mask_create.Name = "num_mask_create";
             this.num_mask_create.Size = new System.Drawing.Size(49, 23);
-            this.num_mask_create.TabIndex = 7;
+            this.num_mask_create.TabIndex = 1;
             this.num_mask_create.Value = new decimal(new int[] {
             1,
             0,
@@ -245,7 +257,7 @@
             0});
             this.num_mask_remove.Name = "num_mask_remove";
             this.num_mask_remove.Size = new System.Drawing.Size(49, 23);
-            this.num_mask_remove.TabIndex = 10;
+            this.num_mask_remove.TabIndex = 2;
             this.num_mask_remove.Value = new decimal(new int[] {
             1,
             0,
@@ -278,7 +290,7 @@
             0});
             this.num_percent_var.Name = "num_percent_var";
             this.num_percent_var.Size = new System.Drawing.Size(49, 23);
-            this.num_percent_var.TabIndex = 13;
+            this.num_percent_var.TabIndex = 3;
             this.num_percent_var.Value = new decimal(new int[] {
             1,
             0,
@@ -382,10 +394,36 @@
             this.btnAdvanced.Margin = new System.Windows.Forms.Padding(5);
             this.btnAdvanced.Name = "btnAdvanced";
             this.btnAdvanced.Size = new System.Drawing.Size(70, 29);
-            this.btnAdvanced.TabIndex = 16;
+            this.btnAdvanced.TabIndex = 4;
             this.btnAdvanced.Text = "Advanced";
             this.btnAdvanced.UseVisualStyleBackColor = true;
             this.btnAdvanced.Click += new System.EventHandler(this.btnAdvanced_Click);
+            // 
+            // label3
+            // 
+            this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label3.Location = new System.Drawing.Point(5, 182);
+            this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(108, 15);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Remove mask after ";
+            // 
+            // num_max_unused
+            // 
+            this.num_max_unused.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.num_max_unused.Location = new System.Drawing.Point(118, 178);
+            this.num_max_unused.Name = "num_max_unused";
+            this.num_max_unused.Size = new System.Drawing.Size(49, 23);
+            this.num_max_unused.TabIndex = 5;
+            this.num_max_unused.Value = new decimal(new int[] {
+            60,
+            0,
+            0,
+            0});
+            this.num_max_unused.Leave += new System.EventHandler(this.num_max_unused_Leave);
             // 
             // groupBox1
             // 
@@ -417,7 +455,7 @@
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(4);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(68, 19);
-            this.cb_enabled.TabIndex = 21;
+            this.cb_enabled.TabIndex = 7;
             this.cb_enabled.Text = "Enabled";
             this.cb_enabled.UseVisualStyleBackColor = true;
             // 
@@ -429,48 +467,10 @@
             this.tb_objects.Margin = new System.Windows.Forms.Padding(4);
             this.tb_objects.Name = "tb_objects";
             this.tb_objects.Size = new System.Drawing.Size(690, 23);
-            this.tb_objects.TabIndex = 22;
+            this.tb_objects.TabIndex = 6;
             this.toolTip1.SetToolTip(this.tb_objects, "Leave empty for all object types, or enter a comma seperated list of objects to a" +
         "pply dynamic masking to. \r\nIE person, bear, Tasseled Wobbegong, Pink Fairy Armad" +
         "illo, etc.");
-            // 
-            // label3
-            // 
-            this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label3.Location = new System.Drawing.Point(5, 182);
-            this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(108, 15);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "Remove mask after ";
-            // 
-            // num_max_unused
-            // 
-            this.num_max_unused.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_max_unused.Location = new System.Drawing.Point(118, 178);
-            this.num_max_unused.Name = "num_max_unused";
-            this.num_max_unused.Size = new System.Drawing.Size(49, 23);
-            this.num_max_unused.TabIndex = 16;
-            this.num_max_unused.Value = new decimal(new int[] {
-            60,
-            0,
-            0,
-            0});
-            this.num_max_unused.Leave += new System.EventHandler(this.num_max_unused_Leave);
-            // 
-            // label4
-            // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label4.Location = new System.Drawing.Point(175, 184);
-            this.label4.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(202, 15);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "days if static mask has not been used";
             // 
             // Frm_DynamicMasking
             // 
@@ -501,8 +501,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numMaskThreshold)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.num_max_unused)).EndInit();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 

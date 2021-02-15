@@ -1243,7 +1243,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(728, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(730, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1256,7 +1256,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(723, 388);
+            this.pictureBox1.Size = new System.Drawing.Size(725, 388);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -1354,7 +1354,7 @@
             this.btnCameraSave.Location = new System.Drawing.Point(695, 3);
             this.btnCameraSave.Name = "btnCameraSave";
             this.btnCameraSave.Size = new System.Drawing.Size(70, 30);
-            this.btnCameraSave.TabIndex = 26;
+            this.btnCameraSave.TabIndex = 34;
             this.btnCameraSave.Text = "Save";
             this.btnCameraSave.UseVisualStyleBackColor = false;
             this.btnCameraSave.Click += new System.EventHandler(this.btnCameraSave_Click_1);
@@ -1366,7 +1366,7 @@
             this.btnCameraAdd.Location = new System.Drawing.Point(41, 3);
             this.btnCameraAdd.Name = "btnCameraAdd";
             this.btnCameraAdd.Size = new System.Drawing.Size(70, 30);
-            this.btnCameraAdd.TabIndex = 24;
+            this.btnCameraAdd.TabIndex = 31;
             this.btnCameraAdd.Text = "Add";
             this.btnCameraAdd.UseVisualStyleBackColor = true;
             this.btnCameraAdd.Click += new System.EventHandler(this.btnCameraAdd_Click);
@@ -1378,7 +1378,7 @@
             this.btnCameraDel.Location = new System.Drawing.Point(232, 3);
             this.btnCameraDel.Name = "btnCameraDel";
             this.btnCameraDel.Size = new System.Drawing.Size(70, 30);
-            this.btnCameraDel.TabIndex = 25;
+            this.btnCameraDel.TabIndex = 32;
             this.btnCameraDel.Text = "Delete";
             this.btnCameraDel.UseVisualStyleBackColor = true;
             this.btnCameraDel.Click += new System.EventHandler(this.btnCameraDel_Click);
@@ -1391,7 +1391,7 @@
             this.btnSaveTo.Location = new System.Drawing.Point(463, 3);
             this.btnSaveTo.Name = "btnSaveTo";
             this.btnSaveTo.Size = new System.Drawing.Size(70, 30);
-            this.btnSaveTo.TabIndex = 27;
+            this.btnSaveTo.TabIndex = 33;
             this.btnSaveTo.Text = "Apply to";
             this.btnSaveTo.UseVisualStyleBackColor = false;
             this.btnSaveTo.Click += new System.EventHandler(this.btnSaveTo_Click);
@@ -1574,7 +1574,7 @@
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(211, 19);
-            this.cb_enabled.TabIndex = 2;
+            this.cb_enabled.TabIndex = 1;
             this.cb_enabled.Text = "Enable AI Detection for this camera";
             this.cb_enabled.UseVisualStyleBackColor = true;
             // 
@@ -1586,7 +1586,7 @@
             this.tbName.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbName.Name = "tbName";
             this.tbName.Size = new System.Drawing.Size(303, 23);
-            this.tbName.TabIndex = 1;
+            this.tbName.TabIndex = 0;
             // 
             // lblRelevantObjects
             // 
@@ -1629,7 +1629,7 @@
             this.cmbcaminput.Margin = new System.Windows.Forms.Padding(21, 2, 21, 2);
             this.cmbcaminput.Name = "cmbcaminput";
             this.cmbcaminput.Size = new System.Drawing.Size(390, 23);
-            this.cmbcaminput.TabIndex = 7;
+            this.cmbcaminput.TabIndex = 4;
             // 
             // cb_monitorCamInputfolder
             // 
@@ -1702,7 +1702,7 @@
             this.cb_masking_enabled.Margin = new System.Windows.Forms.Padding(21, 3, 5, 0);
             this.cb_masking_enabled.Name = "cb_masking_enabled";
             this.cb_masking_enabled.Size = new System.Drawing.Size(158, 19);
-            this.cb_masking_enabled.TabIndex = 21;
+            this.cb_masking_enabled.TabIndex = 25;
             this.cb_masking_enabled.Text = "Enable dynamic masking";
             this.cb_masking_enabled.UseVisualStyleBackColor = true;
             // 
@@ -1714,7 +1714,7 @@
             this.BtnDynamicMaskingSettings.Margin = new System.Windows.Forms.Padding(5, 1, 5, 1);
             this.BtnDynamicMaskingSettings.Name = "BtnDynamicMaskingSettings";
             this.BtnDynamicMaskingSettings.Size = new System.Drawing.Size(70, 25);
-            this.BtnDynamicMaskingSettings.TabIndex = 22;
+            this.BtnDynamicMaskingSettings.TabIndex = 26;
             this.BtnDynamicMaskingSettings.Text = "Settings";
             this.BtnDynamicMaskingSettings.UseVisualStyleBackColor = true;
             this.BtnDynamicMaskingSettings.Click += new System.EventHandler(this.BtnDynamicMaskingSettings_Click);
@@ -1726,7 +1726,7 @@
             this.btnDetails.Margin = new System.Windows.Forms.Padding(5, 2, 5, 2);
             this.btnDetails.Name = "btnDetails";
             this.btnDetails.Size = new System.Drawing.Size(70, 23);
-            this.btnDetails.TabIndex = 23;
+            this.btnDetails.TabIndex = 27;
             this.btnDetails.Text = "Details";
             this.btnDetails.UseVisualStyleBackColor = true;
             this.btnDetails.Click += new System.EventHandler(this.btnDetails_Click);
@@ -1738,7 +1738,7 @@
             this.btnCustomMask.Margin = new System.Windows.Forms.Padding(1, 2, 5, 2);
             this.btnCustomMask.Name = "btnCustomMask";
             this.btnCustomMask.Size = new System.Drawing.Size(70, 23);
-            this.btnCustomMask.TabIndex = 24;
+            this.btnCustomMask.TabIndex = 28;
             this.btnCustomMask.Text = "Custom";
             this.btnCustomMask.UseVisualStyleBackColor = true;
             this.btnCustomMask.Click += new System.EventHandler(this.btnCustomMask_Click);
@@ -1762,7 +1762,7 @@
             this.btnActions.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
             this.btnActions.Name = "btnActions";
             this.btnActions.Size = new System.Drawing.Size(70, 25);
-            this.btnActions.TabIndex = 21;
+            this.btnActions.TabIndex = 24;
             this.btnActions.Text = "Settings";
             this.btnActions.UseVisualStyleBackColor = true;
             this.btnActions.Click += new System.EventHandler(this.btnActions_Click_1);
@@ -1812,7 +1812,7 @@
             this.cb_person.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_person.Name = "cb_person";
             this.cb_person.Size = new System.Drawing.Size(62, 17);
-            this.cb_person.TabIndex = 4;
+            this.cb_person.TabIndex = 7;
             this.cb_person.Text = "Person";
             this.cb_person.UseVisualStyleBackColor = true;
             this.cb_person.CheckedChanged += new System.EventHandler(this.cb_person_CheckedChanged);
@@ -1826,7 +1826,7 @@
             this.cb_bicycle.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bicycle.Name = "cb_bicycle";
             this.cb_bicycle.Size = new System.Drawing.Size(63, 17);
-            this.cb_bicycle.TabIndex = 9;
+            this.cb_bicycle.TabIndex = 12;
             this.cb_bicycle.Text = "Bicycle";
             this.cb_bicycle.UseVisualStyleBackColor = true;
             // 
@@ -1839,7 +1839,7 @@
             this.cb_motorcycle.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_motorcycle.Name = "cb_motorcycle";
             this.cb_motorcycle.Size = new System.Drawing.Size(86, 17);
-            this.cb_motorcycle.TabIndex = 14;
+            this.cb_motorcycle.TabIndex = 17;
             this.cb_motorcycle.Text = "Motorcycle";
             this.cb_motorcycle.UseVisualStyleBackColor = true;
             // 
@@ -1852,7 +1852,7 @@
             this.cb_bear.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bear.Name = "cb_bear";
             this.cb_bear.Size = new System.Drawing.Size(49, 17);
-            this.cb_bear.TabIndex = 18;
+            this.cb_bear.TabIndex = 21;
             this.cb_bear.Text = "Bear";
             this.cb_bear.UseVisualStyleBackColor = true;
             // 
@@ -1865,7 +1865,7 @@
             this.cb_cow.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cow.Name = "cb_cow";
             this.cb_cow.Size = new System.Drawing.Size(50, 17);
-            this.cb_cow.TabIndex = 13;
+            this.cb_cow.TabIndex = 16;
             this.cb_cow.Text = "Cow";
             this.cb_cow.UseVisualStyleBackColor = true;
             // 
@@ -1878,7 +1878,7 @@
             this.cb_sheep.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_sheep.Name = "cb_sheep";
             this.cb_sheep.Size = new System.Drawing.Size(58, 17);
-            this.cb_sheep.TabIndex = 8;
+            this.cb_sheep.TabIndex = 11;
             this.cb_sheep.Text = "Sheep";
             this.cb_sheep.UseVisualStyleBackColor = true;
             // 
@@ -1891,7 +1891,7 @@
             this.cb_horse.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_horse.Name = "cb_horse";
             this.cb_horse.Size = new System.Drawing.Size(57, 17);
-            this.cb_horse.TabIndex = 17;
+            this.cb_horse.TabIndex = 21;
             this.cb_horse.Text = "Horse";
             this.cb_horse.UseVisualStyleBackColor = true;
             // 
@@ -1904,7 +1904,7 @@
             this.cb_bird.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bird.Name = "cb_bird";
             this.cb_bird.Size = new System.Drawing.Size(47, 17);
-            this.cb_bird.TabIndex = 12;
+            this.cb_bird.TabIndex = 15;
             this.cb_bird.Text = "Bird";
             this.cb_bird.UseVisualStyleBackColor = true;
             // 
@@ -1917,7 +1917,7 @@
             this.cb_dog.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_dog.Name = "cb_dog";
             this.cb_dog.Size = new System.Drawing.Size(48, 17);
-            this.cb_dog.TabIndex = 7;
+            this.cb_dog.TabIndex = 10;
             this.cb_dog.Text = "Dog";
             this.cb_dog.UseVisualStyleBackColor = true;
             // 
@@ -1930,7 +1930,7 @@
             this.cb_cat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_cat.Name = "cb_cat";
             this.cb_cat.Size = new System.Drawing.Size(44, 17);
-            this.cb_cat.TabIndex = 16;
+            this.cb_cat.TabIndex = 19;
             this.cb_cat.Text = "Cat";
             this.cb_cat.UseVisualStyleBackColor = true;
             // 
@@ -1943,7 +1943,7 @@
             this.cb_airplane.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_airplane.Name = "cb_airplane";
             this.cb_airplane.Size = new System.Drawing.Size(70, 17);
-            this.cb_airplane.TabIndex = 11;
+            this.cb_airplane.TabIndex = 14;
             this.cb_airplane.Text = "Airplane";
             this.cb_airplane.UseVisualStyleBackColor = true;
             // 
@@ -1956,7 +1956,7 @@
             this.cb_boat.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_boat.Name = "cb_boat";
             this.cb_boat.Size = new System.Drawing.Size(50, 17);
-            this.cb_boat.TabIndex = 6;
+            this.cb_boat.TabIndex = 9;
             this.cb_boat.Text = "Boat";
             this.cb_boat.UseVisualStyleBackColor = true;
             // 
@@ -1969,7 +1969,7 @@
             this.cb_bus.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_bus.Name = "cb_bus";
             this.cb_bus.Size = new System.Drawing.Size(45, 17);
-            this.cb_bus.TabIndex = 15;
+            this.cb_bus.TabIndex = 18;
             this.cb_bus.Text = "Bus";
             this.cb_bus.UseVisualStyleBackColor = true;
             // 
@@ -1982,7 +1982,7 @@
             this.cb_truck.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_truck.Name = "cb_truck";
             this.cb_truck.Size = new System.Drawing.Size(54, 17);
-            this.cb_truck.TabIndex = 10;
+            this.cb_truck.TabIndex = 13;
             this.cb_truck.Text = "Truck";
             this.cb_truck.UseVisualStyleBackColor = true;
             // 
@@ -1995,7 +1995,7 @@
             this.cb_car.Margin = new System.Windows.Forms.Padding(21, 3, 3, 3);
             this.cb_car.Name = "cb_car";
             this.cb_car.Size = new System.Drawing.Size(44, 17);
-            this.cb_car.TabIndex = 5;
+            this.cb_car.TabIndex = 8;
             this.cb_car.Text = "Car";
             this.cb_car.UseVisualStyleBackColor = true;
             // 
@@ -2017,7 +2017,7 @@
             this.tbAdditionalRelevantObjects.Location = new System.Drawing.Point(153, 209);
             this.tbAdditionalRelevantObjects.Name = "tbAdditionalRelevantObjects";
             this.tbAdditionalRelevantObjects.Size = new System.Drawing.Size(690, 23);
-            this.tbAdditionalRelevantObjects.TabIndex = 23;
+            this.tbAdditionalRelevantObjects.TabIndex = 22;
             this.toolTip1.SetToolTip(this.tbAdditionalRelevantObjects, "comma separated list of custom object names to be accepted as relevant.");
             // 
             // label25
@@ -2054,7 +2054,7 @@
             this.tbBiCamName.Margin = new System.Windows.Forms.Padding(21, 3, 21, 3);
             this.tbBiCamName.Name = "tbBiCamName";
             this.tbBiCamName.Size = new System.Drawing.Size(303, 23);
-            this.tbBiCamName.TabIndex = 1;
+            this.tbBiCamName.TabIndex = 2;
             // 
             // dbLayoutPanel7
             // 
@@ -2080,7 +2080,7 @@
             this.tb_camera_telegram_chatid.Location = new System.Drawing.Point(413, 7);
             this.tb_camera_telegram_chatid.Name = "tb_camera_telegram_chatid";
             this.tb_camera_telegram_chatid.Size = new System.Drawing.Size(274, 23);
-            this.tb_camera_telegram_chatid.TabIndex = 23;
+            this.tb_camera_telegram_chatid.TabIndex = 30;
             this.toolTip1.SetToolTip(this.tb_camera_telegram_chatid, "This overrides the chatid in the settings tab.");
             // 
             // tbCustomMaskFile
@@ -2089,7 +2089,7 @@
             this.tbCustomMaskFile.Location = new System.Drawing.Point(3, 7);
             this.tbCustomMaskFile.Name = "tbCustomMaskFile";
             this.tbCustomMaskFile.Size = new System.Drawing.Size(288, 23);
-            this.tbCustomMaskFile.TabIndex = 23;
+            this.tbCustomMaskFile.TabIndex = 29;
             // 
             // label21
             // 
@@ -2121,7 +2121,7 @@
             this.BtnPredictionSize.Margin = new System.Windows.Forms.Padding(21, 2, 2, 2);
             this.BtnPredictionSize.Name = "BtnPredictionSize";
             this.BtnPredictionSize.Size = new System.Drawing.Size(70, 25);
-            this.BtnPredictionSize.TabIndex = 21;
+            this.BtnPredictionSize.TabIndex = 23;
             this.BtnPredictionSize.Text = "Settings";
             this.BtnPredictionSize.UseVisualStyleBackColor = true;
             this.BtnPredictionSize.Click += new System.EventHandler(this.BtnPredictionSize_Click);
@@ -2257,7 +2257,7 @@
             this.cmbInput.Margin = new System.Windows.Forms.Padding(3, 2, 2, 2);
             this.cmbInput.Name = "cmbInput";
             this.cmbInput.Size = new System.Drawing.Size(620, 21);
-            this.cmbInput.TabIndex = 3;
+            this.cmbInput.TabIndex = 0;
             // 
             // cb_inputpathsubfolders
             // 
@@ -2267,7 +2267,7 @@
             this.cb_inputpathsubfolders.Margin = new System.Windows.Forms.Padding(11, 2, 2, 2);
             this.cb_inputpathsubfolders.Name = "cb_inputpathsubfolders";
             this.cb_inputpathsubfolders.Size = new System.Drawing.Size(76, 17);
-            this.cb_inputpathsubfolders.TabIndex = 4;
+            this.cb_inputpathsubfolders.TabIndex = 1;
             this.cb_inputpathsubfolders.Text = "Subfolders";
             this.cb_inputpathsubfolders.UseVisualStyleBackColor = true;
             // 
@@ -2309,7 +2309,7 @@
             this.cb_DeepStackURLsQueued.Margin = new System.Windows.Forms.Padding(11, 2, 2, 2);
             this.cb_DeepStackURLsQueued.Name = "cb_DeepStackURLsQueued";
             this.cb_DeepStackURLsQueued.Size = new System.Drawing.Size(64, 17);
-            this.cb_DeepStackURLsQueued.TabIndex = 7;
+            this.cb_DeepStackURLsQueued.TabIndex = 4;
             this.cb_DeepStackURLsQueued.Text = "Queued";
             this.toolTip1.SetToolTip(this.cb_DeepStackURLsQueued, "When checked, all urls will take turns processing the images.\r\nWhen unchecked, th" +
         "e original order will always be used.");
@@ -2321,7 +2321,7 @@
             this.button1.Location = new System.Drawing.Point(3, 7);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(70, 30);
-            this.button1.TabIndex = 8;
+            this.button1.TabIndex = 3;
             this.button1.Text = "Edit";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
@@ -2357,7 +2357,7 @@
             this.tb_telegram_cooldown.Location = new System.Drawing.Point(743, 10);
             this.tb_telegram_cooldown.Name = "tb_telegram_cooldown";
             this.tb_telegram_cooldown.Size = new System.Drawing.Size(112, 25);
-            this.tb_telegram_cooldown.TabIndex = 12;
+            this.tb_telegram_cooldown.TabIndex = 7;
             // 
             // label5
             // 
@@ -2377,7 +2377,7 @@
             this.tb_telegram_chatid.Location = new System.Drawing.Point(353, 10);
             this.tb_telegram_chatid.Name = "tb_telegram_chatid";
             this.tb_telegram_chatid.Size = new System.Drawing.Size(268, 25);
-            this.tb_telegram_chatid.TabIndex = 10;
+            this.tb_telegram_chatid.TabIndex = 6;
             // 
             // lbl_telegram_chatid
             // 
@@ -2397,7 +2397,7 @@
             this.tb_telegram_token.Location = new System.Drawing.Point(3, 10);
             this.tb_telegram_token.Name = "tb_telegram_token";
             this.tb_telegram_token.Size = new System.Drawing.Size(274, 25);
-            this.tb_telegram_token.TabIndex = 9;
+            this.tb_telegram_token.TabIndex = 5;
             // 
             // label12
             // 
@@ -2438,7 +2438,7 @@
             this.cb_send_telegram_errors.Location = new System.Drawing.Point(3, 13);
             this.cb_send_telegram_errors.Name = "cb_send_telegram_errors";
             this.cb_send_telegram_errors.Size = new System.Drawing.Size(70, 17);
-            this.cb_send_telegram_errors.TabIndex = 12;
+            this.cb_send_telegram_errors.TabIndex = 11;
             this.cb_send_telegram_errors.Text = "Telegram";
             this.cb_send_telegram_errors.UseVisualStyleBackColor = true;
             // 
@@ -2460,7 +2460,7 @@
             this.btn_disabletelegram.Location = new System.Drawing.Point(778, 7);
             this.btn_disabletelegram.Name = "btn_disabletelegram";
             this.btn_disabletelegram.Size = new System.Drawing.Size(70, 30);
-            this.btn_disabletelegram.TabIndex = 13;
+            this.btn_disabletelegram.TabIndex = 14;
             this.btn_disabletelegram.Text = "Disable All";
             this.toolTip1.SetToolTip(this.btn_disabletelegram, "Disable Telegram or Pushover on all Cameras");
             this.btn_disabletelegram.UseVisualStyleBackColor = true;
@@ -2528,7 +2528,7 @@
             this.tb_username.Location = new System.Drawing.Point(78, 12);
             this.tb_username.Name = "tb_username";
             this.tb_username.Size = new System.Drawing.Size(144, 20);
-            this.tb_username.TabIndex = 1;
+            this.tb_username.TabIndex = 17;
             // 
             // tb_password
             // 
@@ -2536,7 +2536,7 @@
             this.tb_password.Location = new System.Drawing.Point(303, 12);
             this.tb_password.Name = "tb_password";
             this.tb_password.Size = new System.Drawing.Size(144, 20);
-            this.tb_password.TabIndex = 2;
+            this.tb_password.TabIndex = 18;
             // 
             // label16
             // 
@@ -2596,7 +2596,7 @@
             this.tb_BlueIrisServer.Location = new System.Drawing.Point(3, 11);
             this.tb_BlueIrisServer.Name = "tb_BlueIrisServer";
             this.tb_BlueIrisServer.Size = new System.Drawing.Size(219, 25);
-            this.tb_BlueIrisServer.TabIndex = 9;
+            this.tb_BlueIrisServer.TabIndex = 19;
             // 
             // label19
             // 
@@ -2653,7 +2653,7 @@
             this.tb_Pushover_Cooldown.Location = new System.Drawing.Point(743, 10);
             this.tb_Pushover_Cooldown.Name = "tb_Pushover_Cooldown";
             this.tb_Pushover_Cooldown.Size = new System.Drawing.Size(112, 25);
-            this.tb_Pushover_Cooldown.TabIndex = 12;
+            this.tb_Pushover_Cooldown.TabIndex = 10;
             // 
             // tb_Pushover_APIKey
             // 
@@ -2662,7 +2662,7 @@
             this.tb_Pushover_APIKey.Location = new System.Drawing.Point(3, 10);
             this.tb_Pushover_APIKey.Name = "tb_Pushover_APIKey";
             this.tb_Pushover_APIKey.Size = new System.Drawing.Size(275, 25);
-            this.tb_Pushover_APIKey.TabIndex = 9;
+            this.tb_Pushover_APIKey.TabIndex = 8;
             // 
             // label31
             // 
@@ -2693,7 +2693,7 @@
             this.tb_Pushover_UserKey.Location = new System.Drawing.Point(356, 10);
             this.tb_Pushover_UserKey.Name = "tb_Pushover_UserKey";
             this.tb_Pushover_UserKey.Size = new System.Drawing.Size(267, 25);
-            this.tb_Pushover_UserKey.TabIndex = 10;
+            this.tb_Pushover_UserKey.TabIndex = 9;
             // 
             // dbLayoutPanel9
             // 
@@ -2703,7 +2703,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 56F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 57F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 258);
@@ -2721,7 +2721,7 @@
             this.cbStartWithWindows.Margin = new System.Windows.Forms.Padding(2);
             this.cbStartWithWindows.Name = "cbStartWithWindows";
             this.cbStartWithWindows.Size = new System.Drawing.Size(182, 17);
-            this.cbStartWithWindows.TabIndex = 17;
+            this.cbStartWithWindows.TabIndex = 15;
             this.cbStartWithWindows.Text = "Start with user login (non-service)";
             this.cbStartWithWindows.UseVisualStyleBackColor = true;
             // 
@@ -2732,7 +2732,7 @@
             this.cbMinimizeToTray.Location = new System.Drawing.Point(217, 13);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
-            this.cbMinimizeToTray.TabIndex = 18;
+            this.cbMinimizeToTray.TabIndex = 16;
             this.cbMinimizeToTray.Text = "Minimize to Tray";
             this.cbMinimizeToTray.UseVisualStyleBackColor = true;
             // 
@@ -2769,7 +2769,7 @@
             this.BtnSettingsSave.Location = new System.Drawing.Point(727, 3);
             this.BtnSettingsSave.Name = "BtnSettingsSave";
             this.BtnSettingsSave.Size = new System.Drawing.Size(69, 28);
-            this.BtnSettingsSave.TabIndex = 2;
+            this.BtnSettingsSave.TabIndex = 21;
             this.BtnSettingsSave.Text = "Save";
             this.BtnSettingsSave.UseVisualStyleBackColor = true;
             this.BtnSettingsSave.Click += new System.EventHandler(this.BtnSettingsSave_Click_1);
@@ -2781,7 +2781,7 @@
             this.button3.Location = new System.Drawing.Point(219, 3);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(69, 28);
-            this.button3.TabIndex = 2;
+            this.button3.TabIndex = 20;
             this.button3.Text = "Reset";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
@@ -2860,14 +2860,14 @@
             this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(415, 358);
             this.txt_DeepstackNoMoreOftenThanMins.Name = "txt_DeepstackNoMoreOftenThanMins";
             this.txt_DeepstackNoMoreOftenThanMins.Size = new System.Drawing.Size(42, 20);
-            this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 23;
+            this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 17;
             // 
             // txt_DeepstackRestartFailCount
             // 
             this.txt_DeepstackRestartFailCount.Location = new System.Drawing.Point(128, 358);
             this.txt_DeepstackRestartFailCount.Name = "txt_DeepstackRestartFailCount";
             this.txt_DeepstackRestartFailCount.Size = new System.Drawing.Size(42, 20);
-            this.txt_DeepstackRestartFailCount.TabIndex = 23;
+            this.txt_DeepstackRestartFailCount.TabIndex = 16;
             // 
             // Chk_AutoReStart
             // 
@@ -2875,7 +2875,7 @@
             this.Chk_AutoReStart.Location = new System.Drawing.Point(13, 361);
             this.Chk_AutoReStart.Name = "Chk_AutoReStart";
             this.Chk_AutoReStart.Size = new System.Drawing.Size(109, 17);
-            this.Chk_AutoReStart.TabIndex = 22;
+            this.Chk_AutoReStart.TabIndex = 15;
             this.Chk_AutoReStart.Text = "Auto Restart after";
             this.Chk_AutoReStart.UseVisualStyleBackColor = true;
             // 
@@ -2885,7 +2885,7 @@
             this.Btn_ViewLog.Location = new System.Drawing.Point(363, 388);
             this.Btn_ViewLog.Name = "Btn_ViewLog";
             this.Btn_ViewLog.Size = new System.Drawing.Size(70, 30);
-            this.Btn_ViewLog.TabIndex = 21;
+            this.Btn_ViewLog.TabIndex = 22;
             this.Btn_ViewLog.Text = "stderr.txt";
             this.toolTip1.SetToolTip(this.Btn_ViewLog, "Open STDERR.TXT which contains any errors deepstack may have had.");
             this.Btn_ViewLog.UseVisualStyleBackColor = true;
@@ -2896,7 +2896,7 @@
             this.Btn_DeepstackReset.Location = new System.Drawing.Point(275, 388);
             this.Btn_DeepstackReset.Name = "Btn_DeepstackReset";
             this.Btn_DeepstackReset.Size = new System.Drawing.Size(70, 30);
-            this.Btn_DeepstackReset.TabIndex = 20;
+            this.Btn_DeepstackReset.TabIndex = 21;
             this.Btn_DeepstackReset.Text = "Reset";
             this.toolTip1.SetToolTip(this.Btn_DeepstackReset, "Delete all Deepstack temp files");
             this.Btn_DeepstackReset.UseVisualStyleBackColor = true;
@@ -3038,7 +3038,7 @@
             this.chk_stopbeforestart.Margin = new System.Windows.Forms.Padding(2);
             this.chk_stopbeforestart.Name = "chk_stopbeforestart";
             this.chk_stopbeforestart.Size = new System.Drawing.Size(138, 17);
-            this.chk_stopbeforestart.TabIndex = 15;
+            this.chk_stopbeforestart.TabIndex = 14;
             this.chk_stopbeforestart.Text = "Always stop before start";
             this.toolTip1.SetToolTip(this.chk_stopbeforestart, "If deepstack exe files are running when a START is requested, stop them first.");
             this.chk_stopbeforestart.UseVisualStyleBackColor = true;
@@ -3050,7 +3050,7 @@
             this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
             this.chk_HighPriority.Name = "chk_HighPriority";
             this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
-            this.chk_HighPriority.TabIndex = 15;
+            this.chk_HighPriority.TabIndex = 13;
             this.chk_HighPriority.Text = "Run high priority";
             this.chk_HighPriority.UseVisualStyleBackColor = true;
             // 
@@ -3061,7 +3061,7 @@
             this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_DSDebug.Name = "Chk_DSDebug";
             this.Chk_DSDebug.Size = new System.Drawing.Size(58, 17);
-            this.Chk_DSDebug.TabIndex = 14;
+            this.Chk_DSDebug.TabIndex = 12;
             this.Chk_DSDebug.Text = "Debug";
             this.toolTip1.SetToolTip(this.Chk_DSDebug, "Show all output from Deepstack\'s python.exe, redis.exe and server.exe  (Windows v" +
         "ersion, installed on same machine)");
@@ -3084,7 +3084,7 @@
             this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Save.Name = "Btn_Save";
             this.Btn_Save.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Save.TabIndex = 12;
+            this.Btn_Save.TabIndex = 20;
             this.Btn_Save.Text = "Save";
             this.Btn_Save.UseVisualStyleBackColor = true;
             this.Btn_Save.Click += new System.EventHandler(this.Btn_Save_Click);
@@ -3124,7 +3124,7 @@
             this.Chk_DetectionAPI.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_DetectionAPI.Name = "Chk_DetectionAPI";
             this.Chk_DetectionAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_DetectionAPI.TabIndex = 2;
+            this.Chk_DetectionAPI.TabIndex = 6;
             this.Chk_DetectionAPI.Text = "Detection API";
             this.Chk_DetectionAPI.UseVisualStyleBackColor = true;
             // 
@@ -3134,7 +3134,7 @@
             this.Chk_FaceAPI.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_FaceAPI.Name = "Chk_FaceAPI";
             this.Chk_FaceAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_FaceAPI.TabIndex = 1;
+            this.Chk_FaceAPI.TabIndex = 5;
             this.Chk_FaceAPI.Text = "Face API";
             this.Chk_FaceAPI.UseVisualStyleBackColor = true;
             // 
@@ -3144,7 +3144,7 @@
             this.Chk_SceneAPI.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_SceneAPI.Name = "Chk_SceneAPI";
             this.Chk_SceneAPI.Size = new System.Drawing.Size(147, 19);
-            this.Chk_SceneAPI.TabIndex = 0;
+            this.Chk_SceneAPI.TabIndex = 4;
             this.Chk_SceneAPI.Text = "Scene API";
             this.Chk_SceneAPI.UseVisualStyleBackColor = true;
             // 
@@ -3168,7 +3168,7 @@
             this.RB_High.Margin = new System.Windows.Forms.Padding(2);
             this.RB_High.Name = "RB_High";
             this.RB_High.Size = new System.Drawing.Size(139, 19);
-            this.RB_High.TabIndex = 3;
+            this.RB_High.TabIndex = 9;
             this.RB_High.TabStop = true;
             this.RB_High.Text = "High";
             this.RB_High.UseVisualStyleBackColor = true;
@@ -3179,7 +3179,7 @@
             this.RB_Medium.Margin = new System.Windows.Forms.Padding(2);
             this.RB_Medium.Name = "RB_Medium";
             this.RB_Medium.Size = new System.Drawing.Size(139, 19);
-            this.RB_Medium.TabIndex = 2;
+            this.RB_Medium.TabIndex = 8;
             this.RB_Medium.TabStop = true;
             this.RB_Medium.Text = "Medium";
             this.RB_Medium.UseVisualStyleBackColor = true;
@@ -3190,7 +3190,7 @@
             this.RB_Low.Margin = new System.Windows.Forms.Padding(2);
             this.RB_Low.Name = "RB_Low";
             this.RB_Low.Size = new System.Drawing.Size(139, 19);
-            this.RB_Low.TabIndex = 1;
+            this.RB_Low.TabIndex = 7;
             this.RB_Low.TabStop = true;
             this.RB_Low.Text = "Low";
             this.RB_Low.UseVisualStyleBackColor = true;
@@ -3249,7 +3249,7 @@
             this.Txt_Port.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_Port.Name = "Txt_Port";
             this.Txt_Port.Size = new System.Drawing.Size(127, 20);
-            this.Txt_Port.TabIndex = 0;
+            this.Txt_Port.TabIndex = 10;
             this.toolTip1.SetToolTip(this.Txt_Port, resources.GetString("Txt_Port.ToolTip"));
             // 
             // Chk_AutoStart
@@ -3259,7 +3259,7 @@
             this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_AutoStart.Name = "Chk_AutoStart";
             this.Chk_AutoStart.Size = new System.Drawing.Size(113, 17);
-            this.Chk_AutoStart.TabIndex = 8;
+            this.Chk_AutoStart.TabIndex = 11;
             this.Chk_AutoStart.Text = "Automatically Start";
             this.Chk_AutoStart.UseVisualStyleBackColor = true;
             // 
@@ -3269,7 +3269,7 @@
             this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Start.Name = "Btn_Start";
             this.Btn_Start.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Start.TabIndex = 6;
+            this.Btn_Start.TabIndex = 18;
             this.Btn_Start.Text = "Start";
             this.Btn_Start.UseVisualStyleBackColor = true;
             this.Btn_Start.Click += new System.EventHandler(this.Btn_Start_Click);
@@ -3280,7 +3280,7 @@
             this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Stop.Name = "Btn_Stop";
             this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
-            this.Btn_Stop.TabIndex = 7;
+            this.Btn_Stop.TabIndex = 19;
             this.Btn_Stop.Text = "Stop";
             this.Btn_Stop.UseVisualStyleBackColor = true;
             this.Btn_Stop.Click += new System.EventHandler(this.Btn_Stop_Click);
@@ -3311,7 +3311,7 @@
             this.Chk_CustomModelAPI.Location = new System.Drawing.Point(7, -2);
             this.Chk_CustomModelAPI.Name = "Chk_CustomModelAPI";
             this.Chk_CustomModelAPI.Size = new System.Drawing.Size(99, 18);
-            this.Chk_CustomModelAPI.TabIndex = 3;
+            this.Chk_CustomModelAPI.TabIndex = 0;
             this.Chk_CustomModelAPI.Text = "Custom Model";
             this.Chk_CustomModelAPI.UseVisualStyleBackColor = false;
             this.Chk_CustomModelAPI.CheckedChanged += new System.EventHandler(this.Chk_CustomModelAPI_CheckedChanged);
@@ -3366,7 +3366,7 @@
             this.Txt_CustomModelPort.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_CustomModelPort.Name = "Txt_CustomModelPort";
             this.Txt_CustomModelPort.Size = new System.Drawing.Size(423, 20);
-            this.Txt_CustomModelPort.TabIndex = 0;
+            this.Txt_CustomModelPort.TabIndex = 3;
             this.Txt_CustomModelPort.TextChanged += new System.EventHandler(this.Txt_CustomModelName_TextChanged);
             // 
             // Txt_CustomModelName
@@ -3377,7 +3377,7 @@
             this.Txt_CustomModelName.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_CustomModelName.Name = "Txt_CustomModelName";
             this.Txt_CustomModelName.Size = new System.Drawing.Size(423, 20);
-            this.Txt_CustomModelName.TabIndex = 0;
+            this.Txt_CustomModelName.TabIndex = 2;
             this.toolTip1.SetToolTip(this.Txt_CustomModelName, "The custom model name");
             this.Txt_CustomModelName.TextChanged += new System.EventHandler(this.Txt_CustomModelName_TextChanged);
             // 
@@ -3389,7 +3389,7 @@
             this.Txt_CustomModelPath.Margin = new System.Windows.Forms.Padding(2);
             this.Txt_CustomModelPath.Name = "Txt_CustomModelPath";
             this.Txt_CustomModelPath.Size = new System.Drawing.Size(423, 20);
-            this.Txt_CustomModelPath.TabIndex = 0;
+            this.Txt_CustomModelPath.TabIndex = 1;
             this.toolTip1.SetToolTip(this.Txt_CustomModelPath, "The custom model path not including filename");
             // 
             // tabLog

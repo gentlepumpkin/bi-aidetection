@@ -86,7 +86,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(6);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
-            this.btnCancel.TabIndex = 0;
+            this.btnCancel.TabIndex = 7;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -98,7 +98,7 @@
             this.btnOk.Margin = new System.Windows.Forms.Padding(6);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(70, 30);
-            this.btnOk.TabIndex = 1;
+            this.btnOk.TabIndex = 6;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             // 
@@ -177,7 +177,7 @@
             0});
             this.numSmallObjMax.Name = "numSmallObjMax";
             this.numSmallObjMax.Size = new System.Drawing.Size(40, 20);
-            this.numSmallObjMax.TabIndex = 8;
+            this.numSmallObjMax.TabIndex = 1;
             this.numSmallObjMax.Value = new decimal(new int[] {
             1,
             0,
@@ -210,7 +210,7 @@
             0});
             this.numSmallObjPercent.Name = "numSmallObjPercent";
             this.numSmallObjPercent.Size = new System.Drawing.Size(40, 20);
-            this.numSmallObjPercent.TabIndex = 11;
+            this.numSmallObjPercent.TabIndex = 2;
             this.numSmallObjPercent.Value = new decimal(new int[] {
             5,
             0,
@@ -295,7 +295,7 @@
             0});
             this.numMidObjMin.Name = "numMidObjMin";
             this.numMidObjMin.Size = new System.Drawing.Size(40, 20);
-            this.numMidObjMin.TabIndex = 40;
+            this.numMidObjMin.TabIndex = 3;
             this.numMidObjMin.Value = new decimal(new int[] {
             1,
             0,
@@ -333,7 +333,7 @@
             0});
             this.numMidObjMax.Name = "numMidObjMax";
             this.numMidObjMax.Size = new System.Drawing.Size(40, 20);
-            this.numMidObjMax.TabIndex = 36;
+            this.numMidObjMax.TabIndex = 4;
             this.numMidObjMax.Value = new decimal(new int[] {
             1,
             0,
@@ -360,7 +360,7 @@
             this.numMidObjPercent.Margin = new System.Windows.Forms.Padding(0, 6, 2, 6);
             this.numMidObjPercent.Name = "numMidObjPercent";
             this.numMidObjPercent.Size = new System.Drawing.Size(40, 20);
-            this.numMidObjPercent.TabIndex = 30;
+            this.numMidObjPercent.TabIndex = 5;
             this.numMidObjPercent.Value = new decimal(new int[] {
             1,
             0,
@@ -399,7 +399,7 @@
             this.cbEnableScaling.Margin = new System.Windows.Forms.Padding(6);
             this.cbEnableScaling.Name = "cbEnableScaling";
             this.cbEnableScaling.Size = new System.Drawing.Size(137, 19);
-            this.cbEnableScaling.TabIndex = 9;
+            this.cbEnableScaling.TabIndex = 0;
             this.cbEnableScaling.Text = "Enable object scaling";
             this.cbEnableScaling.UseVisualStyleBackColor = true;
             // 

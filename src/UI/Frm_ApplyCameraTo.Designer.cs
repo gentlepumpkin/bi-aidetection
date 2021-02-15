@@ -46,7 +46,7 @@
             this.btnApply.Location = new System.Drawing.Point(172, 326);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(70, 30);
-            this.btnApply.TabIndex = 26;
+            this.btnApply.TabIndex = 5;
             this.btnApply.Text = "Apply";
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
@@ -61,7 +61,7 @@
             this.checkedListBoxCameras.Location = new System.Drawing.Point(3, 40);
             this.checkedListBoxCameras.Name = "checkedListBoxCameras";
             this.checkedListBoxCameras.Size = new System.Drawing.Size(239, 199);
-            this.checkedListBoxCameras.TabIndex = 27;
+            this.checkedListBoxCameras.TabIndex = 0;
             // 
             // label1
             // 
@@ -82,7 +82,7 @@
             this.cb_apply_objects.Location = new System.Drawing.Point(8, 19);
             this.cb_apply_objects.Name = "cb_apply_objects";
             this.cb_apply_objects.Size = new System.Drawing.Size(108, 17);
-            this.cb_apply_objects.TabIndex = 29;
+            this.cb_apply_objects.TabIndex = 1;
             this.cb_apply_objects.Text = "Relevant Objects";
             this.cb_apply_objects.UseVisualStyleBackColor = true;
             // 
@@ -109,7 +109,7 @@
             this.cb_apply_mask_settings.Location = new System.Drawing.Point(123, 42);
             this.cb_apply_mask_settings.Name = "cb_apply_mask_settings";
             this.cb_apply_mask_settings.Size = new System.Drawing.Size(93, 17);
-            this.cb_apply_mask_settings.TabIndex = 29;
+            this.cb_apply_mask_settings.TabIndex = 4;
             this.cb_apply_mask_settings.Text = "Mask Settings";
             this.cb_apply_mask_settings.UseVisualStyleBackColor = true;
             // 
@@ -121,7 +121,7 @@
             this.cb_apply_actions.Location = new System.Drawing.Point(8, 42);
             this.cb_apply_actions.Name = "cb_apply_actions";
             this.cb_apply_actions.Size = new System.Drawing.Size(61, 17);
-            this.cb_apply_actions.TabIndex = 29;
+            this.cb_apply_actions.TabIndex = 3;
             this.cb_apply_actions.Text = "Actions";
             this.cb_apply_actions.UseVisualStyleBackColor = true;
             // 
@@ -133,7 +133,7 @@
             this.cb_apply_confidence_limits.Location = new System.Drawing.Point(123, 19);
             this.cb_apply_confidence_limits.Name = "cb_apply_confidence_limits";
             this.cb_apply_confidence_limits.Size = new System.Drawing.Size(109, 17);
-            this.cb_apply_confidence_limits.TabIndex = 29;
+            this.cb_apply_confidence_limits.TabIndex = 2;
             this.cb_apply_confidence_limits.Text = "Confidence Limits";
             this.cb_apply_confidence_limits.UseVisualStyleBackColor = true;
             // 
