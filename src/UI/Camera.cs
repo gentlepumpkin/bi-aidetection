@@ -455,14 +455,14 @@ namespace AITool
 
         }
 
-        public ResultType IsRelevantObject(ClsPrediction pred)
-        {
-            if (Global.IsInList(pred.Label, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(pred.Label, this.additional_triggering_objects_as_string, TrueIfEmpty: false))
-                return ResultType.Relevant;
-            else
-                return ResultType.UnwantedObject;
+        //public ResultType IsRelevantObject(ClsPrediction pred)
+        //{
+        //    if (Global.IsInList(pred.Label, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(pred.Label, this.additional_triggering_objects_as_string, TrueIfEmpty: false))
+        //        return ResultType.Relevant;
+        //    else
+        //        return ResultType.UnwantedObject;
 
-        }
+        //}
         public ResultType IsRelevantSize(ClsPrediction pred)
         {
             ResultType ret = ResultType.Relevant;

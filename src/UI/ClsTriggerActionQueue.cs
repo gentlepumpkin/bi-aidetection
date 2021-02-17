@@ -460,19 +460,14 @@ namespace AITool
                                         List<string> splt = Global.Split(prm, ";");
                                         string soundfile = splt[1];
                                         List<string> objects = Global.Split(splt[0], ",");
-                                        foreach (string objname in objects)
+
+                                        if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                                         {
-                                            foreach (string detection in AQI.cam.last_detections)
-                                            {
-                                                if (detection.IndexOf(objname, StringComparison.OrdinalIgnoreCase) >= 0 || (objname == "*"))
-                                                {
-                                                    Log($"Debug:   Playing sound because '{objname}' was detected: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
-                                                    SoundPlayer sp = new SoundPlayer(soundfile);
-                                                    sp.Play();
-                                                    played++;
-                                                    wasplayed = true;
-                                                }
-                                            }
+                                            Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                            SoundPlayer sp = new SoundPlayer(soundfile);
+                                            sp.Play();
+                                            played++;
+                                            wasplayed = true;
                                         }
                                     }
                                     if (played == 0)
@@ -969,8 +964,8 @@ namespace AITool
                     string objects = Global.GetWordBetween(url, "", ";");
                     url = Global.GetWordBetween(url, ";", "");
                     //make sure it is a matching object
-                    if (!AQI.Hist.PredictionRelevant(objects, "TriggerURL"))
-                        continue;
+                    if (AITOOL.ArePredictionObjectsRelevant(objects, "TriggerURL", AQI.Hist.Predictions(), false) != ResultType.Relevant) ;
+                    continue;
 
                 }
                 else
@@ -1021,7 +1016,7 @@ namespace AITool
                 //make sure it is a matching object
                 if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects) && AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) == -1)
                 {
-                    if (!AQI.Hist.PredictionRelevant(AQI.cam.Action_pushover_triggering_objects, "Pushover"))
+                    if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.Action_pushover_triggering_objects, "Pushover", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                         return true;
                 }
 
@@ -1228,7 +1223,7 @@ namespace AITool
                         Caption = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.telegram_caption, Global.IPType.Path);
 
                     //make sure it is a matching object
-                    if (!AQI.Hist.PredictionRelevant(AQI.cam.telegram_triggering_objects, "Telegram"))
+                    if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.telegram_triggering_objects, "Telegram", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                         return true;
 
                     DateTime now = DateTime.Now;

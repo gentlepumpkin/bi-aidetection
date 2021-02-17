@@ -19,6 +19,7 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using static AITool.AITOOL;
+using static AITool.Global;
 
 namespace AITool
 {
@@ -2857,7 +2858,7 @@ namespace AITool
             AppSettings.Settings.deepstack_urls_are_queued = this.cb_DeepStackURLsQueued.Checked;
             AppSettings.Settings.telegram_chatids = Global.Split(this.tb_telegram_chatid.Text, "|;,", true, true);
             AppSettings.Settings.telegram_token = this.tb_telegram_token.Text.Trim();
-            AppSettings.Settings.telegram_cooldown_seconds = Convert.ToInt32(this.tb_telegram_cooldown.Text.Trim());
+            AppSettings.Settings.telegram_cooldown_seconds = GetNumberInt(this.tb_telegram_cooldown.Text.Trim());
             AppSettings.Settings.send_telegram_errors = this.cb_send_telegram_errors.Checked;
             AppSettings.Settings.send_pushover_errors = this.cb_send_pushover_errors.Checked;
             AppSettings.Settings.startwithwindows = this.cbStartWithWindows.Checked;
@@ -2870,7 +2871,7 @@ namespace AITool
 
             AppSettings.Settings.pushover_APIKey = this.tb_Pushover_APIKey.Text.Trim();
             AppSettings.Settings.pushover_UserKey = this.tb_Pushover_UserKey.Text.Trim();
-            AppSettings.Settings.pushover_cooldown_seconds = Convert.ToInt32(this.tb_Pushover_Cooldown.Text.Trim());
+            AppSettings.Settings.pushover_cooldown_seconds = GetNumberInt(this.tb_Pushover_Cooldown.Text.Trim());
 
             Global.Startup(AppSettings.Settings.startwithwindows);
 
@@ -3076,7 +3077,7 @@ namespace AITool
             AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
 
             AppSettings.Settings.deepstack_autorestart = this.Chk_AutoReStart.Checked;
-            AppSettings.Settings.deepstack_autorestart_fail_count = Convert.ToInt32(this.txt_DeepstackRestartFailCount.Text);
+            AppSettings.Settings.deepstack_autorestart_fail_count = GetNumberInt(this.txt_DeepstackRestartFailCount.Text);
             AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = Convert.ToDouble(this.txt_DeepstackNoMoreOftenThanMins.Text);
 
             if (AppSettings.Settings.deepstack_autorestart_fail_count >= AppSettings.Settings.MaxQueueItemRetries)
@@ -3669,13 +3670,13 @@ namespace AITool
                     cam.DetectionDisplayFormat = frm.tb_DetectionFormat.Text.Trim();
                     AppSettings.Settings.DisplayPercentageFormat = frm.tb_ConfidenceFormat.Text.Trim();
 
-                    cam.trigger_urls_as_string = string.Join(",", Global.Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|"));
-                    cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();
-                    cam.cancel_urls_as_string = string.Join(",", Global.Split(frm.tbCancelUrl.Text.Trim(), "\r\n|"));
-                    cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
+                    cam.trigger_urls_as_string = string.Join(",", Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|"));
+                    cam.trigger_urls = Split(cam.trigger_urls_as_string, "\r\n|").ToArray();
+                    cam.cancel_urls_as_string = string.Join(",", Split(frm.tbCancelUrl.Text.Trim(), "\r\n|"));
+                    cam.cancel_urls = Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
 
-                    cam.cooldown_time_seconds = Convert.ToInt32(frm.tb_cooldown.Text.Trim());
-                    cam.sound_cooldown_time_seconds = Convert.ToInt32(frm.tb_sound_cooldown.Text.Trim());
+                    cam.cooldown_time_seconds = GetNumberInt(frm.tb_cooldown.Text.Trim());
+                    cam.sound_cooldown_time_seconds = GetNumberInt(frm.tb_sound_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
                     cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text.Trim();
@@ -5141,15 +5142,15 @@ namespace AITool
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    cam.threshold_lower = Convert.ToInt32(frm.tb_ConfidenceLower.Text);
-                    cam.threshold_upper = Convert.ToInt32(frm.tb_ConfidenceUpper.Text);
-                    cam.PredSizeMaxHeight = Convert.ToInt32(frm.tb_maxheight.Text);
-                    cam.PredSizeMaxWidth = Convert.ToInt32(frm.tb_maxwidth.Text);
-                    cam.PredSizeMinWidth = Convert.ToInt32(frm.tb_minwidth.Text);
-                    cam.PredSizeMinHeight = Convert.ToInt32(frm.tb_minheight.Text);
-                    cam.PredSizeMaxPercentOfImage = Convert.ToInt32(frm.tb_maxpercent.Text);
-                    cam.PredSizeMinPercentOfImage = Convert.ToInt32(frm.tb_MinPercent.Text);
-                    cam.MergePredictionsMinMatchPercent = Convert.ToInt32(frm.tb_duplicatepercent.Text);
+                    cam.threshold_lower = GetNumberInt(frm.tb_ConfidenceLower.Text);
+                    cam.threshold_upper = GetNumberInt(frm.tb_ConfidenceUpper.Text);
+                    cam.PredSizeMaxHeight = GetNumberInt(frm.tb_maxheight.Text);
+                    cam.PredSizeMaxWidth = GetNumberInt(frm.tb_maxwidth.Text);
+                    cam.PredSizeMinWidth = GetNumberInt(frm.tb_minwidth.Text);
+                    cam.PredSizeMinHeight = GetNumberInt(frm.tb_minheight.Text);
+                    cam.PredSizeMaxPercentOfImage = GetNumberInt(frm.tb_maxpercent.Text);
+                    cam.PredSizeMinPercentOfImage = GetNumberInt(frm.tb_MinPercent.Text);
+                    cam.MergePredictionsMinMatchPercent = GetNumberInt(frm.tb_duplicatepercent.Text);
 
                     AppSettings.SaveAsync();
                 }

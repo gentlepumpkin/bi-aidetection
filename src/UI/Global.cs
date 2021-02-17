@@ -1524,18 +1524,34 @@ namespace AITool
             int Ret = 0;
             if (Obj != null)
             {
-                if (Obj is string)
+                if (Obj is string && !string.IsNullOrWhiteSpace((string)Obj))
                 {
-                    string o = System.Convert.ToString(Obj);
-                    //If o.Trim.Length > 0 AndAlso o.Trim.Length < 10 Then
-                    int outint = 0;
-                    string OnlyNums = System.Convert.ToString(Regex.Match(o, "\\d+").Value);
-                    if (int.TryParse(OnlyNums, out outint))
-                        Ret = outint;
-                    //End If
+                    string o = System.Convert.ToString(Obj).Trim();
+                    double outdbl = 0;
+                    string OnlyNums = "";
+
+                    try
+                    {
+                        //this can grab anything even "The number is 69"
+                        OnlyNums = Regex.Match(o, @"[-+]?(?:\b[0-9]+(?:\.[0-9]*)?|\.[0-9]+\b)(?:[eE][-+]?[0-9]+\b)?").Value;
+                    }
+                    catch { }
+
+                    if (OnlyNums != o)
+                    {
+                        //debug
+                        int brkpt = 0;
+                    }
+
+                    if (double.TryParse(OnlyNums, out outdbl))
+                        Ret = Convert.ToInt32(Math.Round(outdbl));
                 }
                 else if (Obj is int)
                     Ret = (int)Obj;
+                else if (Obj is double)
+                    Ret = Convert.ToInt32(Math.Round((double)Obj));
+                else if (Obj is float)
+                    Ret = Convert.ToInt32(Math.Round((float)Obj));
             }
             return Ret;
 
@@ -2164,7 +2180,7 @@ namespace AITool
             {
                 foreach (string searchstr in SearchList)
                 {
-                    if (findstr == searchstr || searchstr == "*")
+                    if (findstr.Equals(searchstr, StringComparison.OrdinalIgnoreCase) || searchstr == "*")
                         return true;
                 }
             }

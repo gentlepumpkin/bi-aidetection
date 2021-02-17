@@ -48,58 +48,7 @@ namespace AITool
             return ret;
         }
 
-        public bool PredictionRelevant(string triggering_objects, string type)
-        {
-            bool ret = false;
 
-            if (string.IsNullOrEmpty(triggering_objects))
-                return true;
-
-            List<ClsPrediction> preds = this.Predictions();
-
-            if (preds != null && preds.Count > 0)
-            {
-                //find at least one thing in the triggered objects list in order to send
-                string bad = "";
-                string good = "";
-                int notrelevant = 0;
-                foreach (ClsPrediction pred in preds)
-                {
-                    if (pred.Result == ResultType.Relevant)
-                    {
-                        if (Global.IsInList(pred.Label, triggering_objects))
-                        {
-                            ret = true;
-                            if (!good.Contains(pred.Label))
-                                good += pred.Label + ",";
-                        }
-                        else
-                        {
-                            if (!bad.Contains(pred.Label))
-                                bad += pred.Label + ",";
-                        }
-                    }
-                    else
-                    {
-                        notrelevant++;
-                        if (!bad.Contains(pred.Label))
-                            bad += "irr:" + pred.Label + ",";
-                    }
-                }
-                if (!ret)
-                {
-                    Log($"Debug: Skipping {type} because object(s) '{bad}' ({notrelevant} irrelevant) not in trigger objects list '{triggering_objects}'", this.AIServer, this.Camera, this.Filename);
-                }
-                else
-                {
-                    Log($"Debug: Valid prediction for {type} because object(s) '{good}' were in trigger objects list '{triggering_objects}'", this.AIServer, this.Camera, this.Filename);
-
-                }
-            }
-
-            return ret;
-
-        }
         public History()
         {
         }

@@ -2090,8 +2090,14 @@ namespace AITool
                                             {
                                                 foreach (SightHoundVehicleObject DSObj in SHObj.Objects)
                                                 {
-                                                    ClsPrediction pred = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl, SHObj.Image);
-                                                    ret.Predictions.Add(pred);
+                                                    //Get the vehicle and plate as 2 separate predictions
+                                                    ClsPrediction predv = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl, SHObj.Image, false);
+                                                    if (!string.IsNullOrEmpty(predv.Label))
+                                                        ret.Predictions.Add(predv);
+                                                    ClsPrediction predp = new ClsPrediction(ObjectType.Object, cam, DSObj, CurImg, AiUrl, SHObj.Image, true);
+                                                    if (!string.IsNullOrEmpty(predp.Label))
+                                                        ret.Predictions.Add(predp);
+
                                                 }
                                             }
 
@@ -2691,6 +2697,8 @@ namespace AITool
         //search for position based on object position
         public static ClsPredMatch ContainsPrediction(ClsPrediction pred, List<ClsPrediction> predictions, Camera cam, bool ObjTypeMustMatch, bool TrueIfInsideOrPartiallyInside)
         {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
             List<ClsPredMatch> preds = new List<ClsPredMatch>();
 
             ClsPredMatch ret = new ClsPredMatch();
@@ -2772,6 +2780,99 @@ namespace AITool
 
             return false;
         }
+
+        //public ResultType IsRelevantObject(ClsPrediction pred)
+        //{
+        //    if (Global.IsInList(pred.Label, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(pred.Label, this.additional_triggering_objects_as_string, TrueIfEmpty: false))
+        //        return ResultType.Relevant;
+        //    else
+        //        return ResultType.UnwantedObject;
+
+        public static ResultType ArePredictionObjectsRelevant(string triggering_objects, string type, ClsPrediction pred, bool isnew)
+        {
+            return ArePredictionObjectsRelevant(triggering_objects, type, new List<ClsPrediction>() { pred }, isnew);
+        }
+
+        //}
+        public static ResultType ArePredictionObjectsRelevant(string triggering_objects, string typename, List<ClsPrediction> preds, bool isnew)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            ResultType ret = ResultType.UnwantedObject;
+
+            List<string> objs = Global.Split(triggering_objects, ",");
+
+            if (objs.Count == 0)  //assume if no list is provided to always return relevant
+                return ResultType.Relevant;
+
+            //if fred is found, the whole prediction will be ignored
+            //triggering_objects = person, car, -FRED
+            //found objects = person, fred
+
+            if (preds != null && preds.Count > 0)
+            {
+                //find at least one thing in the triggered objects list in order to send
+                string notrelevant = "";
+                string good = "";
+                string ignored = "";
+                bool ignore = false;
+                foreach (ClsPrediction pred in preds)
+                {
+                    string label = pred.Label;
+                    bool hasignore = false;
+                    if (label.TrimStart().StartsWith("-"))
+                    {
+                        label = label.Trim("- ".ToCharArray());
+                        hasignore = true;
+                    }
+                    if (pred.Result == ResultType.Relevant || isnew)
+                    {
+                        if (Global.IsInList(label, objs, ",", TrueIfEmpty: false))
+                        {
+                            if (hasignore)
+                            {
+                                ignore = true;
+                                if (!ignored.Contains(label))
+                                    ignored += label + ",";
+                            }
+                            else
+                            {
+                                ret = ResultType.Relevant;
+                                if (!good.Contains(label))
+                                    good += label + ",";
+                            }
+                        }
+                        else
+                        {
+                            if (!notrelevant.Contains(label))
+                                notrelevant += label + ",";
+                        }
+                    }
+                    else
+                    {
+                        if (!notrelevant.Contains(label))
+                            notrelevant += label + ",";
+                    }
+                }
+
+                if (ignore)
+                    ret = ResultType.IgnoredObject;
+
+                if (ret != ResultType.Relevant)
+                {
+                    Log($"Debug: Skipping {typename} because objects were not defined to trigger, or were set to ignore: Relevant='{good.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}'.  All Triggering Objects='{triggering_objects.Trim(", ".ToCharArray())}', {preds.Count} predictions(s)");
+                }
+                else
+                {
+                    Log($"Debug: Valid prediction for {typename} because object(s) '{good.Trim(", ".ToCharArray())}' were in trigger objects list '{triggering_objects.Trim(", ".ToCharArray())}'");
+
+                }
+            }
+
+            return ret;
+
+        }
+
         public class DetectObjectsResult
         {
             public bool Success = false;
@@ -2814,6 +2915,7 @@ namespace AITool
             //only analyze if 50% of the cameras cooldown time since last detection has passed
             double secs = (DateTime.Now - cam.last_trigger_time.Read()).TotalSeconds;
             double halfcool = cam.cooldown_time_seconds / 2;
+
             //ClsAIServerResponse asr = new ClsAIServerResponse();
             ClsAIServerResponse[] asrs = new ClsAIServerResponse[] { };
             string AISRV = "";
@@ -2877,23 +2979,28 @@ namespace AITool
                                 Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
                                 foreach (ClsPrediction pred in asr.Predictions)
                                 {
-                                    ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, false, false);
+                                    ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
+
                                     if (pm.Idx == -1)  //does not contain
                                     {
-                                        pred.AnalyzePrediction(false);
+                                        pred.AnalyzePrediction(SkipDynamicMaskCheck: false);
                                         if (pred.Result == ResultType.Relevant)
                                             RelevantPredictionCount++;
                                     }
                                     else  //already in list, replace it - it may be a different confidence
                                     {
-                                        pred.AnalyzePrediction(true); //skip re-detecting dynamic mask so the count does not increase
+                                        pred.AnalyzePrediction(SkipDynamicMaskCheck: true); //skip re-detecting dynamic mask so the count does not increase
                                         Log($"Debug: [Linked Server] Duplicate prediction {pm.Idx} Old={predictions[pm.Idx].ToString()}, New={pred.ToString()}", AiUrl.CurSrv, cam, CurImg);
-                                        //predictions.RemoveAt(pm.Idx);
-                                        //predictions.Insert(pm.Idx, pred);
+                                        //Use the result from the first object so that we dont all the masking routine more than once for each object (with dynamic masking it will start to ignore things it shouldnt)
+                                        pred.Result = predictions[pm.Idx].Result;
+                                        pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
+                                        pred.DynMaskType = predictions[pm.Idx].DynMaskType;
                                         predictions[pm.Idx].Result = ResultType.DuplicateObject;
                                         if (IsNull(pred.Detail))
                                             pred.Detail = predictions[pm.Idx].Detail;
                                     }
+
+                                    pred.OriginalOrder = predictions.Count + 1;
                                     predictions.Add(pred);
                                 }
                             }
@@ -2941,12 +3048,12 @@ namespace AITool
                                         //note dupe detection works only on label name and position
                                         foreach (ClsPrediction pred in asr.Predictions)
                                         {
-                                            ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, true, false);
+                                            pred.AnalyzePrediction(SkipDynamicMaskCheck: true);  //skip re-detecting dynamic mask so the count does not increase
+
+                                            ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
+
                                             if (pm.Idx == -1)  //does not contain
                                             {
-                                                //bool addit = true;
-                                                pred.AnalyzePrediction(true);
-
                                                 //sighthound and deepstack face detection is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
                                                 if (pred.ObjType == ObjectType.Face)
                                                 {
@@ -2960,10 +3067,13 @@ namespace AITool
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
                                                             if (RectangleMatches(personRect, faceRect, cam.MergePredictionsMinMatchPercent, out int matched, true))
                                                             {
-                                                                fpred.PercentMatchRefinement = matched;
-                                                                fpred.Detail = pred.Detail;
-                                                                pred.Result = ResultType.RefinementObject;
-                                                                Log($"Debug: [Refinement Server] Added face detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                {
+                                                                    fpred.PercentMatchRefinement = matched;
+                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
+                                                                    pred.Result = ResultType.RefinementObject;
+                                                                    Log($"Debug: [Refinement Server] Added face detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                }
                                                             }
                                                             else
                                                             {
@@ -2973,9 +3083,36 @@ namespace AITool
                                                         }
                                                     }
                                                 }
+                                                //try to match a license plate to a vehicle:
+                                                else if (pred.ObjType == ObjectType.LicensePlate)
+                                                {
+                                                    foreach (ClsPrediction fpred in predictions)
+                                                    {
+                                                        if (fpred.ObjType == ObjectType.Vehicle)
+                                                        {
+                                                            Rectangle VehicleRect = fpred.GetRectangle();
+                                                            Rectangle PlateRect = pred.GetRectangle();
 
+                                                            //check for at least an 80% match since various ai servers create different size rectangles 
+                                                            if (RectangleMatches(VehicleRect, PlateRect, cam.MergePredictionsMinMatchPercent, out int matched, true))
+                                                            {
+                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                {
+                                                                    fpred.PercentMatchRefinement = matched;
+                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
+                                                                    Log($"Debug: [Refinement Server] Added plate detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                Log($"Debug: [Refinement Server] Did *NOT* match plate from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent}% (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                                            }
+                                                            pred.PercentMatchRefinement = matched;
+                                                        }
+                                                    }
+                                                }
                                                 //handle where deepstack detected a person and sighthound or aws refined it and made it a little bigger or smaller
-                                                if (pred.ObjType == ObjectType.Person)
+                                                else if (pred.ObjType == ObjectType.Person)
                                                 {
                                                     foreach (ClsPrediction fpred in predictions)
                                                     {
@@ -2987,11 +3124,14 @@ namespace AITool
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
                                                             if (RectangleMatches(personRect, newPerson, cam.MergePredictionsMinMatchPercent, out int matched, false))
                                                             {
-                                                                //change person to "person [details]"
-                                                                //fpred.Detail = pred.Detail;
-                                                                fpred.PercentMatchRefinement = matched;
-                                                                pred.Result = ResultType.RefinementObject;
-                                                                Log($"Debug: [Refinement Server] Skipped duplicated matching 'person' detection for {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+
+                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                {
+                                                                    fpred.PercentMatchRefinement = matched;
+                                                                    pred.Result = ResultType.RefinementObject;
+                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
+                                                                    Log($"Debug: [Refinement Server] Skipped duplicated matching 'person' detection for {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                }
                                                             }
                                                             else
                                                             {
@@ -3003,8 +3143,8 @@ namespace AITool
                                                         }
                                                     }
                                                 }
-
-                                                if (pred.ObjType == ObjectType.Vehicle)
+                                                //handle where deepstack detected a person and sighthound or aws refined it and made it a little bigger or smaller
+                                                else if (pred.ObjType == ObjectType.Vehicle)
                                                 {
                                                     foreach (ClsPrediction fpred in predictions)
                                                     {
@@ -3014,16 +3154,18 @@ namespace AITool
                                                             Rectangle newVehicle = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
 
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(ExistingVehicleRect, newVehicle, cam.MergePredictionsMinMatchPercent, out int matched, false))
+                                                            if (RectangleMatches(ExistingVehicleRect, newVehicle, cam.MergePredictionsMinMatchPercent, out int matched, TrueIfInsideOrPartiallyInside: false))
                                                             {
                                                                 //change Truck to "Truck [Model,etc]"
-                                                                fpred.Detail = pred.Detail;
-                                                                fpred.Label = pred.Label;
-                                                                fpred.Confidence = pred.Confidence;
-                                                                fpred.PercentMatchRefinement = matched;
-                                                                pred.Result = ResultType.RefinementObject;
-
-                                                                Log($"Debug: [Refinement Server] Added vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                {
+                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
+                                                                    fpred.Label = pred.Label;
+                                                                    fpred.Confidence = pred.Confidence;
+                                                                    fpred.PercentMatchRefinement = matched;
+                                                                    pred.Result = ResultType.RefinementObject;
+                                                                    Log($"Debug: [Refinement Server] Added vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                }
                                                             }
                                                             else
                                                             {
@@ -3039,19 +3181,21 @@ namespace AITool
                                                 if (pred.Result == ResultType.Relevant)
                                                     RelevantPredictionCount++;
 
-
+                                                pred.OriginalOrder = predictions.Count + 1;
                                                 predictions.Add(pred);
 
                                             }
                                             else  //already in list, replace it - it may be a different confidence
                                             {
-                                                pred.AnalyzePrediction(true);  //skip re-detecting dynamic mask so the count does not increase
                                                 Log($"Debug: [Refinement Server] Duplicate prediction {pm.Idx} Old={predictions[pm.Idx].ToString()} ({predictions[pm.Idx].Server}), New={pred.ToString()} ({pred.Server})");
-                                                //predictions.RemoveAt(pm.Idx);
-                                                //predictions.Insert(pm.Idx, pred);
+                                                pred.Result = predictions[pm.Idx].Result;
+                                                pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
+                                                pred.DynMaskType = predictions[pm.Idx].DynMaskType;
                                                 predictions[pm.Idx].Result = ResultType.DuplicateObject;
                                                 if (IsNull(pred.Detail))
                                                     pred.Detail = predictions[pm.Idx].Detail;
+
+                                                pred.OriginalOrder = predictions.Count + 1;
                                                 predictions.Add(pred);
 
                                             }
@@ -3568,10 +3712,18 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilenamenoext]", Path.GetFileNameWithoutExtension(imgpath)); //gives the image name of the image that caused the trigger
 
-                ret = Global.ReplaceCaseInsensitive(ret, "[username]", AppSettings.Settings.DefaultUserName); //gives the image name of the image that caused the trigger
-                ret = Global.ReplaceCaseInsensitive(ret, "[password]", Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted)); //gives the image name of the image that caused the trigger
-                ret = Global.ReplaceCaseInsensitive(ret, "[blueirisserverip]", Global.IP2Str(AppSettings.Settings.BlueIrisServer.Trim(), iptype)); //gives the image name of the image that caused the trigger
-                ret = Global.ReplaceCaseInsensitive(ret, "[blueirisurl]", BlueIrisInfo.URL); //gives the image name of the image that caused the trigger
+                if (!IsNull(AppSettings.Settings.DefaultUserName))
+                    ret = Global.ReplaceCaseInsensitive(ret, "[username]", AppSettings.Settings.DefaultUserName); //gives the image name of the image that caused the trigger
+
+                string pw = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
+                if (!IsNull(pw))
+                    ret = Global.ReplaceCaseInsensitive(ret, "[password]", pw); //gives the image name of the image that caused the trigger
+
+                if (BlueIrisInfo.Result == BlueIrisResult.Valid)
+                {
+                    ret = Global.ReplaceCaseInsensitive(ret, "[blueirisserverip]", Global.IP2Str(AppSettings.Settings.BlueIrisServer.Trim(), iptype)); //gives the image name of the image that caused the trigger
+                    ret = Global.ReplaceCaseInsensitive(ret, "[blueirisurl]", BlueIrisInfo.URL); //gives the image name of the image that caused the trigger
+                }
 
 
                 if (hist != null || curpred != null)

@@ -15,7 +15,8 @@ namespace AITool
         Animal,
         Vehicle,
         Face,
-        Unknown
+        Unknown,
+        LicensePlate
     }
 
     public enum ResultType
@@ -37,7 +38,8 @@ namespace AITool
         TooSmallWidth = 15,
         TooSmallHeight = 16,
         TooLargeWidth = 17,
-        TooLargeHeight = 18
+        TooLargeHeight = 18,
+        IgnoredObject = 19
 
     }
     public class ClsPrediction : IEquatable<ClsPrediction>
@@ -51,6 +53,7 @@ namespace AITool
         public string Detail { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
+        public string Server { get; set; } = "";
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
         public float PercentMatch { get; set; } = 0;
@@ -74,7 +77,7 @@ namespace AITool
         public int PercentOfImage { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
-        public string Server { get; set; } = "";
+        public int OriginalOrder { get; set; } = 0;
         public DateTime Time { get; set; } = DateTime.MinValue;
         private void UpdateImageInfo(ClsImageQueueItem curImg)
         {
@@ -286,7 +289,7 @@ namespace AITool
 
         }
 
-        public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundVehicleObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg)
+        public ClsPrediction(ObjectType defaultObjType, Camera cam, SightHoundVehicleObject AiDetectionObject, ClsImageQueueItem curImg, ClsURLItem curURL, SightHoundImage SHImg, bool GetPlate)
         {
             //https://docs.sighthound.com/cloud/recognition/
 
@@ -449,51 +452,84 @@ namespace AITool
             //        y (integer): Vertical pixel position of the vertex
 
 
-            // get the bounding box from vertices 
-            List<System.Drawing.Point> pts = new List<System.Drawing.Point>();
-            foreach (var pt in AiDetectionObject.VehicleAnnotation.Bounding.Vertices)
-                pts.Add(new System.Drawing.Point(pt.X, pt.Y));
-
-            Rectangle rect = Global.RectFromVertices(pts);
-
-            this.RectHeight = rect.Height;
-            this.RectWidth = rect.Width;
-
-            double right = rect.X + this.RectWidth;
-            double left = rect.X;
-
-            double top = rect.Y;
-            double bottom = rect.Y + this.RectHeight;
-
-            this.XMin = Convert.ToInt32(Math.Round(left));
-            this.YMin = Convert.ToInt32(Math.Round(top));
-
-            this.XMax = Convert.ToInt32(Math.Round(right));
-            this.YMax = Convert.ToInt32(Math.Round(bottom));
-
-            if (AiDetectionObject.VehicleAnnotation != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType))
+            if (!GetPlate)
             {
-                string type = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType);
-                string color = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Color.Name);
-                string make = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Make.Name);
-                string model = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Model.Name);
+                // get the bounding box from vertices's 
+                List<System.Drawing.Point> pts = new List<System.Drawing.Point>();
+                foreach (var pt in AiDetectionObject.VehicleAnnotation.Bounding.Vertices)
+                    pts.Add(new System.Drawing.Point(pt.X, pt.Y));
 
-                string plate = "Unknown";
-                if (AiDetectionObject.VehicleAnnotation.Licenseplate != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name))
+                Rectangle rect = Global.RectFromVertices(pts);
+
+                this.RectHeight = rect.Height;
+                this.RectWidth = rect.Width;
+
+                double right = rect.X + this.RectWidth;
+                double left = rect.X;
+
+                double top = rect.Y;
+                double bottom = rect.Y + this.RectHeight;
+
+                this.XMin = Convert.ToInt32(Math.Round(left));
+                this.YMin = Convert.ToInt32(Math.Round(top));
+
+                this.XMax = Convert.ToInt32(Math.Round(right));
+                this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+                if (AiDetectionObject.VehicleAnnotation != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType))
                 {
-                    plate = $"{AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.Region.Name} {AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name}";
+                    string type = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType);
+                    string color = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Color.Name);
+                    string make = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Make.Name);
+                    string model = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Model.Name);
+
+                    this.Label = type;
+                    this.Detail = $"{color}, {make}, {model}";
+                    this.ObjType = ObjectType.Vehicle;
+
+                    //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
+                    this.Confidence = AiDetectionObject.VehicleAnnotation.RecognitionConfidence * 100;
+                }
+                else
+                {
+                    this.Confidence = 100;
                 }
 
-                this.Label = type;
-                this.Detail = $"{color}, {make}, {model}, Plate={plate}";
+            }
+            else if (AiDetectionObject.VehicleAnnotation.Licenseplate != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name))
+            {
+                //get the license plate object
+                // get the bounding box from vertices's 
+                List<System.Drawing.Point> pts = new List<System.Drawing.Point>();
+                foreach (var pt in AiDetectionObject.VehicleAnnotation.Licenseplate.Bounding.Vertices)
+                    pts.Add(new System.Drawing.Point(pt.X, pt.Y));
+
+                Rectangle rect = Global.RectFromVertices(pts);
+
+                this.RectHeight = rect.Height;
+                this.RectWidth = rect.Width;
+
+                double right = rect.X + this.RectWidth;
+                double left = rect.X;
+
+                double top = rect.Y;
+                double bottom = rect.Y + this.RectHeight;
+
+                this.XMin = Convert.ToInt32(Math.Round(left));
+                this.YMin = Convert.ToInt32(Math.Round(top));
+
+                this.XMax = Convert.ToInt32(Math.Round(right));
+                this.YMax = Convert.ToInt32(Math.Round(bottom));
+
+                this.Label = "License Plate";
+                this.ObjType = ObjectType.LicensePlate;
+                this.Detail = $"Plate={AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.Region.Name} {AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Name}";
 
                 //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
-                this.Confidence = AiDetectionObject.VehicleAnnotation.RecognitionConfidence * 100;
+                this.Confidence = AiDetectionObject.VehicleAnnotation.Licenseplate.Attributes.System.String.Confidence * 100;
+
             }
-            else
-            {
-                this.Confidence = 100;
-            }
+
 
             this.GetObjectType();
             this.UpdateImageInfo(curImg);
@@ -705,7 +741,7 @@ namespace AITool
             {
                 this.ObjType = ObjectType.Face;
                 this.Label = Global.UpperFirst(AiDetectionObject.UserID);
-                this.Detail = "Face, " + Global.UpperFirst(AiDetectionObject.UserID);
+                this.Detail = "";  //"Face, " + Global.UpperFirst(AiDetectionObject.UserID);
             }
             else
             {
@@ -805,7 +841,7 @@ namespace AITool
                 {
                     if (!string.IsNullOrWhiteSpace(this._cam.triggering_objects_as_string))
                     {
-                        this.Result = this._cam.IsRelevantObject(this);
+                        this.Result = AITOOL.ArePredictionObjectsRelevant(this._cam.triggering_objects_as_string + "," + this._cam.additional_triggering_objects_as_string, "NEW", this, true);
                         if (this.Result == ResultType.Relevant)
                         {
                             this.Result = this._cam.IsRelevantSize(this);
@@ -987,6 +1023,11 @@ namespace AITool
                 this.ObjType = ObjectType.Person;
             else if (tmp.Equals("face") || this.Detail.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
                 this.ObjType = ObjectType.Face;
+            else if (tmp.Contains("license") || tmp.Contains("plate"))
+            {
+                this.ObjType = ObjectType.LicensePlate;
+                this.Label = "License Plate";
+            }
             else if (tmp.Equals("dog") ||
                      tmp.Equals("cat") ||
                      tmp.Equals("bird") ||

@@ -144,7 +144,7 @@ namespace AITool
         public string Name { get; set; }
 
         [JsonProperty("confidence")]
-        public double Confidence { get; set; }
+        public float Confidence { get; set; }
     }
 
     public class SightHoundCharacter
