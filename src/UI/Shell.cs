@@ -1363,7 +1363,7 @@ namespace AITool
                         //write the confidence of every detection into the green_values string
                         foreach (string detection in detections)
                         {
-                            int x_value = Global.GetNumberInt(detection);  // gets a number anywhere in the string
+                            int x_value = Global.GetNumberInt(detection);  // gets first number anywhere in the string - TODO: May not be correct
                             if (x_value > 0 && x_value <= green_values.Count() - 1)
                             {
                                 //example: -> "person (41%)"

@@ -46,7 +46,7 @@ namespace AITool
             }
         }
 
-        public string Objects = "";
+        public string Objects { get; set; } = "";
         public ObjectScale ScaleConfig { get; set; }
 
         private object _maskLockObject = new object();
@@ -202,8 +202,8 @@ namespace AITool
 
         public MaskResultInfo CreateDynamicMask(ObjectPosition currentObject, bool forceStatic = false, bool forceDynamic = false)
         {
-            
-            
+
+
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             MaskResultInfo returnInfo = new MaskResultInfo();
@@ -213,9 +213,10 @@ namespace AITool
                 lock (this._maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
 
-                    
-
-                    if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty:true))
+                    ClsPrediction pred = new ClsPrediction();
+                    pred.Label = currentObject.Label;
+                    //if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty: true))
+                    if (AITOOL.ArePredictionObjectsRelevant(this.Objects, "DynamicMask", pred, true) != ResultType.Relevant)
                     {
                         Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
                         returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);

@@ -309,6 +309,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
+                res = false;
                 Log("Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
@@ -1012,182 +1013,191 @@ namespace AITool
 
             if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) && !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey))
             {
-
-                //make sure it is a matching object
-                if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects) && AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) == -1)
+                try
                 {
-                    if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.Action_pushover_triggering_objects, "Pushover", AQI.Hist.Predictions(), false) != ResultType.Relevant)
-                        return true;
-                }
-
-                if (AppSettings.Settings.pushover_cooldown_seconds < 2)
-                    AppSettings.Settings.pushover_cooldown_seconds = 2;  //force to be at least 2 seconds
-
-                DateTime now = DateTime.Now;
-
-                if (this.PushoverRetryTime.Read() == DateTime.MinValue || now >= this.PushoverRetryTime.Read())
-                {
-                    double cooltime = Math.Round((now - this.last_Pushover_trigger_time.Read()).TotalSeconds, 4);
-                    if (cooltime >= AppSettings.Settings.pushover_cooldown_seconds)
+                    //make sure it is a matching object
+                    if (!string.IsNullOrEmpty(AQI.cam.Action_pushover_triggering_objects) && AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) == -1)
                     {
+                        if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.Action_pushover_triggering_objects, "Pushover", AQI.Hist.Predictions(), false) != ResultType.Relevant)
+                            return true;
+                    }
 
-                        if (Global.IsTimeBetween(now, AQI.cam.Action_pushover_active_time_range))
+                    if (AppSettings.Settings.pushover_cooldown_seconds < 2)
+                        AppSettings.Settings.pushover_cooldown_seconds = 2;  //force to be at least 2 seconds
+
+                    DateTime now = DateTime.Now;
+
+                    if (this.PushoverRetryTime.Read() == DateTime.MinValue || now >= this.PushoverRetryTime.Read())
+                    {
+                        double cooltime = Math.Round((now - this.last_Pushover_trigger_time.Read()).TotalSeconds, 4);
+                        if (cooltime >= AppSettings.Settings.pushover_cooldown_seconds)
                         {
-                            string title = "";
-                            string message = "";
-                            string device = "";
 
-                            if (AQI.Trigger)
+                            if (Global.IsTimeBetween(now, AQI.cam.Action_pushover_active_time_range))
                             {
+                                string title = "";
+                                string message = "";
+                                string device = "";
 
-                                if (!string.IsNullOrEmpty(AQI.Text))
+                                if (AQI.Trigger)
                                 {
-                                    if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        title = "Error";
+
+                                    if (!string.IsNullOrEmpty(AQI.Text))
+                                    {
+                                        if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
+                                            title = "Error";
+                                        else
+                                            title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
+
+                                        message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
+
+                                    }
                                     else
+                                    {
                                         title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
+                                        message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
+                                    }
 
-                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
-
+                                    device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
                                 }
-                                else
+                                else  //TODO: Add cancel if requested
                                 {
                                     title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
                                     message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
+                                    device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
                                 }
 
-                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
-                            }
-                            else  //TODO: Add cancel if requested
-                            {
-                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
-                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
-                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
-                            }
 
+                                List<string> titles = Global.Split(title, "|");
+                                List<string> messages = Global.Split(message, "|");
+                                List<string> devices = Global.Split(device, "|");
+                                List<string> sounds = Global.Split(AQI.cam.Action_pushover_Sound, "|");
 
-                            List<string> titles = Global.Split(title, "|");
-                            List<string> messages = Global.Split(message, "|");
-                            List<string> devices = Global.Split(device, "|");
-                            List<string> sounds = Global.Split(AQI.cam.Action_pushover_Sound, "|");
+                                if (AITOOL.pushoverClient == null)
+                                    AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
 
-                            if (AITOOL.pushoverClient == null)
-                                AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
-
-                            string imginfo = "";
-                            if (AQI.CurImg != null && AQI.CurImg.IsValid())
-                            {
-                                imginfo = $"Attached Image: {Path.GetFileName(AQI.CurImg.image_path)}";
-                            }
-
-                            for (int i = 0; i < titles.Count; i++)
-                            {
-                                PushoverUserResponse response = null;
-
-                                Stopwatch sw = Stopwatch.StartNew();
-
-                                try
+                                string imginfo = "";
+                                if (AQI.CurImg != null && AQI.CurImg.IsValid())
                                 {
-                                    string pushtitle = titles[i];
-                                    string pushmessage = messages[i];
-                                    string pushsound = "";
-                                    string pushdevice = "";
-                                    if (i <= devices.Count - 1)
-                                        pushdevice = devices[i];
-                                    if (i <= sounds.Count - 1)
-                                        pushsound = sounds[i];
+                                    imginfo = $"Attached Image: {Path.GetFileName(AQI.CurImg.image_path)}";
+                                }
 
-                                    NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
+                                for (int i = 0; i < titles.Count; i++)
+                                {
+                                    PushoverUserResponse response = null;
 
-                                    NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
+                                    Stopwatch sw = Stopwatch.StartNew();
+
+                                    try
                                     {
-                                        Title = pushtitle,
-                                        Body = pushmessage,
-                                        Timestamp = AQI.CurImg != null ? AQI.CurImg.TimeCreated : DateTime.Now,
-                                        Priority = pri,
-                                        Sound = pushsound,
+                                        string pushtitle = titles[i];
+                                        string pushmessage = messages[i];
+                                        string pushsound = "";
+                                        string pushdevice = "";
+                                        if (i <= devices.Count - 1)
+                                            pushdevice = devices[i];
+                                        if (i <= sounds.Count - 1)
+                                            pushsound = sounds[i];
 
-                                        RetryOptions = pri == Priority.Emergency ? new RetryOptions
+                                        NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
+
+                                        NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
                                         {
-                                            RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
-                                            RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
-                                            CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url) : null,
-                                        } : null,
-                                        SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL { Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42" } : null,
-                                    };
+                                            Title = pushtitle,
+                                            Body = pushmessage,
+                                            Timestamp = AQI.CurImg != null ? AQI.CurImg.TimeCreated : DateTime.Now,
+                                            Priority = pri,
+                                            Sound = pushsound,
 
-                                    sw.Restart();
+                                            RetryOptions = pri == Priority.Emergency ? new RetryOptions
+                                            {
+                                                RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
+                                                RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
+                                                CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url) : null,
+                                            } : null,
+                                            SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL { Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42" } : null,
+                                        };
 
-                                    List<string> userkeys = Global.Split(AppSettings.Settings.pushover_UserKey, "|,;");
-                                    foreach (string userkey in userkeys)
-                                    {
-                                        Log($"Debug: Sending pushover message '{pushmessage}' to user '{userkey}' {imginfo}...");
-                                        response = await AITOOL.pushoverClient.SendPushoverMessageAsync(msg, userkey, pushdevice, AQI.CurImg);
+                                        sw.Restart();
+
+                                        List<string> userkeys = Global.Split(AppSettings.Settings.pushover_UserKey, "|,;");
+                                        foreach (string userkey in userkeys)
+                                        {
+                                            Log($"Debug: Sending pushover message '{pushmessage}' to user '{userkey}' {imginfo}...");
+                                            response = await AITOOL.pushoverClient.SendPushoverMessageAsync(msg, userkey, pushdevice, AQI.CurImg);
+                                        }
+                                        sw.Stop();
                                     }
-                                    sw.Stop();
-                                }
-                                catch (Exception ex)
-                                {
-
-                                    sw.Stop();
-                                    ret = false;
-                                    Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
-                                }
-
-                                if (response != null)
-                                {
-                                    string rateinfo = "";
-                                    if (response.RateLimitInfo != null)
+                                    catch (Exception ex)
                                     {
-                                        rateinfo = $"(Monthly Limit={response.RateLimitInfo.Limit}, Remaining={response.RateLimitInfo.Remaining}, ResetDate={response.RateLimitInfo.Reset})";
+
+                                        sw.Stop();
+                                        ret = false;
+                                        Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
                                     }
 
-                                    if (response.IsOk)
+                                    if (response != null)
                                     {
-                                        ret = true;
-                                        Log($"Debug: ...Pushover success in {sw.ElapsedMilliseconds}ms {rateinfo}");
+                                        string rateinfo = "";
+                                        if (response.RateLimitInfo != null)
+                                        {
+                                            rateinfo = $"(Monthly Limit={response.RateLimitInfo.Limit}, Remaining={response.RateLimitInfo.Remaining}, ResetDate={response.RateLimitInfo.Reset})";
+                                        }
+
+                                        if (response.IsOk)
+                                        {
+                                            ret = true;
+                                            Log($"Debug: ...Pushover success in {sw.ElapsedMilliseconds}ms {rateinfo}");
+                                        }
+                                        else
+                                        {
+                                            string errs = "";
+                                            if (response.HasErrors)
+                                                errs = string.Join(";", response.Errors);
+                                            ret = false;
+                                            Log($"Error: Pushover response code={response.Status} in {sw.ElapsedMilliseconds}ms, Errs='{errs}' {rateinfo}");
+                                        }
                                     }
                                     else
                                     {
-                                        string errs = "";
-                                        if (response.HasErrors)
-                                            errs = string.Join(";", response.Errors);
                                         ret = false;
-                                        Log($"Error: Pushover response code={response.Status} in {sw.ElapsedMilliseconds}ms, Errs='{errs}' {rateinfo}");
+                                        Log($"Error: Pushover failed to return a response in {sw.ElapsedMilliseconds}ms?", this.CurSrv, AQI.cam, AQI.CurImg);
                                     }
-                                }
-                                else
-                                {
-                                    ret = false;
-                                    Log($"Error: Pushover failed to return a response in {sw.ElapsedMilliseconds}ms?", this.CurSrv, AQI.cam, AQI.CurImg);
+
+                                    if (!ret)
+                                        this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
+                                    else
+                                        this.PushoverRetryTime.Write(DateTime.MinValue);
+
                                 }
 
-                                if (!ret)
-                                    this.PushoverRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Pushover_RetryAfterFailSeconds));
-                                else
-                                    this.PushoverRetryTime.Write(DateTime.MinValue);
-
+                            }
+                            else
+                            {
+                                Log($"Debug: Skipping pushover because time is not between {AQI.cam.Action_pushover_active_time_range}");
                             }
 
                         }
                         else
                         {
-                            Log($"Debug: Skipping pushover because time is not between {AQI.cam.Action_pushover_active_time_range}");
-                        }
+                            //log that nothing was done
+                            Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Pushover.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
+                        }
                     }
                     else
                     {
-                        //log that nothing was done
-                        Log($"Debug:   Still in PUSHOVER cooldown. No image will be uploaded to Pushover.  ({cooltime} of {AppSettings.Settings.pushover_cooldown_seconds} seconds - See 'pushover_cooldown_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
-
+                        Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime.Read()}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam, AQI.CurImg);
                     }
-                }
-                else
-                {
-                    Log($"Debug:   Waiting {Math.Round((this.PushoverRetryTime.Read() - DateTime.Now).TotalSeconds, 1)} seconds ({this.PushoverRetryTime.Read()}) to retry PUSHOVER connection.  This is due to a previous pushover send error.", this.CurSrv, AQI.cam, AQI.CurImg);
-                }
 
+
+                }
+                catch (Exception ex)
+                {
+
+                    ret = false;
+                    Log($"Error: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                }
             }
             else
             {
