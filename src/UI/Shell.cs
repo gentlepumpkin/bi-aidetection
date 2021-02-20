@@ -86,8 +86,6 @@ namespace AITool
         {
 
 
-
-
             Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 
             //Uri pth = new Uri("\\\\[2600:6c64:6b7f:f8d8::1d4]\\c$");
@@ -162,7 +160,7 @@ namespace AITool
                 //---------------------------------------------------------------------------
                 //CAMERAS TAB
 
-                Global_GUI.ConfigureFOLV(this.FOLV_Cameras, typeof(Camera), new Font("Segoe UI", (float)9.75, FontStyle.Regular), GridLines: false);
+                Global_GUI.ConfigureFOLV(this.FOLV_Cameras, typeof(Camera), new Font("Segoe UI", (float)9.75, FontStyle.Regular), CameraImageList, GridLines: false);
 
 
                 this.comboBox_filter_camera.SelectedIndex = this.comboBox_filter_camera.FindStringExact("All Cameras"); //select all cameras entry
@@ -639,7 +637,7 @@ namespace AITool
                     catch (Exception ex)
                     {
 
-                        Log($"Error: Could not find label '{lblcontrolname}': {Global.ExMsg(ex)}");
+                        Log($"Error: Could not find label '{lblcontrolname}': {ex.Msg()}");
                     }
 
                     if (lbl != null)
@@ -1290,7 +1288,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
 
@@ -1397,7 +1395,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
 
@@ -1604,7 +1602,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
         }
 
@@ -1736,7 +1734,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log($"Error: Positions (subitem4) ='{positions}', Detections (subitem3) ='{detections}': {Global.ExMsg(ex)}");
+                    Log($"Error: Positions (subitem4) ='{positions}', Detections (subitem3) ='{detections}': {ex.Msg()}");
                 }
 
             }
@@ -1876,7 +1874,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -2031,7 +2029,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -2352,13 +2350,22 @@ namespace AITool
 
 
         //remove camera
-        private void RemoveCamera(Camera cam)
+        private void RemoveCamera(System.Collections.IList objs)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            Log($"Removing camera {cam.Name}...");
+            for (int i = 0; i < objs.Count; i++)
+            {
+                Log($"Removing camera {((Camera)objs[i]).Name}...");
 
-            AppSettings.Settings.CameraList.Remove(cam);
+                AppSettings.Settings.CameraList.Remove((Camera)objs[i]);
+
+            }
+            if (this.FOLV_Cameras.Items.Count > 0)
+                this.FOLV_Cameras.SelectedIndex = 0;
+            AppSettings.SaveAsync();
+            this.LoadCameras();
+
         }
 
         //display camera settings for selected camera
@@ -2813,8 +2820,7 @@ namespace AITool
                     if (result == DialogResult.OK)
                     {
                         //Log("about to del cam");
-                        this.RemoveCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]));
-                        this.LoadCameras();
+                        this.RemoveCamera(this.FOLV_Cameras.SelectedObjects);
                     }
                 }
             }
@@ -2832,7 +2838,7 @@ namespace AITool
                         var result = form.ShowDialog();
                         if (result == DialogResult.OK)
                         {
-                            this.RemoveCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]));
+                            this.RemoveCamera(this.FOLV_Cameras.SelectedObjects);
                         }
                     }
                 }
@@ -3384,7 +3390,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log(Global.ExMsg(ex));
+                Log(ex.Msg());
             }
         }
 
@@ -3791,7 +3797,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
 
             }
 
@@ -3835,12 +3841,36 @@ namespace AITool
             catch (Exception)
             {
             }
-            // Log("Error: " & ExMsg(ex))
+            // Log("Error: " & ex.Msg())
             finally
             {
             }
         }
 
+        private void FormatCameraRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
+        {
+            try
+            {
+                Camera cam = (Camera)e.Model;
+
+
+                if (!cam.enabled)
+                    e.Item.ForeColor = Color.Gray;
+                else if (cam.Name.Equals("default", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(cam.Prefix))
+                    e.Item.ForeColor = Color.Brown;
+                else
+                    e.Item.ForeColor = Color.Black;
+            }
+
+
+            catch (Exception)
+            {
+            }
+            // Log("Error: " & ex.Msg())
+            finally
+            {
+            }
+        }
         private void btn_resetstats_Click(object sender, EventArgs e)
         {
 
@@ -4072,7 +4102,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
         }
 
@@ -4439,7 +4469,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -4881,7 +4911,7 @@ namespace AITool
                     catch (Exception ex)
                     {
 
-                        Log("Error: " + Global.ExMsg(ex));
+                        Log("Error: " + ex.Msg());
                     }
 
                 }
@@ -4906,7 +4936,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -5169,6 +5199,11 @@ namespace AITool
                 Global.SaveRegSetting("LastSelectedCamera", ((Camera)FOLV_Cameras.SelectedObjects[0]).Name);
 
             DisplayCameraSettings();
+        }
+
+        private void FOLV_Cameras_FormatRow(object sender, FormatRowEventArgs e)
+        {
+            this.FormatCameraRow(sender, e);
         }
     }
 

@@ -79,6 +79,18 @@ namespace AITool
         public string Filename { get; set; } = "";
         public int OriginalOrder { get; set; } = 0;
         public DateTime Time { get; set; } = DateTime.MinValue;
+        public ClsDeepstackDetection ToDeepstackDetection()
+        {
+            ClsDeepstackDetection ret = new ClsDeepstackDetection();
+            ret.label = this.Label;
+            ret.confidence = this.Confidence;
+            ret.x_min = this.XMin;
+            ret.y_min = this.YMin;
+            ret.x_max = this.XMax;
+            ret.y_max = this.YMax;
+            ret.Detail = this.Detail;
+            return ret;
+        }
         private void UpdateImageInfo(ClsImageQueueItem curImg)
         {
             this._curimg = curImg;
@@ -942,7 +954,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: Label '{this.Label}', Camera '{this._cam.Name}': {Global.ExMsg(ex)}", "", this._cam.Name, this._curimg.image_path);
+                Log($"Error: Label '{this.Label}', Camera '{this._cam.Name}': {ex.Msg()}", "", this._cam.Name, this._curimg.image_path);
                 this.Result = ResultType.Error;
             }
 

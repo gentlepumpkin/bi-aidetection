@@ -310,7 +310,7 @@ namespace AITool
             catch (Exception ex)
             {
                 res = false;
-                Log("Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
+                Log("Error: " + ex.Msg(), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return res;
@@ -429,7 +429,7 @@ namespace AITool
                         {
 
                             ret = false;
-                            Log($"Error: while running program '{run}' with params '{param}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Error: while running program '{run}' with params '{param}', got: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
 
@@ -485,7 +485,7 @@ namespace AITool
                             {
 
                                 ret = false;
-                                Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                                Log($"Error: while calling sound '{AQI.cam.Action_Sounds}', got: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                             }
 
                         }
@@ -595,7 +595,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
+                Log($"Error: " + ex.Msg(), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
 
@@ -874,7 +874,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
+                Log($"Error: Detections='{detections}', LastText='{lasttext}', LastPostions='{lastposition}' - " + ex.Msg(), this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return OutputImageFile;
@@ -909,7 +909,7 @@ namespace AITool
 
                 string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder, Global.IPType.Path);
 
-                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\") || netfld.Contains("."))
+                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\"))
                 {
                     AITOOL.Log($"Error: Camera settings > Copy alert images to folder is not a valid path: {netfld}");
                     return false;
@@ -931,7 +931,7 @@ namespace AITool
             catch (Exception ex)
             {
                 ret = false;
-                Log($"ERROR: Could not copy image {AQI.CurImg.image_path} to network path {dest_path}: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                Log($"ERROR: Could not copy image {AQI.CurImg.image_path} to network path {dest_path}: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return ret;
@@ -994,7 +994,7 @@ namespace AITool
                 catch (Exception ex)
                 {
                     ret = false;
-                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} URL '{url}', please check if correct and reachable: {Global.ExMsg(ex)}");
+                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} URL '{url}', please check if correct and reachable: {ex.Msg()}");
                 }
 
             }
@@ -1133,7 +1133,7 @@ namespace AITool
 
                                         sw.Stop();
                                         ret = false;
-                                        Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + Global.ExMsg(ex), this.CurSrv, AQI.cam, AQI.CurImg);
+                                        Log($"Error: Pushover: After {sw.ElapsedMilliseconds}ms, got: " + ex.Msg(), this.CurSrv, AQI.cam, AQI.CurImg);
                                     }
 
                                     if (response != null)
@@ -1196,7 +1196,7 @@ namespace AITool
                 {
 
                     ret = false;
-                    Log($"Error: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"Error: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
             }
             else
@@ -1317,7 +1317,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
                     Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;
@@ -1341,7 +1341,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
                     Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;
@@ -1471,7 +1471,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
                     Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;
@@ -1482,7 +1482,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload image '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {Global.ExMsg(ex)}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload image '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
                     Log($"...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;

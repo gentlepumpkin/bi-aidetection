@@ -347,7 +347,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: While detecting DeepStack, got: " + Global.ExMsg(ex));
+                Log("Error: While detecting DeepStack, got: " + ex.Msg());
             }
 
             if (key != null)
@@ -399,7 +399,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
 
             return ret;
@@ -817,7 +817,7 @@ namespace AITool
             {
                 this.IsStarted = false;
                 this.HasError = true;
-                Log("Error: Cannot start: " + Global.ExMsg(ex));
+                Log("Error: Cannot start: " + ex.Msg());
             }
             finally
             {
@@ -945,7 +945,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
         }
         private void DSProcess_Exited(object sender, System.EventArgs e, string Name)

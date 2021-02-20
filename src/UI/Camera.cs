@@ -303,7 +303,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    AITOOL.Log("Error: " + Global.ExMsg(ex));
+                    AITOOL.Log("Error: " + ex.Msg());
                 }
 
             }

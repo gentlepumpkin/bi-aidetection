@@ -154,7 +154,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log("Error: Problem getting OS version: " + Global.ExMsg(ex));
+                    Log("Error: Problem getting OS version: " + ex.Msg());
                 }
 
 
@@ -253,7 +253,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
         }
@@ -585,7 +585,7 @@ namespace AITool
                         {
                             url = new ClsURLItem(SpltURLs[i], i + 1, URLTypeEnum.Unknown);
                         }
-                        catch (Exception ex) { Log($"Error: url='{SpltURLs[i]}': {Global.ExMsg(ex)}"); }
+                        catch (Exception ex) { Log($"Error: url='{SpltURLs[i]}': {ex.Msg()}"); }
 
                         if (url != null && url.IsValid)
                         {
@@ -618,7 +618,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log($"Error: {Global.ExMsg(ex)}");
+                    Log($"Error: {ex.Msg()}");
                 }
 
                 Log($"Debug: ...{newcnt} new AI URL's migrated from old settings, with a total of {AppSettings.Settings.AIURLList.Count} AI URL's");
@@ -969,7 +969,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
 
             //remove any dupes just in case
@@ -1120,9 +1120,10 @@ namespace AITool
                                             {
                                                 cam.stats_skipped_images++;
                                                 cam.stats_skipped_images_session++;
+                                                int timems = (int)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds;
 
                                                 Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam, CurImg);
-                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv));
+                                                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv, timems, false));
 
                                             }
                                         }
@@ -1188,7 +1189,7 @@ namespace AITool
             catch (Exception ex)
             {
                 //if we get here its the end of the world as we know it
-                Log("Error: * '...Human sacrifice, dogs and cats living together – mass hysteria!' * - " + Global.ExMsg(ex));
+                Log("Error: * '...Human sacrifice, dogs and cats living together – mass hysteria!' * - " + ex.Msg());
             }
         }
 
@@ -1255,7 +1256,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
 
             }
@@ -1500,7 +1501,7 @@ namespace AITool
             catch (Exception ex)
             {
                 FileWatcherHasError.WriteFullFence(true);
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
             finally
             {
@@ -1553,7 +1554,7 @@ namespace AITool
             catch (Exception ex)
             {
                 FileWatcherHasError.WriteFullFence(true);
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
 
             return watcher;
@@ -1691,7 +1692,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -1707,60 +1708,6 @@ namespace AITool
 
         }
 
-
-
-        //public static bool IsValidImage(ClsImageQueueItem CurImg)
-        //{
-        //    using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-
-        //    bool ret = false;
-
-        //    try
-        //    {
-        //        if (System.IO.File.Exists(CurImg.image_path))
-        //        {
-        //            if (new FileInfo(CurImg.image_path).Length >= 1024)
-        //            {
-        //                using (System.Drawing.Image test = System.Drawing.Image.FromFile(CurImg.image_path))
-        //                {
-        //                    ret = (test.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg));
-
-        //                    if (!ret)
-        //                    {
-        //                        Log($"Error: Image file is not jpeg? ({test.RawFormat}): {CurImg.image_path}");
-        //                    }
-        //                    else
-        //                    {
-        //                        CurImg.Width = test.Width;
-        //                        CurImg.Height = test.Height;
-        //                        Log($"Debug: Image file is valid: {Path.GetFileName(CurImg.image_path)}");
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Log($"Error: Image file is too small, less than 1024 bytes: {CurImg.image_path}");
-        //            }
-
-        //        }
-        //        else
-        //        {
-        //            Log($"Error: Image file does not exist: {CurImg.image_path}");
-        //        }
-        //    }
-        //    catch (NotSupportedException ex)
-        //    {
-        //        // System.NotSupportedException:
-        //        // No imaging component suitable to complete this operation was found.
-        //        Log($"Error: Image file not valid {CurImg.image_path}: {Global.ExMsg(ex)}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log($"Error: Image file not valid {CurImg.image_path}: {Global.ExMsg(ex)}");
-        //    }
-
-        //    return ret;
-        //}
 
         public class ClsAIServerResponse
         {
@@ -1925,7 +1872,7 @@ namespace AITool
                         }
                         catch (Exception ex)
                         {
-                            ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                            ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {ex.Msg()}, JSON: '{cleanjsonString}'";
                             AiUrl.IncrementError();
                             AiUrl.LastResultMessage = ret.Error;
                         }
@@ -1950,11 +1897,11 @@ namespace AITool
                     long seconds = swposttime.ElapsedMilliseconds / 1000;
                     if (seconds >= AiUrl.GetTimeout().TotalSeconds)
                     {
-                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds ('HTTPClientTimeoutSeconds' is currently set to {AiUrl.GetTimeout().TotalSeconds} in AITOOL.Settings.JSON file.): {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds ('HTTPClientTimeoutSeconds' is currently set to {AiUrl.GetTimeout().TotalSeconds} in AITOOL.Settings.JSON file.): {ex.Msg()}";
                     }
                     else
                     {
-                        ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: {ex.Msg()}";
                     }
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
@@ -2169,7 +2116,7 @@ namespace AITool
                             }
                             catch (Exception ex)
                             {
-                                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {ex.Msg()}, JSON: '{cleanjsonString}'";
                                 AiUrl.IncrementError();
                                 AiUrl.LastResultMessage = ret.Error;
                             }
@@ -2241,11 +2188,11 @@ namespace AITool
                     long seconds = swposttime.ElapsedMilliseconds / 1000;
                     if (seconds >= AiUrl.GetTimeout().TotalSeconds)
                     {
-                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): - '{error}': {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): - '{error}': {ex.Msg()}";
                     }
                     else
                     {
-                        ret.Error = $"ERROR: '{error}': {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: '{error}': {ex.Msg()}";
                     }
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
@@ -2367,7 +2314,7 @@ namespace AITool
                                 }
                                 catch (Exception ex)
                                 {
-                                    ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {Global.ExMsg(ex)}, JSON: '{cleanjsonString}'";
+                                    ret.Error = $"ERROR: Deserialization of 'Response' from '{AiUrl.Type.ToString()}' failed: {ex.Msg()}, JSON: '{cleanjsonString}'";
                                     AiUrl.IncrementError();
                                     AiUrl.LastResultMessage = ret.Error;
                                 }
@@ -2400,14 +2347,14 @@ namespace AITool
                     long seconds = swposttime.ElapsedMilliseconds / 1000;
                     if (seconds >= AiUrl.GetTimeout().TotalSeconds)
                     {
-                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: HTTPClient timeout at {seconds} seconds (Max={AiUrl.GetTimeout().TotalSeconds} set in 'HTTPClientTimeoutSeconds' in aitool.settings.json): {ex.Msg()}";
                     }
                     else
                     {
-                        ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                        ret.Error = $"ERROR: {ex.Msg()}";
                     }
 
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    ret.Error = $"ERROR: {ex.Msg()}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -2520,7 +2467,7 @@ namespace AITool
                 {
                     swposttime.Stop();
 
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    ret.Error = $"ERROR: {ex.Msg()}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -2624,7 +2571,7 @@ namespace AITool
                 {
                     swposttime.Stop();
 
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    ret.Error = $"ERROR: {ex.Msg()}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                 }
@@ -2816,6 +2763,7 @@ namespace AITool
                 string good = "";
                 string ignored = "";
                 bool ignore = false;
+                int cnt = 0;
                 foreach (ClsPrediction pred in preds)
                 {
                     string label = pred.Label;
@@ -2824,6 +2772,10 @@ namespace AITool
                     {
                         label = label.Trim("- ".ToCharArray());
                         hasignore = true;
+                    }
+                    else
+                    {
+                        cnt++;
                     }
                     if (pred.Result == ResultType.Relevant || isnew)
                     {
@@ -2854,6 +2806,9 @@ namespace AITool
                             notrelevant += label + ",";
                     }
                 }
+
+                if (cnt == 0)
+                    ret = ResultType.Relevant;
 
                 if (ignore)
                     ret = ResultType.IgnoredObject;
@@ -3347,7 +3302,8 @@ namespace AITool
 
                                 Log($"Debug: (5/6) Performing alert actions:", AISRV, cam, CurImg);
 
-                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AISRV);
+
+                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, objects_and_confidences, object_positions_as_string, true, PredictionsJSON, AISRV, TotalSWPostTime, true);
 
                                 await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, true, !cam.Action_queued, AISRV, ""); //make TRIGGER
 
@@ -3414,7 +3370,7 @@ namespace AITool
 
                                 Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
 
-                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AISRV);
+                                hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AISRV, TotalSWPostTime, false);
 
                                 await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
 
@@ -3434,7 +3390,7 @@ namespace AITool
 
                             Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
 
-                            hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "false alert", "", false, "", AISRV);
+                            hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "false alert", "", false, "", AISRV, TotalSWPostTime, false);
 
                             await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
 
@@ -3449,7 +3405,7 @@ namespace AITool
                     else
                     {
                         //could not access the file for 30 seconds??   Or unexpected error
-                        ret.Error = $"Error: Image is not valid or inaccessible for {CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries, giving up: {CurImg.image_path}";
+                        ret.Error = $"Error: {CurImg.LastError}.  ({CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries)";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = ret.Error;
                         Log(ret.Error, AISRV, cam, CurImg);
@@ -3459,7 +3415,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    ret.Error = $"ERROR: {Global.ExMsg(ex)}";
+                    ret.Error = $"ERROR: {ex.Msg()}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
                     Log(ret.Error, AISRV, cam, CurImg);
@@ -3470,7 +3426,7 @@ namespace AITool
                     //bool success = await TelegramUpload(CurImg, "Error");
                     if (hist == null)
                     {
-                        hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "error", "", false, "", AiUrl.CurSrv);
+                        hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "error", "", false, "", AiUrl.CurSrv, TotalSWPostTime, false);
                     }
                     await TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramImageUpload, cam, CurImg, hist, false, !cam.Action_queued, AiUrl.CurSrv, "Error"); //make TRIGGER
                 }
@@ -3506,7 +3462,7 @@ namespace AITool
                 cam.stats_skipped_images++;
                 cam.stats_skipped_images_session++;
                 Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.Name}':  '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", AiUrl.CurSrv, cam, CurImg);
-                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, cooldown was '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds.", "", false, "", AiUrl.CurSrv));
+                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, cooldown was '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds.", "", false, "", AiUrl.CurSrv, TotalSWPostTime, false));
             }
 
             ret.Success = (ret.Error == "");
@@ -3653,7 +3609,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"ERROR while loading the mask file {foundfile}: {Global.ExMsg(ex)}");
+                Log($"ERROR while loading the mask file {foundfile}: {ex.Msg()}");
                 ret.IsMasked = false;
                 ret.MaskType = MaskType.Image;
                 ret.Result = MaskResult.Error;
@@ -3735,14 +3691,19 @@ namespace AITool
                     else if (curpred != null)
                         preds.Add(curpred);
 
+                    List<ClsDeepstackDetection> detectionslst = new List<ClsDeepstackDetection>();
+
                     if (preds != null && preds.Count > 0)
                     {
                         string detections = "";
                         string confidences = "";
+
                         foreach (ClsPrediction pred in preds)
                         {
                             if (pred.Result != ResultType.Relevant && AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
                                 continue;
+
+                            detectionslst.Add(pred.ToDeepstackDetection());
 
                             confidences += pred.ConfidenceString() + ",";
                             detections += pred.ToString() + ",";
@@ -3757,6 +3718,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", preds[0].ConfidenceString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections.Trim(",".ToCharArray()));
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", confidences.Trim(",".ToCharArray()));
+
                     }
                     else
                     {
@@ -3771,6 +3733,31 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "Detection1, Detection2");
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123) + ", " + string.Format(AppSettings.Settings.DisplayPercentageFormat, 90.01));
                     }
+
+                    if (ret.IndexOf("[Summaryjson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        ret = Global.ReplaceCaseInsensitive(ret, "[SummaryJson]", "{\"summary\": \"" + Uri.EscapeUriString(hist.Detections) + "\"}");
+                    }
+
+                    if (ret.IndexOf("[Detectionsjson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        string jsonstr = CleanString(GetJSONString(detectionslst.ToArray(), Formatting.None));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[DetectionsJson]", "{\"detections\": \"" + jsonstr + "\"}");
+                    }
+
+                    if (ret.IndexOf("[alljson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        AllJson json = new AllJson();
+                        json.analysisDurationMS = hist.analysisDurationMS;
+                        json.fileName = hist.Filename;
+                        json.baseName = Path.GetFileName(hist.Filename);
+                        json.summary = hist.Detections;
+                        json.state = hist.state;
+                        json.predictions = detectionslst.ToArray();
+                        string jsonstr = CleanString(GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[alljson]", jsonstr);
+                    }
+
                 }
                 else if (cam != null)
                 {
@@ -3801,13 +3788,41 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123) + ", " + string.Format(AppSettings.Settings.DisplayPercentageFormat, 90.01));
                     }
 
+                    if (ret.IndexOf("[Summaryjson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        ret = Global.ReplaceCaseInsensitive(ret, "[SummaryJson]", "{\"summary\": \"Test Summary\"}");
+                    }
+
+                    if (ret.IndexOf("[Detectionsjson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        ret = Global.ReplaceCaseInsensitive(ret, "[DetectionsJson]", "{\"detections\": \"[]\"}");
+                    }
+
+
+                    if (ret.IndexOf("[alljson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        AllJson json = new AllJson();
+                        json.analysisDurationMS = 999;
+                        json.fileName = imgpath;
+                        json.baseName = Path.GetFileName(imgpath);
+                        if (IsNull(cam.last_detections_summary))
+                            cam.last_detections_summary = "Test Detection";
+                        json.summary = Uri.EscapeUriString(cam.last_detections_summary);
+                        json.state = "on";
+                        json.predictions = new List<ClsDeepstackDetection>().ToArray();
+                        string jsonstr = CleanString(GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[alljson]", jsonstr);
+                    }
+
+
+
                 }
 
             }
             catch (Exception ex)
             {
 
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
 
             return ret;
@@ -4040,7 +4055,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log(Global.ExMsg(ex));
+                Log(ex.Msg());
             }
 
             Camera cam = null;
@@ -4054,11 +4069,11 @@ namespace AITool
                 cam = cams[0];
                 if (cams.Count > 1)
                 {
-                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched ***");
-                    for (int i = 0; i < cams.Count; i++)
-                    {
-                        Log($"Debug:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");
-                    }
+                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' ***");
+                    //for (int i = 0; i < cams.Count; i++)
+                    //{
+                    //    Log($"Debug:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");
+                    //}
                 }
             }
 

@@ -371,7 +371,7 @@ public class LogFileWriter : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error: " + Global.ExMsg(ex));
+            Console.WriteLine("Error: " + ex.Msg());
         }
         finally
         {
@@ -462,7 +462,7 @@ public class IOFile : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine("IsFileInUse Error: " + Global.ExMsg(ex));
+            Console.WriteLine("IsFileInUse Error: " + ex.Msg());
             inUse = true;
         }
         finally

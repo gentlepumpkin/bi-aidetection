@@ -203,7 +203,7 @@ namespace AITool
         {
             try
             {
-                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
+                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];[SummaryJson];[DetectionsJson];[AllJson];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
                 List<string> varlist = Global.Split(vars, ";");
                 List<ClsProp> props = new List<ClsProp>();
                 foreach (var varitm in varlist)

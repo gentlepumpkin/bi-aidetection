@@ -167,7 +167,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
             }
         }
@@ -300,7 +300,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
                 returnInfo.Result = MaskResult.Error;
             }
 
@@ -412,7 +412,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
             }
         }
@@ -471,7 +471,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
             }
         }

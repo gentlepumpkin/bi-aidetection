@@ -55,7 +55,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
+                AITOOL.Log($"Error: {ex.Msg()}");
 
             }
 
@@ -248,7 +248,7 @@ namespace AITool
             catch (Exception)
             {
             }
-            // Log("Error: " & ExMsg(ex))
+            // Log("Error: " & ex.Msg())
             finally
             {
             }

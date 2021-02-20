@@ -32,6 +32,8 @@ namespace AITool
         public string Positions { get; set; } = "";
         public string PredictionsJSON { get; set; } = "";
         public string AIServer { get; set; } = "";
+        public long analysisDurationMS { get; set; } = 0;
+        public string state { get; set; } = "";
 
         public List<ClsPrediction> Predictions()
         {
@@ -40,9 +42,16 @@ namespace AITool
             {
                 //I think we were storing predictions as json either due to something with sqlite db or for compatibility with original AITOOL
                 ret = Global.SetJSONString<List<ClsPrediction>>(this.PredictionsJSON);
-                foreach (var pred in ret)
+                if (ret != null)
                 {
-                    pred.UpdatePercent();
+                    foreach (var pred in ret)
+                    {
+                        pred.UpdatePercent();
+                    }
+                }
+                else
+                {
+                    ret = new List<ClsPrediction>();
                 }
             }
             return ret;
@@ -121,7 +130,7 @@ namespace AITool
             return this;
 
         }
-        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions, bool Success, string PredictionsJSON, string AIServer)
+        public History Create(string filename, DateTime date, string camera, string objects_and_confidence, string object_positions, bool Success, string PredictionsJSON, string AIServer, long analysisDurationMS, bool Trigger)
         {
             this.Filename = filename.Trim().ToLower();
             this.Date = date;
@@ -130,6 +139,11 @@ namespace AITool
             this.Positions = object_positions.Trim();
             this.PredictionsJSON = PredictionsJSON;
             this.AIServer = AIServer;
+            this.analysisDurationMS = analysisDurationMS;
+            if (Trigger)
+                this.state = "on";
+            else
+                this.state = "off";
 
             this.Success = Success; //this.Detections.Contains("%") && !this.Detections.Contains(':');
 

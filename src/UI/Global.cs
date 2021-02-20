@@ -106,7 +106,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log($"Error: Could not delete file after {result.TimeMS} ms: {ExMsg(ex)}");
+                    Log($"Error: Could not delete file after {result.TimeMS} ms: {ex.Msg()}");
                 }
             }
             else
@@ -259,7 +259,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
                 return true;
             }
 
@@ -800,7 +800,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
                 return false;
             }
 
@@ -845,7 +845,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
                 return false;
             }
 
@@ -931,14 +931,15 @@ namespace AITool
 
             if (ip.AddressFamily == AddressFamily.InterNetworkV6)
             {
+
                 if (type == IPType.Path)
                 {
-                    return $"{ip.ToString().Replace(":", "-").Replace("%", "s")}.ipv6-literal.net";  //https://devblogs.microsoft.com/oldnewthing/20100915-00/?p=12863
+                    return $"{ip.ToString().Replace(":::", "::").Replace(":", "-").Replace("%", "s")}.ipv6-literal.net";  //https://devblogs.microsoft.com/oldnewthing/20100915-00/?p=12863
 
                 }
                 else if (type == IPType.URL)
                 {
-                    return $"[{ip.ToString()}]";  //add square brackets to make the URL valid
+                    return $"[{ip.ToString().Replace(":::", "::")}]";  //add square brackets to make the URL valid.  Fix where BlueIris returns 3 colons vs 2 correct.
                 }
             }
 
@@ -948,7 +949,7 @@ namespace AITool
 
         public static string IP2Str(string HostNameOrIPAddress, IPType type)
         {
-            IPAddress ip = GetIPAddressFromIPString(HostNameOrIPAddress);
+            IPAddress ip = GetIPAddressFromIPString(HostNameOrIPAddress.Replace(":::", "::"));
             if (ip == IPAddress.None)
                 return HostNameOrIPAddress;
 
@@ -962,10 +963,11 @@ namespace AITool
             //2600-6c64-6b7f-f8d8--1d4.ipv6-literal.net
             //2600:6c64:6b7f:f8d8::1d4
             //[2600:6c64:6b7f:f8d8::1d4]
+            //[2600:6c64:6b7f:f8d8:::1d4] - bad, 3 colons
             IP = IP.Trim("[] ".ToCharArray());
             if (IP.IndexOf(".ipv6-literal.net", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                IP = IP.Replace(".ipv6-literal.net", "").Replace("-", ":").Replace("s", "%").Trim();
+                IP = IP.Replace(".ipv6-literal.net", "").Replace(":::", "::").Replace("-", ":").Replace("s", "%").Trim();
             }
             return IP;
         }
@@ -1018,7 +1020,7 @@ namespace AITool
                 if (!DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
                     DNSErrCache.Add(HostNameOrIPAddress.ToLower(), ex.Message);
 
-                Log($"Error: Hostname '{HostNameOrIPAddress}': {ExMsg(ex)}");
+                Log($"Error: Hostname '{HostNameOrIPAddress}': {ex.Msg()}");
             }
 
             return ret;
@@ -1082,7 +1084,7 @@ namespace AITool
                 if (!DNSErrCache.ContainsKey(HostNameOrIPAddress.ToLower()))
                     DNSErrCache.Add(HostNameOrIPAddress.ToLower(), ex.Message);
 
-                Log($"Error: Hostname '{HostNameOrIPAddress}': {ExMsg(ex)}");
+                Log($"Error: Hostname '{HostNameOrIPAddress}': {ex.Msg()}");
             }
 
             return ret;
@@ -1188,7 +1190,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                ret.PingError = $"{ExMsg(ex)} (Site={HostOrIPToPing} Timeout was {TimeoutMS}ms)";
+                ret.PingError = $"{ex.Msg()} (Site={HostOrIPToPing} Timeout was {TimeoutMS}ms)";
                 Log($"Error: {ret.PingError}");
             }
             finally
@@ -1312,7 +1314,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log($"Error: Could not move {fi.FullName} to {newfile}: {Global.ExMsg(ex)}");
+                    Log($"Error: Could not move {fi.FullName} to {newfile}: {ex.Msg()}");
                 }
             }
 
@@ -1411,7 +1413,7 @@ namespace AITool
             }
             catch (Exception)
             {
-                //Log($"Error: {Global.ExMsg(ex)}");
+                //Log($"Error: {ex.Msg()}");
             }
 
             return ret;
@@ -1437,7 +1439,7 @@ namespace AITool
             }
             catch (Exception)
             {
-                //Log($"Error: {Global.ExMsg(ex)}");
+                //Log($"Error: {ex.Msg()}");
             }
 
             return ret;
@@ -1511,7 +1513,7 @@ namespace AITool
             }
             catch (Exception)
             {
-                //Log($"Error: {Global.ExMsg(ex)}");
+                //Log($"Error: {ex.Msg()}");
             }
 
             return RetVal;
@@ -1595,7 +1597,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
             finally
             {
@@ -2043,23 +2045,27 @@ namespace AITool
 
                     ret.TimeMS = SW.ElapsedMilliseconds;
 
-                    if (!ret.Success || ret.ErrRetryCnt > 2 || ret.TimeMS > 1000)
+                    if (!ret.Success)
                     {
                         ret.ResultString = $"Debug: LastFail={LastFailReason}, lock time: {ret.TimeMS}ms (max={MaxWaitMS}), {ret.ErrRetryCnt} retries (max={MaxErrRetryCnt}) with a {RetryDelayMS}ms retry delay: {Path.GetFileName(filename)}";
-                        Log(ret.ResultString);
+                        if (ret.ErrRetryCnt > 2 || ret.TimeMS > 1000)
+                        {
+                            Log(ret.ResultString);
+                        }
                     }
 
                 }
                 else
                 {
-                    Log("Error: File not found: " + filename);
+                    ret.ResultString = $"Error: File not found: " + filename;
+                    Log(ret.ResultString);
                 }
 
             }
             catch (Exception ex)
             {
                 ret.TimeMS = SW.ElapsedMilliseconds;
-                ret.ResultString = $"Error: {filename}: {Global.ExMsg(ex)}";
+                ret.ResultString = $"Error: {filename}: {ex.Msg()}";
                 Log(ret.ResultString);
             }
             finally
@@ -2236,74 +2242,26 @@ namespace AITool
             return base64;
         }
 
-        public static string ExMsg(Exception MyEx2, [CallerMemberName] string MemberName = null)
+
+
+        public static IEnumerable<Exception> GetAllExceptions(this Exception exception)
         {
-            //Gets the nested/inner exception if found, and also line and column of error - assuming PDB is in same folder
-            string msg = "";
-            try
+            yield return exception;
+
+            if (exception is AggregateException aggrEx)
             {
-                string typ = "";
-                Exception BaseEx = MyEx2.GetBaseException();
-                Exception InnerEx = MyEx2.InnerException;
-                if (InnerEx != null)
+                foreach (Exception innerEx in aggrEx.InnerExceptions.SelectMany(e => e.GetAllExceptions()))
                 {
-                    typ = InnerEx.GetType().Name;
-                    string Extra = GetExtraExceptionInfo(MyEx2);
-                    msg = InnerEx.Message + " [" + typ + "] " + Extra;
-                }
-                else if (BaseEx != null)
-                {
-                    typ = BaseEx.GetType().Name;
-                    string Extra = GetExtraExceptionInfo(MyEx2);
-                    msg = BaseEx.Message + " [" + typ + "] " + Extra;
-                }
-                else
-                {
-                    typ = MyEx2.GetType().Name;
-                    string Extra = GetExtraExceptionInfo(MyEx2);
-                    msg = MyEx2.Message + " [" + typ + "] " + Extra;
-                }
-
-                //ExtraInfo = $"Mod: {LastMod} Line:{Frames(Frames.Count - 1).GetFileLineNumber}:{Frames(Frames.Count - 1).GetFileColumnNumber}"
-
-                if (msg.IndexOf(MemberName, StringComparison.OrdinalIgnoreCase) == -1)
-                {
-                    msg = $"{msg} ({MemberName})";
-                }
-
-            }
-            catch (Exception)
-            {
-            }
-
-            msg = msg.Replace("\r\n", " | ");
-            return msg;
-
-        }
-
-        public static string GetExtraExceptionInfo(Exception ThisEX)
-        {
-            string ExtraInfo = "";
-            try
-            {
-                //Dim st As StackTrace = New StackTrace(ThisEX, True)
-                if (ThisEX.StackTrace != null)
-                {
-                    string ST = ThisEX.StackTrace;
-                    string[] SpltStr = new string[1] { " at " };
-                    string[] Splt = ST.Split(SpltStr, StringSplitOptions.None);
-                    string Lst = Splt[Splt.Length - 1].Replace(".MoveNext()", "").Trim();
-                    Lst = GetWordBetween(Lst, "", " in ");
-                    string[] Splt2 = Lst.Split('.');
-                    string LastMod = Splt2[Splt2.Length - 1].Trim();
-                    StackFrame[] Frames = (new StackTrace(ThisEX, true)).GetFrames();
-
-
-                    ExtraInfo = $"Mod: {LastMod} Line:{Frames[Frames.Length - 1].GetFileLineNumber()}";
+                    yield return innerEx;
                 }
             }
-            catch { }
-            return ExtraInfo;
+            else if (exception.InnerException != null)
+            {
+                foreach (Exception innerEx in exception.InnerException.GetAllExceptions())
+                {
+                    yield return innerEx;
+                }
+            }
         }
 
         public static void Startup(bool Enable)
@@ -2488,7 +2446,7 @@ namespace AITool
             catch (Exception ex)
             {
                 Ret = "";
-                Log($"Error: While writing '{filePath}', got: " + Global.ExMsg(ex));
+                Log($"Error: While writing '{filePath}', got: " + ex.Msg());
             }
             finally
             {
@@ -2527,7 +2485,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: While reading '{filePath}', got: " + Global.ExMsg(ex));
+                Log($"Error: While reading '{filePath}', got: " + ex.Msg());
             }
             finally
             {
@@ -2567,7 +2525,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: " + Global.ExMsg(ex));
+                Log($"Error: " + ex.Msg());
             }
             finally
             {
@@ -2577,7 +2535,7 @@ namespace AITool
 
         }
 
-        public static string GetJSONString(object cls2)
+        public static string GetJSONString(object cls2, Newtonsoft.Json.Formatting formatting = Formatting.Indented, Newtonsoft.Json.TypeNameHandling handling = TypeNameHandling.Objects, PreserveReferencesHandling reference = PreserveReferencesHandling.Objects)
         {
 
             string Ret = "";
@@ -2585,11 +2543,11 @@ namespace AITool
             {
 
                 JsonSerializerSettings jset = new JsonSerializerSettings { };
-                jset.TypeNameHandling = TypeNameHandling.All;
-                jset.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                jset.TypeNameHandling = handling;
+                jset.PreserveReferencesHandling = reference;
                 jset.ContractResolver = Global.JSONContractResolver;
 
-                string contents2 = JsonConvert.SerializeObject(cls2, Formatting.Indented, jset);
+                string contents2 = JsonConvert.SerializeObject(cls2, formatting, jset);
                 if (jset.Error == null)
                 {
 
@@ -2603,7 +2561,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: " + Global.ExMsg(ex));
+                Log($"Error: " + ex.Msg());
             }
             finally
             {
@@ -2631,7 +2589,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: While converting json string '{JSONString}', got: " + Global.ExMsg(ex));
+                Log($"Error: While converting json string '{JSONString}', got: " + ex.Msg());
             }
             finally
             {
@@ -2675,7 +2633,7 @@ namespace AITool
             }
             catch (System.Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return dt;
@@ -2712,7 +2670,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return OutDate;
@@ -2934,7 +2892,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
             return ret;
 
@@ -2971,7 +2929,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
             return ret;
 
@@ -3174,7 +3132,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return Ret;
@@ -3346,7 +3304,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: Could not get command line: " + Global.ExMsg(ex));
+                Log("Error: Could not get command line: " + ex.Msg());
             }
             return Ret;
         }
@@ -3506,7 +3464,7 @@ namespace AITool
                             }
                             catch (Exception ex)
                             {
-                                Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
+                                Log("Error: While getting file list, received error: " + ex.Msg());
                             }
                         }
 
@@ -3525,7 +3483,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: While getting file list, received error: " + Global.ExMsg(ex));
+                Log("Error: While getting file list, received error: " + ex.Msg());
             }
             finally
             {

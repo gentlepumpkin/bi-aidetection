@@ -24,6 +24,7 @@ namespace AITool
         public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
         public ThreadSafe.Integer RetryCount { get; set; } = new ThreadSafe.Integer(0);
         public string ResultMessage { get; set; } = "";
+        public string LastError { get; set; } = "";
         public int Width { get; set; } = 0;
         public int Height { get; set; } = 0;
         public float DPI { get; set; } = 0;
@@ -44,7 +45,7 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = false;
-            
+
             int bufferSize = 1024 * 1024;
             string copydir = "";
 
@@ -55,7 +56,7 @@ namespace AITool
                     AITOOL.Log($"Error: Must specify a full path: {outputFilePath}");
                     return false;
                 }
-                
+
                 if (this.IsValid())  //loads into memory if not already loaded
                 {
 
@@ -111,7 +112,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                AITOOL.Log($"Error: Copying to {outputFilePath}: {Global.ExMsg(ex)}");
+                AITOOL.Log($"Error: Copying to {outputFilePath}: {ex.Msg()}");
             }
 
             return ret;
@@ -163,7 +164,6 @@ namespace AITool
             //since having a lot of trouble with image access problems, try to wait for image to become available, validate the image and load
             //a single time rather than multiple
             Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
-            string LastError = "";
             this._valid = false;
             bool validate = !this._Temp;
 
@@ -202,9 +202,9 @@ namespace AITool
                                 using (FileStream fileStream = new FileStream(result.Handle, FileAccess.Read))
                                 {
 
-                                    using System.Drawing.Image img = System.Drawing.Image.FromStream(fileStream,true,validate);
-                                   
-                                    this._valid = img !=null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg) && img.Width > 0 && img.Height > 0;
+                                    using System.Drawing.Image img = System.Drawing.Image.FromStream(fileStream, true, validate);
+
+                                    this._valid = img != null && img.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg) && img.Width > 0 && img.Height > 0;
 
                                     this.FileLoadMS = sw.ElapsedMilliseconds;
 
@@ -231,6 +231,7 @@ namespace AITool
                                             this.ImageByteArray = ms.ToArray();
                                             this.FileSize = this.ImageByteArray.Length;
                                             this.FileLoadMS = sw.ElapsedMilliseconds;
+                                            this._valid = true;
                                             AITOOL.Log($"Debug: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
                                         }
                                         break;
@@ -241,9 +242,9 @@ namespace AITool
                             catch (Exception ex)
                             {
                                 this._valid = false;
-                                LastError = $"Error: Image is corrupt. LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}: {Path.GetFileName(this.image_path)} - {Global.ExMsg(ex)}";
+                                LastError = $"Error: Image is corrupt. LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}: {Path.GetFileName(this.image_path)} - {ex.Msg()}";
                             }
-                            finally 
+                            finally
                             {
                                 this._loaded = true;
 
@@ -271,13 +272,13 @@ namespace AITool
                 }
                 else
                 {
-                    //AITOOL.Log("Error: Tried to load the image too soon?");
+                    LastError = "Error: File has been deleted: " + this.image_path;
                 }
             }
             catch (Exception ex)
             {
 
-                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
+                LastError = $"Error: {ex.Msg()}";
             }
             finally
             {

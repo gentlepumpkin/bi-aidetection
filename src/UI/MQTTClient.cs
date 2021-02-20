@@ -48,7 +48,7 @@ namespace AITool
                     catch (Exception ex)
                     {
                         //dont throw ERROR in the log if fail to disconnect
-                        Log($"Debug: MQTT: Could not disconnect from server, got: {Global.ExMsg(ex)}");
+                        Log($"Debug: MQTT: Could not disconnect from server, got: {ex.Msg()}");
                     }
                 }
                 else
@@ -80,7 +80,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
         }
 
@@ -309,7 +309,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: {Global.ExMsg(ex)}");
+                Log($"Error: {ex.Msg()}");
             }
             return ret;
         }
@@ -428,7 +428,7 @@ namespace AITool
                                 catch (Exception ex)
                                 {
 
-                                    Log($"Error: MQTT: Unexpected Problem: Topic '{this.LastTopic}' Payload '{this.LastPayload}': " + Global.ExMsg(ex));
+                                    Log($"Error: MQTT: Unexpected Problem: Topic '{this.LastTopic}' Payload '{this.LastPayload}': " + ex.Msg());
                                 }
                                 finally
                                 {

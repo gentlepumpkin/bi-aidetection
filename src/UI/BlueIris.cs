@@ -313,19 +313,19 @@ namespace AITool
             {
                 if (ex.Message.IndexOf("The network path was not found", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    Log($"Error: The remote machine needs the 'Remote Registry' service enabled (automatic) + started on '{ServernameOrIP}': " + Global.ExMsg(ex));
+                    Log($"Error: The remote machine needs the 'Remote Registry' service enabled (automatic) + started on '{ServernameOrIP}': " + ex.Msg());
                     this.Result = BlueIrisResult.NeedsRemoteRegistryService;
                 }
                 //System.UnauthorizedAccessException: 'Attempted to perform an unauthorized operation.'
                 else if (ex.Message.IndexOf("unauthorized operation", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     string userinfo = Environment.GetEnvironmentVariable("USERDOMAIN") + @"\" + Environment.GetEnvironmentVariable("USERNAME");
-                    Log($"Error: Give the current user ({userinfo}) access to '{ServernameOrIP}': " + Global.ExMsg(ex));
+                    Log($"Error: Give the current user ({userinfo}) access to '{ServernameOrIP}': " + ex.Msg());
                     this.Result = BlueIrisResult.NeedsPermission;
                 }
                 else
                 {
-                    Log("Error: Got error while reading BlueIris registry: " + Global.ExMsg(ex));
+                    Log("Error: Got error while reading BlueIris registry: " + ex.Msg());
                 }
                 this.Result = BlueIrisResult.Unknown;
             }

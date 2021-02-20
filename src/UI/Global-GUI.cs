@@ -156,7 +156,7 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
                 finally
                 {
@@ -302,7 +302,7 @@ namespace AITool
 
                     colcnt = colcnt + 1;
                     OLVColumn cl = new OLVColumn();
-                    if (ImageList != null)
+                    if (FOLV.SmallImageList != null)
                     {
 
                         if (string.Equals(FOLV.Name, "folv_history", StringComparison.OrdinalIgnoreCase))
@@ -333,6 +333,13 @@ namespace AITool
                             if (colcnt == 1)
                             {
                                 cl.ImageGetter = GetImageForAIServerList;
+                            }
+                        }
+                        else if (string.Equals(FOLV.Name, "FOLV_Cameras", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (colcnt == 1)
+                            {
+                                cl.ImageGetter = GetImageForCameraList;
                             }
                         }
                         //else if (FOLV.Name == "FOLV_BlocklistViewer" && ei.Name == "RegionalInternetRegistry")
@@ -528,7 +535,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return Ret;
@@ -583,7 +590,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return ret;
@@ -932,6 +939,11 @@ namespace AITool
             }
 
             return RetKey;
+
+        }
+        public static string GetImageForCameraList(object row)
+        {
+            return "camera-webcam.ico";
 
         }
         public static string GetImageForHistoryListPerson(object row)

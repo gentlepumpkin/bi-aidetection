@@ -267,8 +267,8 @@ namespace NPushover
             catch (Exception ex)
             {
 
-                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
-                ret.Errors = new string[] { Global.ExMsg(ex) };
+                AITOOL.Log($"Error: {ex.Msg()}");
+                ret.Errors = new string[] { ex.Msg() };
             }
 
             return ret;
@@ -321,8 +321,8 @@ namespace NPushover
             }
             catch (Exception ex)
             {
-                AITOOL.Log($"Error: {Global.ExMsg(ex)}");
-                ret.Errors = new string[] { Global.ExMsg(ex) };
+                AITOOL.Log($"Error: {ex.Msg()}");
+                ret.Errors = new string[] { ex.Msg() };
             }
 
             return ret;

@@ -218,7 +218,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
             return "";

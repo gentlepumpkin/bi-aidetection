@@ -261,7 +261,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                Log("Error: Could not save settings: " + ex.Msg());
             }
 
             if (!Ret)
@@ -287,7 +287,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                    Log("Error: Could not save settings: " + ex.Msg());
                 }
             }
 
@@ -332,7 +332,7 @@ namespace AITool
                             }
                             else
                             {
-                                Log("Error: Settings file contains null bytes, corrupt: (size={fi.Length} bytes)" + Filename);
+                                Log($"Error: Settings file contains null bytes, corrupt: (size={fi.Length} bytes): " + Filename);
                             }
                         }
                         else
@@ -467,7 +467,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
 
         }
@@ -778,7 +778,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log("Error: Could not save settings: " + Global.ExMsg(ex));
+                Log("Error: Could not save settings: " + ex.Msg());
             }
             finally
             {

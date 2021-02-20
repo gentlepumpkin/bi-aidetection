@@ -182,7 +182,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + Global.ExMsg(ex));
+                Console.WriteLine("Error: " + ex.Msg());
             }
 
         }
@@ -643,7 +643,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    this.Log($"Error: {Global.ExMsg(ex)}");
+                    this.Log($"Error: {ex.Msg()}");
                 }
 
 

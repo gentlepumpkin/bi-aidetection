@@ -70,7 +70,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
             }
             finally
             {
@@ -140,7 +140,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex), "None", "None", "None");
+                Log("Error: " + ex.Msg(), "None", "None", "None");
 
                 return false;
             }
@@ -163,7 +163,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log("Error: " + Global.ExMsg(ex));
+                Log("Error: " + ex.Msg());
 
             }
         }
@@ -234,7 +234,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: Flags='{sflags}', Error=" + Global.ExMsg(ex), "None", "None", "None");
+                Log($"Error: Flags='{sflags}', Error=" + ex.Msg(), "None", "None", "None");
             }
 
 
@@ -295,7 +295,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + Global.ExMsg(ex), hist.AIServer, hist.Camera, hist.Filename);
+                        Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: {hist.Filename}: " + ex.Msg(), hist.AIServer, hist.Camera, hist.Filename);
                     }
                 }
 
@@ -329,7 +329,7 @@ namespace AITool
             this.HistoryDic.TryGetValue(Filename.ToLower(), out hist);
 
             if (hist == null)
-                hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "", "");
+                hist = new History().Create(Filename, DateTime.Now, "unknown", "", "", false, "", "", 0, false);
 
             DBQueueHistoryItem ditm = new DBQueueHistoryItem(hist, false);
 
@@ -378,7 +378,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log($"Error: File='{hist.Filename}' - " + Global.ExMsg(ex), hist.AIServer, hist.Camera, hist.Filename);
+                    Log($"Error: File='{hist.Filename}' - " + ex.Msg(), hist.AIServer, hist.Camera, hist.Filename);
                 }
 
                 if (ret || dret > 0)
@@ -504,7 +504,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
 
             }
@@ -690,7 +690,7 @@ namespace AITool
                 catch (Exception ex)
                 {
 
-                    Log("Error: " + Global.ExMsg(ex));
+                    Log("Error: " + ex.Msg());
                 }
 
             }
@@ -803,7 +803,7 @@ namespace AITool
                                 catch (Exception ex)
                                 {
                                     failedcnt++;
-                                    Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{this.Filename}' - " + Global.ExMsg(ex));
+                                    Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{this.Filename}' - " + ex.Msg());
                                 }
                                 rcnt = rcnt + rowsdeleted;
                             }

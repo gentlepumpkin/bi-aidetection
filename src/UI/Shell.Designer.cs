@@ -318,6 +318,7 @@
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.CameraImageList = new System.Windows.Forms.ImageList(this.components);
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -1243,7 +1244,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(730, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(736, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1256,7 +1257,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(725, 388);
+            this.pictureBox1.Size = new System.Drawing.Size(731, 388);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -1297,6 +1298,7 @@
             // 
             this.FOLV_Cameras.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FOLV_Cameras.HideSelection = false;
+            this.FOLV_Cameras.LargeImageList = this.CameraImageList;
             this.FOLV_Cameras.Location = new System.Drawing.Point(0, 0);
             this.FOLV_Cameras.Name = "FOLV_Cameras";
             this.FOLV_Cameras.ShowGroups = false;
@@ -1305,6 +1307,7 @@
             this.FOLV_Cameras.UseCompatibleStateImageBehavior = false;
             this.FOLV_Cameras.View = System.Windows.Forms.View.Details;
             this.FOLV_Cameras.VirtualMode = true;
+            this.FOLV_Cameras.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.FOLV_Cameras_FormatRow);
             this.FOLV_Cameras.SelectionChanged += new System.EventHandler(this.FOLV_Cameras_SelectionChanged);
             // 
             // tableLayoutPanel6
@@ -1363,11 +1366,15 @@
             // 
             this.btnCameraAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnCameraAdd.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCameraAdd.Image = global::AITool.Properties.Resources.camera_webcam_add;
+            this.btnCameraAdd.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnCameraAdd.Location = new System.Drawing.Point(41, 3);
             this.btnCameraAdd.Name = "btnCameraAdd";
             this.btnCameraAdd.Size = new System.Drawing.Size(70, 30);
             this.btnCameraAdd.TabIndex = 31;
             this.btnCameraAdd.Text = "Add";
+            this.btnCameraAdd.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnCameraAdd.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnCameraAdd.UseVisualStyleBackColor = true;
             this.btnCameraAdd.Click += new System.EventHandler(this.btnCameraAdd_Click);
             // 
@@ -1375,11 +1382,15 @@
             // 
             this.btnCameraDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnCameraDel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCameraDel.Image = global::AITool.Properties.Resources.camera_webcam_delete;
+            this.btnCameraDel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnCameraDel.Location = new System.Drawing.Point(232, 3);
             this.btnCameraDel.Name = "btnCameraDel";
             this.btnCameraDel.Size = new System.Drawing.Size(70, 30);
             this.btnCameraDel.TabIndex = 32;
             this.btnCameraDel.Text = "Delete";
+            this.btnCameraDel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnCameraDel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnCameraDel.UseVisualStyleBackColor = true;
             this.btnCameraDel.Click += new System.EventHandler(this.btnCameraDel_Click);
             // 
@@ -2703,7 +2714,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 57F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(156, 258);
@@ -2729,7 +2740,7 @@
             // 
             this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbMinimizeToTray.AutoSize = true;
-            this.cbMinimizeToTray.Location = new System.Drawing.Point(217, 13);
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(216, 13);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
             this.cbMinimizeToTray.TabIndex = 16;
@@ -3838,6 +3849,14 @@
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
             // 
+            // CameraImageList
+            // 
+            this.CameraImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("CameraImageList.ImageStream")));
+            this.CameraImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.CameraImageList.Images.SetKeyName(0, "camera-webcam.ico");
+            this.CameraImageList.Images.SetKeyName(1, "camera-webcam_add.ico");
+            this.CameraImageList.Images.SetKeyName(2, "camera-webcam_delete.ico");
+            // 
             // Shell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -4228,6 +4247,7 @@
         private System.Windows.Forms.Button BtnPredictionSize;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private BrightIdeasSoftware.FastObjectListView FOLV_Cameras;
+        private System.Windows.Forms.ImageList CameraImageList;
     }
 }
 
