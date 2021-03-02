@@ -387,7 +387,7 @@ namespace AITool
 
                 if (this.LastLogItm.Detail.TrimStart().StartsWith("{"))
                 {
-                    this.LastLogItm.Color = Global.GetWordBetween(this.LastLogItm.Detail, "{", "}");
+                    this.LastLogItm.Color = this.LastLogItm.Detail.GetWord("{", "}");
                     //strip out the color definition
                     this.LastLogItm.Detail = Global.ReplaceCaseInsensitive(this.LastLogItm.Detail, "{" + this.LastLogItm.Color + "}", "");
                 }

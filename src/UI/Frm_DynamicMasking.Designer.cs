@@ -53,10 +53,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.num_max_unused = new System.Windows.Forms.NumericUpDown();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.tb_objects = new System.Windows.Forms.TextBox();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.lbl_objects = new System.Windows.Forms.Label();
             this.tableLayoutAdvancedMasking.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.num_history_mins)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_mask_create)).BeginInit();
@@ -436,17 +436,6 @@
             this.groupBox1.TabIndex = 21;
             this.groupBox1.TabStop = false;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label1.Location = new System.Drawing.Point(13, 261);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(50, 15);
-            this.label1.TabIndex = 21;
-            this.label1.Text = "Objects:";
-            // 
             // cb_enabled
             // 
             this.cb_enabled.AutoSize = true;
@@ -459,18 +448,26 @@
             this.cb_enabled.Text = "Enabled";
             this.cb_enabled.UseVisualStyleBackColor = true;
             // 
-            // tb_objects
+            // linkLabel1
             // 
-            this.tb_objects.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_objects.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.tb_objects.Location = new System.Drawing.Point(107, 258);
-            this.tb_objects.Margin = new System.Windows.Forms.Padding(4);
-            this.tb_objects.Name = "tb_objects";
-            this.tb_objects.Size = new System.Drawing.Size(690, 23);
-            this.tb_objects.TabIndex = 6;
-            this.toolTip1.SetToolTip(this.tb_objects, "Leave empty for all object types, or enter a comma seperated list of objects to a" +
-        "pply dynamic masking to. \r\nIE person, bear, Tasseled Wobbegong, Pink Fairy Armad" +
-        "illo, etc.");
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(9, 254);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(103, 15);
+            this.linkLabel1.TabIndex = 22;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "Triggering Objects";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
+            // lbl_objects
+            // 
+            this.lbl_objects.AutoSize = true;
+            this.lbl_objects.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_objects.Location = new System.Drawing.Point(118, 256);
+            this.lbl_objects.Name = "lbl_objects";
+            this.lbl_objects.Size = new System.Drawing.Size(10, 13);
+            this.lbl_objects.TabIndex = 23;
+            this.lbl_objects.Text = ".";
             // 
             // Frm_DynamicMasking
             // 
@@ -478,8 +475,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(807, 332);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.tb_objects);
+            this.Controls.Add(this.lbl_objects);
+            this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.cb_enabled);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
@@ -526,8 +523,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         public System.Windows.Forms.CheckBox cb_enabled;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label label1;
-        public System.Windows.Forms.TextBox tb_objects;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Button btnAdvanced;
@@ -538,5 +533,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         public System.Windows.Forms.NumericUpDown num_max_unused;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        public System.Windows.Forms.Label lbl_objects;
     }
 }

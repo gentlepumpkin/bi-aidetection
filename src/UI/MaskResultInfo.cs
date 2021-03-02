@@ -34,7 +34,7 @@
         public MaskResult Result = MaskResult.Unknown;
         public int ImagePointsOutsideMask = 0;
         public int DynamicThresholdCount = 0;
-        public float PercentMatch = 0;
+        public double PercentMatch = 0;
 
         public void SetResults(MaskType type, MaskResult result)
         {

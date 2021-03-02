@@ -132,7 +132,7 @@ namespace AITool
                         if (pred != null)
                         {
                             this.showObject(e, pred); //call rectangle drawing method, calls appropriate detection text
-                            pictureBox2.Image = cropImage(OriginalBMP, Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax));
+                            pictureBox2.Image = cropImage(OriginalBMP, Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt()));
 
                         }
 
@@ -179,54 +179,54 @@ namespace AITool
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
-                    float imgWidth = this.pictureBox1.Image.Width;
-                    float imgHeight = this.pictureBox1.Image.Height;
-                    float boxWidth = this.pictureBox1.Width;
-                    float boxHeight = this.pictureBox1.Height;
-                    float clnWidth = this.pictureBox1.ClientSize.Width;
-                    float clnHeight = this.pictureBox1.ClientSize.Height;
-                    float rctWidth = this.pictureBox1.ClientRectangle.Width;
-                    float rctHeight = this.pictureBox1.ClientRectangle.Height;
+                    double imgWidth = this.pictureBox1.Image.Width;
+                    double imgHeight = this.pictureBox1.Image.Height;
+                    double boxWidth = this.pictureBox1.Width;
+                    double boxHeight = this.pictureBox1.Height;
+                    double clnWidth = this.pictureBox1.ClientSize.Width;
+                    double clnHeight = this.pictureBox1.ClientSize.Height;
+                    double rctWidth = this.pictureBox1.ClientRectangle.Width;
+                    double rctHeight = this.pictureBox1.ClientRectangle.Height;
 
                     //these variables store the padding between image border and picturebox border
-                    int absX = 0;
-                    int absY = 0;
+                    double absX = 0;
+                    double absY = 0;
 
                     //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                    float scale = 1;
+                    double scale = 1;
 
 
                     //Comparing the aspect ratio of both the control and the image itself.
                     if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                     {
                         scale = boxWidth / imgWidth; //get scale factor
-                        absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
                     }
                     else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
                     {
                         scale = boxHeight / imgHeight; //get scale factor
-                        absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
                     //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                    int xmin = (int)(scale * pred.XMin) + absX;
-                    int xmax = (int)(scale * pred.XMax) + absX;
-                    int ymin = (int)(scale * pred.YMin) + absY;
-                    int ymax = (int)(scale * pred.YMax) + absY;
+                    double xmin = (scale * pred.XMin) + absX;
+                    double xmax = (scale * pred.XMax) + absX;
+                    double ymin = (scale * pred.YMin) + absY;
+                    double ymax = (scale * pred.YMax) + absY;
 
-                    int sclWidth = xmax - xmin;
-                    int sclHeight = ymax - ymin;
+                    double sclWidth = xmax - xmin;
+                    double sclHeight = ymax - ymin;
 
-                    int sclxmax = (int)boxWidth - (absX * 2);
-                    int sclymax = (int)boxHeight - (absY * 2);
-                    int sclxmin = absX;
-                    int sclymin = absY;
+                    double sclxmax = boxWidth - (absX * 2);
+                    double sclymax = boxHeight - (absY * 2);
+                    double sclxmin = absX;
+                    double sclymin = absY;
 
                     //3. paint rectangle
-                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin,
-                                                                                 ymin,
-                                                                                 sclWidth,
-                                                                                 sclHeight);
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
+                                                                                 ymin.ToInt(),
+                                                                                 sclWidth.ToInt(),
+                                                                                 sclHeight.ToInt());
 
                     pictureBox2.Image = cropImage(OriginalBMP, pred.GetRectangle());
 
@@ -250,7 +250,7 @@ namespace AITool
                     ///testing=================================================
 
                     //we need this since people can change the border width in the json file
-                    int halfbrd = BorderWidth / 2;
+                    double halfbrd = BorderWidth / 2;
 
 
                     Brush brush = new SolidBrush(color); //sets background rectangle color
@@ -260,8 +260,8 @@ namespace AITool
 
                     //object name text below rectangle
 
-                    int x = xmin - halfbrd;
-                    int y = ymax + halfbrd;
+                    double x = xmin - halfbrd;
+                    double y = ymax + halfbrd;
 
                     //just for debugging:
                     //int timgWidth = (int)imgWidth;
@@ -274,11 +274,11 @@ namespace AITool
 
 
                     //adjust the x / width label so it doesnt go off screen
-                    int EndX = x + (int)TextSize.Width;
+                    double EndX = x + TextSize.Width;
                     if (EndX > sclxmax)
                     {
                         //int diffx = x - sclxmax;
-                        x = xmax - (int)TextSize.Width + halfbrd;
+                        x = xmax - TextSize.Width + halfbrd;
                     }
 
                     if (x < sclxmin)
@@ -288,26 +288,26 @@ namespace AITool
                         x = 0;
 
                     //adjust the y / height label so it doesnt go off screen
-                    int EndY = y + (int)TextSize.Height;
+                    double EndY = y + TextSize.Height;
                     if (EndY > sclymax)
                     {
                         //float diffy = EndY - sclymax;
-                        y = ymax - (int)TextSize.Height - halfbrd;
+                        y = ymax - TextSize.Height - halfbrd;
                     }
 
                     if (y < 0)
                         y = 0;
 
 
-                    rect = new System.Drawing.Rectangle(x,
-                                                        y,
-                                                        (int)boxWidth,
-                                                        (int)boxHeight); //sets bounding box for drawn text
+                    rect = new System.Drawing.Rectangle(x.ToInt(),
+                                                        y.ToInt(),
+                                                        boxWidth.ToInt(),
+                                                        boxHeight.ToInt()); //sets bounding box for drawn text
 
 
                     e.Graphics.FillRectangle(brush,
-                                             x,
-                                             y,
+                                             x.ToInt(),
+                                             y.ToInt(),
                                              TextSize.Width,
                                              TextSize.Height); //draw grey background rectangle for detection text
 

@@ -13,6 +13,8 @@ namespace AITool
         public string summary { get; set; } = "";
         public string state { get; set; } = "";
         public long analysisDurationMS { get; set; } = 0;
+        public DateTime Time { get; set; } = DateTime.MinValue;
+        public string Camera { get; set; } = "";
 
         public ClsDeepstackDetection[] predictions { get; set; }
 

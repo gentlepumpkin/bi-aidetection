@@ -94,25 +94,37 @@ namespace AITool
         public string Prefix { get; set; } = "";
         public string BICamName { get; set; } = "";
         public string MaskFileName { get; set; } = "";
-        public string triggering_objects_as_string { get; set; } = "person, bear, elephant, car, truck, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+        public string triggering_objects_as_string { get; set; } = "person, face, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+
         public string additional_triggering_objects_as_string { get; set; } = "SUV, VAN, Pickup Truck, Meat Popsicle";
+        public ClsRelevantObjectManager DefaultTriggeringObjects { get; set; } = null;
+        public ClsRelevantObjectManager TelegramTriggeringObjects { get; set; } = null;
+        public ClsRelevantObjectManager PushoverTriggeringObjects { get; set; } = null;
+
+        public ClsRelevantObjectManager MQTTTriggeringObjects { get; set; } = null;
         public string[] triggering_objects { get; set; } = new string[0];
+
         public string trigger_urls_as_string { get; set; } = "";
         public string[] trigger_urls { get; set; } = new string[0];
         public string cancel_urls_as_string { get; set; } = "";
         public string[] cancel_urls { get; set; } = new string[0];
         //public List<CameraTriggerAction> trigger_action_list { get; set; } = new List<CameraTriggerAction>();
         public bool trigger_url_cancels { get; set; } = false;
+        public bool Action_TriggerURL_Enabled { get; set; } = false;
+        public bool Action_CancelURL_Enabled { get; set; } = false;
+        public bool UpdatedURLs = false;
+
         public bool telegram_enabled { get; set; } = false;
         public string telegram_caption { get; set; } = "[camera] - [SummaryNonEscaped]";  //cam.name + " - " + cam.last_detections_summary
         public string telegram_triggering_objects { get; set; } = "";
+
         public string telegram_chatid { get; set; } = "";
         public string telegram_active_time_range { get; set; } = "00:00:00-23:59:59";
         public bool enabled { get; set; } = true;
         public double cooldown_time { get; set; } = 0;
         public int cooldown_time_seconds { get; set; } = 5;
         public int sound_cooldown_time_seconds { get; set; } = 5;
-        public int threshold_lower { get; set; } = 1;
+        public int threshold_lower { get; set; } = 30;
         public int threshold_upper { get; set; } = 100;
 
         //watch folder for each camera
@@ -146,6 +158,7 @@ namespace AITool
         public string Action_pushover_message { get; set; } = "[SummaryNonEscaped]";
         public string Action_pushover_device { get; set; } = "";
         public string Action_pushover_triggering_objects { get; set; } = "";
+
         public string Action_pushover_Priority { get; set; } = "Normal";
         public string Action_pushover_Sound { get; set; } = "pushover";
         public int Action_pushover_retry_seconds { get; set; } = 60;
@@ -186,14 +199,16 @@ namespace AITool
         //Keep a list of image resolutions and the last image file name with that resolution.  This will help us keep track of which image mask to use
         public List<ImageResItem> ImageResolutions { get; set; } = new List<ImageResItem>();
 
-        public int PredSizeMinPercentOfImage { get; set; } = 1;   //prediction must be at least this % of the image
-        public int PredSizeMaxPercentOfImage { get; set; } = 95;
-        public int PredSizeMinHeight { get; set; } = 0;
-        public int PredSizeMinWidth { get; set; } = 0;
-        public int PredSizeMaxHeight { get; set; } = 0;
-        public int PredSizeMaxWidth { get; set; } = 0;
+        public double PredSizeMinPercentOfImage { get; set; } = 0;   //prediction must be at least this % of the image
+        public double PredSizeMaxPercentOfImage { get; set; } = 95;
+        public double PredSizeMinHeight { get; set; } = 0;
+        public double PredSizeMinWidth { get; set; } = 0;
+        public double PredSizeMaxHeight { get; set; } = 0;
+        public double PredSizeMaxWidth { get; set; } = 0;
 
-        public int MergePredictionsMinMatchPercent { get; set; } = 85;   //when combining predictions from multiple sources (deepstack/aws for example) the two objects have to match at least this much to be considered the same
+        public double MergePredictionsMinMatchPercent { get; set; } = 85;   //when combining predictions from multiple sources (deepstack/aws for example) the two objects have to match at least this much to be considered the same
+
+        public int LastJPGCleanDay { get; set; } = 0;
 
         [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
@@ -208,13 +223,176 @@ namespace AITool
         [JsonIgnore]
         public List<string> last_details { get; set; } = new List<string>(); //stores objects that were detected last
         [JsonIgnore]
-        public List<float> last_confidences { get; set; } = new List<float>(); //stores last objects confidences
+        public List<double> last_confidences { get; set; } = new List<double>(); //stores last objects confidences
         [JsonIgnore]
         public List<string> last_positions { get; set; } = new List<string>(); //stores last objects positions
         [JsonIgnore]
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
         private object CamLock { get; set; } = new object();
+
+        [JsonConstructor]
+        public Camera() { }
+
+        public Camera(string Name = "")
+        {
+
+            this.Name = Name;
+            this.BICamName = Name;
+            this.Prefix = Name;
+            this.UpdateCamera();
+        }
+
+        public void UpdateCamera()
+        {
+            lock (CamLock)
+            {
+                this.UpdateTriggeringObjects();
+
+                if (string.IsNullOrEmpty(this.DetectionDisplayFormat))
+                    this.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
+
+                if (string.IsNullOrEmpty(this.BICamName))
+                    this.BICamName = this.Name;
+
+                if (string.IsNullOrEmpty(this.MaskFileName))
+                    this.MaskFileName = $"{this.Name}.bmp";
+
+                if (this.ImageResolutions.Count == 0)
+                    this.ScanImages(10, 500, -1);//run a quick scan to get resolutions
+
+                if (this.cooldown_time > -1)
+                {
+                    this.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(this.cooldown_time).TotalSeconds, 0));
+                    this.cooldown_time = -1;
+                }
+
+                if (this.maskManager == null)
+                {
+                    this.maskManager = new MaskManager();
+                    AITOOL.Log("Debug: Had to reset MaskManager for camera " + this.Name);
+                }
+
+                //update threshold in all masks if changed during session
+                this.maskManager.Update(this);
+
+                ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
+                if (this.trigger_url_cancels && !string.IsNullOrWhiteSpace(this.cancel_urls_as_string))
+                {
+                    this.cancel_urls_as_string = this.trigger_urls_as_string;
+                    this.trigger_url_cancels = false;
+                }
+
+                //this is just a flag to see if we have updated old settings file to support an 'enabled' property.
+                //before, the existence of a URL indicated 'enabled', now we have an actual flag
+                if (!this.UpdatedURLs)
+                {
+                    //if there was a URL set then it was 'enabled'
+                    this.Action_TriggerURL_Enabled = !this.trigger_urls_as_string.IsEmpty();
+                    this.Action_CancelURL_Enabled = !this.cancel_urls_as_string.IsEmpty();
+                    this.UpdatedURLs = true;
+                }
+
+                //set the default url's if nothing configured
+                ///admin?camera=x&flagalert=x&memo=text&jpeg=path&flagclip x = 0 mark the most recent alert as cancelled (if not previously confirmed). x = 1 mark the most recent alert as flagged. x = 2 mark the most recent alert as confirmed. x = 3 mark the most recent alert as flagged and confirmed. x = -1 reset the flagged, confirmed, and cancelled states 
+
+
+                if (!AITOOL.BlueIrisInfo.IsNull() && AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
+                {
+                    if (this.trigger_urls_as_string.IsEmpty())
+                        this.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                    if (this.cancel_urls_as_string.IsEmpty())
+                        this.cancel_urls_as_string = "[BlueIrisURL]/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
+                }
+                else
+                {
+                    if (this.trigger_urls_as_string.IsEmpty())
+                        this.trigger_urls_as_string = "http://127.0.0.1:81/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                    if (this.cancel_urls_as_string.IsEmpty())
+                        this.cancel_urls_as_string = "http://127.0.0.1:81/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
+
+                }
+
+                this.trigger_urls = this.trigger_urls_as_string.SplitStr("\r\n|").ToArray();
+                this.cancel_urls = this.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
+
+                if (this.Action_image_copy_enabled &&
+                    !string.IsNullOrWhiteSpace(this.Action_network_folder) &&
+                    this.Action_network_folder_purge_older_than_days > 0 &&
+                    LastJPGCleanDay != DateTime.Now.DayOfYear &&
+                    Directory.Exists(this.Action_network_folder))
+                {
+                    AITOOL.Log($"Debug: Cleaning out jpg files older than '{this.Action_network_folder_purge_older_than_days}' days in '{this.Action_network_folder}'...");
+
+                    List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(this.Action_network_folder, "*.jpg"));
+                    int deleted = 0;
+                    int errs = 0;
+                    foreach (FileInfo fi in filist)
+                    {
+                        if ((DateTime.Now - fi.LastWriteTime).TotalDays > this.Action_network_folder_purge_older_than_days)
+                        {
+                            try { fi.Delete(); deleted++; }
+                            catch { errs++; }
+                        }
+                    }
+                    if (errs == 0)
+                        AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+                    else
+                        AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+                    LastJPGCleanDay = DateTime.Now.DayOfYear;
+
+
+                }
+
+            }
+
+        }
+
+        public void UpdateTriggeringObjects()
+        {
+            //Convert string Triggering objects to RelevantObjectManager instances
+            if (this.DefaultTriggeringObjects == null || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
+            {
+                this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this.Name);
+                this.triggering_objects_as_string = "";
+                this.additional_triggering_objects_as_string = "";
+            }
+            else  //force the camera name to stay correct if renamed
+            {
+                this.DefaultTriggeringObjects.Camera = this.Name;
+            }
+
+            if (this.TelegramTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+            {
+                this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this.Name);
+                this.telegram_triggering_objects = "";
+            }
+            else  //force the camera name to stay correct if renamed
+            {
+                this.TelegramTriggeringObjects.Camera = this.Name;
+            }
+
+            if (this.PushoverTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+            {
+                this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this.Name);
+                this.Action_pushover_triggering_objects = "";
+            }
+            else  //force the camera name to stay correct if renamed
+            {
+                this.PushoverTriggeringObjects.Camera = this.Name;
+            }
+
+            if (this.MQTTTriggeringObjects == null)
+            {
+                this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this.Name);
+            }
+            else  //force the camera name to stay correct if renamed
+            {
+                this.MQTTTriggeringObjects.Camera = this.Name;
+            }
+
+        }
 
 
         public string GetMaskFile(bool MustExist, ClsImageQueueItem CurImg = null, ImageResItem ir = null)
@@ -477,13 +655,10 @@ namespace AITool
             //public int PredSizeMaxHeight = 0;
             //public int PredSizeMaxWidth = 0;
 
-            if (this.PredSizeMinPercentOfImage > 0 || this.PredSizeMaxPercentOfImage > 0)
-            {
-                if (pred.PercentOfImage < this.PredSizeMinPercentOfImage)
-                    ret = ResultType.TooSmallPercent;
-                else if (this.PredSizeMaxPercentOfImage > 0 && pred.PercentOfImage > this.PredSizeMaxPercentOfImage)
-                    ret = ResultType.TooLargePercent;
-            }
+            if (this.PredSizeMinPercentOfImage > 0 && pred.PercentOfImage.Round() < this.PredSizeMinPercentOfImage)
+                ret = ResultType.TooSmallPercent;
+            else if (this.PredSizeMaxPercentOfImage > 0 && pred.PercentOfImage.Round() > this.PredSizeMaxPercentOfImage)
+                ret = ResultType.TooLargePercent;
 
             if (ret == ResultType.Relevant)
             {
@@ -499,14 +674,6 @@ namespace AITool
 
             return ret;
         }
-        public Camera(string Name = "")
-        {
-
-            this.Name = Name;
-            this.BICamName = Name;
-            this.Prefix = Name;
-        }
-
         public void ReadConfig(string config_path)
         {
             //retrieve whole config file content
@@ -518,7 +685,7 @@ namespace AITool
 
             //read triggering objects
             this.triggering_objects_as_string = content[1].Split('"')[1].Replace(" ", ""); //take the second line, split it between every ", take the part after the first ", remove every " " in this part
-            this.triggering_objects = Global.Split(this.triggering_objects_as_string, ",").ToArray(); //split the row of triggering objects between every ','
+            this.triggering_objects = this.triggering_objects_as_string.SplitStr(",").ToArray(); //split the row of triggering objects between every ','
 
             //input_path = AppSettings.Settings.input_path;
 
@@ -573,7 +740,7 @@ namespace AITool
             }
             else //if config file from older version, set values to 0% and 100%
             {
-                this.threshold_lower = 0;
+                this.threshold_lower = 30;
                 this.threshold_upper = 100;
             }
 

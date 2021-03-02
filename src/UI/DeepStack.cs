@@ -84,7 +84,7 @@ namespace AITool
             this.CustomModelPort = CustomModelPort;
             this.Port = Port;
             this.Mode = Mode;
-            this.Count = Global.Split(this.Port, ",|").Count;
+            this.Count = this.Port.SplitStr(",|").Count;
             this.StopBeforeStart = StopBeforeStart;
 
             bool found = this.RefreshDeepstackInfo();
@@ -313,7 +313,7 @@ namespace AITool
                             {
                                 string isscontents = File.ReadAllText(files[0].FullName);
                                 //#define MyAppVersion "2020.12.beta"
-                                this.DisplayVersion = Global.GetWordBetween(isscontents, "MyAppVersion \"", "\"");
+                                this.DisplayVersion = isscontents.GetWord("MyAppVersion \"", "\"");
                             }
                             else
                             {
@@ -371,7 +371,7 @@ namespace AITool
                     string contents = Global.SafeLoadTextFile(errfile);
                     if (!string.IsNullOrWhiteSpace(contents))
                     {
-                        List<string> lines = Global.Split(contents, "\r\n", TrimStr: false);
+                        List<string> lines = contents.SplitStr("\r\n", TrimStr: false);
                         for (int i = lines.Count - 1; i >= 0; i--)
                         {
                             if (!string.IsNullOrWhiteSpace(lines[i]) && lines[i].Substring(0) != " " && !lines[i].Contains("Traceback"))
@@ -491,9 +491,9 @@ namespace AITool
                     //start the custom model(s)
                     if (this.CustomModelEnabled)
                     {
-                        List<string> cports = Global.Split(this.CustomModelPort, ",;|");
-                        List<string> cpaths = Global.Split(this.CustomModelPath, ",;|");
-                        List<string> cnames = Global.Split(this.CustomModelName, ",;|");
+                        List<string> cports = this.CustomModelPort.SplitStr(",;|");
+                        List<string> cpaths = this.CustomModelPath.SplitStr(",;|");
+                        List<string> cnames = this.CustomModelName.SplitStr(",;|");
 
                         this.Count = cports.Count;
 
@@ -583,7 +583,7 @@ namespace AITool
 
                     }
 
-                    List<string> ports = Global.Split(this.Port, ",;|");
+                    List<string> ports = this.Port.SplitStr(",;|");
                     this.Count = ports.Count;
 
                     if (this.FaceAPIEnabled || this.SceneAPIEnabled || this.DetectionAPIEnabled && ports.Count > 0)
@@ -1140,7 +1140,7 @@ namespace AITool
 
                 //--VISION-DETECTION True --PORT 84
                 Process prc = (Process)sender;
-                string dsinfo = $"DeepStack:{Global.GetWordBetween(prc.StartInfo.Arguments, "PORT ", " |")}>>";
+                string dsinfo = $"DeepStack:{prc.StartInfo.Arguments.GetWord("PORT ", " |")}>>";
 
                 //Console.WriteLine(Message);
                 if (line.Data.IndexOf("visit localhost to activate deepstack", StringComparison.OrdinalIgnoreCase) >= 0)

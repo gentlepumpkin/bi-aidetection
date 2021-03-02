@@ -193,7 +193,7 @@ namespace NPushover
         /// <exception cref="InvalidKeyException">Thrown when an invalid user/group is specified.</exception>
         public async Task<PushoverUserResponse> SendPushoverMessageAsync(Message message, string userOrGroup, string deviceName, ClsImageQueueItem CurImg)
         {
-            List<string> devices = Global.Split(deviceName, ";");
+            List<string> devices = deviceName.SplitStr(";");
 
             return await this.SendPushoverMessageAsync(message, userOrGroup, devices.ToArray(), CurImg).ConfigureAwait(false);
         }
@@ -300,7 +300,8 @@ namespace NPushover
 
                 response = await httpClient.PostAsync(uri, parameters);
 
-                json = Global.CleanString(response.Content.ReadAsStringAsync().Result);
+                json = await response.Content.ReadAsStringAsync();
+                json = json.CleanString();
 
                 if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(json))
                 {

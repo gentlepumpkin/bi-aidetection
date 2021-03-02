@@ -90,5 +90,17 @@ namespace AITool
         {
             this.num_max_unused.Text = this.num_max_unused.Value.ToString();
         }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
+            {
+                frm.ObjectManager = this.cam.maskManager.MaskTriggeringObjects;
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    this.cam.maskManager.MaskTriggeringObjects = frm.ObjectManager;
+                }
+            }
+        }
     }
 }

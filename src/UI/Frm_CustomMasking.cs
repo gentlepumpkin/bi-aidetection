@@ -111,7 +111,7 @@ namespace AITool
 
         private void cbResolution_SelectedIndexChanged(object sender, EventArgs e)
         {
-           
+
         }
 
         private void ShowImage()
@@ -187,42 +187,42 @@ namespace AITool
                 return point;
             }
             //default to current values
-            int xScaled = point.X;
-            int yScaled = point.Y;
+            double xScaled = point.X;
+            double yScaled = point.Y;
 
             //get dimensions of picturebox and scaled image
-            float imgWidth = this.pbMaskImage.Image.Width;
-            float imgHeight = this.pbMaskImage.Image.Height;
-            float picboxWidth = this.pbMaskImage.Width;
-            float picboxHeight = this.pbMaskImage.Height;
+            double imgWidth = this.pbMaskImage.Image.Width;
+            double imgHeight = this.pbMaskImage.Image.Height;
+            double picboxWidth = this.pbMaskImage.Width;
+            double picboxHeight = this.pbMaskImage.Height;
 
-            float picAspect = picboxWidth / (float)picboxHeight;
-            float imgAspect = imgWidth / (float)imgHeight;
+            double picAspect = picboxWidth / picboxHeight;
+            double imgAspect = imgWidth / imgHeight;
 
             if (picAspect > imgAspect)
             {
                 // pictureBox is wider/shorter than the image.
-                yScaled = (int)(imgHeight * point.Y / (float)picboxHeight);
+                yScaled = (imgHeight * point.Y / picboxHeight);
 
                 // image fills the height of the PictureBox.
                 // Get width.
-                float scaledWidth = imgWidth * picboxHeight / imgHeight;
-                float dx = (picboxWidth - scaledWidth) / 2;
-                xScaled = (int)((point.X - dx) * imgHeight / (float)picboxHeight);
+                double scaledWidth = imgWidth * picboxHeight / imgHeight;
+                double dx = (picboxWidth - scaledWidth) / 2;
+                xScaled = ((point.X - dx) * imgHeight / picboxHeight);
             }
             else
             {
                 // pictureBox is taller/thinner than the image.
-                xScaled = (int)(imgWidth * point.X / (float)picboxWidth);
+                xScaled = (imgWidth * point.X / picboxWidth);
 
                 // image fills the height of the PictureBox.
                 // Get height.
-                float scaledHeight = imgHeight * picboxWidth / imgWidth;
-                float dy = (picboxHeight - scaledHeight) / 2;
-                yScaled = (int)((point.Y - dy) * imgWidth / picboxWidth);
+                double scaledHeight = imgHeight * picboxWidth / imgWidth;
+                double dy = (picboxHeight - scaledHeight) / 2;
+                yScaled = ((point.Y - dy) * imgWidth / picboxWidth);
             }
 
-            return new Point(xScaled, yScaled);
+            return new Point(xScaled.ToInt(), yScaled.ToInt());
         }
 
         private Bitmap AdjustImageOpacity(Image image, float alphaLevel)

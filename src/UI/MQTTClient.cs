@@ -38,7 +38,7 @@ namespace AITool
             if (mqttClient != null)
             {
 
-                if (mqttClient.IsConnected )
+                if (mqttClient.IsConnected)
                 {
                     Log($"Debug: MQTT: Disconnecting from server.");
                     try
@@ -62,7 +62,7 @@ namespace AITool
                 mqttClient.Dispose();
 
             }
-                        
+
 
 
         }
@@ -75,7 +75,7 @@ namespace AITool
             {
                 this.factory = new MqttFactory();
                 this.mqttClient = factory.CreateMqttClient();
-                                               
+
 
             }
             catch (Exception ex)
@@ -93,8 +93,8 @@ namespace AITool
             try
             {
 
-                this.server = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, "", ":");
-                this.port = Global.GetWordBetween(AppSettings.Settings.mqtt_serverandport, ":", "/");
+                this.server = AppSettings.Settings.mqtt_serverandport.GetWord("", ":");
+                this.port = AppSettings.Settings.mqtt_serverandport.GetWord(":", "/");
                 this.portint = 0;
 
                 if (!string.IsNullOrEmpty(this.port))
@@ -149,7 +149,7 @@ namespace AITool
                                 .WithWillMessage(lw)
                                 .WithCleanSession()
                                 .Build();
-                            
+
                         }
                         else
                         {
@@ -265,7 +265,7 @@ namespace AITool
                 {
                     Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
                     Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                    Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload).Truncate(128,true)}");
+                    Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload).Truncate(128, true)}");
                     Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                     Log("");
@@ -277,7 +277,7 @@ namespace AITool
                 {
                     IsConnected = true;
                     Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
-                    
+
 
                     MqttApplicationMessage ma = new MqttApplicationMessageBuilder()
                                                     .WithTopic(AppSettings.Settings.mqtt_LastWillTopic)
@@ -335,107 +335,107 @@ namespace AITool
             if (!this.IsConnected)
                 return res;
 
-                await Task.Run(async () =>
-                            {
-                                
+            await Task.Run(async () =>
+                        {
 
-                                try
+
+                            try
+                            {
+
+
+                                Log($"Debug: MQTT: Sending topic '{this.LastTopic}' with payload '{this.LastPayload}' to server '{this.server}:{this.portint}'...");
+
+                                if (cres != null && mqttClient.IsConnected && cres.ResultCode == MqttClientConnectResultCode.Success)
                                 {
 
+                                    IsConnected = true;
 
-                                    Log($"Debug: MQTT: Sending topic '{this.LastTopic}' with payload '{this.LastPayload}' to server '{this.server}:{this.portint}'...");
+                                    MqttApplicationMessage ma;
 
-                                    if (cres != null && mqttClient.IsConnected && cres.ResultCode == MqttClientConnectResultCode.Success)
+                                    if (CurImg != null)
                                     {
+                                        //using FileStream image_data =  System.IO.File.OpenRead(CurImg.image_path);
 
-                                        IsConnected = true;
+                                        ma = new MqttApplicationMessageBuilder()
+                                             .WithTopic(this.LastTopic)
+                                             .WithPayload(CurImg.ToStream())
+                                             .WithAtLeastOnceQoS()
+                                             .WithRetainFlag(this.LastRetain)
+                                             .Build();
 
-                                        MqttApplicationMessage ma;
+                                        res = await mqttClient.PublishAsync(ma, CancellationToken.None);
 
-                                        if (CurImg != null)
+
+                                        if (res.ReasonCode == MqttClientPublishReasonCode.Success)
                                         {
-                                            //using FileStream image_data =  System.IO.File.OpenRead(CurImg.image_path);
-
-                                            ma = new MqttApplicationMessageBuilder()
-                                                     .WithTopic(this.LastTopic)
-                                                     .WithPayload(CurImg.ToStream())
-                                                     .WithAtLeastOnceQoS()
-                                                     .WithRetainFlag(this.LastRetain)
-                                                     .Build();
-                                            
-                                            res = await mqttClient.PublishAsync(ma, CancellationToken.None);
-
-
-                                            if (res.ReasonCode == MqttClientPublishReasonCode.Success)
-                                            {
-                                                Log($"Debug: MQTT: ...Sent image in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
-                                            else
-                                            {
-                                                Log($"Error: MQTT: sending image: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
-
+                                            Log($"Debug: MQTT: ...Sent image in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                         }
                                         else
                                         {
-                                            ma = new MqttApplicationMessageBuilder()
-                                                    .WithTopic(this.LastTopic)
-                                                    .WithPayload(this.LastPayload)
-                                                    .WithAtLeastOnceQoS()
-                                                    .WithRetainFlag(this.LastRetain)
-                                                    .Build();
-
-                                            res = await mqttClient.PublishAsync(ma, CancellationToken.None);
-
-                                            //Success = 0,
-                                            //        NoMatchingSubscribers = 0x10,
-                                            //        UnspecifiedError = 0x80,
-                                            //        ImplementationSpecificError = 0x83,
-                                            //        NotAuthorized = 0x87,
-                                            //        TopicNameInvalid = 0x90,
-                                            //        PacketIdentifierInUse = 0x91,
-                                            //        QuotaExceeded = 0x97,
-                                            //        PayloadFormatInvalid = 0x99
-
-                                            if (res.ReasonCode == MqttClientPublishReasonCode.Success)
-                                            {
-                                                Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
-                                            else
-                                            {
-                                                Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
-                                            }
-
+                                            Log($"Error: MQTT: sending image: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
                                         }
 
                                     }
-                                    else if (cres != null)
-                                    {
-                                        IsConnected = false;
-                                        Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
-                                    }
                                     else
                                     {
-                                        IsConnected = false;
-                                        Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
+                                        ma = new MqttApplicationMessageBuilder()
+                                                .WithTopic(this.LastTopic)
+                                                .WithPayload(this.LastPayload)
+                                                .WithAtLeastOnceQoS()
+                                                .WithRetainFlag(this.LastRetain)
+                                                .Build();
+
+                                        res = await mqttClient.PublishAsync(ma, CancellationToken.None);
+
+                                        //Success = 0,
+                                        //        NoMatchingSubscribers = 0x10,
+                                        //        UnspecifiedError = 0x80,
+                                        //        ImplementationSpecificError = 0x83,
+                                        //        NotAuthorized = 0x87,
+                                        //        TopicNameInvalid = 0x90,
+                                        //        PacketIdentifierInUse = 0x91,
+                                        //        QuotaExceeded = 0x97,
+                                        //        PayloadFormatInvalid = 0x99
+
+                                        if (res.ReasonCode == MqttClientPublishReasonCode.Success)
+                                        {
+                                            Log($"Debug: MQTT: ...Sent in {sw.ElapsedMilliseconds}ms, Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                        }
+                                        else
+                                        {
+                                            Log($"Error: MQTT: sending: ({sw.ElapsedMilliseconds}ms) Reason: '{res.ReasonCode}' ({Convert.ToInt32(res.ReasonCode)} - '{res.ReasonString}')");
+                                        }
+
                                     }
 
-                                    
-
-
-
                                 }
-                                catch (Exception ex)
+                                else if (cres != null)
                                 {
-
-                                    Log($"Error: MQTT: Unexpected Problem: Topic '{this.LastTopic}' Payload '{this.LastPayload}': " + ex.Msg());
+                                    IsConnected = false;
+                                    Log($"Error: MQTT: connecting: ({sw.ElapsedMilliseconds}ms) Result: '{cres.ResultCode}' - '{cres.ReasonString}'");
                                 }
-                                finally
+                                else
                                 {
-                                   
+                                    IsConnected = false;
+                                    Log($"Error: MQTT: Error connecting: ({sw.ElapsedMilliseconds}ms) cres=null");
                                 }
 
-                            });
+
+
+
+
+                            }
+                            catch (Exception ex)
+                            {
+
+                                Log($"Error: MQTT: Unexpected Problem: Topic '{this.LastTopic}' Payload '{this.LastPayload}': " + ex.Msg());
+                            }
+                            finally
+                            {
+
+                            }
+
+                        });
 
 
             return res;

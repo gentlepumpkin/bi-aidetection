@@ -45,6 +45,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.tb_LWTTopic = new System.Windows.Forms.TextBox();
+            this.tb_LWTPayload = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -54,7 +58,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(435, 294);
+            this.btnCancel.Location = new System.Drawing.Point(431, 297);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -67,7 +71,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(357, 294);
+            this.btnSave.Location = new System.Drawing.Point(353, 297);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -78,18 +82,21 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.groupBox2);
+            this.groupBox1.Controls.Add(this.tb_LWTPayload);
             this.groupBox1.Controls.Add(this.tb_Password);
+            this.groupBox1.Controls.Add(this.tb_LWTTopic);
             this.groupBox1.Controls.Add(this.tb_Username);
             this.groupBox1.Controls.Add(this.tb_ServerPort);
             this.groupBox1.Controls.Add(this.cb_UseTLS);
+            this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(8, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(493, 276);
+            this.groupBox1.Size = new System.Drawing.Size(493, 277);
             this.groupBox1.TabIndex = 6;
             this.groupBox1.TabStop = false;
             // 
@@ -97,7 +104,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.label6.Location = new System.Drawing.Point(11, 111);
+            this.label6.Location = new System.Drawing.Point(9, 19);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(424, 15);
             this.label6.TabIndex = 6;
@@ -105,13 +112,14 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.tb_Payload);
             this.groupBox2.Controls.Add(this.tb_Topic);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.label5);
-            this.groupBox2.Location = new System.Drawing.Point(10, 132);
+            this.groupBox2.Location = new System.Drawing.Point(9, 137);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(471, 138);
+            this.groupBox2.Size = new System.Drawing.Size(471, 128);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Testing";
@@ -119,7 +127,7 @@
             // tb_Payload
             // 
             this.tb_Payload.Font = new System.Drawing.Font("Consolas", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_Payload.Location = new System.Drawing.Point(69, 81);
+            this.tb_Payload.Location = new System.Drawing.Point(69, 69);
             this.tb_Payload.Multiline = true;
             this.tb_Payload.Name = "tb_Payload";
             this.tb_Payload.Size = new System.Drawing.Size(395, 51);
@@ -127,7 +135,7 @@
             // 
             // tb_Topic
             // 
-            this.tb_Topic.Location = new System.Drawing.Point(70, 34);
+            this.tb_Topic.Location = new System.Drawing.Point(70, 40);
             this.tb_Topic.Name = "tb_Topic";
             this.tb_Topic.Size = new System.Drawing.Size(395, 23);
             this.tb_Topic.TabIndex = 4;
@@ -135,7 +143,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(26, 37);
+            this.label4.Location = new System.Drawing.Point(23, 43);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(38, 15);
             this.label4.TabIndex = 0;
@@ -144,7 +152,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(4, 80);
+            this.label5.Location = new System.Drawing.Point(9, 69);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(52, 15);
             this.label5.TabIndex = 0;
@@ -174,7 +182,7 @@
             // cb_UseTLS
             // 
             this.cb_UseTLS.AutoSize = true;
-            this.cb_UseTLS.Location = new System.Drawing.Point(11, 86);
+            this.cb_UseTLS.Location = new System.Drawing.Point(10, 112);
             this.cb_UseTLS.Name = "cb_UseTLS";
             this.cb_UseTLS.Size = new System.Drawing.Size(66, 19);
             this.cb_UseTLS.TabIndex = 3;
@@ -184,7 +192,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(246, 53);
+            this.label3.Location = new System.Drawing.Point(246, 54);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(60, 15);
             this.label3.TabIndex = 0;
@@ -211,7 +219,7 @@
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(280, 294);
+            this.btTest.Location = new System.Drawing.Point(276, 297);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 6;
@@ -219,11 +227,43 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_ClickAsync);
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(6, 82);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(63, 15);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "LWT Topic:";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(253, 82);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(52, 15);
+            this.label8.TabIndex = 0;
+            this.label8.Text = "Payload:";
+            // 
+            // tb_LWTTopic
+            // 
+            this.tb_LWTTopic.Location = new System.Drawing.Point(78, 79);
+            this.tb_LWTTopic.Name = "tb_LWTTopic";
+            this.tb_LWTTopic.Size = new System.Drawing.Size(161, 23);
+            this.tb_LWTTopic.TabIndex = 1;
+            // 
+            // tb_LWTPayload
+            // 
+            this.tb_LWTPayload.Location = new System.Drawing.Point(311, 78);
+            this.tb_LWTPayload.Name = "tb_LWTPayload";
+            this.tb_LWTPayload.Size = new System.Drawing.Size(169, 23);
+            this.tb_LWTPayload.TabIndex = 2;
+            // 
             // Frm_MQTTSettings
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(513, 334);
+            this.ClientSize = new System.Drawing.Size(513, 337);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
@@ -260,5 +300,9 @@
         public System.Windows.Forms.TextBox tb_ServerPort;
         public System.Windows.Forms.CheckBox cb_UseTLS;
         private System.Windows.Forms.Label label6;
+        public System.Windows.Forms.TextBox tb_LWTPayload;
+        public System.Windows.Forms.TextBox tb_LWTTopic;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label7;
     }
 }

@@ -63,6 +63,26 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap arrow_down_double_3 {
+            get {
+                object obj = ResourceManager.GetObject("arrow-down-double-3", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap arrow_up_double_3 {
+            get {
+                object obj = ResourceManager.GetObject("arrow-up-double-3", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap camera_webcam {
             get {
                 object obj = ResourceManager.GetObject("camera-webcam", resourceCulture);
@@ -86,6 +106,26 @@ namespace AITool.Properties {
         internal static System.Drawing.Bitmap camera_webcam_delete {
             get {
                 object obj = ResourceManager.GetObject("camera-webcam_delete", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap edit_delete_5 {
+            get {
+                object obj = ResourceManager.GetObject("edit-delete-5", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap image_x_generic {
+            get {
+                object obj = ResourceManager.GetObject("image-x-generic", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

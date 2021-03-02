@@ -196,7 +196,7 @@ namespace AITool
                 this.cbMinimizeToTray.Checked = AppSettings.Settings.MinimizeToTray;
 
                 this.tb_username.Text = AppSettings.Settings.DefaultUserName;
-                this.tb_password.Text = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
+                this.tb_password.Text = AppSettings.Settings.DefaultPasswordEncrypted.Decrypt();
 
                 this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
 
@@ -1437,7 +1437,7 @@ namespace AITool
         }
 
         //show rectangle overlay
-        private void showObject(PaintEventArgs e, int _xmin, int _ymin, int _xmax, int _ymax, string text, ResultType result)
+        private void showObject(PaintEventArgs e, double _xmin, double _ymin, double _xmax, double _ymax, string text, ResultType result)
         {
             try
             {
@@ -1464,54 +1464,54 @@ namespace AITool
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
-                    float imgWidth = this.pictureBox1.BackgroundImage.Width;
-                    float imgHeight = this.pictureBox1.BackgroundImage.Height;
-                    float boxWidth = this.pictureBox1.Width;
-                    float boxHeight = this.pictureBox1.Height;
-                    float clnWidth = this.pictureBox1.ClientSize.Width;
-                    float clnHeight = this.pictureBox1.ClientSize.Height;
-                    float rctWidth = this.pictureBox1.ClientRectangle.Width;
-                    float rctHeight = this.pictureBox1.ClientRectangle.Height;
+                    double imgWidth = this.pictureBox1.BackgroundImage.Width;
+                    double imgHeight = this.pictureBox1.BackgroundImage.Height;
+                    double boxWidth = this.pictureBox1.Width;
+                    double boxHeight = this.pictureBox1.Height;
+                    double clnWidth = this.pictureBox1.ClientSize.Width;
+                    double clnHeight = this.pictureBox1.ClientSize.Height;
+                    double rctWidth = this.pictureBox1.ClientRectangle.Width;
+                    double rctHeight = this.pictureBox1.ClientRectangle.Height;
 
                     //these variables store the padding between image border and picturebox border
-                    int absX = 0;
-                    int absY = 0;
+                    double absX = 0;
+                    double absY = 0;
 
                     //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                    float scale = 1;
+                    double scale = 1;
 
 
                     //Comparing the aspect ratio of both the control and the image itself.
                     if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                     {
                         scale = boxWidth / imgWidth; //get scale factor
-                        absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
                     }
                     else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
                     {
                         scale = boxHeight / imgHeight; //get scale factor
-                        absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
                     //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                    int xmin = (int)(scale * _xmin) + absX;
-                    int xmax = (int)(scale * _xmax) + absX;
-                    int ymin = (int)(scale * _ymin) + absY;
-                    int ymax = (int)(scale * _ymax) + absY;
+                    double xmin = (scale * _xmin) + absX;
+                    double xmax = (scale * _xmax) + absX;
+                    double ymin = (scale * _ymin) + absY;
+                    double ymax = (scale * _ymax) + absY;
 
-                    int sclWidth = xmax - xmin;
-                    int sclHeight = ymax - ymin;
+                    double sclWidth = xmax - xmin;
+                    double sclHeight = ymax - ymin;
 
-                    int sclxmax = (int)boxWidth - (absX * 2);
-                    int sclymax = (int)boxHeight - (absY * 2);
-                    int sclxmin = absX;
-                    int sclymin = absY;
+                    double sclxmax = boxWidth - (absX * 2);
+                    double sclymax = boxHeight - (absY * 2);
+                    double sclxmin = absX;
+                    double sclymin = absY;
 
                     //3. paint rectangle
-                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin,
-                                                                                 ymin,
-                                                                                 sclWidth,
-                                                                                 sclHeight);
+                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
+                                                                                 ymin.ToInt(),
+                                                                                 sclWidth.ToInt(),
+                                                                                 sclHeight.ToInt());
                     using (Pen pen = new Pen(color, BorderWidth))
                     {
                         e.Graphics.DrawRectangle(pen, rect); //draw rectangle
@@ -1532,7 +1532,7 @@ namespace AITool
                     ///testing=================================================
 
                     //we need this since people can change the border width in the json file
-                    int halfbrd = BorderWidth / 2;
+                    double halfbrd = BorderWidth / 2;
 
 
                     Brush brush = new SolidBrush(color); //sets background rectangle color
@@ -1542,8 +1542,8 @@ namespace AITool
 
                     //object name text below rectangle
 
-                    int x = xmin - halfbrd;
-                    int y = ymax + halfbrd;
+                    double x = xmin - halfbrd;
+                    double y = ymax + halfbrd;
 
                     //just for debugging:
                     //int timgWidth = (int)imgWidth;
@@ -1556,11 +1556,11 @@ namespace AITool
 
 
                     //adjust the x / width label so it doesnt go off screen
-                    int EndX = x + (int)TextSize.Width;
+                    double EndX = x + TextSize.Width;
                     if (EndX > sclxmax)
                     {
                         //int diffx = x - sclxmax;
-                        x = xmax - (int)TextSize.Width + halfbrd;
+                        x = xmax - TextSize.Width + halfbrd;
                     }
 
                     if (x < sclxmin)
@@ -1570,26 +1570,26 @@ namespace AITool
                         x = 0;
 
                     //adjust the y / height label so it doesnt go off screen
-                    int EndY = y + (int)TextSize.Height;
+                    double EndY = y + TextSize.Height;
                     if (EndY > sclymax)
                     {
                         //float diffy = EndY - sclymax;
-                        y = ymax - (int)TextSize.Height - halfbrd;
+                        y = ymax - TextSize.Height - halfbrd;
                     }
 
                     if (y < 0)
                         y = 0;
 
 
-                    rect = new System.Drawing.Rectangle(x,
-                                                        y,
-                                                        (int)boxWidth,
-                                                        (int)boxHeight); //sets bounding box for drawn text
+                    rect = new System.Drawing.Rectangle(x.ToInt(),
+                                                        y.ToInt(),
+                                                        boxWidth.ToInt(),
+                                                        boxHeight.ToInt()); //sets bounding box for drawn text
 
 
                     e.Graphics.FillRectangle(brush,
-                                             x,
-                                             y,
+                                             x.ToInt(),
+                                             y.ToInt(),
                                              TextSize.Width,
                                              TextSize.Height); //draw grey background rectangle for detection text
 
@@ -1677,7 +1677,7 @@ namespace AITool
                     {
 
                         //we should never get here after all old AITOOL entries have been deleted
-                        List<string> positionssArray = Global.Split(positions, ";");//creates array of detected objects, used for adding text overlay
+                        List<string> positionssArray = positions.SplitStr(";");//creates array of detected objects, used for adding text overlay
 
                         int countr = positionssArray.Count;
 
@@ -1700,7 +1700,7 @@ namespace AITool
                             result = ResultType.Relevant;
                         }
 
-                        List<string> detectionsArray = Global.Split(detections, ";");//creates array of detected objects, used for adding text overlay
+                        List<string> detectionsArray = detections.SplitStr(";");//creates array of detected objects, used for adding text overlay
 
                         if (cam != null)
                         {
@@ -1714,7 +1714,7 @@ namespace AITool
                         {
 
                             //load 'xmin,ymin,xmax,ymax' from third column into a string
-                            List<string> positionsplt = Global.Split(positionssArray[i], ",");
+                            List<string> positionsplt = positionssArray[i].SplitStr(",");
 
                             //store xmin, ymin, xmax, ymax in separate variables
                             Int32.TryParse(positionsplt[0], out int xmin);
@@ -2326,15 +2326,15 @@ namespace AITool
             if (BlueIrisInfo.Result == BlueIrisResult.Valid)
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                cam.trigger_urls_as_string = $"[BlueIrisURL]/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
+                cam.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
             }
 
             //I dont think this is used anywhere
-            cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+            cam.triggering_objects = cam.triggering_objects_as_string.SplitStr(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
             //Split by cr/lf or other common delimiters
-            cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
-            cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
+            cam.trigger_urls = cam.trigger_urls_as_string.SplitStr("\r\n|").ToArray();  //all trigger urls in an array
+            cam.cancel_urls = cam.cancel_urls_as_string.SplitStr("\r\n|").ToArray();  //all trigger urls in an array
 
             cam.BICamName = cam.Name;
 
@@ -2376,6 +2376,10 @@ namespace AITool
             if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
             {
                 Camera cam = ((Camera)this.FOLV_Cameras.SelectedObjects[0]);
+
+                UpdateActionsLabel(cam);
+
+                Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";
 
                 this.tableLayoutPanel6.Enabled = true;
 
@@ -2419,28 +2423,29 @@ namespace AITool
                 this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
 
 
-                //load triggering objects
-                //first create arrays with all checkboxes stored in
-                CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
-                //create array with strings of the triggering_objects related to the checkboxes in the same order
-                string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
+                this.lbl_RelevantObjects.Text = cam.DefaultTriggeringObjects.ToString();
+                ////load triggering objects
+                ////first create arrays with all checkboxes stored in
+                //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
+                ////create array with strings of the triggering_objects related to the checkboxes in the same order
+                //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
-                //clear all checkmarks
-                foreach (CheckBox cb in cbarray)
-                {
-                    cb.Checked = false;
-                }
+                ////clear all checkmarks
+                //foreach (CheckBox cb in cbarray)
+                //{
+                //    cb.Checked = false;
+                //}
 
-                //check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
-                for (int j = 0; j < cbarray.Length; j++)
-                {
-                    if (cam.triggering_objects_as_string.IndexOf(cbstringarray[j], StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        cbarray[j].Checked = true;
-                    }
-                }
+                ////check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
+                //for (int j = 0; j < cbarray.Length; j++)
+                //{
+                //    if (cam.triggering_objects_as_string.IndexOf(cbstringarray[j], StringComparison.OrdinalIgnoreCase) >= 0)
+                //    {
+                //        cbarray[j].Checked = true;
+                //    }
+                //}
 
-                this.tbAdditionalRelevantObjects.Text = cam.additional_triggering_objects_as_string;
+                //this.tbAdditionalRelevantObjects.Text = cam.additional_triggering_objects_as_string;
 
 
             }
@@ -2479,7 +2484,7 @@ namespace AITool
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     int added = 0;
-                    List<string> cams = Global.Split(frm.tb_Cameras.Text, "\r\n|;,");
+                    List<string> cams = frm.tb_Cameras.Text.SplitStr("\r\n|;,");
                     foreach (var cs in cams)
                     {
 
@@ -2599,27 +2604,27 @@ namespace AITool
                 //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
                 //hair dryer, toothbrush.
 
-                CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
-                //create array with strings of the triggering_objects related to the checkboxes in the same order
-                string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
+                //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
+                ////create array with strings of the triggering_objects related to the checkboxes in the same order
+                //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
-                //go through all checkboxes and write all triggering_objects in one string
-                cam.triggering_objects_as_string = "";
-                for (int i = 0; i < cbarray.Length; i++)
-                {
-                    if (cbarray[i].Checked == true)
-                    {
-                        cam.triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
-                    }
-                }
+                ////go through all checkboxes and write all triggering_objects in one string
+                //cam.triggering_objects_as_string = "";
+                //for (int i = 0; i < cbarray.Length; i++)
+                //{
+                //    if (cbarray[i].Checked == true)
+                //    {
+                //        cam.triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
+                //    }
+                //}
 
 
-                cam.triggering_objects = Global.Split(cam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                //cam.triggering_objects = cam.triggering_objects_as_string.Split(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
-                cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
+                //cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
 
-                cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|").ToArray();  //all trigger urls in an array
-                cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
+                cam.trigger_urls = cam.trigger_urls_as_string.SplitStr("\r\n|").ToArray();  //all trigger urls in an array
+                cam.cancel_urls = cam.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
 
                 if (cam.Name != this.tbName.Text.Trim())
                 {
@@ -2691,12 +2696,21 @@ namespace AITool
                                         {
                                             icam.triggering_objects_as_string = cam.triggering_objects_as_string;
                                             icam.additional_triggering_objects_as_string = cam.additional_triggering_objects_as_string;
-                                            icam.triggering_objects = Global.Split(icam.triggering_objects_as_string, ",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                                            icam.triggering_objects = cam.triggering_objects_as_string.SplitStr(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                                            icam.Action_pushover_triggering_objects = cam.Action_pushover_triggering_objects;
+                                            icam.DefaultTriggeringObjects = cam.DefaultTriggeringObjects;
+                                            icam.TelegramTriggeringObjects = cam.TelegramTriggeringObjects;
+                                            icam.MQTTTriggeringObjects = cam.MQTTTriggeringObjects;
+                                            icam.PushoverTriggeringObjects = cam.PushoverTriggeringObjects;
+                                            icam.maskManager.MaskTriggeringObjects = cam.maskManager.MaskTriggeringObjects;
+
                                         }
                                         if (frm.cb_apply_actions.Checked)
                                         {
                                             icam.trigger_urls_as_string = cam.trigger_urls_as_string;
                                             icam.trigger_urls = cam.trigger_urls;
+                                            icam.Action_TriggerURL_Enabled = cam.Action_TriggerURL_Enabled;
+                                            icam.Action_CancelURL_Enabled = cam.Action_CancelURL_Enabled;
                                             icam.cancel_urls_as_string = cam.cancel_urls_as_string;
                                             icam.cancel_urls = cam.cancel_urls;
                                             icam.cooldown_time_seconds = cam.cooldown_time_seconds;
@@ -2737,7 +2751,7 @@ namespace AITool
                                             icam.Action_pushover_SupplementaryUrl = cam.Action_pushover_SupplementaryUrl;
                                             icam.Action_pushover_expire_seconds = cam.Action_pushover_expire_seconds;
                                             icam.Action_pushover_retry_seconds = cam.Action_pushover_retry_seconds;
-                                            icam.Action_pushover_triggering_objects = cam.Action_pushover_triggering_objects;
+
                                             icam.Action_pushover_active_time_range = cam.Action_pushover_active_time_range;
 
                                             icam.Action_queued = cam.Action_queued;
@@ -2752,7 +2766,6 @@ namespace AITool
                                             icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
 
                                             icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
-                                            icam.maskManager.Objects = cam.maskManager.Objects;
 
                                             icam.maskManager.ScaleConfig.IsScaledObject = cam.maskManager.ScaleConfig.IsScaledObject;
                                             icam.maskManager.ScaleConfig.MediumObjectMatchPercent = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
@@ -2862,7 +2875,7 @@ namespace AITool
             AppSettings.Settings.input_path = this.cmbInput.Text.Trim();
             AppSettings.Settings.input_path_includesubfolders = this.cb_inputpathsubfolders.Checked;
             AppSettings.Settings.deepstack_urls_are_queued = this.cb_DeepStackURLsQueued.Checked;
-            AppSettings.Settings.telegram_chatids = Global.Split(this.tb_telegram_chatid.Text, "|;,", true, true);
+            AppSettings.Settings.telegram_chatids = this.tb_telegram_chatid.Text.SplitStr("|;,", true, true);
             AppSettings.Settings.telegram_token = this.tb_telegram_token.Text.Trim();
             AppSettings.Settings.telegram_cooldown_seconds = GetNumberInt(this.tb_telegram_cooldown.Text.Trim());
             AppSettings.Settings.send_telegram_errors = this.cb_send_telegram_errors.Checked;
@@ -2871,7 +2884,7 @@ namespace AITool
             AppSettings.Settings.MinimizeToTray = this.cbMinimizeToTray.Checked;
 
             AppSettings.Settings.DefaultUserName = this.tb_username.Text.Trim();
-            AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(this.tb_password.Text.Trim());
+            AppSettings.Settings.DefaultPasswordEncrypted = this.tb_password.Text.Trim().Encrypt();
 
             AppSettings.Settings.BlueIrisServer = this.tb_BlueIrisServer.Text.Trim();
 
@@ -3479,28 +3492,22 @@ namespace AITool
 
                 frm.cb_enabled.Checked = this.cb_masking_enabled.Checked;
 
-                frm.tb_objects.Text = cam.maskManager.Objects;
+                frm.lbl_objects.Text = cam.maskManager.MaskTriggeringObjects.ToString();
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
-                    Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
-                    Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
-                    Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
-                    Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
-                    Int32.TryParse(frm.num_percent_var.Text, out int variance);
-                    Int32.TryParse(frm.num_max_unused.Text, out int MaxUnusedDays);
 
-                    cam.maskManager.HistorySaveMins = history_mins;
-                    cam.maskManager.HistoryThresholdCount = mask_create_counter;
-                    cam.maskManager.MaskRemoveMins = mask_remove_mins;
-                    cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
-                    cam.maskManager.PercentMatch = variance;
-                    cam.maskManager.MaxMaskUnusedDays = MaxUnusedDays;
+                    cam.maskManager.HistorySaveMins = frm.num_history_mins.Text.ToInt();
+                    cam.maskManager.HistoryThresholdCount = frm.num_mask_create.Text.ToInt();
+                    cam.maskManager.MaskRemoveMins = frm.num_mask_remove.Text.ToInt();
+                    cam.maskManager.MaskRemoveThreshold = frm.numMaskThreshold.Text.ToInt();
+                    cam.maskManager.PercentMatch = frm.num_percent_var.Text.ToDouble();
+                    cam.maskManager.MaxMaskUnusedDays = frm.num_max_unused.Text.ToInt();
 
                     this.cb_masking_enabled.Checked = frm.cb_enabled.Checked;
                     cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
-                    cam.maskManager.Objects = frm.tb_objects.Text.Trim();
+                    //cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
                     AppSettings.SaveAsync();
                 }
@@ -3611,14 +3618,25 @@ namespace AITool
                 frm.tb_ConfidenceFormat.Text = AppSettings.Settings.DisplayPercentageFormat;
                 frm.lbl_Confidence.Text = string.Format(frm.tb_ConfidenceFormat.Text, 99.123);
 
-                frm.tbTriggerUrl.Text = string.Join("\r\n", Global.Split(cam.trigger_urls_as_string, "\r\n|"));
-                frm.tbCancelUrl.Text = string.Join("\r\n", Global.Split(cam.cancel_urls_as_string, "\r\n|"));
+
+                if (cam.cancel_urls_as_string.IsEmpty())
+                    cam.Action_CancelURL_Enabled = false;
+                if (cam.trigger_urls_as_string.IsEmpty())
+                    cam.Action_TriggerURL_Enabled = false;
+
+                frm.cb_UrlTriggerEnabled.Checked = cam.Action_TriggerURL_Enabled;
+                frm.cb_UrlCancelEnabled.Checked = cam.Action_CancelURL_Enabled;
+
+                frm.tbTriggerUrl.Text = cam.trigger_urls_as_string.SplitStr("\r\n|").JoinStr("\r\n");
+                frm.tbCancelUrl.Text = cam.cancel_urls_as_string.SplitStr("\r\n|").JoinStr("\r\n");
+
+
                 frm.tb_cooldown.Text = cam.cooldown_time_seconds.ToString(); //load cooldown time
                 frm.tb_sound_cooldown.Text = cam.sound_cooldown_time_seconds.ToString(); //load cooldown time
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
                 frm.tb_telegram_caption.Text = cam.telegram_caption;
-                frm.tb_telegram_triggering_objects.Text = cam.telegram_triggering_objects;
+                //frm.tb_telegram_triggering_objects.Text = cam.telegram_triggering_objects;
 
                 frm.cb_telegram_active_time.Text = cam.telegram_active_time_range;
 
@@ -3644,7 +3662,7 @@ namespace AITool
                 frm.tb_Pushover_Title.Text = cam.Action_pushover_title;
                 frm.tb_Pushover_Message.Text = cam.Action_pushover_message;
                 frm.tb_Pushover_Device.Text = cam.Action_pushover_device;
-                frm.tb_pushover_triggering_objects.Text = cam.Action_pushover_triggering_objects;
+                //frm.tb_pushover_triggering_objects.Text = cam.Action_pushover_triggering_objects;
                 frm.tb_Pushover_Priority.Text = cam.Action_pushover_Priority;
                 frm.tb_Pushover_sound.Text = cam.Action_pushover_Sound;
                 frm.cb_pushover_active_time.Text = cam.Action_pushover_active_time_range;
@@ -3658,6 +3676,8 @@ namespace AITool
                 Global_GUI.GroupboxEnableDisable(frm.groupBoxPushover, frm.cb_Pushover_Enabled);
                 Global_GUI.GroupboxEnableDisable(frm.groupBoxTelegram, frm.cb_telegram);
                 Global_GUI.GroupboxEnableDisable(frm.groupBoxMQTT, frm.cb_MQTT_enabled);
+                Global_GUI.GroupboxEnableDisable(frm.groupBoxUrlTrigger, frm.cb_UrlTriggerEnabled);
+                Global_GUI.GroupboxEnableDisable(frm.groupBoxUrlCancel, frm.cb_UrlCancelEnabled);
 
                 frm.tb_Sounds.Enabled = frm.cb_PlaySound.Checked;
                 frm.tb_RunExternalProgram.Enabled = frm.cb_RunProgram.Checked;
@@ -3665,6 +3685,9 @@ namespace AITool
                 frm.tb_network_folder.Enabled = frm.cb_copyAlertImages.Checked;
                 frm.tb_network_folder_filename.Enabled = frm.cb_copyAlertImages.Checked;
 
+                frm.tb_ActionCancelSecs.Text = AppSettings.Settings.ActionCancelSeconds.ToString();
+
+                frm.cb_ShowOnlyRelevant.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
 
                 if (frm.cb_mergeannotations.Checked)
                     frm.tb_jpeg_merge_quality.Enabled = true;
@@ -3676,16 +3699,26 @@ namespace AITool
                     cam.DetectionDisplayFormat = frm.tb_DetectionFormat.Text.Trim();
                     AppSettings.Settings.DisplayPercentageFormat = frm.tb_ConfidenceFormat.Text.Trim();
 
-                    cam.trigger_urls_as_string = string.Join(",", Split(frm.tbTriggerUrl.Text.Trim(), "\r\n|"));
-                    cam.trigger_urls = Split(cam.trigger_urls_as_string, "\r\n|").ToArray();
-                    cam.cancel_urls_as_string = string.Join(",", Split(frm.tbCancelUrl.Text.Trim(), "\r\n|"));
-                    cam.cancel_urls = Split(cam.cancel_urls_as_string, "\r\n|").ToArray();
+                    //clean up the trigger lists by splitting and re-joining 
+                    cam.trigger_urls_as_string = frm.tbTriggerUrl.Text.Trim().SplitStr("\r\n|").JoinStr("|");
+                    cam.trigger_urls = cam.trigger_urls_as_string.SplitStr("\r\n|").ToArray();
+
+                    cam.cancel_urls_as_string = frm.tbCancelUrl.Text.Trim().SplitStr("\r\n|").JoinStr("|");
+                    cam.cancel_urls = cam.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
+
+                    cam.Action_TriggerURL_Enabled = frm.cb_UrlTriggerEnabled.Checked;
+                    cam.Action_CancelURL_Enabled = frm.cb_UrlCancelEnabled.Checked;
+
+                    if (cam.cancel_urls.Count() == 0)
+                        cam.Action_CancelURL_Enabled = false;
+                    if (cam.trigger_urls.Count() == 0)
+                        cam.Action_TriggerURL_Enabled = false;
 
                     cam.cooldown_time_seconds = GetNumberInt(frm.tb_cooldown.Text.Trim());
                     cam.sound_cooldown_time_seconds = GetNumberInt(frm.tb_sound_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
-                    cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text.Trim();
+                    //cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text.Trim();
 
                     cam.telegram_active_time_range = frm.cb_telegram_active_time.Text.Trim();
 
@@ -3711,7 +3744,7 @@ namespace AITool
                     cam.Action_pushover_title = frm.tb_Pushover_Title.Text.Trim();
                     cam.Action_pushover_message = frm.tb_Pushover_Message.Text.Trim();
                     cam.Action_pushover_device = frm.tb_Pushover_Device.Text.Trim();
-                    cam.Action_pushover_triggering_objects = frm.tb_pushover_triggering_objects.Text.Trim();
+                    //cam.Action_pushover_triggering_objects = frm.tb_pushover_triggering_objects.Text.Trim();
                     cam.Action_pushover_Sound = frm.tb_Pushover_sound.Text.Trim();
                     cam.Action_pushover_Priority = frm.tb_Pushover_Priority.Text.Trim();
                     cam.Action_pushover_active_time_range = frm.cb_pushover_active_time.Text.Trim();
@@ -3722,10 +3755,45 @@ namespace AITool
 
                     cam.Action_queued = frm.cb_queue_actions.Checked;
 
+                    AppSettings.Settings.ActionCancelSeconds = GetNumberInt(frm.tb_ActionCancelSecs.Text);
+                    AppSettings.Settings.HistoryOnlyDisplayRelevantObjects = frm.cb_ShowOnlyRelevant.Checked;
+
+
+                    cam.UpdateCamera();
+
+                    UpdateActionsLabel(cam);
+
                     AppSettings.SaveAsync();
 
                 }
             }
+        }
+
+        private void UpdateActionsLabel(Camera cam)
+        {
+            Lbl_Actions.Text = "";
+            if (cam.Action_TriggerURL_Enabled)
+                Lbl_Actions.Text += "TriggerURL";
+            if (cam.Action_CancelURL_Enabled)
+                Lbl_Actions.Text += ", CancelURL";
+            if (cam.telegram_enabled)
+                Lbl_Actions.Text += ", Telegram";
+            if (cam.Action_pushover_enabled)
+                Lbl_Actions.Text += ", Pushover";
+            if (cam.Action_mqtt_enabled)
+                Lbl_Actions.Text += ", MQTT";
+            if (cam.Action_RunProgram)
+                Lbl_Actions.Text += ", Run";
+            if (cam.Action_PlaySounds)
+                Lbl_Actions.Text += ", Sound";
+            if (cam.Action_image_copy_enabled)
+                Lbl_Actions.Text += ", Copy";
+
+            if (Lbl_Actions.Text.IsEmpty())
+                Lbl_Actions.Text = "No Actions enabled.";
+            else
+                Lbl_Actions.Text = Lbl_Actions.Text.Trim(", ".ToCharArray());
+
         }
 
         private void tbDeepstackUrl_TextChanged(object sender, EventArgs e)
@@ -4343,10 +4411,10 @@ namespace AITool
                 {
                     //AITool.[2020-10-19.1].log.zip
                     //        ------------
-                    string date = Global.GetWordBetween(fi.FullName, "[", "]");
+                    string date = fi.FullName.GetWord("[", "]");
                     //AITool.[2020-10-19.1].log.zip
                     //        ----------
-                    date = Global.GetWordBetween(date, "", ".");
+                    date = date.GetWord("", ".");
 
                     if (string.IsNullOrEmpty(date))
                     {
@@ -4390,13 +4458,13 @@ namespace AITool
                                     // Current object detected: key=2249882, name=Person, xmin=1789,
                                     if (CLI.Detail.IndexOf("Current object detected:", StringComparison.OrdinalIgnoreCase) >= 0)
                                     {
-                                        imagemaskkey = "key=" + Global.GetWordBetween(CLI.Detail, "key=", ",| ");
+                                        imagemaskkey = "key=" + CLI.Detail.GetWord("key=", ",| ");
                                         Log("Debug: " + imagemaskkey);
                                     }
                                     //   Found 'Person' (Key=191457) in last_positions_history: key=198932, name=Person, xmin=1108
                                     else if (CLI.Detail.IndexOf("last_positions_history: key=", StringComparison.OrdinalIgnoreCase) >= 0)
                                     {
-                                        matchedmaskkey = "key=" + Global.GetWordBetween(CLI.Detail, "history: key=", ",| ");
+                                        matchedmaskkey = "key=" + CLI.Detail.GetWord("history: key=", ",| ");
                                         Log("Debug: " + matchedmaskkey);
                                     }
                                 }
@@ -5178,9 +5246,11 @@ namespace AITool
                     cam.PredSizeMaxWidth = GetNumberInt(frm.tb_maxwidth.Text);
                     cam.PredSizeMinWidth = GetNumberInt(frm.tb_minwidth.Text);
                     cam.PredSizeMinHeight = GetNumberInt(frm.tb_minheight.Text);
-                    cam.PredSizeMaxPercentOfImage = GetNumberInt(frm.tb_maxpercent.Text);
-                    cam.PredSizeMinPercentOfImage = GetNumberInt(frm.tb_MinPercent.Text);
-                    cam.MergePredictionsMinMatchPercent = GetNumberInt(frm.tb_duplicatepercent.Text);
+                    cam.PredSizeMaxPercentOfImage = frm.tb_maxpercent.Text.ToDouble();
+                    cam.PredSizeMinPercentOfImage = frm.tb_MinPercent.Text.ToDouble();
+                    cam.MergePredictionsMinMatchPercent = frm.tb_duplicatepercent.Text.ToDouble();
+
+                    Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";
 
                     AppSettings.SaveAsync();
                 }
@@ -5204,6 +5274,20 @@ namespace AITool
         private void FOLV_Cameras_FormatRow(object sender, FormatRowEventArgs e)
         {
             this.FormatCameraRow(sender, e);
+        }
+
+        private void BtnRelevantObjects_Click(object sender, EventArgs e)
+        {
+            using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
+            {
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
+                frm.ObjectManager = cam.DefaultTriggeringObjects;
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    cam.DefaultTriggeringObjects = frm.ObjectManager;
+                    DisplayCameraSettings();
+                }
+            }
         }
     }
 

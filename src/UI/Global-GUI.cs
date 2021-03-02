@@ -59,6 +59,7 @@ namespace AITool
                                        bool FullRefresh = false,
                                        bool UseSelected = false,
                                        object SelectObject = null,
+                                       bool ForcedSelection = false,
                                        [CallerMemberName()] string memberName = null)
         {
 
@@ -117,7 +118,7 @@ namespace AITool
                         else
                         {
                             //only select something if nothing is already selected 
-                            if (SelectObject != null && UseSelected && olv.SelectedObject == null)
+                            if (SelectObject != null && (ForcedSelection || (UseSelected && olv.SelectedObject == null)))
                             {
                                 //use the given object as selected
                                 olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
@@ -383,6 +384,10 @@ namespace AITool
                         cl.Hyperlink = true;
                     }
 
+                    if ((ei.Name.Has("percent") || ei.Name.Has("threshold") || ei.Name.Has("confidence")) && (ei.PropertyType == typeof(double) || ei.PropertyType == typeof(int) || ei.PropertyType == typeof(float)))
+                    {
+                        cl.AspectToStringFormat = "{0:0.##}%";
+                    }
 
                     //if (ei.PropertyType == typeof(ThreadSafe.Boolean))
                     //{

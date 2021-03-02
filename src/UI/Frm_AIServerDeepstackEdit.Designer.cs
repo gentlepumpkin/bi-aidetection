@@ -119,7 +119,7 @@ namespace AITool
             // 
             this.bt_Save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.bt_Save.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.bt_Save.Location = new System.Drawing.Point(513, 376);
+            this.bt_Save.Location = new System.Drawing.Point(516, 374);
             this.bt_Save.Name = "bt_Save";
             this.bt_Save.Size = new System.Drawing.Size(70, 30);
             this.bt_Save.TabIndex = 17;
@@ -180,9 +180,6 @@ namespace AITool
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.label14);
             this.groupBox1.Controls.Add(this.cb_OnlyLinked);
             this.groupBox1.Controls.Add(this.cb_TimeoutError);
@@ -502,7 +499,7 @@ namespace AITool
             // 
             this.linkHelpURL.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkHelpURL.AutoSize = true;
-            this.linkHelpURL.Location = new System.Drawing.Point(2, 357);
+            this.linkHelpURL.Location = new System.Drawing.Point(2, 355);
             this.linkHelpURL.Name = "linkHelpURL";
             this.linkHelpURL.Size = new System.Drawing.Size(10, 13);
             this.linkHelpURL.TabIndex = 8;
@@ -513,7 +510,7 @@ namespace AITool
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(437, 376);
+            this.btTest.Location = new System.Drawing.Point(440, 374);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 16;
@@ -524,7 +521,7 @@ namespace AITool
             // bt_clear
             // 
             this.bt_clear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.bt_clear.Location = new System.Drawing.Point(361, 376);
+            this.bt_clear.Location = new System.Drawing.Point(364, 374);
             this.bt_clear.Name = "bt_clear";
             this.bt_clear.Size = new System.Drawing.Size(70, 30);
             this.bt_clear.TabIndex = 15;
@@ -536,12 +533,13 @@ namespace AITool
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(586, 413);
+            this.AutoScroll = true;
+            this.ClientSize = new System.Drawing.Size(589, 411);
+            this.Controls.Add(this.bt_Save);
             this.Controls.Add(this.bt_clear);
             this.Controls.Add(this.btTest);
             this.Controls.Add(this.linkHelpURL);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.bt_Save);
             this.Name = "Frm_AIServerDeepstackEdit";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit AI Server";

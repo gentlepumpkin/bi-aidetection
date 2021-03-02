@@ -120,9 +120,12 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
+  <data name="tb_ActionCancelSecs.ToolTip" xml:space="preserve">
+    <value>If you have any Cancel actions configured, this is the amount
+of time before the Cancel action will be performed if there WAS
+a detection but no other since then.  (Note that 
+cancel will always be called immediately on false alerts)</value>
+  </data>
   <data name="cb_queue_actions.ToolTip" xml:space="preserve">
     <value>This will send any actions to a background thread.  It will allow the main detection routine
 to finish without waiting for Telegram, mqtt, etc.   It is possible this will affect how the
@@ -142,6 +145,31 @@ dog, cat, bird ; C:\WOOF.WAV
 * ; C:\DEFAULT.WAV</value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>35</value>
+    <value>33</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAEAEBAAAAAAAABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA
+        AAD///8A////AP///wAnqNw3////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP//
+        /wD///8A////AP///wD///8AKaze1Sep3OklptsM////AP///wD///8A////AP///wD///8A////AP//
+        /wD///8A////AP///wD///8A////ACuv3wwtrt//K6ve/yWm24r///8A////AP///wD///8A////AP//
+        /wD///8A////AP///wD///8A////AP///wD///8AK6/fz0+85/9Muub/Jqfc7SSk2xf///8A////AP//
+        /wD///8A////AP///wD///8A////AP///wD///8A////AP///wArr9//hNPy/1W95/8uqt7/JKTbkP//
+        /wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8ALbLgwHDM7v+D0vL/fs7x/0q2
+        5P8kpdvxIqLaF////wD///8A////AP///wA4wufwNsDm+DW95fgzu+T4Mbjj+C+24viG1/P/L7br/0q8
+        7P+AzvH/Ubnm/yyo3f8jotqd////AP///wD///8AOsTo6XXa8v+T5vj/keP3/43g9v+K3PX/itv1/4jX
+        9P+E0/L/f8/x/3zM8P96ye//SLTj/yOj2vUgntgj////ADvH6TdPzez/mOn5/0rV8/9Fz/H/QMrw/zjC
+        7v+J2fT/LrTh/iyx4Pgrrt/4Kaze+Cep3Pglptv4I6Pa6f///wD///8AO8fp9IDh9f+O5vj/Q9Lz/z/N
+        8f85x+//jNz1/1jG6v8utOF0////AP///wD///8A////AP///wD///8A////AD3J6lRb1O//mer5/0fW
+        9P9C0PL/Pcvw/27V8/9/1/P/SsDn/y+04Ur///8A////AP///wD///8A////AP///wD///8APcrq+ZPp
+        +f9y4ff/RdTz/0HO8v88yfD/itz1/3DQ7/89u+T/L7XhI////wD///8A////AP///wD///8A////AD/M
+        64Nk2fH/muv6/0jY9P9E0/P/P87x/zrI8P+M3PX/Ysvt/zG44/z///8A////AP///wD///8A////AP//
+        /wD///8AP8zr/Zrt+v+Z6/n/l+j5/5Tl+P+R4vf/jt/2/4vb9f9Wx+v/Mbjj8////wD///8A////AP//
+        /wD///8A////AEDO7KI/zOv/Psvq/zzJ6f87x+n/OsTo/zjC5/82wOb/Nb3l/zO75P8xuOPh////AP//
+        /wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP//
+        /wD///8A//8AAOf/AADx/wAA8P8AAPg/AAD4HwAAAAcAAAADAACAAQAAgH8AAMA/AADAHwAAwA8AAOAH
+        AADgAwAA//8AAA==
+</value>
+  </data>
 </root>

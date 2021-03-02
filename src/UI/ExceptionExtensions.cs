@@ -69,35 +69,35 @@ namespace AITool
 
                     string ST = ThisEX.StackTrace;
 
-                    List<string> lines = Global.Split(ST, "\r\n");
+                    List<string> lines = ST.SplitStr("\r\n");
                     string lastmod = "";
                     for (int i = lines.Count - 1; i >= 0; i--)
                     {
                         if (!lines[i].Contains(" System."))
                         {
-                            string fnc = Global.GetWordBetween(lines[i], "at ", " in");
-                            fnc = Global.GetWordBetween(fnc, ".", "");
+                            string fnc = lines[i].GetWord("at ", " in");
+                            fnc = fnc.GetWord(".", "");
                             //Shell.<Shell_Load>d__15.MoveNext()
-                            string tmp = Global.GetWordBetween(fnc, "<", ">");
-                            if (Global.IsNull(tmp))
+                            string tmp = fnc.GetWord("<", ">");
+                            if (tmp.IsEmpty())
                             {
                                 //Shell.test1()
                                 fnc = fnc.Replace("()", "");
                             }
                             else
                             {
-                                fnc = Global.GetWordBetween(fnc, "", ".") + "." + tmp;
+                                fnc = fnc.GetWord("", ".") + "." + tmp;
                             }
-                            string line = Global.GetWordBetween(lines[i], "line ", "");
-                            if (!Global.IsNull(line))
+                            string line = lines[i].GetWord("line ", "");
+                            if (!line.IsEmpty())
                                 line = ":" + line;
 
-                            if (!Global.IsNull(lastmod))
+                            if (!lastmod.IsEmpty())
                                 fnc = fnc.Replace(lastmod, "");
 
                             ExtraInfo += $"{fnc}{line} > ";
 
-                            lastmod = Global.GetWordBetween(lines[i], "at ", ".") + ".";
+                            lastmod = lines[i].GetWord("at ", ".") + ".";
                         }
                     }
 

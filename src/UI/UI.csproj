@@ -83,10 +83,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.5.3.1\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Core.3.5.3.2\lib\net45\AWSSDK.Core.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.Rekognition, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Rekognition.3.5.2.44\lib\net45\AWSSDK.Rekognition.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Rekognition.3.5.2.45\lib\net45\AWSSDK.Rekognition.dll</HintPath>
     </Reference>
     <Reference Include="Docker.DotNet, Version=3.125.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Docker.DotNet.3.125.4\lib\netstandard2.0\Docker.DotNet.dll</HintPath>
@@ -139,15 +139,15 @@
       <HintPath>..\packages\Microsoft.WindowsAPICodePack.Shell.1.1.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="MQTTnet, Version=3.0.14.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
-      <HintPath>..\packages\MQTTnet.3.0.14\lib\net461\MQTTnet.dll</HintPath>
+    <Reference Include="MQTTnet, Version=3.0.15.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
+      <HintPath>..\packages\MQTTnet.3.0.15\lib\net461\MQTTnet.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.7.7\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.7.8\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="ObjectListView, Version=2.9.1.25410, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <HintPath>..\packages\ObjectListView.Official.2.9.2-alpha2\lib\net20\ObjectListView.dll</HintPath>
@@ -178,6 +178,11 @@
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
@@ -294,7 +299,9 @@
     <Compile Include="ClsDoodsResponse.cs" />
     <Compile Include="ClsImageAdjust.cs" />
     <Compile Include="ClsProp.cs" />
+    <Compile Include="ClsRelevantObjectManager.cs" />
     <Compile Include="ClsSightHound.cs" />
+    <Compile Include="DoubleExtensions.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>
@@ -331,6 +338,12 @@
     </Compile>
     <Compile Include="Frm_PredSizeLimits.Designer.cs">
       <DependentUpon>Frm_PredSizeLimits.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm_RelevantObjects.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_RelevantObjects.Designer.cs">
+      <DependentUpon>Frm_RelevantObjects.cs</DependentUpon>
     </Compile>
     <Compile Include="Frm_Variables.cs">
       <SubType>Form</SubType>
@@ -386,7 +399,7 @@
     <Compile Include="NPushOver\Validators\EMailValidator.cs" />
     <Compile Include="NPushOver\Validators\IValidator.cs" />
     <Compile Include="NPushOver\Validators\KeyValidators.cs" />
-    <Compile Include="StringCompareExtensions.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="TaskCancellationExtension.cs" />
     <Compile Include="Trace.cs" />
     <Compile Include="ClsTriggerActionQueue.cs" />
@@ -551,6 +564,9 @@
     <EmbeddedResource Include="Frm_PredSizeLimits.resx">
       <DependentUpon>Frm_PredSizeLimits.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Frm_RelevantObjects.resx">
+      <DependentUpon>Frm_RelevantObjects.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Frm_Variables.resx">
       <DependentUpon>Frm_Variables.cs</DependentUpon>
     </EmbeddedResource>
@@ -601,6 +617,10 @@
     <None Include="Resources\camera-webcam.ico" />
     <None Include="Resources\camera-webcam_add.ico" />
     <None Include="Resources\camera-webcam_delete.ico" />
+    <None Include="Resources\image-x-generic.ico" />
+    <None Include="Resources\edit-delete-5.ico" />
+    <None Include="Resources\arrow-up-double-3.ico" />
+    <None Include="Resources\arrow-down-double-3.ico" />
     <Content Include="TestImage.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -644,7 +664,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.5.2.44\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.5.2.45\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />

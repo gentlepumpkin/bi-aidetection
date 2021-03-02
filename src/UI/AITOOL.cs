@@ -205,7 +205,7 @@ namespace AITool
                     if (BlueIrisInfo.Users.Count > 0 && string.IsNullOrEmpty(AppSettings.Settings.DefaultUserName) || string.Equals(AppSettings.Settings.DefaultUserName, "username", StringComparison.OrdinalIgnoreCase))
                     {
                         AppSettings.Settings.DefaultUserName = BlueIrisInfo.Users[0].Name;
-                        AppSettings.Settings.DefaultPasswordEncrypted = Global.EncryptString(BlueIrisInfo.Users[0].Password);
+                        AppSettings.Settings.DefaultPasswordEncrypted = BlueIrisInfo.Users[0].Password.Encrypt();
                     }
                 }
                 else
@@ -380,7 +380,7 @@ namespace AITool
                                 {
                                     if (form.text.Contains("\t"))
                                     {
-                                        region = Global.GetWordBetween(form.text, "\t", "").Trim();
+                                        region = form.text.GetWord("\t", "").Trim();
                                     }
                                     else if (form.text.Contains("-"))
                                     {
@@ -478,8 +478,8 @@ namespace AITool
                     if (!string.IsNullOrWhiteSpace(csv))
                     {
                         AITOOL.Log($"Debug: Extracting AWSAccessKeyId and AWSSecretKey from {pth}");
-                        string tid = Global.GetWordBetween(csv, "AWSAccessKeyId=", "\r|\n");
-                        string tsid = Global.GetWordBetween(csv, "AWSSecretKey=", "\r|\n|");
+                        string tid = csv.GetWord("AWSAccessKeyId=", "\r|\n");
+                        string tsid = csv.GetWord("AWSSecretKey=", "\r|\n|");
                         if (!string.IsNullOrEmpty(tid) && tid != AppSettings.Settings.AmazonAccessKeyId)
                             AppSettings.Settings.AmazonAccessKeyId = tid;
                         if (!string.IsNullOrEmpty(tsid) && tsid != AppSettings.Settings.AmazonSecretKey)
@@ -551,7 +551,7 @@ namespace AITool
                 try
                 {
                     Log("Debug: Updating/Resetting AI URL list...");
-                    List<string> SpltURLs = Global.Split(AppSettings.Settings.deepstack_url, "|;,");
+                    List<string> SpltURLs = AppSettings.Settings.deepstack_url.SplitStr("|;,");
 
                     //I want to reuse any object that already exists for the url but make sure to get the right order if it changes
                     Dictionary<string, ClsURLItem> tmpdic = new Dictionary<string, ClsURLItem>();
@@ -648,7 +648,7 @@ namespace AITool
             bool displayedbad = false;
             bool displayedretry = false;
             List<string> CurrentURLs = new List<string>();
-            List<string> RequiredURLs = Global.Split(RequiredURLList, ",;|", ToLower: true);
+            List<string> RequiredURLs = RequiredURLList.SplitStr(",;|", ToLower: true);
             bool HasRequiredList = RequiredURLs.Count > 0;
             int FoundRequiredCount = 0;
             int FoundRefinementCount = 0;
@@ -1352,7 +1352,7 @@ namespace AITool
                 //check each one to see if needs to be added
                 foreach (string item in names)
                 {
-                    List<string> splt = Global.Split(item, "|", false);
+                    List<string> splt = item.SplitStr("|", false);
                     string name = splt[0];
                     string path = splt[1];
                     if (!string.IsNullOrWhiteSpace(path))
@@ -1400,7 +1400,7 @@ namespace AITool
                     bool fnd = false;
                     foreach (string item in names)
                     {
-                        List<string> splt = Global.Split(item);
+                        List<string> splt = item.SplitStr("|");
                         string name = splt[0];
                         if (string.Equals(name, watcher1.Name, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1630,11 +1630,11 @@ namespace AITool
                     else if (IAProfile.ImageSizePercent > 0 && IAProfile.ImageSizePercent < 100)
                     {
                         double fractionalPercentage = (IAProfile.ImageSizePercent / 100.0);
-                        int outputWidth = (int)(ISImage.Width * fractionalPercentage);
-                        int outputHeight = (int)(ISImage.Height * fractionalPercentage);
+                        double outputWidth = ISImage.Width * fractionalPercentage;
+                        double outputHeight = ISImage.Height * fractionalPercentage;
 
                         Log($"Resizing image to {IAProfile.ImageSizePercent} from {ISImage.Width},{ISImage.Height} to {outputWidth},{outputHeight}...");
-                        ISImage.Mutate(i => i.Resize(outputWidth, outputHeight));
+                        ISImage.Mutate(i => i.Resize(outputWidth.ToInt(), outputHeight.ToInt()));
                     }
 
                     if (IAProfile.Brightness > 1 && IAProfile.Brightness < 100)
@@ -1786,7 +1786,7 @@ namespace AITool
                     string cleanjsonString = "";
                     if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
                     {
-                        cleanjsonString = Global.CleanString(ret.JsonString);
+                        cleanjsonString = ret.JsonString.CleanString();
                         try
                         {
                             response = JsonConvert.DeserializeObject<ClsDeepStackResponse>(ret.JsonString);
@@ -2013,7 +2013,7 @@ namespace AITool
 
                         if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
                         {
-                            string cleanjsonString = Global.CleanString(ret.JsonString);
+                            string cleanjsonString = ret.JsonString.CleanString();
 
                             try
                             {
@@ -2262,7 +2262,7 @@ namespace AITool
 
                             if (ret.JsonString != null && !string.IsNullOrWhiteSpace(ret.JsonString))
                             {
-                                string cleanjsonString = Global.CleanString(ret.JsonString);
+                                string cleanjsonString = ret.JsonString.CleanString();
 
                                 ClsDoodsResponse response = null;
 
@@ -2632,9 +2632,9 @@ namespace AITool
         public class ClsPredMatch
         {
             public int Idx = -1;
-            public int MatchPercent = 0;
+            public double MatchPercent = 0;
 
-            public ClsPredMatch(int idx, int matchPercent)
+            public ClsPredMatch(int idx, double matchPercent)
             {
                 Idx = idx;
                 MatchPercent = matchPercent;
@@ -2663,7 +2663,7 @@ namespace AITool
                 if (TrueIfInsideOrPartiallyInside)
                 {
                     //for face matching, we dont care if it is not a closely matching rectangle size, in fact it should be smaller but mostly within
-                    if (RectangleMatches(predictions[i].GetRectangle(), pred.GetRectangle(), cam.MergePredictionsMinMatchPercent, out int matched, TrueIfInsideOrPartiallyInside))
+                    if (RectangleMatches(predictions[i].GetRectangle(), pred.GetRectangle(), cam.MergePredictionsMinMatchPercent, out double matched, TrueIfInsideOrPartiallyInside))
                     {
                         if (!ObjTypeMustMatch || ObjTypeMustMatch && (predictions[i].ObjType == pred.ObjType || predictions[i].Label.IndexOf(pred.Label, StringComparison.OrdinalIgnoreCase) >= 0))
                         {
@@ -2682,7 +2682,7 @@ namespace AITool
                     op2.PercentMatch = cam.MergePredictionsMinMatchPercent;  //cam.maskManager.PercentMatch;
                     if (op1 == op2 && (!ObjTypeMustMatch || ObjTypeMustMatch && (predictions[i].ObjType == pred.ObjType || predictions[i].Label.IndexOf(pred.Label, StringComparison.OrdinalIgnoreCase) >= 0)))
                     {
-                        preds.Add(new ClsPredMatch(i, (int)Math.Round(op1.LastPercentMatch)));
+                        preds.Add(new ClsPredMatch(i, op1.LastPercentMatch));
                     }
                     //I'm not sure if the logic makes sense here but even if something fails to match I want to know how much it failed
                     predictions[i].PercentMatchRefinement = op1.LastPercentMatch;
@@ -2703,10 +2703,10 @@ namespace AITool
             return ret;
         }
 
-        public static bool RectangleMatches(Rectangle MasterRect, Rectangle CompareRect, int PercentMatch, out int MatchedPercent, bool TrueIfInsideOrPartiallyInside)
+        public static bool RectangleMatches(Rectangle MasterRect, Rectangle CompareRect, double PercentMatch, out double MatchedPercent, bool TrueIfInsideOrPartiallyInside)
         {
 
-            MatchedPercent = (int)Math.Round(AITOOL.GetObjIntersectPercent(MasterRect, CompareRect));
+            MatchedPercent = AITOOL.GetObjIntersectPercent(MasterRect, CompareRect);
 
             if (TrueIfInsideOrPartiallyInside)
             {
@@ -2728,105 +2728,9 @@ namespace AITool
             return false;
         }
 
-        //public ResultType IsRelevantObject(ClsPrediction pred)
-        //{
-        //    if (Global.IsInList(pred.Label, this.triggering_objects_as_string, TrueIfEmpty: false) || Global.IsInList(pred.Label, this.additional_triggering_objects_as_string, TrueIfEmpty: false))
-        //        return ResultType.Relevant;
-        //    else
-        //        return ResultType.UnwantedObject;
 
-        public static ResultType ArePredictionObjectsRelevant(string triggering_objects, string type, ClsPrediction pred, bool isnew)
-        {
-            return ArePredictionObjectsRelevant(triggering_objects, type, new List<ClsPrediction>() { pred }, isnew);
-        }
 
-        //}
-        public static ResultType ArePredictionObjectsRelevant(string triggering_objects, string typename, List<ClsPrediction> preds, bool isnew)
-        {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            ResultType ret = ResultType.UnwantedObject;
-
-            List<string> objs = Global.Split(triggering_objects, ",");
-
-            if (objs.Count == 0)  //assume if no list is provided to always return relevant
-                return ResultType.Relevant;
-
-            //if fred is found, the whole prediction will be ignored
-            //triggering_objects = person, car, -FRED
-            //found objects = person, fred
-
-            if (preds != null && preds.Count > 0)
-            {
-                //find at least one thing in the triggered objects list in order to send
-                string notrelevant = "";
-                string good = "";
-                string ignored = "";
-                bool ignore = false;
-                int cnt = 0;
-                foreach (ClsPrediction pred in preds)
-                {
-                    string label = pred.Label;
-                    bool hasignore = false;
-                    if (label.TrimStart().StartsWith("-"))
-                    {
-                        label = label.Trim("- ".ToCharArray());
-                        hasignore = true;
-                    }
-                    else
-                    {
-                        cnt++;
-                    }
-                    if (pred.Result == ResultType.Relevant || isnew)
-                    {
-                        if (Global.IsInList(label, objs, ",", TrueIfEmpty: false))
-                        {
-                            if (hasignore)
-                            {
-                                ignore = true;
-                                if (!ignored.Contains(label))
-                                    ignored += label + ",";
-                            }
-                            else
-                            {
-                                ret = ResultType.Relevant;
-                                if (!good.Contains(label))
-                                    good += label + ",";
-                            }
-                        }
-                        else
-                        {
-                            if (!notrelevant.Contains(label))
-                                notrelevant += label + ",";
-                        }
-                    }
-                    else
-                    {
-                        if (!notrelevant.Contains(label))
-                            notrelevant += label + ",";
-                    }
-                }
-
-                if (cnt == 0)
-                    ret = ResultType.Relevant;
-
-                if (ignore)
-                    ret = ResultType.IgnoredObject;
-
-                if (ret != ResultType.Relevant)
-                {
-                    Log($"Debug: Skipping {typename} because objects were not defined to trigger, or were set to ignore: Relevant='{good.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}'.  All Triggering Objects='{triggering_objects.Trim(", ".ToCharArray())}', {preds.Count} predictions(s)");
-                }
-                else
-                {
-                    Log($"Debug: Valid prediction for {typename} because object(s) '{good.Trim(", ".ToCharArray())}' were in trigger objects list '{triggering_objects.Trim(", ".ToCharArray())}'");
-
-                }
-            }
-
-            return ret;
-
-        }
 
         public class DetectObjectsResult
         {
@@ -2951,7 +2855,7 @@ namespace AITool
                                         pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
                                         pred.DynMaskType = predictions[pm.Idx].DynMaskType;
                                         predictions[pm.Idx].Result = ResultType.DuplicateObject;
-                                        if (IsNull(pred.Detail))
+                                        if (pred.Detail.IsEmpty())
                                             pred.Detail = predictions[pm.Idx].Detail;
                                     }
 
@@ -3020,19 +2924,19 @@ namespace AITool
                                                             Rectangle faceRect = pred.GetRectangle();
 
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(personRect, faceRect, cam.MergePredictionsMinMatchPercent, out int matched, true))
+                                                            if (RectangleMatches(personRect, faceRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
                                                             {
-                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
                                                                 {
                                                                     fpred.PercentMatchRefinement = matched;
                                                                     fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
                                                                     pred.Result = ResultType.RefinementObject;
-                                                                    Log($"Debug: [Refinement Server] Added face detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                    Log($"Debug: [Refinement Server] Added face detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match face from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent}% (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                                                Log($"Debug: [Refinement Server] Did *NOT* match face from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
                                                             }
                                                             pred.PercentMatchRefinement = matched;
                                                         }
@@ -3049,18 +2953,18 @@ namespace AITool
                                                             Rectangle PlateRect = pred.GetRectangle();
 
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(VehicleRect, PlateRect, cam.MergePredictionsMinMatchPercent, out int matched, true))
+                                                            if (RectangleMatches(VehicleRect, PlateRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
                                                             {
-                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
                                                                 {
                                                                     fpred.PercentMatchRefinement = matched;
                                                                     fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    Log($"Debug: [Refinement Server] Added plate detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                    Log($"Debug: [Refinement Server] Added plate detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match plate from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent}% (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                                                Log($"Debug: [Refinement Server] Did *NOT* match plate from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
                                                             }
                                                             pred.PercentMatchRefinement = matched;
                                                         }
@@ -3073,24 +2977,24 @@ namespace AITool
                                                     {
                                                         if (fpred.ObjType == ObjectType.Person)
                                                         {
-                                                            Rectangle personRect = Rectangle.FromLTRB(fpred.XMin, fpred.YMin, fpred.XMax, fpred.YMax);
-                                                            Rectangle newPerson = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
+                                                            Rectangle personRect = Rectangle.FromLTRB(fpred.XMin.ToInt(), fpred.YMin.ToInt(), fpred.XMax.ToInt(), fpred.YMax.ToInt());
+                                                            Rectangle newPerson = Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt());
 
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(personRect, newPerson, cam.MergePredictionsMinMatchPercent, out int matched, false))
+                                                            if (RectangleMatches(personRect, newPerson, cam.MergePredictionsMinMatchPercent, out double matched, false))
                                                             {
 
-                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
                                                                 {
                                                                     fpred.PercentMatchRefinement = matched;
                                                                     pred.Result = ResultType.RefinementObject;
                                                                     fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    Log($"Debug: [Refinement Server] Skipped duplicated matching 'person' detection for {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                    Log($"Debug: [Refinement Server] Skipped duplicated matching 'person' detection for {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match person from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, Required={cam.MergePredictionsMinMatchPercent}% (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                                                Log($"Debug: [Refinement Server] Did *NOT* match person from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}%, Required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
                                                             }
 
                                                             pred.PercentMatchRefinement = matched;
@@ -3105,26 +3009,26 @@ namespace AITool
                                                     {
                                                         if (fpred.ObjType == ObjectType.Vehicle)
                                                         {
-                                                            Rectangle ExistingVehicleRect = Rectangle.FromLTRB(fpred.XMin, fpred.YMin, fpred.XMax, fpred.YMax);
-                                                            Rectangle newVehicle = Rectangle.FromLTRB(pred.XMin, pred.YMin, pred.XMax, pred.YMax);
+                                                            Rectangle ExistingVehicleRect = Rectangle.FromLTRB(fpred.XMin.ToInt(), fpred.YMin.ToInt(), fpred.XMax.ToInt(), fpred.YMax.ToInt());
+                                                            Rectangle newVehicle = Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt());
 
                                                             //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(ExistingVehicleRect, newVehicle, cam.MergePredictionsMinMatchPercent, out int matched, TrueIfInsideOrPartiallyInside: false))
+                                                            if (RectangleMatches(ExistingVehicleRect, newVehicle, cam.MergePredictionsMinMatchPercent, out double matched, TrueIfInsideOrPartiallyInside: false))
                                                             {
                                                                 //change Truck to "Truck [Model,etc]"
-                                                                if (!IsNull(pred.Detail) && !fpred.Detail.Contains(pred.Detail))
+                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
                                                                 {
                                                                     fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
                                                                     fpred.Label = pred.Label;
-                                                                    fpred.Confidence = pred.Confidence;
+                                                                    //fpred.Confidence = pred.Confidence;
                                                                     fpred.PercentMatchRefinement = matched;
                                                                     pred.Result = ResultType.RefinementObject;
-                                                                    Log($"Debug: [Refinement Server] Added vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%");
+                                                                    Log($"Debug: [Refinement Server] Added vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required=75%");
+                                                                Log($"Debug: [Refinement Server] Did *NOT* match vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}, required={cam.MergePredictionsMinMatchPercent.ToPercent()}");
                                                             }
                                                             pred.PercentMatchRefinement = matched;
 
@@ -3147,7 +3051,7 @@ namespace AITool
                                                 pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
                                                 pred.DynMaskType = predictions[pm.Idx].DynMaskType;
                                                 predictions[pm.Idx].Result = ResultType.DuplicateObject;
-                                                if (IsNull(pred.Detail))
+                                                if (pred.Detail.IsEmpty())
                                                     pred.Detail = predictions[pm.Idx].Detail;
 
                                                 pred.OriginalOrder = predictions.Count + 1;
@@ -3179,12 +3083,12 @@ namespace AITool
                         if (predictions.Count > 0)
                         {
                             List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
-                            List<float> objects_confidence = new List<float>(); //list containing ai confidence value of object at same position in List objects
+                            List<double> objects_confidence = new List<double>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_details = new List<string>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
 
                             List<string> irrelevant_objects = new List<string>(); //list that will be filled with all irrelevant objects
-                            List<float> irrelevant_objects_confidence = new List<float>(); //list containing ai confidence value of irrelevant object at same position in List objects
+                            List<double> irrelevant_objects_confidence = new List<double>(); //list containing ai confidence value of irrelevant object at same position in List objects
                             List<string> irrelevant_objects_details = new List<string>(); //list containing ai confidence value of irrelevant object at same position in List objects
                             List<string> irrelevant_objects_position = new List<string>(); //list containing irrelevant object positions (xmin, ymin, xmax, ymax)
 
@@ -3245,7 +3149,7 @@ namespace AITool
                                 }
 
                                 if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}", pred.Server, cam, CurImg);
+                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}, PercentOfImage={pred.PercentOfImage.ToPercent()}", pred.Server, cam, CurImg);
                                 else
                                     Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", pred.Server, cam, CurImg);
 
@@ -3539,11 +3443,11 @@ namespace AITool
                     for (int i = 0; i < 9; i++)
                     {
                         //get image point coordinates (and converting double to int)
-                        int x = (int)(xmin + (xmax - xmin) * x_factor[i]);
-                        int y = (int)(ymin + (ymax - ymin) * y_factor[i]);
+                        double x = xmin + (xmax - xmin) * x_factor[i];
+                        double y = ymin + (ymax - ymin) * y_factor[i];
 
                         // Get the color of the pixel
-                        System.Drawing.Color pixelColor = mask_img.GetPixel(x, y);
+                        System.Drawing.Color pixelColor = mask_img.GetPixel(x.ToInt(), y.ToInt());
 
                         if (fileType == ".png")
                         {
@@ -3668,11 +3572,11 @@ namespace AITool
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilename]", Path.GetFileName(imgpath)); //gives the image name of the image that caused the trigger
                 ret = Global.ReplaceCaseInsensitive(ret, "[imagefilenamenoext]", Path.GetFileNameWithoutExtension(imgpath)); //gives the image name of the image that caused the trigger
 
-                if (!IsNull(AppSettings.Settings.DefaultUserName))
+                if (!AppSettings.Settings.DefaultUserName.IsEmpty())
                     ret = Global.ReplaceCaseInsensitive(ret, "[username]", AppSettings.Settings.DefaultUserName); //gives the image name of the image that caused the trigger
 
-                string pw = Global.DecryptString(AppSettings.Settings.DefaultPasswordEncrypted);
-                if (!IsNull(pw))
+                string pw = AppSettings.Settings.DefaultPasswordEncrypted.Decrypt();
+                if (!pw.IsEmpty())
                     ret = Global.ReplaceCaseInsensitive(ret, "[password]", pw); //gives the image name of the image that caused the trigger
 
                 if (BlueIrisInfo.Result == BlueIrisResult.Valid)
@@ -3714,6 +3618,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", preds[0].Label); //only gives first detection 
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", preds[0].Detail);
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", preds[0].Result.ToString());
+                        ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", preds[0].PercentOfImage.Round().ToString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", preds[0].PositionString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", preds[0].ConfidenceString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", detections.Trim(",".ToCharArray()));
@@ -3729,6 +3634,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", "0,0,0,0");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", "50.123");
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123));
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "Detection1, Detection2");
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123) + ", " + string.Format(AppSettings.Settings.DisplayPercentageFormat, 90.01));
@@ -3741,20 +3647,22 @@ namespace AITool
 
                     if (ret.IndexOf("[Detectionsjson]", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        string jsonstr = CleanString(GetJSONString(detectionslst.ToArray(), Formatting.None));
+                        string jsonstr = GetJSONString(detectionslst.ToArray(), Formatting.None).CleanString();
                         ret = Global.ReplaceCaseInsensitive(ret, "[DetectionsJson]", "{\"detections\": \"" + jsonstr + "\"}");
                     }
 
                     if (ret.IndexOf("[alljson]", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         AllJson json = new AllJson();
+                        json.Time = hist.Date;
+                        json.Camera = cam.Name;
                         json.analysisDurationMS = hist.analysisDurationMS;
                         json.fileName = hist.Filename;
                         json.baseName = Path.GetFileName(hist.Filename);
                         json.summary = hist.Detections;
                         json.state = hist.state;
                         json.predictions = detectionslst.ToArray();
-                        string jsonstr = CleanString(GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None));
+                        string jsonstr = GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None).CleanString();
                         ret = Global.ReplaceCaseInsensitive(ret, "[alljson]", jsonstr);
                     }
 
@@ -3771,8 +3679,9 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", cam.last_positions.ElementAt(0));
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, cam.last_confidences.ElementAt(0)));
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Unknown");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", "50.123");
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", string.Join(",", cam.last_detections));
-                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Join(",", cam.last_confidences));
+                        ret = Global.ReplaceCaseInsensitive(ret, "[confidences]", string.Join(",", cam.last_confidences.Select(x => x.ToString(AppSettings.Settings.DisplayPercentageFormat))));
                     }
                     else
                     {
@@ -3782,6 +3691,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", "Person");
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", "50.123");
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", "0,0,0,0");
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, 99.123));
                         ret = Global.ReplaceCaseInsensitive(ret, "[detections]", "Detection1, Detection2");
@@ -3799,18 +3709,20 @@ namespace AITool
                     }
 
 
-                    if (ret.IndexOf("[alljson]", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (ret.EqualsIgnoreCase("[alljson]"))
                     {
                         AllJson json = new AllJson();
                         json.analysisDurationMS = 999;
                         json.fileName = imgpath;
+                        json.Camera = cam.Name;
                         json.baseName = Path.GetFileName(imgpath);
-                        if (IsNull(cam.last_detections_summary))
+                        if (cam.last_detections_summary.IsEmpty())
                             cam.last_detections_summary = "Test Detection";
                         json.summary = Uri.EscapeUriString(cam.last_detections_summary);
                         json.state = "on";
                         json.predictions = new List<ClsDeepstackDetection>().ToArray();
-                        string jsonstr = CleanString(GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None));
+                        json.Time = DateTime.Now;
+                        string jsonstr = GetJSONString(json, Formatting.None, TypeNameHandling.None, PreserveReferencesHandling.None).CleanString();
                         ret = Global.ReplaceCaseInsensitive(ret, "[alljson]", jsonstr);
                     }
 
@@ -4040,8 +3952,8 @@ namespace AITool
                         {
                             if (!cams.Contains(AppSettings.Settings.CameraList[i]))
                                 cams.Add(AppSettings.Settings.CameraList[i]);
-
-                            Log($"Debug:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
+                            if (!ImageOrNameOrPrefix.EqualsIgnoreCase("none"))
+                                Log($"Debug:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
                         }
                         else
                         {
@@ -4081,12 +3993,12 @@ namespace AITool
 
         }
 
-        public static float GetObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
+        public static double GetObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
         {
 
             Rectangle objIntersect = Rectangle.Intersect(masterRectangle, compareRectangle);
 
-            float percentage = (((objIntersect.Width * objIntersect.Height) * 2) * 100f) /
+            double percentage = ((objIntersect.Width * objIntersect.Height * 2) * 100) /
                    ((compareRectangle.Width * compareRectangle.Height) + (compareRectangle.Width * masterRectangle.Height));
 
             return percentage;

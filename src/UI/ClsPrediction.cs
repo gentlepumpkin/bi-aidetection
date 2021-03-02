@@ -52,29 +52,34 @@ namespace AITool
         public string Label { get; set; } = "";
         public string Detail { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
+        public double Confidence { get; set; } = 0;
+        public double PercentOfImage { get; set; } = 0;
+
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
         public string Server { get; set; } = "";
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
-        public float PercentMatch { get; set; } = 0;
-        public float PercentMatchRefinement { get; set; } = 0;
+        public double PercentMatch { get; set; } = 0;
+        public double PercentMatchRefinement { get; set; } = 0;
         public MaskType ImgMaskType { get; set; } = MaskType.Unknown;
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
         public int DynamicThresholdCount { get; set; } = 0;
         public int ImagePointsOutsideMask { get; set; } = 0;
 
-        public float Confidence { get; set; } = 0;
-        public int YMin { get; set; } = 0;
-        public int XMin { get; set; } = 0;
-        public int YMax { get; set; } = 0;
-        public int XMax { get; set; } = 0;
+        public double YMin { get; set; } = 0;
+        public double XMin { get; set; } = 0;
+        public double YMax { get; set; } = 0;
+        public double XMax { get; set; } = 0;
         public string Camera { get; set; } = "";
         public string BICamName { get; set; } = "";
-        public int RectWidth { get; set; } = 0;
-        public int RectHeight { get; set; } = 0;
-        public int ImageWidth { get; set; } = 0;
-        public int ImageHeight { get; set; } = 0;
-        public int PercentOfImage { get; set; } = 0;
+        public double RectWidth { get; set; } = 0;
+        public double RectHeight { get; set; } = 0;
+        public double RectArea { get; set; } = 0;
+        public double AIWidth { get; set; } = 0;
+        public double AIHeight { get; set; } = 0;
+        public double ImageWidth { get; set; } = 0;
+        public double ImageHeight { get; set; } = 0;
+        public double ImageArea { get; set; } = 0;
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
         public int OriginalOrder { get; set; } = 0;
@@ -89,6 +94,7 @@ namespace AITool
             ret.x_max = this.XMax;
             ret.y_max = this.YMax;
             ret.Detail = this.Detail;
+            ret.Server = this.Server;
             return ret;
         }
         private void UpdateImageInfo(ClsImageQueueItem curImg)
@@ -100,9 +106,13 @@ namespace AITool
             this.UpdatePercent();
         }
 
+        public bool IsValid()
+        {
+            return !this.Label.IsEmpty() && this.XMax > 0 && this.YMax > 0 && this.ImageHeight > 0 && this.ImageWidth > 0;
+        }
         public void UpdatePercent()
         {
-            if (this.XMax > 0 && this.YMax > 0 && this.ImageHeight > 0 && this.ImageWidth > 0)
+            if (this.IsValid())
             {
 
                 //calculate the percentage of the size of the prediction compared to the image size
@@ -112,19 +122,26 @@ namespace AITool
                 this.RectWidth = rect.Width;
                 this.RectHeight = rect.Height;
 
-                double ImageArea = this.ImageWidth * this.ImageHeight;
-                double PredArea = this.RectWidth * this.RectHeight;
-                double diff = Math.Abs(PredArea - ImageArea);
-                double percent = 100 - ((diff / ImageArea) * 100);
+                this.ImageArea = this.ImageWidth * this.ImageHeight;
+                this.RectArea = this.RectWidth * this.RectHeight;
+                double diff = Math.Abs(this.RectArea - this.ImageArea);
+                double percent = 100 - (diff / this.ImageArea * 100);
 
-                this.PercentOfImage = (int)Math.Round(percent);
+                this.PercentOfImage = percent; //(int)Math.Round(percent);
 
+                if (percent <= 0)
+                    Log($"Error: PercentOfImage is {percent.ToPercent()}? ImageArea={ImageArea}, PredArea={this.RectArea}, Diff={diff}, pred.width={this.RectWidth}, pred.height={this.RectHeight}, pred.Xmin={this.XMin}, pred.Ymin={this.YMin}, pred.Xmax={this.XMax}, pred.Ymax={this.YMax}, ImageWidth={this.ImageWidth}, ImageHeight={this.ImageHeight}");
+
+            }
+            else
+            {
+                //Log($"Error: Updated prediction PercentOfImage too soon? Xmax={this.XMax}, Ymax={this.YMax}, ImageWidth={this.ImageWidth}, ImageHeight={this.ImageHeight}");
             }
 
         }
         public Rectangle GetRectangle()
         {
-            return Rectangle.FromLTRB(this.XMin, this.YMin, this.XMax, this.YMax);
+            return Rectangle.FromLTRB(this.XMin.ToInt(), this.YMin.ToInt(), this.XMax.ToInt(), this.YMax.ToInt());
         }
         [JsonConstructor]
         public ClsPrediction()
@@ -149,8 +166,13 @@ namespace AITool
                 return;
             }
 
-            this.RectHeight = Convert.ToInt32(Math.Round(curImg.Height * AiDetectionObject.BoundingBox.Height));
-            this.RectWidth = Convert.ToInt32(Math.Round(curImg.Width * AiDetectionObject.BoundingBox.Width));
+            this.AIWidth = AiDetectionObject.BoundingBox.Width;
+            this.AIHeight = AiDetectionObject.BoundingBox.Height;
+
+            //aws returns a percentage of the image width and height rather than actual pixels
+            this.RectHeight = curImg.Height * AiDetectionObject.BoundingBox.Height;
+            this.RectWidth = curImg.Width * AiDetectionObject.BoundingBox.Width;
+
 
             double right = (curImg.Width * AiDetectionObject.BoundingBox.Left) + this.RectWidth;
             double left = curImg.Width * AiDetectionObject.BoundingBox.Left;
@@ -158,11 +180,11 @@ namespace AITool
             double top = curImg.Height * AiDetectionObject.BoundingBox.Top;
             double bottom = (curImg.Height * AiDetectionObject.BoundingBox.Top) + this.RectHeight;
 
-            this.XMin = Convert.ToInt32(Math.Round(left));
-            this.YMin = Convert.ToInt32(Math.Round(top));
+            this.XMin = left;
+            this.YMin = top;
 
-            this.XMax = Convert.ToInt32(Math.Round(right));
-            this.YMax = Convert.ToInt32(Math.Round(bottom));
+            this.XMax = right;
+            this.YMax = bottom;
 
             //[{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {Global.UpperFirst(AiDetectionObject.Attributes.Emotion)}] 
             string emotions = "";
@@ -183,7 +205,7 @@ namespace AITool
                     int cnt = 0;
                     foreach (Emotion em in emotionslist)
                     {
-                        emotions += $"{Global.UpperFirst(em.Type.ToString().ToLower())};";
+                        emotions += $"{em.Type.ToString().ToLower().UpperFirst()};";
                         cnt++;
                         if (cnt > 3)
                             break;
@@ -268,8 +290,11 @@ namespace AITool
             //Rectangle(xmin, ymin, xmax - xmin, ymax - ymin)
             //          x,    y     Width,       Height
 
-            this.RectHeight = Convert.ToInt32(Math.Round(curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Height));
-            this.RectWidth = Convert.ToInt32(Math.Round(curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Width));
+            this.AIWidth = AiDetectionObject.Instances[InstanceIdx].BoundingBox.Width;
+            this.AIHeight = AiDetectionObject.Instances[InstanceIdx].BoundingBox.Height;
+
+            this.RectHeight = curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Height;
+            this.RectWidth = curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Width;
 
             double right = (curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Left) + this.RectWidth;
             double left = curImg.Width * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Left;
@@ -277,19 +302,19 @@ namespace AITool
             double top = curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Top;
             double bottom = (curImg.Height * AiDetectionObject.Instances[InstanceIdx].BoundingBox.Top) + this.RectHeight;
 
-            this.XMin = Convert.ToInt32(Math.Round(left));
-            this.YMin = Convert.ToInt32(Math.Round(top));
+            this.XMin = left;
+            this.YMin = top;
 
-            this.XMax = Convert.ToInt32(Math.Round(right));
-            this.YMax = Convert.ToInt32(Math.Round(bottom));
+            this.XMax = right;
+            this.YMax = bottom;
 
             //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(AiDetectionObject.Name);
+            this.Label = AiDetectionObject.Name.UpperFirst();
             if (AiDetectionObject.Parents != null && AiDetectionObject.Parents.Count > 0)
             {
                 foreach (var parent in AiDetectionObject.Parents)
                 {
-                    this.Detail += $", {Global.UpperFirst(parent.Name)}";
+                    this.Detail += $", {parent.Name.UpperFirst()}";
                 }
                 this.Detail = this.Detail.Trim(", ".ToCharArray());
             }
@@ -473,6 +498,9 @@ namespace AITool
 
                 Rectangle rect = Global.RectFromVertices(pts);
 
+                this.AIHeight = rect.Height;
+                this.AIWidth = rect.Width;
+
                 this.RectHeight = rect.Height;
                 this.RectWidth = rect.Width;
 
@@ -482,18 +510,18 @@ namespace AITool
                 double top = rect.Y;
                 double bottom = rect.Y + this.RectHeight;
 
-                this.XMin = Convert.ToInt32(Math.Round(left));
-                this.YMin = Convert.ToInt32(Math.Round(top));
+                this.XMin = left;
+                this.YMin = top;
 
-                this.XMax = Convert.ToInt32(Math.Round(right));
-                this.YMax = Convert.ToInt32(Math.Round(bottom));
+                this.XMax = right;
+                this.YMax = bottom;
 
                 if (AiDetectionObject.VehicleAnnotation != null && !string.IsNullOrEmpty(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType))
                 {
-                    string type = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType);
-                    string color = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Color.Name);
-                    string make = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Make.Name);
-                    string model = Global.UpperFirst(AiDetectionObject.VehicleAnnotation.Attributes.System.Model.Name);
+                    string type = AiDetectionObject.VehicleAnnotation.Attributes.System.VehicleType.UpperFirst();
+                    string color = AiDetectionObject.VehicleAnnotation.Attributes.System.Color.Name.UpperFirst();
+                    string make = AiDetectionObject.VehicleAnnotation.Attributes.System.Make.Name.UpperFirst();
+                    string model = AiDetectionObject.VehicleAnnotation.Attributes.System.Model.Name.UpperFirst();
 
                     this.Label = type;
                     this.Detail = $"{color}, {make}, {model}";
@@ -518,6 +546,9 @@ namespace AITool
 
                 Rectangle rect = Global.RectFromVertices(pts);
 
+                this.AIHeight = rect.Height;
+                this.AIWidth = rect.Width;
+
                 this.RectHeight = rect.Height;
                 this.RectWidth = rect.Width;
 
@@ -527,11 +558,10 @@ namespace AITool
                 double top = rect.Y;
                 double bottom = rect.Y + this.RectHeight;
 
-                this.XMin = Convert.ToInt32(Math.Round(left));
-                this.YMin = Convert.ToInt32(Math.Round(top));
-
-                this.XMax = Convert.ToInt32(Math.Round(right));
-                this.YMax = Convert.ToInt32(Math.Round(bottom));
+                this.XMin = left;
+                this.YMin = top;
+                this.XMax = right;
+                this.YMax = bottom;
 
                 this.Label = "License Plate";
                 this.ObjType = ObjectType.LicensePlate;
@@ -653,6 +683,9 @@ namespace AITool
             //defining the location of the object in the image. The top left pixel of 
             //the image represents coordinate (0,0).
 
+            this.AIHeight = AiDetectionObject.BoundingBox.Height;
+            this.AIWidth = AiDetectionObject.BoundingBox.Width;
+
             this.RectHeight = AiDetectionObject.BoundingBox.Height;
             this.RectWidth = AiDetectionObject.BoundingBox.Width;
 
@@ -662,18 +695,17 @@ namespace AITool
             double top = AiDetectionObject.BoundingBox.Y;
             double bottom = AiDetectionObject.BoundingBox.Y + this.RectHeight;
 
-            this.XMin = Convert.ToInt32(Math.Round(left));
-            this.YMin = Convert.ToInt32(Math.Round(top));
-
-            this.XMax = Convert.ToInt32(Math.Round(right));
-            this.YMax = Convert.ToInt32(Math.Round(bottom));
+            this.XMin = left;
+            this.YMin = top;
+            this.XMax = right;
+            this.YMax = bottom;
 
             //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(AiDetectionObject.Type);
+            this.Label = AiDetectionObject.Type.UpperFirst();
 
             if (AiDetectionObject.Attributes != null && !string.IsNullOrEmpty(AiDetectionObject.Attributes.Gender))
             {
-                string emotions = Global.UpperFirst(AiDetectionObject.Attributes.Emotion);  //this is the highest confidence emotion 
+                string emotions = AiDetectionObject.Attributes.Emotion.UpperFirst();  //this is the highest confidence emotion 
 
                 if (AiDetectionObject.Attributes.EmotionsAll != null)
                 {
@@ -713,8 +745,8 @@ namespace AITool
                 if (AiDetectionObject.Attributes.Frontal)
                     frontal = ", Frontal";
 
-                this.Label = Global.UpperFirst(AiDetectionObject.Type);
-                this.Detail = $"{Global.UpperFirst(AiDetectionObject.Attributes.Gender)}, {AiDetectionObject.Attributes.Age}, {emotions}{frontal}";
+                this.Label = AiDetectionObject.Type.UpperFirst();
+                this.Detail = $"{AiDetectionObject.Attributes.Gender.UpperFirst()}, {AiDetectionObject.Attributes.Age}, {emotions}{frontal}";
 
                 //this isnt exactly right, but sighthound doesnt give confidence for person/face, only gender, age
                 this.Confidence = AiDetectionObject.Attributes.GenderConfidence * 100;
@@ -752,17 +784,17 @@ namespace AITool
             if (!string.IsNullOrWhiteSpace(AiDetectionObject.UserID))
             {
                 this.ObjType = ObjectType.Face;
-                this.Label = Global.UpperFirst(AiDetectionObject.UserID);
+                this.Label = AiDetectionObject.UserID.UpperFirst();
                 this.Detail = "";  //"Face, " + Global.UpperFirst(AiDetectionObject.UserID);
             }
             else
             {
                 //force first letter to always be capitalized 
-                this.Label = Global.UpperFirst(AiDetectionObject.label);
+                this.Label = AiDetectionObject.label.UpperFirst();
             }
 
             if (!string.IsNullOrEmpty(AiDetectionObject.Detail))
-                this.Detail = Global.UpperFirst(AiDetectionObject.Detail);
+                this.Detail = AiDetectionObject.Detail.UpperFirst();
 
             this.XMax = AiDetectionObject.x_max;
             this.YMax = AiDetectionObject.y_max;
@@ -770,6 +802,9 @@ namespace AITool
             this.YMin = AiDetectionObject.y_min;
             this.Confidence = AiDetectionObject.confidence * 100;  //store as whole number percent 
             this.Filename = curImg.image_path;
+
+            this.AIWidth = this.XMax - this.XMin;
+            this.AIHeight = this.YMax - this.YMin;
 
             this.RectWidth = this.XMax - this.XMin;
             this.RectHeight = this.YMax - this.YMin;
@@ -799,7 +834,7 @@ namespace AITool
             }
 
             //force first letter to always be capitalized 
-            this.Label = Global.UpperFirst(AiDetectionObject.Label);
+            this.Label = AiDetectionObject.Label.UpperFirst();
 
             //{
             //         "top":0.09833781,
@@ -824,16 +859,19 @@ namespace AITool
             double top = curImg.Height * AiDetectionObject.Top;
             double bottom = curImg.Height * AiDetectionObject.Bottom;
 
-            this.XMin = Convert.ToInt32(Math.Round(left));
-            this.YMin = Convert.ToInt32(Math.Round(top));
+            this.XMin = left;
+            this.YMin = top;
 
-            this.XMax = Convert.ToInt32(Math.Round(right));
-            this.YMax = Convert.ToInt32(Math.Round(bottom));
+            this.XMax = right;
+            this.YMax = bottom;
+
+            this.AIWidth = AiDetectionObject.Right - AiDetectionObject.Left;
+            this.AIHeight = AiDetectionObject.Bottom - AiDetectionObject.Top;
 
             this.RectWidth = this.XMax - this.XMin;
             this.RectHeight = this.YMax - this.YMin;
 
-            this.Confidence = Convert.ToSingle(AiDetectionObject.Confidence);
+            this.Confidence = AiDetectionObject.Confidence;
             this.Filename = curImg.image_path;
 
             this.GetObjectType();
@@ -849,100 +887,103 @@ namespace AITool
 
             try
             {
+                if (this.ObjectPriority == 0)
+                    this.GetObjectType();
+
+                if (!this.IsValid())
+                {
+                    Log($"Error: prediction has not been processed yet? Label={this.Label}");
+                    this.UpdateImageInfo(this._curimg);
+
+                }
+
                 if (this._cam.enabled)
                 {
-                    if (!string.IsNullOrWhiteSpace(this._cam.triggering_objects_as_string))
+                    //this.Result = AITOOL.ArePredictionObjectsRelevant(this._cam.triggering_objects_as_string + "," + this._cam.additional_triggering_objects_as_string, "NEW", this, true);
+                    this.Result = this._cam.DefaultTriggeringObjects.IsRelevant(this, true, "NEW");
+                    if (this.Result == ResultType.Relevant)
                     {
-                        this.Result = AITOOL.ArePredictionObjectsRelevant(this._cam.triggering_objects_as_string + "," + this._cam.additional_triggering_objects_as_string, "NEW", this, true);
+                        this.Result = this._cam.IsRelevantSize(this);
                         if (this.Result == ResultType.Relevant)
                         {
-                            this.Result = this._cam.IsRelevantSize(this);
-                            if (this.Result == ResultType.Relevant)
+                            // -> OBJECT IS RELEVANT
+
+                            //if confidence limits are satisfied
+                            bool OverrideThreshold = this._cururl != null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
+
+                            if ((!OverrideThreshold && this.Confidence.Round() >= this._cam.threshold_lower && this.Confidence.Round() <= this._cam.threshold_upper) ||
+                                (OverrideThreshold && this.Confidence.Round() >= this._cururl.Threshold_Lower && this.Confidence.Round() <= this._cururl.Threshold_Upper))
                             {
-                                // -> OBJECT IS RELEVANT
+                                // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                //if confidence limits are satisfied
-                                bool OverrideThreshold = this._cururl != null && (this._cururl.Threshold_Lower > 0 || (this._cururl.Threshold_Upper > 0 && this._cururl.Threshold_Upper < 100));
+                                //only if the object is outside of the masked area
+                                result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
+                                this.ImgMaskResult = result.Result;
+                                this.ImgMaskType = result.MaskType;
+                                this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
 
-                                if ((!OverrideThreshold && this.Confidence >= this._cam.threshold_lower && this.Confidence <= this._cam.threshold_upper) ||
-                                    (OverrideThreshold && this.Confidence >= this._cururl.Threshold_Lower && this.Confidence <= this._cururl.Threshold_Upper))
+                                if (!result.IsMasked)
                                 {
-                                    // -> OBJECT IS WITHIN CONFIDENCE LIMITS
+                                    this.Result = ResultType.Relevant;
+                                }
+                                else if (result.MaskType == MaskType.None) //if the object is in a masked area
+                                {
+                                    this.Result = ResultType.NoMask;
+                                }
+                                else if (result.MaskType == MaskType.Image) //if the object is in a masked area
+                                {
+                                    this.Result = ResultType.ImageMasked;
+                                }
 
-                                    //only if the object is outside of the masked area
-                                    result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
-                                    this.ImgMaskResult = result.Result;
-                                    this.ImgMaskType = result.MaskType;
-                                    this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
-
-                                    if (!result.IsMasked)
+                                //check the mask manager if the image mask didnt flag anything
+                                if (!result.IsMasked)
+                                {
+                                    //check the dynamic or static masks
+                                    if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)
                                     {
-                                        this.Result = ResultType.Relevant;
+                                        ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
+                                                                                          this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
+                                        //creates history and masked lists for objects returned
+                                        result = this._cam.maskManager.CreateDynamicMask(currentObject);
+                                        this.DynMaskResult = result.Result;
+                                        this.DynMaskType = result.MaskType;
+                                        this.DynamicThresholdCount = result.DynamicThresholdCount;
+                                        this.PercentMatch = result.PercentMatch;
+                                        //there is a dynamic or static mask
+                                        if (result.MaskType == MaskType.Dynamic)
+                                            this.Result = ResultType.DynamicMasked;
+                                        else if (result.MaskType == MaskType.Static)
+                                            this.Result = ResultType.StaticMasked;
                                     }
-                                    else if (result.MaskType == MaskType.None) //if the object is in a masked area
+                                    else if (SkipDynamicMaskCheck)
                                     {
-                                        this.Result = ResultType.NoMask;
-                                    }
-                                    else if (result.MaskType == MaskType.Image) //if the object is in a masked area
-                                    {
-                                        this.Result = ResultType.ImageMasked;
-                                    }
-
-                                    //check the mask manager if the image mask didnt flag anything
-                                    if (!result.IsMasked)
-                                    {
-                                        //check the dynamic or static masks
-                                        if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)
-                                        {
-                                            ObjectPosition currentObject = new ObjectPosition(this.XMin, this.XMax, this.YMin, this.YMax, this.Label,
-                                                                                              this._curimg.Width, this._curimg.Height, this._cam.Name, this._curimg.image_path);
-                                            //creates history and masked lists for objects returned
-                                            result = this._cam.maskManager.CreateDynamicMask(currentObject);
-                                            this.DynMaskResult = result.Result;
-                                            this.DynMaskType = result.MaskType;
-                                            this.DynamicThresholdCount = result.DynamicThresholdCount;
-                                            this.PercentMatch = result.PercentMatch;
-                                            //there is a dynamic or static mask
-                                            if (result.MaskType == MaskType.Dynamic)
-                                                this.Result = ResultType.DynamicMasked;
-                                            else if (result.MaskType == MaskType.Static)
-                                                this.Result = ResultType.StaticMasked;
-                                        }
-                                        else if (SkipDynamicMaskCheck)
-                                        {
-                                            this.DynMaskResult = MaskResult.SkippedDynamicMaskCheck;
-                                            this.DynMaskType = MaskType.None;
-
-                                        }
-                                        else
-                                        {
-                                            this.DynMaskResult = MaskResult.NotEnabled;
-                                        }
+                                        this.DynMaskResult = MaskResult.SkippedDynamicMaskCheck;
+                                        this.DynMaskType = MaskType.None;
 
                                     }
-
-                                    if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
+                                    else
                                     {
-                                        this.Result = ResultType.Error;
-                                        Log($"Error: Masking error? '{this._cam.Name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.Name, this._curimg.image_path);
+                                        this.DynMaskResult = MaskResult.NotEnabled;
                                     }
 
                                 }
-                                else //if confidence limits are not satisfied
-                                {
-                                    this.Result = ResultType.NoConfidence;
-                                }
 
+                                if (result.Result == MaskResult.Error || result.Result == MaskResult.Unknown)
+                                {
+                                    this.Result = ResultType.Error;
+                                    Log($"Error: Masking error? '{this._cam.Name}' ('{this.Label}') - DynMaskResult={this.DynMaskResult}, ImgMaskResult={this.ImgMaskResult}", "", this._cam.Name, this._curimg.image_path);
+                                }
 
                             }
-                        }
+                            else //if confidence limits are not satisfied
+                            {
+                                this.Result = ResultType.NoConfidence;
+                            }
 
+
+                        }
                     }
-                    else
-                    {
-                        Log($"Error: Camera does not have any objects enabled '{this._cam.Name}' ('{this.Label}')", "", this._cam.Name, this._curimg.image_path);
-                        this.Result = ResultType.Error;
-                    }
+
 
                 }
                 else
@@ -1011,11 +1052,6 @@ namespace AITool
         {
             string tmp = this.Label.Trim().ToLower();
 
-            List<string> pris = Global.Split(AppSettings.Settings.ObjectPriority, ",", ToLower: true);
-            this.ObjectPriority = pris.IndexOf(tmp);
-            if (this.ObjectPriority == -1)
-                this.ObjectPriority = 999;
-
             //person,   bicycle,   car,   motorcycle,   airplane,
             //bus,   train,   truck,   boat,   traffic light,   fire hydrant,   stop_sign,
             //parking meter,   bench,   bird,   cat,   dog,   horse,   sheep,   cow,   elephant,
@@ -1029,7 +1065,10 @@ namespace AITool
             //hair dryer, toothbrush.
 
             if (this.ObjType != ObjectType.Unknown)  //because we can set this in deepstack face detection for example
+            {
+                this.GetPriority();
                 return;
+            }
 
             if (tmp.Equals("person"))
                 this.ObjType = ObjectType.Person;
@@ -1065,6 +1104,19 @@ namespace AITool
                 this.ObjType = ObjectType.Vehicle;
             else
                 this.ObjType = this._defaultObjType;
+
+            this.GetPriority();
+
+        }
+
+        public void GetPriority()
+        {
+            //List<string> pris = AppSettings.Settings.ObjectPriority.Split(",", ToLower: true);
+            ClsRelevantObject ro = this._cam.DefaultTriggeringObjects.Get(this.Label);
+            if (ro != null && ro.Priority > 0)
+                this.ObjectPriority = ro.Priority; //pris.IndexOf(tmp);
+            else
+                this.ObjectPriority = 999;
         }
 
         public override bool Equals(object obj)

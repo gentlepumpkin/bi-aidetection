@@ -345,28 +345,28 @@ namespace AITool
                     //1. get the padding between the image and the picturebox border
 
                     //get dimensions of the image and the picturebox
-                    float imgWidth = this.pictureBox1.BackgroundImage.Width;
-                    float imgHeight = this.pictureBox1.BackgroundImage.Height;
-                    float boxWidth = this.pictureBox1.Width;
-                    float boxHeight = this.pictureBox1.Height;
+                    double imgWidth = this.pictureBox1.BackgroundImage.Width;
+                    double imgHeight = this.pictureBox1.BackgroundImage.Height;
+                    double boxWidth = this.pictureBox1.Width;
+                    double boxHeight = this.pictureBox1.Height;
 
                     //these variables store the padding between image border and picturebox border
-                    int absX = 0;
-                    int absY = 0;
+                    double absX = 0;
+                    double absY = 0;
 
                     //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                    float scale = 1;
+                    double scale = 1;
 
                     //Comparing the aspect ratio of both the control and the image itself.
                     if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
                     {
                         scale = boxWidth / imgWidth; //get scale factor
-                        absY = (int)(boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
                     }
                     else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
                     {
                         scale = boxHeight / imgHeight; //get scale factor
-                        absX = (int)(boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
                     }
 
                     bool showkey = this.CurObjPosLst.Count > 1;
@@ -378,10 +378,10 @@ namespace AITool
                             //Log("Painting object");
                             //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
 
-                            int xmin = (int)(scale * op.Xmin + this.cam.XOffset) + absX;
-                            int xmax = (int)(scale * op.Xmax) + absX;
-                            int ymin = (int)(scale * op.Ymin + this.cam.YOffset) + absY;
-                            int ymax = (int)(scale * op.Ymax) + absY;
+                            double xmin = (scale * op.Xmin + this.cam.XOffset) + absX;
+                            double xmax = (scale * op.Xmax) + absX;
+                            double ymin = (scale * op.Ymin + this.cam.YOffset) + absY;
+                            double ymax = (scale * op.Ymax) + absY;
 
                             Color color;
                             if (op.IsStatic)
@@ -394,14 +394,14 @@ namespace AITool
                             }
 
                             //3. paint rectangle
-                            System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+                            System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(), ymin.ToInt(), (xmax - xmin).ToInt(), (ymax - ymin).ToInt());
                             using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
                             {
                                 e.Graphics.DrawRectangle(pen, rect); //draw rectangle
                             }
 
                             //object name text below rectangle
-                            rect = new System.Drawing.Rectangle(xmin - 1, ymax, (int)boxWidth, (int)boxHeight); //sets bounding box for drawn text
+                            rect = new System.Drawing.Rectangle((xmin - 1).ToInt(), ymax.ToInt(), boxWidth.ToInt(), boxHeight.ToInt()); //sets bounding box for drawn text
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
 
@@ -411,7 +411,7 @@ namespace AITool
                                 display += $" ({op.Key})";
 
                             System.Drawing.SizeF size = e.Graphics.MeasureString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-                            e.Graphics.FillRectangle(brush, xmin - 1, ymax, size.Width, size.Height); //draw grey background rectangle for detection text
+                            e.Graphics.FillRectangle(brush, (xmin - 1).ToInt(), ymax.ToInt(), size.Width, size.Height); //draw grey background rectangle for detection text
                             e.Graphics.DrawString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
                         }
                         else
@@ -638,30 +638,17 @@ namespace AITool
 
                 frm.cb_enabled.Checked = this.cam.maskManager.MaskingEnabled;
 
-                frm.tb_objects.Text = this.cam.maskManager.Objects;
+                //frm.tb_objects.Text = this.cam.maskManager.Objects;
 
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     ////get masking values from textboxes
-                    Int32.TryParse(frm.num_history_mins.Text, out int history_mins);
-                    Int32.TryParse(frm.num_mask_create.Text, out int mask_create_counter);
-                    Int32.TryParse(frm.num_mask_remove.Text, out int mask_remove_mins);
-                    Int32.TryParse(frm.numMaskThreshold.Text, out int maskRemoveThreshold);
-                    Int32.TryParse(frm.num_percent_var.Text, out int percent_match);
-                    Int32.TryParse(frm.num_max_unused.Text, out int unused);
-
-                    ////convert to percent
-                    //Double percent_variance = (double)variance / 100;
-
-                    this.cam.maskManager.HistorySaveMins = history_mins;
-                    this.cam.maskManager.HistoryThresholdCount = mask_create_counter;
-                    this.cam.maskManager.MaskRemoveMins = mask_remove_mins;
-                    this.cam.maskManager.MaskRemoveThreshold = maskRemoveThreshold;
-                    this.cam.maskManager.PercentMatch = percent_match;
-                    this.cam.maskManager.MaxMaskUnusedDays = unused;
-
-                    this.cam.maskManager.Objects = frm.tb_objects.Text.Trim();
-
+                    this.cam.maskManager.HistorySaveMins = frm.num_history_mins.Text.ToInt();
+                    this.cam.maskManager.HistoryThresholdCount = frm.num_mask_create.Text.ToInt();
+                    this.cam.maskManager.MaskRemoveMins = frm.num_mask_remove.Text.ToInt();
+                    this.cam.maskManager.MaskRemoveThreshold = frm.numMaskThreshold.Text.ToInt();
+                    this.cam.maskManager.PercentMatch = frm.num_percent_var.Text.ToDouble();
+                    this.cam.maskManager.MaxMaskUnusedDays = frm.num_max_unused.Text.ToInt();
                     this.cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
 
                     AppSettings.SaveAsync();

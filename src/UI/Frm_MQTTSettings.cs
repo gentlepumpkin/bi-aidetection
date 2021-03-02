@@ -49,8 +49,8 @@ namespace AITool
                     string topic = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Topic.Text.Trim(), Global.IPType.Path);
                     string payload = AITOOL.ReplaceParams(this.cam, null, null, this.tb_Payload.Text.Trim(), Global.IPType.Path);
 
-                    List<string> topics = Global.Split(topic, "|");
-                    List<string> payloads = Global.Split(payload, "|");
+                    List<string> topics = topic.SplitStr("|");
+                    List<string> payloads = payload.SplitStr("|");
 
                     MqttClientPublishResult pr = null;
                     ClsImageQueueItem CurImg = null;

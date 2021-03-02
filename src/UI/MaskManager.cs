@@ -47,6 +47,8 @@ namespace AITool
         }
 
         public string Objects { get; set; } = "";
+        public ClsRelevantObjectManager MaskTriggeringObjects { get; set; } = null;
+
         public ObjectScale ScaleConfig { get; set; }
 
         private object _maskLockObject = new object();
@@ -80,6 +82,12 @@ namespace AITool
 
                 if (cam.maskManager.ScaleConfig == null)
                     cam.maskManager.ScaleConfig = new ObjectScale();
+
+                if (cam.maskManager.MaskTriggeringObjects == null || !cam.maskManager.Objects.IsEmpty())
+                {
+                    cam.maskManager.MaskTriggeringObjects = new ClsRelevantObjectManager(cam.maskManager.Objects, "DynamicMask", cam.Name);
+                    cam.maskManager.Objects = "";
+                }
 
                 foreach (ObjectPosition op in this.LastPositionsHistory)
                 {
@@ -216,9 +224,9 @@ namespace AITool
                     ClsPrediction pred = new ClsPrediction();
                     pred.Label = currentObject.Label;
                     //if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty: true))
-                    if (AITOOL.ArePredictionObjectsRelevant(this.Objects, "DynamicMask", pred, true) != ResultType.Relevant)
+                    if (this.MaskTriggeringObjects.IsRelevant(pred, true) != ResultType.Relevant)
                     {
-                        Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
+                        //Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
                         returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
                         return returnInfo;
                     }

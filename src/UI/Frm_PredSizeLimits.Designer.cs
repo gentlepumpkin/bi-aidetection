@@ -52,8 +52,8 @@ namespace AITool
             this.tb_ConfidenceUpper = new System.Windows.Forms.TextBox();
             this.tb_ConfidenceLower = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.tb_duplicatepercent = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
+            this.tb_duplicatepercent = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -71,8 +71,6 @@ namespace AITool
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.tb_maxpercent);
             this.groupBox1.Controls.Add(this.label2);
@@ -122,8 +120,6 @@ namespace AITool
             // 
             // groupBox2
             // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.label5);
             this.groupBox2.Controls.Add(this.label6);
@@ -210,7 +206,7 @@ namespace AITool
             // BtnSave
             // 
             this.BtnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.BtnSave.Location = new System.Drawing.Point(208, 292);
+            this.BtnSave.Location = new System.Drawing.Point(207, 290);
             this.BtnSave.Name = "BtnSave";
             this.BtnSave.Size = new System.Drawing.Size(70, 30);
             this.BtnSave.TabIndex = 9;
@@ -230,8 +226,6 @@ namespace AITool
             // 
             // groupBox3
             // 
-            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox3.Controls.Add(this.label10);
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.tb_ConfidenceUpper);
@@ -279,8 +273,6 @@ namespace AITool
             // 
             // groupBox4
             // 
-            this.groupBox4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox4.Controls.Add(this.label11);
             this.groupBox4.Controls.Add(this.tb_duplicatepercent);
             this.groupBox4.Location = new System.Drawing.Point(12, 234);
@@ -289,14 +281,6 @@ namespace AITool
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Duplicate object detection";
-            // 
-            // tb_duplicatepercent
-            // 
-            this.tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
-            this.tb_duplicatepercent.Name = "tb_duplicatepercent";
-            this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 20);
-            this.tb_duplicatepercent.TabIndex = 8;
-            this.tb_duplicatepercent.Text = "100";
             // 
             // label11
             // 
@@ -307,11 +291,20 @@ namespace AITool
             this.label11.TabIndex = 2;
             this.label11.Text = "Match Size %:";
             // 
+            // tb_duplicatepercent
+            // 
+            this.tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
+            this.tb_duplicatepercent.Name = "tb_duplicatepercent";
+            this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 20);
+            this.tb_duplicatepercent.TabIndex = 8;
+            this.tb_duplicatepercent.Text = "100";
+            // 
             // Frm_PredSizeLimits
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(290, 334);
+            this.AutoScroll = true;
+            this.ClientSize = new System.Drawing.Size(289, 332);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.label8);

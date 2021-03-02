@@ -21,7 +21,6 @@ namespace AITool
         public static string LastShutdownState = "";
         public static string LastLogEntry = "";
         private static string LastSettingsJSON = "";
-        private static int LastJPGCleanDay = 0;
         private static ClsDeepstackDetection ThreadLock = new ClsDeepstackDetection();
         public class ClsSettings
         {
@@ -144,7 +143,7 @@ namespace AITool
             public bool HistoryFilterMasked = false;
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, face, bear, elephant, car, truck, pickup truck, suv, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+            public string ObjectPriority = "person, face, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird, Meat Popsicle";
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -225,7 +224,7 @@ namespace AITool
                 //update threshold in all masks if changed during session
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {
-                    cam.maskManager.Update(cam);
+                    cam.UpdateCamera();
                 }
 
                 Settings.SettingsValid = true;
@@ -540,7 +539,7 @@ namespace AITool
                         if (!string.IsNullOrEmpty(val))
                         {
                             if (el.ToString().Contains("telegram_token")) { Settings.telegram_token = val; cnt += 1; }
-                            if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = Global.Split(val, ","); cnt += 1; }
+                            if (el.ToString().Contains("telegram_chatids")) { Settings.telegram_chatids = val.SplitStr(","); cnt += 1; }
                             if (el.ToString().Contains("input_path")) { Settings.input_path = val; cnt += 1; }
                             if (el.ToString().Contains("deepstack_url")) { Settings.deepstack_url = val; cnt += 1; }
                             if (el.ToString().Contains("log_everything")) { Settings.log_everything = Convert.ToBoolean(val); cnt += 1; }
@@ -664,73 +663,7 @@ namespace AITool
                     //make sure everything in the cameras look correct:
                     foreach (Camera cam in Settings.CameraList)
                     {
-
-                        if (string.IsNullOrEmpty(cam.DetectionDisplayFormat))
-                            cam.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
-
-                        if (string.IsNullOrEmpty(cam.BICamName))
-                            cam.BICamName = cam.Name;
-
-                        if (string.IsNullOrEmpty(cam.MaskFileName))
-                            cam.MaskFileName = $"{cam.Name}.bmp";
-
-                        if (cam.ImageResolutions.Count == 0)
-                            cam.ScanImages(10, 500, -1);//run a quick scan to get resolutions
-
-                        if (cam.cooldown_time > -1)
-                        {
-                            cam.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(cam.cooldown_time).TotalSeconds, 0));
-                            cam.cooldown_time = -1;
-                        }
-
-                        if (cam.maskManager == null)
-                        {
-                            cam.maskManager = new MaskManager();
-                            Log("Debug: Had to reset MaskManager for camera " + cam.Name);
-                        }
-
-                        //update threshold in all masks if changed during session
-                        cam.maskManager.Update(cam);
-
-                        ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
-                        if (cam.trigger_url_cancels && !string.IsNullOrWhiteSpace(cam.cancel_urls_as_string))
-                        {
-                            cam.cancel_urls_as_string = cam.trigger_urls_as_string;
-                            cam.trigger_url_cancels = false;
-                        }
-
-                        cam.trigger_urls = Global.Split(cam.trigger_urls_as_string, "\r\n|;,").ToArray();
-                        cam.cancel_urls = Global.Split(cam.cancel_urls_as_string, "\r\n|;,").ToArray();
-
-                        if (cam.Action_image_copy_enabled &&
-                            !string.IsNullOrWhiteSpace(cam.Action_network_folder) &&
-                            cam.Action_network_folder_purge_older_than_days > 0 &&
-                            LastJPGCleanDay != DateTime.Now.DayOfYear &&
-                            Directory.Exists(cam.Action_network_folder))
-                        {
-                            Log($"Debug: Cleaning out jpg files older than '{cam.Action_network_folder_purge_older_than_days}' days in '{cam.Action_network_folder}'...");
-
-                            List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(cam.Action_network_folder, "*.jpg"));
-                            int deleted = 0;
-                            int errs = 0;
-                            foreach (FileInfo fi in filist)
-                            {
-                                if ((DateTime.Now - fi.LastWriteTime).TotalDays > cam.Action_network_folder_purge_older_than_days)
-                                {
-                                    try { fi.Delete(); deleted++; }
-                                    catch { errs++; }
-                                }
-                            }
-                            if (errs == 0)
-                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
-                            else
-                                Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
-
-                            LastJPGCleanDay = DateTime.Now.DayOfYear;
-
-
-                        }
-
+                        cam.UpdateCamera();
                     }
 
 
@@ -788,6 +721,7 @@ namespace AITool
 
             return Ret;
         }
+
 
     }
 

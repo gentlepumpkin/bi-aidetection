@@ -49,6 +49,9 @@ namespace AITool
                 frm.tb_Password.Text = AppSettings.Settings.mqtt_password;
                 frm.tb_Username.Text = AppSettings.Settings.mqtt_username;
 
+                frm.tb_LWTTopic.Text = AppSettings.Settings.mqtt_LastWillTopic;
+                frm.tb_LWTPayload.Text = AppSettings.Settings.mqtt_LastWillPayload;
+
                 frm.tb_Topic.Text = this.tb_MQTT_Topic.Text.Trim();
                 frm.tb_Payload.Text = this.tb_MQTT_Payload.Text.Trim();
 
@@ -59,6 +62,9 @@ namespace AITool
                     AppSettings.Settings.mqtt_username = frm.tb_Username.Text.Trim();
                     AppSettings.Settings.mqtt_serverandport = frm.tb_ServerPort.Text.Trim();
                     AppSettings.Settings.mqtt_password = frm.tb_Password.Text.Trim();
+
+                    AppSettings.Settings.mqtt_LastWillTopic = frm.tb_LWTTopic.Text.Trim();
+                    AppSettings.Settings.mqtt_LastWillPayload = frm.tb_LWTPayload.Text.Trim();
 
                     this.tb_MQTT_Payload.Text = frm.tb_Payload.Text.Trim();
                     this.tb_MQTT_Topic.Text = frm.tb_Topic.Text.Trim();
@@ -203,8 +209,8 @@ namespace AITool
         {
             try
             {
-                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];[SummaryJson];[DetectionsJson];[AllJson];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
-                List<string> varlist = Global.Split(vars, ";");
+                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];[SummaryJson];[DetectionsJson];[AllJson];[PercentOfImage];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
+                List<string> varlist = vars.SplitStr(";");
                 List<ClsProp> props = new List<ClsProp>();
                 foreach (var varitm in varlist)
                 {
@@ -227,6 +233,53 @@ namespace AITool
 
         private void lbl_DetectionFormat_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private void LnkPushoverObjects_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
+            {
+                frm.ObjectManager = cam.PushoverTriggeringObjects;
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    cam.PushoverTriggeringObjects = frm.ObjectManager;
+                }
+            }
+        }
+
+        private void lnkTelegramTriggeringObjects_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
+            {
+                frm.ObjectManager = cam.TelegramTriggeringObjects;
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    cam.TelegramTriggeringObjects = frm.ObjectManager;
+                }
+            }
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
+            {
+                frm.ObjectManager = cam.MQTTTriggeringObjects;
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    cam.MQTTTriggeringObjects = frm.ObjectManager;
+                }
+            }
+        }
+
+        private void cb_TriggerURLEnabled_CheckedChanged(object sender, EventArgs e)
+        {
+            Global_GUI.GroupboxEnableDisable(groupBoxUrlTrigger, cb_UrlTriggerEnabled);
+        }
+
+        private void cb_CancelURLEnabled_CheckedChanged(object sender, EventArgs e)
+        {
+            Global_GUI.GroupboxEnableDisable(groupBoxUrlCancel, cb_UrlCancelEnabled);
 
         }
     }

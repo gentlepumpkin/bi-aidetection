@@ -117,38 +117,57 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="image-x-generic" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\image-x-generic.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Logo1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Logo.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="arrow-up-double-3" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\arrow-up-double-3.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Logo_Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Logo-Error.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="camera-webcam_delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\camera-webcam_delete.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="network-server" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\network-server.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="edit-delete-5" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\edit-delete-5.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="camera-webcam" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\camera-webcam.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="camera-webcam_add" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\camera-webcam_add.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\logo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="arrow-down-double-3" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\arrow-down-double-3.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>122, 17</value>
+  </metadata>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        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
+        Hv/ZjWH/ycnJngAAABMAAAATv7++nq1yb/9KImL/GyBw/xowa/8mJ2X/TwBb/04AYP9oE3r/ayyJ/yxY
+        gv8ZYZX/LV+m/2xdtv+gT0X/xlka/8ZZG//GWRv/xlkb/8VWF//WiFz/yMjIngAAABMAAAARwsLBodah
+        iP+QY4P/aFuY/1Valv9rYob/iFh9/4VMif+UWpH/jW+I/193lP9gd6L/Z2ym/4xvt/+7fHD/1Idc/9SH
+        XP/Uh1z/1Idc/9SFWf/gqYr/ysrKoQAAABEAAAALqaioW9DQz5POzs2Tz87Ok9DQz5PR0NCT0dHQk9LS
+        0ZPT09KT09PSk9PT05PU1NOT1NTUk9XV1JPV1dWT1dXVk9XV1ZPV1dWT1dXVk9XV1ZPY2NiTrq6uWwAA
+        AAsAAAACAAAABQAAAAcAAAAHAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAA
+        AAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAHAAAABQAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wCAAD8AgAAfAIAADwCAAAcAgAADAIAA
+        AwCAAAEAgAABAIAAAQCAAAEAgAABAIAAAQCAAAEAgAABAIAAAQCAAAEAwAADAP///wD///8A////AP//
+        /wA=
+</value>
   </data>
 </root>

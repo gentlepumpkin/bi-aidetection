@@ -54,7 +54,7 @@ namespace AITool
 
             this.cb_OnlyLinked.Checked = this.CurURL.UseOnlyAsLinkedServer;
 
-            List<string> linked = Global.Split(this.CurURL.LinkedResultsServerList, ",;|");
+            List<string> linked = this.CurURL.LinkedResultsServerList.SplitStr(",;|");
 
             //Add all servers except current one and refinement server
             int idx = 0;

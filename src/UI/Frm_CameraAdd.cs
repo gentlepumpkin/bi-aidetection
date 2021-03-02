@@ -34,7 +34,7 @@ namespace AITool
             List<string> cams = new List<string>();
 
             if (keeptextcontents)
-                cams = Global.Split(tb_Cameras.Text, "\r\n|;,");
+                cams = tb_Cameras.Text.SplitStr("\r\n|;,");
 
             foreach (object itm in this.checkedListBoxCameras.CheckedItems)
             {

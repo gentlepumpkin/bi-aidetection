@@ -444,20 +444,64 @@ namespace AITool
 
         public static bool IsTimeBetween(DateTime time, string span)
         {
-            if (string.IsNullOrEmpty(span))
+            if (span.IsEmpty())
                 return true;  //if span is not set, assume its always true
 
-            // convert datetime to a TimeSpan
-            TimeSpan now = time.TimeOfDay;
+            bool ret = false;
 
-            string[] splt = span.Split('-');
-            TimeSpan BeginSpan = TimeSpan.Parse(splt[0]);
-            TimeSpan EndSpan = TimeSpan.Parse(splt[1]);
-            // see if start comes before end
-            if (BeginSpan < EndSpan)
-                return BeginSpan <= now && now <= EndSpan;
-            // start is after end, so do the inverse comparison
-            return !(EndSpan < now && now < BeginSpan);
+            try
+            {
+                // convert datetime to a TimeSpan
+                TimeSpan now = time.TimeOfDay;
+
+                //first split up multiple ranges:
+                List<string> spans = span.SplitStr(",");
+                foreach (var spn in spans)
+                {
+
+                    //support simple format hour1;hour2;hour3  12;1;2;3;4;5;6
+                    if (spn.Contains(";"))
+                    {
+                        List<string> semsplt = spn.SplitStr(";");
+                        foreach (string hr in semsplt)
+                        {
+                            //The value of the Hour property is always expressed using a 24-hour clock.
+                            if (hr == time.Hour.ToString())
+                            {
+                                ret = true;
+                                break;
+                            }
+                        }
+
+                        if (ret)
+                            break;
+                    }
+                    else
+                    {
+                        string[] splt = spn.Split('-');
+                        TimeSpan BeginSpan = TimeSpan.Parse(splt[0]);
+                        TimeSpan EndSpan = TimeSpan.Parse(splt[1]);
+
+                        // see if start comes before end
+                        if (BeginSpan < EndSpan)
+                            ret = BeginSpan <= now && now <= EndSpan;
+                        else
+                            // start is after end, so do the inverse comparison
+                            ret = !(EndSpan < now && now < BeginSpan);
+
+                        if (ret)
+                            break;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: Range Invalid: '{span}': " + ex.Msg());
+            }
+
+            return ret;
         }
 
         public static async Task<bool> DirectoryExistsAsync(string filename, int TimeoutMS = 20000)
@@ -501,7 +545,7 @@ namespace AITool
             //We are taking a path like C:\BlueIris\clips\blah read from a remote computer's registry
             //and trying to convert it to an accessible path on the current computer.
             string ret = RemoteLocalPath;
-            string lastremotepathpart = Global.Split(RemoteLocalPath, @"\").Last();
+            string lastremotepathpart = RemoteLocalPath.SplitStr(@"\").Last();
             string ip = "";
             string hostname = "";
             Stopwatch sw = Stopwatch.StartNew();
@@ -528,7 +572,7 @@ namespace AITool
                             string remotepath = drvkey.GetValue("RemotePath").ToString();
                             if (!string.IsNullOrEmpty(remotepath) && remotepath.StartsWith(@"\\"))
                             {
-                                string mappedserver = GetWordBetween(remotepath, @"\\", @"\");
+                                string mappedserver = remotepath.GetWord(@"\\", @"\");
 
                                 if (string.Equals(mappedserver, ip, StringComparison.OrdinalIgnoreCase) || string.Equals(mappedserver, hostname, StringComparison.OrdinalIgnoreCase))
                                 {
@@ -556,7 +600,7 @@ namespace AITool
                     }
                 }
 
-                List<string> spltpth = Global.Split(RemoteLocalPath, "\\");
+                List<string> spltpth = RemoteLocalPath.SplitStr("\\");
 
                 //search for last two parts of the path UNDER each of the shares
                 string lastpath = spltpth[spltpth.Count - 1];
@@ -1026,16 +1070,7 @@ namespace AITool
             return ret;
         }
 
-        public static bool IsNull(object obj)
-        {
-            if (obj == null)
-                return true;
 
-            if (obj is string && string.IsNullOrWhiteSpace((string)obj))
-                return true;
-
-            return false;
-        }
         public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddress = "")
         {
             IPAddress ret = IPAddress.None;
@@ -1212,62 +1247,6 @@ namespace AITool
             return ret;
         }
 
-        static byte[] entropy = System.Text.Encoding.Unicode.GetBytes("sdsgtj;lrjwteojtkslkdjsl;dvlbmv.bmvlfu7r0tret-rereigjejgkgljg42");
-
-        //this is not truly secure, but better than storing plain text in the JSON file
-        public static string EncryptString(string input)
-        {
-            byte[] encryptedData = System.Security.Cryptography.ProtectedData.Protect(
-                System.Text.Encoding.Unicode.GetBytes(input),
-                entropy,
-                System.Security.Cryptography.DataProtectionScope.CurrentUser);
-            return Convert.ToBase64String(encryptedData);
-        }
-
-        public static string DecryptString(string encryptedData)
-        {
-            if (String.IsNullOrEmpty(encryptedData))
-                return "";
-
-            try
-            {
-                byte[] decryptedData = System.Security.Cryptography.ProtectedData.Unprotect(
-                    Convert.FromBase64String(encryptedData),
-                    entropy,
-                    System.Security.Cryptography.DataProtectionScope.CurrentUser);
-                return System.Text.Encoding.Unicode.GetString(decryptedData);
-            }
-            catch
-            {
-                return "";
-            }
-        }
-
-        public static SecureString ToSecureString(string input)
-        {
-            SecureString secure = new SecureString();
-            foreach (char c in input)
-            {
-                secure.AppendChar(c);
-            }
-            secure.MakeReadOnly();
-            return secure;
-        }
-
-        public static string ToInsecureString(SecureString input)
-        {
-            string returnValue = string.Empty;
-            IntPtr ptr = System.Runtime.InteropServices.Marshal.SecureStringToBSTR(input);
-            try
-            {
-                returnValue = System.Runtime.InteropServices.Marshal.PtrToStringBSTR(ptr);
-            }
-            finally
-            {
-                System.Runtime.InteropServices.Marshal.ZeroFreeBSTR(ptr);
-            }
-            return returnValue;
-        }
 
         public static void MoveFiles(string FromFolder, string ToFolder, string FileSpec, bool OnlyIfNewer)
         {
@@ -1365,16 +1344,7 @@ namespace AITool
                 throw new NotSupportedException(@"No registry key found under 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' to determine running framework version");
             }
         }
-        public static string UpperFirst(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-            {
-                return string.Empty;
-            }
-            char[] a = s.ToCharArray();
-            a[0] = char.ToUpper(a[0]);
-            return new string(a);
-        }
+
 
         public static bool DeleteRegSetting(string Name)
         {
@@ -1488,16 +1458,16 @@ namespace AITool
                         else if (RetVal is string && DefaultValue is Point)
                         {
                             //{X=965,Y=399}
-                            int X = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "X=", ","));
-                            int Y = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Y=", "}"));
+                            int X = GetNumberInt(RetVal.ToString().GetWord("X=", ","));
+                            int Y = GetNumberInt(RetVal.ToString().GetWord("Y=", "}"));
                             RetVal = new Point(X, Y);
 
                         }
                         else if (RetVal is string && DefaultValue is Size)
                         {
                             //{Width=931, Height=592}
-                            int Wid = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Width=", ","));
-                            int Hei = GetNumberInt(Global.GetWordBetween(RetVal.ToString(), "Height=", "}"));
+                            int Wid = GetNumberInt(RetVal.ToString().GetWord("Width=", ","));
+                            int Hei = GetNumberInt(RetVal.ToString().GetWord("Height=", "}"));
                             RetVal = new Size(Wid, Hei);
                         }
                         else if (DefaultValue != null)
@@ -1551,7 +1521,7 @@ namespace AITool
                 else if (Obj is int)
                     Ret = (int)Obj;
                 else if (Obj is double)
-                    Ret = Convert.ToInt32(Math.Round((double)Obj));
+                    Ret = ((double)Obj).ToInt();
                 else if (Obj is float)
                     Ret = Convert.ToInt32(Math.Round((float)Obj));
             }
@@ -2163,14 +2133,14 @@ namespace AITool
             if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
                 return true;  //If there is no searchlist, always return true
 
-            return IsInList(FindStrList, Global.Split(SearchList, Separators, true, true, true));
+            return IsInList(FindStrList, SearchList.SplitStr(Separators, true, true, true));
         }
         public static bool IsInList(string FindStr, List<string> SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
             if (TrueIfEmpty && SearchList.Count == 0)
                 return true;  //If there is no searchlist, always return true
 
-            return IsInList(Global.Split(FindStr, Separators, true, true, true), SearchList);
+            return IsInList(FindStr.SplitStr(Separators, true, true, true), SearchList);
         }
         public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
@@ -2178,7 +2148,7 @@ namespace AITool
                 return true;  //If there is no searchlist, always return true
 
 
-            return IsInList(Global.Split(FindStr, Separators, true, true, true), Global.Split(SearchList, Separators, true, true, true));
+            return IsInList(FindStr.SplitStr(Separators, true, true, true), SearchList.SplitStr(Separators, true, true, true));
         }
         public static bool IsInList(List<string> FindStrsList, List<string> SearchList)
         {
@@ -2193,41 +2163,7 @@ namespace AITool
             return false;
         }
 
-        public static List<string> Split(string InList, string Separators = "|", bool RemoveEmpty = true, bool TrimStr = true, bool ToLower = false)
-        {
-            List<string> Ret = new List<string>();
-            if (!string.IsNullOrWhiteSpace(InList))
-            {
-                StringSplitOptions SSO = StringSplitOptions.None;
 
-                if (RemoveEmpty)
-                    SSO = StringSplitOptions.RemoveEmptyEntries;
-
-                string[] splt = InList.Split(Separators.ToCharArray(), SSO);
-                for (int i = 0; i < splt.Length; i++)
-                {
-                    if (ToLower)
-                        splt[i] = splt[i].ToLower();
-
-                    if (RemoveEmpty && !string.IsNullOrWhiteSpace(splt[i]))
-                    {
-                        if (TrimStr)
-                            Ret.Add(splt[i].Trim());
-                        else
-                            Ret.Add(splt[i]);
-                    }
-                    else if (!RemoveEmpty)
-                    {
-                        if (TrimStr)
-                            Ret.Add(splt[i].Trim());
-                        else
-                            Ret.Add(splt[i]);
-                    }
-
-                }
-            }
-            return Ret;
-        }
 
         public static string ConvertToBase64(this Stream stream)
         {
@@ -2326,45 +2262,7 @@ namespace AITool
             }
         }
 
-        public static string CleanString(string inp)
-        {
-            if (inp == null || string.IsNullOrWhiteSpace(inp))
-            {
-                return "";
-            }
-            else
-            {
-                return inp.Replace("\0", " ").Replace("\r", " ").Replace("\n", " ");
-            }
-        }
 
-        public static bool IsStringBefore(string teststring, string first, string second)
-        {
-
-            //test something like this - make sure we arnt picking up the semicolon that could be part of a URL:
-            //person, car ; http://URL/;
-            bool ret = false;
-            int firstidx = teststring.IndexOf(first, StringComparison.OrdinalIgnoreCase);
-
-            if (firstidx > -1)
-            {
-                int secondidx = teststring.IndexOf(second, StringComparison.OrdinalIgnoreCase);
-                if (secondidx > -1)
-                {
-                    if (firstidx < secondidx)
-                    {
-                        ret = true;
-                    }
-                }
-                else
-                {
-                    ret = true;
-                }
-            }
-
-            return ret;
-
-        }
 
 
         public static void SerializeJsonIntoStream(object value, Stream stream)
@@ -3139,89 +3037,6 @@ namespace AITool
         }
 
 
-        public static string GetWordBetween(string InpStr, string JustBefore, string JustAfter, Int32 LastPos = 0, Int32 FirstPos = 0, bool NoTrim = false, bool MustFindJustAfter = false)
-        {
-            string Ret = "";
-
-            try
-            {
-                string[] JB = JustBefore.Split('|');
-                string[] JA = JustAfter.Split('|');
-                int JBPos = 0;
-                int JAPos = 0;
-                string BefStr = "";
-                string AftStr = "";
-                int WordLen = 0;
-                string RetWord = "";
-
-                if (JustBefore.Length > 0)
-                {
-                    foreach (string BefStrTmp in JB)
-                    {
-                        BefStr = BefStrTmp;
-                        if (BefStr.Length > 0)
-                        {
-                            JBPos = InpStr.IndexOf(BefStr, FirstPos, StringComparison.OrdinalIgnoreCase);
-                            if (JBPos >= 0)
-                                break;
-                        }
-                    }
-                }
-                else
-                    JBPos = FirstPos;
-                if (JBPos == -1)
-                    return Ret;
-                int FirstFnd = InpStr.Length;
-                foreach (string AftStrTmp in JA)
-                {
-                    AftStr = AftStrTmp;
-                    if (AftStr.Length > 0)
-                    {
-                        Int32 count = InpStr.Length - (JBPos + BefStr.Length);
-                        Int32 StartIndex = JBPos + BefStr.Length;
-                        JAPos = InpStr.IndexOf(AftStr, StartIndex, count, StringComparison.OrdinalIgnoreCase);
-                        if (JAPos >= 0)
-                            // If JAPos <= FirstFnd Then FirstFnd = JAPos
-                            FirstFnd = Math.Min(JAPos, FirstFnd);
-                    }
-                }
-
-                // If FirstFnd <= JAPos Then
-                JAPos = FirstFnd;
-                // End If
-
-                if (JAPos == -1 || JAPos == 0 || JustAfter.Length == 0)
-                {
-                    if (!MustFindJustAfter)
-                        JAPos = InpStr.Length;
-                }
-
-                if (JAPos <= JBPos)
-                    return Ret;
-
-                WordLen = JAPos - (JBPos + BefStr.Length);
-                if (WordLen > 0)
-                {
-                    RetWord = InpStr.Substring(JBPos + BefStr.Length, WordLen);
-                    LastPos = JAPos; // JBPos + BefStr.Length + RetWord.Length
-                    if (NoTrim)
-                        Ret = RetWord;
-                    else
-                        Ret = RetWord.Trim();
-                }
-            }
-            // Return ""
-
-            catch (Exception)
-            {
-            }
-            finally
-            {
-
-            }
-
-            return Ret;
-        }
 
         public static string GetWMIPropertyFromProcess(Int32 PID, string PropName)
         {
@@ -3408,8 +3223,8 @@ namespace AITool
             try
             {
                 //If Directory.Exists(CurDirectory) Then
-                List<string> Folders = Global.Split(CurDirectory, ";|");
-                List<string> Names = Global.Split(FileName, ";|");
+                List<string> Folders = CurDirectory.SplitStr(";|");
+                List<string> Names = FileName.SplitStr(";|");
                 bool HasDate = MinLastWriteTime.HasValue;
                 foreach (string fld in Folders)
                 {
@@ -4158,20 +3973,6 @@ namespace AITool
     }
 
 
-    public static class StringExt
-    {
-        public static string Truncate(this string value, int maxLength, bool ellipsis)
-        {
-            if (string.IsNullOrEmpty(value)) return value;
-
-            if (value.Length <= maxLength) return value;
-
-            if (ellipsis) return value.Substring(0, maxLength) + "...";
-
-            return value.Substring(0, maxLength);
-
-        }
-    }
 
 }
 

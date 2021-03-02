@@ -13,21 +13,21 @@ namespace AITool
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
         public int Counter { get; set; }
         public double PercentMatch { get; set; }
-        public float LastPercentMatch { get; set; }
+        public double LastPercentMatch { get; set; }
         public Boolean IsStatic { get; set; } = false;
-        public int Xmin { get; }
-        public int Ymin { get; }
-        public int Xmax { get; }
-        public int Ymax { get; }
+        public double Xmin { get; }
+        public double Ymin { get; }
+        public double Xmax { get; }
+        public double Ymax { get; }
         public long Key { get; }
-        public int ImageWidth { get; set; }
-        public int ImageHeight { get; set; }
+        public double ImageWidth { get; set; }
+        public double ImageHeight { get; set; }
         private Rectangle _objRectangle;
         public string CameraName { get; set; } = "";
         public string ImagePath { get; set; } = "";
 
         //scaling of object based on size
-        public int ScalePercent { get; set; }
+        public double ScalePercent { get; set; }
         public double ObjectImagePercent { get; }
 
         private ObjectScale _scaleConfig;
@@ -42,7 +42,7 @@ namespace AITool
         }
 
 
-        public ObjectPosition(int xmin, int xmax, int ymin, int ymax, string label, int imageWidth, int imageHeight, string cameraName, string imagePath)
+        public ObjectPosition(double xmin, double xmax, double ymin, double ymax, string label, double imageWidth, double imageHeight, string cameraName, string imagePath)
         {
             this.CreateDate = DateTime.Now;
             this.LastSeenDate = DateTime.Now;
@@ -54,16 +54,16 @@ namespace AITool
             this.Xmax = xmax;
             this.Ymax = ymax;
 
-            this._objRectangle = Rectangle.FromLTRB(this.Xmin, this.Ymin, this.Xmax, this.Ymax);
+            this._objRectangle = Rectangle.FromLTRB(this.Xmin.ToInt(), this.Ymin.ToInt(), this.Xmax.ToInt(), this.Ymax.ToInt());
 
             this.ImageHeight = imageHeight;
             this.ImageWidth = imageWidth;
 
             //object percent of image area
-            this.ObjectImagePercent = (this._objRectangle.Width * this._objRectangle.Height) / (float)(imageWidth * imageHeight) * 100;
+            this.ObjectImagePercent = (this._objRectangle.Width * this._objRectangle.Height) / (double)(imageWidth * imageHeight) * 100;
 
             //starting x * y point + width * height of rectangle - used for debugging only
-            this.Key = ((this.Xmin + 1) * (this.Ymin + 1) + (this._objRectangle.Width * this._objRectangle.Height));
+            this.Key = Convert.ToInt64((this.Xmin + 1) * (this.Ymin + 1) + (this._objRectangle.Width * this._objRectangle.Height));
         }
 
         /*Increases object variance percentage for smaller objects. 
@@ -101,13 +101,13 @@ namespace AITool
             if (other == null)
                 return false;
 
-            float percentageIntersect = AITOOL.GetObjIntersectPercent(this._objRectangle, other._objRectangle);
+            double percentageIntersect = AITOOL.GetObjIntersectPercent(this._objRectangle, other._objRectangle);
 
             if (percentageIntersect > other.LastPercentMatch)
             {
                 this.LastPercentMatch = percentageIntersect;   //parent object highest match for this detection cycle
                 other.LastPercentMatch = percentageIntersect;  //current object highest match
-                Log($"Debug: Percentage Intersection of object: {percentageIntersect}% Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName, other.ImagePath);
+                Log($"Debug: Percentage Intersection of object: {percentageIntersect.ToPercent()} Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName, other.ImagePath);
             }
 
             double percentMatch = this.ScalePercent == 0 ? this.PercentMatch : this.ScalePercent;
