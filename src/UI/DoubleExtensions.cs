@@ -13,7 +13,7 @@ namespace AITool
             try
             {
                 if (!val.IsNull())
-                    return Convert.ToInt32(val);  //I believe ToInt32 rounds up so 1.5 is 2
+                    return Convert.ToInt32(val);  //I believe ToInt32 rounds up so 1.5 is 2.  (int) just truncates the decimal
             }
             catch { }
 

@@ -135,12 +135,12 @@ namespace AITool
         public bool Action_image_merge_detections { get; set; } = false;
         public bool Action_image_merge_detections_makecopy { get; set; } = true;
         public long Action_image_merge_jpegquality { get; set; } = 90;
-        public string Action_network_folder { get; set; } = "";
+        public string Action_network_folder { get; set; } = "C:\\StoredAlerts";
         public string Action_network_folder_filename { get; set; } = "[ImageFilenameNoExt]";
         public int Action_network_folder_purge_older_than_days { get; set; } = 30;
         public bool Action_RunProgram { get; set; } = false;
-        public string Action_RunProgramString { get; set; } = "";
-        public string Action_RunProgramArgsString { get; set; } = "";
+        public string Action_RunProgramString { get; set; } = "C:\\TOOLS\\SomeTool.exe";
+        public string Action_RunProgramArgsString { get; set; } = "/switch1 /description=[Summary]";
         public bool Action_PlaySounds { get; set; } = false;
         public string Action_Sounds { get; set; } = @"person ; C:\example\YOYO.WAV | bird ; C:\example\TWEET.WAV";
 
@@ -558,7 +558,7 @@ namespace AITool
                 AITOOL.Log($"Debug: Found {newfiles.Count} {this.Prefix}*.jpg files in {AppSettings.Settings.input_path}");
             }
 
-            if (files.Count < MaxFiles && !string.IsNullOrEmpty(this.Action_network_folder) && Directory.Exists(this.Action_network_folder))
+            if (files.Count < MaxFiles && this.Action_image_copy_enabled && !string.IsNullOrEmpty(this.Action_network_folder) && Directory.Exists(this.Action_network_folder))
             {
                 List<FileInfo> newfiles = Global.GetFiles(this.Action_network_folder, $"{this.Prefix}*.jpg", SearchOption.TopDirectoryOnly, DateTime.Now.AddDays(MaxDaysOld), DateTime.Now, MaxFiles);
                 files.AddRange(newfiles);

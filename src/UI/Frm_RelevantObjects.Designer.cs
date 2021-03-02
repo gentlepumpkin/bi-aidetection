@@ -109,6 +109,7 @@ namespace AITool
             this.FOLV_RelevantObjects.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.FOLV_RelevantObjects_FormatRow);
             this.FOLV_RelevantObjects.SelectionChanged += new System.EventHandler(this.FOLV_RelevantObjects_SelectionChanged);
             this.FOLV_RelevantObjects.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.FOLV_RelevantObjects_ItemChecked);
+            this.FOLV_RelevantObjects.SelectedIndexChanged += new System.EventHandler(this.FOLV_RelevantObjects_SelectedIndexChanged);
             // 
             // groupBox1
             // 

@@ -221,10 +221,8 @@ namespace AITool
                 lock (this._maskLockObject)  //moved this up, trying to figure out why IsMasked isnt returning correctly
                 {
 
-                    ClsPrediction pred = new ClsPrediction();
-                    pred.Label = currentObject.Label;
                     //if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty: true))
-                    if (this.MaskTriggeringObjects.IsRelevant(pred, true) != ResultType.Relevant)
+                    if (this.MaskTriggeringObjects.IsRelevant(currentObject.Label) != ResultType.Relevant)
                     {
                         //Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
                         returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);

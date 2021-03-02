@@ -305,11 +305,11 @@ namespace AITool
 
         }
 
-        public ResultType IsRelevant(string Label, bool IsNew, string DbgDetail = "")
+        public ResultType IsRelevant(string Label, string DbgDetail = "")
         {
             ClsPrediction pred = new ClsPrediction();
             pred.Label = Label;
-            return IsRelevant(new List<ClsPrediction>() { pred }, IsNew, DbgDetail);
+            return IsRelevant(new List<ClsPrediction>() { pred }, true, DbgDetail);
         }
         public ResultType IsRelevant(ClsPrediction pred, bool IsNew, string DbgDetail = "")
         {
@@ -356,7 +356,8 @@ namespace AITool
                             {
                                 if (Global.IsTimeBetween(DateTime.Now, ro.ActiveTimeRange))
                                 {
-                                    if (pred.Confidence.Round() >= ro.Threshold_lower && pred.Confidence.Round() <= ro.Threshold_upper)
+                                    //assume if confidence is 0 it has not been set yet (dynamic masking routine, etc)
+                                    if (pred.Confidence == 0 || pred.Confidence.Round() >= ro.Threshold_lower && pred.Confidence.Round() <= ro.Threshold_upper)
                                     {
                                         ro.LastHitTime = DateTime.Now;
                                         ro.Hits++;
@@ -377,7 +378,7 @@ namespace AITool
                                     else
                                     {
                                         if (!nothreshold.Contains(label))
-                                            nothreshold += label + $"({pred.Confidence.Round()}%),";
+                                            nothreshold += label + $" ({pred.Confidence.Round()}%),";
                                     }
 
                                 }

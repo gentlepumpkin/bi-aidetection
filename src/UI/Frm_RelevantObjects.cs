@@ -125,6 +125,7 @@ namespace AITool
                 if (this.ro.IsNull())
                 {
                     this.cb_enabled.Checked = false;
+                    this.cb_enabled.Enabled = false;
                     this.tb_Name.Text = "";
                     this.tb_Time.Text = "";
                     this.tb_ConfidenceLower.Text = "";
@@ -134,6 +135,7 @@ namespace AITool
                 else
                 {
                     this.cb_enabled.Checked = this.ro.Enabled;
+                    this.cb_enabled.Enabled = true;
                     this.tb_Name.Text = this.ro.Name;
                     this.tb_Time.Text = this.ro.ActiveTimeRange;
                     this.tb_ConfidenceLower.Text = this.ro.Threshold_lower.ToString();
@@ -427,6 +429,11 @@ namespace AITool
         {
             NeedsSaving = true;
             this.SaveRO();
+
+        }
+
+        private void FOLV_RelevantObjects_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
         }
     }

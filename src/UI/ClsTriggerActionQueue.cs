@@ -931,7 +931,7 @@ namespace AITool
 
                 string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder, Global.IPType.Path);
 
-                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\"))
+                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\") || !Directory.Exists(netfld))
                 {
                     AITOOL.Log($"Error: Camera settings > Copy alert images to folder is not a valid path: {netfld}");
                     return false;
