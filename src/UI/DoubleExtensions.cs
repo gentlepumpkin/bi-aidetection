@@ -30,7 +30,7 @@ namespace AITool
 
             return 0;
         }
-        public static double Round(this double val, int Places = 2)
+        public static double Round(this double val, int Places = 1)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace AITool
 
             return 0;
         }
-        public static string ToPercent(this double val, int Places = 2)
+        public static string ToPercent(this double val, int Places = 1)
         {
             string chars = "";
             if (Places > 0)

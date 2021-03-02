@@ -2706,7 +2706,7 @@ namespace AITool
         public static bool RectangleMatches(Rectangle MasterRect, Rectangle CompareRect, double PercentMatch, out double MatchedPercent, bool TrueIfInsideOrPartiallyInside)
         {
 
-            MatchedPercent = AITOOL.GetObjIntersectPercent(MasterRect, CompareRect);
+            MatchedPercent = MasterRect.IntersectPercent(CompareRect);
 
             if (TrueIfInsideOrPartiallyInside)
             {
@@ -3993,16 +3993,7 @@ namespace AITool
 
         }
 
-        public static double GetObjIntersectPercent(Rectangle masterRectangle, Rectangle compareRectangle)
-        {
 
-            Rectangle objIntersect = Rectangle.Intersect(masterRectangle, compareRectangle);
-
-            double percentage = ((objIntersect.Width * objIntersect.Height * 2) * 100) /
-                   ((compareRectangle.Width * compareRectangle.Height) + (compareRectangle.Width * masterRectangle.Height));
-
-            return percentage;
-        }
 
     }
 }

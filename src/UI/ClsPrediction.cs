@@ -118,19 +118,19 @@ namespace AITool
                 //calculate the percentage of the size of the prediction compared to the image size
 
                 //First update width and height due to past miscalculation
-                Rectangle rect = this.GetRectangle();
-                this.RectWidth = rect.Width;
-                this.RectHeight = rect.Height;
+                Rectangle PredRect = this.GetRectangle();
 
-                this.ImageArea = this.ImageWidth * this.ImageHeight;
-                this.RectArea = this.RectWidth * this.RectHeight;
-                double diff = Math.Abs(this.RectArea - this.ImageArea);
-                double percent = 100 - (diff / this.ImageArea * 100);
+                this.RectWidth = PredRect.Width;
+                this.RectHeight = PredRect.Height;
+                this.RectArea = PredRect.Area();
 
-                this.PercentOfImage = percent; //(int)Math.Round(percent);
+                Rectangle img = new Rectangle(0, 0, this.ImageWidth.ToInt(), this.ImageHeight.ToInt());
+                this.ImageArea = img.Area();
 
-                if (percent <= 0)
-                    Log($"Error: PercentOfImage is {percent.ToPercent()}? ImageArea={ImageArea}, PredArea={this.RectArea}, Diff={diff}, pred.width={this.RectWidth}, pred.height={this.RectHeight}, pred.Xmin={this.XMin}, pred.Ymin={this.YMin}, pred.Xmax={this.XMax}, pred.Ymax={this.YMax}, ImageWidth={this.ImageWidth}, ImageHeight={this.ImageHeight}");
+                this.PercentOfImage = img.PercentOfSize(PredRect);
+
+                if (this.PercentOfImage <= 0)
+                    Log($"Error: PercentOfImage is {this.PercentOfImage.ToPercent()}? ImageArea={ImageArea}, PredArea={this.RectArea}, pred.width={this.RectWidth}, pred.height={this.RectHeight}, pred.Xmin={this.XMin}, pred.Ymin={this.YMin}, pred.Xmax={this.XMax}, pred.Ymax={this.YMax}, ImageWidth={this.ImageWidth}, ImageHeight={this.ImageHeight}");
 
             }
             else
@@ -496,7 +496,7 @@ namespace AITool
                 foreach (var pt in AiDetectionObject.VehicleAnnotation.Bounding.Vertices)
                     pts.Add(new System.Drawing.Point(pt.X, pt.Y));
 
-                Rectangle rect = Global.RectFromVertices(pts);
+                Rectangle rect = new Rectangle().FromVertices(pts);
 
                 this.AIHeight = rect.Height;
                 this.AIWidth = rect.Width;
@@ -544,7 +544,7 @@ namespace AITool
                 foreach (var pt in AiDetectionObject.VehicleAnnotation.Licenseplate.Bounding.Vertices)
                     pts.Add(new System.Drawing.Point(pt.X, pt.Y));
 
-                Rectangle rect = Global.RectFromVertices(pts);
+                Rectangle rect = new Rectangle().FromVertices(pts); //Global.RectFromVertices(pts);
 
                 this.AIHeight = rect.Height;
                 this.AIWidth = rect.Width;

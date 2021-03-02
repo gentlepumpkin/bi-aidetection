@@ -101,7 +101,7 @@ namespace AITool
             if (other == null)
                 return false;
 
-            double percentageIntersect = AITOOL.GetObjIntersectPercent(this._objRectangle, other._objRectangle);
+            double percentageIntersect = this._objRectangle.IntersectPercent(other._objRectangle);
 
             if (percentageIntersect > other.LastPercentMatch)
             {

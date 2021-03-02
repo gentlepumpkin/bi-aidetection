@@ -85,6 +85,13 @@ namespace AITool
         private async void Shell_Load(object sender, EventArgs e)
         {
 
+            //Rectangle img = new Rectangle(0, 0, 3840, 2160);
+            //Rectangle prd = new Rectangle(0, 0, 155, 204);  // .38% of the original image
+            //Rectangle prd = new Rectangle(0, 0, img.Width / 2, img.Height);  //half of the original image = 50%
+            //Rectangle prd = new Rectangle(0, 0, img.Width, img.Height / 2);  //half of the original image = 50%
+            //Rectangle prd = new Rectangle(0, 0, img.Width / 2, img.Height / 2);  //a quarter of the original image = 25%
+
+            //double percent = img.PercentOfSize(prd);
 
             Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
 

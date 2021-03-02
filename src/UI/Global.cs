@@ -152,15 +152,7 @@ namespace AITool
 
         }
 
-        public static Rectangle RectFromVertices(List<Point> vertices)
-        {
-            var minX = vertices.Min(p => p.X);
-            var minY = vertices.Min(p => p.Y);
-            var maxX = vertices.Max(p => p.X);
-            var maxY = vertices.Max(p => p.Y);
-            return new Rectangle(new Point(minX, minY), new Size(maxX - minX, maxY - minY));
 
-        }
 
         public static async Task<bool> IsPortOpenAsync(string Host, int port)
         {

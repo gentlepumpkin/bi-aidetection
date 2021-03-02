@@ -386,7 +386,7 @@ namespace AITool
 
                     if ((ei.Name.Has("percent") || ei.Name.Has("threshold") || ei.Name.Has("confidence")) && (ei.PropertyType == typeof(double) || ei.PropertyType == typeof(int) || ei.PropertyType == typeof(float)))
                     {
-                        cl.AspectToStringFormat = "{0:0.##}%";
+                        cl.AspectToStringFormat = "{0:0.#}%";
                     }
 
                     //if (ei.PropertyType == typeof(ThreadSafe.Boolean))
