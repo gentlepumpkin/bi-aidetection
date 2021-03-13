@@ -14,7 +14,7 @@ namespace AITool
     public partial class Frm_RelevantObjects : Form
     {
         public ClsRelevantObjectManager ObjectManager = null;
-        private List<ClsRelevantObject> ObjectList = new List<ClsRelevantObject>();
+        public ClsRelevantObjectManager TempObjectManager = null;
 
         private ClsRelevantObject ro = null;
         private bool NeedsSaving = false;
@@ -31,6 +31,8 @@ namespace AITool
 
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            this.TempObjectManager = new ClsRelevantObjectManager(this.ObjectManager);
+
             Global_GUI.ConfigureFOLV(FOLV_RelevantObjects, typeof(ClsRelevantObject));
 
             this.FOLV_RelevantObjects.BooleanCheckStateGetter = delegate (Object rowObject)
@@ -44,9 +46,8 @@ namespace AITool
                 return newValue;
             };
 
-            this.ObjectList = ObjectManager.ToList();
 
-            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList);
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList);
             Global_GUI.RestoreWindowState(this);
 
             Global_GUI.GroupboxEnableDisable(groupBox1, cb_enabled);
@@ -146,16 +147,8 @@ namespace AITool
                     else
                         this.tb_Name.Enabled = false;
 
-                    if (this.ro.Trigger)
-                    {
-                        rb_trigger.Checked = true;
-                        rb_ignore.Checked = false;
-                    }
-                    else
-                    {
-                        rb_trigger.Checked = false;
-                        rb_ignore.Checked = true;
-                    }
+                    this.cb_ObjectTriggers.Checked = this.ro.Trigger;
+                    this.cb_ObjectIgnoreMask.Checked = this.ro.IgnoreMask;
 
                 }
 
@@ -180,14 +173,15 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
             try
             {
-                if (!Loading && NeedsSaving && !this.ro.IsNull() && this.tb_Name.Enabled && !this.tb_Name.Text.IsEmpty())
+                if (!Loading && NeedsSaving && !this.ro.IsNull() && !this.tb_Name.Text.IsEmpty())
                 {
                     this.ro.Enabled = this.cb_enabled.Checked;
                     this.ro.Name = this.tb_Name.Text;
                     this.ro.ActiveTimeRange = this.tb_Time.Text;
                     this.ro.Threshold_lower = this.tb_ConfidenceLower.Text.ToDouble();
                     this.ro.Threshold_upper = this.tb_ConfidenceUpper.Text.ToDouble();
-                    this.ro.Trigger = this.rb_trigger.Checked;
+                    this.ro.Trigger = this.cb_ObjectTriggers.Checked;
+                    this.ro.IgnoreMask = this.cb_ObjectIgnoreMask.Checked;
                     this.FOLV_RelevantObjects.Refresh();
                 }
 
@@ -248,7 +242,10 @@ namespace AITool
                     rolist.Add(ro);
                 }
 
-                this.ObjectManager.FromList(rolist);
+                this.TempObjectManager.ObjectList = this.TempObjectManager.FromList(rolist, true, true);
+                this.TempObjectManager.Update();
+
+                this.ObjectManager = this.TempObjectManager;
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();
@@ -268,22 +265,10 @@ namespace AITool
             if (this.ro == null)
                 return;
 
-            int idx = this.ObjectList.IndexOf(this.ro);
+            this.ro = this.TempObjectManager.MoveUp(ro, out int NewIDX);
 
-            if (idx > 0)
-            {
-                this.ObjectList.Move(idx, idx - 1);
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
 
-                this.ro = this.ObjectList[idx - 1];
-
-                for (int i = 0; i < this.ObjectList.Count; i++)
-                {
-                    this.ObjectList[i].Priority = i + 1;
-                }
-
-                Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
-
-            }
         }
 
         private void toolStripButtonDown_Click(object sender, EventArgs e)
@@ -293,42 +278,19 @@ namespace AITool
             if (this.ro == null)
                 return;
 
-            int idx = this.ObjectList.IndexOf(this.ro);
+            this.ro = this.TempObjectManager.MoveDown(ro, out int NewIDX);
 
-            if (idx > -1 && idx < this.ObjectList.Count - 1)
-            {
-                this.ObjectList.Move(idx, idx + 1);
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
 
-                this.ro = this.ObjectList[idx + 1];
-
-                for (int i = 0; i < this.ObjectList.Count; i++)
-                {
-                    this.ObjectList[i].Priority = i + 1;
-                }
-
-                Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
-
-            }
         }
 
         private void toolStripButtonDelete_Click(object sender, EventArgs e)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            int idx = this.ObjectList.IndexOf(this.ro);
+            this.ro = this.TempObjectManager.Delete(ro, out int NewIDX);
 
-            if (idx > -1)
-            {
-                this.ObjectList.Remove(this.ro);
-                if (idx - 1 > -1)
-                    this.ro = this.ObjectList[idx - 1];
-
-                for (int i = 0; i < this.ObjectList.Count; i++)
-                {
-                    this.ObjectList[i].Priority = i + 1;
-                }
-                Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
-            }
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
         }
 
         private void toolStripButtonAdd_Click(object sender, EventArgs e)
@@ -337,21 +299,19 @@ namespace AITool
             SaveRO();
 
             ClsRelevantObject ro = new ClsRelevantObject("NEW OBJECT");
-
-
             this.ro = ro;
-            this.ro.Priority = this.ObjectList.Count + 1;
-            this.ObjectList.Add(ro);
-            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
+
+            if (this.TempObjectManager.TryAdd(ro, true, out int NewIDX))
+                Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
 
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
-            this.ObjectManager = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, this.ObjectManager.TypeName, this.ObjectManager.Camera);
-            this.ObjectList = this.ObjectManager.ToList();
-            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
+            this.TempObjectManager.Reset(); // = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, this.ObjectManager.TypeName, this.ObjectManager.Camera);
+            this.ro = null;
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
 
         }
 
@@ -435,6 +395,32 @@ namespace AITool
         private void FOLV_RelevantObjects_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void tb_Time_TextChanged(object sender, EventArgs e)
+        {
+            NeedsSaving = true;
+            this.SaveRO();
+        }
+
+        private void cb_ObjectTriggers_CheckedChanged(object sender, EventArgs e)
+        {
+            NeedsSaving = true;
+            this.SaveRO();
+        }
+
+        private void cb_IgnoreMask_CheckedChanged(object sender, EventArgs e)
+        {
+            NeedsSaving = true;
+            this.SaveRO();
+        }
+
+        private void btn_adddefaults_Click(object sender, EventArgs e)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            this.TempObjectManager.AddDefaults(); // = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, this.ObjectManager.TypeName, this.ObjectManager.Camera);
+            this.ro = null;
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
         }
     }
 }

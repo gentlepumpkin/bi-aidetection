@@ -5,12 +5,14 @@ using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
+
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -114,7 +116,7 @@ namespace AITool
 
                 bool UseTLS = (AppSettings.Settings.mqtt_UseTLS || portint == 8883 || AppSettings.Settings.mqtt_serverandport.IndexOf("wss://", StringComparison.OrdinalIgnoreCase) >= 0);
 
-                bool UseCreds = (!string.IsNullOrWhiteSpace(AppSettings.Settings.mqtt_username));
+                //bool UseCreds = (!string.IsNullOrWhiteSpace(AppSettings.Settings.mqtt_username));
 
 
 
@@ -136,113 +138,58 @@ namespace AITool
 
                 if (UseTLS)
                 {
-                    if (UseCreds)
+                    if (IsWebSocket)
                     {
-                        if (IsWebSocket)
-                        {
 
-                            options = new MqttClientOptionsBuilder()
-                                .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                .WithTls()
-                                .WithWillMessage(lw)
-                                .WithCleanSession()
-                                .Build();
-
-                        }
-                        else
-                        {
-                            options = new MqttClientOptionsBuilder()
-                                .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                .WithTcpServer(server, portint)
-                                .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                                .WithTls()
-                                .WithWillMessage(lw)
-                                .WithCleanSession()
-                                .Build();
-                        }
+                        options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithTls()
+                            .WithWillMessage(lw)
+                            .WithCleanSession()
+                            .Build();
 
                     }
                     else
                     {
-                        if (IsWebSocket)
-                        {
-                            options = new MqttClientOptionsBuilder()
-                                .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                                .WithTls()
-                                .WithWillMessage(lw)
-                                .WithCleanSession()
-                                .Build();
-
-                        }
-                        else
-                        {
-                            options = new MqttClientOptionsBuilder()
-                                .WithClientId(AppSettings.Settings.mqtt_clientid)
-                                .WithTcpServer(server, portint)
-                                .WithTls()
-                                .WithWillMessage(lw)
-                                .WithCleanSession()
-                                .Build();
-
-                        }
-
+                        options = new MqttClientOptionsBuilder()
+                            .WithClientId(AppSettings.Settings.mqtt_clientid)
+                            .WithTcpServer(server, portint)
+                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                            .WithTls()
+                            .WithWillMessage(lw)
+                            .WithCleanSession()
+                            .Build();
                     }
+
 
                 }
                 else
                 {
-                    if (UseCreds)
+                    if (IsWebSocket)
                     {
-                        if (IsWebSocket)
-                        {
-                            options = new MqttClientOptionsBuilder()
-                            .WithClientId(AppSettings.Settings.mqtt_clientid)
-                            .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                            .WithWillMessage(lw)
-                            .WithCleanSession()
-                            .Build();
-
-                        }
-                        else
-                        {
-                            options = new MqttClientOptionsBuilder()
-                            .WithClientId(AppSettings.Settings.mqtt_clientid)
-                            .WithTcpServer(server, portint)
-                            .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                            .WithWillMessage(lw)
-                            .WithCleanSession()
-                            .Build();
-
-                        }
+                        options = new MqttClientOptionsBuilder()
+                        .WithClientId(AppSettings.Settings.mqtt_clientid)
+                        .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
+                        .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                        .WithWillMessage(lw)
+                        .WithCleanSession()
+                        .Build();
 
                     }
                     else
                     {
-                        if (IsWebSocket)
-                        {
-                            options = new MqttClientOptionsBuilder()
-                            .WithClientId(AppSettings.Settings.mqtt_clientid)
-                            .WithTcpServer(server, portint)
-                            .WithWillMessage(lw)
-                            .WithCleanSession()
-                            .Build();
+                        options = new MqttClientOptionsBuilder()
+                        .WithClientId(AppSettings.Settings.mqtt_clientid)
+                        .WithTcpServer(server, portint)
+                        .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
+                        .WithWillMessage(lw)
+                        .WithCleanSession()
+                        .Build();
 
-                        }
-                        else
-                        {
-                            options = new MqttClientOptionsBuilder()
-                            .WithClientId(AppSettings.Settings.mqtt_clientid)
-                            .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
-                            .WithWillMessage(lw)
-                            .WithCleanSession()
-                            .Build();
-
-                        }
                     }
+
 
 
                 }
@@ -255,7 +202,7 @@ namespace AITool
                     {
                         excp = e.Exception.Message;
                     }
-                    Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.ReasonCode}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
+                    Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.Reason}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
 
                     //reconnect here if needed?
                 });

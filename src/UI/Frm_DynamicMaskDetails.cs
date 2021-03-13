@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -404,6 +405,12 @@ namespace AITool
                             rect = new System.Drawing.Rectangle((xmin - 1).ToInt(), ymax.ToInt(), boxWidth.ToInt(), boxHeight.ToInt()); //sets bounding box for drawn text
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
+                            if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                                brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                            Brush forecolor = Brushes.Black;
+                            if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                                forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
 
                             string display = $"{op.Label}";
 
@@ -412,7 +419,7 @@ namespace AITool
 
                             System.Drawing.SizeF size = e.Graphics.MeasureString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                             e.Graphics.FillRectangle(brush, (xmin - 1).ToInt(), ymax.ToInt(), size.Width, size.Height); //draw grey background rectangle for detection text
-                            e.Graphics.DrawString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                            e.Graphics.DrawString(display, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
                         }
                         else
                         {

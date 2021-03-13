@@ -162,7 +162,7 @@ namespace AITool
         public string Action_pushover_Priority { get; set; } = "Normal";
         public string Action_pushover_Sound { get; set; } = "pushover";
         public int Action_pushover_retry_seconds { get; set; } = 60;
-        public int Action_pushover_expire_seconds { get; set; } = 10800;
+        public int Action_pushover_expire_seconds { get; set; } = 10800; //3 hours
         public string Action_pushover_retrycallback_url { get; set; } = "";
         public string Action_pushover_SupplementaryUrl { get; set; } = "";
         public string Action_pushover_active_time_range { get; set; } = "00:00:00-23:59:59";

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -97,6 +99,8 @@ namespace AITool
             public int RectDetectionTextSize = 14;
             public string RectDetectionTextFont = "Segoe UI Semibold";
 
+            public System.Drawing.Color RectDetectionTextBackColor = System.Drawing.Color.Gainsboro;  //a magic color randomly picked that means "Use Relevant or Irrelevant colors"
+            public System.Drawing.Color RectDetectionTextForeColor = System.Drawing.Color.Gainsboro;  //a magic color randomly picked that means "Use Relevant or Irrelevant colors"
             public System.Drawing.Color RectRelevantColor = System.Drawing.Color.Red;
             public System.Drawing.Color RectIrrelevantColor = System.Drawing.Color.Silver;
             public System.Drawing.Color RectMaskedColor = System.Drawing.Color.DarkSlateGray;

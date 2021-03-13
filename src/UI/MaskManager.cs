@@ -1,7 +1,9 @@
 using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Timers;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -222,15 +224,21 @@ namespace AITool
                 {
 
                     //if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty: true))
-                    if (this.MaskTriggeringObjects.IsRelevant(currentObject.Label) != ResultType.Relevant)
+                    if (this.MaskTriggeringObjects.IsRelevant(currentObject.Label, out bool IgnoreMask) != ResultType.Relevant)
                     {
                         //Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
                         returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
                         return returnInfo;
                     }
 
-                    Log("Debug: *** Starting new object mask processing ***", "", currentObject.CameraName, currentObject.ImagePath);
-                    Log($"Debug: Current object detected: {currentObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
+                    if (IgnoreMask)
+                    {
+                        returnInfo.SetResults(MaskType.Unknown, MaskResult.IgnoredObject);
+                        return returnInfo;
+                    }
+
+                    Log("Trace: *** Starting new object mask processing ***", "", currentObject.CameraName, currentObject.ImagePath);
+                    Log($"Trace: Current object detected: {currentObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
 
                     currentObject.ScaleConfig = this.ScaleConfig;
                     currentObject.PercentMatch = this.PercentMatch;
@@ -252,7 +260,7 @@ namespace AITool
                         foundObject.ImagePath = currentObject.ImagePath;
                         foundObject.CameraName = currentObject.CameraName;
 
-                        Log($"Debug: Found '{currentObject.Label}' (Key={currentObject.Key}) in last_positions_history: {foundObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
+                        Log($"Trace: Found '{currentObject.Label}' (Key={currentObject.Key}) in last_positions_history: {foundObject.ToString()}", "", currentObject.CameraName, currentObject.ImagePath);
 
                         if (foundObject.Counter < this.HistoryThresholdCount)
                         {
@@ -298,7 +306,7 @@ namespace AITool
                     }
                     else
                     {
-                        Log($"Debug: + New object found: {currentObject.ToString()}. Adding to last_positions_history.", "", currentObject.CameraName, currentObject.ImagePath);
+                        Log($"Trace: + New object found: {currentObject.ToString()}. Adding to last_positions_history.", "", currentObject.CameraName, currentObject.ImagePath);
                         this.LastPositionsHistory.Add(currentObject);
                         returnInfo.SetResults(MaskType.History, MaskResult.New, currentObject);
                     }

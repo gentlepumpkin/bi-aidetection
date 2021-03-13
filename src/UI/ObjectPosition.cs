@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -107,7 +108,7 @@ namespace AITool
             {
                 this.LastPercentMatch = percentageIntersect;   //parent object highest match for this detection cycle
                 other.LastPercentMatch = percentageIntersect;  //current object highest match
-                Log($"Debug: Percentage Intersection of object: {percentageIntersect.ToPercent()} Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName, other.ImagePath);
+                Log($"Trace: Percentage Intersection of object: {percentageIntersect.ToPercent()} Current '{this.Label}' key={this.Key}, Tested '{other.Label}' key={other.Key}", "", other.CameraName, other.ImagePath);
             }
 
             double percentMatch = this.ScalePercent == 0 ? this.PercentMatch : this.ScalePercent;

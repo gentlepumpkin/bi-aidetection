@@ -25,7 +25,8 @@
         Error,
         SkippedDynamicMaskCheck,
         NotEnabled,
-        Unknown
+        Unknown,
+        IgnoredObject
     }
     public class MaskResultInfo
     {

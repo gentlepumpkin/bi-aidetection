@@ -10,6 +10,7 @@ using NPushover;
 using OSVersionExtension;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,7 +30,6 @@ using System.Windows.Forms;
 using Telegram.Bot;
 using Rectangle = System.Drawing.Rectangle;
 using static AITool.Global;
-
 
 namespace AITool
 {
@@ -258,6 +258,48 @@ namespace AITool
 
         }
 
+
+        public static System.Drawing.Image CropImage(ClsImageQueueItem img, System.Drawing.Rectangle cropArea)
+        {
+
+            if (img.IsValid())
+            {
+                try
+                {
+                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(img.ImageByteArray, out IImageFormat format))
+                    {
+                        image.Mutate(i => i.Crop(SixLabors.ImageSharp.Rectangle.FromLTRB(cropArea.Left, cropArea.Top, cropArea.Right, cropArea.Bottom)));
+
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            image.Save(ms, format);
+                            System.Drawing.Image newimg = System.Drawing.Image.FromStream(ms);
+                            return newimg;
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    Log($"Error: {ex.Msg()}");
+                }
+
+            }
+
+            return null;
+            //using Bitmap bmpImage = new Bitmap(img);
+
+            //if (cropArea.Right > bmpImage.Width || cropArea.Bottom > bmpImage.Height)
+            //{
+            //    cropArea.Intersect(new Rectangle(0, 0, bmpImage.Width, bmpImage.Height));
+            //}
+
+            //Bitmap bmpCrop = bmpImage.Clone(cropArea, bmpImage.PixelFormat);
+
+            //return (Image)(bmpCrop);
+
+        }
         //public static void Log(string Detail, string AIServer = "", Camera Camera = null, ClsImageQueueItem Image = null, string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
         //{
         //    string cam = Camera != null ? Camera.Name : "";
@@ -271,6 +313,7 @@ namespace AITool
         //}
 
         //just an alias to make things easier
+        [DebuggerStepThrough]
         public static void Log(string Detail, string AIServer = "", object Camera = null, object Image = null, string Source = "", int Depth = 0, LogLevel Level = null, Nullable<DateTime> Time = default(DateTime?), [CallerMemberName()] string memberName = null)
         {
 
@@ -905,7 +948,8 @@ namespace AITool
                     }
 
 
-                    if (HasRequiredList && FoundRequiredCount >= RequiredURLs.Count)
+                    if ((HasRequiredList && (FoundRequiredCount >= RequiredURLs.Count)) ||
+                        (GetRefinementServer && (FoundRefinementCount >= RefineMatchCount)))
                     {
                         break;
                     }
@@ -1081,7 +1125,7 @@ namespace AITool
 
                                             }
 
-                                            if (url.ErrsInRowCount.ReadUnfenced() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
+                                            if (url.ErrsInRowCount.ReadFullFence() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
                                                 AppSettings.Settings.deepstack_autostart &&
                                                 DeepStackServerControl.IsInstalled &&
                                                 DeepStackServerControl.URLS.IndexOf(url.ToString(), StringComparison.OrdinalIgnoreCase) >= 0)
@@ -1092,10 +1136,11 @@ namespace AITool
 
                                                 double mins = (DateTime.Now - NextDeepstackRestartTime.Read()).TotalMinutes;
                                                 double togo = (AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts - mins);
+
                                                 if (!DeepStackServerControl.Starting.ReadFullFence() &&
                                                    DateTime.Now >= NextDeepstackRestartTime.Read())
                                                 {
-                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Restarting Deepstack...");
+                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadFullFence()} times in a row. (autorestart_fail_count={AppSettings.Settings.deepstack_autorestart_fail_count}) Restarting Deepstack...");
                                                     //dont wait for it
                                                     await DeepStackServerControl.StartDeepstackAsync(true);
                                                     url.ErrsInRowCount.WriteFullFence(0);
@@ -1103,7 +1148,7 @@ namespace AITool
                                                 }
                                                 else
                                                 {
-                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  Waiting {togo.ToString("##0.0")} mins before attempting restart...");
+                                                    Log($"Error: Locally installed deepstack instance failed {url.ErrsInRowCount.ReadUnfenced()} times in a row.  (autorestart_fail_count={AppSettings.Settings.deepstack_autorestart_fail_count}) Waiting {togo.ToString("##0.0")} mins before attempting restart...");
                                                 }
 
                                             }
@@ -1727,6 +1772,7 @@ namespace AITool
             ClsAIServerResponse ret = new ClsAIServerResponse();
 
             ret.AIURL = AiUrl;
+
 
             bool OverrideThreshold = AiUrl.Threshold_Lower > 0 || (AiUrl.Threshold_Upper > 0 && AiUrl.Threshold_Upper < 100);
 
@@ -2633,11 +2679,14 @@ namespace AITool
         {
             public int Idx = -1;
             public double MatchPercent = 0;
+            public List<ClsPrediction> preds = new List<ClsPrediction>();
+
 
             public ClsPredMatch(int idx, double matchPercent)
             {
                 Idx = idx;
                 MatchPercent = matchPercent;
+
             }
             public ClsPredMatch() { }
         }
@@ -2646,13 +2695,12 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            List<ClsPredMatch> preds = new List<ClsPredMatch>();
+
 
             ClsPredMatch ret = new ClsPredMatch();
 
             if (predictions.Count == 0)
                 return ret;
-
 
             ObjectPosition op1 = new ObjectPosition(pred.XMin, pred.XMax, pred.YMin, pred.YMax, pred.Label, pred.ImageWidth, pred.ImageHeight, pred.Camera, pred.Filename);
             op1.ScaleConfig = cam.maskManager.ScaleConfig;
@@ -2660,6 +2708,10 @@ namespace AITool
 
             for (int i = 0; i < predictions.Count; i++)
             {
+                //nope out so we dont include ourself?
+                //if (predictions[i].GetHashCode() == pred.GetHashCode())
+                //    break;
+
                 if (TrueIfInsideOrPartiallyInside)
                 {
                     //for face matching, we dont care if it is not a closely matching rectangle size, in fact it should be smaller but mostly within
@@ -2667,12 +2719,10 @@ namespace AITool
                     {
                         if (!ObjTypeMustMatch || ObjTypeMustMatch && (predictions[i].ObjType == pred.ObjType || predictions[i].Label.IndexOf(pred.Label, StringComparison.OrdinalIgnoreCase) >= 0))
                         {
-                            preds.Add(new ClsPredMatch(i, matched));
+                            predictions[i].PercentMatchRefinement = matched;
+                            ret.preds.Add(predictions[i]);
                         }
                     }
-                    //I'm not sure if the logic makes sense here but even if something fails to match I want to know how much it failed
-                    predictions[i].PercentMatchRefinement = matched;
-                    pred.PercentMatchRefinement = matched;
 
                 }
                 else  // to see if we can find a similar sized rectangle using the maskmanager's technique of matching roughly the same size
@@ -2682,21 +2732,20 @@ namespace AITool
                     op2.PercentMatch = cam.MergePredictionsMinMatchPercent;  //cam.maskManager.PercentMatch;
                     if (op1 == op2 && (!ObjTypeMustMatch || ObjTypeMustMatch && (predictions[i].ObjType == pred.ObjType || predictions[i].Label.IndexOf(pred.Label, StringComparison.OrdinalIgnoreCase) >= 0)))
                     {
-                        preds.Add(new ClsPredMatch(i, op1.LastPercentMatch));
+                        predictions[i].PercentMatchRefinement = op1.LastPercentMatch;
+                        ret.preds.Add(predictions[i]);
                     }
-                    //I'm not sure if the logic makes sense here but even if something fails to match I want to know how much it failed
-                    predictions[i].PercentMatchRefinement = op1.LastPercentMatch;
-                    pred.PercentMatchRefinement = op1.LastPercentMatch;
 
                 }
             }
 
             //send only best match
-            if (preds.Count > 0)
+            if (ret.preds.Count > 0)
             {
                 //sort so highest match is first:
-                preds = preds.OrderByDescending(p => p.MatchPercent).ToList();
-                ret = preds[0];
+                ret.preds = ret.preds.OrderByDescending(p => p.PercentMatchRefinement).ToList();
+                ret.MatchPercent = ret.preds[0].PercentMatchRefinement;
+                pred.PercentMatchRefinement = ret.MatchPercent;
             }
 
 
@@ -2809,58 +2858,60 @@ namespace AITool
                             LastImageBackupTime.Write(DateTime.Now);
                         }
 
+
+                        ///====================================================================================================================
+                        ///Get the initial predictions=========================================================================================
+                        ///====================================================================================================================
+
                         //Start processing all urls that may be linked at the same time in separate threads
                         List<Task<ClsAIServerResponse>> urltasks = new List<Task<ClsAIServerResponse>>();
 
-
-                        //===================================================================================================
-                        //===================================================================================================
-
+                        bool HasLinked = false;
                         foreach (ClsURLItem url in ret.OutURLs)
+                        {
+                            if (!url.LinkedResultsServerList.IsEmpty())
+                                HasLinked = true;
+
                             urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));
+                        }
 
                         asrs = await Task.WhenAll(urltasks);
 
-                        //combine all the predictions
-                        List<ClsPrediction> predictions = new List<ClsPrediction>();
+                        List<ClsPrediction> initialpredictions = new List<ClsPrediction>();
 
+                        int order = 0;
                         int RelevantPredictionCount = 0;
 
                         foreach (ClsAIServerResponse asr in asrs)
                         {
-                            AiUrl = asr.AIURL;
-                            AiUrl.LastResultSuccess = asr.Success;
+
                             TotalSWPostTime += asr.SWPostTime;
+
+                            bool IsPrimary = (urltasks.Count == 1) || !HasLinked || (HasLinked && !asr.AIURL.LinkedResultsServerList.IsEmpty());
+                            string primdet = "";
+                            if (IsPrimary)
+                                primdet = "[Primary]";
+                            else
+                                primdet = "[Linked]";
+
+                            Log($"Debug: (2/6) {primdet} Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                            Log($"Debug: (3/6) {primdet} Processing {asr.Predictions.Count} results...", AiUrl.CurSrv, cam, CurImg);
+
 
                             if (asr.Success)
                             {
-                                Log($"Debug: (2/6) Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
-                                Log($"Debug: (3/6) Processing results...", AiUrl.CurSrv, cam, CurImg);
+
                                 foreach (ClsPrediction pred in asr.Predictions)
                                 {
-                                    ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
-
-                                    if (pm.Idx == -1)  //does not contain
-                                    {
-                                        pred.AnalyzePrediction(SkipDynamicMaskCheck: false);
-                                        if (pred.Result == ResultType.Relevant)
-                                            RelevantPredictionCount++;
-                                    }
-                                    else  //already in list, replace it - it may be a different confidence
-                                    {
-                                        pred.AnalyzePrediction(SkipDynamicMaskCheck: true); //skip re-detecting dynamic mask so the count does not increase
-                                        Log($"Debug: [Linked Server] Duplicate prediction {pm.Idx} Old={predictions[pm.Idx].ToString()}, New={pred.ToString()}", AiUrl.CurSrv, cam, CurImg);
-                                        //Use the result from the first object so that we dont all the masking routine more than once for each object (with dynamic masking it will start to ignore things it shouldnt)
-                                        pred.Result = predictions[pm.Idx].Result;
-                                        pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
-                                        pred.DynMaskType = predictions[pm.Idx].DynMaskType;
-                                        predictions[pm.Idx].Result = ResultType.DuplicateObject;
-                                        if (pred.Detail.IsEmpty())
-                                            pred.Detail = predictions[pm.Idx].Detail;
-                                    }
-
-                                    pred.OriginalOrder = predictions.Count + 1;
-                                    predictions.Add(pred);
+                                    order++;
+                                    pred.AnalyzePrediction(SkipDynamicMaskCheck: true);
+                                    if (pred.Result == ResultType.Relevant)
+                                        RelevantPredictionCount++;
+                                    pred.ServerType = IsPrimary ? ServerType.Primary : ServerType.Linked;
+                                    AiUrl = asr.AIURL;
+                                    AiUrl.LastResultSuccess = asr.Success;
+                                    pred.OriginalOrder = order;
+                                    initialpredictions.Add(pred);
                                 }
                             }
                             else
@@ -2873,192 +2924,60 @@ namespace AITool
                         }
 
 
-                        // check to see if we can get a refinement server URL to postprocess 
-                        //wait for the next url to become available...
+                        ///====================================================================================================================
+                        ///Get the refinement predictions======================================================================================
+                        ///====================================================================================================================
 
+                        List<ClsPrediction> refinepredictions = new List<ClsPrediction>();
+
+
+                        //First check and see if the main or linked servers contained any refinement objects, if so, add them to the list:
+                        foreach (ClsPrediction pred in initialpredictions)
+                        {
+                            if (pred.ObjType == ObjectType.Face || pred.ObjType == ObjectType.LicensePlate)
+                                refinepredictions.Add(pred);
+                        }
+
+                        //see if there are any refinement servers we need to ask for info...
                         if (AIURLListAvailableRefineServerCount.ReadFullFence() > 0 && RelevantPredictionCount > 0)
                         {
-                            List<ClsURLItem> PostProcessURLs = await WaitForNextURL(cam, true, predictions, "", ret.OutURLs);
-                            if (PostProcessURLs.Count > 0)
+                            List<ClsURLItem> RefineURLs = await WaitForNextURL(cam, true, initialpredictions, "", ret.OutURLs);
+                            if (RefineURLs.Count > 0)
                             {
                                 //Start processing all refinement urls
                                 urltasks = new List<Task<ClsAIServerResponse>>();
 
-                                foreach (ClsURLItem url in PostProcessURLs)
+                                foreach (ClsURLItem url in RefineURLs)
                                     urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));
 
                                 asrs = await Task.WhenAll(urltasks);
+
+                                int refineorder = 0;
 
                                 foreach (ClsAIServerResponse asr in asrs)
                                 {
                                     AiUrl = asr.AIURL;
                                     AiUrl.LastResultSuccess = asr.Success;
+                                    TotalSWPostTime += asr.SWPostTime;
 
                                     //add to the list of url's we called
                                     if (!ret.OutURLs.Contains(AiUrl))
                                         ret.OutURLs.Add(AiUrl);
 
+                                    Log($"Debug: (2.1/6) [Refinement Server] Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                                    Log($"Debug: (3.1/6) [Refinement Server] Processing {asr.Predictions.Count} results...", AiUrl.CurSrv, cam, CurImg);
+
+
                                     if (asr.Success)
                                     {
-                                        Log($"Debug: (2.1/6) [Refinement Server] Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
-                                        Log($"Debug: (3.1/6) [Refinement Server] Processing results...", AiUrl.CurSrv, cam, CurImg);
 
-                                        //try to remove duplicates and prefer results from refinement sever
-                                        //note dupe detection works only on label name and position
                                         foreach (ClsPrediction pred in asr.Predictions)
                                         {
-                                            pred.AnalyzePrediction(SkipDynamicMaskCheck: true);  //skip re-detecting dynamic mask so the count does not increase
-
-                                            ClsPredMatch pm = ContainsPrediction(pred, predictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
-
-                                            if (pm.Idx == -1)  //does not contain
-                                            {
-                                                //sighthound and deepstack face detection is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
-                                                if (pred.ObjType == ObjectType.Face)
-                                                {
-                                                    foreach (ClsPrediction fpred in predictions)
-                                                    {
-                                                        if (fpred.ObjType == ObjectType.Person)
-                                                        {
-                                                            Rectangle personRect = fpred.GetRectangle();
-                                                            Rectangle faceRect = pred.GetRectangle();
-
-                                                            //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(personRect, faceRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
-                                                            {
-                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
-                                                                {
-                                                                    fpred.PercentMatchRefinement = matched;
-                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    pred.Result = ResultType.RefinementObject;
-                                                                    Log($"Debug: [Refinement Server] Added face detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match face from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
-                                                            }
-                                                            pred.PercentMatchRefinement = matched;
-                                                        }
-                                                    }
-                                                }
-                                                //try to match a license plate to a vehicle:
-                                                else if (pred.ObjType == ObjectType.LicensePlate)
-                                                {
-                                                    foreach (ClsPrediction fpred in predictions)
-                                                    {
-                                                        if (fpred.ObjType == ObjectType.Vehicle)
-                                                        {
-                                                            Rectangle VehicleRect = fpred.GetRectangle();
-                                                            Rectangle PlateRect = pred.GetRectangle();
-
-                                                            //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(VehicleRect, PlateRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
-                                                            {
-                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
-                                                                {
-                                                                    fpred.PercentMatchRefinement = matched;
-                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    Log($"Debug: [Refinement Server] Added plate detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match plate from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
-                                                            }
-                                                            pred.PercentMatchRefinement = matched;
-                                                        }
-                                                    }
-                                                }
-                                                //handle where deepstack detected a person and sighthound or aws refined it and made it a little bigger or smaller
-                                                else if (pred.ObjType == ObjectType.Person)
-                                                {
-                                                    foreach (ClsPrediction fpred in predictions)
-                                                    {
-                                                        if (fpred.ObjType == ObjectType.Person)
-                                                        {
-                                                            Rectangle personRect = Rectangle.FromLTRB(fpred.XMin.ToInt(), fpred.YMin.ToInt(), fpred.XMax.ToInt(), fpred.YMax.ToInt());
-                                                            Rectangle newPerson = Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt());
-
-                                                            //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(personRect, newPerson, cam.MergePredictionsMinMatchPercent, out double matched, false))
-                                                            {
-
-                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
-                                                                {
-                                                                    fpred.PercentMatchRefinement = matched;
-                                                                    pred.Result = ResultType.RefinementObject;
-                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    Log($"Debug: [Refinement Server] Skipped duplicated matching 'person' detection for {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match person from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}%, Required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
-                                                            }
-
-                                                            pred.PercentMatchRefinement = matched;
-
-                                                        }
-                                                    }
-                                                }
-                                                //handle where deepstack detected a person and sighthound or aws refined it and made it a little bigger or smaller
-                                                else if (pred.ObjType == ObjectType.Vehicle)
-                                                {
-                                                    foreach (ClsPrediction fpred in predictions)
-                                                    {
-                                                        if (fpred.ObjType == ObjectType.Vehicle)
-                                                        {
-                                                            Rectangle ExistingVehicleRect = Rectangle.FromLTRB(fpred.XMin.ToInt(), fpred.YMin.ToInt(), fpred.XMax.ToInt(), fpred.YMax.ToInt());
-                                                            Rectangle newVehicle = Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt());
-
-                                                            //check for at least an 80% match since various ai servers create different size rectangles 
-                                                            if (RectangleMatches(ExistingVehicleRect, newVehicle, cam.MergePredictionsMinMatchPercent, out double matched, TrueIfInsideOrPartiallyInside: false))
-                                                            {
-                                                                //change Truck to "Truck [Model,etc]"
-                                                                if (!pred.Detail.IsEmpty() && !fpred.Detail.Contains(pred.Detail))
-                                                                {
-                                                                    fpred.Detail = (fpred.Detail.Trim(" ;".ToCharArray()) + "; " + pred.Detail).Trim(" ;".ToCharArray());
-                                                                    fpred.Label = pred.Label;
-                                                                    //fpred.Confidence = pred.Confidence;
-                                                                    fpred.PercentMatchRefinement = matched;
-                                                                    pred.Result = ResultType.RefinementObject;
-                                                                    Log($"Debug: [Refinement Server] Added vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                Log($"Debug: [Refinement Server] Did *NOT* match vehicle detail from {pred.Server} for original {fpred.Server} detection: {fpred.ToString()}, Rectangle Match={matched.ToPercent()}, required={cam.MergePredictionsMinMatchPercent.ToPercent()}");
-                                                            }
-                                                            pred.PercentMatchRefinement = matched;
-
-
-                                                        }
-                                                    }
-                                                }
-
-                                                if (pred.Result == ResultType.Relevant)
-                                                    RelevantPredictionCount++;
-
-                                                pred.OriginalOrder = predictions.Count + 1;
-                                                predictions.Add(pred);
-
-                                            }
-                                            else  //already in list, replace it - it may be a different confidence
-                                            {
-                                                Log($"Debug: [Refinement Server] Duplicate prediction {pm.Idx} Old={predictions[pm.Idx].ToString()} ({predictions[pm.Idx].Server}), New={pred.ToString()} ({pred.Server})");
-                                                pred.Result = predictions[pm.Idx].Result;
-                                                pred.DynMaskResult = predictions[pm.Idx].DynMaskResult;
-                                                pred.DynMaskType = predictions[pm.Idx].DynMaskType;
-                                                predictions[pm.Idx].Result = ResultType.DuplicateObject;
-                                                if (pred.Detail.IsEmpty())
-                                                    pred.Detail = predictions[pm.Idx].Detail;
-
-                                                pred.OriginalOrder = predictions.Count + 1;
-                                                predictions.Add(pred);
-
-                                            }
-
+                                            refineorder++;
+                                            pred.AnalyzePrediction(SkipDynamicMaskCheck: true);
+                                            pred.ServerType = ServerType.Refine;
+                                            pred.OriginalOrder = order;
+                                            refinepredictions.Add(pred);
                                         }
                                     }
                                     else
@@ -3069,8 +2988,134 @@ namespace AITool
                                         Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
                                     }
                                 }
+
+
                             }
                         }
+
+                        ///====================================================================================================================
+                        ///merge the refinement predictions====================================================================================
+                        ///====================================================================================================================
+
+
+                        for (int i = 0; i < refinepredictions.Count; i++)
+                        {
+                            ClsPrediction RefinePred = refinepredictions[i];
+
+                            Log($"Debug: [Refinement] Processing prediction #{i + 1} of {refinepredictions.Count} - {RefinePred.ToString()} [{RefinePred.Result}]...", AiUrl.CurSrv, cam, CurImg);
+
+                            //See if there are any existing predictions that can be refined...
+                            for (int r = 0; r < initialpredictions.Count; r++)
+                            {
+                                ClsPrediction ExistingPred = initialpredictions[r];
+                                //sighthound and deepstack face detection is a rectangle around the face inside the person rectangle so it wont be an exact match.  Try to combine the face detail with person
+                                if (RefinePred.ObjType == ObjectType.Face && ExistingPred.ObjType == ObjectType.Person)
+                                {
+                                    Rectangle personRect = ExistingPred.GetRectangle();
+                                    Rectangle faceRect = RefinePred.GetRectangle();
+
+                                    //check for at least an 80% match since various ai servers create different size rectangles 
+                                    if (RectangleMatches(personRect, faceRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
+                                    {
+                                        Log($"Debug: [Refinement]   Added face detail '{ExistingPred.Detail}' (r={r}) from {RefinePred.Server} for original {ExistingPred.Server} detection: {ExistingPred.ToString()} [{ExistingPred.Result}], Rectangle Match={matched.ToPercent()}");
+                                        ExistingPred.PercentMatchRefinement = matched;
+                                        ExistingPred.RefineMergedCount++;
+                                        ExistingPred.Detail = ExistingPred.Detail.Append(RefinePred.Detail, "; ");
+                                        //RefinePred.Result = ResultType.RefinementObject;
+                                    }
+                                    else
+                                    {
+                                        Log($"Debug: [Refinement]   Did *NOT* match face (r={r}) from {RefinePred.Server} for original {ExistingPred.Server} detection: {ExistingPred.ToString()} [{ExistingPred.Result}], Rectangle Match={matched}%, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                    }
+                                    RefinePred.PercentMatchRefinement = matched;
+
+                                }
+                                //try to match a license plate to a vehicle:
+                                else if (RefinePred.ObjType == ObjectType.LicensePlate && ExistingPred.ObjType == ObjectType.Vehicle)
+                                {
+                                    Rectangle VehicleRect = ExistingPred.GetRectangle();
+                                    Rectangle PlateRect = RefinePred.GetRectangle();
+
+                                    //check for at least an 80% match since various ai servers create different size rectangles 
+                                    if (RectangleMatches(VehicleRect, PlateRect, cam.MergePredictionsMinMatchPercent, out double matched, true))
+                                    {
+                                        Log($"Debug: [Refinement]   Added license plate detail '{ExistingPred.Detail}' (r={r}) from {RefinePred.Server} for original {ExistingPred.Server} detection: {ExistingPred.ToString()} [{ExistingPred.Result}], Rectangle Match={matched.ToPercent()}");
+                                        ExistingPred.PercentMatchRefinement = matched;
+                                        ExistingPred.RefineMergedCount++;
+                                        ExistingPred.Detail = ExistingPred.Detail.Append(RefinePred.Detail, "; ");
+                                    }
+                                    else
+                                    {
+                                        Log($"Debug: [Refinement]   Did *NOT* match license plate (r={r}) from {RefinePred.Server} for original {ExistingPred.Server} detection: {ExistingPred.ToString()} [{ExistingPred.Result}], Rectangle Match={matched.ToPercent()}, required={cam.MergePredictionsMinMatchPercent.ToPercent()} (Json CAM setting='MergePredictionsMinMatchPercent')");
+                                    }
+                                    RefinePred.PercentMatchRefinement = matched;
+                                }
+                                else
+                                {
+                                    //lets just add it for now (new people, trucks, etc from refinement servers)
+                                }
+
+                            }
+
+                            if (RefinePred.Result == ResultType.Relevant)
+                                RelevantPredictionCount++;
+
+                            RefinePred.OriginalOrder = initialpredictions.Count + 1;
+                            initialpredictions.Add(RefinePred);
+
+
+                        }
+
+
+                        ///====================================================================================================================
+                        ///De-duplicate + merge=================================================================================================
+                        ///====================================================================================================================
+
+                        ////lets sort the predictions so that lowest confidence are processed first so they are replaced with duplicates of higher confidence:
+                        initialpredictions = initialpredictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).OrderByDescending(p => p.Confidence).ToList();
+
+
+                        List<ClsPrediction> predictions = new List<ClsPrediction>();
+
+                        //take duplicates out of the queue as we go...
+                        while (initialpredictions.Count > 0)
+                        {
+                            ClsPrediction TestPred = initialpredictions[0];
+                            ClsPredMatch pm = ContainsPrediction(TestPred, initialpredictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
+                            if (pm.preds.Count > 1) //if only 1, then it is itself
+                            {
+                                //We only want to keep the first one of any that look alike, it will already be sorted with high confidence
+                                for (int i = 0; i < pm.preds.Count; i++)
+                                {
+                                    if (i > 0)
+                                    {
+                                        pm.preds[i].Result = pm.preds[i].Result == ResultType.Relevant || pm.preds[i].Result == ResultType.RelevantDuplicateObject ? ResultType.RelevantDuplicateObject : ResultType.DuplicateObject;
+                                        pm.preds[i].DupeCount++;
+                                        pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Detail, "; ");
+                                    }
+                                    predictions.Add(pm.preds[i]);
+                                    initialpredictions.Remove(pm.preds[i]);
+                                }
+
+                            }
+                            else
+                            {
+                                predictions.Add(TestPred);
+                                initialpredictions.Remove(TestPred);
+                            }
+                        }
+
+
+                        ///====================================================================================================================
+                        ///Run dynamic mask check last so that it does not increase mask counts of duplicate objects===========================
+                        ///====================================================================================================================
+
+                        foreach (ClsPrediction pred in predictions)
+                        {
+                            if (pred.Result == ResultType.Relevant)
+                                pred.AnalyzePrediction(SkipDynamicMaskCheck: false);  //this may increase things like hitcount for relevant objects since it is run twice, may want to figure this out later
+                        }
+
 
                         //sort predictions so most important are at the top
                         predictions = predictions.Distinct().OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
@@ -3078,6 +3123,10 @@ namespace AITool
                         string PredictionsJSON = Global.GetJSONString(predictions);
 
                         ret.OutPredictions = predictions;
+
+                        ///====================================================================================================================
+                        ///====================================================================================================================
+                        ///====================================================================================================================
 
                         //process the combined predictions
                         if (predictions.Count > 0)
@@ -3180,7 +3229,7 @@ namespace AITool
                                     detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
                                 }
 
-                                cam.last_detections_summary = detectionsTextSb.ToString().Trim(" ;".ToCharArray());
+                                cam.last_detections_summary = detectionsTextSb.ToString().Trim("; ".ToCharArray());
 
                                 //create text string objects and confidences
                                 string objects_and_confidences = "";
@@ -3200,7 +3249,7 @@ namespace AITool
                                     object_positions_as_string += $"{pred.PositionString()};";
                                 }
 
-                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+                                objects_and_confidences = objects_and_confidences.Trim("; ".ToCharArray());
 
                                 Log($"Debug: The summary:" + cam.last_detections_summary, AISRV, cam, CurImg);
 
@@ -3244,7 +3293,7 @@ namespace AITool
                                 }
 
 
-                                objects_and_confidences = objects_and_confidences.Trim(" ;".ToCharArray());
+                                objects_and_confidences = objects_and_confidences.Trim("; ".ToCharArray());
 
                                 //string text contains what is written in the log and in the history list
                                 string text = "";
@@ -3408,12 +3457,12 @@ namespace AITool
 
                 if (!string.IsNullOrEmpty(foundfile) && System.IO.File.Exists(foundfile))
                 {
-                    Log($"Debug:     ->Using found mask file {foundfile}...");
+                    Log($"Trace:     ->Using found mask file {foundfile}...");
                     fileType = Path.GetExtension(foundfile).ToLower();
                 }
                 else
                 {
-                    Log($"Debug:     ->Camera has no mask file yet");
+                    Log($"Trace:     ->Camera has no mask file yet");
                     ret.IsMasked = false;
                     ret.MaskType = MaskType.None;
                     ret.Result = MaskResult.NoMaskImageFile;
@@ -3471,7 +3520,7 @@ namespace AITool
                     {
                         if (ret.ImagePointsOutsideMask == 9)
                         {
-                            Log($"Debug:      ->ALL of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Trace:      ->ALL of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityOutsideMask;
@@ -3479,7 +3528,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Debug:      ->Most of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
+                            Log($"Trace:      ->Most of the object is OUTSIDE of masked area(s). ({ret.ImagePointsOutsideMask} of 9 points)");
                             ret.IsMasked = false;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyOutsideMask;
@@ -3491,7 +3540,7 @@ namespace AITool
                     {
                         if (ret.ImagePointsOutsideMask == 0)
                         {
-                            Log($"Debug:      ->All of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points were outside)");
+                            Log($"Trace:      ->All of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points were outside)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.CompletlyInsideMask;
@@ -3500,7 +3549,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"Debug:      ->Most of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points were outside)");
+                            Log($"Trace:      ->Most of the object is INSIDE a masked area. ({ret.ImagePointsOutsideMask} of 9 points were outside)");
                             ret.IsMasked = true;
                             ret.MaskType = MaskType.Image;
                             ret.Result = MaskResult.MajorityInsideMask;
@@ -3513,7 +3562,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"ERROR while loading the mask file {foundfile}: {ex.Msg()}");
+                Log($"ERROR: While loading the mask file {foundfile}: {ex.Msg()}");
                 ret.IsMasked = false;
                 ret.MaskType = MaskType.Image;
                 ret.Result = MaskResult.Error;
@@ -3789,7 +3838,10 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            //Camera cam = null;
+
+            //we got here too early, no warning messages
+            if (AppSettings.Settings.CameraList.Count == 0)
+                return null;
 
             List<Camera> cams = new List<Camera>();
 
@@ -3943,21 +3995,23 @@ namespace AITool
                     //check if there is a default camera which accepts any prefix, select it
                     if (ReturnDefault)
                     {
-                        int i = AppSettings.Settings.CameraList.FindIndex(x => x.Prefix.Trim() == "");
+
+                        int i = AppSettings.Settings.CameraList.FindIndex(x => string.Equals(x.Name.Trim(), "default", StringComparison.OrdinalIgnoreCase));
 
                         if (i == -1)
-                            i = AppSettings.Settings.CameraList.FindIndex(x => string.Equals(x.Name.Trim(), "default", StringComparison.OrdinalIgnoreCase));
+                            i = AppSettings.Settings.CameraList.FindIndex(x => x.Prefix.Trim() == "");
 
                         if (i > -1)
                         {
                             if (!cams.Contains(AppSettings.Settings.CameraList[i]))
                                 cams.Add(AppSettings.Settings.CameraList[i]);
+
                             if (!ImageOrNameOrPrefix.EqualsIgnoreCase("none"))
                                 Log($"Debug:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
                         }
                         else
                         {
-                            Log("Debug: No default camera found. Aborting.");
+                            Log($"Debug: No default camera found. Aborting. (Out of {AppSettings.Settings.CameraList.Count} cameras.)");
                         }
                     }
 
@@ -3974,7 +4028,7 @@ namespace AITool
 
             if (cams.Count == 0)
             {
-                Log($"Debug: Cannot match '{ImageOrNameOrPrefix}' to an existing camera.");
+                Log($"Debug: Cannot match '{ImageOrNameOrPrefix}' to an existing camera. (Out of {AppSettings.Settings.CameraList.Count} cameras.)");
             }
             else
             {

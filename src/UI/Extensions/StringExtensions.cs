@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -10,6 +11,7 @@ namespace AITool
 {
     public static class StringExtensions
     {
+        [DebuggerStepThrough]
         public static string JoinStr(this List<string> values, string separator)
         {
             //this custom join should not be used for CVS type output because it does not include empty items
@@ -27,13 +29,14 @@ namespace AITool
             for (int i = 0; i < values.Count; i++)
             {
                 if (!values[i].IsEmpty())
-                   sb.Append(values[i].Trim() + separator);
+                    sb.Append(values[i].Trim() + separator);
             }
 
             return sb.ToString().Trim(separator.ToCharArray());
 
         }
 
+        [DebuggerStepThrough]
         public static List<string> SplitStr(this string InList, string Separators, bool RemoveEmpty = true, bool TrimStr = true, bool ToLower = false)
         {
             List<string> Ret = new List<string>();
@@ -71,6 +74,32 @@ namespace AITool
         }
 
 
+        //[DebuggerStepThrough]
+        public static string Append(this string value, string newvalue, string Separators, string ListSeparators = ",;")
+        {
+            //appends only if the string doesnt already have it and trims the separator characters 
+
+            if (newvalue.IsEmpty())
+                return value;
+
+            if (value.IsEmpty())
+                return newvalue.Trim((Separators + ListSeparators).ToCharArray());
+
+            List<string> newlist = newvalue.SplitStr(ListSeparators);
+            List<string> existinglist = value.SplitStr((Separators + ListSeparators).Replace(" ", ""));
+            string newstr = "";
+            foreach (var item in newlist)
+            {
+                if (!Global.IsInList(item, existinglist, TrueIfEmpty: true))
+                {
+                    newstr += item + ", ";
+                }
+            }
+
+            return (value.Trim((Separators + ListSeparators).ToCharArray()) + Separators + newstr).Trim((Separators + ListSeparators).ToCharArray());
+
+        }
+        [DebuggerStepThrough]
         public static string Truncate(this string value, int maxLength, bool ellipsis)
         {
             if (string.IsNullOrEmpty(value)) return value;
@@ -83,6 +112,7 @@ namespace AITool
 
         }
 
+        [DebuggerStepThrough]
         public static double ToDouble(this string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
@@ -90,6 +120,8 @@ namespace AITool
             else
                 return 0;
         }
+
+        [DebuggerStepThrough]
         public static int ToInt(this string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
@@ -97,6 +129,7 @@ namespace AITool
             else
                 return 0;
         }
+        [DebuggerStepThrough]
         public static bool IsEmpty(this string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -105,6 +138,7 @@ namespace AITool
                 return false;
         }
 
+        [DebuggerStepThrough]
         public static bool IsNull(this object obj)
         {
             if (obj == null)
@@ -115,6 +149,7 @@ namespace AITool
 
             return false;
         }
+        [DebuggerStepThrough]
         public static string CleanString(this string inp, string ReplaceStr = " ")
         {
             if (inp == null || string.IsNullOrWhiteSpace(inp))
@@ -126,7 +161,7 @@ namespace AITool
                 return inp.Replace("\0", ReplaceStr).Replace("\r", ReplaceStr).Replace("\n", ReplaceStr);
             }
         }
-
+        [DebuggerStepThrough]
         public static string UpperFirst(this string s)
         {
             if (string.IsNullOrEmpty(s))
@@ -204,7 +239,7 @@ namespace AITool
             return ret;
 
         }
-
+        [DebuggerStepThrough]
         public static bool Has(this string value, string FindStr)
         {
             if (value.IndexOf(FindStr, StringComparison.OrdinalIgnoreCase) >= 0)
@@ -212,7 +247,7 @@ namespace AITool
             else
                 return false;
         }
-
+        [DebuggerStepThrough]
         public static bool EqualsIgnoreCase(this string value, string FindStr)
         {
             if (string.Equals(value, FindStr, StringComparison.OrdinalIgnoreCase))
@@ -220,6 +255,7 @@ namespace AITool
             else
                 return false;
         }
+        [DebuggerStepThrough]
         public static string GetWord(this string InpStr, string JustBefore, string JustAfter, Int32 LastPos = 0, Int32 FirstPos = 0, bool NoTrim = false, bool MustFindJustAfter = false)
         {
             string Ret = "";

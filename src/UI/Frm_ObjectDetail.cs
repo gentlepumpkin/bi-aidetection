@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
+
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -16,7 +19,7 @@ namespace AITool
         private Matrix transform = new Matrix();
         private float m_dZoomscale = 1.0f;
         public const float s_dScrollValue = 0.1f;
-        private Bitmap OriginalBMP = null;
+        private ClsImageQueueItem OriginalBMP = null;
         public Frm_ObjectDetail()
         {
             this.InitializeComponent();
@@ -43,8 +46,8 @@ namespace AITool
 
                 if (!String.IsNullOrEmpty(this.ImageFileName) && this.ImageFileName.Contains("\\") && File.Exists(this.ImageFileName))
                 {
-                    OriginalBMP = new Bitmap(this.ImageFileName);
-                    this.pictureBox1.Image = OriginalBMP; //load actual image as background, so that an overlay can be added as the image
+                    OriginalBMP = new ClsImageQueueItem(this.ImageFileName, 0);
+                    this.pictureBox1.Image = Image.FromStream(OriginalBMP.ToStream()); //load actual image as background, so that an overlay can be added as the image
                 }
 
             }
@@ -132,7 +135,7 @@ namespace AITool
                         if (pred != null)
                         {
                             this.showObject(e, pred); //call rectangle drawing method, calls appropriate detection text
-                            pictureBox2.Image = cropImage(OriginalBMP, Rectangle.FromLTRB(pred.XMin.ToInt(), pred.YMin.ToInt(), pred.XMax.ToInt(), pred.YMax.ToInt()));
+                            pictureBox2.Image = AITOOL.CropImage(OriginalBMP, pred.GetRectangle());
 
                         }
 
@@ -228,7 +231,7 @@ namespace AITool
                                                                                  sclWidth.ToInt(),
                                                                                  sclHeight.ToInt());
 
-                    pictureBox2.Image = cropImage(OriginalBMP, pred.GetRectangle());
+                    //pictureBox2.Image = AITOOL.CropImage(OriginalBMP, pred.GetRectangle());
 
                     using (Pen pen = new Pen(color, BorderWidth))
                     {
@@ -253,7 +256,6 @@ namespace AITool
                     double halfbrd = BorderWidth / 2;
 
 
-                    Brush brush = new SolidBrush(color); //sets background rectangle color
 
                     System.Drawing.SizeF TextSize = e.Graphics.MeasureString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
 
@@ -304,6 +306,13 @@ namespace AITool
                                                         boxWidth.ToInt(),
                                                         boxHeight.ToInt()); //sets bounding box for drawn text
 
+                    Brush brush = new SolidBrush(color); //sets background rectangle color
+                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                    Brush forecolor = Brushes.Black;
+                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
 
                     e.Graphics.FillRectangle(brush,
                                              x.ToInt(),
@@ -311,7 +320,7 @@ namespace AITool
                                              TextSize.Width,
                                              TextSize.Height); //draw grey background rectangle for detection text
 
-                    e.Graphics.DrawString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                    e.Graphics.DrawString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
 
 
                 }
@@ -328,64 +337,50 @@ namespace AITool
         {
             this.pictureBox1.Refresh();
         }
-        protected override void OnMouseWheel(MouseEventArgs mea)
-        {
-            pictureBox1.Focus();
-            if (pictureBox1.Focused == true && mea.Delta != 0)
-            {
-                // Map the Form-centric mouse location to the PictureBox client coordinate system
-                Point pictureBoxPoint = pictureBox1.PointToClient(this.PointToScreen(mea.Location));
-                ZoomScroll(pictureBoxPoint, mea.Delta > 0);
-            }
-        }
+        //protected override void OnMouseWheel(MouseEventArgs mea)
+        //{
+        //    pictureBox1.Focus();
+        //    if (pictureBox1.Focused == true && mea.Delta != 0)
+        //    {
+        //        // Map the Form-centric mouse location to the PictureBox client coordinate system
+        //        Point pictureBoxPoint = pictureBox1.PointToClient(this.PointToScreen(mea.Location));
+        //        ZoomScroll(pictureBoxPoint, mea.Delta > 0);
+        //    }
+        //}
 
-        private void ZoomScroll(Point location, bool zoomIn)
-        {
-            // Figure out what the new scale will be. Ensure the scale factor remains between
-            // 1% and 1000%
-            float newScale = Math.Min(Math.Max(m_dZoomscale + (zoomIn ? s_dScrollValue : -s_dScrollValue), 0.1f), 10);
+        //private void ZoomScroll(Point location, bool zoomIn)
+        //{
+        //    // Figure out what the new scale will be. Ensure the scale factor remains between
+        //    // 1% and 1000%
+        //    float newScale = Math.Min(Math.Max(m_dZoomscale + (zoomIn ? s_dScrollValue : -s_dScrollValue), 0.1f), 10);
 
-            if (newScale != m_dZoomscale)
-            {
-                float adjust = newScale / m_dZoomscale;
-                m_dZoomscale = newScale;
+        //    if (newScale != m_dZoomscale)
+        //    {
+        //        float adjust = newScale / m_dZoomscale;
+        //        m_dZoomscale = newScale;
 
-                // Translate mouse point to origin
-                transform.Translate(-location.X, -location.Y, MatrixOrder.Append);
+        //        // Translate mouse point to origin
+        //        transform.Translate(-location.X, -location.Y, MatrixOrder.Append);
 
-                // Scale view
-                transform.Scale(adjust, adjust, MatrixOrder.Append);
+        //        // Scale view
+        //        transform.Scale(adjust, adjust, MatrixOrder.Append);
 
-                // Translate origin back to original mouse point.
-                transform.Translate(location.X, location.Y, MatrixOrder.Append);
-                Size newSize = new Size((int)(OriginalBMP.Width * m_dZoomscale), (int)(OriginalBMP.Height * m_dZoomscale));
-                Bitmap bmp = new Bitmap(OriginalBMP, newSize);
-                this.pictureBox1.Image = bmp; //load actual image as background, so that an overlay can be added as the image
+        //        // Translate origin back to original mouse point.
+        //        transform.Translate(location.X, location.Y, MatrixOrder.Append);
+        //        Size newSize = new Size((int)(OriginalBMP.Width * m_dZoomscale), (int)(OriginalBMP.Height * m_dZoomscale));
+        //        Bitmap bmp = new Bitmap(OriginalBMP, newSize);
+        //        this.pictureBox1.Image = bmp; //load actual image as background, so that an overlay can be added as the image
 
-                pictureBox1.Invalidate();
-                pictureBox1.Refresh();
-            }
-        }
+        //        pictureBox1.Invalidate();
+        //        pictureBox1.Refresh();
+        //    }
+        //}
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
 
         }
 
-        private static Image cropImage(Image img, Rectangle cropArea)
-        {
-            using Bitmap bmpImage = new Bitmap(img);
-
-            if (cropArea.Right > bmpImage.Width || cropArea.Bottom > bmpImage.Height)
-            {
-                cropArea.Intersect(new Rectangle(0, 0, bmpImage.Width, bmpImage.Height));
-            }
-
-            Bitmap bmpCrop = bmpImage.Clone(cropArea, bmpImage.PixelFormat);
-
-            return (Image)(bmpCrop);
-
-        }
         //FUNCTION FOR MOUSE SCROL ZOOM-IN
         //private void ZoomScroll(Point location, bool zoomIn)
         //{

@@ -18,6 +18,13 @@ namespace AITool
         Unknown,
         LicensePlate
     }
+    public enum ServerType
+    {
+        Primary,
+        Linked,
+        Refine,
+        Unknown
+    }
 
     public enum ResultType
     {
@@ -39,7 +46,8 @@ namespace AITool
         TooSmallHeight = 16,
         TooLargeWidth = 17,
         TooLargeHeight = 18,
-        IgnoredObject = 19
+        IgnoredObject = 19,
+        RelevantDuplicateObject = 20
 
     }
     public class ClsPrediction : IEquatable<ClsPrediction>
@@ -56,6 +64,7 @@ namespace AITool
         public double PercentOfImage { get; set; } = 0;
 
         public ObjectType ObjType { get; set; } = ObjectType.Unknown;
+        public ServerType ServerType { get; set; } = ServerType.Unknown;
         public string Server { get; set; } = "";
         public MaskType DynMaskType { get; set; } = MaskType.Unknown;
         public MaskResult DynMaskResult { get; set; } = MaskResult.Unknown;
@@ -65,7 +74,6 @@ namespace AITool
         public MaskResult ImgMaskResult { get; set; } = MaskResult.Unknown;
         public int DynamicThresholdCount { get; set; } = 0;
         public int ImagePointsOutsideMask { get; set; } = 0;
-
         public double YMin { get; set; } = 0;
         public double XMin { get; set; } = 0;
         public double YMax { get; set; } = 0;
@@ -83,6 +91,8 @@ namespace AITool
         public int ObjectPriority { get; set; } = 0;
         public string Filename { get; set; } = "";
         public int OriginalOrder { get; set; } = 0;
+        public int DupeCount { get; set; } = 0;
+        public int RefineMergedCount { get; set; } = 0;
         public DateTime Time { get; set; } = DateTime.MinValue;
         public ClsDeepstackDetection ToDeepstackDetection()
         {
@@ -141,7 +151,7 @@ namespace AITool
         }
         public Rectangle GetRectangle()
         {
-            return Rectangle.FromLTRB(this.XMin.ToInt(), this.YMin.ToInt(), this.XMax.ToInt(), this.YMax.ToInt());
+            return Rectangle.FromLTRB(this.XMin.ToInt(true), this.YMin.ToInt(true), this.XMax.ToInt(true), this.YMax.ToInt(true));
         }
         [JsonConstructor]
         public ClsPrediction()
@@ -210,7 +220,7 @@ namespace AITool
                         if (cnt > 3)
                             break;
                     }
-                    emotions = emotions.Trim(" ;".ToCharArray());
+                    emotions = emotions.Trim("; ".ToCharArray());
                 }
             }
 
@@ -310,16 +320,16 @@ namespace AITool
 
             //force first letter to always be capitalized 
             this.Label = AiDetectionObject.Name.UpperFirst();
-            if (AiDetectionObject.Parents != null && AiDetectionObject.Parents.Count > 0)
-            {
-                foreach (var parent in AiDetectionObject.Parents)
-                {
-                    this.Detail += $", {parent.Name.UpperFirst()}";
-                }
-                this.Detail = this.Detail.Trim(", ".ToCharArray());
-            }
+            //if (AiDetectionObject.Parents != null && AiDetectionObject.Parents.Count > 0)
+            //{
+            //    foreach (var parent in AiDetectionObject.Parents)
+            //    {
+            //        this.Detail += $", {parent.Name.UpperFirst()}";
+            //    }
+            //    this.Detail = this.Detail.Trim(", ".ToCharArray());
+            //}
 
-            this.Confidence = AiDetectionObject.Instances[InstanceIdx].Confidence;
+            this.Confidence = AiDetectionObject.Confidence; //AiDetectionObject.Instances[InstanceIdx].Confidence;
 
             this.GetObjectType();
             this.UpdateImageInfo(curImg);
@@ -736,7 +746,7 @@ namespace AITool
                         if (cnt > 3)
                             break;
                     }
-                    emotions = emotions.Trim(" ;".ToCharArray());
+                    emotions = emotions.Trim("; ".ToCharArray());
                     if (string.IsNullOrEmpty(emotions))
                         emotions = "UnknownEmotions";
                 }
@@ -804,10 +814,10 @@ namespace AITool
             this.Filename = curImg.image_path;
 
             this.AIWidth = this.XMax - this.XMin;
-            this.AIHeight = this.YMax - this.YMin;
+            this.AIHeight = this.YMax - this.YMin;  //TODO:  Bug?  Deepstack returning higher YMIN than YMAX sometimes.  
 
-            this.RectWidth = this.XMax - this.XMin;
-            this.RectHeight = this.YMax - this.YMin;
+            this.RectWidth = this.AIWidth;
+            this.RectHeight = this.AIHeight;
 
             this.GetObjectType();
             this.UpdateImageInfo(curImg);
@@ -900,7 +910,7 @@ namespace AITool
                 if (this._cam.enabled)
                 {
                     //this.Result = AITOOL.ArePredictionObjectsRelevant(this._cam.triggering_objects_as_string + "," + this._cam.additional_triggering_objects_as_string, "NEW", this, true);
-                    this.Result = this._cam.DefaultTriggeringObjects.IsRelevant(this, true, "NEW");
+                    this.Result = this._cam.DefaultTriggeringObjects.IsRelevant(this, true, out bool IgnoreMask, "NEW");
                     if (this.Result == ResultType.Relevant)
                     {
                         this.Result = this._cam.IsRelevantSize(this);
@@ -916,11 +926,24 @@ namespace AITool
                             {
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                //only if the object is outside of the masked area
-                                result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
-                                this.ImgMaskResult = result.Result;
-                                this.ImgMaskType = result.MaskType;
-                                this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
+                                if (!IgnoreMask)
+                                {
+                                    //only if the object is outside of the masked area
+                                    result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
+                                    this.ImgMaskResult = result.Result;
+                                    this.ImgMaskType = result.MaskType;
+                                    this.ImagePointsOutsideMask = result.ImagePointsOutsideMask;
+                                }
+                                else
+                                {
+                                    //a relevant object was flagged to ignore masks
+                                    result.IsMasked = false;
+                                    result.Result = MaskResult.IgnoredObject;
+                                    result.MaskType = MaskType.Unknown;
+                                    this.ImgMaskResult = result.Result;
+                                    this.ImgMaskType = result.MaskType;
+
+                                }
 
                                 if (!result.IsMasked)
                                 {
@@ -1033,6 +1056,7 @@ namespace AITool
             ret = Global.ReplaceCaseInsensitive(ret, "[result]", this.Result.ToString());
             ret = Global.ReplaceCaseInsensitive(ret, "[position]", this.PositionString());
             ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", this.ConfidenceString());
+            ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", this.PercentOfImage.Round().ToString());
             //if there was no detail string, clean up:
             ret = ret.Replace("[]", "").Replace("()", "").Replace("   ", " ").Replace("  ", " ");
 
@@ -1050,6 +1074,13 @@ namespace AITool
 
         private void GetObjectType()
         {
+            //just to make it so truck and pickup truck are the same object priority
+            //eventually we may have to allow for more than one object with the same priority but this is a quick fix
+            if (this.Label.EqualsIgnoreCase("pickup truck"))
+            {
+                this.Label = "Truck";
+            }
+
             string tmp = this.Label.Trim().ToLower();
 
             //person,   bicycle,   car,   motorcycle,   airplane,
@@ -1063,6 +1094,7 @@ namespace AITool
             //toilet,   tv,   laptop,   mouse,   remote,   keyboard,   cell phone,   microwave,
             //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
             //hair dryer, toothbrush.
+
 
             if (this.ObjType != ObjectType.Unknown)  //because we can set this in deepstack face detection for example
             {
@@ -1101,7 +1133,9 @@ namespace AITool
                      tmp.Equals("boat") ||
                      tmp.Equals("train") ||
                      tmp.Equals("airplane"))
+            {
                 this.ObjType = ObjectType.Vehicle;
+            }
             else
                 this.ObjType = this._defaultObjType;
 
@@ -1112,7 +1146,7 @@ namespace AITool
         public void GetPriority()
         {
             //List<string> pris = AppSettings.Settings.ObjectPriority.Split(",", ToLower: true);
-            ClsRelevantObject ro = this._cam.DefaultTriggeringObjects.Get(this.Label);
+            ClsRelevantObject ro = this._cam.DefaultTriggeringObjects.Get(this.Label, AllowEverything: false, out int FoundIDX);
             if (ro != null && ro.Priority > 0)
                 this.ObjectPriority = ro.Priority; //pris.IndexOf(tmp);
             else
@@ -1129,8 +1163,8 @@ namespace AITool
             if (other == null)
                 return false;
 
-            string tmp1 = this.Label.Trim().ToLower();
-            string tmp2 = other.Label.Trim().ToLower();
+            //string tmp1 = this.Label.Trim().ToLower();
+            //string tmp2 = other.Label.Trim().ToLower();
 
             //if (tmp1.Contains("["))
             //    tmp1 = Global.GetWordBetween(tmp1, "", "[").Trim();
@@ -1138,7 +1172,20 @@ namespace AITool
             //if (tmp2.Contains("["))
             //    tmp2 = Global.GetWordBetween(tmp2, "", "[").Trim();
 
-            return tmp1 == tmp2;
+            return this.GetHashCode() == other.GetHashCode();
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 1877525906;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Label);
+            hashCode = hashCode * -1521134295 + Confidence.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Server);
+            hashCode = hashCode * -1521134295 + YMin.GetHashCode();
+            hashCode = hashCode * -1521134295 + XMin.GetHashCode();
+            hashCode = hashCode * -1521134295 + YMax.GetHashCode();
+            hashCode = hashCode * -1521134295 + XMax.GetHashCode();
+            return hashCode;
         }
 
         public static bool operator ==(ClsPrediction left, ClsPrediction right)

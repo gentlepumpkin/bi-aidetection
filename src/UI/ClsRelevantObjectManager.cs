@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,9 +20,17 @@ namespace AITool
         public double Threshold_lower { get; set; } = 30;
         public double Threshold_upper { get; set; } = 100;
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
+        public bool IgnoreMask { get; set; } = false;
         public long Hits { get; set; } = 0;
         public DateTime LastHitTime { get; set; } = DateTime.MinValue;
         public DateTime CreatedTime { get; set; } = DateTime.MinValue;
+        public int LastHashCode = 0;
+
+        [JsonConstructor]
+        public ClsRelevantObject()
+        {
+            this.Update();
+        }
         public ClsRelevantObject(string Name)
         {
             if (Name.TrimStart().StartsWith("-"))
@@ -35,9 +44,14 @@ namespace AITool
             this.Name = Name.Trim(" -".ToCharArray()).UpperFirst();
             this.Priority = Priority;
             this.CreatedTime = DateTime.Now;
+            this.Update();
 
         }
 
+        public void Update()
+        {
+            this.LastHashCode = this.GetHashCode();
+        }
         public override string ToString()
         {
             if (this.Trigger)
@@ -54,7 +68,17 @@ namespace AITool
         public bool Equals(ClsRelevantObject other)
         {
             return other != null &&
-                   Name.EqualsIgnoreCase(other.Name);
+                   this.GetHashCode() == other.GetHashCode();
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 349655125;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name.ToLower());
+            hashCode = hashCode * -1521134295 + Threshold_lower.GetHashCode();
+            hashCode = hashCode * -1521134295 + Threshold_upper.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ActiveTimeRange.ToLower());
+            return hashCode;
         }
 
         public static bool operator ==(ClsRelevantObject left, ClsRelevantObject right)
@@ -73,125 +97,351 @@ namespace AITool
 
     public class ClsRelevantObjectManager
     {
-        public OrderedDictionary ObjectDict { get; set; } = new OrderedDictionary();
+        public OrderedDictionary ObjectDict { get; set; } = null;
+        public List<ClsRelevantObject> ObjectList { get; set; } = new List<ClsRelevantObject>();
         public string TypeName { get; set; } = "";
         public int EnabledCount { get; set; } = 0;
         public string Camera = "";
         [JsonIgnore]
         private Camera cam = null;
+        [JsonIgnore]
+        private Camera defaultcam = null;
+        [JsonIgnore]
+        private List<ClsRelevantObject> DefaultObjectList { get; set; } = new List<ClsRelevantObject>();
+        private bool Initialized = false;
+        private bool Initializing = false;
+        private object ROLockObject = new object();
+        [JsonConstructor]
         public ClsRelevantObjectManager()
         {
+            this.Init();
+        }
+
+        public ClsRelevantObjectManager(ClsRelevantObjectManager manager)
+        {
+            this.TypeName = manager.TypeName;
+            this.Camera = manager.Camera;
+            this.Init();
+            this.ObjectList = this.FromList(manager.ObjectList, true, ExactMatchOnly: true);
+            this.Update();
         }
         public ClsRelevantObjectManager(string Objects, string TypeName, string Camera)
         {
             this.TypeName = TypeName;
             this.Camera = Camera;
-            this.FromString(Objects);
+
+            this.Init();
+
+            if (!Objects.IsEmpty())
+                this.ObjectList = this.FromString(Objects, true, true);
+            else
+                this.Reset();
+
+            this.Update();
+
         }
 
-        public List<ClsRelevantObject> ToList()
+        public void Init()
         {
-            this.AddDefaults();
-
-            List<ClsRelevantObject> ret = new List<ClsRelevantObject>();
-            this.EnabledCount = 0;
-            int Order = 0;
-            foreach (DictionaryEntry entry in this.ObjectDict)
+            //dont initialize until we have a list of cameras available
+            if (!this.Initialized && !AppSettings.Settings.CameraList.IsNull() && AppSettings.Settings.CameraList.Count > 0)
             {
-                ClsRelevantObject ro = (ClsRelevantObject)entry.Value;
-
-                if (ro.Enabled)
+                Initializing = true;
+                lock (ROLockObject)
                 {
-                    this.EnabledCount++;
-                    Order++;
-                    ro.Priority = Order;
-                    ret.Add(ro);
+                    //migrate from the dictionary to the list - dictionary no longer used
+                    if (!this.ObjectDict.IsNull())
+                    {
+                        ObjectList.Clear();
+                        foreach (Object item in ObjectDict.Values)
+                        {
+                            if (item is DictionaryEntry)
+                            {
+                                ClsRelevantObject ro = (ClsRelevantObject)((DictionaryEntry)item).Value;
+                                ObjectList.Add(ro);
+                            }
+                            else if (item is ClsRelevantObject)
+                            {
+                                ClsRelevantObject ro = (ClsRelevantObject)item;
+                                ObjectList.Add(ro);
+                            }
+                            else
+                            {
+                                AITOOL.Log($"Debug: Old object is {item.GetType().FullName}??");
+                            }
+                        }
+                        this.ObjectDict = null;
+                    }
+
+                    //Add default settings
+                    this.Initialized = true;
+                    UpdateDefaultObjectList();
+
+
+                    Update();
                 }
+                Initializing = false;
             }
-            //force disabled items to be lower priority
-            foreach (DictionaryEntry entry in this.ObjectDict)
-            {
-                ClsRelevantObject ro = (ClsRelevantObject)entry.Value;
 
-                if (!ro.Enabled)
+
+        }
+
+        public void AddDefaults()
+        {
+            //Add defaults if missing
+            this.ObjectList = this.FromList(this.DefaultObjectList, false, ExactMatchOnly: true);
+
+        }
+        public void Update()
+        {
+
+            //sort
+            //this.ObjectList = this.ObjectList.OrderByDescending(ro => ro.Enabled).ThenBy(ro => ro.Priority).ThenBy(ro => ro.CreatedTime).ThenBy(ro => ro.Name).ToList();
+
+            if (this.ObjectList.Count == 0)
+                this.Reset();
+
+            //make sure no priority dupes
+            for (int i = 0; i < this.ObjectList.Count; i++)
+            {
+                this.ObjectList[i].Update();
+                this.ObjectList[i].Priority = i + 1;
+            }
+
+        }
+
+        public ClsRelevantObject Delete(ClsRelevantObject ro, out int NewIDX)
+        {
+            ClsRelevantObject ret = ro;
+
+            NewIDX = 0;
+
+            if (ro == null)
+                return ro;
+
+            ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, true);
+            if (!rofound.IsNull())
+            {
+                this.ObjectList.RemoveAt(FoundIDX);
+                NewIDX = FoundIDX - 1;
+
+                if (NewIDX > -1)
                 {
-                    Order++;
-                    ro.Priority = Order;
-                    ret.Add(ro);
+                    ret = this.ObjectList[NewIDX];
                 }
             }
 
             return ret;
+
         }
-        public void FromList(List<ClsRelevantObject> InList)
+
+        public ClsRelevantObject MoveUp(ClsRelevantObject ro, out int NewIDX)
         {
-            this.ObjectDict.Clear();
-            this.EnabledCount = 0;
-            int order = 0;
+            ClsRelevantObject ret = ro;
+            NewIDX = 0;
 
-            foreach (var ro in InList)
+            if (ro == null)
+                return ro;
+
+            ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, true);
+            if (!rofound.IsNull())
             {
-                if (!this.ObjectDict.Contains(ro.Name.ToLower()))
+                NewIDX = FoundIDX - 1;
+
+                if (NewIDX > -1)
                 {
-                    if (ro.Enabled)
-                    {
-                        order++;
-                        this.EnabledCount++;
-                        ro.Priority = order;
-                        this.ObjectDict.Add(ro.Name.ToLower(), ro);
-                    }
+                    this.ObjectList.Move(FoundIDX, NewIDX);
+                    ret = this.ObjectList[NewIDX];
                 }
             }
 
-            //force disabled items to be lower priority
-            foreach (var ro in InList)
+            return ret;
+
+        }
+        public ClsRelevantObject MoveDown(ClsRelevantObject ro, out int NewIDX)
+        {
+            ClsRelevantObject ret = ro;
+            NewIDX = 0;
+
+            if (ro == null)
+                return ro;
+
+            ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, true);
+            if (!rofound.IsNull())
             {
-                if (!this.ObjectDict.Contains(ro.Name.ToLower()))
+                NewIDX = FoundIDX + 1;
+
+                if (NewIDX < this.ObjectList.Count - 1)
                 {
-                    if (!ro.Enabled)
-                    {
-                        order++;
-                        ro.Priority = order;
-                        this.ObjectDict.Add(ro.Name.ToLower(), ro);
-                    }
+                    this.ObjectList.Move(FoundIDX, NewIDX);
+                    ret = this.ObjectList[NewIDX];
                 }
+            }
+
+            return ret;
+
+        }
+        public void Reset()
+        {
+            AITOOL.Log("Using Relevant Objects list from the 'Default' camera.");
+            if (this.Camera.EqualsIgnoreCase(this.defaultcam.Name))
+            {
+                this.ObjectList = this.FromString(AppSettings.Settings.ObjectPriority, true, false);
+            }
+            else
+            {
+                this.ObjectList = this.DefaultObjectList;
             }
         }
-        public void FromString(string Objects)
+
+        public void UpdateDefaultObjectList()
+        {
+            //get the default camera list
+            if (this.defaultcam.IsNull())
+                this.defaultcam = AITOOL.GetCamera("Default", true);
+
+            if (!this.defaultcam.IsNull() && !this.defaultcam.DefaultTriggeringObjects.IsNull() && this.defaultcam.DefaultTriggeringObjects.ObjectList.Count > 0)
+            {
+                this.DefaultObjectList = this.defaultcam.DefaultTriggeringObjects.CloneObjectList();
+            }
+            else
+            {
+                this.DefaultObjectList = this.FromString(AppSettings.Settings.ObjectPriority, true, false);
+            }
+        }
+
+        public List<ClsRelevantObject> CloneObjectList()
+        {
+            List<ClsRelevantObject> ret = new List<ClsRelevantObject>();
+            foreach (var ro in this.ObjectList)
+            {
+                ret.Add(ro.CloneJson());  //cloning so that when we add default settings from another object manager instance we dont change the original
+            }
+            return ret;
+        }
+
+        public List<ClsRelevantObject> FromList(List<ClsRelevantObject> InList, bool Clear, bool ExactMatchOnly)
+        {
+
+            List<ClsRelevantObject> ret = new List<ClsRelevantObject>();
+
+            if (InList.Count == 0)
+                return ret;
+
+            this.Init();
+            if (!this.Initialized)
+                return ret;
+
+            if (Clear)
+            {
+                this.ObjectList.Clear();
+                this.EnabledCount = 0;
+            }
+
+            ret.AddRange(this.ObjectList);
+
+            int order = ret.Count - 1;
+
+            bool AlreadyHasItems = ret.Count > 0;
+            int dupes = 0;
+
+            foreach (var ro in InList)
+            {
+                ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, ExactMatchOnly, ret);
+
+                if (rofound.IsNull())
+                {
+                    //Only add items as enabled if we started out from an empty list
+                    if (AlreadyHasItems)
+                        ro.Enabled = false;
+
+                    order++;
+                    this.EnabledCount++;
+                    ro.Priority = order;
+                    ro.Update();
+                    ret.Add(ro);
+                }
+                else
+                {
+                    dupes++;
+                }
+            }
+
+            ////force disabled items to be lower priority
+            //foreach (var ro in InList)
+            //{
+            //    ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX);
+            //    if (rofound.IsNull())
+            //    {
+            //        //Only add items as enabled if we started out from an empty list
+            //        if (!AlreadyHasItems)
+            //            ro.Enabled = true;
+            //        else
+            //            ro.Enabled = false;
+
+            //        if (!ro.Enabled)
+            //        {
+            //            order++;
+            //            ro.Priority = order;
+            //            ro.Update();
+            //            ret.Add(ro);
+            //        }
+            //    }
+            //}
+
+            return ret;
+        }
+        public List<ClsRelevantObject> FromString(string Objects, bool Clear, bool ExactMatchonly)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            List<ClsRelevantObject> ret = new List<ClsRelevantObject>();
+
+            this.Init();
+            if (!this.Initialized)
+                return ret;
+
+
             try
             {
+
+                if (Clear)
+                {
+                    this.ObjectList.Clear();
+                    this.EnabledCount = 0;
+                }
                 //take anything before the first semicolon:
                 if (Objects.Contains(";"))
                     Objects = Objects.GetWord("", ";");
 
-                this.EnabledCount = 0;
-                int order = 0;
+                bool AlreadyHasItems = ObjectList.Count > 0;
 
                 List<string> lst = Objects.SplitStr(",");
-                List<string> deflst = AppSettings.Settings.ObjectPriority.ToLower().SplitStr(",");
 
                 foreach (var obj in lst)
                 {
                     ClsRelevantObject ro = new ClsRelevantObject(obj);
 
-                    if (!ObjectDict.Contains(ro.Name.ToLower()))
+                    ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, ExactMatchonly, ret);
+
+                    if (rofound.IsNull())
                     {
+                        //Only add items as enabled if we started out from an empty list
+                        if (AlreadyHasItems)
+                            ro.Enabled = false;
+
                         if (ro.Enabled)
                             this.EnabledCount++;
 
-                        order = deflst.IndexOf(ro.Name.ToLower());
+                        //set the order if found in the default list
+                        ClsRelevantObject defRo = this.Get(ro, false, out int DefFoundIDX, false, this.DefaultObjectList);
 
-                        if (order > -1)
-                            ro.Priority = order + 1;
+                        if (DefFoundIDX > -1)
+                            ro.Priority = DefFoundIDX + 1;
 
-                        ObjectDict.Add(ro.Name.ToLower(), ro);
+                        ret.Add(ro);
                     }
                 }
-
-                AddDefaults();
 
 
             }
@@ -199,131 +449,147 @@ namespace AITool
             {
                 AITOOL.Log("Error: " + ex.Msg());
             }
-        }
-
-        public void AddDefaults()
-        {
-            //Make sure the default objects are always in the list
-
-            List<string> deflst = AppSettings.Settings.ObjectPriority.SplitStr(",");
-            bool AlreadyHasItems = ObjectDict.Count > 0;
-
-            for (int i = 0; i < deflst.Count; i++)
-            {
-                ClsRelevantObject ro = new ClsRelevantObject(deflst[i]);
-
-                if (!ObjectDict.Contains(ro.Name.ToLower()))
-                {
-                    //if no items are currently in the dictionary, assume we want to ENABLE all the objects
-                    //  Otherwise, Disable objects so that existing lists from old versions dont suddenly have everything enabled that shouldnt be
-                    if (!AlreadyHasItems)
-                        ro.Enabled = true;
-                    else
-                        ro.Enabled = false;
-
-                    if (ro.Enabled)
-                        this.EnabledCount++;
-
-                    ro.Priority = i + 1;
-
-                    ObjectDict.Add(ro.Name.ToLower(), ro);
-                }
-                else
-                {
-                    if (!AlreadyHasItems)
-                        ro.Priority = i + 1;
-                }
-            }
-        }
-
-
-        public bool TryDelete(ClsRelevantObject ro)
-        {
-            bool ret = false;
-
-            if (ro.IsNull())
-                return false;
-
-            if (ObjectDict.Contains(ro.Name.ToLower()))
-            {
-                ObjectDict.Remove(ro.Name.ToLower());
-                ret = true;
-            }
 
             return ret;
-
         }
-        public bool TryAdd(ClsRelevantObject ro, bool Enable)
+
+        public bool TryAdd(ClsRelevantObject ro, bool Enable, out int AddedIDX)
         {
             bool ret = false;
+            AddedIDX = -1;
 
             if (ro.IsNull())
                 return false;
 
-            if (!ObjectDict.Contains(ro.Name.ToLower()))
+            ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, true);
+
+            if (rofound.IsNull())
             {
-                ro.Priority = ObjectDict.Count + 1;
+                ro.Priority = this.ObjectList.Count + 1;
                 ro.Enabled = Enable;
 
                 if (ro.Enabled)
                     this.EnabledCount++;
-                ObjectDict.Add(ro.Name.ToLower(), ro);
+
+                ro.Update();
+                this.ObjectList.Add(ro);
+                AddedIDX = this.ObjectList.Count - 1;
                 ret = true;
             }
 
             return ret;
 
         }
-        public bool TryAdd(string objname, bool Enable)
+        public bool TryAdd(string objname, bool Enable, out int AddedIDX)
         {
+            AddedIDX = -1;
+
             if (objname.IsEmpty() || this.TypeName.IsEmpty())
                 return false;
 
-            return this.TryAdd(new ClsRelevantObject(objname), Enable);
+            return this.TryAdd(new ClsRelevantObject(objname), Enable, out AddedIDX);
         }
 
         public override string ToString()
         {
             string ret = "";
-            foreach (DictionaryEntry entry in this.ObjectDict)
+            foreach (var ro in this.ObjectList)
             {
-                ClsRelevantObject ro = (ClsRelevantObject)entry.Value;
                 if (ro.Enabled)
                     ret += ro.ToString() + ", ";
             }
             return ret.Trim(" ,".ToCharArray());
         }
 
-        public ClsRelevantObject Get(string objname)
+        public ClsRelevantObject Get(ClsRelevantObject roobj, bool AllowEverything, out int FoundIDX, bool ExactMatchOnly, List<ClsRelevantObject> ObjList = null)
         {
-            if (this.ObjectDict.Contains(objname.ToLower()))
-                return (ClsRelevantObject)this.ObjectDict[objname.ToLower()];
-            else if (this.ObjectDict.Contains("everything"))
-                return (ClsRelevantObject)this.ObjectDict["everything"];
+
+            if (ObjList.IsNull())
+                ObjList = this.ObjectList;
+
+            //look for exact hashcode first
+            FoundIDX = ObjList.IndexOf(roobj);
+
+            if (FoundIDX > -1)
+                return ObjList[FoundIDX];
+
+            //search for the last hashcode in case the object has changed
+            for (int i = 0; i < ObjList.Count; i++)
+            {
+                if (ObjList[i].LastHashCode != 0 && ObjList[i].LastHashCode == roobj.LastHashCode && !roobj.Name.EqualsIgnoreCase("new object"))
+                {
+                    FoundIDX = i;
+                    return ObjList[i];
+                }
+
+            }
+
+            //fall back to name only search
+            if (!ExactMatchOnly)
+                return this.Get(roobj.Name, AllowEverything, out FoundIDX, ObjList);
+
+            return null;
+
+
+        }
+        public ClsRelevantObject Get(string objname, bool AllowEverything, out int FoundIDX, List<ClsRelevantObject> ObjList = null)
+        {
+
+            if (ObjList.IsNull())
+                ObjList = this.ObjectList;
+
+            FoundIDX = -1;
+            //Get only by label name
+            for (int i = 0; i < ObjList.Count; i++)
+            {
+                if (ObjList[i].Name.EqualsIgnoreCase(objname))
+                {
+                    FoundIDX = i;
+                    return ObjList[i];
+                }
+            }
+
+            if (AllowEverything)
+            {
+                for (int i = 0; i < ObjList.Count; i++)
+                {
+                    if (ObjList[i].Name.EqualsIgnoreCase("everything"))
+                    {
+                        FoundIDX = i;
+                        return ObjList[i];
+                    }
+                }
+            }
 
             return null;
 
         }
 
-        public ResultType IsRelevant(string Label, string DbgDetail = "")
+        public ResultType IsRelevant(string Label, out bool IgnoreMask, string DbgDetail = "")
         {
             ClsPrediction pred = new ClsPrediction();
             pred.Label = Label;
-            return IsRelevant(new List<ClsPrediction>() { pred }, true, DbgDetail);
+            return IsRelevant(new List<ClsPrediction>() { pred }, true, out IgnoreMask, DbgDetail);
         }
-        public ResultType IsRelevant(ClsPrediction pred, bool IsNew, string DbgDetail = "")
+        public ResultType IsRelevant(ClsPrediction pred, bool IsNew, out bool IgnoreMask, string DbgDetail = "")
         {
-            return IsRelevant(new List<ClsPrediction>() { pred }, IsNew, DbgDetail);
+            return IsRelevant(new List<ClsPrediction>() { pred }, IsNew, out IgnoreMask, DbgDetail);
         }
 
-        public ResultType IsRelevant(List<ClsPrediction> preds, bool IsNew, string DbgDetail = "")
+        public ResultType IsRelevant(List<ClsPrediction> preds, bool IsNew, out bool IgnoreMask, string DbgDetail = "")
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             ResultType ret = ResultType.UnwantedObject;
+            IgnoreMask = false;
+
+            this.Init();
+            if (!this.Initialized)
+                return ret;
+
 
             //if nothing is 'enabled' assume everything should be let through to be on the safe side  (As if they passed an empty list)
-            if (this.ObjectDict.Count == 0 || this.EnabledCount == 0)  //assume if no list is provided to always return relevant
+            if (this.ObjectList.Count == 0 || this.EnabledCount == 0)  //assume if no list is provided to always return relevant
                 return ResultType.Relevant;
 
             //if fred is found, the whole prediction will be ignored
@@ -348,7 +614,7 @@ namespace AITool
 
                     if (pred.Result == ResultType.Relevant || IsNew)
                     {
-                        ClsRelevantObject ro = this.Get(label);
+                        ClsRelevantObject ro = this.Get(label, AllowEverything: true, out int FoundIDX);
 
                         if (!ro.IsNull())
                         {
@@ -370,6 +636,7 @@ namespace AITool
                                         else
                                         {
                                             ret = ResultType.Relevant;
+                                            IgnoreMask = ro.IgnoreMask;
                                             if (!relevant.Contains(label))
                                                 relevant += label + ",";
                                         }
@@ -392,7 +659,7 @@ namespace AITool
                             else
                             {
                                 if (!notenabled.Contains(label))
-                                    notenabled += notenabled + ",";
+                                    notenabled += label + ",";
                             }
                         }
                         else
@@ -412,15 +679,21 @@ namespace AITool
                 //Add to the main list
                 if (this.cam == null)
                     this.cam = AITOOL.GetCamera(this.Camera);
+                if (this.defaultcam == null)
+                    this.defaultcam = AITOOL.GetCamera("Default", true);
 
                 //always try to add the current prediction to the list (disabled) to give them the option of enabling later
                 foreach (ClsPrediction pred in preds)
                 {
-                    this.TryAdd(pred.Label, false);
+                    this.TryAdd(pred.Label, false, out int AddedIDX);
 
 
-                    if (this != this.cam.DefaultTriggeringObjects)
-                        this.cam.DefaultTriggeringObjects.TryAdd(pred.Label, false);
+                    //add it to the Current camera list (disabled)
+                    this.cam.DefaultTriggeringObjects.TryAdd(pred.Label, false, out int AddedIDX2);
+
+                    //add it to the default camera list (disabled)
+                    if (!this.defaultcam.IsNull())
+                        this.defaultcam.DefaultTriggeringObjects.TryAdd(pred.Label, false, out int AddedIDX3);
 
                 }
 
@@ -449,13 +722,17 @@ namespace AITool
                 if (nothreshold.IsEmpty())
                     nothreshold = "(NONE)";
 
+                string maskignore = "";
+                if (IgnoreMask)
+                    maskignore = " (Mask will be ignored)";
+
                 if (ret != ResultType.Relevant)
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Enabled={this.EnabledCount} of {this.ObjectDict.Count}, Skipping {this.TypeName}{DbgDetail} because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, No Threshold Match={nothreshold.Trim(" ,".ToCharArray())}  All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s)");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, No Threshold Match={nothreshold.Trim(" ,".ToCharArray())}  All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
                 }
                 else
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Enabled={this.EnabledCount} of {this.ObjectDict.Count}, Valid prediction for {this.TypeName}{DbgDetail} because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}'");
+                    AITOOL.Log($"Trace: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}',{maskignore} Enabled={this.EnabledCount} of {this.ObjectList.Count}");
 
                 }
             }

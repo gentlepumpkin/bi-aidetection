@@ -46,8 +46,8 @@ namespace AITool
             this.tb_ConfidenceLower = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.rb_ignore = new System.Windows.Forms.RadioButton();
-            this.rb_trigger = new System.Windows.Forms.RadioButton();
+            this.cb_ObjectIgnoreMask = new System.Windows.Forms.CheckBox();
+            this.cb_ObjectTriggers = new System.Windows.Forms.CheckBox();
             this.cb_enabled = new System.Windows.Forms.CheckBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonAdd = new System.Windows.Forms.ToolStripButton();
@@ -58,6 +58,7 @@ namespace AITool
             this.btnSave = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnReset = new System.Windows.Forms.Button();
+            this.btn_adddefaults = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -76,7 +77,8 @@ namespace AITool
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 34);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 52);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -88,8 +90,9 @@ namespace AITool
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
             this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
-            this.splitContainer1.Size = new System.Drawing.Size(567, 380);
-            this.splitContainer1.SplitterDistance = 227;
+            this.splitContainer1.Size = new System.Drawing.Size(850, 627);
+            this.splitContainer1.SplitterDistance = 417;
+            this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 0;
             // 
             // FOLV_RelevantObjects
@@ -98,10 +101,11 @@ namespace AITool
             this.FOLV_RelevantObjects.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FOLV_RelevantObjects.HideSelection = false;
             this.FOLV_RelevantObjects.Location = new System.Drawing.Point(0, 0);
+            this.FOLV_RelevantObjects.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.FOLV_RelevantObjects.Name = "FOLV_RelevantObjects";
             this.FOLV_RelevantObjects.ShowGroups = false;
             this.FOLV_RelevantObjects.ShowImagesOnSubItems = true;
-            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(567, 227);
+            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(850, 417);
             this.FOLV_RelevantObjects.TabIndex = 0;
             this.FOLV_RelevantObjects.UseCompatibleStateImageBehavior = false;
             this.FOLV_RelevantObjects.View = System.Windows.Forms.View.Details;
@@ -120,9 +124,11 @@ namespace AITool
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.groupBox2);
             this.groupBox1.Controls.Add(this.cb_enabled);
-            this.groupBox1.Location = new System.Drawing.Point(9, 9);
+            this.groupBox1.Location = new System.Drawing.Point(14, 14);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(547, 118);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Size = new System.Drawing.Size(820, 182);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
@@ -134,17 +140,20 @@ namespace AITool
             this.groupBox4.Controls.Add(this.label1);
             this.groupBox4.Controls.Add(this.label2);
             this.groupBox4.Controls.Add(this.tb_Time);
-            this.groupBox4.Location = new System.Drawing.Point(6, 23);
+            this.groupBox4.Location = new System.Drawing.Point(9, 35);
+            this.groupBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(201, 63);
+            this.groupBox4.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox4.Size = new System.Drawing.Size(302, 97);
             this.groupBox4.TabIndex = 6;
             this.groupBox4.TabStop = false;
             // 
             // tb_Name
             // 
-            this.tb_Name.Location = new System.Drawing.Point(46, 11);
+            this.tb_Name.Location = new System.Drawing.Point(69, 17);
+            this.tb_Name.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_Name.Name = "tb_Name";
-            this.tb_Name.Size = new System.Drawing.Size(149, 20);
+            this.tb_Name.Size = new System.Drawing.Size(222, 26);
             this.tb_Name.TabIndex = 1;
             this.tb_Name.TextChanged += new System.EventHandler(this.tb_Name_TextChanged);
             this.tb_Name.Leave += new System.EventHandler(this.tb_Name_Leave);
@@ -152,27 +161,31 @@ namespace AITool
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(2, 14);
+            this.label1.Location = new System.Drawing.Point(3, 22);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(38, 13);
+            this.label1.Size = new System.Drawing.Size(55, 20);
             this.label1.TabIndex = 0;
             this.label1.Text = "Name:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 40);
+            this.label2.Location = new System.Drawing.Point(10, 62);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(33, 13);
+            this.label2.Size = new System.Drawing.Size(47, 20);
             this.label2.TabIndex = 0;
             this.label2.Text = "Time:";
             // 
             // tb_Time
             // 
-            this.tb_Time.Location = new System.Drawing.Point(46, 37);
+            this.tb_Time.Location = new System.Drawing.Point(69, 57);
+            this.tb_Time.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_Time.Name = "tb_Time";
-            this.tb_Time.Size = new System.Drawing.Size(149, 20);
+            this.tb_Time.Size = new System.Drawing.Size(222, 26);
             this.tb_Time.TabIndex = 1;
+            this.tb_Time.TextChanged += new System.EventHandler(this.tb_Time_TextChanged);
             this.tb_Time.Leave += new System.EventHandler(this.tb_Time_Leave);
             // 
             // groupBox3
@@ -181,9 +194,11 @@ namespace AITool
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.tb_ConfidenceUpper);
             this.groupBox3.Controls.Add(this.tb_ConfidenceLower);
-            this.groupBox3.Location = new System.Drawing.Point(362, 23);
+            this.groupBox3.Location = new System.Drawing.Point(543, 35);
+            this.groupBox3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(172, 63);
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox3.Size = new System.Drawing.Size(258, 97);
             this.groupBox3.TabIndex = 5;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Object Confidence limits";
@@ -191,26 +206,29 @@ namespace AITool
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(89, 29);
+            this.label10.Location = new System.Drawing.Point(134, 45);
+            this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(39, 13);
+            this.label10.Size = new System.Drawing.Size(57, 20);
             this.label10.TabIndex = 0;
             this.label10.Text = "Upper:";
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(5, 29);
+            this.label9.Location = new System.Drawing.Point(8, 45);
+            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(39, 13);
+            this.label9.Size = new System.Drawing.Size(56, 20);
             this.label9.TabIndex = 0;
             this.label9.Text = "Lower:";
             // 
             // tb_ConfidenceUpper
             // 
-            this.tb_ConfidenceUpper.Location = new System.Drawing.Point(131, 25);
+            this.tb_ConfidenceUpper.Location = new System.Drawing.Point(196, 38);
+            this.tb_ConfidenceUpper.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_ConfidenceUpper.Name = "tb_ConfidenceUpper";
-            this.tb_ConfidenceUpper.Size = new System.Drawing.Size(33, 20);
+            this.tb_ConfidenceUpper.Size = new System.Drawing.Size(48, 26);
             this.tb_ConfidenceUpper.TabIndex = 1;
             this.tb_ConfidenceUpper.Text = "100";
             this.tb_ConfidenceUpper.TextChanged += new System.EventHandler(this.tb_ConfidenceUpper_TextChanged);
@@ -218,9 +236,10 @@ namespace AITool
             // 
             // tb_ConfidenceLower
             // 
-            this.tb_ConfidenceLower.Location = new System.Drawing.Point(50, 25);
+            this.tb_ConfidenceLower.Location = new System.Drawing.Point(75, 38);
+            this.tb_ConfidenceLower.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tb_ConfidenceLower.Name = "tb_ConfidenceLower";
-            this.tb_ConfidenceLower.Size = new System.Drawing.Size(33, 20);
+            this.tb_ConfidenceLower.Size = new System.Drawing.Size(48, 26);
             this.tb_ConfidenceLower.TabIndex = 0;
             this.tb_ConfidenceLower.Text = "100";
             this.tb_ConfidenceLower.TextChanged += new System.EventHandler(this.tb_ConfidenceLower_TextChanged);
@@ -231,55 +250,62 @@ namespace AITool
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Consolas", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Gray;
-            this.label3.Location = new System.Drawing.Point(6, 95);
+            this.label3.Location = new System.Drawing.Point(9, 146);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(525, 10);
+            this.label3.Size = new System.Drawing.Size(840, 17);
             this.label3.TabIndex = 4;
             this.label3.Text = "Example Time Reanges - \"00:01:00-02:59:59, 06:00:00-11:59:59\".  Semicolon Hour li" +
     "st: \"22;23;0;1;2;3;4;5\"";
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.rb_ignore);
-            this.groupBox2.Controls.Add(this.rb_trigger);
-            this.groupBox2.Location = new System.Drawing.Point(213, 23);
+            this.groupBox2.Controls.Add(this.cb_ObjectIgnoreMask);
+            this.groupBox2.Controls.Add(this.cb_ObjectTriggers);
+            this.groupBox2.Location = new System.Drawing.Point(320, 35);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(143, 63);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox2.Size = new System.Drawing.Size(214, 97);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             // 
-            // rb_ignore
+            // cb_ObjectIgnoreMask
             // 
-            this.rb_ignore.AutoSize = true;
-            this.rb_ignore.Location = new System.Drawing.Point(76, 27);
-            this.rb_ignore.Name = "rb_ignore";
-            this.rb_ignore.Size = new System.Drawing.Size(55, 17);
-            this.rb_ignore.TabIndex = 0;
-            this.rb_ignore.TabStop = true;
-            this.rb_ignore.Text = "Ignore";
-            this.toolTip1.SetToolTip(this.rb_ignore, "Detection of this object prevents a trigger (A persons name for example)");
-            this.rb_ignore.UseVisualStyleBackColor = true;
-            this.rb_ignore.CheckedChanged += new System.EventHandler(this.rb_ignore_CheckedChanged);
+            this.cb_ObjectIgnoreMask.AutoSize = true;
+            this.cb_ObjectIgnoreMask.Location = new System.Drawing.Point(9, 57);
+            this.cb_ObjectIgnoreMask.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_ObjectIgnoreMask.Name = "cb_ObjectIgnoreMask";
+            this.cb_ObjectIgnoreMask.Size = new System.Drawing.Size(181, 24);
+            this.cb_ObjectIgnoreMask.TabIndex = 0;
+            this.cb_ObjectIgnoreMask.Text = "Object Ignores Mask";
+            this.toolTip1.SetToolTip(this.cb_ObjectIgnoreMask, "If you enable this and the object is behind a mask, it will still trigger.\r\nFor e" +
+        "xample, if you mask the road but still want to know when PEOPLE walk by.\r\n");
+            this.cb_ObjectIgnoreMask.UseVisualStyleBackColor = true;
+            this.cb_ObjectIgnoreMask.CheckedChanged += new System.EventHandler(this.cb_IgnoreMask_CheckedChanged);
             // 
-            // rb_trigger
+            // cb_ObjectTriggers
             // 
-            this.rb_trigger.AutoSize = true;
-            this.rb_trigger.Location = new System.Drawing.Point(17, 27);
-            this.rb_trigger.Name = "rb_trigger";
-            this.rb_trigger.Size = new System.Drawing.Size(58, 17);
-            this.rb_trigger.TabIndex = 0;
-            this.rb_trigger.TabStop = true;
-            this.rb_trigger.Text = "Trigger";
-            this.toolTip1.SetToolTip(this.rb_trigger, "Object causes a trigger");
-            this.rb_trigger.UseVisualStyleBackColor = true;
-            this.rb_trigger.CheckedChanged += new System.EventHandler(this.rb_trigger_CheckedChanged);
+            this.cb_ObjectTriggers.AutoSize = true;
+            this.cb_ObjectTriggers.Location = new System.Drawing.Point(9, 22);
+            this.cb_ObjectTriggers.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_ObjectTriggers.Name = "cb_ObjectTriggers";
+            this.cb_ObjectTriggers.Size = new System.Drawing.Size(142, 24);
+            this.cb_ObjectTriggers.TabIndex = 0;
+            this.cb_ObjectTriggers.Text = "Object Triggers";
+            this.toolTip1.SetToolTip(this.cb_ObjectTriggers, "If you uncheck this, the detection of this object will prevent a trigger.  (A per" +
+        "sons name for example)");
+            this.cb_ObjectTriggers.UseVisualStyleBackColor = true;
+            this.cb_ObjectTriggers.CheckedChanged += new System.EventHandler(this.cb_ObjectTriggers_CheckedChanged);
             // 
             // cb_enabled
             // 
             this.cb_enabled.AutoSize = true;
-            this.cb_enabled.Location = new System.Drawing.Point(6, 0);
+            this.cb_enabled.Enabled = false;
+            this.cb_enabled.Location = new System.Drawing.Point(9, 0);
+            this.cb_enabled.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cb_enabled.Name = "cb_enabled";
-            this.cb_enabled.Size = new System.Drawing.Size(65, 17);
+            this.cb_enabled.Size = new System.Drawing.Size(94, 24);
             this.cb_enabled.TabIndex = 2;
             this.cb_enabled.Text = "Enabled";
             this.cb_enabled.UseVisualStyleBackColor = true;
@@ -295,8 +321,8 @@ namespace AITool
             this.toolStripButtonDown});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(567, 31);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(850, 34);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -305,7 +331,7 @@ namespace AITool
             this.toolStripButtonAdd.Image = global::AITool.Properties.Resources.image_x_generic;
             this.toolStripButtonAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonAdd.Name = "toolStripButtonAdd";
-            this.toolStripButtonAdd.Size = new System.Drawing.Size(57, 28);
+            this.toolStripButtonAdd.Size = new System.Drawing.Size(74, 29);
             this.toolStripButtonAdd.Text = "Add";
             this.toolStripButtonAdd.Click += new System.EventHandler(this.toolStripButtonAdd_Click);
             // 
@@ -315,7 +341,7 @@ namespace AITool
             this.toolStripButtonDelete.Image = global::AITool.Properties.Resources.edit_delete_5;
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(68, 28);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(90, 29);
             this.toolStripButtonDelete.Text = "Delete";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
@@ -325,7 +351,7 @@ namespace AITool
             this.toolStripButtonUp.Image = global::AITool.Properties.Resources.arrow_up_double_3;
             this.toolStripButtonUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonUp.Name = "toolStripButtonUp";
-            this.toolStripButtonUp.Size = new System.Drawing.Size(50, 28);
+            this.toolStripButtonUp.Size = new System.Drawing.Size(63, 29);
             this.toolStripButtonUp.Text = "Up";
             this.toolStripButtonUp.Click += new System.EventHandler(this.toolStripButtonUp_Click);
             // 
@@ -335,7 +361,7 @@ namespace AITool
             this.toolStripButtonDown.Image = global::AITool.Properties.Resources.arrow_down_double_3;
             this.toolStripButtonDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDown.Name = "toolStripButtonDown";
-            this.toolStripButtonDown.Size = new System.Drawing.Size(66, 28);
+            this.toolStripButtonDown.Size = new System.Drawing.Size(87, 29);
             this.toolStripButtonDown.Text = "Down";
             this.toolStripButtonDown.Click += new System.EventHandler(this.toolStripButtonDown_Click);
             // 
@@ -343,10 +369,10 @@ namespace AITool
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(487, 421);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
+            this.btnCancel.Location = new System.Drawing.Point(730, 690);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(70, 30);
+            this.btnCancel.Size = new System.Drawing.Size(105, 46);
             this.btnCancel.TabIndex = 11;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -354,10 +380,10 @@ namespace AITool
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(407, 421);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(4);
+            this.btnSave.Location = new System.Drawing.Point(610, 690);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(70, 30);
+            this.btnSave.Size = new System.Drawing.Size(105, 46);
             this.btnSave.TabIndex = 10;
             this.btnSave.Text = "OK";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -366,26 +392,40 @@ namespace AITool
             // btnReset
             // 
             this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnReset.Location = new System.Drawing.Point(9, 421);
-            this.btnReset.Margin = new System.Windows.Forms.Padding(4);
+            this.btnReset.Location = new System.Drawing.Point(14, 690);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(70, 30);
+            this.btnReset.Size = new System.Drawing.Size(105, 46);
             this.btnReset.TabIndex = 10;
             this.btnReset.Text = "Reset";
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
+            // btn_adddefaults
+            // 
+            this.btn_adddefaults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btn_adddefaults.Location = new System.Drawing.Point(131, 690);
+            this.btn_adddefaults.Margin = new System.Windows.Forms.Padding(6);
+            this.btn_adddefaults.Name = "btn_adddefaults";
+            this.btn_adddefaults.Size = new System.Drawing.Size(120, 46);
+            this.btn_adddefaults.TabIndex = 10;
+            this.btn_adddefaults.Text = "Add Defaults";
+            this.btn_adddefaults.UseVisualStyleBackColor = true;
+            this.btn_adddefaults.Click += new System.EventHandler(this.btn_adddefaults_Click);
+            // 
             // Frm_RelevantObjects
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(567, 458);
+            this.ClientSize = new System.Drawing.Size(850, 747);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.btn_adddefaults);
             this.Controls.Add(this.btnReset);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Frm_RelevantObjects";
             this.Tag = "SAVE";
             this.Text = "Relevant Objects";
@@ -422,9 +462,7 @@ namespace AITool
         private System.Windows.Forms.CheckBox cb_enabled;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.RadioButton rb_ignore;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.RadioButton rb_trigger;
         private System.Windows.Forms.TextBox tb_Time;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnCancel;
@@ -440,5 +478,8 @@ namespace AITool
         private System.Windows.Forms.ToolStripButton toolStripButtonUp;
         private System.Windows.Forms.ToolStripButton toolStripButtonDown;
         private System.Windows.Forms.Button btnReset;
+        private System.Windows.Forms.CheckBox cb_ObjectIgnoreMask;
+        private System.Windows.Forms.CheckBox cb_ObjectTriggers;
+        private System.Windows.Forms.Button btn_adddefaults;
     }
 }

@@ -465,7 +465,7 @@ namespace AITool
                                         //if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                                         ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam.Name);
 
-                                        if (AQI.Hist.IsNull() || rom.IsRelevant(AQI.Hist.Predictions(), false) == ResultType.Relevant)
+                                        if (AQI.Hist.IsNull() || rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
                                         {
                                             Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
                                             SoundPlayer sp = new SoundPlayer(soundfile);
@@ -503,7 +503,7 @@ namespace AITool
                     {
 
                         //make sure it is a matching object
-                        if (AQI.Hist.IsNull() || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false) == ResultType.Relevant)
+                        if (AQI.Hist.IsNull() || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
                         {
                             string topic = "";
                             string payload = "";
@@ -687,12 +687,12 @@ namespace AITool
                                             color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
                                         }
 
-                                        double xmin = pred.XMin + AQI.cam.XOffset;
-                                        double ymin = pred.YMin + AQI.cam.YOffset;
+                                        double xmin = pred.XMin;
+                                        double ymin = pred.YMin;
                                         double xmax = pred.XMax;
                                         double ymax = pred.YMax;
 
-                                        System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(), ymin.ToInt(), (xmax - xmin).ToInt(), (ymax - ymin).ToInt());
+                                        System.Drawing.Rectangle rect = pred.GetRectangle();  //new System.Drawing.Rectangle(xmin.ToInt(), ymin.ToInt(), (xmax - xmin).ToInt(), (ymax - ymin).ToInt());
 
                                         using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
                                         {
@@ -741,11 +741,26 @@ namespace AITool
                                                                             img.Height); //sets bounding box for drawn text
 
                                         Brush brush = new SolidBrush(color); //sets background rectangle color
+                                        if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                                            brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                                        Brush forecolor = Brushes.Black;
+                                        if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                                            forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
 
                                         lasttext = pred.ToString();
 
-                                        g.FillRectangle(brush, (xmin - halfbrd).ToFloat(), (ymax + halfbrd).ToFloat(), TextSize.Width, TextSize.Height); //draw grey background rectangle for detection text
-                                        g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                                        g.FillRectangle(brush,
+                                                       x.ToInt(),
+                                                       y.ToInt(),
+                                                       TextSize.Width,
+                                                       TextSize.Height); //draw grey background rectangle for detection text
+
+                                        g.DrawString(lasttext,
+                                                     new Font(AppSettings.Settings.RectDetectionTextFont,
+                                                     AppSettings.Settings.RectDetectionTextSize),
+                                                     forecolor,
+                                                     rect); //draw detection text
 
                                         g.Flush();
 
@@ -820,10 +835,16 @@ namespace AITool
 
 
                                     Brush brush = new SolidBrush(color); //sets background rectangle color
+                                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                                    Brush forecolor = Brushes.Black;
+                                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
 
                                     System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
                                     g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
-                                    g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                                    g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
 
                                     g.Flush();
 
@@ -931,10 +952,15 @@ namespace AITool
 
                 string netfld = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder, Global.IPType.Path);
 
-                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\") || !Directory.Exists(netfld))
+                if (string.IsNullOrWhiteSpace(netfld) || !netfld.Contains("\\"))
                 {
                     AITOOL.Log($"Error: Camera settings > Copy alert images to folder is not a valid path: {netfld}");
                     return false;
+                }
+
+                if (!Directory.Exists(netfld))
+                {
+                    Directory.CreateDirectory(netfld);
                 }
 
                 string ext = Path.GetExtension(AQI.CurImg.image_path);
@@ -991,7 +1017,7 @@ namespace AITool
 
                     ClsRelevantObjectManager rom = new ClsRelevantObjectManager(objects, "TriggerURL", AQI.cam.Name);
 
-                    if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
                         continue;
 
                 }
@@ -1020,7 +1046,7 @@ namespace AITool
                 catch (Exception ex)
                 {
                     ret = false;
-                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} URL '{url}', please check if correct and reachable: {ex.Msg()}");
+                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} Error='{ex.Msg()}', URL='{url}'");
                 }
 
             }
@@ -1042,7 +1068,7 @@ namespace AITool
                 try
                 {
                     //make sure it is a matching object
-                    if (!AQI.Hist.IsNull() && AQI.cam.PushoverTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && AQI.cam.PushoverTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
                         return true;
 
                     if (AppSettings.Settings.pushover_cooldown_seconds < 2)
@@ -1135,7 +1161,7 @@ namespace AITool
                                             RetryOptions = pri == Priority.Emergency ? new RetryOptions
                                             {
                                                 RetryEvery = TimeSpan.FromSeconds(AQI.cam.Action_pushover_retry_seconds),
-                                                RetryPeriod = TimeSpan.FromHours(AQI.cam.Action_pushover_expire_seconds),
+                                                RetryPeriod = TimeSpan.FromSeconds(AQI.cam.Action_pushover_expire_seconds),
                                                 CallBackUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_retrycallback_url) ? new Uri(AQI.cam.Action_pushover_retrycallback_url) : null,
                                             } : null,
                                             SupplementaryUrl = !string.IsNullOrEmpty(AQI.cam.Action_pushover_SupplementaryUrl) ? new SupplementaryURL { Uri = new Uri(AQI.cam.Action_pushover_SupplementaryUrl), Title = "42" } : null,
@@ -1257,7 +1283,7 @@ namespace AITool
 
                     //make sure it is a matching object
                     //if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.telegram_triggering_objects, "Telegram", AQI.Hist.Predictions(), false) != ResultType.Relevant)
-                    if (!AQI.Hist.IsNull() && AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
                         return true;
 
                     DateTime now = DateTime.Now;

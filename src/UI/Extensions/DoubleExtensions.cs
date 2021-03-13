@@ -8,12 +8,17 @@ namespace AITool
 {
     public static class DoubleExtensions
     {
-        public static int ToInt(this double val)
+        public static int ToInt(this double val, bool Abs = false)
         {
             try
             {
                 if (!val.IsNull())
-                    return Convert.ToInt32(val);  //I believe ToInt32 rounds up so 1.5 is 2.  (int) just truncates the decimal
+                {
+                    if (!Abs)
+                        return Convert.ToInt32(val);  //I believe ToInt32 rounds up so 1.5 is 2.  (int) just truncates the decimal
+                    else
+                        return Math.Abs(Convert.ToInt32(val));  //I believe ToInt32 rounds up so 1.5 is 2.  (int) just truncates the decimal
+                }
             }
             catch { }
 

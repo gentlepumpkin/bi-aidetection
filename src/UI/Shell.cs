@@ -1,8 +1,13 @@
 ﻿using BrightIdeasSoftware;
+
 using EasyAsyncCancel;
+
 using Microsoft.WindowsAPICodePack.Dialogs;
+
 using Newtonsoft.Json; //deserialize DeepquestAI response
+
 using NLog;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,6 +23,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+
 using static AITool.AITOOL;
 using static AITool.Global;
 
@@ -1542,8 +1548,6 @@ namespace AITool
                     double halfbrd = BorderWidth / 2;
 
 
-                    Brush brush = new SolidBrush(color); //sets background rectangle color
-
                     System.Drawing.SizeF TextSize = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
 
 
@@ -1594,13 +1598,25 @@ namespace AITool
                                                         boxHeight.ToInt()); //sets bounding box for drawn text
 
 
+                    Brush brush = new SolidBrush(color); //sets background rectangle color
+                    if (AppSettings.Settings.RectDetectionTextBackColor != Color.Gainsboro)
+                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                    Brush forecolor = Brushes.Black;
+                    if (AppSettings.Settings.RectDetectionTextForeColor != Color.Gainsboro)
+                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
                     e.Graphics.FillRectangle(brush,
                                              x.ToInt(),
                                              y.ToInt(),
                                              TextSize.Width,
                                              TextSize.Height); //draw grey background rectangle for detection text
 
-                    e.Graphics.DrawString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), Brushes.Black, rect); //draw detection text
+                    e.Graphics.DrawString(text,
+                                          new Font(AppSettings.Settings.RectDetectionTextFont,
+                                          AppSettings.Settings.RectDetectionTextSize),
+                                          forecolor,
+                                          rect); //draw detection text
 
 
                 }
@@ -3819,6 +3835,8 @@ namespace AITool
             if (IsClosing.ReadFullFence())
                 return;
 
+            string filename = "";
+
             try
             {
                 if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0)
@@ -3828,19 +3846,24 @@ namespace AITool
                     if (hist == null)
                         return;
 
-                    if (!String.IsNullOrEmpty(hist.Filename) && hist.Filename.Contains("\\") && File.Exists(hist.Filename))
+                    filename = hist.Filename;
+
+                    if (!filename.IsEmpty() && filename.Contains("\\") && File.Exists(filename))
                     {
-                        using (var img = new Bitmap(hist.Filename))
+                        this.lbl_objects.Text = $"Loading Image {filename}...";
+
+                        ClsImageQueueItem imgq = new ClsImageQueueItem(filename, 0);
+                        if (imgq.IsValid())
                         {
-                            this.pictureBox1.BackgroundImage = new Bitmap(img); //load actual image as background, so that an overlay can be added as the image
+                            this.pictureBox1.BackgroundImage = Image.FromStream(imgq.ToStream()); //load actual image as background, so that an overlay can be added as the image
                         }
                         this.showHideMask();
                         this.lbl_objects.Text = hist.Detections;
                     }
                     else
                     {
-                        Log("Removing missing file from database: " + hist.Filename);
-                        HistoryDB.DeleteHistoryQueue(hist.Filename);
+                        Log("Removing missing file from database: " + filename);
+                        HistoryDB.DeleteHistoryQueue(filename);
                         this.lbl_objects.Text = "Image not found";
                         this.pictureBox1.BackgroundImage = null;
                     }
@@ -3872,7 +3895,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ex.Msg()}");
+                Log($"Error: {ex.Msg()} - Hist.Filename={filename}");
 
             }
 
@@ -5088,8 +5111,8 @@ namespace AITool
                     // Read the files
                     foreach (String file in ofd.FileNames)
                     {
-                        Global.SaveRegSetting("LastLoadedImageFile", ofd.FileName);
-                        AddImageToQueue(ofd.FileName);
+                        Global.SaveRegSetting("LastLoadedImageFile", file);
+                        AddImageToQueue(file);
                         //small delay
                         await Task.Delay(AppSettings.Settings.loop_delay_ms);
                     }

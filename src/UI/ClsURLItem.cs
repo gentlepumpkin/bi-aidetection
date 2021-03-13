@@ -1,5 +1,7 @@
 ﻿using Amazon;
+
 using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -154,7 +156,7 @@ namespace AITool
                     this.HelpURL = "https://docs.aws.amazon.com/rekognition/latest/dg/setting-up.html";
                     this.Type = URLTypeEnum.AWSRekognition_Faces;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "person,face";
+                    this.RefinementObjects = "Person, Face";
                     this.MaxImagesPerMonth = 5000;
                 }
                 else if (this.Type == URLTypeEnum.SightHound_Vehicle || HasSHVeh)
@@ -164,7 +166,7 @@ namespace AITool
                     this.Type = URLTypeEnum.SightHound_Vehicle;
                     this.MaxImagesPerMonth = 5000;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "car,truck,pickup truck,bus,suv,van,motorcycle";
+                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, License Plate";
                     this.IsLocalHost = false;
                     this.IsLocalNetwork = false;
                     this.HttpClient = null;
@@ -175,7 +177,7 @@ namespace AITool
                     this.HelpURL = "https://docs.sighthound.com/cloud/detection/";
                     this.Type = URLTypeEnum.SightHound_Person;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "person,face";
+                    this.RefinementObjects = "Person, Face";
                     this.IsLocalHost = false;
                     this.IsLocalNetwork = false;
                     this.HttpClient = null;
@@ -187,7 +189,7 @@ namespace AITool
                     this.HelpURL = "https://docs.deepstack.cc/face-recognition/index.html";
                     this.Type = URLTypeEnum.DeepStack_Faces;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "person,face";
+                    this.RefinementObjects = "Person, Face";
                 }
                 else if (this.Type == URLTypeEnum.DeepStack_Scene || HasDSScn)
                 {
