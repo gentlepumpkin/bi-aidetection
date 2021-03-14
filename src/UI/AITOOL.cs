@@ -4036,10 +4036,10 @@ namespace AITool
                 if (cams.Count > 1)
                 {
                     Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' ***");
-                    //for (int i = 0; i < cams.Count; i++)
-                    //{
-                    //    Log($"Debug:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");
-                    //}
+                    for (int i = 0; i < cams.Count; i++)
+                    {
+                        Log($"Trace:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");
+                    }
                 }
             }
 
