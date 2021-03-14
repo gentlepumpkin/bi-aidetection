@@ -90,7 +90,7 @@ namespace AITool
 
         private void tb_URL_TextChanged(object sender, EventArgs e)
         {
-            ValidateForm();
+            //ValidateForm();
         }
 
         private void ValidateForm()
