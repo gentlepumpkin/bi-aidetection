@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -354,42 +355,42 @@ namespace AITool
             //Convert string Triggering objects to RelevantObjectManager instances
             if (this.DefaultTriggeringObjects == null || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
             {
-                this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this.Name);
+                this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this);
                 this.triggering_objects_as_string = "";
                 this.additional_triggering_objects_as_string = "";
             }
             else  //force the camera name to stay correct if renamed
             {
-                this.DefaultTriggeringObjects.Camera = this.Name;
+                this.DefaultTriggeringObjects.Init(this);
             }
 
             if (this.TelegramTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
             {
-                this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this.Name);
+                this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this);
                 this.telegram_triggering_objects = "";
             }
             else  //force the camera name to stay correct if renamed
             {
-                this.TelegramTriggeringObjects.Camera = this.Name;
+                this.TelegramTriggeringObjects.Init(this);
             }
 
             if (this.PushoverTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
             {
-                this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this.Name);
+                this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this);
                 this.Action_pushover_triggering_objects = "";
             }
             else  //force the camera name to stay correct if renamed
             {
-                this.PushoverTriggeringObjects.Camera = this.Name;
+                this.PushoverTriggeringObjects.Init(this);
             }
 
             if (this.MQTTTriggeringObjects == null)
             {
-                this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this.Name);
+                this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this);
             }
             else  //force the camera name to stay correct if renamed
             {
-                this.MQTTTriggeringObjects.Camera = this.Name;
+                this.MQTTTriggeringObjects.Init(this);
             }
 
         }

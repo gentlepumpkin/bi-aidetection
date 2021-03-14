@@ -101,36 +101,35 @@ namespace AITool
         public List<ClsRelevantObject> ObjectList { get; set; } = new List<ClsRelevantObject>();
         public string TypeName { get; set; } = "";
         public int EnabledCount { get; set; } = 0;
-        public string Camera = "";
+        public string Camera { get; set; } = "";
         [JsonIgnore]
         private Camera cam = null;
         [JsonIgnore]
         private Camera defaultcam = null;
         [JsonIgnore]
-        private List<ClsRelevantObject> DefaultObjectList { get; set; } = new List<ClsRelevantObject>();
         private bool Initialized = false;
-        private bool Initializing = false;
+        private int LastHashCode = 0;
+        private List<ClsRelevantObject> _DefaultObjectsList = new List<ClsRelevantObject>();
         private object ROLockObject = new object();
         [JsonConstructor]
         public ClsRelevantObjectManager()
         {
-            this.Init();
+            //this.Init();
         }
 
         public ClsRelevantObjectManager(ClsRelevantObjectManager manager)
         {
             this.TypeName = manager.TypeName;
             this.Camera = manager.Camera;
-            this.Init();
+            this.Init(manager.cam);
             this.ObjectList = this.FromList(manager.ObjectList, true, ExactMatchOnly: true);
             this.Update();
         }
-        public ClsRelevantObjectManager(string Objects, string TypeName, string Camera)
+        public ClsRelevantObjectManager(string Objects, string TypeName, Camera cam)
         {
             this.TypeName = TypeName;
-            this.Camera = Camera;
 
-            this.Init();
+            this.Init(cam);
 
             if (!Objects.IsEmpty())
                 this.ObjectList = this.FromString(Objects, true, true);
@@ -141,12 +140,18 @@ namespace AITool
 
         }
 
-        public void Init()
+        public void Init(Camera cam = null)
         {
+            if (!cam.IsNull())
+                this.cam = cam;
+
+            if (!this.cam.IsNull())
+                this.Camera = this.cam.Name;
+
             //dont initialize until we have a list of cameras available
-            if (!this.Initialized && !AppSettings.Settings.CameraList.IsNull() && AppSettings.Settings.CameraList.Count > 0)
+            if (!this.Initialized || !this.ObjectDict.IsNull() && !AppSettings.Settings.CameraList.IsNull() && AppSettings.Settings.CameraList.Count > 0)
             {
-                Initializing = true;
+
                 lock (ROLockObject)
                 {
                     //migrate from the dictionary to the list - dictionary no longer used
@@ -158,16 +163,16 @@ namespace AITool
                             if (item is DictionaryEntry)
                             {
                                 ClsRelevantObject ro = (ClsRelevantObject)((DictionaryEntry)item).Value;
-                                ObjectList.Add(ro);
+                                ObjectList.Add(ro.CloneJson());
                             }
                             else if (item is ClsRelevantObject)
                             {
                                 ClsRelevantObject ro = (ClsRelevantObject)item;
-                                ObjectList.Add(ro);
+                                ObjectList.Add(ro.CloneJson());
                             }
                             else
                             {
-                                AITOOL.Log($"Debug: Old object is {item.GetType().FullName}??");
+                                AITOOL.Log($"Warn: Old object is {item.GetType().FullName}??");
                             }
                         }
                         this.ObjectDict = null;
@@ -175,12 +180,9 @@ namespace AITool
 
                     //Add default settings
                     this.Initialized = true;
-                    UpdateDefaultObjectList();
-
 
                     Update();
                 }
-                Initializing = false;
             }
 
 
@@ -189,7 +191,7 @@ namespace AITool
         public void AddDefaults()
         {
             //Add defaults if missing
-            this.ObjectList = this.FromList(this.DefaultObjectList, false, ExactMatchOnly: true);
+            this.ObjectList = this.FromList(this.GetDefaultObjectList(false), false, ExactMatchOnly: true);
 
         }
         public void Update()
@@ -198,7 +200,7 @@ namespace AITool
             //sort
             //this.ObjectList = this.ObjectList.OrderByDescending(ro => ro.Enabled).ThenBy(ro => ro.Priority).ThenBy(ro => ro.CreatedTime).ThenBy(ro => ro.Name).ToList();
 
-            if (this.ObjectList.Count == 0)
+            if (this.ObjectList.Count == 0 && !this.Camera.EqualsIgnoreCase("default"))
                 this.Reset();
 
             //make sure no priority dupes
@@ -284,30 +286,33 @@ namespace AITool
         public void Reset()
         {
             AITOOL.Log("Using Relevant Objects list from the 'Default' camera.");
-            if (this.Camera.EqualsIgnoreCase(this.defaultcam.Name))
-            {
-                this.ObjectList = this.FromString(AppSettings.Settings.ObjectPriority, true, false);
-            }
-            else
-            {
-                this.ObjectList = this.DefaultObjectList;
-            }
+            this.ObjectList = this.GetDefaultObjectList(true);
         }
 
-        public void UpdateDefaultObjectList()
+        public List<ClsRelevantObject> GetDefaultObjectList(bool Clear)
         {
+            List<ClsRelevantObject> ret = this._DefaultObjectsList;
             //get the default camera list
             if (this.defaultcam.IsNull())
                 this.defaultcam = AITOOL.GetCamera("Default", true);
 
-            if (!this.defaultcam.IsNull() && !this.defaultcam.DefaultTriggeringObjects.IsNull() && this.defaultcam.DefaultTriggeringObjects.ObjectList.Count > 0)
+            if (!this.defaultcam.IsNull())  //probably here to soon
             {
-                this.DefaultObjectList = this.defaultcam.DefaultTriggeringObjects.CloneObjectList();
+
+                if (this.defaultcam.DefaultTriggeringObjects.ObjectList.Count > 0 && !this.Camera.EqualsIgnoreCase(this.defaultcam.Name))
+                {
+                    this._DefaultObjectsList = this.defaultcam.DefaultTriggeringObjects.CloneObjectList();
+                }
+                else
+                {
+                    this._DefaultObjectsList = this.FromString(AppSettings.Settings.ObjectPriority, Clear, false);
+                }
+
+                ret = this._DefaultObjectsList;
+
             }
-            else
-            {
-                this.DefaultObjectList = this.FromString(AppSettings.Settings.ObjectPriority, true, false);
-            }
+
+            return ret;
         }
 
         public List<ClsRelevantObject> CloneObjectList()
@@ -317,6 +322,14 @@ namespace AITool
             {
                 ret.Add(ro.CloneJson());  //cloning so that when we add default settings from another object manager instance we dont change the original
             }
+            return ret;
+        }
+
+        public int GetHashCode()
+        {
+            int ret = 0;
+            foreach (var ro in this.ObjectList)
+                ret += ro.GetHashCode();
             return ret;
         }
 
@@ -359,7 +372,7 @@ namespace AITool
                     this.EnabledCount++;
                     ro.Priority = order;
                     ro.Update();
-                    ret.Add(ro);
+                    ret.Add(ro.CloneJson());
                 }
                 else
                 {
@@ -417,6 +430,10 @@ namespace AITool
                 bool AlreadyHasItems = ObjectList.Count > 0;
 
                 List<string> lst = Objects.SplitStr(",");
+                List<ClsRelevantObject> DefaultObjectList = new List<ClsRelevantObject>();
+
+                if (!this.Camera.EqualsIgnoreCase("default"))
+                    DefaultObjectList = this.GetDefaultObjectList(false);
 
                 foreach (var obj in lst)
                 {
@@ -434,10 +451,12 @@ namespace AITool
                             this.EnabledCount++;
 
                         //set the order if found in the default list
-                        ClsRelevantObject defRo = this.Get(ro, false, out int DefFoundIDX, false, this.DefaultObjectList);
+                        ClsRelevantObject defRo = this.Get(ro, false, out int DefFoundIDX, false, DefaultObjectList);
 
                         if (DefFoundIDX > -1)
                             ro.Priority = DefFoundIDX + 1;
+                        else
+                            ro.Priority = ret.Count + 1;
 
                         ret.Add(ro);
                     }
@@ -679,6 +698,7 @@ namespace AITool
                 //Add to the main list
                 if (this.cam == null)
                     this.cam = AITOOL.GetCamera(this.Camera);
+
                 if (this.defaultcam == null)
                     this.defaultcam = AITOOL.GetCamera("Default", true);
 

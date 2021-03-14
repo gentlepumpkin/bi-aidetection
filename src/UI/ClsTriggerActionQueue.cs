@@ -463,7 +463,7 @@ namespace AITool
 
                                         //List<string> objects = splt[0].Split(",");
                                         //if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
-                                        ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam.Name);
+                                        ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam);
 
                                         if (AQI.Hist.IsNull() || rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
                                         {
@@ -1015,7 +1015,7 @@ namespace AITool
                     //make sure it is a matching object
                     //if (AITOOL.ArePredictionObjectsRelevant(objects, "TriggerURL", AQI.Hist.Predictions(), false) != ResultType.Relevant) ;
 
-                    ClsRelevantObjectManager rom = new ClsRelevantObjectManager(objects, "TriggerURL", AQI.cam.Name);
+                    ClsRelevantObjectManager rom = new ClsRelevantObjectManager(objects, "TriggerURL", AQI.cam);
 
                     if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
                         continue;

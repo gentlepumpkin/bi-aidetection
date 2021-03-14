@@ -3972,18 +3972,18 @@ namespace AITool
                             }
                         }
                     }
-                    //find by actual cam name if we have to
-                    foreach (Camera ccam in AppSettings.Settings.CameraList)
-                    {
-                        if (ImageOrNameOrPrefix.Equals(ccam.BICamName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (!cams.Contains(ccam))
-                            {
-                                ccam.LastGetCameraMatchResult = "(ByBICamName?)";
-                                cams.Add(ccam);
-                            }
-                        }
-                    }
+                    ////find by actual cam name if we have to
+                    //foreach (Camera ccam in AppSettings.Settings.CameraList)
+                    //{
+                    //    if (ImageOrNameOrPrefix.Equals(ccam.BICamName, StringComparison.OrdinalIgnoreCase))
+                    //    {
+                    //        if (!cams.Contains(ccam))
+                    //        {
+                    //            ccam.LastGetCameraMatchResult = "(ByBICamName?)";
+                    //            cams.Add(ccam);
+                    //        }
+                    //    }
+                    //}
 
                 }
 
@@ -4035,7 +4035,7 @@ namespace AITool
                 cam = cams[0];
                 if (cams.Count > 1)
                 {
-                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' ***");
+                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' {cams[0].LastGetCameraMatchResult} ***");
                     for (int i = 0; i < cams.Count; i++)
                     {
                         Log($"Trace:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");

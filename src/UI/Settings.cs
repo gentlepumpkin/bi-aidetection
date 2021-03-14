@@ -147,7 +147,7 @@ namespace AITool
             public bool HistoryFilterMasked = false;
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, face, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird, Meat Popsicle";
+            public string ObjectPriority = "person, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -663,6 +663,9 @@ namespace AITool
                         Camera cam = new Camera("Default");
                         Settings.CameraList.Add(cam);
                     }
+
+                    if (!Settings.ObjectPriority.Contains("suv") || !Settings.ObjectPriority.Contains("van"))
+                        Settings.ObjectPriority = "person, bear, elephant, car, truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
                     //make sure everything in the cameras look correct:
                     foreach (Camera cam in Settings.CameraList)

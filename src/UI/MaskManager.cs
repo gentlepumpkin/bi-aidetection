@@ -87,7 +87,7 @@ namespace AITool
 
                 if (cam.maskManager.MaskTriggeringObjects == null || !cam.maskManager.Objects.IsEmpty())
                 {
-                    cam.maskManager.MaskTriggeringObjects = new ClsRelevantObjectManager(cam.maskManager.Objects, "DynamicMask", cam.Name);
+                    cam.maskManager.MaskTriggeringObjects = new ClsRelevantObjectManager(cam.maskManager.Objects, "DynamicMask", cam);
                     cam.maskManager.Objects = "";
                 }
 
