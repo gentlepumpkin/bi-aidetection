@@ -264,7 +264,7 @@ namespace AITool
                 }
 
 
-                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && string.IsNullOrEmpty(AQI.cam.Action_mqtt_payload_cancel)) || (AQI.cam.cancel_urls.Length > 0));
+                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && !AQI.cam.Action_mqtt_payload_cancel.IsEmpty()) || (AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0));
 
                 if (HasCancelAction)
                 {

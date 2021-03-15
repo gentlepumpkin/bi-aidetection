@@ -157,24 +157,29 @@ namespace AITool
                     //migrate from the dictionary to the list - dictionary no longer used
                     if (!this.ObjectDict.IsNull())
                     {
-                        ObjectList.Clear();
-                        foreach (Object item in ObjectDict.Values)
+                        if (this.ObjectDict.Count > 0)
                         {
-                            if (item is DictionaryEntry)
+                            ObjectList.Clear();
+                            foreach (Object item in ObjectDict.Values)
                             {
-                                ClsRelevantObject ro = (ClsRelevantObject)((DictionaryEntry)item).Value;
-                                ObjectList.Add(ro.CloneJson());
+                                if (item is DictionaryEntry)
+                                {
+                                    ClsRelevantObject ro = (ClsRelevantObject)((DictionaryEntry)item).Value;
+                                    ObjectList.Add(ro.CloneJson());
+                                }
+                                else if (item is ClsRelevantObject)
+                                {
+                                    ClsRelevantObject ro = (ClsRelevantObject)item;
+                                    ObjectList.Add(ro.CloneJson());
+                                }
+                                else
+                                {
+                                    AITOOL.Log($"Warn: Old object is {item.GetType().FullName}??");
+                                }
                             }
-                            else if (item is ClsRelevantObject)
-                            {
-                                ClsRelevantObject ro = (ClsRelevantObject)item;
-                                ObjectList.Add(ro.CloneJson());
-                            }
-                            else
-                            {
-                                AITOOL.Log($"Warn: Old object is {item.GetType().FullName}??");
-                            }
+
                         }
+
                         this.ObjectDict = null;
                     }
 

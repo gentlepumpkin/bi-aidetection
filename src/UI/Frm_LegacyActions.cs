@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -55,6 +56,8 @@ namespace AITool
                 frm.tb_Topic.Text = this.tb_MQTT_Topic.Text.Trim();
                 frm.tb_Payload.Text = this.tb_MQTT_Payload.Text.Trim();
 
+                frm.cb_Retain.Checked = this.cam.Action_mqtt_retain_message;
+
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
 
@@ -69,6 +72,7 @@ namespace AITool
                     this.tb_MQTT_Payload.Text = frm.tb_Payload.Text.Trim();
                     this.tb_MQTT_Topic.Text = frm.tb_Topic.Text.Trim();
 
+                    this.cam.Action_mqtt_retain_message = frm.cb_Retain.Checked;
 
                     AppSettings.SaveAsync();
 

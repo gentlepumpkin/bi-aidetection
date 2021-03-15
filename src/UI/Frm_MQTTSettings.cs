@@ -1,8 +1,10 @@
 ﻿using MQTTnet.Client.Publishing;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -40,6 +42,8 @@ namespace AITool
                 AppSettings.Settings.mqtt_password = this.tb_Password.Text.Trim();
                 AppSettings.Settings.mqtt_username = this.tb_Username.Text.Trim();
                 AppSettings.Settings.mqtt_UseTLS = this.cb_UseTLS.Checked;
+
+                this.cam.Action_mqtt_retain_message = this.cb_Retain.Checked;
 
                 using (Global_GUI.CursorWait cw = new Global_GUI.CursorWait())
                 {
@@ -115,6 +119,11 @@ namespace AITool
         }
 
         private void Frm_MQTTSettings_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cb_UseTLS_CheckedChanged(object sender, EventArgs e)
         {
 
         }
