@@ -29,6 +29,7 @@ using System.Xml.Linq;
 using System.Globalization;
 using static AITool.AITOOL;
 using System.Net.Sockets;
+using NLog.Fluent;
 
 namespace AITool
 {
@@ -721,6 +722,48 @@ namespace AITool
             return false;
         }
 
+
+        /// <summary>
+        /// Finds the MAC address of the NIC with maximum speed.
+        /// </summary>
+        /// <returns>The MAC address.</returns>
+        public static string GetMacAddress()
+        {
+            const int MIN_MAC_ADDR_LENGTH = 12;
+            string macAddress = string.Empty;
+            long maxSpeed = -1;
+            Stopwatch sw = Stopwatch.StartNew();
+
+            try
+            {
+                foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                    {
+                        string tempMac = nic.GetPhysicalAddress().ToString();
+
+                        if (nic.Speed > maxSpeed && !string.IsNullOrEmpty(tempMac) && tempMac.Length >= MIN_MAC_ADDR_LENGTH)
+                        {
+                            //log.Debug("New Max Speed = " + nic.Speed + ", MAC: " + tempMac);
+                            maxSpeed = nic.Speed;
+                            macAddress = tempMac;
+                        }
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log("Error: " + ex.Msg());
+            }
+
+            if (sw.ElapsedMilliseconds > 500)  //should it really take this long??
+                Log($"Warn: It tool {sw.ElapsedMilliseconds}ms to get the MAC address?");
+
+            return macAddress;
+        }
         public static void ResponsiveSleep(int SleepMS)
         {
             Stopwatch sw = Stopwatch.StartNew();

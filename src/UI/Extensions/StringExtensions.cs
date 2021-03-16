@@ -111,6 +111,14 @@ namespace AITool
             return value.Substring(0, maxLength);
 
         }
+        [DebuggerStepThrough]
+        public static string ReplaceChars(this string value, char replacechar)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+
+            return new string(replacechar, value.Length);
+
+        }
 
         [DebuggerStepThrough]
         public static double ToDouble(this string value)

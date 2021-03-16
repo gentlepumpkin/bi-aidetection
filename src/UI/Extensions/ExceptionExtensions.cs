@@ -73,7 +73,7 @@ namespace AITool
                     string lastmod = "";
                     for (int i = lines.Count - 1; i >= 0; i--)
                     {
-                        if (!lines[i].Contains(" System."))
+                        if (!lines[i].Contains(" System.") && !lines[i].IsEmpty())
                         {
                             string fnc = lines[i].GetWord("at ", " in");
                             fnc = fnc.GetWord(".", "");
@@ -95,7 +95,8 @@ namespace AITool
                             if (!lastmod.IsEmpty())
                                 fnc = fnc.Replace(lastmod, "");
 
-                            ExtraInfo += $"{fnc}{line} > ";
+                            if (!fnc.IsEmpty())
+                                ExtraInfo += $"{fnc}{line} > ";
 
                             lastmod = lines[i].GetWord("at ", ".") + ".";
                         }

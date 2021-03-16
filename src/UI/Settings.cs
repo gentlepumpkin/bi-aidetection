@@ -600,6 +600,17 @@ namespace AITool
                 if (Settings != null)
                 {
 
+                    //The client identifier (ClientId) identifies each MQTT client that connects to an MQTT broker.
+                    //The broker uses the ClientID to identify the client and the current state of the client.Therefore,
+                    //this ID should be unique per client and broker. In MQTT 3.1.1 (the current standard), you can send
+                    //an empty ClientId, if you don’t need a state to be held by the broker. The empty ClientID results
+                    //in a connection without any state. In this case, the clean session flag must be set to true or
+                    //the broker will reject the connection.
+
+                    if (Settings.mqtt_clientid.EqualsIgnoreCase("aitool"))
+                        Settings.mqtt_clientid = "AITool-BATMAN-" + Global.GetMacAddress();  //set the id to a unique number that should not *usually* change on a machine - the mac address of an active adapter
+                                                                                             //but only set it once if the default clientid is set
+
                     if (Settings.telegram_cooldown_minutes > -1)
                     {
                         Settings.telegram_cooldown_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(Settings.telegram_cooldown_minutes).TotalSeconds, 0));

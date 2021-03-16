@@ -49,6 +49,7 @@ namespace AITool
                 frm.cb_UseTLS.Checked = AppSettings.Settings.mqtt_UseTLS;
                 frm.tb_Password.Text = AppSettings.Settings.mqtt_password;
                 frm.tb_Username.Text = AppSettings.Settings.mqtt_username;
+                frm.tb_ClientID.Text = AppSettings.Settings.mqtt_clientid;
 
                 frm.tb_LWTTopic.Text = AppSettings.Settings.mqtt_LastWillTopic;
                 frm.tb_LWTPayload.Text = AppSettings.Settings.mqtt_LastWillPayload;
@@ -65,6 +66,7 @@ namespace AITool
                     AppSettings.Settings.mqtt_username = frm.tb_Username.Text.Trim();
                     AppSettings.Settings.mqtt_serverandport = frm.tb_ServerPort.Text.Trim();
                     AppSettings.Settings.mqtt_password = frm.tb_Password.Text.Trim();
+                    AppSettings.Settings.mqtt_clientid = frm.tb_ClientID.Text.Trim();
 
                     AppSettings.Settings.mqtt_LastWillTopic = frm.tb_LWTTopic.Text.Trim();
                     AppSettings.Settings.mqtt_LastWillPayload = frm.tb_LWTPayload.Text.Trim();

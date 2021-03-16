@@ -78,7 +78,6 @@ namespace AITool
                 this.factory = new MqttFactory();
                 this.mqttClient = factory.CreateMqttClient();
 
-
             }
             catch (Exception ex)
             {
@@ -176,7 +175,6 @@ namespace AITool
                         .WithWillMessage(lw)
                         .WithCleanSession()
                         .Build();
-
                     }
                     else
                     {
@@ -247,7 +245,7 @@ namespace AITool
                     //}
                 });
 
-                Log($"Debug: MQTT: Connecting to server '{this.server}:{this.portint}'...");
+                Log($"Debug: MQTT: Connecting to server '{this.server}:{this.portint}' with ClientID '{AppSettings.Settings.mqtt_clientid}', Username '{AppSettings.Settings.mqtt_username}', Password '{AppSettings.Settings.mqtt_username.ReplaceChars('*')}'...");
 
 
                 cres = await mqttClient.ConnectAsync(options, CancellationToken.None);

@@ -42,6 +42,7 @@ namespace AITool
                 AppSettings.Settings.mqtt_password = this.tb_Password.Text.Trim();
                 AppSettings.Settings.mqtt_username = this.tb_Username.Text.Trim();
                 AppSettings.Settings.mqtt_UseTLS = this.cb_UseTLS.Checked;
+                AppSettings.Settings.mqtt_clientid = this.tb_ClientID.Text.Trim();
 
                 this.cam.Action_mqtt_retain_message = this.cb_Retain.Checked;
 
