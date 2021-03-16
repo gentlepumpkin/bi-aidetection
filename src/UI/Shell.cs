@@ -1028,32 +1028,44 @@ namespace AITool
         private async void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             //Application.DoEvents();
+            using var Trace = new Trace();
 
-            if (this.tabControl1.SelectedIndex == 1)
+            try
             {
-                this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
-            }
-            else if (this.tabControl1.SelectedIndex == 2)
-            {
-                await this.LoadHistoryAsync(true, true);
-            }
-            else if (this.tabControl1.SelectedIndex == 3)
-            {
-                this.LoadCameras();
-            }
-            else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
-            {
-                this.LoadDeepStackTab();
-            }
-            else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabLog"])
-            {
-                //scroll to bottom, only when tab is active for better performance 
-                if (!this.toolStripButtonPauseLog.Checked)
+                if (this.tabControl1.SelectedIndex == 1)
                 {
-                    await this.UpdateLogAddedRemovedAsync(true, true);
+                    this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
                 }
+                else if (this.tabControl1.SelectedIndex == 2)
+                {
+                    await this.LoadHistoryAsync(true, true);
+                }
+                else if (this.tabControl1.SelectedIndex == 3)
+                {
+                    this.LoadCameras();
+                }
+                else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
+                {
+                    this.LoadDeepStackTab();
+                }
+                else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabLog"])
+                {
+                    //scroll to bottom, only when tab is active for better performance 
+                    if (!this.toolStripButtonPauseLog.Checked)
+                    {
+                        await this.UpdateLogAddedRemovedAsync(true, true);
+                    }
+                }
+                UpdateStats();
+
             }
-            UpdateStats();
+            catch (Exception ex)
+            {
+                string err = $"Error: While changing to tab {this.tabControl1.SelectedTab.Name}, got error: {ex.Msg()}";
+                Log(err);
+                MessageBox.Show(err);
+
+            }
 
         }
 
@@ -2287,10 +2299,10 @@ namespace AITool
                 //});
 
             }
-            catch
+            catch (Exception ex)
             {
-                Log("ERROR LoadCameras() failed.");
-                MessageBox.Show("ERROR LoadCameras() failed.");
+                Log("ERROR: LoadCameras() failed: " + ex.Msg());
+                MessageBox.Show("ERROR: LoadCameras() failed: " + ex.Msg());
             }
 
         }
@@ -2396,81 +2408,92 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
+            try
             {
-                Camera cam = ((Camera)this.FOLV_Cameras.SelectedObjects[0]);
-
-                UpdateActionsLabel(cam);
-
-                Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";
-
-                this.tableLayoutPanel6.Enabled = true;
-
-                this.tbName.Text = cam.Name; //load name textbox from name in list2
-                this.tbBiCamName.Text = cam.BICamName;
-                this.tbCustomMaskFile.Text = cam.MaskFileName;
-
-                //load cameras stats
-                string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
-
-                if (cam.maskManager.MaskingEnabled)
+                if (this.FOLV_Cameras.SelectedObjects != null && this.FOLV_Cameras.SelectedObjects.Count > 0)
                 {
-                    stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count}";
+                    Camera cam = ((Camera)this.FOLV_Cameras.SelectedObjects[0]);
+
+                    UpdateActionsLabel(cam);
+
+                    Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";
+
+                    this.tableLayoutPanel6.Enabled = true;
+
+                    this.tbName.Text = cam.Name; //load name textbox from name in list2
+                    this.tbBiCamName.Text = cam.BICamName;
+                    this.tbCustomMaskFile.Text = cam.MaskFileName;
+
+                    //load cameras stats
+                    string stats = $"Alerts: {cam.stats_alerts.ToString()} | Irrelevant Alerts: {cam.stats_irrelevant_alerts.ToString()} | False Alerts: {cam.stats_false_alerts.ToString()}";
+
+                    if (cam.maskManager.MaskingEnabled)
+                    {
+                        stats += $" | Mask History Count: {cam.maskManager.LastPositionsHistory.Count} | Current Dynamic Masks: {cam.maskManager.MaskedPositions.Count}";
+                    }
+                    this.lbl_camstats.Text = stats;
+
+                    //load if ai detection is active for the camera
+                    if (cam.enabled == true)
+                    {
+                        this.cb_enabled.Checked = true;
+                    }
+                    else
+                    {
+                        this.cb_enabled.Checked = false;
+                    }
+                    this.tbPrefix.Text = cam.Prefix; //load 'input file begins with'
+                    this.lbl_prefix.Text = this.tbPrefix.Text + ".××××××.jpg"; //prefix live preview
+
+                    this.cmbcaminput.Text = cam.input_path;
+                    this.cmbcaminput.Items.Clear();
+                    foreach (string pth in BlueIrisInfo.ClipPaths)
+                    {
+                        this.cmbcaminput.Items.Add(pth);
+                    }
+
+                    this.cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
+
+                    this.tb_camera_telegram_chatid.Text = cam.telegram_chatid;
+
+                    //load is masking enabled 
+                    this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
+
+
+                    this.lbl_RelevantObjects.Text = cam.DefaultTriggeringObjects.ToString();
+                    ////load triggering objects
+                    ////first create arrays with all checkboxes stored in
+                    //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
+                    ////create array with strings of the triggering_objects related to the checkboxes in the same order
+                    //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
+
+                    ////clear all checkmarks
+                    //foreach (CheckBox cb in cbarray)
+                    //{
+                    //    cb.Checked = false;
+                    //}
+
+                    ////check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
+                    //for (int j = 0; j < cbarray.Length; j++)
+                    //{
+                    //    if (cam.triggering_objects_as_string.IndexOf(cbstringarray[j], StringComparison.OrdinalIgnoreCase) >= 0)
+                    //    {
+                    //        cbarray[j].Checked = true;
+                    //    }
+                    //}
+
+                    //this.tbAdditionalRelevantObjects.Text = cam.additional_triggering_objects_as_string;
+
+
                 }
-                this.lbl_camstats.Text = stats;
 
-                //load if ai detection is active for the camera
-                if (cam.enabled == true)
-                {
-                    this.cb_enabled.Checked = true;
-                }
-                else
-                {
-                    this.cb_enabled.Checked = false;
-                }
-                this.tbPrefix.Text = cam.Prefix; //load 'input file begins with'
-                this.lbl_prefix.Text = this.tbPrefix.Text + ".××××××.jpg"; //prefix live preview
+            }
+            catch (Exception ex)
+            {
 
-                this.cmbcaminput.Text = cam.input_path;
-                this.cmbcaminput.Items.Clear();
-                foreach (string pth in BlueIrisInfo.ClipPaths)
-                {
-                    this.cmbcaminput.Items.Add(pth);
-                }
-
-                this.cb_monitorCamInputfolder.Checked = cam.input_path_includesubfolders;
-
-                this.tb_camera_telegram_chatid.Text = cam.telegram_chatid;
-
-                //load is masking enabled 
-                this.cb_masking_enabled.Checked = cam.maskManager.MaskingEnabled;
-
-
-                this.lbl_RelevantObjects.Text = cam.DefaultTriggeringObjects.ToString();
-                ////load triggering objects
-                ////first create arrays with all checkboxes stored in
-                //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
-                ////create array with strings of the triggering_objects related to the checkboxes in the same order
-                //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
-
-                ////clear all checkmarks
-                //foreach (CheckBox cb in cbarray)
-                //{
-                //    cb.Checked = false;
-                //}
-
-                ////check for every triggering_object string if it is active in the settings file. If yes, check according checkbox
-                //for (int j = 0; j < cbarray.Length; j++)
-                //{
-                //    if (cam.triggering_objects_as_string.IndexOf(cbstringarray[j], StringComparison.OrdinalIgnoreCase) >= 0)
-                //    {
-                //        cbarray[j].Checked = true;
-                //    }
-                //}
-
-                //this.tbAdditionalRelevantObjects.Text = cam.additional_triggering_objects_as_string;
-
-
+                string err = $"Error: While displaying camera settings, got error: {ex.Msg()}";
+                Log(err);
+                MessageBox.Show(err);
             }
         }
 
@@ -2577,272 +2600,283 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if (this.FOLV_Cameras.SelectedObjects.Count > 0)
+            try
             {
-                //check if name is empty
-                if (String.IsNullOrWhiteSpace(this.tbName.Text))
+                if (this.FOLV_Cameras.SelectedObjects.Count > 0)
                 {
-                    this.DisplayCameraSettings(); //reset displayed settings
-                    MessageBox.Show($"WARNING: Camera name may not be empty.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                if (!string.Equals(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name.Trim(), this.tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    //camera renamed, make sure name doesnt exist
-                    Camera CamCheck = AITOOL.GetCamera(this.tbName.Text, false);
-                    if (CamCheck != null)
+                    //check if name is empty
+                    if (String.IsNullOrWhiteSpace(this.tbName.Text))
                     {
-                        //Its a dupe
-                        MessageBox.Show($"WARNING: Camera name must be unique, but new camera name '{this.tbName.Text}' already exists.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.DisplayCameraSettings(); //reset displayed settings
+                        MessageBox.Show($"WARNING: Camera name may not be empty.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    if (!string.Equals(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name.Trim(), this.tbName.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        //camera renamed, make sure name doesnt exist
+                        Camera CamCheck = AITOOL.GetCamera(this.tbName.Text, false);
+                        if (CamCheck != null)
+                        {
+                            //Its a dupe
+                            MessageBox.Show($"WARNING: Camera name must be unique, but new camera name '{this.tbName.Text}' already exists.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            this.DisplayCameraSettings(); //reset displayed settings
+                            return;
+                        }
+                    }
+
+
+                    Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name, false);
+
+                    if (cam == null)
+                    {
+                        //should not happen, but...
+                        MessageBox.Show($"WARNING: Camera not found???  '{((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         this.DisplayCameraSettings(); //reset displayed settings
                         return;
                     }
-                }
 
 
-                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name, false);
+                    //1. GET SETTINGS INPUTTED
+                    //all checkboxes in one array
 
-                if (cam == null)
-                {
-                    //should not happen, but...
-                    MessageBox.Show($"WARNING: Camera not found???  '{((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    this.DisplayCameraSettings(); //reset displayed settings
-                    return;
-                }
+                    //person,   bicycle,   car,   motorcycle,   airplane,
+                    //bus,   train,   truck,   boat,   traffic light,   fire hydrant,   stop_sign,
+                    //parking meter,   bench,   bird,   cat,   dog,   horse,   sheep,   cow,   elephant,
+                    //bear,   zebra, giraffe,   backpack,   umbrella,   handbag,   tie,   suitcase,
+                    //frisbee,   skis,   snowboard, sports ball,   kite,   baseball bat,   baseball glove,
+                    //skateboard,   surfboard,   tennis racket, bottle,   wine glass,   cup,   fork,
+                    //knife,   spoon,   bowl,   banana,   apple,   sandwich,   orange, broccoli,   carrot,
+                    //hot dog,   pizza,   donot,   cake,   chair,   couch,   potted plant,   bed, dining table,
+                    //toilet,   tv,   laptop,   mouse,   remote,   keyboard,   cell phone,   microwave,
+                    //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
+                    //hair dryer, toothbrush.
 
+                    //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
+                    ////create array with strings of the triggering_objects related to the checkboxes in the same order
+                    //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
 
-                //1. GET SETTINGS INPUTTED
-                //all checkboxes in one array
-
-                //person,   bicycle,   car,   motorcycle,   airplane,
-                //bus,   train,   truck,   boat,   traffic light,   fire hydrant,   stop_sign,
-                //parking meter,   bench,   bird,   cat,   dog,   horse,   sheep,   cow,   elephant,
-                //bear,   zebra, giraffe,   backpack,   umbrella,   handbag,   tie,   suitcase,
-                //frisbee,   skis,   snowboard, sports ball,   kite,   baseball bat,   baseball glove,
-                //skateboard,   surfboard,   tennis racket, bottle,   wine glass,   cup,   fork,
-                //knife,   spoon,   bowl,   banana,   apple,   sandwich,   orange, broccoli,   carrot,
-                //hot dog,   pizza,   donot,   cake,   chair,   couch,   potted plant,   bed, dining table,
-                //toilet,   tv,   laptop,   mouse,   remote,   keyboard,   cell phone,   microwave,
-                //oven,   toaster,   sink,   refrigerator,   book,   clock,   vase,   scissors,   teddy bear,
-                //hair dryer, toothbrush.
-
-                //CheckBox[] cbarray = new CheckBox[] { this.cb_airplane, this.cb_bear, this.cb_bicycle, this.cb_bird, this.cb_boat, this.cb_bus, this.cb_car, this.cb_cat, this.cb_cow, this.cb_dog, this.cb_horse, this.cb_motorcycle, this.cb_person, this.cb_sheep, this.cb_truck };
-                ////create array with strings of the triggering_objects related to the checkboxes in the same order
-                //string[] cbstringarray = new string[] { "Airplane", "Bear", "Bicycle", "Bird", "Boat", "Bus", "Car", "Cat", "Cow", "Dog", "Horse", "Motorcycle", "Person", "Sheep", "Truck" };
-
-                ////go through all checkboxes and write all triggering_objects in one string
-                //cam.triggering_objects_as_string = "";
-                //for (int i = 0; i < cbarray.Length; i++)
-                //{
-                //    if (cbarray[i].Checked == true)
-                //    {
-                //        cam.triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
-                //    }
-                //}
+                    ////go through all checkboxes and write all triggering_objects in one string
+                    //cam.triggering_objects_as_string = "";
+                    //for (int i = 0; i < cbarray.Length; i++)
+                    //{
+                    //    if (cbarray[i].Checked == true)
+                    //    {
+                    //        cam.triggering_objects_as_string += $"{cbstringarray[i].Trim()}, ";
+                    //    }
+                    //}
 
 
-                //cam.triggering_objects = cam.triggering_objects_as_string.Split(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                    //cam.triggering_objects = cam.triggering_objects_as_string.Split(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
 
-                //cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
+                    //cam.additional_triggering_objects_as_string = this.tbAdditionalRelevantObjects.Text.Trim();
 
-                cam.trigger_urls = cam.trigger_urls_as_string.SplitStr("\r\n|").ToArray();  //all trigger urls in an array
-                cam.cancel_urls = cam.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
+                    cam.trigger_urls = cam.trigger_urls_as_string.SplitStr("\r\n|").ToArray();  //all trigger urls in an array
+                    cam.cancel_urls = cam.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
 
-                if (cam.Name != this.tbName.Text.Trim())
-                {
-                    string Oldmaskfile = cam.GetMaskFile(false);
-                    if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
+                    if (cam.Name != this.tbName.Text.Trim())
                     {
-                        string ext = Path.GetExtension(Oldmaskfile);
-                        string pth = Path.GetDirectoryName(Oldmaskfile);
-                        string NewMaskFile = Path.Combine(pth, this.tbName.Text.Trim() + ext);
-                        File.Move(Oldmaskfile, NewMaskFile);
-                        cam.MaskFileName = NewMaskFile;
-                    }
-                    Log($"Renaming Camera '{cam.Name}' to '{this.tbName.Text}'");
-                    cam.Name = this.tbName.Text.Trim();  //just in case we needed to rename it
-                }
-
-                cam.BICamName = this.tbBiCamName.Text.Trim();
-                cam.MaskFileName = this.tbCustomMaskFile.Text.Trim();
-
-                cam.Prefix = this.tbPrefix.Text.Trim();
-                cam.enabled = this.cb_enabled.Checked;
-                cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
-                cam.input_path = this.cmbcaminput.Text.Trim();
-                cam.input_path_includesubfolders = this.cb_monitorCamInputfolder.Checked;
-
-                cam.telegram_chatid = this.tb_camera_telegram_chatid.Text.Trim();
-
-                int ccnt = 0;
-
-                if (SaveTo)
-                {
-                    using (Frm_ApplyCameraTo frm = new Frm_ApplyCameraTo())
-                    {
-                        foreach (Camera ccam in AppSettings.Settings.CameraList)
+                        string Oldmaskfile = cam.GetMaskFile(false);
+                        if (!string.IsNullOrEmpty(Oldmaskfile) && File.Exists(Oldmaskfile))
                         {
-                            if (ccam.Name != cam.Name)
-                                frm.checkedListBoxCameras.Items.Add(ccam.Name, false);
+                            string ext = Path.GetExtension(Oldmaskfile);
+                            string pth = Path.GetDirectoryName(Oldmaskfile);
+                            string NewMaskFile = Path.Combine(pth, this.tbName.Text.Trim() + ext);
+                            File.Move(Oldmaskfile, NewMaskFile);
+                            cam.MaskFileName = NewMaskFile;
                         }
+                        Log($"Renaming Camera '{cam.Name}' to '{this.tbName.Text}'");
+                        cam.Name = this.tbName.Text.Trim();  //just in case we needed to rename it
+                    }
 
-                        if (frm.ShowDialog() == DialogResult.OK)
+                    cam.BICamName = this.tbBiCamName.Text.Trim();
+                    cam.MaskFileName = this.tbCustomMaskFile.Text.Trim();
+
+                    cam.Prefix = this.tbPrefix.Text.Trim();
+                    cam.enabled = this.cb_enabled.Checked;
+                    cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
+                    cam.input_path = this.cmbcaminput.Text.Trim();
+                    cam.input_path_includesubfolders = this.cb_monitorCamInputfolder.Checked;
+
+                    cam.telegram_chatid = this.tb_camera_telegram_chatid.Text.Trim();
+
+                    int ccnt = 0;
+
+                    if (SaveTo)
+                    {
+                        using (Frm_ApplyCameraTo frm = new Frm_ApplyCameraTo())
                         {
-                            for (int i = 0; i < frm.checkedListBoxCameras.Items.Count; i++)
+                            foreach (Camera ccam in AppSettings.Settings.CameraList)
                             {
-                                if (frm.checkedListBoxCameras.GetItemChecked(i))
+                                if (ccam.Name != cam.Name)
+                                    frm.checkedListBoxCameras.Items.Add(ccam.Name, false);
+                            }
+
+                            if (frm.ShowDialog() == DialogResult.OK)
+                            {
+                                for (int i = 0; i < frm.checkedListBoxCameras.Items.Count; i++)
                                 {
-                                    Camera icam = AITOOL.GetCamera(frm.checkedListBoxCameras.Items[i].ToString(), false);
-                                    if (icam != null)
+                                    if (frm.checkedListBoxCameras.GetItemChecked(i))
                                     {
-                                        ccnt++;
-
-                                        Log($"Updating camera '{cam.Name}' with settings from '{icam.Name}'...");
-
-                                        //icam.BICamName = cam.BICamName;
-
-
-                                        if (frm.cb_apply_confidence_limits.Checked)
+                                        Camera icam = AITOOL.GetCamera(frm.checkedListBoxCameras.Items[i].ToString(), false);
+                                        if (icam != null)
                                         {
-                                            icam.threshold_lower = cam.threshold_lower;
-                                            icam.threshold_upper = cam.threshold_upper;
-                                            icam.MergePredictionsMinMatchPercent = cam.MergePredictionsMinMatchPercent;
-                                            icam.PredSizeMinHeight = cam.PredSizeMinHeight;
-                                            icam.PredSizeMinWidth = cam.PredSizeMinWidth;
-                                            icam.PredSizeMaxHeight = cam.PredSizeMaxHeight;
-                                            icam.PredSizeMaxWidth = cam.PredSizeMaxWidth;
-                                            icam.PredSizeMaxPercentOfImage = cam.PredSizeMaxPercentOfImage;
-                                            icam.PredSizeMinPercentOfImage = cam.PredSizeMinPercentOfImage;
-                                        }
-                                        if (frm.cb_apply_objects.Checked)
-                                        {
-                                            icam.triggering_objects_as_string = cam.triggering_objects_as_string;
-                                            icam.additional_triggering_objects_as_string = cam.additional_triggering_objects_as_string;
-                                            icam.triggering_objects = cam.triggering_objects_as_string.SplitStr(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
-                                            icam.Action_pushover_triggering_objects = cam.Action_pushover_triggering_objects;
-                                            icam.DefaultTriggeringObjects = cam.DefaultTriggeringObjects;
-                                            icam.TelegramTriggeringObjects = cam.TelegramTriggeringObjects;
-                                            icam.MQTTTriggeringObjects = cam.MQTTTriggeringObjects;
-                                            icam.PushoverTriggeringObjects = cam.PushoverTriggeringObjects;
-                                            icam.maskManager.MaskTriggeringObjects = cam.maskManager.MaskTriggeringObjects;
+                                            ccnt++;
+
+                                            Log($"Updating camera '{cam.Name}' with settings from '{icam.Name}'...");
+
+                                            //icam.BICamName = cam.BICamName;
+
+
+                                            if (frm.cb_apply_confidence_limits.Checked)
+                                            {
+                                                icam.threshold_lower = cam.threshold_lower;
+                                                icam.threshold_upper = cam.threshold_upper;
+                                                icam.MergePredictionsMinMatchPercent = cam.MergePredictionsMinMatchPercent;
+                                                icam.PredSizeMinHeight = cam.PredSizeMinHeight;
+                                                icam.PredSizeMinWidth = cam.PredSizeMinWidth;
+                                                icam.PredSizeMaxHeight = cam.PredSizeMaxHeight;
+                                                icam.PredSizeMaxWidth = cam.PredSizeMaxWidth;
+                                                icam.PredSizeMaxPercentOfImage = cam.PredSizeMaxPercentOfImage;
+                                                icam.PredSizeMinPercentOfImage = cam.PredSizeMinPercentOfImage;
+                                            }
+                                            if (frm.cb_apply_objects.Checked)
+                                            {
+                                                icam.triggering_objects_as_string = cam.triggering_objects_as_string;
+                                                icam.additional_triggering_objects_as_string = cam.additional_triggering_objects_as_string;
+                                                icam.triggering_objects = cam.triggering_objects_as_string.SplitStr(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+                                                icam.Action_pushover_triggering_objects = cam.Action_pushover_triggering_objects;
+                                                icam.DefaultTriggeringObjects = cam.DefaultTriggeringObjects;
+                                                icam.TelegramTriggeringObjects = cam.TelegramTriggeringObjects;
+                                                icam.MQTTTriggeringObjects = cam.MQTTTriggeringObjects;
+                                                icam.PushoverTriggeringObjects = cam.PushoverTriggeringObjects;
+                                                icam.maskManager.MaskTriggeringObjects = cam.maskManager.MaskTriggeringObjects;
+
+                                            }
+                                            if (frm.cb_apply_actions.Checked)
+                                            {
+                                                icam.trigger_urls_as_string = cam.trigger_urls_as_string;
+                                                icam.trigger_urls = cam.trigger_urls;
+                                                icam.Action_TriggerURL_Enabled = cam.Action_TriggerURL_Enabled;
+                                                icam.Action_CancelURL_Enabled = cam.Action_CancelURL_Enabled;
+                                                icam.cancel_urls_as_string = cam.cancel_urls_as_string;
+                                                icam.cancel_urls = cam.cancel_urls;
+                                                icam.cooldown_time_seconds = cam.cooldown_time_seconds;
+
+                                                icam.DetectionDisplayFormat = cam.DetectionDisplayFormat;
+
+
+                                                icam.telegram_enabled = cam.telegram_enabled;
+                                                icam.telegram_caption = cam.telegram_caption;
+                                                icam.telegram_chatid = cam.telegram_chatid;
+                                                icam.telegram_active_time_range = cam.telegram_active_time_range;
+
+                                                icam.Action_image_copy_enabled = cam.Action_image_copy_enabled;
+                                                icam.Action_network_folder = cam.Action_network_folder;
+                                                icam.Action_network_folder_filename = cam.Action_network_folder_filename;
+                                                icam.Action_RunProgram = cam.Action_RunProgram;
+                                                icam.Action_RunProgramString = cam.Action_RunProgramString;
+                                                icam.Action_RunProgramArgsString = cam.Action_RunProgramArgsString;
+                                                icam.Action_PlaySounds = cam.Action_PlaySounds;
+                                                icam.Action_Sounds = cam.Action_Sounds;
+
+                                                icam.Action_mqtt_enabled = cam.Action_mqtt_enabled;
+                                                icam.Action_mqtt_payload = cam.Action_mqtt_payload;
+                                                icam.Action_mqtt_topic = cam.Action_mqtt_topic;
+                                                icam.Action_mqtt_payload_cancel = cam.Action_mqtt_payload_cancel;
+                                                icam.Action_mqtt_topic_cancel = cam.Action_mqtt_topic_cancel;
+
+                                                icam.Action_image_merge_detections = cam.Action_image_merge_detections;
+                                                icam.Action_image_merge_jpegquality = cam.Action_image_merge_jpegquality;
+
+                                                icam.Action_pushover_enabled = cam.Action_pushover_enabled;
+                                                icam.Action_pushover_title = cam.Action_pushover_title;
+                                                icam.Action_pushover_message = cam.Action_pushover_message;
+                                                icam.Action_pushover_device = cam.Action_pushover_device;
+                                                icam.Action_pushover_Sound = cam.Action_pushover_Sound;
+                                                icam.Action_pushover_Priority = cam.Action_pushover_Priority;
+                                                icam.Action_pushover_retrycallback_url = cam.Action_pushover_retrycallback_url;
+                                                icam.Action_pushover_SupplementaryUrl = cam.Action_pushover_SupplementaryUrl;
+                                                icam.Action_pushover_expire_seconds = cam.Action_pushover_expire_seconds;
+                                                icam.Action_pushover_retry_seconds = cam.Action_pushover_retry_seconds;
+
+                                                icam.Action_pushover_active_time_range = cam.Action_pushover_active_time_range;
+
+                                                icam.Action_queued = cam.Action_queued;
+                                            }
+                                            if (frm.cb_apply_mask_settings.Checked)
+                                            {
+                                                icam.maskManager.MaskingEnabled = cam.maskManager.MaskingEnabled;
+
+                                                icam.maskManager.HistorySaveMins = cam.maskManager.HistorySaveMins;
+                                                icam.maskManager.HistoryThresholdCount = cam.maskManager.HistoryThresholdCount;
+                                                icam.maskManager.MaskRemoveThreshold = cam.maskManager.MaskRemoveThreshold;
+                                                icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
+
+                                                icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
+
+                                                icam.maskManager.ScaleConfig.IsScaledObject = cam.maskManager.ScaleConfig.IsScaledObject;
+                                                icam.maskManager.ScaleConfig.MediumObjectMatchPercent = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
+                                                icam.maskManager.ScaleConfig.MediumObjectMaxPercent = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
+                                                icam.maskManager.ScaleConfig.SmallObjectMatchPercent = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
+                                                icam.maskManager.ScaleConfig.SmallObjectMaxPercent = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
+
+                                            }
 
                                         }
-                                        if (frm.cb_apply_actions.Checked)
-                                        {
-                                            icam.trigger_urls_as_string = cam.trigger_urls_as_string;
-                                            icam.trigger_urls = cam.trigger_urls;
-                                            icam.Action_TriggerURL_Enabled = cam.Action_TriggerURL_Enabled;
-                                            icam.Action_CancelURL_Enabled = cam.Action_CancelURL_Enabled;
-                                            icam.cancel_urls_as_string = cam.cancel_urls_as_string;
-                                            icam.cancel_urls = cam.cancel_urls;
-                                            icam.cooldown_time_seconds = cam.cooldown_time_seconds;
-
-                                            icam.DetectionDisplayFormat = cam.DetectionDisplayFormat;
-
-
-                                            icam.telegram_enabled = cam.telegram_enabled;
-                                            icam.telegram_caption = cam.telegram_caption;
-                                            icam.telegram_chatid = cam.telegram_chatid;
-                                            icam.telegram_active_time_range = cam.telegram_active_time_range;
-
-                                            icam.Action_image_copy_enabled = cam.Action_image_copy_enabled;
-                                            icam.Action_network_folder = cam.Action_network_folder;
-                                            icam.Action_network_folder_filename = cam.Action_network_folder_filename;
-                                            icam.Action_RunProgram = cam.Action_RunProgram;
-                                            icam.Action_RunProgramString = cam.Action_RunProgramString;
-                                            icam.Action_RunProgramArgsString = cam.Action_RunProgramArgsString;
-                                            icam.Action_PlaySounds = cam.Action_PlaySounds;
-                                            icam.Action_Sounds = cam.Action_Sounds;
-
-                                            icam.Action_mqtt_enabled = cam.Action_mqtt_enabled;
-                                            icam.Action_mqtt_payload = cam.Action_mqtt_payload;
-                                            icam.Action_mqtt_topic = cam.Action_mqtt_topic;
-                                            icam.Action_mqtt_payload_cancel = cam.Action_mqtt_payload_cancel;
-                                            icam.Action_mqtt_topic_cancel = cam.Action_mqtt_topic_cancel;
-
-                                            icam.Action_image_merge_detections = cam.Action_image_merge_detections;
-                                            icam.Action_image_merge_jpegquality = cam.Action_image_merge_jpegquality;
-
-                                            icam.Action_pushover_enabled = cam.Action_pushover_enabled;
-                                            icam.Action_pushover_title = cam.Action_pushover_title;
-                                            icam.Action_pushover_message = cam.Action_pushover_message;
-                                            icam.Action_pushover_device = cam.Action_pushover_device;
-                                            icam.Action_pushover_Sound = cam.Action_pushover_Sound;
-                                            icam.Action_pushover_Priority = cam.Action_pushover_Priority;
-                                            icam.Action_pushover_retrycallback_url = cam.Action_pushover_retrycallback_url;
-                                            icam.Action_pushover_SupplementaryUrl = cam.Action_pushover_SupplementaryUrl;
-                                            icam.Action_pushover_expire_seconds = cam.Action_pushover_expire_seconds;
-                                            icam.Action_pushover_retry_seconds = cam.Action_pushover_retry_seconds;
-
-                                            icam.Action_pushover_active_time_range = cam.Action_pushover_active_time_range;
-
-                                            icam.Action_queued = cam.Action_queued;
-                                        }
-                                        if (frm.cb_apply_mask_settings.Checked)
-                                        {
-                                            icam.maskManager.MaskingEnabled = cam.maskManager.MaskingEnabled;
-
-                                            icam.maskManager.HistorySaveMins = cam.maskManager.HistorySaveMins;
-                                            icam.maskManager.HistoryThresholdCount = cam.maskManager.HistoryThresholdCount;
-                                            icam.maskManager.MaskRemoveThreshold = cam.maskManager.MaskRemoveThreshold;
-                                            icam.maskManager.MaskRemoveMins = cam.maskManager.MaskRemoveMins;
-
-                                            icam.maskManager.PercentMatch = cam.maskManager.PercentMatch;
-
-                                            icam.maskManager.ScaleConfig.IsScaledObject = cam.maskManager.ScaleConfig.IsScaledObject;
-                                            icam.maskManager.ScaleConfig.MediumObjectMatchPercent = cam.maskManager.ScaleConfig.MediumObjectMatchPercent;
-                                            icam.maskManager.ScaleConfig.MediumObjectMaxPercent = cam.maskManager.ScaleConfig.MediumObjectMaxPercent;
-                                            icam.maskManager.ScaleConfig.SmallObjectMatchPercent = cam.maskManager.ScaleConfig.SmallObjectMatchPercent;
-                                            icam.maskManager.ScaleConfig.SmallObjectMaxPercent = cam.maskManager.ScaleConfig.SmallObjectMaxPercent;
-
-                                        }
-
                                     }
+
                                 }
 
                             }
-
                         }
                     }
+                    else
+                    {
+                        ccnt = 1;
+                    }
+
+                    this.LoadCameras();
+
+                    AppSettings.SaveAsync();
+
+                    UpdateWatchers(true);
+
+                    string saved = $"{ccnt} Camera(s) saved.";
+                    Log(saved);
+
+                    MessageBox.Show(saved, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
+                    ////2. UPDATE SETTINGS
+                    //// save new camera settings, display result in MessageBox
+                    //string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
+                    //                             cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
+                    //                             cb_masking_enabled.Checked,
+                    //                             cb_TriggerCancels.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
+
+
+
+                    //1     2       3                             4                       5                 6        7              8                9
+                    //name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
+                    //                                                               10           11  
+                    //                                                               _input_path, _input_path_includesubfolders,
+                    //                                                          12   masking_enabled,
+                    //                                                          13   trigger_cancel
+
+
+
                 }
-                else
-                {
-                    ccnt = 1;
-                }
-
-                this.LoadCameras();
-
-                AppSettings.SaveAsync();
-
-                UpdateWatchers(true);
-
-                string saved = $"{ccnt} Camera(s) saved.";
-                Log(saved);
-
-                MessageBox.Show(saved, "", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-
-                ////2. UPDATE SETTINGS
-                //// save new camera settings, display result in MessageBox
-                //string result = UpdateCamera(list2.SelectedItems[0].Text, tbName.Text, tbPrefix.Text, tbTriggerUrl.Text, triggering_objects_as_string, cb_telegram.Checked, cb_enabled.Checked, cooldown_time, threshold_lower, threshold_upper,
-                //                             cmbcaminput.Text, cb_monitorCamInputfolder.Checked,
-                //                             cb_masking_enabled.Checked,
-                //                             cb_TriggerCancels.Checked); //, history_mins, mask_create_counter, mask_remove_counter, percent_variance);
-
-
-
-                //1     2       3                             4                       5                 6        7              8                9
-                //name, prefix, triggering_objects_as_string, trigger_urls_as_string, telegram_enabled, enabled, cooldown_time, threshold_lower, threshold_upper,
-                //                                                               10           11  
-                //                                                               _input_path, _input_path_includesubfolders,
-                //                                                          12   masking_enabled,
-                //                                                          13   trigger_cancel
-
-
+                this.DisplayCameraSettings();
 
             }
-            this.DisplayCameraSettings();
+            catch (Exception ex)
+            {
+
+                string err = $"Error: While saving camera, got error: {ex.Msg()}";
+                Log(err);
+                MessageBox.Show(err);
+            }
 
         }
         //event: delete camera button

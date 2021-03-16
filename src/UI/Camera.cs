@@ -248,102 +248,112 @@ namespace AITool
         {
             lock (CamLock)
             {
-                this.UpdateTriggeringObjects();
 
-                if (string.IsNullOrEmpty(this.DetectionDisplayFormat))
-                    this.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
-
-                if (string.IsNullOrEmpty(this.BICamName))
-                    this.BICamName = this.Name;
-
-                if (string.IsNullOrEmpty(this.MaskFileName))
-                    this.MaskFileName = $"{this.Name}.bmp";
-
-                if (this.ImageResolutions.Count == 0)
-                    this.ScanImages(10, 500, -1);//run a quick scan to get resolutions
-
-                if (this.cooldown_time > -1)
+                try
                 {
-                    this.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(this.cooldown_time).TotalSeconds, 0));
-                    this.cooldown_time = -1;
-                }
+                    this.UpdateTriggeringObjects();
 
-                if (this.maskManager == null)
-                {
-                    this.maskManager = new MaskManager();
-                    AITOOL.Log("Debug: Had to reset MaskManager for camera " + this.Name);
-                }
+                    if (string.IsNullOrEmpty(this.DetectionDisplayFormat))
+                        this.DetectionDisplayFormat = "[Label] [[Detail]] [confidence]";
 
-                //update threshold in all masks if changed during session
-                this.maskManager.Update(this);
+                    if (string.IsNullOrEmpty(this.BICamName))
+                        this.BICamName = this.Name;
 
-                ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
-                if (this.trigger_url_cancels && !string.IsNullOrWhiteSpace(this.cancel_urls_as_string))
-                {
-                    this.cancel_urls_as_string = this.trigger_urls_as_string;
-                    this.trigger_url_cancels = false;
-                }
+                    if (string.IsNullOrEmpty(this.MaskFileName))
+                        this.MaskFileName = $"{this.Name}.bmp";
 
-                //this is just a flag to see if we have updated old settings file to support an 'enabled' property.
-                //before, the existence of a URL indicated 'enabled', now we have an actual flag
-                if (!this.UpdatedURLs)
-                {
-                    //if there was a URL set then it was 'enabled'
-                    this.Action_TriggerURL_Enabled = !this.trigger_urls_as_string.IsEmpty();
-                    this.Action_CancelURL_Enabled = !this.cancel_urls_as_string.IsEmpty();
-                    this.UpdatedURLs = true;
-                }
+                    if (this.ImageResolutions.Count == 0)
+                        this.ScanImages(10, 500, -1);//run a quick scan to get resolutions
 
-                //set the default url's if nothing configured
-                ///admin?camera=x&flagalert=x&memo=text&jpeg=path&flagclip x = 0 mark the most recent alert as cancelled (if not previously confirmed). x = 1 mark the most recent alert as flagged. x = 2 mark the most recent alert as confirmed. x = 3 mark the most recent alert as flagged and confirmed. x = -1 reset the flagged, confirmed, and cancelled states 
-
-
-                if (!AITOOL.BlueIrisInfo.IsNull() && AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
-                {
-                    if (this.trigger_urls_as_string.IsEmpty())
-                        this.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
-                    if (this.cancel_urls_as_string.IsEmpty())
-                        this.cancel_urls_as_string = "[BlueIrisURL]/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
-                }
-                else
-                {
-                    if (this.trigger_urls_as_string.IsEmpty())
-                        this.trigger_urls_as_string = "http://127.0.0.1:81/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
-                    if (this.cancel_urls_as_string.IsEmpty())
-                        this.cancel_urls_as_string = "http://127.0.0.1:81/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
-
-                }
-
-                this.trigger_urls = this.trigger_urls_as_string.SplitStr("\r\n|").ToArray();
-                this.cancel_urls = this.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
-
-                if (this.Action_image_copy_enabled &&
-                    !string.IsNullOrWhiteSpace(this.Action_network_folder) &&
-                    this.Action_network_folder_purge_older_than_days > 0 &&
-                    LastJPGCleanDay != DateTime.Now.DayOfYear &&
-                    Directory.Exists(this.Action_network_folder))
-                {
-                    AITOOL.Log($"Debug: Cleaning out jpg files older than '{this.Action_network_folder_purge_older_than_days}' days in '{this.Action_network_folder}'...");
-
-                    List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(this.Action_network_folder, "*.jpg"));
-                    int deleted = 0;
-                    int errs = 0;
-                    foreach (FileInfo fi in filist)
+                    if (this.cooldown_time > -1)
                     {
-                        if ((DateTime.Now - fi.LastWriteTime).TotalDays > this.Action_network_folder_purge_older_than_days)
-                        {
-                            try { fi.Delete(); deleted++; }
-                            catch { errs++; }
-                        }
+                        this.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(this.cooldown_time).TotalSeconds, 0));
+                        this.cooldown_time = -1;
                     }
-                    if (errs == 0)
-                        AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+
+                    if (this.maskManager == null)
+                    {
+                        this.maskManager = new MaskManager();
+                        AITOOL.Log("Debug: Had to reset MaskManager for camera " + this.Name);
+                    }
+
+                    //update threshold in all masks if changed during session
+                    this.maskManager.Update(this);
+
+                    ///this was an old setting we dont want to use any longer, but pull it over if someone enabled it before
+                    if (this.trigger_url_cancels && !string.IsNullOrWhiteSpace(this.cancel_urls_as_string))
+                    {
+                        this.cancel_urls_as_string = this.trigger_urls_as_string;
+                        this.trigger_url_cancels = false;
+                    }
+
+                    //this is just a flag to see if we have updated old settings file to support an 'enabled' property.
+                    //before, the existence of a URL indicated 'enabled', now we have an actual flag
+                    if (!this.UpdatedURLs)
+                    {
+                        //if there was a URL set then it was 'enabled'
+                        this.Action_TriggerURL_Enabled = !this.trigger_urls_as_string.IsEmpty();
+                        this.Action_CancelURL_Enabled = !this.cancel_urls_as_string.IsEmpty();
+                        this.UpdatedURLs = true;
+                    }
+
+                    //set the default url's if nothing configured
+                    ///admin?camera=x&flagalert=x&memo=text&jpeg=path&flagclip x = 0 mark the most recent alert as cancelled (if not previously confirmed). x = 1 mark the most recent alert as flagged. x = 2 mark the most recent alert as confirmed. x = 3 mark the most recent alert as flagged and confirmed. x = -1 reset the flagged, confirmed, and cancelled states 
+
+
+                    if (!AITOOL.BlueIrisInfo.IsNull() && AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
+                    {
+                        if (this.trigger_urls_as_string.IsEmpty())
+                            this.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                        if (this.cancel_urls_as_string.IsEmpty())
+                            this.cancel_urls_as_string = "[BlueIrisURL]/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
+                    }
                     else
-                        AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+                    {
+                        if (this.trigger_urls_as_string.IsEmpty())
+                            this.trigger_urls_as_string = "http://127.0.0.1:81/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                        if (this.cancel_urls_as_string.IsEmpty())
+                            this.cancel_urls_as_string = "http://127.0.0.1:81/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
 
-                    LastJPGCleanDay = DateTime.Now.DayOfYear;
+                    }
+
+                    this.trigger_urls = this.trigger_urls_as_string.SplitStr("\r\n|").ToArray();
+                    this.cancel_urls = this.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
+
+                    if (this.Action_image_copy_enabled &&
+                        !string.IsNullOrWhiteSpace(this.Action_network_folder) &&
+                        this.Action_network_folder_purge_older_than_days > 0 &&
+                        LastJPGCleanDay != DateTime.Now.DayOfYear &&
+                        Directory.Exists(this.Action_network_folder))
+                    {
+                        AITOOL.Log($"Debug: Cleaning out jpg files older than '{this.Action_network_folder_purge_older_than_days}' days in '{this.Action_network_folder}'...");
+
+                        List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(this.Action_network_folder, "*.jpg"));
+                        int deleted = 0;
+                        int errs = 0;
+                        foreach (FileInfo fi in filist)
+                        {
+                            if ((DateTime.Now - fi.LastWriteTime).TotalDays > this.Action_network_folder_purge_older_than_days)
+                            {
+                                try { fi.Delete(); deleted++; }
+                                catch { errs++; }
+                            }
+                        }
+                        if (errs == 0)
+                            AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+                        else
+                            AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+                        LastJPGCleanDay = DateTime.Now.DayOfYear;
 
 
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    AITOOL.Log($"Error: While updating camera '{this.Name}', got error: {ex.Msg()}");
                 }
 
             }
@@ -352,45 +362,53 @@ namespace AITool
 
         public void UpdateTriggeringObjects()
         {
-            //Convert string Triggering objects to RelevantObjectManager instances
-            if (this.DefaultTriggeringObjects == null || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
+            try
             {
-                this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this);
-                this.triggering_objects_as_string = "";
-                this.additional_triggering_objects_as_string = "";
-            }
-            else  //force the camera name to stay correct if renamed
-            {
-                this.DefaultTriggeringObjects.Init(this);
-            }
+                //Convert string Triggering objects to RelevantObjectManager instances
+                if (this.DefaultTriggeringObjects == null || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
+                {
+                    this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this);
+                    this.triggering_objects_as_string = "";
+                    this.additional_triggering_objects_as_string = "";
+                }
+                else  //force the camera name to stay correct if renamed
+                {
+                    this.DefaultTriggeringObjects.Init(this);
+                }
 
-            if (this.TelegramTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
-            {
-                this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this);
-                this.telegram_triggering_objects = "";
-            }
-            else  //force the camera name to stay correct if renamed
-            {
-                this.TelegramTriggeringObjects.Init(this);
-            }
+                if (this.TelegramTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+                {
+                    this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this);
+                    this.telegram_triggering_objects = "";
+                }
+                else  //force the camera name to stay correct if renamed
+                {
+                    this.TelegramTriggeringObjects.Init(this);
+                }
 
-            if (this.PushoverTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
-            {
-                this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this);
-                this.Action_pushover_triggering_objects = "";
-            }
-            else  //force the camera name to stay correct if renamed
-            {
-                this.PushoverTriggeringObjects.Init(this);
-            }
+                if (this.PushoverTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+                {
+                    this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this);
+                    this.Action_pushover_triggering_objects = "";
+                }
+                else  //force the camera name to stay correct if renamed
+                {
+                    this.PushoverTriggeringObjects.Init(this);
+                }
 
-            if (this.MQTTTriggeringObjects == null)
-            {
-                this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this);
+                if (this.MQTTTriggeringObjects == null)
+                {
+                    this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this);
+                }
+                else  //force the camera name to stay correct if renamed
+                {
+                    this.MQTTTriggeringObjects.Init(this);
+                }
+
             }
-            else  //force the camera name to stay correct if renamed
+            catch (Exception ex)
             {
-                this.MQTTTriggeringObjects.Init(this);
+                AITOOL.Log($"Error: While updating camera '{this.Name}', got error: {ex.Msg()}");
             }
 
         }

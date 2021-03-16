@@ -302,6 +302,7 @@
     <Compile Include="ClsRelevantObjectManager.cs" />
     <Compile Include="ClsSightHound.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>

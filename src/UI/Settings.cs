@@ -225,6 +225,12 @@ namespace AITool
                     }
                 }
 
+                if (GetCamera("default", ReturnDefault: true) == null)
+                {
+                    //add a default camera
+                    Camera cam = new Camera("Default");
+                    Settings.CameraList.Add(cam);
+                }
                 //update threshold in all masks if changed during session
                 foreach (Camera cam in AppSettings.Settings.CameraList)
                 {

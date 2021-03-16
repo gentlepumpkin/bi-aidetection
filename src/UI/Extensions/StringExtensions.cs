@@ -132,10 +132,11 @@ namespace AITool
         [DebuggerStepThrough]
         public static bool IsEmpty(this string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return true;
-            else
-                return false;
+            return string.IsNullOrWhiteSpace(value);
+        }
+        public static bool IsNotEmpty(this string value)
+        {
+            return !string.IsNullOrWhiteSpace(value);
         }
 
         [DebuggerStepThrough]
