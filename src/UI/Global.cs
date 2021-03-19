@@ -30,6 +30,7 @@ using System.Globalization;
 using static AITool.AITOOL;
 using System.Net.Sockets;
 using NLog.Fluent;
+using System.Drawing.Imaging;
 
 namespace AITool
 {
@@ -722,6 +723,74 @@ namespace AITool
             return false;
         }
 
+        public static bool OnlyHexInString(string test)
+        {
+            if (test.IsEmpty())
+                return false;
+            // For C-style hex notation (0xFF) you can use @"\A\b(0[xX])?[0-9a-fA-F]+\b\Z"
+            return System.Text.RegularExpressions.Regex.IsMatch(test, @"\A\b[0-9a-fA-F]+\b\Z");
+        }
+
+        public static Color ConvertStringToColor(string InString, string InAlphaString = "")
+        {
+            Color Ret = Color.FromKnownColor(KnownColor.White);
+            try
+            {
+                if (InString.IsNotEmpty())
+                {
+                    int Alpha = 255;
+                    int Red = Ret.R;
+                    int Green = Ret.G;
+                    int Blue = Ret.B;
+                    string[] splt;
+                    if (InString.Contains(","))
+                    {
+                        splt = InString.Trim().Split(',');
+                        if (splt.Count() == 3)
+                        {
+                            Red = splt[0].ToInt();
+                            Green = splt[1].ToInt();
+                            Blue = splt[2].ToInt();
+                            Ret = Color.FromArgb(Red, Green, Blue);
+                        }
+                        else if (splt.Count() == 4)
+                        {
+                            Alpha = splt[0].ToInt();
+                            Red = splt[1].ToInt();
+                            Green = splt[2].ToInt();
+                            Blue = splt[3].ToInt();
+                            Ret = Color.FromArgb(Alpha, Red, Green, Blue);
+                        }
+                        else
+                            Log("Error: Problem converting color, not 3 RGB numbers or 4 ARGB: '" + InString + ",");
+
+                    }
+                    else
+                    {
+                        if (InString.StartsWith("#") || OnlyHexInString(InString.Trim()))
+                        {
+                            int argb = Int32.Parse(InString.Replace("#", "").Trim(), NumberStyles.HexNumber);
+                            Ret = Color.FromArgb(argb);
+                        }
+                        else
+                        {
+                            Ret = Color.FromName(InString.Trim());
+                        }
+                    }
+
+                    if (InAlphaString.IsNotEmpty())
+                    {
+                        Ret = Color.FromArgb(InAlphaString.ToInt(), Ret);
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: InString='{InString}': {ex.Message}");
+            }
+            return Ret;
+        }
 
         /// <summary>
         /// Finds the MAC address of the NIC with maximum speed.

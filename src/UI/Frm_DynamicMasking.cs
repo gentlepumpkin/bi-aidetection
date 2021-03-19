@@ -30,16 +30,16 @@ namespace AITool
 
         private void num_mask_remove_Leave(object sender, EventArgs e)
         {
-             this.num_mask_remove.Text = this.num_mask_remove.Value.ToString();
+            this.num_mask_remove.Text = this.num_mask_remove.Value.ToString();
         }
 
         private void num_percent_var_Leave(object sender, EventArgs e)
         {
-             this.num_percent_var.Text = this.num_percent_var.Value.ToString();
+            this.num_percent_var.Text = this.num_percent_var.Value.ToString();
         }
         private void numMaskThreshold_Leave(object sender, EventArgs e)
         {
-             this.numMaskThreshold.Text = this.numMaskThreshold.Value.ToString();
+            this.numMaskThreshold.Text = this.numMaskThreshold.Value.ToString();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -95,11 +95,8 @@ namespace AITool
         {
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
-                frm.ObjectManager = this.cam.maskManager.MaskTriggeringObjects;
-                if (frm.ShowDialog(this) == DialogResult.OK)
-                {
-                    this.cam.maskManager.MaskTriggeringObjects = frm.ObjectManager;
-                }
+                frm.ROMName = $"{cam.Name}\\{cam.maskManager.MaskTriggeringObjects.TypeName}";
+                frm.ShowDialog(this);
             }
         }
     }

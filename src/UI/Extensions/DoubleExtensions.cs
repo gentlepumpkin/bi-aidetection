@@ -24,12 +24,17 @@ namespace AITool
 
             return 0;
         }
-        public static float ToFloat(this double val)
+        public static float ToFloat(this double val, bool Abs = false)
         {
             try
             {
                 if (!val.IsNull())
-                    return Convert.ToSingle(val);
+                {
+                    if (!Abs)
+                        return Convert.ToSingle(val);
+                    else
+                        return Math.Abs(Convert.ToSingle(val));
+                }
             }
             catch { }
 

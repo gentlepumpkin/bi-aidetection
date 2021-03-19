@@ -1462,189 +1462,183 @@ namespace AITool
         }
 
         //show rectangle overlay
-        private void showObject(PaintEventArgs e, double _xmin, double _ymin, double _xmax, double _ymax, string text, ResultType result)
-        {
-            try
-            {
-                if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0 && (this.pictureBox1 != null) && (this.pictureBox1.BackgroundImage != null))
-                {
+        //        private void showObject(PaintEventArgs e, double _xmin, double _ymin, double _xmax, double _ymax, string text, ResultType result)
+        //        {
+        //            try
+        //            {
+        //                if (this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0 && (this.pictureBox1 != null) && (this.pictureBox1.BackgroundImage != null))
+        //                {
 
-                    System.Drawing.Color color = new System.Drawing.Color();
-                    int BorderWidth = AppSettings.Settings.RectBorderWidth
-;
+        //                    System.Drawing.Color color = new System.Drawing.Color();
+        //                    int BorderWidth = AppSettings.Settings.RectBorderWidth
+        //;
 
-                    if (result == ResultType.Relevant)
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
-                    }
-                    else if (result == ResultType.DynamicMasked || result == ResultType.ImageMasked || result == ResultType.StaticMasked)
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
-                    }
-                    else
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                    }
+        //                    if (result == ResultType.Relevant)
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+        //                    }
+        //                    else if (result == ResultType.DynamicMasked || result == ResultType.ImageMasked || result == ResultType.StaticMasked)
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+        //                    }
+        //                    else
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+        //                    }
 
-                    //1. get the padding between the image and the picturebox border
+        //                    //1. get the padding between the image and the picturebox border
 
-                    //get dimensions of the image and the picturebox
-                    double imgWidth = this.pictureBox1.BackgroundImage.Width;
-                    double imgHeight = this.pictureBox1.BackgroundImage.Height;
-                    double boxWidth = this.pictureBox1.Width;
-                    double boxHeight = this.pictureBox1.Height;
-                    double clnWidth = this.pictureBox1.ClientSize.Width;
-                    double clnHeight = this.pictureBox1.ClientSize.Height;
-                    double rctWidth = this.pictureBox1.ClientRectangle.Width;
-                    double rctHeight = this.pictureBox1.ClientRectangle.Height;
+        //                    //get dimensions of the image and the picturebox
+        //                    double imgWidth = this.pictureBox1.BackgroundImage.Width;
+        //                    double imgHeight = this.pictureBox1.BackgroundImage.Height;
+        //                    double boxWidth = this.pictureBox1.Width;
+        //                    double boxHeight = this.pictureBox1.Height;
+        //                    //double clnWidth = this.pictureBox1.ClientSize.Width;
+        //                    //double clnHeight = this.pictureBox1.ClientSize.Height;
+        //                    //double rctWidth = this.pictureBox1.ClientRectangle.Width;
+        //                    //double rctHeight = this.pictureBox1.ClientRectangle.Height;
 
-                    //these variables store the padding between image border and picturebox border
-                    double absX = 0;
-                    double absY = 0;
+        //                    //these variables store the padding between image border and picturebox border
+        //                    double absX = 0;
+        //                    double absY = 0;
 
-                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                    double scale = 1;
-
-
-                    //Comparing the aspect ratio of both the control and the image itself.
-                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
-                    {
-                        scale = boxWidth / imgWidth; //get scale factor
-                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
-                    }
-                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
-                    {
-                        scale = boxHeight / imgHeight; //get scale factor
-                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
-                    }
-
-                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                    double xmin = (scale * _xmin) + absX;
-                    double xmax = (scale * _xmax) + absX;
-                    double ymin = (scale * _ymin) + absY;
-                    double ymax = (scale * _ymax) + absY;
-
-                    double sclWidth = xmax - xmin;
-                    double sclHeight = ymax - ymin;
-
-                    double sclxmax = boxWidth - (absX * 2);
-                    double sclymax = boxHeight - (absY * 2);
-                    double sclxmin = absX;
-                    double sclymin = absY;
-
-                    //3. paint rectangle
-                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
-                                                                                 ymin.ToInt(),
-                                                                                 sclWidth.ToInt(),
-                                                                                 sclHeight.ToInt());
-                    using (Pen pen = new Pen(color, BorderWidth))
-                    {
-                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
-                    }
+        //                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
+        //                    double scale = 1;
 
 
-                    ///testing=================================================
-                    //3. paint rectangle
-                    //rect = new System.Drawing.Rectangle(absX + 5,
-                    //                                    absY + 5,
-                    //                                    sclxmax - 10,
-                    //                                    sclymax - 10);
+        //                    //Comparing the aspect ratio of both the control and the image itself.
+        //                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+        //                    {
+        //                        scale = boxWidth / imgWidth; //get scale factor
+        //                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+        //                    }
+        //                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+        //                    {
+        //                        scale = boxHeight / imgHeight; //get scale factor
+        //                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+        //                    }
 
-                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
-                    //{
-                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
-                    //}
-                    ///testing=================================================
+        //                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
+        //                    double xmin = (scale * _xmin) + absX;
+        //                    double xmax = (scale * _xmax) + absX;
+        //                    double ymin = (scale * _ymin) + absY;
+        //                    double ymax = (scale * _ymax) + absY;
 
-                    //we need this since people can change the border width in the json file
-                    double halfbrd = BorderWidth / 2;
+        //                    double sclWidth = xmax - xmin;
+        //                    double sclHeight = ymax - ymin;
 
+        //                    double sclxmax = boxWidth - (absX * 2);
+        //                    double sclymax = boxHeight - (absY * 2);
+        //                    double sclxmin = absX;
+        //                    double sclymin = absY;
 
-                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-
-
-                    //object name text below rectangle
-
-                    double x = xmin - halfbrd;
-                    double y = ymax + halfbrd;
-
-                    //just for debugging:
-                    //int timgWidth = (int)imgWidth;
-                    //int tboxWidth = (int)boxWidth;
-                    //int tsclWidth = (int)sclWidth;
-
-                    //int timgHeight = (int)imgHeight;
-                    //int tboxHeight = (int)boxHeight;
-                    //int tsclHeight = (int)sclHeight;
-
-
-                    //adjust the x / width label so it doesnt go off screen
-                    double EndX = x + TextSize.Width;
-                    if (EndX > sclxmax)
-                    {
-                        //int diffx = x - sclxmax;
-                        x = xmax - TextSize.Width + halfbrd;
-                    }
-
-                    if (x < sclxmin)
-                        x = sclxmin;
-
-                    if (x < 0)
-                        x = 0;
-
-                    //adjust the y / height label so it doesnt go off screen
-                    double EndY = y + TextSize.Height;
-                    if (EndY > sclymax)
-                    {
-                        //float diffy = EndY - sclymax;
-                        y = ymax - TextSize.Height - halfbrd;
-                    }
-
-                    if (y < 0)
-                        y = 0;
+        //                    //3. paint rectangle
+        //                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
+        //                                                                                 ymin.ToInt(),
+        //                                                                                 sclWidth.ToInt(),
+        //                                                                                 sclHeight.ToInt());
+        //                    using (Pen pen = new Pen(color, BorderWidth))
+        //                    {
+        //                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+        //                    }
 
 
-                    rect = new System.Drawing.Rectangle(x.ToInt(),
-                                                        y.ToInt(),
-                                                        boxWidth.ToInt(),
-                                                        boxHeight.ToInt()); //sets bounding box for drawn text
+        //                    ///testing=================================================
+        //                    //3. paint rectangle
+        //                    //rect = new System.Drawing.Rectangle(absX + 5,
+        //                    //                                    absY + 5,
+        //                    //                                    sclxmax - 10,
+        //                    //                                    sclymax - 10);
+
+        //                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
+        //                    //{
+        //                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+        //                    //}
+        //                    ///testing=================================================
+
+        //                    //we need this since people can change the border width in the json file
+        //                    double halfbrd = BorderWidth / 2;
 
 
-                    Brush brush = new SolidBrush(color); //sets background rectangle color
-                    if (AppSettings.Settings.RectDetectionTextBackColor != Color.Gainsboro)
-                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
-
-                    Brush forecolor = Brushes.Black;
-                    if (AppSettings.Settings.RectDetectionTextForeColor != Color.Gainsboro)
-                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
-
-                    e.Graphics.FillRectangle(brush,
-                                             x.ToInt(),
-                                             y.ToInt(),
-                                             TextSize.Width,
-                                             TextSize.Height); //draw grey background rectangle for detection text
-
-                    e.Graphics.DrawString(text,
-                                          new Font(AppSettings.Settings.RectDetectionTextFont,
-                                          AppSettings.Settings.RectDetectionTextSize),
-                                          forecolor,
-                                          rect); //draw detection text
+        //                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(text, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
 
 
-                }
+        //                    //object name text below rectangle
 
-            }
-            catch (Exception ex)
-            {
+        //                    double x = xmin - halfbrd;
+        //                    double y = ymax + halfbrd;
 
-                Log("Error: " + ex.Msg());
-            }
-        }
+
+        //                    //adjust the x / width label so it doesnt go off screen
+        //                    double EndX = x + TextSize.Width;
+        //                    if (EndX > sclxmax)
+        //                    {
+        //                        //int diffx = x - sclxmax;
+        //                        x = xmax - TextSize.Width + halfbrd;
+        //                    }
+
+        //                    if (x < sclxmin)
+        //                        x = sclxmin;
+
+        //                    if (x < 0)
+        //                        x = 0;
+
+        //                    //adjust the y / height label so it doesnt go off screen
+        //                    double EndY = y + TextSize.Height;
+        //                    if (EndY > sclymax)
+        //                    {
+        //                        //float diffy = EndY - sclymax;
+        //                        y = ymax - TextSize.Height - halfbrd;
+        //                    }
+
+        //                    if (y < 0)
+        //                        y = 0;
+
+
+        //                    rect = new System.Drawing.Rectangle(x.ToInt(),
+        //                                                        y.ToInt(),
+        //                                                        boxWidth.ToInt(),
+        //                                                        boxHeight.ToInt()); //sets bounding box for drawn text
+
+
+        //                    Brush brush = new SolidBrush(color); //sets background rectangle color
+        //                    if (AppSettings.Settings.RectDetectionTextBackColor != Color.Gainsboro)
+        //                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+        //                    Brush forecolor = Brushes.Black;
+        //                    if (AppSettings.Settings.RectDetectionTextForeColor != Color.Gainsboro)
+        //                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
+        //                    e.Graphics.FillRectangle(brush,
+        //                                             x.ToInt(),
+        //                                             y.ToInt(),
+        //                                             TextSize.Width,
+        //                                             TextSize.Height); //draw grey background rectangle for detection text
+
+        //                    e.Graphics.DrawString(text,
+        //                                          new Font(AppSettings.Settings.RectDetectionTextFont,
+        //                                          AppSettings.Settings.RectDetectionTextSize),
+        //                                          forecolor,
+        //                                          rect); //draw detection text
+
+
+        //                }
+
+        //            }
+        //            catch (Exception ex)
+        //            {
+
+        //                Log("Error: " + ex.Msg());
+        //            }
+        //        }
 
         //load object rectangle overlays
         //TODO: refactor detections
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
+            if (this.pictureBox1.BackgroundImage.IsNull())
+                return;
+
             if (AppSettings.Settings.HistoryShowObjects && this.folv_history.SelectedObjects != null && this.folv_history.SelectedObjects.Count > 0) //if checkbox button is enabled
             {
                 //Log("Loading object rectangles...");
@@ -1659,16 +1653,16 @@ namespace AITool
                 string positions = hist.Positions;
                 string detections = hist.Detections;
 
-                int XOffset = 0;
-                int YOffset = 0;
+                //int XOffset = 0;
+                //int YOffset = 0;
 
-                Camera cam = AITOOL.GetCamera(hist.Camera);
-                if (cam != null)
-                {
-                    //apply offset if one is defined by user in json file
-                    XOffset = cam.XOffset;
-                    YOffset = cam.YOffset;
-                }
+                //Camera cam = AITOOL.GetCamera(hist.Camera);
+                //if (cam != null)
+                //{
+                //    //apply offset if one is defined by user in json file
+                //    XOffset = cam.XOffset;
+                //    YOffset = cam.YOffset;
+                //}
 
                 try
                 {
@@ -1685,14 +1679,22 @@ namespace AITool
                                 ClsPrediction pred = predictions[i];
                                 if (pred != null)
                                 {
-                                    if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
-                                    {
-                                        this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
-                                    }
-                                    else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
-                                    {
-                                        this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
-                                    }
+
+                                    AITOOL.DrawAnnotation(e.Graphics,
+                                                          pred,
+                                                          this.pictureBox1.BackgroundImage.Width,
+                                                          this.pictureBox1.BackgroundImage.Height,
+                                                          this.pictureBox1.Width,
+                                                          this.pictureBox1.Height);
+
+                                    //if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                                    //{
+                                    //    this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                    //}
+                                    //else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                    //{
+                                    //    this.showObject(e, pred.XMin + XOffset, pred.YMin + YOffset, pred.XMax, pred.YMax, pred.ToString(), pred.Result); //call rectangle drawing method, calls appropriate detection text
+                                    //}
                                 }
                                 else
                                 {
@@ -1708,61 +1710,61 @@ namespace AITool
                         }
 
                     }
-                    else
-                    {
+                    //else
+                    //{
 
-                        //we should never get here after all old AITOOL entries have been deleted
-                        List<string> positionssArray = positions.SplitStr(";");//creates array of detected objects, used for adding text overlay
+                    //    //we should never get here after all old AITOOL entries have been deleted
+                    //    List<string> positionssArray = positions.SplitStr(";");//creates array of detected objects, used for adding text overlay
 
-                        int countr = positionssArray.Count;
+                    //    int countr = positionssArray.Count;
 
-                        ResultType result = ResultType.Unknown;
+                    //    ResultType result = ResultType.Unknown;
 
-                        if (detections.IndexOf("irrelevant", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("confidence", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
-                            if (detections.Contains("masked"))
-                            {
-                                result = ResultType.ImageMasked;
-                            }
-                            else
-                            {
-                                result = ResultType.Unknown;
-                            }
-                        }
-                        else
-                        {
-                            result = ResultType.Relevant;
-                        }
+                    //    if (detections.IndexOf("irrelevant", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0 || detections.IndexOf("confidence", StringComparison.OrdinalIgnoreCase) >= 0)
+                    //    {
+                    //        detections = detections.Split(':')[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                    //        if (detections.Contains("masked"))
+                    //        {
+                    //            result = ResultType.ImageMasked;
+                    //        }
+                    //        else
+                    //        {
+                    //            result = ResultType.Unknown;
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        result = ResultType.Relevant;
+                    //    }
 
-                        List<string> detectionsArray = detections.SplitStr(";");//creates array of detected objects, used for adding text overlay
+                    //    List<string> detectionsArray = detections.SplitStr(";");//creates array of detected objects, used for adding text overlay
 
-                        if (cam != null)
-                        {
-                            //apply offset if one is defined by user in json file
-                            XOffset = cam.XOffset;
-                            YOffset = cam.YOffset;
-                        }
+                    //    if (cam != null)
+                    //    {
+                    //        //apply offset if one is defined by user in json file
+                    //        XOffset = cam.XOffset;
+                    //        YOffset = cam.YOffset;
+                    //    }
 
-                        //display a rectangle around each relevant object
-                        for (int i = 0; i < countr; i++)
-                        {
+                    //    //display a rectangle around each relevant object
+                    //    for (int i = 0; i < countr; i++)
+                    //    {
 
-                            //load 'xmin,ymin,xmax,ymax' from third column into a string
-                            List<string> positionsplt = positionssArray[i].SplitStr(",");
+                    //        //load 'xmin,ymin,xmax,ymax' from third column into a string
+                    //        List<string> positionsplt = positionssArray[i].SplitStr(",");
 
-                            //store xmin, ymin, xmax, ymax in separate variables
-                            Int32.TryParse(positionsplt[0], out int xmin);
-                            Int32.TryParse(positionsplt[1], out int ymin);
-                            Int32.TryParse(positionsplt[2], out int xmax);
-                            Int32.TryParse(positionsplt[3], out int ymax);
+                    //        //store xmin, ymin, xmax, ymax in separate variables
+                    //        Int32.TryParse(positionsplt[0], out int xmin);
+                    //        Int32.TryParse(positionsplt[1], out int ymin);
+                    //        Int32.TryParse(positionsplt[2], out int xmax);
+                    //        Int32.TryParse(positionsplt[3], out int ymax);
 
 
-                            this.showObject(e, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i], result); //call rectangle drawing method, calls appropriate detection text
+                    //        this.showObject(e, xmin + XOffset, ymin + YOffset, xmax, ymax, detectionsArray[i], result); //call rectangle drawing method, calls appropriate detection text
 
-                        }
+                    //    }
 
-                    }
+                    //}
 
 
                 }
@@ -5345,12 +5347,19 @@ namespace AITool
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
-                frm.ObjectManager = cam.DefaultTriggeringObjects;
+                frm.ROMName = $"{cam.Name}\\{cam.DefaultTriggeringObjects.TypeName}";
                 if (frm.ShowDialog(this) == DialogResult.OK)
                 {
-                    cam.DefaultTriggeringObjects = frm.ObjectManager;
                     DisplayCameraSettings();
                 }
+            }
+        }
+
+        private void toolStripButtonAdjustAnno_Click(object sender, EventArgs e)
+        {
+            using (Frm_AnnoAdjust frm = new Frm_AnnoAdjust())
+            {
+                frm.ShowDialog();
             }
         }
     }

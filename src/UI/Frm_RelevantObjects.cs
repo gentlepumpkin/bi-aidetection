@@ -4,18 +4,21 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using SQLite;
+
 namespace AITool
 {
     public partial class Frm_RelevantObjects : Form
     {
-        public ClsRelevantObjectManager ObjectManager = null;
-        public ClsRelevantObjectManager TempObjectManager = null;
-
+        private ClsRelevantObjectManager ObjectManager = null;
+        private ClsRelevantObjectManager TempObjectManager = null;
+        public string ROMName = "";
         private ClsRelevantObject ro = null;
         private bool NeedsSaving = false;
         private bool Loading = false;
@@ -31,29 +34,166 @@ namespace AITool
 
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            this.TempObjectManager = new ClsRelevantObjectManager(this.ObjectManager);
 
             Global_GUI.ConfigureFOLV(FOLV_RelevantObjects, typeof(ClsRelevantObject));
 
             this.FOLV_RelevantObjects.BooleanCheckStateGetter = delegate (Object rowObject)
             {
-                return ((ClsRelevantObject)rowObject).Enabled;
+                return !rowObject.IsNull() && ((ClsRelevantObject)rowObject).Enabled;
             };
 
             this.FOLV_RelevantObjects.BooleanCheckStatePutter = delegate (Object rowObject, bool newValue)
             {
+                if (rowObject.IsNull())
+                    return false;
                 ((ClsRelevantObject)rowObject).Enabled = newValue;
                 return newValue;
             };
 
+            this.FillCombo();
+            this.SetROM();
+            this.LoadROMList();
 
-            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList);
             Global_GUI.RestoreWindowState(this);
-
-            Global_GUI.GroupboxEnableDisable(groupBox1, cb_enabled);
 
             Loading = false;
 
+        }
+
+        private void LoadROMList()
+        {
+            //Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
+            Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, FullRefresh: true);
+
+            Global_GUI.GroupboxEnableDisable(groupBox1, cb_enabled);
+        }
+
+        private void FillCombo()
+        {
+            try
+            {
+                toolStripComboBoxCameras.Items.Clear();
+                int idx = 0;
+                int fnd = -1;
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    foreach (PropertyInfo prop in cam.GetType().GetProperties())
+                    {
+                        if (prop.PropertyType == typeof(ClsRelevantObjectManager))
+                        {
+                            ClsRelevantObjectManager rom = (ClsRelevantObjectManager)prop.GetValue(cam);
+                            string item = $"{cam.Name}\\{rom.TypeName}";
+                            toolStripComboBoxCameras.Items.Add(item);
+                            if (item.EqualsIgnoreCase(this.ROMName))
+                                fnd = idx;
+                            idx++;
+                        }
+                    }
+                    string item2 = $"{cam.Name}\\{cam.maskManager.MaskTriggeringObjects.TypeName}";
+                    toolStripComboBoxCameras.Items.Add(item2);
+                    if (item2.EqualsIgnoreCase(this.ROMName))
+                        fnd = idx;
+                    idx++;
+
+                }
+
+                if (fnd != -1)
+                    toolStripComboBoxCameras.SelectedIndex = fnd;
+                else if (idx > 0)
+                    toolStripComboBoxCameras.SelectedIndex = 0;
+
+                this.Text = $"Relevant Objects - {this.ROMName}";
+
+            }
+            catch (Exception ex)
+            {
+
+                AITOOL.Log($"Error: {ex.Message}");
+            }
+        }
+
+        private void SetROM()
+        {
+            try
+            {
+                if (this.ROMName.IsEmpty())
+                    return;
+
+                this.TempObjectManager = null;
+
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    foreach (PropertyInfo prop in cam.GetType().GetProperties())
+                    {
+                        if (prop.PropertyType == typeof(ClsRelevantObjectManager))
+                        {
+                            ClsRelevantObjectManager rom = (ClsRelevantObjectManager)prop.GetValue(cam);
+                            if ($"{cam.Name}\\{rom.TypeName}".EqualsIgnoreCase(this.ROMName))
+                            {
+                                this.TempObjectManager = rom;
+                                break;
+                            }
+                        }
+                    }
+
+                    string item = $"{cam.Name}\\{cam.maskManager.MaskTriggeringObjects.TypeName}";
+                    if (item.EqualsIgnoreCase(this.ROMName))
+                    {
+                        this.TempObjectManager = cam.maskManager.MaskTriggeringObjects;
+                        break;
+                    }
+                }
+
+                if (this.TempObjectManager.IsNull())
+                    MessageBox.Show($"Error: Could not match '{this.ROMName}' to existing RelevantObjectManager?");
+
+            }
+            catch (Exception ex)
+            {
+
+                AITOOL.Log($"Error: {ex.Message}");
+            }
+        }
+
+        private void SaveROM()
+        {
+            try
+            {
+                if (this.ROMName.IsEmpty())
+                    return;
+
+
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    foreach (PropertyInfo prop in cam.GetType().GetProperties())
+                    {
+                        if (prop.PropertyType == typeof(ClsRelevantObjectManager))
+                        {
+                            ClsRelevantObjectManager rom = (ClsRelevantObjectManager)prop.GetValue(cam);
+                            if ($"{cam.Name}\\{rom.TypeName}".EqualsIgnoreCase(this.ROMName))
+                            {
+                                rom.ObjectList = this.TempObjectManager.ObjectList;
+                                //rom = this.TempObjectManager;
+                                break;
+                            }
+                        }
+                    }
+
+                    string item = $"{cam.Name}\\{cam.maskManager.MaskTriggeringObjects.TypeName}";
+                    if (item.EqualsIgnoreCase(this.ROMName))
+                    {
+                        cam.maskManager.MaskTriggeringObjects.ObjectList = this.TempObjectManager.ObjectList;
+                        break;
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+
+                AITOOL.Log($"Error: {ex.Message}");
+            }
         }
 
         private void Frm_RelevantObjects_FormClosing(object sender, FormClosingEventArgs e)
@@ -234,19 +374,8 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
             try
             {
-                SaveRO();
 
-                List<ClsRelevantObject> rolist = new List<ClsRelevantObject>();
-                foreach (ClsRelevantObject ro in FOLV_RelevantObjects.Objects)
-                {
-                    rolist.Add(ro);
-                }
-
-                this.TempObjectManager.ObjectList = this.TempObjectManager.FromList(rolist, true, true);
-                this.TempObjectManager.Update();
-
-                this.ObjectManager = this.TempObjectManager;
-
+                //this.Save();
                 this.DialogResult = DialogResult.OK;
                 this.Close();
 
@@ -256,6 +385,22 @@ namespace AITool
 
                 AITOOL.Log("Error: " + ex.Msg());
             }
+        }
+
+        private void Save()
+        {
+            SaveRO();
+
+            List<ClsRelevantObject> rolist = new List<ClsRelevantObject>();
+            foreach (ClsRelevantObject ro in FOLV_RelevantObjects.Objects)
+            {
+                rolist.Add(ro);
+            }
+
+            this.TempObjectManager.ObjectList = this.TempObjectManager.FromList(rolist, true, true);
+            this.TempObjectManager.Update();
+
+            //this.SaveROM();
         }
 
         private void toolStripButtonUp_Click(object sender, EventArgs e)
@@ -421,6 +566,33 @@ namespace AITool
             this.TempObjectManager.AddDefaults(); // = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, this.ObjectManager.TypeName, this.ObjectManager.Camera);
             this.ro = null;
             Global_GUI.UpdateFOLV(FOLV_RelevantObjects, this.TempObjectManager.ObjectList, UseSelected: true, SelectObject: this.ro, FullRefresh: true, ForcedSelection: true);
+        }
+
+        private void toolStripComboBoxCameras_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (toolStripComboBoxCameras.SelectedItem.ToString().IsNotEmpty())
+            {
+                this.ROMName = toolStripComboBoxCameras.SelectedItem.ToString();
+                this.Text = $"Relevant Objects - {this.ROMName}";
+                this.SetROM();
+                this.LoadROMList();
+                this.SelectionChanged();
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.Save();
+        }
+
+        private void toolStripComboBoxCameras_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

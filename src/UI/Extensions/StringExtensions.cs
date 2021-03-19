@@ -124,7 +124,7 @@ namespace AITool
         public static double ToDouble(this string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
-                return Convert.ToDouble(value);
+                return Convert.ToDouble(value.Trim());
             else
                 return 0;
         }
@@ -133,7 +133,15 @@ namespace AITool
         public static int ToInt(this string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
-                return Convert.ToInt32(value);
+                return Convert.ToInt32(value.Trim());
+            else
+                return 0;
+        }
+
+        public static float ToFloat(this string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                return Convert.ToSingle(value.Trim());
             else
                 return 0;
         }

@@ -124,6 +124,10 @@ namespace AITool
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
+
+            if (this.pictureBox1.Image.IsNull())
+                return;
+
             if (this.folv_ObjectDetail.SelectedObjects != null && this.folv_ObjectDetail.SelectedObjects.Count > 0) //if checkbox button is enabled
             {
 
@@ -134,7 +138,13 @@ namespace AITool
                     {
                         if (pred != null)
                         {
-                            this.showObject(e, pred); //call rectangle drawing method, calls appropriate detection text
+                            AITOOL.DrawAnnotation(e.Graphics,
+                                                          pred,
+                                                          this.pictureBox1.Image.Width,
+                                                          this.pictureBox1.Image.Height,
+                                                          this.pictureBox1.Width,
+                                                          this.pictureBox1.Height);
+
                             pictureBox2.Image = AITOOL.CropImage(OriginalBMP, pred.GetRectangle());
 
                         }
@@ -153,185 +163,185 @@ namespace AITool
 
         }
 
-        private void showObject(PaintEventArgs e, ClsPrediction pred)
-        {
-            try
-            {
-                if ((this.pictureBox1 != null) && (this.pictureBox1.Image != null))
-                {
+        //        private void showObject(PaintEventArgs e, ClsPrediction pred)
+        //        {
+        //            try
+        //            {
+        //                if ((this.pictureBox1 != null) && (this.pictureBox1.Image != null))
+        //                {
 
-                    e.Graphics.Transform = transform;
+        //                    e.Graphics.Transform = transform;
 
-                    System.Drawing.Color color = new System.Drawing.Color();
-                    int BorderWidth = AppSettings.Settings.RectBorderWidth
-;
+        //                    System.Drawing.Color color = new System.Drawing.Color();
+        //                    int BorderWidth = AppSettings.Settings.RectBorderWidth
+        //;
 
-                    if (pred.Result == ResultType.Relevant)
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
-                    }
-                    else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
-                    }
-                    else
-                    {
-                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                    }
+        //                    if (pred.Result == ResultType.Relevant)
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+        //                    }
+        //                    else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+        //                    }
+        //                    else
+        //                    {
+        //                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+        //                    }
 
-                    //1. get the padding between the image and the picturebox border
+        //                    //1. get the padding between the image and the picturebox border
 
-                    //get dimensions of the image and the picturebox
-                    double imgWidth = this.pictureBox1.Image.Width;
-                    double imgHeight = this.pictureBox1.Image.Height;
-                    double boxWidth = this.pictureBox1.Width;
-                    double boxHeight = this.pictureBox1.Height;
-                    double clnWidth = this.pictureBox1.ClientSize.Width;
-                    double clnHeight = this.pictureBox1.ClientSize.Height;
-                    double rctWidth = this.pictureBox1.ClientRectangle.Width;
-                    double rctHeight = this.pictureBox1.ClientRectangle.Height;
+        //                    //get dimensions of the image and the picturebox
+        //                    double imgWidth = this.pictureBox1.Image.Width;
+        //                    double imgHeight = this.pictureBox1.Image.Height;
+        //                    double boxWidth = this.pictureBox1.Width;
+        //                    double boxHeight = this.pictureBox1.Height;
+        //                    double clnWidth = this.pictureBox1.ClientSize.Width;
+        //                    double clnHeight = this.pictureBox1.ClientSize.Height;
+        //                    double rctWidth = this.pictureBox1.ClientRectangle.Width;
+        //                    double rctHeight = this.pictureBox1.ClientRectangle.Height;
 
-                    //these variables store the padding between image border and picturebox border
-                    double absX = 0;
-                    double absY = 0;
+        //                    //these variables store the padding between image border and picturebox border
+        //                    double absX = 0;
+        //                    double absY = 0;
 
-                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
-                    double scale = 1;
-
-
-                    //Comparing the aspect ratio of both the control and the image itself.
-                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
-                    {
-                        scale = boxWidth / imgWidth; //get scale factor
-                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
-                    }
-                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
-                    {
-                        scale = boxHeight / imgHeight; //get scale factor
-                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
-                    }
-
-                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
-                    double xmin = (scale * pred.XMin) + absX;
-                    double xmax = (scale * pred.XMax) + absX;
-                    double ymin = (scale * pred.YMin) + absY;
-                    double ymax = (scale * pred.YMax) + absY;
-
-                    double sclWidth = xmax - xmin;
-                    double sclHeight = ymax - ymin;
-
-                    double sclxmax = boxWidth - (absX * 2);
-                    double sclymax = boxHeight - (absY * 2);
-                    double sclxmin = absX;
-                    double sclymin = absY;
-
-                    //3. paint rectangle
-                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
-                                                                                 ymin.ToInt(),
-                                                                                 sclWidth.ToInt(),
-                                                                                 sclHeight.ToInt());
-
-                    //pictureBox2.Image = AITOOL.CropImage(OriginalBMP, pred.GetRectangle());
-
-                    using (Pen pen = new Pen(color, BorderWidth))
-                    {
-                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
-                    }
+        //                    //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
+        //                    double scale = 1;
 
 
-                    ///testing=================================================
-                    //3. paint rectangle
-                    //rect = new System.Drawing.Rectangle(absX + 5,
-                    //                                    absY + 5,
-                    //                                    sclxmax - 10,
-                    //                                    sclymax - 10);
+        //                    //Comparing the aspect ratio of both the control and the image itself.
+        //                    if (imgWidth / imgHeight > boxWidth / boxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+        //                    {
+        //                        scale = boxWidth / imgWidth; //get scale factor
+        //                        absY = (boxHeight - scale * imgHeight) / 2; //padding on top and below the image
+        //                    }
+        //                    else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+        //                    {
+        //                        scale = boxHeight / imgHeight; //get scale factor
+        //                        absX = (boxWidth - scale * imgWidth) / 2; //padding left and right of the image
+        //                    }
 
-                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
-                    //{
-                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
-                    //}
-                    ///testing=================================================
+        //                    //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
+        //                    double xmin = (scale * pred.XMin) + absX;
+        //                    double xmax = (scale * pred.XMax) + absX;
+        //                    double ymin = (scale * pred.YMin) + absY;
+        //                    double ymax = (scale * pred.YMax) + absY;
 
-                    //we need this since people can change the border width in the json file
-                    double halfbrd = BorderWidth / 2;
+        //                    double sclWidth = xmax - xmin;
+        //                    double sclHeight = ymax - ymin;
 
+        //                    double sclxmax = boxWidth - (absX * 2);
+        //                    double sclymax = boxHeight - (absY * 2);
+        //                    double sclxmin = absX;
+        //                    double sclymin = absY;
 
+        //                    //3. paint rectangle
+        //                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin.ToInt(),
+        //                                                                                 ymin.ToInt(),
+        //                                                                                 sclWidth.ToInt(),
+        //                                                                                 sclHeight.ToInt());
 
-                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+        //                    //pictureBox2.Image = AITOOL.CropImage(OriginalBMP, pred.GetRectangle());
 
-
-                    //object name text below rectangle
-
-                    double x = xmin - halfbrd;
-                    double y = ymax + halfbrd;
-
-                    //just for debugging:
-                    //int timgWidth = (int)imgWidth;
-                    //int tboxWidth = (int)boxWidth;
-                    //int tsclWidth = (int)sclWidth;
-
-                    //int timgHeight = (int)imgHeight;
-                    //int tboxHeight = (int)boxHeight;
-                    //int tsclHeight = (int)sclHeight;
-
-
-                    //adjust the x / width label so it doesnt go off screen
-                    double EndX = x + TextSize.Width;
-                    if (EndX > sclxmax)
-                    {
-                        //int diffx = x - sclxmax;
-                        x = xmax - TextSize.Width + halfbrd;
-                    }
-
-                    if (x < sclxmin)
-                        x = sclxmin;
-
-                    if (x < 0)
-                        x = 0;
-
-                    //adjust the y / height label so it doesnt go off screen
-                    double EndY = y + TextSize.Height;
-                    if (EndY > sclymax)
-                    {
-                        //float diffy = EndY - sclymax;
-                        y = ymax - TextSize.Height - halfbrd;
-                    }
-
-                    if (y < 0)
-                        y = 0;
+        //                    using (Pen pen = new Pen(color, BorderWidth))
+        //                    {
+        //                        e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+        //                    }
 
 
-                    rect = new System.Drawing.Rectangle(x.ToInt(),
-                                                        y.ToInt(),
-                                                        boxWidth.ToInt(),
-                                                        boxHeight.ToInt()); //sets bounding box for drawn text
+        //                    ///testing=================================================
+        //                    //3. paint rectangle
+        //                    //rect = new System.Drawing.Rectangle(absX + 5,
+        //                    //                                    absY + 5,
+        //                    //                                    sclxmax - 10,
+        //                    //                                    sclymax - 10);
 
-                    Brush brush = new SolidBrush(color); //sets background rectangle color
-                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
-                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+        //                    //using (Pen pen = new Pen(Color.Red, BorderWidth))
+        //                    //{
+        //                    //    e.Graphics.DrawRectangle(pen, rect); //draw rectangle
+        //                    //}
+        //                    ///testing=================================================
 
-                    Brush forecolor = Brushes.Black;
-                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
-                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
-
-                    e.Graphics.FillRectangle(brush,
-                                             x.ToInt(),
-                                             y.ToInt(),
-                                             TextSize.Width,
-                                             TextSize.Height); //draw grey background rectangle for detection text
-
-                    e.Graphics.DrawString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
+        //                    //we need this since people can change the border width in the json file
+        //                    double halfbrd = BorderWidth / 2;
 
 
-                }
 
-            }
-            catch (Exception ex)
-            {
+        //                    System.Drawing.SizeF TextSize = e.Graphics.MeasureString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
 
-                Log("Error: " + ex.Msg());
-            }
-        }
+
+        //                    //object name text below rectangle
+
+        //                    double x = xmin - halfbrd;
+        //                    double y = ymax + halfbrd;
+
+        //                    //just for debugging:
+        //                    //int timgWidth = (int)imgWidth;
+        //                    //int tboxWidth = (int)boxWidth;
+        //                    //int tsclWidth = (int)sclWidth;
+
+        //                    //int timgHeight = (int)imgHeight;
+        //                    //int tboxHeight = (int)boxHeight;
+        //                    //int tsclHeight = (int)sclHeight;
+
+
+        //                    //adjust the x / width label so it doesnt go off screen
+        //                    double EndX = x + TextSize.Width;
+        //                    if (EndX > sclxmax)
+        //                    {
+        //                        //int diffx = x - sclxmax;
+        //                        x = xmax - TextSize.Width + halfbrd;
+        //                    }
+
+        //                    if (x < sclxmin)
+        //                        x = sclxmin;
+
+        //                    if (x < 0)
+        //                        x = 0;
+
+        //                    //adjust the y / height label so it doesnt go off screen
+        //                    double EndY = y + TextSize.Height;
+        //                    if (EndY > sclymax)
+        //                    {
+        //                        //float diffy = EndY - sclymax;
+        //                        y = ymax - TextSize.Height - halfbrd;
+        //                    }
+
+        //                    if (y < 0)
+        //                        y = 0;
+
+
+        //                    rect = new System.Drawing.Rectangle(x.ToInt(),
+        //                                                        y.ToInt(),
+        //                                                        boxWidth.ToInt(),
+        //                                                        boxHeight.ToInt()); //sets bounding box for drawn text
+
+        //                    Brush brush = new SolidBrush(color); //sets background rectangle color
+        //                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+        //                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+        //                    Brush forecolor = Brushes.Black;
+        //                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+        //                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
+        //                    e.Graphics.FillRectangle(brush,
+        //                                             x.ToInt(),
+        //                                             y.ToInt(),
+        //                                             TextSize.Width,
+        //                                             TextSize.Height); //draw grey background rectangle for detection text
+
+        //                    e.Graphics.DrawString(pred.ToString(), new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
+
+
+        //                }
+
+        //            }
+        //            catch (Exception ex)
+        //            {
+
+        //                Log("Error: " + ex.Msg());
+        //            }
+        //        }
 
         private void folv_ObjectDetail_SelectionChanged(object sender, EventArgs e)
         {

@@ -762,7 +762,7 @@ namespace AITool
 
                 if (ret != ResultType.Relevant)
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, No Threshold Match={nothreshold.Trim(" ,".ToCharArray())}  All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
+                    AITOOL.Log($"Trace: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, No Threshold Match={nothreshold.Trim(" ,".ToCharArray())}  All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
                 }
                 else
                 {

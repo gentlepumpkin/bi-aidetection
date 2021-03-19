@@ -169,9 +169,9 @@ namespace AITool
         public string Action_pushover_active_time_range { get; set; } = "00:00:00-23:59:59";
 
         [JsonIgnore]
-        public bool Action_Cancel_Timer_Enabled { get; set; } = false;
+        public ThreadSafe.Boolean Action_Cancel_Timer_Enabled { get; set; } = new ThreadSafe.Boolean(false);
         [JsonIgnore]
-        public DateTime Action_Cancel_Start_Time { get; set; } = DateTime.MinValue;
+        public ThreadSafe.Datetime Action_Cancel_Start_Time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
 
         public MaskManager maskManager { get; set; } = new MaskManager();
         public int mask_brush_size { get; set; } = 35;

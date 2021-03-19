@@ -405,12 +405,12 @@ namespace AITool
                             rect = new System.Drawing.Rectangle((xmin - 1).ToInt(), ymax.ToInt(), boxWidth.ToInt(), boxHeight.ToInt()); //sets bounding box for drawn text
 
                             Brush brush = new SolidBrush(color); //sets background rectangle color
-                            if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
-                                brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+                            //if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                            //    brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
 
                             Brush forecolor = Brushes.Black;
-                            if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
-                                forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+                            //if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                            //    forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
 
                             string display = $"{op.Label}";
 

@@ -153,6 +153,10 @@ namespace AITool
         {
             return Rectangle.FromLTRB(this.XMin.ToInt(true), this.YMin.ToInt(true), this.XMax.ToInt(true), this.YMax.ToInt(true));
         }
+        public RectangleF GetRectangleF()
+        {
+            return RectangleF.FromLTRB(this.XMin.ToFloat(), this.YMin.ToFloat(true), this.XMax.ToFloat(true), this.YMax.ToFloat(true));
+        }
         [JsonConstructor]
         public ClsPrediction()
         {

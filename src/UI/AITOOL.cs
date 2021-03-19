@@ -30,6 +30,9 @@ using System.Windows.Forms;
 using Telegram.Bot;
 using Rectangle = System.Drawing.Rectangle;
 using static AITool.Global;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
+using Docker.DotNet.Models;
 
 namespace AITool
 {
@@ -258,6 +261,208 @@ namespace AITool
 
         }
 
+        public static bool DrawAnnotation(Graphics g, ClsPrediction pred, double ImgWidth, double ImgHeight, double BoxWidth = 0, double BoxHeight = 0)
+        {
+            bool ret = false;
+
+            try
+            {
+
+                if (BoxWidth == 0)
+                    BoxWidth = ImgWidth;
+                if (BoxHeight == 0)
+                    BoxHeight = ImgHeight;
+
+                string AnnoText = pred.ToString();
+
+                bool Merge = false;
+
+                if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                    Merge = true;
+                else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                    Merge = true;
+
+                if (Merge)
+                {
+
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    //http://csharphelper.com/blog/2014/09/understand-font-aliasing-issues-in-c/
+                    g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+
+                    System.Drawing.Color color = new System.Drawing.Color();
+
+                    double BorderWidth = AppSettings.Settings.RectBorderWidth;
+
+                    if (pred.Result == ResultType.Relevant)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                    }
+                    else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                    }
+                    else
+                    {
+                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                    }
+
+                    //Assume no scaling at first:
+                    ///===================================================================================
+
+                    System.Drawing.RectangleF rect = pred.GetRectangleF();
+
+                    double xmin = pred.XMin;
+                    double ymin = pred.YMin;
+                    double xmax = pred.XMax;
+                    double ymax = pred.YMax;
+
+                    double sclxmin = pred.XMin;
+                    double sclymin = pred.YMin;
+                    double sclxmax = pred.XMax;
+                    double sclymax = pred.YMax;
+
+                    double TextSizePoints = AppSettings.Settings.RectDetectionTextSize;
+
+                    ///===================================================================================
+                    //check to see if we need to scale based on onscreen zoomed image from picturebox:
+                    ///===================================================================================
+                    if (ImgWidth != BoxWidth || ImgHeight != BoxHeight)
+                    {
+                        //these variables store the padding between image border and picturebox border
+                        double absX = 0;
+                        double absY = 0;
+
+                        //because the sizemode of the picturebox is set to 'zoom', the image is scaled down
+                        double scale = 1;
+
+                        //Comparing the aspect ratio of both the control and the image itself.
+                        if (ImgWidth / ImgHeight > BoxWidth / BoxHeight) //if the image is p.e. 16:9 and the picturebox is 4:3
+                        {
+                            scale = BoxWidth / ImgWidth; //get scale factor
+                            absY = (BoxHeight - scale * ImgHeight) / 2; //padding on top and below the image
+                        }
+                        else //if the image is p.e. 4:3 and the picturebox is widescreen 16:9
+                        {
+                            scale = BoxHeight / ImgHeight; //get scale factor
+                            absX = (BoxWidth - scale * ImgWidth) / 2; //padding left and right of the image
+                        }
+
+                        //2. inputted position values are for the original image size. As the image is probably smaller in the picturebox, the positions must be adapted. 
+                        xmin = (scale * xmin) + absX;
+                        xmax = (scale * xmax) + absX;
+                        ymin = (scale * ymin) + absY;
+                        ymax = (scale * ymax) + absY;
+
+                        double sclWidth = xmax - xmin;
+                        double sclHeight = ymax - ymin;
+
+                        sclxmax = BoxWidth - (absX * 2);
+                        sclymax = BoxHeight - (absY * 2);
+                        sclxmin = absX;
+                        sclymin = absY;
+
+                        TextSizePoints = scale * TextSizePoints;
+
+                        BorderWidth = scale * BorderWidth;
+
+                        if (BorderWidth < 1)
+                            BorderWidth = 1;
+
+                        rect = new System.Drawing.RectangleF(xmin.ToFloat(),
+                                             ymin.ToFloat(),
+                                             sclWidth.ToFloat(),
+                                             sclHeight.ToFloat());
+                    }
+
+                    ///===================================================================================
+
+                    using (Pen pen = new Pen(color, BorderWidth.ToFloat()))
+                    {
+                        g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height); //draw rectangle
+                    }
+
+                    //we need this since people can change the border width in the json file
+                    double halfbrd = BorderWidth / 2;
+
+                    System.Drawing.SizeF TextSize = g.MeasureString(AnnoText, new Font(AppSettings.Settings.RectDetectionTextFont, TextSizePoints.ToFloat())); //finds size of text to draw the background rectangle
+
+                    double x = xmin - halfbrd;
+                    double y = ymax + halfbrd;
+
+                    //adjust the x / width label so it doesnt go off screen
+                    double EndX = x + TextSize.Width;
+                    if (EndX > sclxmax)
+                    {
+                        //int diffx = x - sclxmax;
+                        x = xmax - TextSize.Width + halfbrd;
+                    }
+
+                    if (x < sclxmin)
+                        x = sclxmin;
+
+                    if (x < 0)
+                        x = 0;
+
+                    //adjust the y / height label so it doesnt go off screen
+                    double EndY = y + TextSize.Height;
+                    if (EndY > sclymax)
+                    {
+                        //float diffy = EndY - sclymax;
+                        y = ymax - TextSize.Height - halfbrd;
+                    }
+
+
+                    if (y < 0)
+                        y = 0;
+
+                    //object name text below rectangle
+                    rect = new System.Drawing.RectangleF(x.ToFloat(),
+                                                         y.ToFloat(),
+                                                         BoxWidth.ToFloat(),
+                                                         BoxHeight.ToFloat()); //sets bounding box for drawn text
+
+                    Brush brush = new SolidBrush(color); //sets background rectangle color
+                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                    {
+                        color = System.Drawing.Color.FromArgb(color.A, AppSettings.Settings.RectDetectionTextBackColor);
+                        brush = new SolidBrush(color);
+                    }
+
+                    Brush forecolor = Brushes.Black;
+                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
+
+                    g.FillRectangle(brush,
+                                    x.ToFloat(),
+                                    y.ToFloat(),
+                                    TextSize.Width,
+                                    TextSize.Height); //draw grey background rectangle for detection text
+
+                    g.DrawString(AnnoText,
+                                 new Font(AppSettings.Settings.RectDetectionTextFont, TextSizePoints.ToFloat()),
+                                 forecolor,
+                                 rect); //draw detection text
+
+                    g.Flush(FlushIntention.Flush);
+
+                    ret = true;
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {ex.Msg()}");
+            }
+
+
+            return ret;
+
+        }
 
         public static System.Drawing.Image CropImage(ClsImageQueueItem img, System.Drawing.Rectangle cropArea)
         {
@@ -3321,11 +3526,20 @@ namespace AITool
 
                                 Log($"Debug: {text}, so it's an irrelevant alert.", AISRV, cam, CurImg);
 
-                                Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
+                                int cancelactions = 0;
+                                if (cam.Action_mqtt_enabled && !cam.Action_mqtt_payload_cancel.IsEmpty())
+                                    cancelactions++;
+
+                                if (cam.Action_CancelURL_Enabled && cam.cancel_urls.Length > 0)
+                                    cancelactions++;
+
+                                if (cancelactions > 0)
+                                    Log($"Debug: (5/6) Performing {cancelactions} CANCEL actions:", AISRV, cam, CurImg);
 
                                 hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AISRV, TotalSWPostTime, false);
 
-                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+                                if (cancelactions > 0)
+                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
 
                                 cam.IncrementIrrelevantAlerts(); //stats update
                                 Log($"Debug: (6/6) Camera {cam.Name} caused an irrelevant alert.", AISRV, cam, CurImg);

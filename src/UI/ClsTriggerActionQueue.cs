@@ -96,8 +96,8 @@ namespace AITool
 
             //Make sure not to put cancel items in the queue if no cancel triggers are defined...
 
-            bool NeedsToCancel = (cam.Action_mqtt_enabled && string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel) ||
-                                  Trigger && cam.cancel_urls.Length > 0);
+            bool NeedsToCancel = ((cam.Action_mqtt_enabled && cam.Action_mqtt_payload_cancel.IsNotEmpty()) ||
+                                  (cam.Action_CancelURL_Enabled && cam.cancel_urls.Length > 0));
 
             //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
             bool DoIt = (Trigger || (!NeedsToCancel) || ttype == TriggerType.TelegramText || ttype == TriggerType.Pushover);
@@ -187,18 +187,19 @@ namespace AITool
 
                         try
                         {
-                            if (AQI.cam.Action_Cancel_Timer_Enabled)
+                            if (AQI.cam.Action_Cancel_Timer_Enabled.ReadFullFence())
                             {
-                                if ((DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds >= AppSettings.Settings.ActionCancelSeconds)
+                                if ((DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds >= AppSettings.Settings.ActionCancelSeconds)
                                 {
+                                    Log($"Debug: Running cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                                     await this.RunTriggers(AQI);
-                                    AQI.cam.Action_Cancel_Timer_Enabled = false;  // will be deleted next time the loop goes through
+                                    AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(false);  // will be deleted next time the loop goes through
                                 }
                             }
                             else
                             {
                                 CancelActionDict.TryRemove(AQI.cam.Name.ToLower(), out ClsTriggerActionQueueItem removedItem);
-                                Log($"Debug: Removed cancel action in queue for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time).TotalSeconds} seconds", this.CurSrv, AQI.cam, AQI.CurImg);
+                                Log($"Debug: Removed cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds", this.CurSrv, AQI.cam, AQI.CurImg);
 
                             }
 
@@ -264,30 +265,39 @@ namespace AITool
                 }
 
 
-                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && !AQI.cam.Action_mqtt_payload_cancel.IsEmpty()) || (AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0));
+                bool HasCancelAction = ((AQI.cam.Action_mqtt_enabled && !AQI.cam.Action_mqtt_payload_cancel.IsEmpty()) ||
+                                       (AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0));
 
                 if (HasCancelAction)
                 {
                     if (AQI.Trigger == false)  //If this is a CANCEL anyway...
                     {
-                        //if we already did a cancel, set flag to delete the queued cancel item if exists
-                        AQI.cam.Action_Cancel_Timer_Enabled = false;
+                        //if we already did a cancel, set flag to delete the queued cancel item if exists and log that we are removing from queue
+                        if (AQI.cam.Action_Cancel_Timer_Enabled.ReadFullFence() || this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
+                        {
+                            AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(false);
+                            if (this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
+                                this.CancelActionDict.TryRemove(AQI.cam.Name.ToLower(), out ClsTriggerActionQueueItem ignoreme);
+
+                            Log($"Debug: Cancel action '{AQI.TType}' has been removed due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}'", this.CurSrv, AQI.cam, AQI.CurImg);
+
+                        }
                     }
                     else //If this is another TRIGGER...
                     {
                         if (this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
                         {
                             //if already in queue, update date
-                            AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
-                            Log($"Debug: EXTENDING cancel action time for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug: EXTENDING cancel action '{AQI.TType}' time due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                            AQI.cam.Action_Cancel_Start_Time.Write(DateTime.Now);
                         }
                         else  //add it to the queue
                         {
-                            AQI.cam.Action_Cancel_Start_Time = DateTime.Now;
-                            AQI.cam.Action_Cancel_Timer_Enabled = true;
+                            Log($"Debug: Cancel action '{AQI.TType}' queued due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                            AQI.cam.Action_Cancel_Start_Time.Write(DateTime.Now);
+                            AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(true);
                             AQI.Trigger = false;  //set to be a cancel
                             this.CancelActionDict.TryAdd(AQI.cam.Name.ToLower(), AQI);
-                            Log($"Debug: Cancel action queued for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
                     }
                 }
@@ -465,7 +475,7 @@ namespace AITool
                                         //if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                                         ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam);
 
-                                        if (AQI.Hist.IsNull() || rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
+                                        if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
                                         {
                                             Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
                                             SoundPlayer sp = new SoundPlayer(soundfile);
@@ -502,8 +512,8 @@ namespace AITool
                     if (AQI.cam.Action_mqtt_enabled)
                     {
 
-                        //make sure it is a matching object
-                        if (AQI.Hist.IsNull() || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
+                        //make sure it is a matching object, but call MQTT in any case if it is a canceled event
+                        if (!AQI.Hist.IsNull() && (!AQI.Trigger || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant))
                         {
                             string topic = "";
                             string payload = "";
@@ -512,14 +522,15 @@ namespace AITool
                             {
                                 topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic, Global.IPType.URL);
                                 payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload, Global.IPType.URL);
+                                Log($"Debug: MQTT Trigger event - [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
                             }
                             else
                             {
                                 topic = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_topic_cancel, Global.IPType.URL);
                                 payload = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_mqtt_payload_cancel, Global.IPType.URL);
+                                Log($"Debug: MQTT Cancel event - [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
                             }
 
-                            //Log($"Debug: [SummaryNonEscaped]='{AQI.Hist.Detections}', After replacement Topic='{topic}', Payload='{payload}'");
 
                             List<string> topics = topic.SplitStr("|");
                             List<string> payloads = payload.SplitStr("|");
@@ -549,6 +560,7 @@ namespace AITool
                         }
                         else
                         {
+                            Log("Trace: Skipping MQTT call.");
                             ret = true;   //dont return false unless actual error
                         }
 
@@ -603,7 +615,7 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {AQI.cam.Name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"   Camera {AQI.cam.Name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime.Round()} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
 
@@ -649,14 +661,14 @@ namespace AITool
                     {
                         using (Graphics g = Graphics.FromImage(img))
                         {
-                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                            g.SmoothingMode = SmoothingMode.HighQuality;
-                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                            //http://csharphelper.com/blog/2014/09/understand-font-aliasing-issues-in-c/
-                            g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+                            //g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            //g.SmoothingMode = SmoothingMode.HighQuality;
+                            //g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                            ////http://csharphelper.com/blog/2014/09/understand-font-aliasing-issues-in-c/
+                            //g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
 
 
-                            System.Drawing.Color color = new System.Drawing.Color();
+                            //System.Drawing.Color color = new System.Drawing.Color();
 
                             if (AQI.Hist != null && !string.IsNullOrEmpty(AQI.Hist.PredictionsJSON))
                             {
@@ -665,193 +677,202 @@ namespace AITool
                                 for (int i = predictions.Count - 1; i >= 0; i--)
                                 {
                                     ClsPrediction pred = predictions[i];
-                                    bool Merge = false;
 
-                                    if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
-                                        Merge = true;
-                                    else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
-                                        Merge = true;
-
-                                    if (Merge)
+                                    if (AITOOL.DrawAnnotation(g,
+                                                          pred,
+                                                          img.Width,
+                                                          img.Height))
                                     {
-                                        if (pred.Result == ResultType.Relevant)
-                                        {
-                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
-                                        }
-                                        else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
-                                        {
-                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
-                                        }
-                                        else
-                                        {
-                                            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                                        }
-
-                                        double xmin = pred.XMin;
-                                        double ymin = pred.YMin;
-                                        double xmax = pred.XMax;
-                                        double ymax = pred.YMax;
-
-                                        System.Drawing.Rectangle rect = pred.GetRectangle();  //new System.Drawing.Rectangle(xmin.ToInt(), ymin.ToInt(), (xmax - xmin).ToInt(), (ymax - ymin).ToInt());
-
-                                        using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
-                                        {
-                                            g.DrawRectangle(pen, rect); //draw rectangle
-                                        }
-
-                                        //we need this since people can change the border width in the json file
-                                        double halfbrd = AppSettings.Settings.RectBorderWidth / 2;
-
-                                        System.Drawing.SizeF TextSize = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-
-                                        double x = xmin - halfbrd;
-                                        double y = ymax + halfbrd;
-
-
-                                        //adjust the x / width label so it doesnt go off screen
-                                        double EndX = x + TextSize.Width;
-                                        if (EndX > xmax)
-                                        {
-                                            //int diffx = x - sclxmax;
-                                            x = xmax - TextSize.Width + halfbrd;
-                                        }
-
-                                        if (x < xmin)
-                                            x = xmin;
-
-                                        if (x < 0)
-                                            x = 0;
-
-                                        //adjust the y / height label so it doesnt go off screen
-                                        double EndY = y + TextSize.Height;
-                                        if (EndY > ymax)
-                                        {
-                                            //float diffy = EndY - sclymax;
-                                            y = ymax - TextSize.Height - halfbrd;
-                                        }
-
-
-                                        if (y < 0)
-                                            y = 0;
-
-                                        //object name text below rectangle
-                                        rect = new System.Drawing.Rectangle(x.ToInt(),
-                                                                            y.ToInt(),
-                                                                            img.Width,
-                                                                            img.Height); //sets bounding box for drawn text
-
-                                        Brush brush = new SolidBrush(color); //sets background rectangle color
-                                        if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
-                                            brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
-
-                                        Brush forecolor = Brushes.Black;
-                                        if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
-                                            forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
-
-                                        lasttext = pred.ToString();
-
-                                        g.FillRectangle(brush,
-                                                       x.ToInt(),
-                                                       y.ToInt(),
-                                                       TextSize.Width,
-                                                       TextSize.Height); //draw grey background rectangle for detection text
-
-                                        g.DrawString(lasttext,
-                                                     new Font(AppSettings.Settings.RectDetectionTextFont,
-                                                     AppSettings.Settings.RectDetectionTextSize),
-                                                     forecolor,
-                                                     rect); //draw detection text
-
-                                        g.Flush();
-
                                         countr++;
                                     }
 
+                                    //bool Merge = false;
+
+                                    //if (AppSettings.Settings.HistoryOnlyDisplayRelevantObjects && pred.Result == ResultType.Relevant)
+                                    //    Merge = true;
+                                    //else if (!AppSettings.Settings.HistoryOnlyDisplayRelevantObjects)
+                                    //    Merge = true;
+
+                                    //if (Merge)
+                                    //{
+                                    //    if (pred.Result == ResultType.Relevant)
+                                    //    {
+                                    //        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                                    //    }
+                                    //    else if (pred.Result == ResultType.DynamicMasked || pred.Result == ResultType.ImageMasked || pred.Result == ResultType.StaticMasked)
+                                    //    {
+                                    //        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                                    //    }
+                                    //    else
+                                    //    {
+                                    //        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                                    //    }
+
+                                    //    double xmin = pred.XMin;
+                                    //    double ymin = pred.YMin;
+                                    //    double xmax = pred.XMax;
+                                    //    double ymax = pred.YMax;
+
+                                    //    System.Drawing.Rectangle rect = pred.GetRectangle();  //new System.Drawing.Rectangle(xmin.ToInt(), ymin.ToInt(), (xmax - xmin).ToInt(), (ymax - ymin).ToInt());
+
+                                    //    using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
+                                    //    {
+                                    //        g.DrawRectangle(pen, rect); //draw rectangle
+                                    //    }
+
+                                    //    //we need this since people can change the border width in the json file
+                                    //    double halfbrd = AppSettings.Settings.RectBorderWidth / 2;
+
+                                    //    System.Drawing.SizeF TextSize = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+
+                                    //    double x = xmin - halfbrd;
+                                    //    double y = ymax + halfbrd;
+
+
+                                    //    //adjust the x / width label so it doesnt go off screen
+                                    //    double EndX = x + TextSize.Width;
+                                    //    if (EndX > xmax)
+                                    //    {
+                                    //        //int diffx = x - sclxmax;
+                                    //        x = xmax - TextSize.Width + halfbrd;
+                                    //    }
+
+                                    //    if (x < xmin)
+                                    //        x = xmin;
+
+                                    //    if (x < 0)
+                                    //        x = 0;
+
+                                    //    //adjust the y / height label so it doesnt go off screen
+                                    //    double EndY = y + TextSize.Height;
+                                    //    if (EndY > ymax)
+                                    //    {
+                                    //        //float diffy = EndY - sclymax;
+                                    //        y = ymax - TextSize.Height - halfbrd;
+                                    //    }
+
+
+                                    //    if (y < 0)
+                                    //        y = 0;
+
+                                    //    //object name text below rectangle
+                                    //    rect = new System.Drawing.Rectangle(x.ToInt(),
+                                    //                                        y.ToInt(),
+                                    //                                        img.Width,
+                                    //                                        img.Height); //sets bounding box for drawn text
+
+                                    //    Brush brush = new SolidBrush(color); //sets background rectangle color
+                                    //    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                                    //        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+
+                                    //    Brush forecolor = Brushes.Black;
+                                    //    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                                    //        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
+                                    //    lasttext = pred.ToString();
+
+                                    //    g.FillRectangle(brush,
+                                    //                   x.ToInt(),
+                                    //                   y.ToInt(),
+                                    //                   TextSize.Width,
+                                    //                   TextSize.Height); //draw grey background rectangle for detection text
+
+                                    //    g.DrawString(lasttext,
+                                    //                 new Font(AppSettings.Settings.RectDetectionTextFont,
+                                    //                 AppSettings.Settings.RectDetectionTextSize),
+                                    //                 forecolor,
+                                    //                 rect); //draw detection text
+
+                                    //    g.Flush();
+
+                                    //    countr++;
+                                    //}
+
 
                                 }
 
                             }
-                            else
-                            {
-                                //Use the old way -this code really doesnt need to be here but leaving just to make sure
-                                detections = AQI.cam.last_detections_summary;
-                                if (string.IsNullOrEmpty(detections))
-                                    detections = "";
+                            //else
+                            //{
+                            //    //Use the old way -this code really doesnt need to be here but leaving just to make sure
+                            //    detections = AQI.cam.last_detections_summary;
+                            //    if (string.IsNullOrEmpty(detections))
+                            //        detections = "";
 
-                                string label = detections.GetWord("", ":");
+                            //    string label = detections.GetWord("", ":");
 
-                                if (label.IndexOf("irrelevant", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("confidence", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("errors", StringComparison.OrdinalIgnoreCase) >= 0)
-                                {
-                                    detections = detections.SplitStr(":")[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
+                            //    if (label.IndexOf("irrelevant", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("confidence", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0 || label.IndexOf("errors", StringComparison.OrdinalIgnoreCase) >= 0)
+                            //    {
+                            //        detections = detections.SplitStr(":")[1]; //removes the "1x masked, 3x irrelevant:" before the actual detection, otherwise this would be displayed in the detection tags
 
-                                    if (label.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0)
-                                    {
-                                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
-                                    }
-                                    else
-                                    {
-                                        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
-                                    }
-                                }
-                                else
-                                {
-                                    color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
-                                }
+                            //        if (label.IndexOf("masked", StringComparison.OrdinalIgnoreCase) >= 0)
+                            //        {
+                            //            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectMaskedColorAlpha, AppSettings.Settings.RectMaskedColor);
+                            //        }
+                            //        else
+                            //        {
+                            //            color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectIrrelevantColorAlpha, AppSettings.Settings.RectIrrelevantColor);
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        color = System.Drawing.Color.FromArgb(AppSettings.Settings.RectRelevantColorAlpha, AppSettings.Settings.RectRelevantColor);
+                            //    }
 
-                                //List<string> detectlist = Global.Split(detections, "|;");
-                                countr = AQI.cam.last_detections.Count;
+                            //    //List<string> detectlist = Global.Split(detections, "|;");
+                            //    countr = AQI.cam.last_detections.Count;
 
-                                //display a rectangle around each relevant object
-
-
-                                for (int i = 0; i < countr; i++)
-                                {
-                                    //({ Math.Round((user.confidence * 100), 2).ToString() }%)
-                                    lasttext = $"{AQI.cam.last_detections[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, AQI.cam.last_confidences[i])}";
-                                    lastposition = AQI.cam.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
-
-                                    //store xmin, ymin, xmax, ymax in separate variables
-                                    Int32.TryParse(lastposition.Split(',')[0], out int xmin);
-                                    Int32.TryParse(lastposition.Split(',')[1], out int ymin);
-                                    Int32.TryParse(lastposition.Split(',')[2], out int xmax);
-                                    Int32.TryParse(lastposition.Split(',')[3], out int ymax);
-
-                                    xmin = xmin + AQI.cam.XOffset;
-                                    ymin = ymin + AQI.cam.YOffset;
-
-                                    System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+                            //    //display a rectangle around each relevant object
 
 
-                                    using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
-                                    {
-                                        g.DrawRectangle(pen, rect); //draw rectangle
-                                    }
+                            //    for (int i = 0; i < countr; i++)
+                            //    {
+                            //        //({ Math.Round((user.confidence * 100), 2).ToString() }%)
+                            //        lasttext = $"{AQI.cam.last_detections[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, AQI.cam.last_confidences[i])}";
+                            //        lastposition = AQI.cam.last_positions[i];  //load 'xmin,ymin,xmax,ymax' from third column into a string
 
-                                    //we need this since people can change the border width in the json file
-                                    int halfbrd = AppSettings.Settings.RectBorderWidth / 2;
+                            //        //store xmin, ymin, xmax, ymax in separate variables
+                            //        Int32.TryParse(lastposition.Split(',')[0], out int xmin);
+                            //        Int32.TryParse(lastposition.Split(',')[1], out int ymin);
+                            //        Int32.TryParse(lastposition.Split(',')[2], out int xmax);
+                            //        Int32.TryParse(lastposition.Split(',')[3], out int ymax);
 
-                                    //object name text below rectangle
-                                    rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, img.Width, img.Height); //sets bounding box for drawn text
+                            //        xmin = xmin + AQI.cam.XOffset;
+                            //        ymin = ymin + AQI.cam.YOffset;
+
+                            //        System.Drawing.Rectangle rect = new System.Drawing.Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 
 
-                                    Brush brush = new SolidBrush(color); //sets background rectangle color
-                                    if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
-                                        brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
+                            //        using (Pen pen = new Pen(color, AppSettings.Settings.RectBorderWidth))
+                            //        {
+                            //            g.DrawRectangle(pen, rect); //draw rectangle
+                            //        }
 
-                                    Brush forecolor = Brushes.Black;
-                                    if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
-                                        forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+                            //        //we need this since people can change the border width in the json file
+                            //        int halfbrd = AppSettings.Settings.RectBorderWidth / 2;
 
-                                    System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
-                                    g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
-                                    g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
+                            //        //object name text below rectangle
+                            //        rect = new System.Drawing.Rectangle(xmin - halfbrd, ymax + halfbrd, img.Width, img.Height); //sets bounding box for drawn text
 
-                                    g.Flush();
 
-                                    //Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
-                                }
+                            //        Brush brush = new SolidBrush(color); //sets background rectangle color
+                            //        if (AppSettings.Settings.RectDetectionTextBackColor != System.Drawing.Color.Gainsboro)
+                            //            brush = new SolidBrush(AppSettings.Settings.RectDetectionTextBackColor);
 
-                            }
+                            //        Brush forecolor = Brushes.Black;
+                            //        if (AppSettings.Settings.RectDetectionTextForeColor != System.Drawing.Color.Gainsboro)
+                            //            forecolor = new SolidBrush(AppSettings.Settings.RectDetectionTextForeColor);
+
+                            //        System.Drawing.SizeF size = g.MeasureString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize)); //finds size of text to draw the background rectangle
+                            //        g.FillRectangle(brush, xmin - halfbrd, ymax + halfbrd, size.Width, size.Height); //draw grey background rectangle for detection text
+                            //        g.DrawString(lasttext, new Font(AppSettings.Settings.RectDetectionTextFont, AppSettings.Settings.RectDetectionTextSize), forecolor, rect); //draw detection text
+
+                            //        g.Flush();
+
+                            //        //Log($"...{i}, LastText='{lasttext}' - LastPosition='{lastposition}'");
+                            //    }
+
+                            //}
 
 
                             if (countr > 0)
@@ -1039,14 +1060,14 @@ namespace AITool
                     else
                     {
                         ret = false;
-                        Log($"ERROR: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
+                        Log($"ERROR: {type}: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
                     }
 
                 }
                 catch (Exception ex)
                 {
                     ret = false;
-                    Log($"ERROR: In {sw.ElapsedMilliseconds}ms, Could not {type} Error='{ex.Msg()}', URL='{url}'");
+                    Log($"ERROR: {type}: In {sw.ElapsedMilliseconds}ms, Could not {type} Error='{ex.Msg()}', URL='{url}'");
                 }
 
             }

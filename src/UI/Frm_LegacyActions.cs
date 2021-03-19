@@ -246,11 +246,8 @@ namespace AITool
         {
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
-                frm.ObjectManager = cam.PushoverTriggeringObjects;
-                if (frm.ShowDialog(this) == DialogResult.OK)
-                {
-                    cam.PushoverTriggeringObjects = frm.ObjectManager;
-                }
+                frm.ROMName = $"{cam.Name}\\{cam.PushoverTriggeringObjects.TypeName}";
+                frm.ShowDialog(this);
             }
         }
 
@@ -258,11 +255,9 @@ namespace AITool
         {
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
-                frm.ObjectManager = cam.TelegramTriggeringObjects;
-                if (frm.ShowDialog(this) == DialogResult.OK)
-                {
-                    cam.TelegramTriggeringObjects = frm.ObjectManager;
-                }
+                frm.ROMName = $"{cam.Name}\\{cam.TelegramTriggeringObjects.TypeName}";
+
+                frm.ShowDialog(this);
             }
         }
 
@@ -270,11 +265,8 @@ namespace AITool
         {
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
-                frm.ObjectManager = cam.MQTTTriggeringObjects;
-                if (frm.ShowDialog(this) == DialogResult.OK)
-                {
-                    cam.MQTTTriggeringObjects = frm.ObjectManager;
-                }
+                frm.ROMName = $"{cam.Name}\\{cam.MQTTTriggeringObjects.TypeName}";
+                frm.ShowDialog(this);
             }
         }
 
