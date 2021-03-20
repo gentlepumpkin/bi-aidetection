@@ -210,6 +210,8 @@ namespace AITool
                         AppSettings.Settings.DefaultUserName = BlueIrisInfo.Users[0].Name;
                         AppSettings.Settings.DefaultPasswordEncrypted = BlueIrisInfo.Users[0].Password.Encrypt();
                     }
+
+                    UpdateLatLong();
                 }
                 else
                 {
@@ -258,6 +260,19 @@ namespace AITool
 
                 Log("Error: " + ex.Msg());
             }
+
+        }
+
+        public static void UpdateLatLong()
+        {
+            //use blueiris lat/long setting if found, and not already set to something different in :
+            if (BlueIrisInfo.Result == BlueIrisResult.Valid && BlueIrisInfo.Latitude != 39.809734)  //default is middle of USA
+            {
+                AppSettings.Settings.LocalLatitude = BlueIrisInfo.Latitude;
+                AppSettings.Settings.LocalLongitude = BlueIrisInfo.Longitude;
+            }
+
+
 
         }
 

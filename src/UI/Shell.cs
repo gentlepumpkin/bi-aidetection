@@ -91,6 +91,10 @@ namespace AITool
         private async void Shell_Load(object sender, EventArgs e)
         {
 
+            //if (Global.IsTimeBetween(DateTime.Now, "dawn-dusk"))
+            //{
+
+            //}
             //Rectangle img = new Rectangle(0, 0, 3840, 2160);
             //Rectangle prd = new Rectangle(0, 0, 155, 204);  // .38% of the original image
             //Rectangle prd = new Rectangle(0, 0, img.Width / 2, img.Height);  //half of the original image = 50%
@@ -2978,6 +2982,7 @@ namespace AITool
             //Update blue iris info
             await BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
 
+            AITOOL.UpdateLatLong();
 
             this.cmbInput.Items.Clear();
             foreach (string pth in BlueIrisInfo.ClipPaths)

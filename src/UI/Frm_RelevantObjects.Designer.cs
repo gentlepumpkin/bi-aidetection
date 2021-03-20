@@ -124,7 +124,7 @@ namespace AITool
             this.groupBox1.Controls.Add(this.cb_enabled);
             this.groupBox1.Location = new System.Drawing.Point(9, 9);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(518, 118);
+            this.groupBox1.Size = new System.Drawing.Size(555, 158);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
@@ -231,15 +231,15 @@ namespace AITool
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Consolas", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Gray;
             this.label3.Location = new System.Drawing.Point(6, 95);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(525, 10);
+            this.label3.Size = new System.Drawing.Size(528, 27);
             this.label3.TabIndex = 4;
             this.label3.Text = "Example Time Reanges - \"00:01:00-02:59:59, 06:00:00-11:59:59\".  Semicolon Hour li" +
-    "st: \"22;23;0;1;2;3;4;5\"";
+    "st: \"22;23;0;1;2;3;4;5\".  or Dusk-Dawn, Dawn-Dusk, Sunrise-Sunset, Sunset-Sunris" +
+    "e";
             // 
             // groupBox2
             // 

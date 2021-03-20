@@ -91,6 +91,12 @@
     <Reference Include="Docker.DotNet, Version=3.125.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Docker.DotNet.3.125.4\lib\netstandard2.0\Docker.DotNet.dll</HintPath>
     </Reference>
+    <Reference Include="Innovative.Geometry.Angle, Version=3.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Angle.3.0.4\lib\net461\Innovative.Geometry.Angle.dll</HintPath>
+    </Reference>
+    <Reference Include="Innovative.SolarCalculator, Version=3.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SolarCalculator.3.0.6\lib\net461\Innovative.SolarCalculator.dll</HintPath>
+    </Reference>
     <Reference Include="M2Mqtt.Net, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\M2Mqtt.4.3.0.0\lib\net45\M2Mqtt.Net.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>

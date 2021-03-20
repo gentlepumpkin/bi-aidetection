@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -49,6 +51,8 @@ namespace AITool
         public bool IsHTTPS = false;
         public bool IsLocalhost = false;
         public string VersionStr = "";
+        public double Latitude = 39.809734;
+        public double Longitude = -98.555620;
 
         public BlueIris()
         {
@@ -301,7 +305,19 @@ namespace AITool
 
                 }
 
+                using (RegistryKey key = RemoteKey.OpenSubKey("Software\\Perspective Software\\Blue Iris\\Options", false))
+                {
+                    if (key != null)
+                    {
+                        this.Latitude = key.GetValue("latitude", "39.809734").ToString().ToDouble();
+                        this.Longitude = key.GetValue("longitude", "-98.555620").ToString().ToDouble();
+                    }
+                    else
+                    {
+                        Log("Debug: Could not find BlueIris OPTIONS info in the registry.");
+                    }
 
+                }
 
                 bool IsValid = (this.ClipPaths.Count > 0 && !String.IsNullOrWhiteSpace(this.AppPath) && !string.IsNullOrWhiteSpace(this.URL) && Directory.Exists(this.AppPath));
 

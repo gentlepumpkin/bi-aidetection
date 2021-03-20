@@ -31,6 +31,7 @@ using static AITool.AITOOL;
 using System.Net.Sockets;
 using NLog.Fluent;
 using System.Drawing.Imaging;
+using Innovative.SolarCalculator;
 
 namespace AITool
 {
@@ -487,9 +488,59 @@ namespace AITool
                     }
                     else
                     {
-                        string[] splt = spn.Split('-');
-                        TimeSpan BeginSpan = TimeSpan.Parse(splt[0]);
-                        TimeSpan EndSpan = TimeSpan.Parse(splt[1]);
+                        List<string> splt = spn.SplitStr("-", RemoveEmpty: false);
+
+                        TimeSpan BeginSpan = now;
+                        TimeSpan EndSpan = now;
+
+
+                        if (splt[0].EqualsIgnoreCase("sunset") || splt[0].EqualsIgnoreCase("sunrise") || splt[0].Has("dusk") || splt[0].Has("dawn"))
+                        {
+                            TimeZoneInfo localZone = TimeZoneInfo.Local;
+                            SolarTimes solarTimes = new SolarTimes(DateTime.Now.Date, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
+
+                            if (splt[0].Has("dusk"))
+                            {
+                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[0].EqualsIgnoreCase("sunset"))
+                            {
+                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[0].EqualsIgnoreCase("sunrise"))
+                            {
+                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[0].Has("dawn"))
+                            {
+                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+
+                            if (splt[1].Has("dusk"))
+                            {
+                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[1].EqualsIgnoreCase("sunset"))
+                            {
+                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[1].EqualsIgnoreCase("sunrise"))
+                            {
+                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+                            else if (splt[1].Has("dawn"))
+                            {
+                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
+                            }
+
+
+                        }
+                        else
+                        {
+                            BeginSpan = TimeSpan.Parse(splt[0]);
+                            EndSpan = TimeSpan.Parse(splt[1]);
+
+                        }
 
                         // see if start comes before end
                         if (BeginSpan < EndSpan)

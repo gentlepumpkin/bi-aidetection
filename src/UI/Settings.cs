@@ -173,6 +173,9 @@ namespace AITool
             public int MaxWaitForAIServerMS = 5000;
             public bool MaxWaitForAIServerTimeoutError = true;
 
+            public double LocalLatitude = 39.809734;
+            public double LocalLongitude = -98.555620;
+
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
 
             public List<ClsImageAdjust> ImageAdjustProfiles = new List<ClsImageAdjust> { new ClsImageAdjust("Default") };
