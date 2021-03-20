@@ -451,7 +451,7 @@ namespace AITool
             StrFormatByteSize(filesize, sb, sb.Capacity);
             return sb.ToString();
         }
-
+        private static DateTime lastlatwarn = DateTime.Now;
         public static bool IsTimeBetween(DateTime time, string span)
         {
             if (span.IsEmpty())
@@ -496,6 +496,12 @@ namespace AITool
 
                         if (splt[0].EqualsIgnoreCase("sunset") || splt[0].EqualsIgnoreCase("sunrise") || splt[0].Has("dusk") || splt[0].Has("dawn"))
                         {
+                            if (AppSettings.Settings.LocalLatitude == 39.809734 && (DateTime.Now - lastlatwarn).TotalMinutes >= 60)
+                            {
+                                Log("Warn: The 'LocalLatitude' and 'LocalLongitude' settings in AITOOL.Settings.JSON need to be set.  If you set those settings in a locally running copy of BlueIris > Settings > Schedule tab, they will be AUTOMATICALLY used.");
+                                lastlatwarn = DateTime.Now;
+                            }
+
                             TimeZoneInfo localZone = TimeZoneInfo.Local;
                             SolarTimes solarTimes = new SolarTimes(DateTime.Now.Date, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
 
