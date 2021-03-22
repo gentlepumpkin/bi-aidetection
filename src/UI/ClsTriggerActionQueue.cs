@@ -1171,6 +1171,11 @@ namespace AITool
 
                                         NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
 
+
+                                        //fix a bug where pushover expire was set to hours rather than seconds
+                                        if (AQI.cam.Action_pushover_expire_seconds >= TimeSpan.FromHours(24).TotalSeconds)
+                                            AQI.cam.Action_pushover_expire_seconds = 10800; //3 hours
+
                                         NPushover.RequestObjects.Message msg = new NPushover.RequestObjects.Message()
                                         {
                                             Title = pushtitle,

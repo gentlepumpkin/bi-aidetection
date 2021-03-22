@@ -292,6 +292,9 @@ namespace AITool
         private void cb_LinkedServers_CheckedChanged(object sender, EventArgs e)
         {
             Global_GUI.GroupboxEnableDisable(groupBoxLinked, cb_LinkedServers);
+            if (!cb_LinkedServers.Checked)
+                this.CurURL.LinkedResultsServerList = "";
+
         }
 
         private void cb_OnlyLinked_CheckedChanged(object sender, EventArgs e)

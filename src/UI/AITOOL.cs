@@ -205,7 +205,7 @@ namespace AITool
                 if (BlueIrisInfo.Result == BlueIrisResult.Valid)
                 {
                     Log($"Debug: BlueIris path is '{BlueIrisInfo.AppPath}', with {BlueIrisInfo.Users.Count} users, {BlueIrisInfo.Cameras.Count} cameras and {BlueIrisInfo.ClipPaths.Count} clip folder paths configured.");
-                    if (BlueIrisInfo.Users.Count > 0 && string.IsNullOrEmpty(AppSettings.Settings.DefaultUserName) || string.Equals(AppSettings.Settings.DefaultUserName, "username", StringComparison.OrdinalIgnoreCase))
+                    if (BlueIrisInfo.Users.Count > 0 && (string.IsNullOrEmpty(AppSettings.Settings.DefaultUserName) || string.Equals(AppSettings.Settings.DefaultUserName, "username", StringComparison.OrdinalIgnoreCase)))
                     {
                         AppSettings.Settings.DefaultUserName = BlueIrisInfo.Users[0].Name;
                         AppSettings.Settings.DefaultPasswordEncrypted = BlueIrisInfo.Users[0].Password.Encrypt();
@@ -3089,7 +3089,7 @@ namespace AITool
                         bool HasLinked = false;
                         foreach (ClsURLItem url in ret.OutURLs)
                         {
-                            if (!url.LinkedResultsServerList.IsEmpty())
+                            if (url.LinkServerResults && !url.LinkedResultsServerList.IsEmpty())
                                 HasLinked = true;
 
                             urltasks.Add(Task.Run(() => GetDetectionsFromAIServer(CurImg, url, cam)));

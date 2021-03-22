@@ -3161,7 +3161,7 @@ namespace AITool
 
             AppSettings.Settings.deepstack_autorestart = this.Chk_AutoReStart.Checked;
             AppSettings.Settings.deepstack_autorestart_fail_count = GetNumberInt(this.txt_DeepstackRestartFailCount.Text);
-            AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = Convert.ToDouble(this.txt_DeepstackNoMoreOftenThanMins.Text);
+            AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = this.txt_DeepstackNoMoreOftenThanMins.Text.ToDouble();
 
             if (AppSettings.Settings.deepstack_autorestart_fail_count >= AppSettings.Settings.MaxQueueItemRetries)
             {

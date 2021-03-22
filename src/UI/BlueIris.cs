@@ -180,19 +180,22 @@ namespace AITool
                                 {
                                     if (curkey != null)
                                     {
-                                        bool enabled = Convert.ToInt32(curkey.GetValue("enabled", 1)) == 1;
-                                        bool admin = Convert.ToInt32(curkey.GetValue("admin", 0)) == 1;
+                                        bool enabled = curkey.GetValue("enabled", 0).ToString().ToInt() == 1;
+                                        bool admin = curkey.GetValue("admin", 0).ToString().ToInt() == 1;
 
-                                        if (!enabled || !admin || string.Equals(sk, "local_console", StringComparison.OrdinalIgnoreCase))
+                                        if (!enabled || !admin) // || string.Equals(sk, "local_console", StringComparison.OrdinalIgnoreCase))
                                             continue;
 
                                         BIUser user = new BIUser();
                                         user.Name = sk;
-                                        string pass = Convert.ToString(curkey.GetValue("password"));
-                                        user.Password = Encoding.UTF8.GetString(Convert.FromBase64String(pass));
+
+                                        //The password can now be encrypted rather than just base64 encoded
+                                        string pass = Convert.ToString(curkey.GetValue("password", ""));
+                                        if (!pass.IsEmpty())
+                                            try { user.Password = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); } catch (Exception) { };
 
                                         this.Users.Add(user);
-                                        Log($"Debug: Found user '{user.Name}'");
+                                        Log($"Debug: Found user '{user.Name}', password '{pass.ReplaceChars('*')}'");
 
                                     }
 
