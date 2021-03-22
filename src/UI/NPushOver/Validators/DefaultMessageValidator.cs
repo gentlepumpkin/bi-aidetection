@@ -1,4 +1,7 @@
-﻿using NPushover.RequestObjects;
+﻿using AITool;
+
+using NPushover.RequestObjects;
+
 using System;
 
 namespace NPushover.Validators
@@ -48,13 +51,13 @@ namespace NPushover.Validators
                     throw new ArgumentNullException("retryOptions");
 
                 if (message.RetryOptions.RetryEvery < MINRETRYEVERY)
-                    throw new ArgumentOutOfRangeException("retryOptions.retryEvery");
+                    throw new ArgumentOutOfRangeException("retryOptions.retryEvery", $"RetryEvery less than {MINRETRYEVERY.FormatTS(true)}: {message.RetryOptions.RetryEvery.FormatTS(true)}");
                 if (message.RetryOptions.RetryEvery > MAXRETRYPERIOD)
-                    throw new ArgumentOutOfRangeException("retryOptions.retryEvery");
+                    throw new ArgumentOutOfRangeException("retryOptions.retryEvery", $"RetryEvery is over {MAXRETRYPERIOD.FormatTS(true)}: {message.RetryOptions.RetryEvery.FormatTS(true)}");
                 if (message.RetryOptions.RetryPeriod > MAXRETRYPERIOD)
-                    throw new ArgumentOutOfRangeException($"retryOptions.retryPeriod is over {MAXRETRYPERIOD}");
+                    throw new ArgumentOutOfRangeException("retryOptions.retryPeriod", $"RetryPeriod is over {MAXRETRYPERIOD.FormatTS(true)}: {message.RetryOptions.RetryPeriod.FormatTS(true)}");
                 if (message.RetryOptions.RetryPeriod < TimeSpan.Zero)
-                    throw new ArgumentOutOfRangeException("retryOptions.retryPeriod is less than 0?");
+                    throw new ArgumentOutOfRangeException("retryOptions.retryPeriod", $"RetryPeriod is less than 0?");
             }
             else
             {

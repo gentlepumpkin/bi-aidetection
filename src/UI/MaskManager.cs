@@ -23,8 +23,17 @@ namespace AITool
             set
             {
                 this._maskingEnabled = value;
-                if (this._maskingEnabled) this._cleanMaskTimer.Start();
-                else this._cleanMaskTimer.Stop();
+                if (this._maskingEnabled)
+                {
+                    this._cleanMaskTimer.Start();
+                    Log("Debug: Mask timer started.");
+                }
+                else
+                {
+                    this._cleanMaskTimer.Stop();
+                    Log("Debug: Mask timer stopped.");
+                }
+
             }
         }
 
@@ -68,6 +77,7 @@ namespace AITool
             //register event handler to run clean history every minute
             this._cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.cleanMaskEvent);
             this._cleanMaskTimer.Interval = 60000; // 1min = 60,000ms
+
         }
 
         public void Update(Camera cam)
@@ -90,6 +100,7 @@ namespace AITool
                     cam.maskManager.MaskTriggeringObjects = new ClsRelevantObjectManager(cam.maskManager.Objects, "DynamicMask", cam);
                     cam.maskManager.Objects = "";
                 }
+
 
                 foreach (ObjectPosition op in this.LastPositionsHistory)
                 {
@@ -290,7 +301,7 @@ namespace AITool
                         maskedObject.LastSeenDate = DateTime.Now;
 
                         //increase threashold counter when object is visible
-                        if (maskedObject.Counter < this.MaskRemoveThreshold || this.MaskRemoveThreshold == 0)
+                        if ((maskedObject.Counter < this.MaskRemoveThreshold) || this.MaskRemoveThreshold == 0)
                         {
                             maskedObject.Counter++;
                         }
@@ -453,7 +464,7 @@ namespace AITool
                             switch (trigger)
                             {
                                 case RemoveEvent.Timer:
-                                    if (minutes >= this.MaskRemoveMins && !maskedObject.IsStatic && (maskedObject.Counter == 0 || this.MaskRemoveThreshold == 0))
+                                    if (minutes >= this.MaskRemoveMins && (!maskedObject.IsStatic && (maskedObject.Counter == 0 || this.MaskRemoveThreshold == 0)))
                                     {
                                         Log($"Debug: Removing expired (after {minutes.Round()} mins), Counter={maskedObject.Counter}, MaskRemoveThreshold={this.MaskRemoveThreshold}, MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         this.MaskedPositions.RemoveAt(x);

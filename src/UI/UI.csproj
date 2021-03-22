@@ -310,6 +310,7 @@
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
+    <Compile Include="Extensions\TimeSpanExtensions.cs" />
     <Compile Include="FrmSplash.cs">
       <SubType>Form</SubType>
     </Compile>

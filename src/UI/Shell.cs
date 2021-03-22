@@ -90,6 +90,9 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
+            //TimeSpan ts = TimeSpan.FromDays(1.2);
+            //Debug.Print(ts.FormatTS(true));
+            //Debug.Print(ts);
 
             //if (Global.IsTimeBetween(DateTime.Now, "dawn-dusk"))
             //{
