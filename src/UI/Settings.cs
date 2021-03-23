@@ -677,14 +677,22 @@ namespace AITool
 
                     }
 
-                    if (GetCamera("default", ReturnDefault: true) == null)
+                    Camera DefaultCam = GetCamera("default", ReturnDefault: true);
+                    if (DefaultCam == null)
                     {
                         //add a default camera
                         Camera cam = new Camera("Default");
                         Settings.CameraList.Add(cam);
                     }
+                    else if (DefaultCam.DefaultTriggeringObjects == null)
+                    {
+                        //replace the old default camera with a new one or else we have trouble with the triggering objects manager
+                        Camera cam = new Camera(DefaultCam.Name);
+                        Settings.CameraList.Remove(DefaultCam);
+                        Settings.CameraList.Add(cam);
+                    }
 
-                    if (!Settings.ObjectPriority.Contains("suv") || !Settings.ObjectPriority.Contains("van"))
+                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van"))
                         Settings.ObjectPriority = "person, bear, elephant, car, truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
                     //make sure everything in the cameras look correct:

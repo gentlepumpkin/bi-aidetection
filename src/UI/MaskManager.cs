@@ -23,16 +23,7 @@ namespace AITool
             set
             {
                 this._maskingEnabled = value;
-                if (this._maskingEnabled)
-                {
-                    this._cleanMaskTimer.Start();
-                    Log("Debug: Mask timer started.");
-                }
-                else
-                {
-                    this._cleanMaskTimer.Stop();
-                    Log("Debug: Mask timer stopped.");
-                }
+                StartStopMaskTimer();
 
             }
         }
@@ -43,6 +34,7 @@ namespace AITool
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public double PercentMatch { get; set; } = 85;                  //minimum percentage match to be considered a match
         public int MaskRemoveThreshold { get; set; } = 2;               //number of times object is NOT seen before being removed by the cleanup timer 
+        public string Camera = "";
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
 
@@ -64,7 +56,8 @@ namespace AITool
 
         private object _maskLockObject = new object();
         private Timer _cleanMaskTimer = new Timer();
-
+        private ElapsedEventHandler ev;
+        private bool timerinfodisplayed = false;
 
         //I think JsonConstructor may not be needed, but adding anyway -Vorlon
         [JsonConstructor]
@@ -74,10 +67,33 @@ namespace AITool
             this.MaskedPositions = new List<ObjectPosition>();
             this.ScaleConfig = new ObjectScale();
 
-            //register event handler to run clean history every minute
-            this._cleanMaskTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.cleanMaskEvent);
             this._cleanMaskTimer.Interval = 60000; // 1min = 60,000ms
+            StartStopMaskTimer();
+        }
 
+        private void StartStopMaskTimer()
+        {
+            if (this._maskingEnabled && !this._cleanMaskTimer.Enabled)
+            {
+                //register event handler to run clean history every minute
+                ev = new System.Timers.ElapsedEventHandler(this.cleanMaskEvent);
+                this._cleanMaskTimer.Elapsed += ev;
+
+                this._cleanMaskTimer.Start();
+                Log($"Debug: Mask timer started for camera '{this.Camera}' at interval {this._cleanMaskTimer.Interval}.");
+            }
+            else if (!this._maskingEnabled && this._cleanMaskTimer.Enabled)
+            {
+                //deregister event handler to run clean history every minute
+                this._cleanMaskTimer.Elapsed -= ev;
+                this._cleanMaskTimer.Stop();
+                Log($"Debug: Mask timer stopped for camera '{this.Camera}'");
+            }
+            else if (!timerinfodisplayed)
+            {
+                timerinfodisplayed = true;  //we are doing this because on first initialization the camera name is not available.
+                Log($"Debug: Mask timer updated for '{this.Camera}'. Started={this._cleanMaskTimer.Enabled}, at interval {this._cleanMaskTimer.Interval}.");
+            }
         }
 
         public void Update(Camera cam)
@@ -86,6 +102,8 @@ namespace AITool
 
             lock (this._maskLockObject)
             {
+                this.Camera = cam.Name;
+
                 //This will run on save/load settings
                 if (this.PercentMatch < 1)
                 {
@@ -162,6 +180,8 @@ namespace AITool
                         }
                     }
                 }
+
+                StartStopMaskTimer();
             }
         }
 
