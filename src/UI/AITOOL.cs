@@ -3392,7 +3392,7 @@ namespace AITool
                                     objects.Add(pred.Label);
                                     objects_confidence.Add(pred.Confidence);
                                     objects_details.Add(pred.Detail);
-                                    objects_position.Add($"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}");
+                                    objects_position.Add($"{pred.XMin.Round(0)},{pred.YMin.Round(0)},{pred.XMax.Round(0)},{pred.YMax.Round(0)}");
                                     clr = "{" + AppSettings.Settings.RectRelevantColor.Name + "}";
                                 }
                                 else
@@ -3401,7 +3401,7 @@ namespace AITool
                                     irrelevant_objects.Add(pred.Label);
                                     irrelevant_objects_details.Add(pred.Detail);
                                     irrelevant_objects_confidence.Add(pred.Confidence);
-                                    string position = $"{pred.XMin},{pred.YMin},{pred.XMax},{pred.YMax}";
+                                    string position = $"{pred.XMin.Round(0)},{pred.YMin.Round(0)},{pred.XMax.Round(0)},{pred.YMax.Round(0)}";
                                     irrelevant_objects_position.Add(position);
 
                                     if (pred.Result == ResultType.NoConfidence)

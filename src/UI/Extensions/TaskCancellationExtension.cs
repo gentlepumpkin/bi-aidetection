@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EasyAsyncCancel
+namespace AITool
 {
     public static class TaskCancellationExtension
     {
@@ -19,7 +19,7 @@ namespace EasyAsyncCancel
         {
             var tcs = new TaskCompletionSource<bool>();
             using (cancellationToken.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
                     throw new OperationCanceledException(cancellationToken);
             return await task;
@@ -36,13 +36,13 @@ namespace EasyAsyncCancel
         /// <returns></returns>
         /// <exception cref="OperationCanceledException"></exception>
         public static async Task<T> CancelAfter<T>(
-            this Task<T> task, CancellationToken cancellationToken,string message)
+            this Task<T> task, CancellationToken cancellationToken, string message)
         {
             var tcs = new TaskCompletionSource<bool>();
             using (cancellationToken.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
-                    throw new OperationCanceledException(message,cancellationToken);
+                    throw new OperationCanceledException(message, cancellationToken);
             return await task;
         }
 
@@ -60,7 +60,7 @@ namespace EasyAsyncCancel
         {
             var tcs = new TaskCompletionSource<bool>();
             using (cancellationToken.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
                     throw new OperationCanceledException(cancellationToken);
             await task;
@@ -77,13 +77,13 @@ namespace EasyAsyncCancel
         /// <returns></returns>
         /// <exception cref="OperationCanceledException"></exception>
         public static async Task CancelAfter(
-            this Task task, CancellationToken cancellationToken,string message)
+            this Task task, CancellationToken cancellationToken, string message)
         {
             var tcs = new TaskCompletionSource<bool>();
             using (cancellationToken.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
-                    throw new OperationCanceledException(message,cancellationToken);
+                    throw new OperationCanceledException(message, cancellationToken);
             await task;
         }
 
@@ -103,7 +103,7 @@ namespace EasyAsyncCancel
             cts.CancelAfter(milliseconds);
             var tcs = new TaskCompletionSource<bool>();
             using (cts.Token.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
                     throw new OperationCanceledException(cts.Token);
             return await task;
@@ -120,18 +120,18 @@ namespace EasyAsyncCancel
         /// <returns></returns>
         /// <exception cref="OperationCanceledException"></exception>
         public static async Task<T> CancelAfter<T>(
-            this Task<T> task, int milliseconds,string message)
+            this Task<T> task, int milliseconds, string message)
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(milliseconds);
             var tcs = new TaskCompletionSource<bool>();
             using (cts.Token.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
-                    throw new OperationCanceledException(message,cts.Token);
+                    throw new OperationCanceledException(message, cts.Token);
             return await task;
         }
-        
+
         /// <summary>
         /// add cancellation functionality to Task
         /// </summary>
@@ -147,7 +147,7 @@ namespace EasyAsyncCancel
             cts.CancelAfter(milliseconds);
             var tcs = new TaskCompletionSource<bool>();
             using (cts.Token.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
                     throw new OperationCanceledException(cts.Token);
             await task;
@@ -164,15 +164,15 @@ namespace EasyAsyncCancel
         /// <returns></returns>
         /// <exception cref="OperationCanceledException"></exception>
         public static async Task CancelAfter(
-            this Task task, int milliseconds,string message)
+            this Task task, int milliseconds, string message)
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(milliseconds);
             var tcs = new TaskCompletionSource<bool>();
             using (cts.Token.Register(
-                s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs))
+                s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
                 if (task != await Task.WhenAny(task, tcs.Task))
-                    throw new OperationCanceledException(message,cts.Token);
+                    throw new OperationCanceledException(message, cts.Token);
             await task;
         }
     }

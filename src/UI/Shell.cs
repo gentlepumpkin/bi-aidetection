@@ -1,7 +1,5 @@
 ﻿using BrightIdeasSoftware;
 
-using EasyAsyncCancel;
-
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 using Newtonsoft.Json; //deserialize DeepquestAI response

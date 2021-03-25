@@ -199,13 +199,13 @@ namespace AITool
             this.ObjectList = this.FromList(this.GetDefaultObjectList(false), false, ExactMatchOnly: true);
 
         }
-        public void Update()
+        public void Update(bool ResetIfNeeded = true)
         {
 
             //sort
             //this.ObjectList = this.ObjectList.OrderByDescending(ro => ro.Enabled).ThenBy(ro => ro.Priority).ThenBy(ro => ro.CreatedTime).ThenBy(ro => ro.Name).ToList();
 
-            if (this.ObjectList.Count == 0 && !this.Camera.EqualsIgnoreCase("default"))
+            if (ResetIfNeeded && this.ObjectList.Count == 0 && !this.Camera.EqualsIgnoreCase("default"))
                 this.Reset();
 
             //make sure no priority dupes
@@ -231,6 +231,8 @@ namespace AITool
             {
                 this.ObjectList.RemoveAt(FoundIDX);
                 NewIDX = FoundIDX - 1;
+
+                this.Update(false);
 
                 if (NewIDX > -1)
                 {
@@ -258,6 +260,7 @@ namespace AITool
                 if (NewIDX > -1)
                 {
                     this.ObjectList.Move(FoundIDX, NewIDX);
+                    this.Update(false);
                     ret = this.ObjectList[NewIDX];
                 }
             }
@@ -281,6 +284,7 @@ namespace AITool
                 if (NewIDX < this.ObjectList.Count - 1)
                 {
                     this.ObjectList.Move(FoundIDX, NewIDX);
+                    this.Update(false);
                     ret = this.ObjectList[NewIDX];
                 }
             }
