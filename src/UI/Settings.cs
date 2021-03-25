@@ -30,6 +30,7 @@ namespace AITool
             public string SettingsFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON");
             [JsonIgnore]
             public string LogFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
+            public string CustomLogFilePath = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
             [JsonIgnore]
             public string HistoryFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             [JsonIgnore]
@@ -419,7 +420,12 @@ namespace AITool
                 OldSettingsFile = Path.Combine(OldFolder, OrigSettingsFilename);
                 NewSettingsFile = Path.Combine(NewFolder, OrigSettingsFilename);
 
-                NewLogFile = Path.Combine(NewFolder, "Logs", OrigLogFilename);
+                if (Settings.CustomLogFilePath.IsEmpty() || !Directory.Exists(Settings.CustomLogFilePath))
+                    NewLogFile = Path.Combine(NewFolder, "Logs", OrigLogFilename);
+                else
+                    NewLogFile = Path.Combine(Settings.CustomLogFilePath, OrigLogFilename);
+
+
                 NewHistoryFile = Path.Combine(NewFolder, OrigHistoryDBFilename);
 
                 bool OrigSettingsFileExists = File.Exists(OrigSettingsFile);
