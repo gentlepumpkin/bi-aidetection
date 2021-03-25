@@ -34,7 +34,7 @@ namespace AITool
         public int HistoryThresholdCount { get; set; } = 2;             //number of times object is seen in same position before moving it to the masked_positions list
         public double PercentMatch { get; set; } = 85;                  //minimum percentage match to be considered a match
         public int MaskRemoveThreshold { get; set; } = 2;               //number of times object is NOT seen before being removed by the cleanup timer 
-        public string Camera = "";
+        public string Camera { get; set; } = "";
         public List<ObjectPosition> LastPositionsHistory { get; set; }  //list of last detected object positions during defined time period - history_save_mins
         public List<ObjectPosition> MaskedPositions { get; set; }       //stores dynamic masked object list (created in default constructor)
 
@@ -445,7 +445,7 @@ namespace AITool
                             //Log("\t" + historyObject.ToString() + " existed for: " + ts.Minutes + " minutes");
                             if (minutes >= this.HistorySaveMins)
                             {
-                                Log($"Debug: Removing expired history: {historyObject.ToString()} which existed for {minutes.ToString("#######0.0")} minutes. (max={this.HistorySaveMins})", "", historyObject.CameraName);
+                                Log($"Debug: Removing expired history: {historyObject.ToString()} which existed for {minutes.Round()} minutes. (max={this.HistorySaveMins})", "", historyObject.CameraName);
                                 this.LastPositionsHistory.RemoveAt(x);
                             }
                         }
@@ -472,12 +472,18 @@ namespace AITool
                 {
                     if (this.MaskedPositions != null && this.MaskedPositions.Count > 0)
                     {
+                        //if using timer, use current time since they may not have been a recent detection date set - Otherwise items would never expire unless there was a recent detection
+                        DateTime CurTime;
+                        if (trigger == RemoveEvent.Timer)
+                            CurTime = DateTime.Now;
+                        else
+                            CurTime = this.LastDetectionDate;
+
                         //scan backward through the list and remove by index. Not as easy to read as find by object but the faster for removals
                         for (int x = this.MaskedPositions.Count - 1; x >= 0; x--)
                         {
                             ObjectPosition maskedObject = this.MaskedPositions[x];
-
-                            TimeSpan ts = this.LastDetectionDate - maskedObject.LastSeenDate;
+                            TimeSpan ts = CurTime - maskedObject.LastSeenDate;
                             double minutes = ts.TotalMinutes;
                             double days = ts.TotalDays;
 
@@ -489,21 +495,28 @@ namespace AITool
                                         Log($"Debug: Removing expired (after {minutes.Round()} mins), Counter={maskedObject.Counter}, MaskRemoveThreshold={this.MaskRemoveThreshold}, MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         this.MaskedPositions.RemoveAt(x);
                                     }
-                                    else if (days >= this.MaxMaskUnusedDays && maskedObject.IsStatic)
+                                    else if (days >= this.MaxMaskUnusedDays)
                                     {
-                                        Log($"Debug: Removing unused (after {days.Round()} days), MaxMaskUnusedDays={this.MaxMaskUnusedDays}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
+                                        Log($"Debug: Removing unused (after {days.Round()} days),  Counter={maskedObject.Counter}, MaxMaskUnusedDays={this.MaxMaskUnusedDays}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                         this.MaskedPositions.RemoveAt(x);
+                                    }
+                                    else
+                                    {
+                                        //Log($"Trace: Not removing mask yet. Static={maskedObject.IsStatic}, Minutes={minutes.Round()}, Days={days.Round()}, Counter={maskedObject.Counter}, MaskRemoveThreshold={this.MaskRemoveThreshold}, MaskSaveMins={this.MaskRemoveMins}) masked object by timer thread: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                     }
                                     break;
                                 case RemoveEvent.Detection:
                                     if (minutes > 1 && !maskedObject.IsStatic)  //if not visible and not marked as a static mask
                                     {
-                                        if (maskedObject.Counter == 0 && minutes >= this.MaskRemoveMins)
+                                        if ((maskedObject.Counter == 0 || this.MaskRemoveThreshold == 0) && minutes >= this.MaskRemoveMins)
                                         {
                                             Log($"Debug: Removing expired ({minutes.Round()} mins, Counter={maskedObject.Counter}, MaskRemoveThreshold={this.MaskRemoveThreshold}, MaskSaveMins={this.MaskRemoveMins}) masked object after detection: " + maskedObject.ToString(), "", maskedObject.CameraName);
                                             this.MaskedPositions.RemoveAt(x);
                                         }
-                                        else if (maskedObject.Counter > 0) maskedObject.Counter--;
+                                        else if (maskedObject.Counter > 0)
+                                        {
+                                            maskedObject.Counter--;
+                                        }
                                     }
                                     break;
                             }

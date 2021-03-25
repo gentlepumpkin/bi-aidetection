@@ -31,6 +31,7 @@ namespace AITool
     {
         public TriggerType TType { get; set; } = TriggerType.Unknown;
         public Camera cam { get; set; } = null;
+        public string camname { get; set; } = "None";
         public History Hist { get; set; } = null;
         public ClsImageQueueItem CurImg { get; set; } = null;
         public bool Trigger { get; set; } = true;
@@ -44,13 +45,27 @@ namespace AITool
         public ClsTriggerActionQueueItem(TriggerType ttype, Camera cam, ClsImageQueueItem CurImg, History hist, bool Trigger, string Text, bool IsQueued)
         {
             this.cam = cam;
-            this.TType = ttype;
+            this.Hist = hist;
             this.CurImg = CurImg;
+
+            //if they are null must be for testing?
+            if (this.cam.IsNull())
+                this.cam = new Camera("None");
+
+            if (this.CurImg.IsNull())
+                this.CurImg = new ClsImageQueueItem("C:\test.jpg", 0);
+
+            if (this.Hist.IsNull())
+                this.Hist = new History().Create(this.CurImg.image_path, DateTime.Now, this.cam.Name, Text, "", Trigger, "", "None", 0, Trigger);
+
+            if (!this.cam.IsNull())
+                this.camname = this.cam.Name;
+
+            this.TType = ttype;
             this.Trigger = Trigger;
             this.AddedTime = DateTime.Now;
             this.Text = Text;
             this.IsQueued = IsQueued;
-            this.Hist = hist;
         }
     }
 
@@ -89,18 +104,18 @@ namespace AITool
                 this.ImgPath = CurImg.image_path;
             }
 
-            if (cam == null)
-                cam = new Camera("None");
 
             ClsTriggerActionQueueItem AQI = new ClsTriggerActionQueueItem(ttype, cam, CurImg, hist, Trigger, Text, !Wait);
 
             //Make sure not to put cancel items in the queue if no cancel triggers are defined...
 
-            bool NeedsToCancel = ((cam.Action_mqtt_enabled && cam.Action_mqtt_payload_cancel.IsNotEmpty()) ||
-                                  (cam.Action_CancelURL_Enabled && cam.cancel_urls.Length > 0));
+            bool HasCancel = ((AQI.cam.Action_mqtt_enabled && AQI.cam.Action_mqtt_payload_cancel.IsNotEmpty()) ||
+                               (AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0));
+
+            bool IsCancel = ttype == TriggerType.Cancel || !Trigger;
 
             //bool DoIt = (Trigger || (!Trigger && cam.cancel_urls.Count > 0 || (cam.Action_mqtt_enabled && !string.IsNullOrEmpty(cam.Action_mqtt_payload_cancel))));
-            bool DoIt = (Trigger || (!NeedsToCancel) || ttype == TriggerType.TelegramText || ttype == TriggerType.Pushover);
+            bool DoIt = (Trigger || (IsCancel && HasCancel));
 
             if (DoIt)
             {
@@ -132,6 +147,10 @@ namespace AITool
                     }
 
                 }
+            }
+            else
+            {
+                Log($"Debug: Action '{AQI.TType}' could not be added because there are no CANCEL actions configured.", this.CurSrv, AQI.cam, AQI.CurImg);
             }
 
             return ret;
@@ -191,15 +210,15 @@ namespace AITool
                             {
                                 if ((DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds >= AppSettings.Settings.ActionCancelSeconds)
                                 {
-                                    Log($"Debug: Running cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                    Log($"Debug: Running cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.camname}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                                     await this.RunTriggers(AQI);
                                     AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(false);  // will be deleted next time the loop goes through
                                 }
                             }
                             else
                             {
-                                CancelActionDict.TryRemove(AQI.cam.Name.ToLower(), out ClsTriggerActionQueueItem removedItem);
-                                Log($"Debug: Removed cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds", this.CurSrv, AQI.cam, AQI.CurImg);
+                                CancelActionDict.TryRemove(AQI.camname.ToLower(), out ClsTriggerActionQueueItem removedItem);
+                                Log($"Debug: Removed cancel Action '{AQI.TType}' in queue for event '{AQI.Hist.Detections}' for camera '{AQI.camname}', after {(DateTime.Now - AQI.cam.Action_Cancel_Start_Time.Read()).TotalSeconds.Round()} seconds", this.CurSrv, AQI.cam, AQI.CurImg);
 
                             }
 
@@ -270,36 +289,41 @@ namespace AITool
 
                 if (HasCancelAction)
                 {
-                    if (AQI.Trigger == false)  //If this is a CANCEL anyway...
+                    if (AQI.TType == TriggerType.Cancel || AQI.Trigger == false)  //If this is a CANCEL anyway...
                     {
                         //if we already did a cancel, set flag to delete the queued cancel item if exists and log that we are removing from queue
-                        if (AQI.cam.Action_Cancel_Timer_Enabled.ReadFullFence() || this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
+                        if (AQI.cam.Action_Cancel_Timer_Enabled.ReadFullFence() || this.CancelActionDict.ContainsKey(AQI.camname.ToLower()))
                         {
                             AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(false);
-                            if (this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
-                                this.CancelActionDict.TryRemove(AQI.cam.Name.ToLower(), out ClsTriggerActionQueueItem ignoreme);
+                            if (this.CancelActionDict.ContainsKey(AQI.camname.ToLower()))
+                                this.CancelActionDict.TryRemove(AQI.camname.ToLower(), out ClsTriggerActionQueueItem ignoreme);
 
-                            Log($"Debug: Cancel action '{AQI.TType}' has been removed due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}'", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug: Cancel action '{AQI.TType}' has been removed due to event '{AQI.Hist.Detections}' for camera '{AQI.camname}'", this.CurSrv, AQI.cam, AQI.CurImg);
 
                         }
                     }
                     else //If this is another TRIGGER...
                     {
-                        if (this.CancelActionDict.ContainsKey(AQI.cam.Name.ToLower()))
+                        if (this.CancelActionDict.ContainsKey(AQI.camname.ToLower()))
                         {
                             //if already in queue, update date
-                            Log($"Debug: EXTENDING cancel action '{AQI.TType}' time due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug: EXTENDING cancel action '{AQI.TType}' time due to event '{AQI.Hist.Detections}' for camera '{AQI.camname}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                             AQI.cam.Action_Cancel_Start_Time.Write(DateTime.Now);
                         }
                         else  //add it to the queue
                         {
-                            Log($"Debug: Cancel action '{AQI.TType}' queued due to event '{AQI.Hist.Detections}' for camera '{AQI.cam.Name}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug: Cancel action '{AQI.TType}' queued due to event '{AQI.Hist.Detections}' for camera '{AQI.camname}', waiting {AppSettings.Settings.ActionCancelSeconds} seconds...", this.CurSrv, AQI.cam, AQI.CurImg);
                             AQI.cam.Action_Cancel_Start_Time.Write(DateTime.Now);
                             AQI.cam.Action_Cancel_Timer_Enabled.WriteFullFence(true);
                             AQI.Trigger = false;  //set to be a cancel
-                            this.CancelActionDict.TryAdd(AQI.cam.Name.ToLower(), AQI);
+                            AQI.TType = TriggerType.Cancel;
+                            this.CancelActionDict.TryAdd(AQI.camname.ToLower(), AQI);
                         }
                     }
+                }
+                else
+                {
+                    Log($"Debug: Cancel action '{AQI.TType}' could not be queued because there are no CANCEL actions configured.   Event='{AQI.Hist.Detections}' for camera '{AQI.camname}'", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
                 this.Count.WriteFullFence(this.TriggerActionQueue.Count);
@@ -346,7 +370,7 @@ namespace AITool
                 }
                 else
                 {
-                    Log($"Error: No image to process?", this.CurSrv, AQI.cam.Name);
+                    Log($"Error: No image to process?", this.CurSrv, AQI.camname);
                     return false;
                 }
             }
@@ -432,7 +456,7 @@ namespace AITool
                         {
                             run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString, Global.IPType.Path);
                             param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString, Global.IPType.Path);
-                            Log($"Debug:   Starting external app - Camera={AQI.cam.Name} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"Debug:   Starting external app - Camera={AQI.camname} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
                             Process.Start(run, param);
                         }
                         catch (Exception ex)
@@ -504,7 +528,7 @@ namespace AITool
                         }
                         else
                         {
-                            Log($"   Camera {AQI.cam.Name} is still in SOUND cooldown. Sound was not played. ({soundcooltime} of {AQI.cam.sound_cooldown_time_seconds} seconds - See Cameras 'sound_cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
+                            Log($"   Camera {AQI.camname} is still in SOUND cooldown. Sound was not played. ({soundcooltime} of {AQI.cam.sound_cooldown_time_seconds} seconds - See Cameras 'sound_cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
 
                         }
                     }
@@ -606,8 +630,8 @@ namespace AITool
                     if (AQI.Trigger)
                     {
                         AQI.cam.last_trigger_time.Write(DateTime.Now); //reset cooldown time every time an image contains something, even if no trigger was called (still in cooldown time)
-                        Log($"Debug: {AQI.cam.Name} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam, AQI.CurImg);
-                        Global.UpdateLabel($"{AQI.cam.Name} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
+                        Log($"Debug: {AQI.camname} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam, AQI.CurImg);
+                        Global.UpdateLabel($"{AQI.camname} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
                     }
 
 
@@ -615,7 +639,7 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {AQI.cam.Name} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime.Round()} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"   Camera {AQI.camname} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime.Round()} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
 

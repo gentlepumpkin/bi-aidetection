@@ -22,7 +22,8 @@ namespace AITool
         Sound,
         Run,
         MQTT,
-        Pushover
+        Pushover,
+        Cancel
     }
     public class CameraTriggerAction
     {

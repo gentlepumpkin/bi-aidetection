@@ -1378,7 +1378,7 @@ namespace AITool
                             if (x_value > 500)
                                 x_value = x_value / 100;
 
-                            if (x_value > 0)
+                            if (x_value > 0 && x_value <= orange_values.Count() - 1)
                             {
                                 //example: -> "person (41%)"
                                 //Int32.TryParse(detection.Split('(')[1].Split('%')[0], out int x_value); //example: -> "41"

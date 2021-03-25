@@ -3348,6 +3348,13 @@ namespace AITool
                         ///====================================================================================================================
                         ///====================================================================================================================
 
+                        int cancelactions = 0;
+                        if (cam.Action_mqtt_enabled && !cam.Action_mqtt_payload_cancel.IsEmpty())
+                            cancelactions++;
+
+                        if (cam.Action_CancelURL_Enabled && cam.cancel_urls.Length > 0)
+                            cancelactions++;
+
                         //process the combined predictions
                         if (predictions.Count > 0)
                         {
@@ -3406,14 +3413,14 @@ namespace AITool
                                         clr = "{" + AppSettings.Settings.RectMaskedColor.Name + "}";
                                         masked_counter++;
                                     }
-                                    else if (pred.Result == ResultType.UnwantedObject)
-                                    {
-                                        irrelevant_counter++;
-                                    }
                                     else if (pred.Result == ResultType.Error)
                                     {
                                         clr = "{red}";
                                         error_counter++;
+                                    }
+                                    else
+                                    {
+                                        irrelevant_counter++;
                                     }
                                 }
 
@@ -3539,22 +3546,20 @@ namespace AITool
                                     text = text.Remove(text.Length - 2);
                                 }
 
+
                                 Log($"Debug: {text}, so it's an irrelevant alert.", AISRV, cam, CurImg);
 
-                                int cancelactions = 0;
-                                if (cam.Action_mqtt_enabled && !cam.Action_mqtt_payload_cancel.IsEmpty())
-                                    cancelactions++;
-
-                                if (cam.Action_CancelURL_Enabled && cam.cancel_urls.Length > 0)
-                                    cancelactions++;
-
-                                if (cancelactions > 0)
-                                    Log($"Debug: (5/6) Performing {cancelactions} CANCEL actions:", AISRV, cam, CurImg);
 
                                 hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"{text} : {objects_and_confidences}", object_positions_as_string, false, PredictionsJSON, AISRV, TotalSWPostTime, false);
 
                                 if (cancelactions > 0)
-                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+                                {
+                                    Log($"Debug: (5/6) Performing {cancelactions} CANCEL actions:", AISRV, cam, CurImg);
+                                    await TriggerActionQueue.AddTriggerActionAsync(TriggerType.Cancel, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+                                }
+                                else
+                                    Log($"Debug: (5/6) NO CANCEL actions defined, skipping.", AISRV, cam, CurImg);
+
 
                                 cam.IncrementIrrelevantAlerts(); //stats update
                                 Log($"Debug: (6/6) Camera {cam.Name} caused an irrelevant alert.", AISRV, cam, CurImg);
@@ -3570,11 +3575,16 @@ namespace AITool
 
                             cam.IncrementFalseAlerts(); //stats update
 
-                            Log($"Debug: (5/6) Performing CANCEL actions:", AISRV, cam, CurImg);
-
                             hist = new History().Create(CurImg.image_path, DateTime.Now, cam.Name, "false alert", "", false, "", AISRV, TotalSWPostTime, false);
 
-                            await TriggerActionQueue.AddTriggerActionAsync(TriggerType.All, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+                            if (cancelactions > 0)
+                            {
+                                Log($"Debug: (5/6) Performing {cancelactions} CANCEL actions:", AISRV, cam, CurImg);
+                                await TriggerActionQueue.AddTriggerActionAsync(TriggerType.Cancel, cam, CurImg, hist, false, !cam.Action_queued, AISRV, ""); //make TRIGGER
+                            }
+                            else
+                                Log($"Debug: (5/6) NO CANCEL actions defined, skipping.", AISRV, cam, CurImg);
+
 
                             Log($"Debug: (6/6) Camera {cam.Name} caused a false alert, nothing detected.", AISRV, cam, CurImg);
 
@@ -3643,8 +3653,8 @@ namespace AITool
             {
                 cam.stats_skipped_images++;
                 cam.stats_skipped_images_session++;
-                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.Name}':  '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", AiUrl.CurSrv, cam, CurImg);
-                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, cooldown was '{secs.ToString("#######0.000")}' of '{halfcool.ToString("#######0.000")}' seconds.", "", false, "", AiUrl.CurSrv, TotalSWPostTime, false));
+                Log($"Skipping detection for '{filename}' because cooldown has not been met for camera '{cam.Name}':  '{secs.Round()}' of '{halfcool.Round()}' seconds (half of trigger cooldown time), Session Skip Count={cam.stats_skipped_images_session}", AiUrl.CurSrv, cam, CurImg);
+                Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, cooldown was '{secs.Round()}' of '{halfcool.Round()}' seconds.", "", false, "", AiUrl.CurSrv, TotalSWPostTime, false));
             }
 
             ret.Success = (ret.Error == "");
