@@ -290,7 +290,8 @@ namespace AITool
                     this.cb_ObjectTriggers.Checked = this.ro.Trigger;
 
                     this.cb_ObjectIgnoreImageMask.Checked = this.ro.IgnoreImageMask;
-                    this.cb_ObjectIgnoreDynamicMask.Checked = this.ro.IgnoreDynamicMask.Value;
+                    if (this.ro.IgnoreDynamicMask.HasValue)
+                        this.cb_ObjectIgnoreDynamicMask.Checked = this.ro.IgnoreDynamicMask.Value;
 
                     if (this.ROMName.Has("\\default"))
                     {
