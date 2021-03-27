@@ -26,7 +26,7 @@
         SkippedDynamicMaskCheck,
         NotEnabled,
         Unknown,
-        IgnoredObject
+        ObjectIgnoredMask
     }
     public class MaskResultInfo
     {

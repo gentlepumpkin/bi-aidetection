@@ -20,7 +20,9 @@ namespace AITool
         public double Threshold_lower { get; set; } = 30;
         public double Threshold_upper { get; set; } = 100;
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
-        public bool IgnoreMask { get; set; } = false;
+        [JsonProperty("IgnoreMask")]
+        public bool IgnoreImageMask { get; set; } = false;
+        public bool? IgnoreDynamicMask { get; set; } = null;
         public long Hits { get; set; } = 0;
         public DateTime LastHitTime { get; set; } = DateTime.MinValue;
         public DateTime CreatedTime { get; set; } = DateTime.MinValue;
@@ -48,8 +50,29 @@ namespace AITool
 
         }
 
-        public void Update()
+        public void Update(double MinLowerThreshold = 0, double MaxUpperThreshold = 0, bool? IgnoreDynamicMask = null, bool? IgnoreImageMask = null)
         {
+            //We originally only had IgnoreMask, now we have split into two so we use the original value as the default for the new value
+            //wait for the json to be initialized and only set the default of the new value after the first run
+            if (this.LastHashCode != 0)
+            {
+                if (!this.IgnoreDynamicMask.HasValue)
+                    this.IgnoreDynamicMask = this.IgnoreImageMask;
+
+                if (MinLowerThreshold > 0 && this.Threshold_lower < MinLowerThreshold)
+                    this.Threshold_lower = MinLowerThreshold;
+
+                if (MaxUpperThreshold > 0 && this.Threshold_upper > MaxUpperThreshold)
+                    this.Threshold_upper = MaxUpperThreshold;
+
+                if (IgnoreDynamicMask.HasValue)
+                    this.IgnoreDynamicMask = IgnoreDynamicMask;
+
+                if (IgnoreImageMask.HasValue)
+                    this.IgnoreImageMask = IgnoreImageMask.Value;
+            }
+
+
             this.LastHashCode = this.GetHashCode();
         }
         public override string ToString()
@@ -101,14 +124,13 @@ namespace AITool
         public List<ClsRelevantObject> ObjectList { get; set; } = new List<ClsRelevantObject>();
         public string TypeName { get; set; } = "";
         public int EnabledCount { get; set; } = 0;
-        public string Camera { get; set; } = "";
+        public string CameraName { get; set; } = "";
         [JsonIgnore]
         private Camera cam = null;
         [JsonIgnore]
         private Camera defaultcam = null;
         [JsonIgnore]
         private bool Initialized = false;
-        private int LastHashCode = 0;
         private List<ClsRelevantObject> _DefaultObjectsList = new List<ClsRelevantObject>();
         private object ROLockObject = new object();
         [JsonConstructor]
@@ -120,7 +142,7 @@ namespace AITool
         public ClsRelevantObjectManager(ClsRelevantObjectManager manager)
         {
             this.TypeName = manager.TypeName;
-            this.Camera = manager.Camera;
+            this.CameraName = manager.CameraName;
             this.Init(manager.cam);
             this.ObjectList = this.FromList(manager.ObjectList, true, ExactMatchOnly: true);
             this.Update();
@@ -145,8 +167,11 @@ namespace AITool
             if (!cam.IsNull())
                 this.cam = cam;
 
+            if (this.cam.IsNull() && this.CameraName.IsNotEmpty())
+                this.cam = AITOOL.GetCamera(this.CameraName);
+
             if (!this.cam.IsNull())
-                this.Camera = this.cam.Name;
+                this.CameraName = this.cam.Name;
 
             //dont initialize until we have a list of cameras available
             if (!this.Initialized || !this.ObjectDict.IsNull() && !AppSettings.Settings.CameraList.IsNull() && AppSettings.Settings.CameraList.Count > 0)
@@ -205,14 +230,32 @@ namespace AITool
             //sort
             //this.ObjectList = this.ObjectList.OrderByDescending(ro => ro.Enabled).ThenBy(ro => ro.Priority).ThenBy(ro => ro.CreatedTime).ThenBy(ro => ro.Name).ToList();
 
-            if (ResetIfNeeded && this.ObjectList.Count == 0 && !this.Camera.EqualsIgnoreCase("default"))
+            if (this.cam.IsNull())
+                this.Init();
+
+            if (ResetIfNeeded && this.ObjectList.Count == 0 && !this.CameraName.EqualsIgnoreCase("default"))
                 this.Reset();
 
-            //make sure no priority dupes
+            bool restrict = this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
+
+            //make sure no priority is in order and the minimum is not less than the main cameras list
             for (int i = 0; i < this.ObjectList.Count; i++)
             {
-                this.ObjectList[i].Update();
+                if (restrict)
+                {
+                    ClsRelevantObject ro = this.Get(this.ObjectList[i].Name, false, out int FoundIDX, this.cam.DefaultTriggeringObjects.ObjectList);
+                    if (!ro.IsNull())
+                        this.ObjectList[i].Update(ro.Threshold_lower, ro.Threshold_upper, ro.IgnoreDynamicMask, ro.IgnoreImageMask);
+                    else
+                        this.ObjectList[i].Update();
+
+                }
+                else
+                {
+                    this.ObjectList[i].Update();
+                }
                 this.ObjectList[i].Priority = i + 1;
+
             }
 
         }
@@ -311,7 +354,7 @@ namespace AITool
                 if (!this.defaultcam.IsNull())  //probably here to soon
                 {
 
-                    if (this.defaultcam.DefaultTriggeringObjects.ObjectList.Count > 0 && !this.Camera.EqualsIgnoreCase(this.defaultcam.Name))
+                    if (this.defaultcam.DefaultTriggeringObjects.ObjectList.Count > 0 && !this.CameraName.EqualsIgnoreCase(this.defaultcam.Name))
                     {
                         this._DefaultObjectsList = this.defaultcam.DefaultTriggeringObjects.CloneObjectList();
                     }
@@ -450,7 +493,7 @@ namespace AITool
                 List<string> lst = Objects.SplitStr(",");
                 List<ClsRelevantObject> DefaultObjectList = new List<ClsRelevantObject>();
 
-                if (!this.Camera.EqualsIgnoreCase("default"))
+                if (!this.CameraName.EqualsIgnoreCase("default"))
                     DefaultObjectList = this.GetDefaultObjectList(false);
 
                 foreach (var obj in lst)
@@ -602,23 +645,24 @@ namespace AITool
 
         }
 
-        public ResultType IsRelevant(string Label, out bool IgnoreMask, string DbgDetail = "")
+        public ResultType IsRelevant(string Label, out bool IgnoreImageMask, out bool IgnoreDynamicMask, string DbgDetail = "")
         {
             ClsPrediction pred = new ClsPrediction();
             pred.Label = Label;
-            return IsRelevant(new List<ClsPrediction>() { pred }, true, out IgnoreMask, DbgDetail);
+            return IsRelevant(new List<ClsPrediction>() { pred }, true, out IgnoreImageMask, out IgnoreDynamicMask, DbgDetail);
         }
-        public ResultType IsRelevant(ClsPrediction pred, bool IsNew, out bool IgnoreMask, string DbgDetail = "")
+        public ResultType IsRelevant(ClsPrediction pred, bool IsNew, out bool IgnoreImageMask, out bool IgnoreDynamicMask, string DbgDetail = "")
         {
-            return IsRelevant(new List<ClsPrediction>() { pred }, IsNew, out IgnoreMask, DbgDetail);
+            return IsRelevant(new List<ClsPrediction>() { pred }, IsNew, out IgnoreImageMask, out IgnoreDynamicMask, DbgDetail);
         }
 
-        public ResultType IsRelevant(List<ClsPrediction> preds, bool IsNew, out bool IgnoreMask, string DbgDetail = "")
+        public ResultType IsRelevant(List<ClsPrediction> preds, bool IsNew, out bool IgnoreImageMask, out bool IgnoreDynamicMask, string DbgDetail = "")
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             ResultType ret = ResultType.UnwantedObject;
-            IgnoreMask = false;
+            IgnoreImageMask = false;
+            IgnoreDynamicMask = false;
 
             this.Init();
             if (!this.Initialized)
@@ -673,7 +717,8 @@ namespace AITool
                                         else
                                         {
                                             ret = ResultType.Relevant;
-                                            IgnoreMask = ro.IgnoreMask;
+                                            IgnoreImageMask = ro.IgnoreImageMask;
+                                            IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
                                             if (!relevant.Contains(label))
                                                 relevant += label + ",";
                                         }
@@ -715,7 +760,7 @@ namespace AITool
 
                 //Add to the main list
                 if (this.cam == null)
-                    this.cam = AITOOL.GetCamera(this.Camera);
+                    this.cam = AITOOL.GetCamera(this.CameraName);
 
                 if (this.defaultcam == null)
                     this.defaultcam = AITOOL.GetCamera("Default", true);
@@ -761,7 +806,7 @@ namespace AITool
                     nothreshold = "(NONE)";
 
                 string maskignore = "";
-                if (IgnoreMask)
+                if (IgnoreImageMask)
                     maskignore = " (Mask will be ignored)";
 
                 if (ret != ResultType.Relevant)

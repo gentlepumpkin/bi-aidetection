@@ -499,7 +499,7 @@ namespace AITool
                                         //if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                                         ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam);
 
-                                        if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant)
+                                        if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) == ResultType.Relevant)
                                         {
                                             Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
                                             SoundPlayer sp = new SoundPlayer(soundfile);
@@ -537,7 +537,7 @@ namespace AITool
                     {
 
                         //make sure it is a matching object, but call MQTT in any case if it is a canceled event
-                        if (!AQI.Hist.IsNull() && (!AQI.Trigger || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) == ResultType.Relevant))
+                        if (!AQI.Hist.IsNull() && (!AQI.Trigger || AQI.cam.MQTTTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) == ResultType.Relevant))
                         {
                             string topic = "";
                             string payload = "";
@@ -1062,7 +1062,7 @@ namespace AITool
 
                     ClsRelevantObjectManager rom = new ClsRelevantObjectManager(objects, "TriggerURL", AQI.cam);
 
-                    if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
                         continue;
 
                 }
@@ -1113,7 +1113,7 @@ namespace AITool
                 try
                 {
                     //make sure it is a matching object
-                    if (!AQI.Hist.IsNull() && AQI.cam.PushoverTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && AQI.cam.PushoverTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
                         return true;
 
                     if (AppSettings.Settings.pushover_cooldown_seconds < 2)
@@ -1333,7 +1333,7 @@ namespace AITool
 
                     //make sure it is a matching object
                     //if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.telegram_triggering_objects, "Telegram", AQI.Hist.Predictions(), false) != ResultType.Relevant)
-                    if (!AQI.Hist.IsNull() && AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreMask) != ResultType.Relevant)
+                    if (!AQI.Hist.IsNull() && AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
                         return true;
 
                     DateTime now = DateTime.Now;

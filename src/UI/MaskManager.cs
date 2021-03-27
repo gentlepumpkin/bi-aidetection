@@ -255,16 +255,16 @@ namespace AITool
                 {
 
                     //if (!Global.IsInList(currentObject.Label, this.Objects, TrueIfEmpty: true))
-                    if (this.MaskTriggeringObjects.IsRelevant(currentObject.Label, out bool IgnoreMask) != ResultType.Relevant)
+                    if (this.MaskTriggeringObjects.IsRelevant(currentObject.Label, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
                     {
                         //Log($"Debug: Skipping mask creation because '{currentObject.Label}' is not one of the configured objects: '{this.Objects}'", "", currentObject.CameraName, currentObject.ImagePath);
                         returnInfo.SetResults(MaskType.Unknown, MaskResult.Unwanted);
                         return returnInfo;
                     }
 
-                    if (IgnoreMask)
+                    if (IgnoreDynamicMask)
                     {
-                        returnInfo.SetResults(MaskType.Unknown, MaskResult.IgnoredObject);
+                        returnInfo.SetResults(MaskType.Unknown, MaskResult.ObjectIgnoredMask);
                         return returnInfo;
                     }
 

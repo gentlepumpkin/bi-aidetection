@@ -120,6 +120,20 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>122, 17</value>
   </metadata>
+  <data name="cb_ObjectIgnoreDynamicMask.ToolTip" xml:space="preserve">
+    <value>If you enable this and the object is behind an DYNAMIC mask, it will still trigger.
+For example, if you mask the road but still want to know when PEOPLE walk by.
+
+Also note that the ignore settings only work on the \DEFAULT objects for each camera.</value>
+  </data>
+  <data name="cb_ObjectIgnoreImageMask.ToolTip" xml:space="preserve">
+    <value>If you enable this and the object is behind an IMAGE mask, it will still trigger.
+For example, if you mask the road but still want to know when PEOPLE walk by.
+
+Note that the IMAGE mask is tested before the DYNAMIC mask.
+
+Also note that the ignore settings only work on the \DEFAULT objects for each camera.</value>
+  </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>

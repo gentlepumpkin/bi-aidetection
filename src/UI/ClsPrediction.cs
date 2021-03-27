@@ -914,7 +914,7 @@ namespace AITool
                 if (this._cam.enabled)
                 {
                     //this.Result = AITOOL.ArePredictionObjectsRelevant(this._cam.triggering_objects_as_string + "," + this._cam.additional_triggering_objects_as_string, "NEW", this, true);
-                    this.Result = this._cam.DefaultTriggeringObjects.IsRelevant(this, true, out bool IgnoreMask, "NEW");
+                    this.Result = this._cam.DefaultTriggeringObjects.IsRelevant(this, true, out bool IgnoreImageMask, out bool IgnoreDynamicMask, "NEW");
                     if (this.Result == ResultType.Relevant)
                     {
                         this.Result = this._cam.IsRelevantSize(this);
@@ -930,7 +930,7 @@ namespace AITool
                             {
                                 // -> OBJECT IS WITHIN CONFIDENCE LIMITS
 
-                                if (!IgnoreMask)
+                                if (!IgnoreImageMask)
                                 {
                                     //only if the object is outside of the masked area
                                     result = AITOOL.Outsidemask(this._cam, this.XMin, this.XMax, this.YMin, this.YMax, this._curimg.Width, this._curimg.Height);
@@ -942,7 +942,7 @@ namespace AITool
                                 {
                                     //a relevant object was flagged to ignore masks
                                     result.IsMasked = false;
-                                    result.Result = MaskResult.IgnoredObject;
+                                    result.Result = MaskResult.ObjectIgnoredMask;
                                     result.MaskType = MaskType.Unknown;
                                     this.ImgMaskResult = result.Result;
                                     this.ImgMaskType = result.MaskType;
@@ -963,7 +963,7 @@ namespace AITool
                                 }
 
                                 //check the mask manager if the image mask didnt flag anything
-                                if (!result.IsMasked)
+                                if (!result.IsMasked && !IgnoreDynamicMask)
                                 {
                                     //check the dynamic or static masks
                                     if (this._cam.maskManager.MaskingEnabled && !SkipDynamicMaskCheck)

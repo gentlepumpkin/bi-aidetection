@@ -288,7 +288,20 @@ namespace AITool
                         this.tb_Name.Enabled = false;
 
                     this.cb_ObjectTriggers.Checked = this.ro.Trigger;
-                    this.cb_ObjectIgnoreMask.Checked = this.ro.IgnoreMask;
+
+                    this.cb_ObjectIgnoreImageMask.Checked = this.ro.IgnoreImageMask;
+                    this.cb_ObjectIgnoreDynamicMask.Checked = this.ro.IgnoreDynamicMask.Value;
+
+                    if (this.ROMName.Has("\\default"))
+                    {
+                        this.cb_ObjectIgnoreDynamicMask.Enabled = true;
+                        this.cb_ObjectIgnoreImageMask.Enabled = true;
+                    }
+                    else
+                    {
+                        this.cb_ObjectIgnoreDynamicMask.Enabled = false;
+                        this.cb_ObjectIgnoreImageMask.Enabled = false;
+                    }
 
                 }
 
@@ -321,7 +334,8 @@ namespace AITool
                     this.ro.Threshold_lower = this.tb_ConfidenceLower.Text.ToDouble();
                     this.ro.Threshold_upper = this.tb_ConfidenceUpper.Text.ToDouble();
                     this.ro.Trigger = this.cb_ObjectTriggers.Checked;
-                    this.ro.IgnoreMask = this.cb_ObjectIgnoreMask.Checked;
+                    this.ro.IgnoreImageMask = this.cb_ObjectIgnoreImageMask.Checked;
+                    this.ro.IgnoreDynamicMask = this.cb_ObjectIgnoreDynamicMask.Checked;
                     this.FOLV_RelevantObjects.Refresh();
                 }
 
