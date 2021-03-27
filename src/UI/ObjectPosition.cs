@@ -10,6 +10,7 @@ namespace AITool
     public class ObjectPosition : IEquatable<ObjectPosition>
     {
         public string Label { get; } = "";
+        public string MaskName { get; } = "";
         public DateTime CreateDate { get; set; } = DateTime.MinValue;
         public DateTime LastSeenDate { get; set; } = DateTime.MinValue;
         public int Counter { get; set; }

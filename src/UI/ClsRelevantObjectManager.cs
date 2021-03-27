@@ -236,7 +236,7 @@ namespace AITool
             if (ResetIfNeeded && this.ObjectList.Count == 0 && !this.CameraName.EqualsIgnoreCase("default"))
                 this.Reset();
 
-            bool restrict = this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
+            bool restrict = !this.cam.IsNull() && this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
 
             //make sure no priority is in order and the minimum is not less than the main cameras list
             for (int i = 0; i < this.ObjectList.Count; i++)
@@ -718,7 +718,8 @@ namespace AITool
                                         {
                                             ret = ResultType.Relevant;
                                             IgnoreImageMask = ro.IgnoreImageMask;
-                                            IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
+                                            if (ro.IgnoreDynamicMask.HasValue)
+                                                IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
                                             if (!relevant.Contains(label))
                                                 relevant += label + ",";
                                         }
