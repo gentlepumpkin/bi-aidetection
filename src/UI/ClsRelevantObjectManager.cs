@@ -324,7 +324,7 @@ namespace AITool
             {
                 NewIDX = FoundIDX + 1;
 
-                if (NewIDX < this.ObjectList.Count - 1)
+                if (NewIDX <= this.ObjectList.Count - 1)
                 {
                     this.ObjectList.Move(FoundIDX, NewIDX);
                     this.Update(false);
