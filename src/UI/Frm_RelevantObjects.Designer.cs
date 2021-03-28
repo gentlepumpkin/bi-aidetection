@@ -40,6 +40,7 @@ namespace AITool
             this.label2 = new System.Windows.Forms.Label();
             this.tb_Time = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.tb_ConfidenceUpper = new System.Windows.Forms.TextBox();
@@ -61,7 +62,6 @@ namespace AITool
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnReset = new System.Windows.Forms.Button();
             this.btn_adddefaults = new System.Windows.Forms.Button();
-            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -92,7 +92,7 @@ namespace AITool
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
             this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
-            this.splitContainer1.Size = new System.Drawing.Size(642, 408);
+            this.splitContainer1.Size = new System.Drawing.Size(656, 408);
             this.splitContainer1.SplitterDistance = 234;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -105,11 +105,12 @@ namespace AITool
             this.FOLV_RelevantObjects.Name = "FOLV_RelevantObjects";
             this.FOLV_RelevantObjects.ShowGroups = false;
             this.FOLV_RelevantObjects.ShowImagesOnSubItems = true;
-            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(642, 234);
+            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(656, 234);
             this.FOLV_RelevantObjects.TabIndex = 0;
             this.FOLV_RelevantObjects.UseCompatibleStateImageBehavior = false;
             this.FOLV_RelevantObjects.View = System.Windows.Forms.View.Details;
             this.FOLV_RelevantObjects.VirtualMode = true;
+            this.FOLV_RelevantObjects.FormatCell += new System.EventHandler<BrightIdeasSoftware.FormatCellEventArgs>(this.FOLV_RelevantObjects_FormatCell);
             this.FOLV_RelevantObjects.FormatRow += new System.EventHandler<BrightIdeasSoftware.FormatRowEventArgs>(this.FOLV_RelevantObjects_FormatRow);
             this.FOLV_RelevantObjects.SelectionChanged += new System.EventHandler(this.FOLV_RelevantObjects_SelectionChanged);
             this.FOLV_RelevantObjects.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.FOLV_RelevantObjects_ItemChecked);
@@ -126,7 +127,7 @@ namespace AITool
             this.groupBox1.Controls.Add(this.cb_enabled);
             this.groupBox1.Location = new System.Drawing.Point(9, 9);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(630, 158);
+            this.groupBox1.Size = new System.Drawing.Size(644, 158);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
@@ -189,10 +190,21 @@ namespace AITool
             this.groupBox3.Controls.Add(this.tb_ConfidenceLower);
             this.groupBox3.Location = new System.Drawing.Point(421, 23);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(204, 87);
+            this.groupBox3.Size = new System.Drawing.Size(210, 87);
             this.groupBox3.TabIndex = 5;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Object Confidence limits";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Consolas", 6.75F);
+            this.label4.ForeColor = System.Drawing.Color.Gray;
+            this.label4.Location = new System.Drawing.Point(9, 64);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(195, 10);
+            this.label4.TabIndex = 2;
+            this.label4.Text = "(Range limited by CAM\\Default objects)";
             // 
             // label10
             // 
@@ -322,7 +334,7 @@ namespace AITool
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(642, 31);
+            this.toolStrip1.Size = new System.Drawing.Size(656, 31);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -382,7 +394,7 @@ namespace AITool
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(572, 449);
+            this.btnSave.Location = new System.Drawing.Point(586, 449);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -415,22 +427,11 @@ namespace AITool
             this.btn_adddefaults.UseVisualStyleBackColor = true;
             this.btn_adddefaults.Click += new System.EventHandler(this.btn_adddefaults_Click);
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Consolas", 6.75F);
-            this.label4.ForeColor = System.Drawing.Color.Gray;
-            this.label4.Location = new System.Drawing.Point(9, 64);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(180, 10);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "(Range limited by \\Default objects)";
-            // 
             // Frm_RelevantObjects
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(642, 486);
+            this.ClientSize = new System.Drawing.Size(656, 486);
             this.Controls.Add(this.btn_adddefaults);
             this.Controls.Add(this.btnReset);
             this.Controls.Add(this.btnSave);

@@ -243,7 +243,7 @@ namespace AITool
             {
                 if (restrict)
                 {
-                    ClsRelevantObject ro = this.Get(this.ObjectList[i].Name, false, out int FoundIDX, this.cam.DefaultTriggeringObjects.ObjectList);
+                    ClsRelevantObject ro = this.Get(this.ObjectList[i].Name, false, out int FoundIDX, UseMainCamList: true);
                     if (!ro.IsNull())
                         this.ObjectList[i].Update(ro.Threshold_lower, ro.Threshold_upper, ro.IgnoreDynamicMask, ro.IgnoreImageMask);
                     else
@@ -339,6 +339,7 @@ namespace AITool
         {
             AITOOL.Log($"Using Relevant Objects list from the 'Default' camera for {this.TypeName} RelevantObjectManager.");
             this.ObjectList = this.GetDefaultObjectList(true);
+            this.Update();
         }
 
         public List<ClsRelevantObject> GetDefaultObjectList(bool Clear)
@@ -612,11 +613,16 @@ namespace AITool
 
 
         }
-        public ClsRelevantObject Get(string objname, bool AllowEverything, out int FoundIDX, List<ClsRelevantObject> ObjList = null)
+        public ClsRelevantObject Get(string objname, bool AllowEverything, out int FoundIDX, List<ClsRelevantObject> ObjList = null, bool UseMainCamList = false)
         {
 
             if (ObjList.IsNull())
-                ObjList = this.ObjectList;
+            {
+                if (!UseMainCamList)
+                    ObjList = this.ObjectList;
+                else
+                    ObjList = this.cam.DefaultTriggeringObjects.ObjectList;
+            }
 
             FoundIDX = -1;
             //Get only by label name

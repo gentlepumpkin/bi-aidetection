@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using BrightIdeasSoftware;
+
 using SQLite;
 
 namespace AITool
@@ -146,7 +148,8 @@ namespace AITool
 
                 if (this.TempObjectManager.IsNull())
                     MessageBox.Show($"Error: Could not match '{this.ROMName}' to existing RelevantObjectManager?");
-
+                else
+                    this.TempObjectManager.Update();
             }
             catch (Exception ex)
             {
@@ -332,12 +335,22 @@ namespace AITool
                     this.ro.Enabled = this.cb_enabled.Checked;
                     this.ro.Name = this.tb_Name.Text;
                     this.ro.ActiveTimeRange = this.tb_Time.Text;
-                    this.ro.Threshold_lower = this.tb_ConfidenceLower.Text.ToDouble();
-                    this.ro.Threshold_upper = this.tb_ConfidenceUpper.Text.ToDouble();
                     this.ro.Trigger = this.cb_ObjectTriggers.Checked;
                     this.ro.IgnoreImageMask = this.cb_ObjectIgnoreImageMask.Checked;
                     this.ro.IgnoreDynamicMask = this.cb_ObjectIgnoreDynamicMask.Checked;
-                    this.FOLV_RelevantObjects.Refresh();
+                    double lower = this.tb_ConfidenceLower.Text.ToDouble();
+                    double upper = this.tb_ConfidenceUpper.Text.ToDouble();
+                    //if (!this.TempObjectManager.TypeName.EqualsIgnoreCase("default"))
+                    //{
+                    //    ClsRelevantObject ro = this.TempObjectManager.Get(this.ro.Name, false, out int FoundIDX, UseMainCamList: true);
+                    //    if (!ro.IsNull() && lower < ro.Threshold_lower || upper > ro.Threshold_upper)
+                    //    {
+                    //        MessageBox.Show($"The threshold cannot be lower or higher than {this.TempObjectManager.CameraName}\\Default setting: ({ro.Threshold_lower}-{ro.Threshold_upper}%)");
+                    //        return;
+                    //    }
+                    //}
+                    this.ro.Threshold_lower = lower;
+                    this.ro.Threshold_upper = upper;
                 }
 
             }
@@ -348,6 +361,7 @@ namespace AITool
             }
             finally
             {
+                this.FOLV_RelevantObjects.Refresh();
                 NeedsSaving = false;
             }
         }
@@ -608,6 +622,21 @@ namespace AITool
         private void btnCancel_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void FOLV_RelevantObjects_FormatCell(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
+        {
+            FormatCell(sender, e);
+        }
+
+        private void FormatCell(object sender, BrightIdeasSoftware.FormatCellEventArgs e)
+        {
+            if (e.Column.Name.Contains("Ignore"))
+            {
+                if (!this.ROMName.Has("\\default"))
+                    e.SubItem.ForeColor = Color.Gray;
+
+            }
         }
     }
 }
