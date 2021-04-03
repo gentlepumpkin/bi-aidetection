@@ -201,6 +201,7 @@
             0,
             0,
             0});
+            this.num_history_mins.ValueChanged += new System.EventHandler(this.num_history_mins_ValueChanged);
             // 
             // num_mask_create
             // 

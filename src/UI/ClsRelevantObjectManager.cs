@@ -236,7 +236,7 @@ namespace AITool
             if (ResetIfNeeded && this.ObjectList.Count == 0 && !this.CameraName.EqualsIgnoreCase("default"))
                 this.Reset();
 
-            bool restrict = !this.cam.IsNull() && this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
+            bool restrict = !this.cam.IsNull() && !this.cam.DefaultTriggeringObjects.IsNull() && this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
 
             //make sure no priority is in order and the minimum is not less than the main cameras list
             for (int i = 0; i < this.ObjectList.Count; i++)
@@ -677,7 +677,10 @@ namespace AITool
 
             //if nothing is 'enabled' assume everything should be let through to be on the safe side  (As if they passed an empty list)
             if (this.ObjectList.Count == 0 || this.EnabledCount == 0)  //assume if no list is provided to always return relevant
+            {
+                AITOOL.Log($"Trace: RelevantObjectManager: Allowing '{this.TypeName}{DbgDetail}' because no relevant objects were not defined. {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
                 return ResultType.Relevant;
+            }
 
             //if fred is found, the whole prediction will be ignored
             //triggering_objects = person, car, -FRED
@@ -825,6 +828,10 @@ namespace AITool
                     AITOOL.Log($"Trace: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}',{maskignore} Enabled={this.EnabledCount} of {this.ObjectList.Count}");
 
                 }
+            }
+            else
+            {
+                AITOOL.Log($"Trace: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because there were no PREDICTIONS.");
             }
 
             return ret;

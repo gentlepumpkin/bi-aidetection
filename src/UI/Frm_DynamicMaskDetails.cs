@@ -259,9 +259,9 @@ namespace AITool
                     }
 
                     this.pictureBox1.Tag = imagePath;
-                    if (this.contextMenuPosObj != null && this.contextMenuPosObj.ImagePath != null)
+                    if (this.contextMenuPosObj != null)
                     {
-                        if (!string.Equals(this.contextMenuPosObj.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                        if (this.contextMenuPosObj.ImagePath.IsNotEmpty() && !string.Equals(this.contextMenuPosObj.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
                         {
                             this.lbl_lastfile.ForeColor = Color.DarkMagenta;
                             this.lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
@@ -275,8 +275,8 @@ namespace AITool
                     }
                     else
                     {
-                        this.lbl_lastfile.ForeColor = Color.DarkMagenta;
-                        this.lbl_lastfile.Text = "Original Mask Image not found, using: " + imagePath;
+                        this.lbl_lastfile.ForeColor = SystemColors.ControlText;
+                        this.lbl_lastfile.Text = "Mask image: " + imagePath;
                     }
 
                 }

@@ -99,5 +99,10 @@ namespace AITool
                 frm.ShowDialog(this);
             }
         }
+
+        private void num_history_mins_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
