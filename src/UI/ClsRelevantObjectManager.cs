@@ -678,7 +678,7 @@ namespace AITool
             //if nothing is 'enabled' assume everything should be let through to be on the safe side  (As if they passed an empty list)
             if (this.ObjectList.Count == 0 || this.EnabledCount == 0)  //assume if no list is provided to always return relevant
             {
-                AITOOL.Log($"Trace: RelevantObjectManager: Allowing '{this.TypeName}{DbgDetail}' because no relevant objects were not defined. {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
+                AITOOL.Log($"Debug: RelevantObjectManager: Allowing '{this.TypeName}{DbgDetail}' because no relevant objects were enabled. {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
                 return ResultType.Relevant;
             }
 
@@ -821,17 +821,17 @@ namespace AITool
 
                 if (ret != ResultType.Relevant)
                 {
-                    AITOOL.Log($"Trace: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, No Threshold Match={nothreshold.Trim(" ,".ToCharArray())}  All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', No Threshold Match='{nothreshold.Trim(" ,".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
                 }
                 else
                 {
-                    AITOOL.Log($"Trace: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}',{maskignore} Enabled={this.EnabledCount} of {this.ObjectList.Count}");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}',{maskignore} Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
 
                 }
             }
             else
             {
-                AITOOL.Log($"Trace: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because there were no PREDICTIONS.");
+                AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because there were no PREDICTIONS.");
             }
 
             return ret;

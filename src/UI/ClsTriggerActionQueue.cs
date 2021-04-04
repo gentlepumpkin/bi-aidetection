@@ -639,7 +639,7 @@ namespace AITool
                 else
                 {
                     //log that nothing was done
-                    Log($"   Camera {AQI.camname} is still in cooldown. Trigger URL wasn't called and no image will be uploaded to Telegram. ({cooltime.Round()} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"   Camera {AQI.camname} is still in cooldown. ({cooltime.Round()} of {AQI.cam.cooldown_time_seconds} seconds - See Cameras 'cooldown_time_seconds' in settings file)", this.CurSrv, AQI.cam, AQI.CurImg);
                 }
 
 
@@ -1333,8 +1333,18 @@ namespace AITool
 
                     //make sure it is a matching object
                     //if (AITOOL.ArePredictionObjectsRelevant(AQI.cam.telegram_triggering_objects, "Telegram", AQI.Hist.Predictions(), false) != ResultType.Relevant)
-                    if (!AQI.Hist.IsNull() && AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
-                        return true;
+                    if (!AQI.Hist.IsNull())
+                    {
+                        if (AQI.cam.TelegramTriggeringObjects.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) != ResultType.Relevant)
+                        {
+                            AITOOL.Log("Debug: No relevant objects, skipping TelegramUpload.");
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        AITOOL.Log("Warn: Hist is null?");
+                    }
 
                     DateTime now = DateTime.Now;
 
@@ -1364,7 +1374,7 @@ namespace AITool
                                     chatid = AppSettings.Settings.telegram_chatids[0];
 
                                 //upload image to Telegram servers and send to first chat
-                                Log($"Debug:      uploading image to chat \"{chatid}\"", this.CurSrv, AQI.cam, AQI.CurImg);
+                                Log($"Debug:      uploading image to chat \"{chatid.ReplaceChars('*')}\"", this.CurSrv, AQI.cam, AQI.CurImg);
                                 lastchatid = chatid;
                                 Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), Path.GetFileName(AQI.CurImg.image_path)), Caption);
 
@@ -1375,7 +1385,7 @@ namespace AITool
                                     //share uploaded image with all remaining telegram chats (if multiple chat_ids given) using file_id 
                                     foreach (string curchatid in AppSettings.Settings.telegram_chatids.Skip(1))
                                     {
-                                        Log($"Debug:      uploading image to chat \"{curchatid}\"...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                        Log($"Debug:      uploading image to chat \"{curchatid.ReplaceChars('*')}\"...", this.CurSrv, AQI.cam, AQI.CurImg);
                                         lastchatid = curchatid;
                                         message = await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
                                     }
@@ -1417,9 +1427,14 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
-                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                    Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} with chatid '{lastchatid.ReplaceChars('*')}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
+
+                    if (!ex.Parameters.IsNull() && !ex.Parameters.RetryAfter.IsNull())
+                    {
+                        this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
+                        Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    }
+
                     AppSettings.Settings.send_telegram_errors = se;
                     //store image that caused an error in ./errors/
                     if (!Directory.Exists("./errors/")) //if folder does not exist, create the folder
@@ -1441,7 +1456,7 @@ namespace AITool
                 {
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
-                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid}': {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
+                    Log($"ERROR: Could not upload image {AQI.CurImg.image_path} to Telegram with chatid '{lastchatid.ReplaceChars('*')}': {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(AppSettings.Settings.Telegram_RetryAfterFailSeconds));
                     Log($"Debug: ...'Default' 'Telegram_RetryAfterFailSeconds' value was set to '{AppSettings.Settings.Telegram_RetryAfterFailSeconds}' seconds, so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;
@@ -1468,7 +1483,7 @@ namespace AITool
             }
             else
             {
-                Log($"Error:  Telegram settings mis-configured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids)}), telegram_token='{AppSettings.Settings.telegram_token}'", this.CurSrv, AQI.cam, AQI.CurImg);
+                Log($"Error:  Telegram settings mis-configured. telegram_chatids.Count={AppSettings.Settings.telegram_chatids.Count} ({string.Join(",", AppSettings.Settings.telegram_chatids).ReplaceChars('*')}), telegram_token='{AppSettings.Settings.telegram_token.ReplaceChars('*')}'", this.CurSrv, AQI.cam, AQI.CurImg);
                 ret = false;
             }
 
