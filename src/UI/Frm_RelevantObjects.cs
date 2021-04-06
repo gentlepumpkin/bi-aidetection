@@ -274,6 +274,8 @@ namespace AITool
                     this.tb_Time.Text = "";
                     this.tb_ConfidenceLower.Text = "";
                     this.tb_ConfidenceUpper.Text = "";
+                    this.tb_MinPercent.Text = "";
+                    this.tb_maxpercent.Text = "";
 
                 }
                 else
@@ -284,6 +286,9 @@ namespace AITool
                     this.tb_Time.Text = this.ro.ActiveTimeRange;
                     this.tb_ConfidenceLower.Text = this.ro.Threshold_lower.ToString();
                     this.tb_ConfidenceUpper.Text = this.ro.Threshold_upper.ToString();
+
+                    this.tb_MinPercent.Text = this.ro.PredSizeMinPercentOfImage.ToString();
+                    this.tb_maxpercent.Text = this.ro.PredSizeMaxPercentOfImage.ToString();
 
                     if (this.tb_Name.Text.EqualsIgnoreCase("NEW OBJECT") || this.tb_Name.Text.IsEmpty())
                         this.tb_Name.Enabled = true;
@@ -351,6 +356,9 @@ namespace AITool
                     //}
                     this.ro.Threshold_lower = lower;
                     this.ro.Threshold_upper = upper;
+
+                    this.ro.PredSizeMinPercentOfImage = tb_MinPercent.Text.ToDouble();
+                    this.ro.PredSizeMaxPercentOfImage = tb_maxpercent.Text.ToDouble();
                 }
 
             }
@@ -637,6 +645,18 @@ namespace AITool
                     e.SubItem.ForeColor = Color.Gray;
 
             }
+        }
+
+        private void tb_MinPercent_TextChanged(object sender, EventArgs e)
+        {
+            NeedsSaving = true;
+            this.SaveRO();
+        }
+
+        private void tb_maxpercent_TextChanged(object sender, EventArgs e)
+        {
+            NeedsSaving = true;
+            this.SaveRO();
         }
     }
 }

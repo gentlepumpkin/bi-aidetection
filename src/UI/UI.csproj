@@ -704,6 +704,6 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)CleanOldInstalls.bat</PreBuildEvent>
+    <PreBuildEvent>"$(ProjectDir)CleanOldInstalls.bat"</PreBuildEvent>
   </PropertyGroup>
 </Project>

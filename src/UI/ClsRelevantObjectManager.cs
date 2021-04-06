@@ -23,6 +23,8 @@ namespace AITool
         [JsonProperty("IgnoreMask")]
         public bool IgnoreImageMask { get; set; } = false;
         public bool? IgnoreDynamicMask { get; set; } = null;
+        public double PredSizeMinPercentOfImage { get; set; } = 0;   //prediction must be at least this % of the image
+        public double PredSizeMaxPercentOfImage { get; set; } = 95;
         public long Hits { get; set; } = 0;
         public DateTime LastHitTime { get; set; } = DateTime.MinValue;
         public DateTime CreatedTime { get; set; } = DateTime.MinValue;
@@ -695,6 +697,7 @@ namespace AITool
                 string notenabled = "";
                 string nottime = "";
                 string nothreshold = "";
+                string percentsizewrong = "";
                 bool ignore = false;
 
                 foreach (ClsPrediction pred in preds)
@@ -715,22 +718,31 @@ namespace AITool
                                     //assume if confidence is 0 it has not been set yet (dynamic masking routine, etc)
                                     if (pred.Confidence == 0 || pred.Confidence.Round() >= ro.Threshold_lower && pred.Confidence.Round() <= ro.Threshold_upper)
                                     {
-                                        ro.LastHitTime = DateTime.Now;
-                                        ro.Hits++;
-                                        if (!ro.Trigger)
+                                        if (pred.PercentOfImage >= ro.PredSizeMinPercentOfImage && pred.PercentOfImage <= ro.PredSizeMaxPercentOfImage)
                                         {
-                                            ignore = true;
-                                            if (!ignored.Contains(label))
-                                                ignored += label + ",";
+                                            ro.LastHitTime = DateTime.Now;
+                                            ro.Hits++;
+                                            if (!ro.Trigger)
+                                            {
+                                                ignore = true;
+                                                if (!ignored.Contains(label))
+                                                    ignored += label + ",";
+                                            }
+                                            else
+                                            {
+                                                ret = ResultType.Relevant;
+                                                IgnoreImageMask = ro.IgnoreImageMask;
+                                                if (ro.IgnoreDynamicMask.HasValue)
+                                                    IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
+                                                if (!relevant.Contains(label))
+                                                    relevant += label + ",";
+                                            }
+
                                         }
                                         else
                                         {
-                                            ret = ResultType.Relevant;
-                                            IgnoreImageMask = ro.IgnoreImageMask;
-                                            if (ro.IgnoreDynamicMask.HasValue)
-                                                IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
-                                            if (!relevant.Contains(label))
-                                                relevant += label + ",";
+                                            if (!percentsizewrong.Contains(label))
+                                                percentsizewrong += label + $" ({pred.PercentOfImage.Round()}%),";
                                         }
 
                                     }
@@ -815,13 +827,16 @@ namespace AITool
                 if (nothreshold.IsEmpty())
                     nothreshold = "(NONE)";
 
+                if (percentsizewrong.IsEmpty())
+                    percentsizewrong = "(NONE)";
+
                 string maskignore = "";
                 if (IgnoreImageMask)
                     maskignore = " (Mask will be ignored)";
 
                 if (ret != ResultType.Relevant)
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', No Threshold Match='{nothreshold.Trim(" ,".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Percent Size wrong='{percentsizewrong.Trim(" ,".ToCharArray())}', No Threshold Match='{nothreshold.Trim(" ,".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
                 }
                 else
                 {
