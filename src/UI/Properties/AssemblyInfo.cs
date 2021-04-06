@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
 [assembly: AssemblyTitle("AITool")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A Gentlepumpkin / VorlonCD Production")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("AITool")]
 [assembly: AssemblyProduct("AITool")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // Sie können alle Werte angeben oder Standardwerte für die Build- und Revisionsnummern verwenden,
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.1041.7764")]
-[assembly: AssemblyFileVersion("2.0.1040.7764")]
+[assembly: AssemblyVersion("2.0.1064.7766")]
+[assembly: AssemblyFileVersion("2.0.1063.7766")]

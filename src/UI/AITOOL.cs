@@ -197,6 +197,8 @@ namespace AITool
                     }
                 }
 
+                Global.SaveRegSetting("LastRunPath", Directory.GetCurrentDirectory());
+
                 //initialize blueiris info class to get camera names, clip paths, etc
                 BlueIrisInfo = new BlueIris();
 
