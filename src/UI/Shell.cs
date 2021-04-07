@@ -2752,12 +2752,13 @@ namespace AITool
                                                 icam.triggering_objects_as_string = cam.triggering_objects_as_string;
                                                 icam.additional_triggering_objects_as_string = cam.additional_triggering_objects_as_string;
                                                 icam.triggering_objects = cam.triggering_objects_as_string.SplitStr(",").ToArray();   //triggering_objects_as_string.Split(','); //split the row of triggering objects between every ','
+
                                                 icam.Action_pushover_triggering_objects = cam.Action_pushover_triggering_objects;
-                                                icam.DefaultTriggeringObjects = cam.DefaultTriggeringObjects;
-                                                icam.TelegramTriggeringObjects = cam.TelegramTriggeringObjects;
-                                                icam.MQTTTriggeringObjects = cam.MQTTTriggeringObjects;
-                                                icam.PushoverTriggeringObjects = cam.PushoverTriggeringObjects;
-                                                icam.maskManager.MaskTriggeringObjects = cam.maskManager.MaskTriggeringObjects;
+                                                icam.DefaultTriggeringObjects.ObjectList = cam.DefaultTriggeringObjects.CloneObjectList();
+                                                icam.TelegramTriggeringObjects.ObjectList = cam.TelegramTriggeringObjects.CloneObjectList();
+                                                icam.MQTTTriggeringObjects.ObjectList = cam.MQTTTriggeringObjects.CloneObjectList();
+                                                icam.PushoverTriggeringObjects.ObjectList = cam.PushoverTriggeringObjects.CloneObjectList();
+                                                icam.maskManager.MaskTriggeringObjects.ObjectList = cam.maskManager.MaskTriggeringObjects.CloneObjectList();
 
                                             }
                                             if (frm.cb_apply_actions.Checked)
