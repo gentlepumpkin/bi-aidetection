@@ -1,6 +1,7 @@
 ﻿using NLog;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -432,6 +433,7 @@ namespace AITool
                     AITOOL.TriggerActionQueue != null &&
                     !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) &&
                     !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
+
                 {
                     //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
                     Camera cam = AITOOL.GetCamera(this._LastCamera);

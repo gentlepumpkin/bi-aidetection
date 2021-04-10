@@ -1488,22 +1488,30 @@ namespace AITool
 
                             if (cam.enabled)
                             {
-                                //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
-                                int qsize = ImageProcessQueue.Count + 1;
-                                if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                                if (!(cam.Paused && cam.PauseFileMon))
                                 {
-                                    Log("");
-                                    Log($"Error: Skipping image because queue ({qsize}) is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + Filename, "", cam, Filename);
+                                    //Note:  Interwebz says ConCurrentQueue.Count may be slow for large number of items but I dont think we have to worry here in most cases
+                                    int qsize = ImageProcessQueue.Count + 1;
+                                    if (qsize > AppSettings.Settings.MaxImageQueueSize)
+                                    {
+                                        Log("");
+                                        Log($"Error: Skipping image because queue ({qsize}) is greater than '{AppSettings.Settings.MaxImageQueueSize}'. (Adjust 'MaxImageQueueSize' in .JSON file if needed): " + Filename, "", cam, Filename);
+                                    }
+                                    else
+                                    {
+                                        Log("Debug: ");
+                                        Log($"Debug: ====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + Filename, "", cam, Filename);
+                                        ClsImageQueueItem CurImg = new ClsImageQueueItem(Filename, qsize);
+                                        detection_dictionary.TryAdd(Filename.ToLower(), CurImg);
+                                        ImageProcessQueue.Enqueue(CurImg);
+                                        scalc.AddToCalc(qsize);
+                                        Global.SendMessage(MessageType.ImageAddedToQueue);
+                                    }
+
                                 }
                                 else
                                 {
-                                    Log("Debug: ");
-                                    Log($"Debug: ====================== Adding new image to queue (Count={ImageProcessQueue.Count + 1}): " + Filename, "", cam, Filename);
-                                    ClsImageQueueItem CurImg = new ClsImageQueueItem(Filename, qsize);
-                                    detection_dictionary.TryAdd(Filename.ToLower(), CurImg);
-                                    ImageProcessQueue.Enqueue(CurImg);
-                                    scalc.AddToCalc(qsize);
-                                    Global.SendMessage(MessageType.ImageAddedToQueue);
+                                    Log($"Debug: Skipping image because camera '{cam}' file monitoring is PAUSED " + Filename, "", cam, Filename);
                                 }
 
                             }
@@ -3615,7 +3623,7 @@ namespace AITool
                     Log(ret.Error, AISRV, cam, CurImg);
                 }
                 //exitfunction:
-                if (!string.IsNullOrEmpty(ret.Error) && AppSettings.Settings.send_telegram_errors == true && cam.telegram_enabled)
+                if (!string.IsNullOrEmpty(ret.Error) && AppSettings.Settings.send_telegram_errors && cam.telegram_enabled && !(cam.Paused && cam.PauseTelegram))
                 {
                     //bool success = await TelegramUpload(CurImg, "Error");
                     if (hist == null)

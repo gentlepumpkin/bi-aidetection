@@ -346,6 +346,12 @@
     <Compile Include="Frm_ImageAdjust.Designer.cs">
       <DependentUpon>Frm_ImageAdjust.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm_Pause.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_Pause.Designer.cs">
+      <DependentUpon>Frm_Pause.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm_PredSizeLimits.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -578,6 +584,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_ApplyCameraTo.resx">
       <DependentUpon>Frm_ApplyCameraTo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_Pause.resx">
+      <DependentUpon>Frm_Pause.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_PredSizeLimits.resx">
       <DependentUpon>Frm_PredSizeLimits.cs</DependentUpon>

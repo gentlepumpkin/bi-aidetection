@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // Sie können alle Werte angeben oder Standardwerte für die Build- und Revisionsnummern verwenden,
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.1068.7767")]
-[assembly: AssemblyFileVersion("2.0.1067.7767")]
+[assembly: AssemblyVersion("2.0.1075.7770")]
+[assembly: AssemblyFileVersion("2.0.1074.7770")]

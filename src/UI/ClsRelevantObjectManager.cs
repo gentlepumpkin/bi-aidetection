@@ -17,7 +17,7 @@ namespace AITool
         public bool Enabled { get; set; } = true;
         public bool Trigger { get; set; } = true;
         public int Priority { get; set; } = 999;
-        public double Threshold_lower { get; set; } = 30;
+        public double Threshold_lower { get; set; } = 40;
         public double Threshold_upper { get; set; } = 100;
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
         [JsonProperty("IgnoreMask")]
@@ -694,6 +694,7 @@ namespace AITool
                 string notrelevant = "";
                 string relevant = "";
                 string ignored = "";
+                string unknownobject = "";
                 string notenabled = "";
                 string nottime = "";
                 string nothreshold = "";
@@ -718,7 +719,7 @@ namespace AITool
                                     //assume if confidence is 0 it has not been set yet (dynamic masking routine, etc)
                                     if (pred.Confidence == 0 || pred.Confidence.Round() >= ro.Threshold_lower && pred.Confidence.Round() <= ro.Threshold_upper)
                                     {
-                                        if (pred.PercentOfImage >= ro.PredSizeMinPercentOfImage && pred.PercentOfImage <= ro.PredSizeMaxPercentOfImage)
+                                        if (pred.PercentOfImage.Round() >= ro.PredSizeMinPercentOfImage && pred.PercentOfImage.Round() <= ro.PredSizeMaxPercentOfImage)
                                         {
                                             ro.LastHitTime = DateTime.Now;
                                             ro.Hits++;
@@ -731,6 +732,7 @@ namespace AITool
                                             else
                                             {
                                                 ret = ResultType.Relevant;
+                                                pred.ObjectResult = ResultType.Relevant;
                                                 IgnoreImageMask = ro.IgnoreImageMask;
                                                 if (ro.IgnoreDynamicMask.HasValue)
                                                     IgnoreDynamicMask = ro.IgnoreDynamicMask.Value;
@@ -741,6 +743,11 @@ namespace AITool
                                         }
                                         else
                                         {
+                                            if (pred.Confidence.Round() < ro.Threshold_lower)
+                                                pred.ObjectResult = ResultType.TooSmallPercent;
+                                            else if (pred.Confidence.Round() > ro.Threshold_upper)
+                                                pred.ObjectResult = ResultType.TooLargePercent;
+
                                             if (!percentsizewrong.Contains(label))
                                                 percentsizewrong += label + $" ({pred.PercentOfImage.Round()}%),";
                                         }
@@ -748,6 +755,7 @@ namespace AITool
                                     }
                                     else
                                     {
+                                        pred.ObjectResult = ResultType.NoConfidence;
                                         if (!nothreshold.Contains(label))
                                             nothreshold += label + $" ({pred.Confidence.Round()}%),";
                                     }
@@ -755,6 +763,7 @@ namespace AITool
                                 }
                                 else
                                 {
+                                    pred.ObjectResult = ResultType.NotInTimeRange;
                                     if (!nottime.Contains(label))
                                         nottime += label + ",";
                                 }
@@ -762,18 +771,21 @@ namespace AITool
                             }
                             else
                             {
+                                pred.ObjectResult = ResultType.NotEnabled;
                                 if (!notenabled.Contains(label))
                                     notenabled += label + ",";
                             }
                         }
                         else
                         {
-                            if (!notrelevant.Contains(label))
-                                notrelevant += label + ",";
+                            pred.ObjectResult = ResultType.UnknownObject;
+                            if (!unknownobject.Contains(label))
+                                unknownobject += label + ",";
                         }
                     }
                     else
                     {
+                        pred.ObjectResult = pred.Result;
                         if (!notrelevant.Contains(label))
                             notrelevant += label + ",";
                     }
@@ -809,26 +821,29 @@ namespace AITool
                 if (!DbgDetail.IsEmpty())
                     DbgDetail = $" ({DbgDetail})";
 
-                if (relevant.IsEmpty())
-                    relevant = "(NONE)";
+                if (!relevant.IsEmpty())
+                    relevant = $"Relevant='{relevant.Trim(", ".ToCharArray())}',";
 
-                if (notrelevant.IsEmpty())
-                    notrelevant = "(NONE)";
+                if (!notrelevant.IsEmpty())
+                    notrelevant = $"Irrelevant='{notrelevant.Trim(", ".ToCharArray())}',";
 
-                if (ignored.IsEmpty())
-                    ignored = "(NONE)";
+                if (!ignored.IsEmpty())
+                    ignored = $"Caused ignore='{ignored.Trim(", ".ToCharArray())}',";
 
-                if (notenabled.IsEmpty())
-                    notenabled = "(NONE)";
+                if (!notenabled.IsEmpty())
+                    notenabled = $"Not Enabled={notenabled.Trim(" ,".ToCharArray())},";
 
-                if (nottime.IsEmpty())
-                    nottime = "(NONE)";
+                if (!nottime.IsEmpty())
+                    nottime = $"Not Time={nottime.Trim(" ,".ToCharArray())},";
 
-                if (nothreshold.IsEmpty())
-                    nothreshold = "(NONE)";
+                if (!nothreshold.IsEmpty())
+                    nothreshold = $"No Threshold Match='{nothreshold.Trim(" ,".ToCharArray())}',";
 
-                if (percentsizewrong.IsEmpty())
-                    percentsizewrong = "(NONE)";
+                if (!percentsizewrong.IsEmpty())
+                    percentsizewrong = $"Percent Size wrong='{percentsizewrong.Trim(" ,".ToCharArray())}',";
+
+                if (!unknownobject.IsEmpty())
+                    unknownobject = $"Unknown Object='{unknownobject.Trim(" ,".ToCharArray())}',"; ;
 
                 string maskignore = "";
                 if (IgnoreImageMask)
@@ -836,11 +851,11 @@ namespace AITool
 
                 if (ret != ResultType.Relevant)
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because objects were not defined to trigger, or were set to ignore: Relevant='{relevant.Trim(", ".ToCharArray())}', Irrelevant='{notrelevant.Trim(", ".ToCharArray())}', Caused ignore='{ignored.Trim(", ".ToCharArray())}', Percent Size wrong='{percentsizewrong.Trim(" ,".ToCharArray())}', No Threshold Match='{nothreshold.Trim(" ,".ToCharArray())}', Not Enabled={notenabled.Trim(" ,".ToCharArray())}, Not Time={nottime.Trim(" ,".ToCharArray())}, All Triggering Objects='{this.ToString()}', {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Skipping '{this.TypeName}{DbgDetail}' because: {notrelevant}{ignored}{notenabled}{nottime}{nothreshold}{percentsizewrong}{unknownobject}{relevant}. {maskignore}, {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
                 }
                 else
                 {
-                    AITOOL.Log($"Debug: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because object(s) '{relevant.Trim(", ".ToCharArray())}' were in trigger objects list '{this.ToString()}',{maskignore} Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
+                    AITOOL.Log($"Debug: RelevantObjectManager: Object is valid for '{this.TypeName}{DbgDetail}' because:  {relevant}{notrelevant}{ignored}{notenabled}{nottime}{nothreshold}{percentsizewrong}{unknownobject}. {maskignore}, {preds.Count} predictions(s), Enabled={this.EnabledCount} of {this.ObjectList.Count}, IsNew={IsNew}");
 
                 }
             }

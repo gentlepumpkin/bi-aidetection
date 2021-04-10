@@ -47,7 +47,10 @@ namespace AITool
         TooLargeWidth = 17,
         TooLargeHeight = 18,
         IgnoredObject = 19,
-        RelevantDuplicateObject = 20
+        RelevantDuplicateObject = 20,
+        NotInTimeRange = 21,
+        NotEnabled = 22,
+        UnknownObject = 23,
 
     }
     public class ClsPrediction : IEquatable<ClsPrediction>
@@ -60,6 +63,7 @@ namespace AITool
         public string Label { get; set; } = "";
         public string Detail { get; set; } = "";
         public ResultType Result { get; set; } = ResultType.Unknown;
+        public ResultType ObjectResult { get; set; } = ResultType.Unknown;
         public double Confidence { get; set; } = 0;
         public double PercentOfImage { get; set; } = 0;
 

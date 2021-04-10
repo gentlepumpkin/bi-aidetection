@@ -7,6 +7,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
+
+using static AITool.MaskManager;
 
 namespace AITool
 {
@@ -123,10 +126,10 @@ namespace AITool
         public string telegram_chatid { get; set; } = "";
         public string telegram_active_time_range { get; set; } = "00:00:00-23:59:59";
         public bool enabled { get; set; } = true;
-        public double cooldown_time { get; set; } = 0;
-        public int cooldown_time_seconds { get; set; } = 5;
-        public int sound_cooldown_time_seconds { get; set; } = 5;
-        public int threshold_lower { get; set; } = 30;
+        public double cooldown_time { get; set; } = -1;
+        public int cooldown_time_seconds { get; set; } = 10;
+        public int sound_cooldown_time_seconds { get; set; } = 10;
+        public int threshold_lower { get; set; } = 40;
         public int threshold_upper { get; set; } = 100;
 
         //watch folder for each camera
@@ -213,6 +216,18 @@ namespace AITool
         public int LastJPGCleanDay { get; set; } = 0;
 
         [JsonIgnore]
+        public bool Paused { get; set; } = false;
+        [JsonIgnore]
+        public DateTime ResumeTime { get; set; } = DateTime.MinValue;
+
+        public double PauseMinutes { get; set; } = 30;
+        public bool PauseFileMon { get; set; } = false;
+        public bool PauseTelegram { get; set; } = false;
+        public bool PausePushover { get; set; } = false;
+        public bool PauseMQTT { get; set; } = false;
+        public bool PauseURL { get; set; } = false;
+
+        [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         [JsonIgnore]
         public ThreadSafe.Datetime last_sound_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
@@ -232,7 +247,8 @@ namespace AITool
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
         private object CamLock { get; set; } = new object();
-
+        private Timer _pauseTimer = new Timer();
+        private ElapsedEventHandler ev;
         [JsonConstructor]
         public Camera() { }
 
@@ -245,6 +261,39 @@ namespace AITool
             this.UpdateCamera();
         }
 
+
+        public void Pause()
+        {
+
+            this.Paused = true;
+            this.ResumeTime = DateTime.Now.AddMinutes(this.PauseMinutes);
+            this._pauseTimer.Interval = 1000;
+            //register event handler to run clean history every minute
+            ev = new System.Timers.ElapsedEventHandler(this.PauseEvent);
+            this._pauseTimer.Elapsed += ev;
+            this._pauseTimer.Start();
+            AITOOL.Log($"Debug: Camera '{this.Name}' paused for '{this.PauseMinutes}' minutes until '{this.ResumeTime}'.");
+
+        }
+
+        public void Resume()
+        {
+            this.Paused = false;
+            this.ResumeTime = DateTime.MinValue;
+            this._pauseTimer.Elapsed -= ev;
+            this._pauseTimer.Stop();
+            AITOOL.Log($"Debug: Resuming paused camera '{this.Name}' after '{this.PauseMinutes}' minutes. ");
+
+        }
+
+        private void PauseEvent(object sender, EventArgs e)
+        {
+            if (this.Paused)
+            {
+                if (DateTime.Now >= this.ResumeTime)
+                    this.Resume();
+            }
+        }
         public void UpdateCamera()
         {
             lock (CamLock)
@@ -268,7 +317,7 @@ namespace AITool
 
                     if (this.cooldown_time > -1)
                     {
-                        this.cooldown_time_seconds = Convert.ToInt32(Math.Round(TimeSpan.FromMinutes(this.cooldown_time).TotalSeconds, 0));
+                        this.cooldown_time_seconds = TimeSpan.FromMinutes(this.cooldown_time).TotalSeconds.ToInt();
                         this.cooldown_time = -1;
                     }
 

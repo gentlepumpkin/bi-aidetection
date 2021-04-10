@@ -112,6 +112,14 @@ namespace AITool
 
         }
         [DebuggerStepThrough]
+        public static string Trim(this string value, string trimstrlist)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+
+            return value.Trim(trimstrlist.ToCharArray());
+
+        }
+        [DebuggerStepThrough]
         public static string ReplaceChars(this string value, char replacechar)
         {
             if (string.IsNullOrEmpty(value)) return value;

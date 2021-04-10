@@ -2538,6 +2538,8 @@ namespace AITool
                 {
                     int added = 0;
                     List<string> cams = frm.tb_Cameras.Text.SplitStr("\r\n|;,");
+                    Camera DefCam = GetCamera("default", true);
+
                     foreach (var cs in cams)
                     {
 
@@ -2554,8 +2556,25 @@ namespace AITool
 
                         if (GetCamera(cn, false) == null)
                         {
-                            Camera cam = new Camera(cn);
+
+                            Camera cam = null;   // new Camera(cn);
+
+                            //Try to use the default camera settings when creating a new camera
+                            if (!DefCam.IsNull())
+                            {
+                                cam = DefCam.CloneJson();
+                                cam.Name = cn;
+                                cam.BICamName = cn;
+                                cam.Prefix = cn;
+                                cam.UpdateCamera();
+                            }
+                            else
+                            {
+                                cam = new Camera(cn);
+                            }
+
                             string camresult = this.AddCamera(cam);
+
                             Log(camresult);
                             if (camresult.StartsWith("success", StringComparison.OrdinalIgnoreCase))
                             {
@@ -5366,6 +5385,17 @@ namespace AITool
         {
             using (Frm_AnnoAdjust frm = new Frm_AnnoAdjust())
             {
+                frm.ShowDialog();
+            }
+        }
+
+        private void btnPause_Click(object sender, EventArgs e)
+        {
+            using (Frm_Pause frm = new Frm_Pause())
+            {
+
+                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
+                frm.CurrentCam = cam;
                 frm.ShowDialog();
             }
         }

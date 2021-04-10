@@ -259,21 +259,21 @@ namespace AITool
 
                 if (AQI.TType == TriggerType.TelegramText)
                 {
-                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
+                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "" && !(AQI.cam.Paused && AQI.cam.PauseTelegram))
                         res = await this.TelegramText(AQI);
                     else
                         WasSkipped = true;
                 }
                 else if (AQI.TType == TriggerType.TelegramImageUpload)
                 {
-                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "")
+                    if (AppSettings.Settings.telegram_chatids.Count > 0 && AppSettings.Settings.telegram_token != "" && !(AQI.cam.Paused && AQI.cam.PauseTelegram))
                         res = await this.TelegramUpload(AQI);
                     else
                         WasSkipped = true;
                 }
                 else if (AQI.TType == TriggerType.Pushover)
                 {
-                    if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) && !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey))
+                    if (!string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) && !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey) && !(AQI.cam.Paused && AQI.cam.PausePushover))
                         res = await this.PushoverUpload(AQI);
                     else
                         WasSkipped = true;
@@ -416,34 +416,38 @@ namespace AITool
 
                     }
 
-                    //call trigger urls
-                    if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
+                    if (!(AQI.cam.Paused && AQI.cam.PauseURL))
                     {
-                        //replace url paramters with according values
-                        List<string> urls = new List<string>();
-                        //call urls
-                        foreach (string url in AQI.cam.trigger_urls)
+                        //call trigger urls
+                        if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
                         {
-                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
-                            urls.Add(tmp);
+                            //replace url paramters with according values
+                            List<string> urls = new List<string>();
+                            //call urls
+                            foreach (string url in AQI.cam.trigger_urls)
+                            {
+                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
+                                urls.Add(tmp);
+
+                            }
+
+                            bool result = await this.CallTriggerURLs(urls, AQI);
+                        }
+                        else if (!AQI.Trigger && AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0)
+                        {
+                            //replace url paramters with according values
+                            List<string> urls = new List<string>();
+                            //call urls
+                            foreach (string url in AQI.cam.cancel_urls)
+                            {
+                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
+                                urls.Add(tmp);
+
+                            }
+
+                            bool result = await this.CallTriggerURLs(urls, AQI);
 
                         }
-
-                        bool result = await this.CallTriggerURLs(urls, AQI);
-                    }
-                    else if (!AQI.Trigger && AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0)
-                    {
-                        //replace url paramters with according values
-                        List<string> urls = new List<string>();
-                        //call urls
-                        foreach (string url in AQI.cam.cancel_urls)
-                        {
-                            string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
-                            urls.Add(tmp);
-
-                        }
-
-                        bool result = await this.CallTriggerURLs(urls, AQI);
 
                     }
 
@@ -533,7 +537,7 @@ namespace AITool
                         }
                     }
 
-                    if (AQI.cam.Action_mqtt_enabled)
+                    if (AQI.cam.Action_mqtt_enabled && !(AQI.cam.Paused && AQI.cam.PauseMQTT))
                     {
 
                         //make sure it is a matching object, but call MQTT in any case if it is a canceled event
@@ -593,7 +597,7 @@ namespace AITool
                     }
 
                     //upload to pushover
-                    if (AQI.cam.Action_pushover_enabled && AQI.Trigger)
+                    if (AQI.cam.Action_pushover_enabled && AQI.Trigger && !(AQI.cam.Paused && AQI.cam.PausePushover))
                     {
 
                         if (!await this.PushoverUpload(AQI))
@@ -609,9 +613,8 @@ namespace AITool
                     }
 
 
-
                     //upload to telegram
-                    if (AQI.cam.telegram_enabled && AQI.Trigger)
+                    if (AQI.cam.telegram_enabled && AQI.Trigger && !(AQI.cam.Paused && AQI.cam.PauseTelegram))
                     {
 
                         if (!await this.TelegramUpload(AQI))
@@ -1068,12 +1071,14 @@ namespace AITool
                 }
                 else
                 {
-                    Log($"Debug: No conditional objects found in URL: {url}");
+                    //Log($"Debug: No conditional objects found in URL: {url}");
                 }
 
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
+                    Log($"Debug:   -> {type} URL is being triggered... {url}");
+
                     HttpResponseMessage response = await triggerHttpClient.GetAsync(url);
 
                     if (response.IsSuccessStatusCode)
