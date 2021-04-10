@@ -2421,6 +2421,18 @@ namespace AITool
                 {
                     Camera cam = ((Camera)this.FOLV_Cameras.SelectedObjects[0]);
 
+                    if (cam.last_image_file.IsNotEmpty() && File.Exists(cam.last_image_file))
+                    {
+                        using (var img = new Bitmap(cam.last_image_file))
+                        {
+                            this.pictureBoxCamera.Image = new Bitmap(img); //load mask as overlay
+                        }
+                    }
+                    else
+                    {
+                        this.pictureBoxCamera.Image = null; //if file does not exist, empty mask overlay (from possible overlays of previous images)
+                    }
+
                     UpdateActionsLabel(cam);
 
                     Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";

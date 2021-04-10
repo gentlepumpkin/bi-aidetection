@@ -113,8 +113,10 @@
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.tabCameras = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.FOLV_Cameras = new BrightIdeasSoftware.FastObjectListView();
             this.CameraImageList = new System.Windows.Forms.ImageList(this.components);
+            this.pictureBoxCamera = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel6 = new AITool.DBLayoutPanel(this.components);
             this.tableLayoutPanel11 = new AITool.DBLayoutPanel(this.components);
             this.btnCameraAdd = new System.Windows.Forms.Button();
@@ -337,7 +339,12 @@
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
+            this.splitContainer3.Panel1.SuspendLayout();
+            this.splitContainer3.Panel2.SuspendLayout();
+            this.splitContainer3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.FOLV_Cameras)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCamera)).BeginInit();
             this.tableLayoutPanel6.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
             this.tableLayoutPanel7.SuspendLayout();
@@ -1251,7 +1258,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(815, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(807, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1264,7 +1271,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(811, 416);
+            this.pictureBox1.Size = new System.Drawing.Size(806, 416);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -1309,7 +1316,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.FOLV_Cameras);
+            this.splitContainer1.Panel1.Controls.Add(this.splitContainer3);
             // 
             // splitContainer1.Panel2
             // 
@@ -1317,6 +1324,24 @@
             this.splitContainer1.Size = new System.Drawing.Size(1093, 488);
             this.splitContainer1.SplitterDistance = 153;
             this.splitContainer1.TabIndex = 1;
+            // 
+            // splitContainer3
+            // 
+            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer3.Name = "splitContainer3";
+            this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer3.Panel1
+            // 
+            this.splitContainer3.Panel1.Controls.Add(this.FOLV_Cameras);
+            // 
+            // splitContainer3.Panel2
+            // 
+            this.splitContainer3.Panel2.Controls.Add(this.pictureBoxCamera);
+            this.splitContainer3.Size = new System.Drawing.Size(149, 484);
+            this.splitContainer3.SplitterDistance = 293;
+            this.splitContainer3.TabIndex = 1;
             // 
             // FOLV_Cameras
             // 
@@ -1326,7 +1351,7 @@
             this.FOLV_Cameras.Location = new System.Drawing.Point(0, 0);
             this.FOLV_Cameras.Name = "FOLV_Cameras";
             this.FOLV_Cameras.ShowGroups = false;
-            this.FOLV_Cameras.Size = new System.Drawing.Size(149, 484);
+            this.FOLV_Cameras.Size = new System.Drawing.Size(149, 293);
             this.FOLV_Cameras.TabIndex = 0;
             this.FOLV_Cameras.UseCompatibleStateImageBehavior = false;
             this.FOLV_Cameras.View = System.Windows.Forms.View.Details;
@@ -1341,6 +1366,17 @@
             this.CameraImageList.Images.SetKeyName(0, "camera-webcam.ico");
             this.CameraImageList.Images.SetKeyName(1, "camera-webcam_add.ico");
             this.CameraImageList.Images.SetKeyName(2, "camera-webcam_delete.ico");
+            // 
+            // pictureBoxCamera
+            // 
+            this.pictureBoxCamera.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.pictureBoxCamera.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBoxCamera.Location = new System.Drawing.Point(0, 0);
+            this.pictureBoxCamera.Name = "pictureBoxCamera";
+            this.pictureBoxCamera.Size = new System.Drawing.Size(149, 187);
+            this.pictureBoxCamera.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBoxCamera.TabIndex = 0;
+            this.pictureBoxCamera.TabStop = false;
             // 
             // tableLayoutPanel6
             // 
@@ -2571,7 +2607,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 72F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 75F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(167, 277);
@@ -2597,7 +2633,7 @@
             // 
             this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbMinimizeToTray.AutoSize = true;
-            this.cbMinimizeToTray.Location = new System.Drawing.Point(229, 15);
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(228, 15);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
             this.cbMinimizeToTray.TabIndex = 16;
@@ -3756,7 +3792,12 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.splitContainer3.Panel1.ResumeLayout(false);
+            this.splitContainer3.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
+            this.splitContainer3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.FOLV_Cameras)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCamera)).EndInit();
             this.tableLayoutPanel6.ResumeLayout(false);
             this.tableLayoutPanel6.PerformLayout();
             this.tableLayoutPanel11.ResumeLayout(false);
@@ -4093,6 +4134,8 @@
         private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.ToolStripButton toolStripButtonAdjustAnno;
         private System.Windows.Forms.Button btnPause;
+        private System.Windows.Forms.SplitContainer splitContainer3;
+        private System.Windows.Forms.PictureBox pictureBoxCamera;
     }
 }
 
