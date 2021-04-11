@@ -3368,7 +3368,7 @@ namespace AITool
                         //process the combined predictions
                         if (predictions.Count > 0)
                         {
-                            List<string> objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
+                            List<string> relevant_objects = new List<string>(); //list that will be filled with all objects that were detected and are triggering_objects for the camera
                             List<double> objects_confidence = new List<double>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_details = new List<string>(); //list containing ai confidence value of object at same position in List objects
                             List<string> objects_position = new List<string>(); //list containing object positions (xmin, ymin, xmax, ymax)
@@ -3387,6 +3387,14 @@ namespace AITool
                             //if we are not using the local deepstack windows version, this means nothing:
                             DeepStackServerControl.IsActivated = true;
 
+                            bool HasIgnore = false;
+                            //Find out if there is even one ignored object to prevent the trigger later
+                            foreach (ClsPrediction pred in predictions)
+                            {
+                                if (pred.Result == ResultType.IgnoredObject)
+                                    HasIgnore = true;
+                            }
+
                             //print every detected object with the according confidence-level
                             Log($"Debug:    Detected objects:", AISRV, cam, CurImg);
 
@@ -3397,9 +3405,9 @@ namespace AITool
                                 if (pred.Result != ResultType.Error)
                                     DeepStackServerControl.VisionDetectionRunning = true;
 
-                                if (pred.Result == ResultType.Relevant)
+                                if (pred.Result == ResultType.Relevant && !HasIgnore)
                                 {
-                                    objects.Add(pred.Label);
+                                    relevant_objects.Add(pred.Label);
                                     objects_confidence.Add(pred.Confidence);
                                     objects_details.Add(pred.Detail);
                                     objects_position.Add($"{pred.XMin.Round(0)},{pred.YMin.Round(0)},{pred.XMax.Round(0)},{pred.YMax.Round(0)}");
@@ -3447,10 +3455,10 @@ namespace AITool
 
 
                             //if one or more objects were detected, that are 1. relevant, 2. within confidence limits and 3. outside of masked areas
-                            if (objects.Count > 0)
+                            if (relevant_objects.Count > 0)
                             {
                                 //store these last detections for the specific camera
-                                cam.last_detections = objects;
+                                cam.last_detections = relevant_objects;
                                 cam.last_confidences = objects_confidence;
                                 cam.last_details = objects_details;
                                 cam.last_positions = objects_position;
@@ -3461,9 +3469,9 @@ namespace AITool
 
                                 //create summary string for this detection
                                 StringBuilder detectionsTextSb = new StringBuilder();
-                                for (int i = 0; i < objects.Count; i++)
+                                for (int i = 0; i < relevant_objects.Count; i++)
                                 {
-                                    detectionsTextSb.Append($"{objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
+                                    detectionsTextSb.Append($"{relevant_objects[i]} {String.Format(AppSettings.Settings.DisplayPercentageFormat, objects_confidence[i])}; "); // String.Format("{0} ({1}%) | ", objects[i], Math.Round((objects_confidence[i] * 100), 2)));
                                 }
 
                                 cam.last_detections_summary = detectionsTextSb.ToString().Trim("; ".ToCharArray());
