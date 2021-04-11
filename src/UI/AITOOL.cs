@@ -3396,7 +3396,10 @@ namespace AITool
                             }
 
                             //print every detected object with the according confidence-level
-                            Log($"Debug:    Detected objects:", AISRV, cam, CurImg);
+                            if (HasIgnore)
+                                Log($"Debug:    Detected objects ('Ignored' object found):", AISRV, cam, CurImg);
+                            else
+                                Log($"Debug:    Detected objects:", AISRV, cam, CurImg);
 
                             foreach (ClsPrediction pred in predictions)
                             {
@@ -3443,9 +3446,9 @@ namespace AITool
                                 }
 
                                 if (pred.Result == ResultType.Relevant || pred.Result == ResultType.Error)
-                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}, PercentOfImage={pred.PercentOfImage.ToPercent()}", pred.Server, cam, CurImg);
+                                    Log($"     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', ObjectResult={pred.ObjectResult}, DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}, PercentOfImage={pred.PercentOfImage.ToPercent()}", pred.Server, cam, CurImg);
                                 else
-                                    Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", pred.Server, cam, CurImg);
+                                    Log($"Debug:     {clr}Result='{pred.Result}', Detail='{pred.ToString()}', ObjType='{pred.ObjType}', ObjectResult={pred.ObjectResult}, DynMaskResult='{pred.DynMaskResult}', DynMaskType='{pred.DynMaskType}', ImgMaskResult='{pred.ImgMaskResult}', ImgMaskType='{pred.ImgMaskType}'", pred.Server, cam, CurImg);
 
                             }
 
