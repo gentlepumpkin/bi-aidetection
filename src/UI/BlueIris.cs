@@ -17,7 +17,7 @@ namespace AITool
     public enum BlueIrisResult
     {
         Valid,
-        NeedsRemoteRegistryService,
+        NeedsRemoteRegistryServiceEnabled,
         NeedsPermission,
         NeedsAdminSharesEnabled,   //https://www.repairwin.com/enable-admin-shares-windows-10-8-7/
         InvalidHostOrIP,
@@ -322,7 +322,7 @@ namespace AITool
 
                 }
 
-                bool IsValid = (this.ClipPaths.Count > 0 && !String.IsNullOrWhiteSpace(this.AppPath) && !string.IsNullOrWhiteSpace(this.URL) && Directory.Exists(this.AppPath));
+                bool IsValid = (this.ClipPaths.Count > 0 && !String.IsNullOrWhiteSpace(this.AppPath) && !string.IsNullOrWhiteSpace(this.ServerName) && Directory.Exists(this.AppPath));
 
                 if (IsValid)
                     this.Result = BlueIrisResult.Valid;
@@ -333,7 +333,7 @@ namespace AITool
                 if (ex.Message.IndexOf("The network path was not found", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     Log($"Error: The remote machine needs the 'Remote Registry' service enabled (automatic) + started on '{ServernameOrIP}': " + ex.Msg());
-                    this.Result = BlueIrisResult.NeedsRemoteRegistryService;
+                    this.Result = BlueIrisResult.NeedsRemoteRegistryServiceEnabled;
                 }
                 //System.UnauthorizedAccessException: 'Attempted to perform an unauthorized operation.'
                 else if (ex.Message.IndexOf("unauthorized operation", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -345,8 +345,8 @@ namespace AITool
                 else
                 {
                     Log("Error: Got error while reading BlueIris registry: " + ex.Msg());
+                    this.Result = BlueIrisResult.Unknown;
                 }
-                this.Result = BlueIrisResult.Unknown;
             }
             finally
             {

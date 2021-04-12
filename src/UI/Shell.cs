@@ -1,4 +1,6 @@
-﻿using BrightIdeasSoftware;
+﻿using AITool.Properties;
+
+using BrightIdeasSoftware;
 
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -186,41 +188,7 @@ namespace AITool
                 //---------------------------------------------------------------------------
                 //SETTINGS TAB
 
-                //fill settings tab with stored settings 
-
-                this.cmbInput.Text = AppSettings.Settings.input_path;
-                this.cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
-                this.cmbInput.Items.Clear();
-                foreach (string pth in BlueIrisInfo.ClipPaths)
-                {
-                    this.cmbInput.Items.Add(pth);
-
-                }
-
-                //this.tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
-                this.cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
-
-                Debug.Print("load tid=" + Thread.CurrentThread.ManagedThreadId);
-
-                this.Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
-
-                this.tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
-                this.tb_telegram_token.Text = AppSettings.Settings.telegram_token;
-                this.tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_seconds.ToString();
-
-                this.cb_send_telegram_errors.Checked = AppSettings.Settings.send_telegram_errors;
-                this.cb_send_pushover_errors.Checked = AppSettings.Settings.send_pushover_errors;
-                this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
-                this.cbMinimizeToTray.Checked = AppSettings.Settings.MinimizeToTray;
-
-                this.tb_username.Text = AppSettings.Settings.DefaultUserName;
-                this.tb_password.Text = AppSettings.Settings.DefaultPasswordEncrypted.Decrypt();
-
-                this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
-
-                this.tb_Pushover_APIKey.Text = AppSettings.Settings.pushover_APIKey;
-                this.tb_Pushover_UserKey.Text = AppSettings.Settings.pushover_UserKey;
-                this.tb_Pushover_Cooldown.Text = AppSettings.Settings.pushover_cooldown_seconds.ToString();
+                this.LoadSettingsTab();
 
                 //---------------------------------------------------------------------------
                 //STATS TAB
@@ -340,6 +308,65 @@ namespace AITool
 
         }
 
+        private void LoadSettingsTab()
+        {
+
+            // fill settings tab with stored settings
+
+            this.cmbInput.Text = AppSettings.Settings.input_path;
+            this.cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
+            this.cmbInput.Items.Clear();
+            foreach (string pth in BlueIrisInfo.ClipPaths)
+            {
+                this.cmbInput.Items.Add(pth);
+
+            }
+
+            //this.tbDeepstackUrl.Text = AppSettings.Settings.deepstack_url;
+            this.cb_DeepStackURLsQueued.Checked = AppSettings.Settings.deepstack_urls_are_queued;
+
+            this.Chk_AutoScroll.Checked = AppSettings.Settings.Autoscroll_log;
+
+            this.tb_telegram_chatid.Text = String.Join(",", AppSettings.Settings.telegram_chatids);
+            this.tb_telegram_token.Text = AppSettings.Settings.telegram_token;
+            this.tb_telegram_cooldown.Text = AppSettings.Settings.telegram_cooldown_seconds.ToString();
+
+            this.cb_send_telegram_errors.Checked = AppSettings.Settings.send_telegram_errors;
+            this.cb_send_pushover_errors.Checked = AppSettings.Settings.send_pushover_errors;
+            this.cbStartWithWindows.Checked = AppSettings.Settings.startwithwindows;
+            this.cbMinimizeToTray.Checked = AppSettings.Settings.MinimizeToTray;
+
+            this.tb_username.Text = AppSettings.Settings.DefaultUserName;
+            this.tb_password.Text = AppSettings.Settings.DefaultPasswordEncrypted.Decrypt();
+
+            this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
+
+
+            if (BlueIrisInfo.Result == BlueIrisResult.Valid)
+            {
+                lbl_blueirisserver.Text = "BI Config: " + BlueIrisInfo.Result;
+                lbl_blueirisserver.Text += $";  WebServer is configured for {BlueIrisInfo.URL}";
+                lbl_blueirisserver.ForeColor = Color.DodgerBlue;
+                if (Global.IsValidIPAddress(AppSettings.Settings.BlueIrisServer, out IPAddress foundip) && !AppSettings.Settings.BlueIrisServer.EqualsIgnoreCase(BlueIrisInfo.ServerName))
+                {
+                    Log($"Warning: BlueIris Settings > Web Server > Local IP address is set to a different IP: AITOOL={AppSettings.Settings.BlueIrisServer}, BI={BlueIrisInfo.ServerName}");
+                }
+            }
+            else if (!AppSettings.Settings.BlueIrisServer.IsEmpty())
+            {
+                lbl_blueirisserver.Text = "BI Config: Error - " + BlueIrisInfo.Result;
+                lbl_blueirisserver.ForeColor = Color.MediumPurple;
+            }
+            else
+            {
+                lbl_blueirisserver.Text = "";
+            }
+
+            this.tb_Pushover_APIKey.Text = AppSettings.Settings.pushover_APIKey;
+            this.tb_Pushover_UserKey.Text = AppSettings.Settings.pushover_UserKey;
+            this.tb_Pushover_Cooldown.Text = AppSettings.Settings.pushover_cooldown_seconds.ToString();
+
+        }
         private void tmr_Elapsed(object sender, ElapsedEventArgs e)
         {
             if ((DateTime.Now - this.TimeSinceType).Milliseconds >= 600)
@@ -1048,6 +1075,10 @@ namespace AITool
                 else if (this.tabControl1.SelectedIndex == 3)
                 {
                     this.LoadCameras();
+                }
+                else if (this.tabControl1.SelectedIndex == 4)
+                {
+                    this.LoadSettingsTab();
                 }
                 else if (this.tabControl1.SelectedTab == this.tabControl1.TabPages["tabDeepStack"])
                 {
@@ -2966,6 +2997,10 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            BtnSettingsSave.Enabled = false;
+            BtnSettingsSave.Text = "Saving...";
+            Application.DoEvents();
+
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
             //save inputted settings into App.settings
             AppSettings.Settings.input_path = this.cmbInput.Text.Trim();
@@ -3009,38 +3044,34 @@ namespace AITool
             //log_everything = AppSettings.Settings.log_everything;
             //send_errors = AppSettings.Settings.send_errors;
 
+            Application.DoEvents();
+
             //update fswatcher to watch new input folder
             UpdateWatchers(true);
 
             //Update blue iris info
+            Application.DoEvents();
+
             await BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
 
             AITOOL.UpdateLatLong();
+
+            Application.DoEvents();
 
             this.cmbInput.Items.Clear();
             foreach (string pth in BlueIrisInfo.ClipPaths)
                 this.cmbInput.Items.Add(pth);
 
 
+            this.LoadSettingsTab();
+
             if (BlueIrisInfo.Result != BlueIrisResult.Valid)
                 MessageBox.Show($"Error: Could not connect to BlueIris server: '{BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
 
-            bool noneg = false;
-            if (AppSettings.Settings.telegram_chatids.Count > 0)
-            {
-                foreach (string id in AppSettings.Settings.telegram_chatids)
-                {
-                    if (!string.IsNullOrWhiteSpace(id) && !id.TrimStart().StartsWith("-"))
-                    {
-                        noneg = true;
-                    }
-                }
-            }
+            BtnSettingsSave.Enabled = true;
+            BtnSettingsSave.Text = "Save";
+            Application.DoEvents();
 
-            if (noneg)
-            {
-                //MessageBox.Show("Please note that the Telegram Chat ID **may** need to start with a negative sign. -1234567890", "Telegram Chat ID format", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
 
         }
 

@@ -51,13 +51,18 @@ namespace AITool
 
         private void UpdateButton()
         {
-            if (!this.CurrentCam.IsNull() && this.CurrentCam.Paused)
+            if (!this.CurrentCam.IsNull())
             {
-                this.lbl_resumingtime.Text = $"Resuming in {(this.CurrentCam.ResumeTime - DateTime.Now).TotalMinutes.Round()} minutes...";
-            }
-            else
-            {
-                this.lbl_resumingtime.Text = "Not paused.";
+                if (this.CurrentCam.Paused)
+                {
+                    this.lbl_resumingtime.Text = $"Resuming in {(this.CurrentCam.ResumeTime - DateTime.Now).TotalMinutes.Round()} minutes...";
+                }
+                else
+                {
+
+                    //this.cb_Paused.Checked = this.CurrentCam.Paused;
+                    this.lbl_resumingtime.Text = "Not paused.";
+                }
             }
 
         }
@@ -103,7 +108,7 @@ namespace AITool
                     cam.PauseURL = cb_URL.Checked;
                     if (cam.Paused && !cb_Paused.Checked)
                     {
-                       cam.Resume();
+                        cam.Resume();
                     }
                     else if (!cam.Paused && cb_Paused.Checked)
                     {

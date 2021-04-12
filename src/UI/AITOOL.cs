@@ -1587,6 +1587,8 @@ namespace AITool
 
                 FileWatcherHasError.WriteFullFence(false);
 
+                Global.UpdateProgressBar($"Updating watched folders'...", 1, 1, 1);
+
                 //first add all the names and paths to check...
                 List<string> names = new List<string>();
                 Dictionary<string, string> paths = new Dictionary<string, string>();
