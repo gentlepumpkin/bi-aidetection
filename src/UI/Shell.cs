@@ -24,8 +24,10 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
-using static AITool.AITOOL;
+
 using static AITool.Global;
+using static AITool.AITOOL;
+
 
 namespace AITool
 {
@@ -5439,7 +5441,20 @@ namespace AITool
 
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
                 frm.CurrentCam = cam;
-                frm.ShowDialog();
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void bt_CheckUpdates_Click(object sender, EventArgs e)
+        {
+            using (Frm_UpdateCheck frm = new Frm_UpdateCheck())
+            {
+                if (frm.ShowDialog(this) == DialogResult.OK)
+                {
+                    this.CloseImmediately = true;
+                    Application.Exit();
+
+                }
             }
         }
     }

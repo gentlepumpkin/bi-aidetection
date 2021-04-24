@@ -1400,7 +1400,7 @@ namespace AITool
         }
 
 
-        public static void MoveFiles(string FromFolder, string ToFolder, string FileSpec, bool OnlyIfNewer)
+        public static void MoveFiles(string FromFolder, string ToFolder, string FileSpec, bool OnlyIfNewer, bool OnlyCopy = false)
         {
             //Let us pass a filename so we can be lazy
             if (Path.HasExtension(FromFolder))
@@ -1433,12 +1433,19 @@ namespace AITool
                         {
                             //just delete the older file rather than moving it
                             move = false;
-                            fi.Delete();
+                            if (!OnlyCopy)
+                                fi.Delete();
                         }
                     }
 
                     if (move)
-                        fi.MoveTo(newfile);
+                    {
+                        if (!OnlyCopy)
+                            fi.MoveTo(newfile);
+                        else
+                            fi.CopyTo(newfile, true);
+
+                    }
 
                     cnt++;
                 }
@@ -1453,7 +1460,7 @@ namespace AITool
 
         }
 
-        public static Version GetFrameworkVersion()
+        public static string GetFrameworkVersion()
         {
             using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
             {
@@ -1461,36 +1468,36 @@ namespace AITool
                 {
                     int value = (int)(ndpKey.GetValue("Release") ?? 0);
                     if (value >= 528040)
-                        return new Version(4, 8, 0);
+                        return new Version(4, 8, 0).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 461808)
-                        return new Version(4, 7, 2);
+                        return new Version(4, 7, 2).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 461308)
-                        return new Version(4, 7, 1);
+                        return new Version(4, 7, 1).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 460798)
-                        return new Version(4, 7, 0);
+                        return new Version(4, 7, 0).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 394802)
-                        return new Version(4, 6, 2);
+                        return new Version(4, 6, 2).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 394254)
-                        return new Version(4, 6, 1);
+                        return new Version(4, 6, 1).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 393295)
-                        return new Version(4, 6, 0);
+                        return new Version(4, 6, 0).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 379893)
-                        return new Version(4, 5, 2);
+                        return new Version(4, 5, 2).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 378675)
-                        return new Version(4, 5, 1);
+                        return new Version(4, 5, 1).ToString() + $" (Release {value.ToString()})";
 
                     if (value >= 378389)
-                        return new Version(4, 5, 0);
+                        return new Version(4, 5, 0).ToString() + $" (Release {value.ToString()})";
 
-                    throw new NotSupportedException($"No 4.5 or later framework version detected, framework key value: {value}");
+                    return $"Unknown release {value}";
                 }
 
                 throw new NotSupportedException(@"No registry key found under 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' to determine running framework version");

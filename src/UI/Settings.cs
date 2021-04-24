@@ -513,6 +513,20 @@ namespace AITool
                 bool IsSettingsFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName);
                 bool SettingsFileExists = File.Exists(AppSettings.Settings.SettingsFileName);
                 bool IsSettingsBakFileValid = await IsFileValidAsync(AppSettings.Settings.SettingsFileName + ".bak");
+                string LastRunPath = Global.GetRegSetting("LastRunPath", "");
+                string LastSettingsFile = "";
+                string LastSettingsFolder = "";
+
+                if (!LastRunPath.IsEmpty() && !Directory.GetCurrentDirectory().EqualsIgnoreCase(LastRunPath) && Directory.Exists(LastRunPath))
+                {
+                    LastSettingsFolder = Path.Combine(LastRunPath, "_SETTINGS");
+                    LastSettingsFile = Path.Combine(LastSettingsFolder, "AITOOL.Settings.JSON");
+                    if (!File.Exists(LastSettingsFile))
+                    {
+                        LastSettingsFile = "";
+                        LastSettingsFolder = "";
+                    }
+                }
                 //read the old configuration file
                 if (!IsSettingsFileValid && !IsSettingsBakFileValid && string.IsNullOrEmpty(AppSettings.LastSettingsJSON))
                 {
@@ -590,6 +604,42 @@ namespace AITool
                     //revert to REGISTRY backup if its good AND the main settings file doesnt exist at all (so someone can delete the settings file to reset settings)
                     Log("Error: Reverting to REGISTRY backup settings...");
                     Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
+
+                }
+                else if (!LastSettingsFile.IsEmpty() && !SettingsFileExists && !Global.IsService)
+                {
+                    //revert to REGISTRY backup and look for the last folder to migrate settings from
+                    string newfolder = Path.GetDirectoryName(Settings.SettingsFileName);
+                    Log($"Debug: Previous settings found at {LastSettingsFolder} but not {newfolder}...");
+                    if (System.Windows.Forms.MessageBox.Show($"Would you like to migrate settings from the last folder?\r\n\r\n{LastSettingsFolder}", "Migrate Settings?", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        //copy the old settings folder:
+                        Log($"Debug: Copying settings folder from original '{LastSettingsFolder}' to '{newfolder}'...");
+                        Global.MoveFiles(LastSettingsFolder, newfolder, "*.*", true, true);
+                        Log("Debug: Loading settings from " + AppSettings.Settings.SettingsFileName);
+                        Settings = Global.ReadFromJsonFile<ClsSettings>(AppSettings.Settings.SettingsFileName);
+                    }
+                    else
+                    {
+                        Log("Debug: Did NOT import settings from folder.");
+                    }
+
+                }
+                else if (!AppSettings.LastSettingsJSON.IsEmpty() && !SettingsFileExists && !Global.IsService)
+                {
+                    //revert to REGISTRY backup and look for the last folder to migrate settings from
+                    string newfolder = Path.GetDirectoryName(Settings.SettingsFileName);
+                    Log($"Debug: Previous settings found in the registry but not {newfolder}...");
+                    if (System.Windows.Forms.MessageBox.Show($"Would you like to migrate settings from the last saved REGISTRY copy?", "Migrate Settings?", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        //copy the old settings folder:
+                        Log("Debug: Loading settings from previous REGISTRY...");
+                        Settings = Global.SetJSONString<ClsSettings>(AppSettings.LastSettingsJSON);
+                    }
+                    else
+                    {
+                        Log("Debug: Did NOT import settings from previous registry copy.");
+                    }
 
                 }
                 else

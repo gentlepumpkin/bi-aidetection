@@ -83,10 +83,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.7.0.10\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Core.3.7.0.12\lib\net45\AWSSDK.Core.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.Rekognition, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Rekognition.3.7.0.9\lib\net45\AWSSDK.Rekognition.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Rekognition.3.7.0.11\lib\net45\AWSSDK.Rekognition.dll</HintPath>
     </Reference>
     <Reference Include="Docker.DotNet, Version=3.125.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Docker.DotNet.3.125.4\lib\netstandard2.0\Docker.DotNet.dll</HintPath>
@@ -100,6 +100,9 @@
     <Reference Include="M2Mqtt.Net, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\M2Mqtt.4.3.0.0\lib\net45\M2Mqtt.Net.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="Markdig, Version=0.24.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Markdig.0.24.0\lib\net452\Markdig.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.5.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -157,6 +160,9 @@
     <Reference Include="ObjectListView, Version=2.9.1.25410, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <HintPath>..\packages\ObjectListView.Official.2.9.2-alpha2\lib\net20\ObjectListView.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="Octokit, Version=0.50.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octokit.0.50.0\lib\net46\Octokit.dll</HintPath>
     </Reference>
     <Reference Include="SixLabors.ImageSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
       <HintPath>..\packages\SixLabors.ImageSharp.1.0.3\lib\net472\SixLabors.ImageSharp.dll</HintPath>
@@ -363,6 +369,12 @@
     </Compile>
     <Compile Include="Frm_RelevantObjects.Designer.cs">
       <DependentUpon>Frm_RelevantObjects.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm_UpdateCheck.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_UpdateCheck.Designer.cs">
+      <DependentUpon>Frm_UpdateCheck.cs</DependentUpon>
     </Compile>
     <Compile Include="Frm_Variables.cs">
       <SubType>Form</SubType>
@@ -594,6 +606,9 @@
     <EmbeddedResource Include="Frm_RelevantObjects.resx">
       <DependentUpon>Frm_RelevantObjects.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Frm_UpdateCheck.resx">
+      <DependentUpon>Frm_UpdateCheck.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Frm_Variables.resx">
       <DependentUpon>Frm_Variables.cs</DependentUpon>
     </EmbeddedResource>
@@ -650,6 +665,7 @@
     <None Include="Resources\arrow-up-double-3.ico" />
     <None Include="Resources\arrow-down-double-3.ico" />
     <None Include="Resources\color-wheel.ico" />
+    <None Include="Resources\donate_button.png" />
     <Content Include="TestImage.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -696,7 +712,7 @@
     <Folder Include="Installer\" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.7.0.9\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.Rekognition.3.7.0.11\analyzers\dotnet\cs\AWSSDK.Rekognition.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />

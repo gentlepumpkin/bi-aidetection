@@ -3928,6 +3928,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", preds[0].ToString()); //only gives first detection 
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", preds[0].Label); //only gives first detection 
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", preds[0].Detail);
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detailescaped]", Uri.EscapeUriString(preds[0].Detail));
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", preds[0].Result.ToString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", preds[0].PercentOfImage.Round().ToString());
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", preds[0].PositionString());
@@ -3943,6 +3944,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "Test Detection");
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", "Person");
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detailescaped]", "Test Detail");
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", "0,0,0,0");
                         ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", "50.123");
@@ -3987,6 +3989,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", cam.last_detections.ElementAt(0)); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", cam.last_details.ElementAt(0)); //only gives first detection (maybe not most relevant one)
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detailescaped]", Uri.EscapeUriString(cam.last_details.ElementAt(0))); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[position]", cam.last_positions.ElementAt(0));
                         ret = Global.ReplaceCaseInsensitive(ret, "[confidence]", string.Format(AppSettings.Settings.DisplayPercentageFormat, cam.last_confidences.ElementAt(0)));
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Unknown");
@@ -4000,6 +4003,7 @@ namespace AITool
                         ret = Global.ReplaceCaseInsensitive(ret, "[summary]", "Test Summary"); //summary text including all detections and confidences, p.e."person (91,53%)"
                         ret = Global.ReplaceCaseInsensitive(ret, "[detection]", "Test Detection"); //only gives first detection (maybe not most relevant one)
                         ret = Global.ReplaceCaseInsensitive(ret, "[detail]", "Test Detail");
+                        ret = Global.ReplaceCaseInsensitive(ret, "[detailescaped]", "Test Detail");
                         ret = Global.ReplaceCaseInsensitive(ret, "[label]", "Person");
                         ret = Global.ReplaceCaseInsensitive(ret, "[result]", "Relevant");
                         ret = Global.ReplaceCaseInsensitive(ret, "[percentofimage]", "50.123");
