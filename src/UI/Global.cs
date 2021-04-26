@@ -611,7 +611,7 @@ namespace AITool
                         using RegistryKey drvkey = key.OpenSubKey(drv);
                         if (drvkey != null)
                         {
-                            string remotepath = drvkey.GetValue("RemotePath").ToString();
+                            string remotepath = drvkey.GetValue("RemotePath", "").ToString();
                             if (!string.IsNullOrEmpty(remotepath) && remotepath.StartsWith(@"\\"))
                             {
                                 string mappedserver = remotepath.GetWord(@"\\", @"\");
