@@ -215,7 +215,7 @@ namespace AITool
         {
             try
             {
-                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[Result];[Position];[Confidence];[Detections];[Confidences];[SummaryJson];[DetectionsJson];[AllJson];[PercentOfImage];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
+                string vars = "[Camera];[Prefix];[CamInputFolder];[InputFolder];[ImagePath];[ImagePathEscaped];[ImageFilename];[ImageFilenameNoExt];[Username];[Password];[BlueIrisServerIP];[BlueIrisURL];[SummaryNonEscaped];[Summary];[Detection];[Label];[Detail];[DetailEscaped];[Result];[Position];[Confidence];[Detections];[Confidences];[SummaryJson];[DetectionsJson];[AllJson];[PercentOfImage];%DATE%;%TIME%;%DATETIME%;%TEMP%;%APPDATA%;%USERPROFILE%;%USERNAME%";
                 List<string> varlist = vars.SplitStr(";");
                 List<ClsProp> props = new List<ClsProp>();
                 foreach (var varitm in varlist)

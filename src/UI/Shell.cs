@@ -349,7 +349,7 @@ namespace AITool
                 lbl_blueirisserver.Text = "BI Config: " + BlueIrisInfo.Result;
                 lbl_blueirisserver.Text += $";  WebServer is configured for {BlueIrisInfo.URL}";
                 lbl_blueirisserver.ForeColor = Color.DodgerBlue;
-                if (Global.IsValidIPAddress(AppSettings.Settings.BlueIrisServer, out IPAddress foundip) && !AppSettings.Settings.BlueIrisServer.EqualsIgnoreCase(BlueIrisInfo.ServerName))
+                if (Global.IsValidIPAddress(AppSettings.Settings.BlueIrisServer, out IPAddress foundip) && !AppSettings.Settings.BlueIrisServer.EqualsIgnoreCase(BlueIrisInfo.ServerName) && AppSettings.Settings.BlueIrisServer != "127.0.0.1")
                 {
                     Log($"Warning: BlueIris Settings > Web Server > Local IP address is set to a different IP: AITOOL={AppSettings.Settings.BlueIrisServer}, BI={BlueIrisInfo.ServerName}");
                 }

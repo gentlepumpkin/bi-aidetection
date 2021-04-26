@@ -33,6 +33,7 @@ using static AITool.Global;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using Docker.DotNet.Models;
+using System.Security.Cryptography;
 
 namespace AITool
 {
@@ -743,12 +744,48 @@ namespace AITool
                     if (!string.IsNullOrWhiteSpace(csv))
                     {
                         AITOOL.Log($"Debug: Extracting AWSAccessKeyId and AWSSecretKey from {pth}");
-                        string tid = csv.GetWord("AWSAccessKeyId=", "\r|\n");
-                        string tsid = csv.GetWord("AWSSecretKey=", "\r|\n|");
-                        if (!string.IsNullOrEmpty(tid) && tid != AppSettings.Settings.AmazonAccessKeyId)
-                            AppSettings.Settings.AmazonAccessKeyId = tid;
-                        if (!string.IsNullOrEmpty(tsid) && tsid != AppSettings.Settings.AmazonSecretKey)
-                            AppSettings.Settings.AmazonSecretKey = tsid;
+                        if (csv.Contains(",") && !csv.Has("AWSAccessKeyId="))
+                        {
+                            //User name, Password,Access key ID,  Secret access key,          Console login link
+                            //aitooluser,        ,XXXXXXXXXXXXX,  xxxxxxxxxxxxxxxxxxxxxxxxxx, https://xxxxxxxxx.signin.aws.amazon.com/console
+
+                            List<string> lines = csv.SplitStr("\r\n", true);
+                            if (lines.Count > 1)
+                            {
+                                List<string> header = lines[0].ToLower().SplitStr(",", false);
+                                List<string> firstline = lines[0].SplitStr(",", false);
+                                int idxID = header.IndexOf("access key id");
+                                int idxSECRET = header.IndexOf("secret access key");
+                                if (idxID > -1 && idxSECRET > -1)
+                                {
+                                    AppSettings.Settings.AmazonAccessKeyId = firstline[idxID];
+                                    AppSettings.Settings.AmazonSecretKey = firstline[idxSECRET];
+                                }
+                                else
+                                {
+                                    error = $"Error: Could not find 'Access Key ID' or 'Secret Access key' columns in '{pth}'";
+                                }
+                            }
+                            else
+                            {
+                                error = $"Error: Too few lines in '{pth}'";
+                            }
+                        }
+                        else if (csv.Has("AWSAccessKeyId="))
+                        {
+                            //old format
+                            string tid = csv.GetWord("AWSAccessKeyId=", "\r|\n");
+                            string tsid = csv.GetWord("AWSSecretKey=", "\r|\n|");
+                            if (!string.IsNullOrEmpty(tid) && tid != AppSettings.Settings.AmazonAccessKeyId)
+                                AppSettings.Settings.AmazonAccessKeyId = tid;
+                            if (!string.IsNullOrEmpty(tsid) && tsid != AppSettings.Settings.AmazonSecretKey)
+                                AppSettings.Settings.AmazonSecretKey = tsid;
+
+                        }
+                        else
+                        {
+                            error = $"Error: File is an unknown format '{pth}'";
+                        }
 
                     }
                     else
