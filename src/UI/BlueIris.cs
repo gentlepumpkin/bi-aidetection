@@ -82,6 +82,7 @@ namespace AITool
             this.Result = BlueIrisResult.Unknown;
             this.URL = "";
             this.ServerName = ServernameOrIP;
+            this.ClipPaths.Clear();
 
             RegistryKey RemoteKey = null;
 

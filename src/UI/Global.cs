@@ -959,21 +959,32 @@ namespace AITool
             return IPAddressOrHostName;
 
         }
+
+        private static string CurrentIP = "";
+        private static string CurrentHost = "";
         public static bool IsLocalHost(string HostNameOrIPAddress)
         {
             try
             {
                 bool ret = false;
 
+                if (CurrentIP.IsEmpty())
+                    CurrentIP = GetAllLocalIPs(NetworkInterfaceType.Ethernet)[0].ToString();
+
+                if (CurrentHost.IsEmpty())
+                    CurrentHost = Dns.GetHostName();
+
                 if (string.IsNullOrEmpty(HostNameOrIPAddress) ||
                     HostNameOrIPAddress == "." ||
-                    string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                    HostNameOrIPAddress.EqualsIgnoreCase("localhost") ||
                     HostNameOrIPAddress == "127.0.0.1" ||
                     HostNameOrIPAddress == "0.0.0.0" ||
                     HostNameOrIPAddress == "::1:" ||
                     HostNameOrIPAddress == "[::1:]" ||
                     HostNameOrIPAddress == "0:0:0:0:0:0:0:1" ||
-                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]")
+                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]" ||
+                    HostNameOrIPAddress.EqualsIgnoreCase(CurrentIP) ||
+                    HostNameOrIPAddress.EqualsIgnoreCase(CurrentHost))
                 {
                     ret = true;
                 }
@@ -984,12 +995,15 @@ namespace AITool
                     {
                         ret = true;
                     }
-                    else if (string.Equals(HostNameOrIPAddress, GetIPAddressFromHostname("").ToString(), StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+                    else if (HostNameOrIPAddress.EqualsIgnoreCase(CurrentIP) ||
+                             HostNameOrIPAddress.EqualsIgnoreCase(CurrentHost))
                     {
                         ret = true;
                     }
                 }
+
+                ////if (!ret)
+                ////    Log($"Host or IP not detected as 'localhost': '{HostNameOrIPAddress}' ThisHost='{CurrentHost}', ThisIP='{CurrentIP}'");
 
                 return ret;
 
@@ -1010,15 +1024,23 @@ namespace AITool
             {
                 bool ret = false;
 
+                if (CurrentIP.IsEmpty())
+                    CurrentIP = GetAllLocalIPs(NetworkInterfaceType.Ethernet)[0].ToString();
+
+                if (CurrentHost.IsEmpty())
+                    CurrentHost = Dns.GetHostName();
+
                 if (string.IsNullOrEmpty(HostNameOrIPAddress) ||
                     HostNameOrIPAddress == "." ||
-                    string.Equals(HostNameOrIPAddress, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                    HostNameOrIPAddress.EqualsIgnoreCase("localhost") ||
                     HostNameOrIPAddress == "127.0.0.1" ||
                     HostNameOrIPAddress == "0.0.0.0" ||
                     HostNameOrIPAddress == "::1:" ||
                     HostNameOrIPAddress == "[::1:]" ||
                     HostNameOrIPAddress == "0:0:0:0:0:0:0:1" ||
-                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]")
+                    HostNameOrIPAddress == "[0:0:0:0:0:0:0:1]" ||
+                    HostNameOrIPAddress.EqualsIgnoreCase(CurrentIP) ||
+                    HostNameOrIPAddress.EqualsIgnoreCase(CurrentHost))
                 {
                     ret = true;
                 }
@@ -1029,12 +1051,15 @@ namespace AITool
                     {
                         ret = true;
                     }
-                    else if (string.Equals(HostNameOrIPAddress, GetIPAddressFromHostnameAsync("").ToString(), StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(HostNameOrIPAddress, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+                    else if (HostNameOrIPAddress.EqualsIgnoreCase(CurrentIP) ||
+                             HostNameOrIPAddress.EqualsIgnoreCase(CurrentHost))
                     {
                         ret = true;
                     }
                 }
+
+                ////if (!ret)
+                ////    Log($"Host or IP not detected as 'localhost': '{HostNameOrIPAddress}' ThisHost='{CurrentHost}', ThisIP='{CurrentIP}'");
 
                 return ret;
 
@@ -1222,6 +1247,52 @@ namespace AITool
             return ret;
         }
 
+        public static List<IPAddress> GetAllLocalIPs(NetworkInterfaceType _type)
+        {
+            List<IPAddress> ipAddrList = new List<IPAddress>();
+            try
+            {
+                foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
+                    {
+                        foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
+                        {
+                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                            {
+                                ipAddrList.Add(ip.Address);
+                            }
+                        }
+                    }
+                }
+                //fall back to IPV6 if needed
+                if (ipAddrList.Count == 0)
+                {
+                    foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+                    {
+                        if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
+                        {
+                            foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
+                            {
+                                if (ip.Address.AddressFamily == AddressFamily.InterNetworkV6)
+                                {
+                                    ipAddrList.Add(ip.Address);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                Log("Error: " + ex.Msg());
+            }
+
+            return ipAddrList;
+        }
 
         public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddress = "")
         {
