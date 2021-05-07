@@ -31,6 +31,7 @@ namespace AITool
             [JsonIgnore]
             public string LogFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
             public string CustomLogFilePath = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG");
+            public string FacesPath = "";
             [JsonIgnore]
             public string HistoryFileName = ""; //Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
             [JsonIgnore]
@@ -65,6 +66,7 @@ namespace AITool
             public bool deepstack_stopbeforestart = true;
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
+            public bool deepstack_autoadd = true;
             public bool deepstack_debug = false;
             public bool deepstack_highpriority = true;
             public bool deepstack_sceneapienabled = false;
@@ -86,7 +88,7 @@ namespace AITool
             public int MaxQueueItemRetries = 5;  //will be disabled if fails this many times - Also applies to individual image failures
             public int URLResetAfterDisabledMinutes = 60;  //If any AI/Deepstack URL's have been disabled for over this time, all URLs will be reset to try again
             public int MinSecondsBetweenFailedURLRetry = 30;   //if a URL has failed, dont retry try more often than xx seconds
-
+            public int MaxErrorsInARowBeforeDisable = 60;
             [JsonProperty("HTTPClientTimeoutSeconds")]
             public int HTTPClientLocalTimeoutSeconds = 120;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
             public int HTTPClientRemoteTimeoutSeconds = 120;    //httpclient.timeout - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=netcore-3.1
@@ -259,6 +261,9 @@ namespace AITool
                     Log($"Error: Failed to save Settings to {AppSettings.Settings.SettingsFileName}");
                 }
 
+
+                string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
+                Global.WriteToJsonFile<ClsFaceManager>(facefile, AITOOL.FaceMan);
 
                 //}
                 //else
@@ -782,6 +787,20 @@ namespace AITool
                             AppSettings.Settings.AIURLList[i].ImageAdjustProfile = "Default";
                         }
                     }
+
+                    if (Settings.FacesPath.IsEmpty())
+                    {
+                        string pth = Path.GetDirectoryName(Settings.SettingsFileName);
+                        Settings.FacesPath = Path.Combine(pth, "FaceStorage");
+                    }
+
+                    string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
+
+                    if (File.Exists(facefile))
+                        AITOOL.FaceMan = Global.SetJSONString<ClsFaceManager>(facefile);
+                    else
+                        AITOOL.FaceMan = new ClsFaceManager();
+
 
                     Ret = true;
                 }

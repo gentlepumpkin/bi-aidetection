@@ -32,8 +32,6 @@ using Rectangle = System.Drawing.Rectangle;
 using static AITool.Global;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using Docker.DotNet.Models;
-using System.Security.Cryptography;
 
 namespace AITool
 {
@@ -64,6 +62,8 @@ namespace AITool
         //public static ClsLogManager errors = new ClsLogManager();
 
         public static ClsLogManager LogMan = null;
+
+        public static ClsFaceManager FaceMan = null;
 
         public static ConcurrentQueue<ClsImageQueueItem> ImageProcessQueue = new ConcurrentQueue<ClsImageQueueItem>();
 
@@ -1362,7 +1362,7 @@ namespace AITool
 
                                     Global.SendMessage(MessageType.EndProcessImage, CurImg.image_path);
 
-                                    foreach (ClsURLItem url in urls)
+                                    foreach (ClsURLItem url in result.OutURLs)
                                     {
                                         if (!url.LastResultSuccess)
                                         {
@@ -1382,6 +1382,12 @@ namespace AITool
                                                     Log($"...Error: AI URL failed with '{url.LastResultMessage}' - for '{url.Type}' failed '{url.CurErrCount}' times.  Disabling: '{url}'", url.CurSrv, cam);
                                                 }
 
+                                            }
+
+                                            if (url.ErrsInRowCount.ReadFullFence() > AppSettings.Settings.MaxErrorsInARowBeforeDisable)
+                                            {
+                                                Log($"...Error: AI URL failed {url.ErrsInRowCount.ReadFullFence()} times in a row.  Permanently DISABLING: '{url}'", url.CurSrv, cam);
+                                                url.Enabled.WriteFullFence(false);
                                             }
 
                                             if (url.ErrsInRowCount.ReadFullFence() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
@@ -2041,7 +2047,8 @@ namespace AITool
             ClsAIServerResponse ret = new ClsAIServerResponse();
 
             ret.AIURL = AiUrl;
-
+            AiUrl.LastResultMessage = "";
+            AiUrl.LastResultSuccess = false;
 
             bool OverrideThreshold = AiUrl.Threshold_Lower > 0 || (AiUrl.Threshold_Upper > 0 && AiUrl.Threshold_Upper < 100);
 
@@ -2238,7 +2245,7 @@ namespace AITool
             //==============================================================================================================
             //==============================================================================================================
 
-            else if (AiUrl.Type.ToString().StartsWith("sighthound", StringComparison.OrdinalIgnoreCase))
+            else if (AiUrl.Type.ToString().Has("sighthound"))
             {
 
                 if (string.IsNullOrEmpty(AppSettings.Settings.SightHoundAPIKey))
@@ -2904,6 +2911,9 @@ namespace AITool
                 AiUrl.LastResultMessage = ret.Error;
             }
 
+
+            AiUrl.LastResultSuccess = ret.Success || !AiUrl.LastResultMessage.Has("error");
+
             return ret;
 
         }
@@ -3186,8 +3196,8 @@ namespace AITool
                             else
                             {
                                 ret.Error = asr.Error;
-                                AiUrl.IncrementError();
-                                AiUrl.LastResultMessage = ret.Error;
+                                //AiUrl.IncrementError();
+                                //AiUrl.LastResultMessage = ret.Error;
                                 Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
                             }
                         }
@@ -3252,8 +3262,8 @@ namespace AITool
                                     else
                                     {
                                         ret.Error = asr.Error;
-                                        AiUrl.IncrementError();
-                                        AiUrl.LastResultMessage = ret.Error;
+                                        //AiUrl.IncrementError();
+                                        //AiUrl.LastResultMessage = ret.Error;
                                         Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
                                     }
                                 }
@@ -3670,6 +3680,7 @@ namespace AITool
                     ret.Error = $"ERROR: {ex.Msg()}";
                     AiUrl.IncrementError();
                     AiUrl.LastResultMessage = ret.Error;
+                    AiUrl.LastResultSuccess = false;
                     Log(ret.Error, AISRV, cam, CurImg);
                 }
                 //exitfunction:

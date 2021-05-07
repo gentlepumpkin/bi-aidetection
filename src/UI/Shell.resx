@@ -1898,10 +1898,22 @@
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>971, 17</value>
   </metadata>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
+  <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>1425, 17</value>
+  </metadata>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>971, 17</value>
+  </metadata>
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAc4SURBVFhHxZd5TJv3GcfZplWRtkmT9s9Uadsf69Sq0qRd
         VauoSaSxJGOFrE24QwaUBAJpIEAohJCaQZyUcjQUGHZgECBQczVADJjTBsxhLmNufMSYwxw2YI6YI8B3
         z/vyrlJEo25aYB/pJ7/v73qe97l+P9t8G+++fer3J0984PpXezc/V0efjz3PX4n18byWePlS2P3AKzcK
         ggOjvm4f+UdkXPQMTrrg5h/rcu7D8Pft3S+fsj3rzuzBbfefkZlZ9iMfz6Do4MBbxYL03GFFh2p6YGDQ
@@ -1935,28 +1947,10 @@
         sIg4cUJC1lGu+7/AxuZfxfG+indKrmUAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, 
-[summary]/[summarynonescaped] variables, objects shown in the right-hand image display and to 
-merging of annotations.
-
-If you enable this, the only way to see all the objects detected by DeepStack is to pick "Prediction Details"
-or have the log set to Debug and view it.</value>
-  </data>
-  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
-in mind that Deepstack will often miss animals at night completly so you wont be able 
-to review footage from night before.</value>
-  </data>
-  <data name="restrictThresholdAtSourceToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>Doods has a feature that lets you specify the minimum threshold/Confidence when you give it the image to process.   
-If this is unchecked, it will give us EVERYTHING (including the kitchen sink) and let AI tool decide the confidence threshold 
-like it does for Deepstack.  But rather than ever seeing ‘false alert’ you will almost always have objects detected, just with low confidence.</value>
-  </data>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAbXSURBVFhHvVddTJNnFCYbmukWFrwxM/HGhAtmZrIsMxDn
         FVGzkOjcnPOGiyFkIsmIJmaCCBdzhkWZiBkSQzLRzGj4Uf6Ruci/WJFS6A+lpaUtlAKlUP4EBr57npfv
         Y2UK0zl3kpPv+9q+73POc55zvrdB/8aysrK+LisraywuKPi9AF5VVdUYExPzpfL167ezZ8/em5mdFb7R
         UeH3+wXt2LFjRcrXr99OnjzZ5B0ZEe6BATE4NCymn8yIhISESuXr/8bi4uLO19bWPrp48eL7ykdBeXl5
@@ -1988,10 +1982,28 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
         0DC/d+/eX5Sv/xf7BJ4IP6I471/u79cr2ho4NRHoa+EvaUFBfwIh7NErm8l5rgAAAABJRU5ErkJggg==
 </value>
   </data>
+  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, 
+[summary]/[summarynonescaped] variables, objects shown in the right-hand image display and to 
+merging of annotations.
+
+If you enable this, the only way to see all the objects detected by DeepStack is to pick "Prediction Details"
+or have the log set to Debug and view it.</value>
+  </data>
+  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
+in mind that Deepstack will often miss animals at night completly so you wont be able 
+to review footage from night before.</value>
+  </data>
+  <data name="restrictThresholdAtSourceToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Doods has a feature that lets you specify the minimum threshold/Confidence when you give it the image to process.   
+If this is unchecked, it will give us EVERYTHING (including the kitchen sink) and let AI tool decide the confidence threshold 
+like it does for Deepstack.  But rather than ever seeing ‘false alert’ you will almost always have objects detected, just with low confidence.</value>
+  </data>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFQSURBVFhH7ZexSsNQGIWziouzo5Nr4+LsW/gAOjl18QH6
         AkJfRVCSWaRNsKVVSkxqTIzVWiMpuIVw7H97G0q4RDP0JmAOHO49l1zOl+GHRKmCthZWSzJ1Kw3XdeMk
         SSDT1EndBKBG0Ry+H0g1dVI3A5jNPhdEHsLwC3Ecs5VyUWfv52XqXAEcTKcfsO0xHIfssJVyUWfv52Xq
         pG4GMJm8YTSy0Ol0oWkaWykXdfZ+XqbOFCAIXjEcPkg1daYAvv+Cfn8g1dSZArjuM0zzTqqpMwVASRIC
@@ -2003,7 +2015,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
   <data name="toolStripButtonMaskDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASkSURBVFhHvVYNTFtVFO7GEjKcms3gRKZuJozA3aKRGJMl
         xizR1EwoTEtAGVsW6qZdcF0czQZ0TRqyNTGr0SEY4rQGU0PBuE5px6CrrLP0SddRupLy+kNbNh6rFBkl
         lSYN9Z3HLSlQDFvafsmXl3vfOfd859x77nusx8Xls69mh2bvif5238rHU+mFz35DGKD0aH5uQnSsOCcL
         T6cPTYe35dr0UmTTSlFtLSsTT6cPkx6iilAJkcfaI8RTqUc0Gt0QCoVejEQiZ8LBAAoHKUR5CeQd7X05
@@ -2029,7 +2041,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
   <data name="toolStripButtonEditImageMask.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
         YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
         0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
         bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
@@ -2044,7 +2056,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
   <data name="toolStripButtonEditURL.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
         YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
         0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
         bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
@@ -2059,7 +2071,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
   <data name="toolStripButtonAdjustAnno.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
         YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
         0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
         bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
@@ -2082,7 +2094,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABe
-        CwAAAk1TRnQBSQFMAgEBAwEAAbgBAAG4AQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CwAAAk1TRnQBSQFMAgEBAwEAAcABAAHAAQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABQAMAARADAAEBAQABCAYAAQQYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
         AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
         AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
@@ -2150,7 +2162,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="toolStripDropDownButton1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAKmSURBVDhPjZLhT1JhFIfZ2tRWW39EXxora6u2ci6Xa42y
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKmSURBVDhPjZLhT1JhFIfZ2tRWW39EXxora6u2ci6Xa42y
         pATdypQkzCS/GBUg5q2FiKKGGHKpK1cCAa/KKgtn5dDCJiahpkwDthrQRA1yq9SJnOSOpV8snu18OOc9
         v2fvu72UzRw9mLEnKytPVitWfFQoHvsxZdsshhmDcjkWVDZqAtLqBmt+foko7XDGISazfHs8RqGgqHF3
         Yz2qVD7EPKHwEvj84X+WSqUPy2TKl2Kx4hQpkEgU9wYHRiEWVrZo4U5VHcjq1YDjhvVeA9dKK0DAF4NE
@@ -2168,7 +2180,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="toolStripDropDownButtonSettings.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAKkSURBVDhPhZLJSxthGMaHXgsNLcWK/heCBy8i9aAoqIjH
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKkSURBVDhPhZLJSxthGMaHXgsNLcWK/heCBy8i9aAoqIjH
         IvbQpCCpB0tED/Ui9JRqAhWXwwSTxloXkLqEQhtbjTVJ6xpjNetkJpnoZLEmsS5tn37fODR09YEXhne+
         37sz/1JjY2MNy7KHJpMpXVpaWqm4L9fg4OBNrVZ7TafTvUim0shks+js7LS0t7df7evru6U8+1Nms7mt
         u7v7+5DJJLLseCYmxhGNiUgkkzg7P8f09PSR2WIR6ZuBgYH7CvZTV55ZR3lOiCKZSsl2IEngIjzEeBz7
@@ -2186,7 +2198,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="openToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAJHSURBVDhPxZBdSNNhFMb/F110ZZEVhVBgeeHNICiiuggp
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJHSURBVDhPxZBdSNNhFMb/F110ZZEVhVBgeeHNICiiuggp
         olAUyyxI0oSaH1QYC3N+tKnp5ubm1JUua5uuqdNKMwr7kApFItTUkWZqVhSVYmao5Nevvy7UoYR3HXh4
         4XCe33nOKyy3lAY7l9RWMo0O/raWXxEyo5spVYTNvOGyfIRPfW+ptOkXqaPl6T83hcRmExSdgzAz3NVm
         YWyoYla/B+1M9JtxWLPpaH22JORIjI6gKAMB0jyEimIdo4OlbuaprwVMOOMovammpDADc34qppwUrmnl
@@ -2202,7 +2214,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="toolStripButtonLoad.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAALkSURBVDhPddJJTBNRGAfwXk3EgwcxRjkYNJRF48UY48mT
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALkSURBVDhPddJJTBNRGAfwXk3EgwcxRjkYNJRF48UY48mT
         W0AErSABQ1BcEFKRyiIZoLQsXexGMZCY6EljNEgLwkGmpdO9tLQUbOlCyxawNCRtAT3o5+MNBCU4ycvM
         ZPL/ffO+9zE2L6Io+RCPfbhaUJ8yzOcc0fCrUzRctJrZx8hm9lG0Nu/4+Suv9oxaLG54I5V2XqqpKU3C
         QEsZI6NLlOUniOzfg8PZMDhwGwZVBaDuY4H6MwsG+tG7+g709qSCwchfJUny19DQkFfQRlzEQGv5gbM9
@@ -2221,7 +2233,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="toolStripButtonReload.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAM9SURBVDhPbVNbTFRXFN33/ZgZBq/ceQAVLYaHcxOljTHK
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAM9SURBVDhPbVNbTFRXFN33/ZgZBq/ceQAVLYaHcxOljTHK
         h5CoafHODDQjFifjoFIlbZmBCqYoMtEo+qMkWKOtj2BAFE2wAjVqQqKxj/Sn1fjVxK9+mtikLXbItJ3V
         M8PENK0r2R9nn7XW2Xufc+h/aKZKCtEgH+UflB0o+3Xt0bW/m53m9yx/nIK0ssAieofKKUzLCyuGFPGM
         sN+ddKd3Xt2J/vv9GPlhBGcfn8XQwyHsub4H7oQ7zUQHGW+z1qn9JrfJz1+J+Qj3sD61PjMwN4DBR4Ov
@@ -2241,7 +2253,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="toolStripButtonPauseLog.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAJrSURBVDhPY0CAEE4W5TIrHs36AB7N0gBW1XwDBoZ6Nohc
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVDhPY0CAEE4W5TIrHs36AB7N0gBW1XwDBoZ6Nohc
         sji/VrUTv3pVMK92vQ+7YaEKUJAZIgcBzCK6pbbaATMPWiUtfWKZuOiRlv+0DQxqORpAQ3iEDJriNEJm
         XdAIm/1EM2zeXVnnCVMYFCvFoXpBoJ5NwKA1yiZtxYsJO+4e699x57hpxPzbPGrlNgxa9UJSlm2tusmr
         P07bdfds45prh5XcJx0UValWhmoGAaABek1xOjHzXzu2HVvt0HJklVbgnHs8KrX2DCq5opLmLd168fM/
@@ -2258,7 +2270,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="chk_filterErrors.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
         qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf7yeke3fS3bm/9meFv9j3a3+f+Dj+b+fgelvJq/gOqAa
@@ -2274,7 +2286,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
   <data name="chk_filterErrorsAll.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI5SURBVDhPY8ACOIGYEcJEAcxAzAFh4gG8vLwWylxcxkAm
         E0SEgcGMgYGPl5PTnIeHRxMqhBewSYqIJHsyMLiKsrMrawOxG5ANNDgWKIfNZRiAVUZGpiw/Q327tjL7
         W2V59rdJ7owrpKSkSoByxBmQn8i5tCBd6p+CgsJ/SUnJ//a2LH/zM5SmAuXg3sIJODk5pXyY2A6aign/
         qysv+K+nJv/fgJf7bxgL6xagNDtEFW4gGsHNf7yeke3fS3bm/9meFv9j3a3+f+Dj+b+fgelvJq/gOqAa
@@ -2295,7 +2307,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAAeABCgHgAQoBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAAegBCgHoAQoBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/

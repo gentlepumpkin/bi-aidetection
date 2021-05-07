@@ -1,10 +1,12 @@
 ﻿using Microsoft.Win32;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using static AITool.AITOOL;
 
 
@@ -563,7 +565,7 @@ namespace AITool
 
                                 ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{cports[i]}/v1/vision/custom/{cnames[i]}", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Custom);
                                 this.URLS += $"{url.ToString()}\r\n";
-                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                if (AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
                                 {
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);

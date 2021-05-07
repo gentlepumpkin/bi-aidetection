@@ -88,9 +88,6 @@
     <Reference Include="AWSSDK.Rekognition, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.Rekognition.3.7.0.14\lib\net45\AWSSDK.Rekognition.dll</HintPath>
     </Reference>
-    <Reference Include="Docker.DotNet, Version=3.125.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Docker.DotNet.3.125.4\lib\netstandard2.0\Docker.DotNet.dll</HintPath>
-    </Reference>
     <Reference Include="Innovative.Geometry.Angle, Version=3.0.4.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Angle.3.0.4\lib\net461\Innovative.Geometry.Angle.dll</HintPath>
     </Reference>
@@ -308,6 +305,7 @@
     <Compile Include="ClsDoodsDetection.cs" />
     <Compile Include="ClsDoodsRequest.cs" />
     <Compile Include="ClsDoodsResponse.cs" />
+    <Compile Include="ClsFaceManager.cs" />
     <Compile Include="ClsImageAdjust.cs" />
     <Compile Include="ClsProp.cs" />
     <Compile Include="ClsRelevantObjectManager.cs" />
@@ -345,6 +343,12 @@
     </Compile>
     <Compile Include="Frm_CameraAdd.Designer.cs">
       <DependentUpon>Frm_CameraAdd.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm_Faces.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_Faces.Designer.cs">
+      <DependentUpon>Frm_Faces.cs</DependentUpon>
     </Compile>
     <Compile Include="Frm_ImageAdjust.cs">
       <SubType>Form</SubType>
@@ -580,6 +584,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_Errors.resx">
       <DependentUpon>Frm_Errors.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_Faces.resx">
+      <DependentUpon>Frm_Faces.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Frm_ImageAdjust.resx">
       <DependentUpon>Frm_ImageAdjust.cs</DependentUpon>

@@ -3212,6 +3212,7 @@ namespace AITool
             AppSettings.Settings.deepstack_faceapienabled = this.Chk_FaceAPI.Checked;
             AppSettings.Settings.deepstack_sceneapienabled = this.Chk_SceneAPI.Checked;
             AppSettings.Settings.deepstack_autostart = this.Chk_AutoStart.Checked;
+            AppSettings.Settings.deepstack_autoadd = this.chk_AutoAdd.Checked;
             AppSettings.Settings.deepstack_debug = this.Chk_DSDebug.Checked;
             AppSettings.Settings.deepstack_highpriority = this.chk_HighPriority.Checked;
             //AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
@@ -3359,6 +3360,7 @@ namespace AITool
                 }
 
                 this.Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
+                this.chk_AutoAdd.Checked = AppSettings.Settings.deepstack_autoadd;
                 this.Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
                 this.chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
                 //this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
