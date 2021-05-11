@@ -1898,18 +1898,6 @@
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>971, 17</value>
   </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>160, 17</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>160, 17</value>
-  </metadata>
-  <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1425, 17</value>
-  </metadata>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>971, 17</value>
-  </metadata>
   <data name="toolStripDropDownButtonFilters.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1947,6 +1935,24 @@
         sIg4cUJC1lGu+7/AxuZfxfG+indKrmUAAAAASUVORK5CYII=
 </value>
   </data>
+  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, 
+[summary]/[summarynonescaped] variables, objects shown in the right-hand image display and to 
+merging of annotations.
+
+If you enable this, the only way to see all the objects detected by DeepStack is to pick "Prediction Details"
+or have the log set to Debug and view it.</value>
+  </data>
+  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
+in mind that Deepstack will often miss animals at night completly so you wont be able 
+to review footage from night before.</value>
+  </data>
+  <data name="restrictThresholdAtSourceToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Doods has a feature that lets you specify the minimum threshold/Confidence when you give it the image to process.   
+If this is unchecked, it will give us EVERYTHING (including the kitchen sink) and let AI tool decide the confidence threshold 
+like it does for Deepstack.  But rather than ever seeing ‘false alert’ you will almost always have objects detected, just with low confidence.</value>
+  </data>
   <data name="toolStripDropDownButtonOptions.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -1981,24 +1987,6 @@
         A/8QLiccbDv2OI/rC2ceaHzVhijXZZacktJCqtnfFCZHcHz8kefVl1OW8/6ZPV7J8Ee0pKGxcZ4znd7Q
         0DC/d+/eX5Sv/xf7BJ4IP6I471/u79cr2ho4NRHoa+EvaUFBfwIh7NErm8l5rgAAAABJRU5ErkJggg==
 </value>
-  </data>
-  <data name="showOnlyRelevantObjectsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>The setting will hide all non relevant objects.   It applies to [variables], the history Detections column, 
-[summary]/[summarynonescaped] variables, objects shown in the right-hand image display and to 
-merging of annotations.
-
-If you enable this, the only way to see all the objects detected by DeepStack is to pick "Prediction Details"
-or have the log set to Debug and view it.</value>
-  </data>
-  <data name="storeFalseAlertsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>If disabled the database will be smaller, leave enabled for better troubleshooting.  Keep
-in mind that Deepstack will often miss animals at night completly so you wont be able 
-to review footage from night before.</value>
-  </data>
-  <data name="restrictThresholdAtSourceToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>Doods has a feature that lets you specify the minimum threshold/Confidence when you give it the image to process.   
-If this is unchecked, it will give us EVERYTHING (including the kitchen sink) and let AI tool decide the confidence threshold 
-like it does for Deepstack.  But rather than ever seeing ‘false alert’ you will almost always have objects detected, just with low confidence.</value>
   </data>
   <data name="toolStripButtonDetails.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -2094,7 +2082,7 @@ like it does for Deepstack.  But rather than ever seeing ‘false alert’ you w
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABe
-        CwAAAk1TRnQBSQFMAgEBAwEAAcABAAHAAQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CwAAAk1TRnQBSQFMAgEBAwEAAdABAAHQAQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABQAMAARADAAEBAQABCAYAAQQYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
         AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
         AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
@@ -2307,7 +2295,7 @@ in the queue, but remember you have to add a URL to each on the SETTINGS tab.</v
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA2
-        xAEAAk1TRnQBSQFMAgEBLgEAAegBCgHoAQoBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
+        xAEAAk1TRnQBSQFMAgEBLgEAAfgBCgH4AQoBIAEAASABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAGA
         AwABgAEBAgABAQEAASAHAAED/wD/AP8A/wA1AAMGAQgDSgGKAyABLwMUARwDOAFeAwEBAlAAAwIBAwMS
         ARkDHgErAxoBJQMLAQ8DAAEB/wB9AAMZASMDXgHOAQABkwG9Af8BYgFJAWIB9gNcAeoBgAIAAf8DQgFz
         TAADCAELAjYBNQFYA1QBrwJeAVwBzgJbAVgBxgNOAZkDLwFJAwcBCf8AdQADMQFOA2IB7wEAAYABxgH/

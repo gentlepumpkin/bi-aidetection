@@ -39,7 +39,7 @@ namespace AITool
             this.ShowCamera();
 
             Global_GUI.RestoreWindowState(this);
-            timer1.Start();
+            //timer1.Start();
 
 
         }
@@ -55,13 +55,20 @@ namespace AITool
             {
                 if (this.CurrentCam.Paused)
                 {
+                    if (!timer1.Enabled)
+                        timer1.Start();
+
                     this.lbl_resumingtime.Text = $"Resuming in {(this.CurrentCam.ResumeTime - DateTime.Now).TotalMinutes.Round()} minutes...";
+                    cb_paused.Text = "UN-pause";
                 }
                 else
                 {
 
                     //this.cb_Paused.Checked = this.CurrentCam.Paused;
+                    cb_paused.Text = "Pause";
                     this.lbl_resumingtime.Text = "Not paused.";
+                    if (timer1.Enabled)
+                        timer1.Stop();
                 }
             }
 
@@ -81,7 +88,12 @@ namespace AITool
             else
                 this.CurrentCam = AITOOL.GetCamera(cmb_cameras.Text.Trim());
 
-            cb_Paused.Checked = this.CurrentCam.Paused;
+            cb_paused.Checked = this.CurrentCam.Paused;
+            if (this.CurrentCam.Paused)
+                cb_paused.Text = "UN-pause";
+            else
+                cb_paused.Text = "Pause";
+
             tb_minutes.Text = this.CurrentCam.PauseMinutes.ToString();
             cb_FileMonitoring.Checked = this.CurrentCam.PauseFileMon;
             cb_MQTT.Checked = this.CurrentCam.PauseMQTT;
@@ -106,11 +118,11 @@ namespace AITool
                     cam.PausePushover = cb_Pushover.Checked;
                     cam.PauseTelegram = cb_Telegram.Checked;
                     cam.PauseURL = cb_URL.Checked;
-                    if (cam.Paused && !cb_Paused.Checked)
+                    if (cam.Paused && !cb_paused.Checked)
                     {
                         cam.Resume();
                     }
-                    else if (!cam.Paused && cb_Paused.Checked)
+                    else if (!cam.Paused && cb_paused.Checked)
                     {
                         cam.Pause();
                     }
@@ -124,11 +136,11 @@ namespace AITool
                 this.CurrentCam.PausePushover = cb_Pushover.Checked;
                 this.CurrentCam.PauseTelegram = cb_Telegram.Checked;
                 this.CurrentCam.PauseURL = cb_URL.Checked;
-                if (this.CurrentCam.Paused && !cb_Paused.Checked)
+                if (this.CurrentCam.Paused && !cb_paused.Checked)
                 {
                     this.CurrentCam.Resume();
                 }
-                else if (!this.CurrentCam.Paused && cb_Paused.Checked)
+                else if (!this.CurrentCam.Paused && cb_paused.Checked)
                 {
                     this.CurrentCam.Pause();
                 }
@@ -146,12 +158,22 @@ namespace AITool
 
         private void bt_save_Click(object sender, EventArgs e)
         {
-            SaveCamera();
+
         }
 
         private void Frm_Pause_FormClosing(object sender, FormClosingEventArgs e)
         {
             Global_GUI.SaveWindowState(this);
+
+        }
+
+        private void cb_paused_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveCamera();
+        }
+
+        private void cmb_cameras_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
         }
     }

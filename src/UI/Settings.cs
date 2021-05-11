@@ -262,8 +262,11 @@ namespace AITool
                 }
 
 
-                string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
-                Global.WriteToJsonFile<ClsFaceManager>(facefile, AITOOL.FaceMan);
+                if (!AITOOL.FaceMan.IsNull() && AITOOL.FaceMan.Faces.IsNotEmpty())
+                {
+                    string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
+                    Global.WriteToJsonFile<ClsFaceManager>(facefile, AITOOL.FaceMan);
+                }
 
                 //}
                 //else
@@ -314,12 +317,12 @@ namespace AITool
             return Ret;
         }
 
-        public static async Task<bool> IsFileValidAsync(string Filename)
+        public static async Task<bool> IsFileValidAsync(string Filename, long MinSize = 800)
         {
-            return await Task.Run(() => IsFileValidInternal(Filename));
+            return await Task.Run(() => IsFileValidInternal(Filename, MinSize));
         }
 
-        public static bool IsFileValidInternal(string Filename)
+        public static bool IsFileValidInternal(string Filename, long MinSize = 800)
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
@@ -329,7 +332,7 @@ namespace AITool
                 if (File.Exists(Filename))
                 {
                     FileInfo fi = new FileInfo(Filename);
-                    if (fi.Length > 800)
+                    if (fi.Length > MinSize)
                     {
                         //try to prevent multiple threads from erroring out writing the json file...
                         Global.WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.Read, FileShare.ReadWrite, 5000);
@@ -796,8 +799,8 @@ namespace AITool
 
                     string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
 
-                    if (File.Exists(facefile))
-                        AITOOL.FaceMan = Global.SetJSONString<ClsFaceManager>(facefile);
+                    if (await IsFileValidAsync(facefile, 400))
+                        AITOOL.FaceMan = Global.ReadFromJsonFile<ClsFaceManager>(facefile);
                     else
                         AITOOL.FaceMan = new ClsFaceManager();
 

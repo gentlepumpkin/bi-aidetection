@@ -205,8 +205,8 @@ namespace AITool
                 if (!DeepStackServerControl.IsInstalled)
                 {
                     //remove deepstack tab if not installed
-                    Log("Removing DeepStack tab since it not installed as a Windows app (No docker support yet)");
-                    this.tabControl1.TabPages.Remove(this.tabControl1.TabPages["tabDeepStack"]);
+                    //Log("Removing DeepStack tab since it not installed as a Windows app (No docker support yet)");
+                    //this.tabControl1.TabPages.Remove(this.tabControl1.TabPages[""]);
                 }
                 else
                 {
