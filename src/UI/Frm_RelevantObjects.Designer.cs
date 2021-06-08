@@ -102,7 +102,7 @@ namespace AITool
             this.splitContainer1.Panel2.BackColor = System.Drawing.SystemColors.Control;
             this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
             this.splitContainer1.Size = new System.Drawing.Size(1028, 840);
-            this.splitContainer1.SplitterDistance = 588;
+            this.splitContainer1.SplitterDistance = 586;
             this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -116,7 +116,7 @@ namespace AITool
             this.FOLV_RelevantObjects.Name = "FOLV_RelevantObjects";
             this.FOLV_RelevantObjects.ShowGroups = false;
             this.FOLV_RelevantObjects.ShowImagesOnSubItems = true;
-            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(1024, 584);
+            this.FOLV_RelevantObjects.Size = new System.Drawing.Size(1024, 582);
             this.FOLV_RelevantObjects.TabIndex = 0;
             this.FOLV_RelevantObjects.UseCompatibleStateImageBehavior = false;
             this.FOLV_RelevantObjects.View = System.Windows.Forms.View.Details;
@@ -140,7 +140,7 @@ namespace AITool
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox1.Size = new System.Drawing.Size(966, 346);
+            this.groupBox1.Size = new System.Drawing.Size(940, 346);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
@@ -485,7 +485,7 @@ namespace AITool
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Location = new System.Drawing.Point(922, 903);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(6);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(105, 46);
             this.btnSave.TabIndex = 10;
@@ -497,7 +497,7 @@ namespace AITool
             // 
             this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnReset.Location = new System.Drawing.Point(14, 902);
-            this.btnReset.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(6);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(105, 46);
             this.btnReset.TabIndex = 10;
@@ -509,7 +509,7 @@ namespace AITool
             // 
             this.btn_adddefaults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btn_adddefaults.Location = new System.Drawing.Point(130, 902);
-            this.btn_adddefaults.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btn_adddefaults.Margin = new System.Windows.Forms.Padding(6);
             this.btn_adddefaults.Name = "btn_adddefaults";
             this.btn_adddefaults.Size = new System.Drawing.Size(120, 46);
             this.btn_adddefaults.TabIndex = 10;

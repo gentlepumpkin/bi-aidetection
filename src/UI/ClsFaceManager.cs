@@ -16,8 +16,7 @@ namespace AITool
         public string Name { get; set; } = "";
         public long Hits { get; set; } = 0;
         public string FaceStoragePath { get; set; } = "";
-        public Dictionary<string, ClsFaceFile> Files = new Dictionary<string, ClsFaceFile>();
-
+        public Dictionary<string, ClsFaceFile> Files { get; set; } = new Dictionary<string, ClsFaceFile>();
         //public List<ClsFaceFile> Files = new List<ClsFaceFile>();
 
         [JsonConstructor]
@@ -137,10 +136,10 @@ namespace AITool
         }
 
         public string Name { get; set; } = "";
-        public int TrainingTimeMS { get; set; } = 0;
+        public int RegisterTimeMS { get; set; } = 0;
         public string FilePath { get; set; } = "";
         public bool Exists = false;
-        public DateTime DateTrained { get; set; } = DateTime.MinValue;
+        public DateTime DateRegistered { get; set; } = DateTime.MinValue;
         public DateTime DateAdded { get; set; } = DateTime.MinValue;
         public DateTime DateFileModified { get; set; } = DateTime.MinValue;
         public string OriginalPath { get; set; } = "";
@@ -158,8 +157,9 @@ namespace AITool
     }
     public class ClsFaceManager
     {
-        public List<ClsFace> Faces = new List<ClsFace>();
-
+        public List<ClsFace> Faces { get; set; } = new List<ClsFace>();
+        public int MaxFilesPerFace = 512;
+        private object FaceLock = new object();
         public ClsFaceManager()
         {
             //update in background thread
@@ -177,30 +177,39 @@ namespace AITool
 
                 Log("Debug: Updating faces...");
 
-                if (!this.Faces.Contains(new ClsFace("Unknown")))
-                    this.Faces.Add(new ClsFace("Unknown"));
 
                 if (!Directory.Exists(AppSettings.Settings.FacesPath))
                     Directory.CreateDirectory(AppSettings.Settings.FacesPath);
 
-                foreach (var Face in this.Faces)
+                this.TryAddFace("Unknown");
+
+                //Add any existing subfolders as new faces if not already in the list
+                string[] facedirs = Directory.GetDirectories(AppSettings.Settings.FacesPath, "*", SearchOption.TopDirectoryOnly);
+                foreach (var facedir in facedirs)
+                    this.TryAddFace(facedir);
+
+                lock (FaceLock)
                 {
+                    foreach (var Face in this.Faces)
+                    {
 
-                    foreach (var file in Face.Files.Values)
-                        file.Update();
+                        foreach (var file in Face.Files.Values)
+                            file.Update();
 
-                    //remove any missing files
-                    var itemsToRemove = Face.Files.Where(f => !f.Value.Exists).ToArray();
-                    foreach (var item in itemsToRemove)
-                        Face.Files.Remove(item.Key);
+                        //remove any missing files
+                        var itemsToRemove = Face.Files.Where(f => !f.Value.Exists).ToArray();
+                        foreach (var item in itemsToRemove)
+                            Face.Files.Remove(item.Key);
 
-                    missingfiles += itemsToRemove.Length;
+                        missingfiles += itemsToRemove.Length;
 
-                    //scan the folder for new ones
-                    List<FileInfo> newfiles = Global.GetFiles(Face.FaceStoragePath, "*.jpg;*.jpeg;*.bmp;*.png", SearchOption.TopDirectoryOnly);
-                    foreach (FileInfo fi in newfiles)
-                        if (Face.TryAddFile(fi.FullName, out string newfilename))
-                            addedfiles++;
+                        //scan the folder for new files
+                        List<FileInfo> newfiles = Global.GetFiles(Face.FaceStoragePath, "*.jpg;*.jpeg;*.bmp;*.png", SearchOption.TopDirectoryOnly);
+                        foreach (FileInfo fi in newfiles)
+                            if (Face.TryAddFile(fi.FullName, out string newfilename))
+                                addedfiles++;
+
+                    }
 
                 }
 
@@ -223,14 +232,7 @@ namespace AITool
             if (face.IsEmpty())
                 face = "Unknown";
 
-            ClsFace FoundFace = new ClsFace(face);
-
-            int fnd = this.Faces.IndexOf(FoundFace);
-
-            if (fnd > -1)
-                FoundFace = this.Faces[fnd];
-            else
-                this.Faces.Add(FoundFace);
+            ClsFace FoundFace = this.TryAddFace(face);
 
             bool added = FoundFace.TryAddFile(filename, out string Outfilename);
 
@@ -239,6 +241,23 @@ namespace AITool
                 Global.SafeFileDelete(filename);
 
             return added;
+        }
+
+        public ClsFace TryAddFace(string face)
+        {
+            ClsFace FoundFace = new ClsFace(face);
+
+            int fnd = this.Faces.IndexOf(FoundFace);
+
+            if (fnd > -1)
+                FoundFace = this.Faces[fnd];
+            else
+            {
+                lock (FaceLock)
+                    this.Faces.Add(FoundFace);
+            }
+
+            return FoundFace;
         }
 
     }

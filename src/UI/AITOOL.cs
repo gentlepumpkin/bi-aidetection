@@ -3371,6 +3371,11 @@ namespace AITool
                                         pm.preds[i].Result = pm.preds[i].Result == ResultType.Relevant || pm.preds[i].Result == ResultType.RelevantDuplicateObject ? ResultType.RelevantDuplicateObject : ResultType.DuplicateObject;
                                         pm.preds[i].DupeCount++;
                                         pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Detail, "; ");
+                                        if (!pm.preds[0].Label.EqualsIgnoreCase(pm.preds[i].Label))
+                                        {
+                                            //add the dupe object name into the details column
+                                            pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Label, "; ");
+                                        }
                                     }
                                     predictions.Add(pm.preds[i]);
                                     initialpredictions.Remove(pm.preds[i]);
@@ -3398,6 +3403,13 @@ namespace AITool
 
                         //sort predictions so most important are at the top
                         predictions = predictions.Distinct().OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
+
+                        //save any images with faces
+                        foreach (ClsPrediction pred in predictions)
+                        {
+                            if (pred.ObjType == ObjectType.Face)
+                                FaceMan.TryAddFile(pred.Filename, pred.Label);
+                        }
 
                         string PredictionsJSON = Global.GetJSONString(predictions);
 

@@ -150,7 +150,7 @@ namespace AITool
             public bool HistoryFilterMasked = false;
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+            public string ObjectPriority = "person, people, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -633,6 +633,7 @@ namespace AITool
                     }
 
                 }
+
                 else if (!AppSettings.LastSettingsJSON.IsEmpty() && !SettingsFileExists && !Global.IsService)
                 {
                     //revert to REGISTRY backup and look for the last folder to migrate settings from
@@ -756,8 +757,8 @@ namespace AITool
                         Settings.CameraList.Add(cam);
                     }
 
-                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van"))
-                        Settings.ObjectPriority = "person, bear, elephant, car, truck, SUV, van, bicycle, motorcycle, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people"))
+                        Settings.ObjectPriority = "person, people, bear, elephant, car, truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
                     //make sure everything in the cameras look correct:
                     foreach (Camera cam in Settings.CameraList)
