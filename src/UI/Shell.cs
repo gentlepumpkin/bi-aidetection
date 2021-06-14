@@ -96,10 +96,16 @@ namespace AITool
             //Debug.Print(ts.FormatTS(true));
             //Debug.Print(ts);
 
-            //if (Global.IsTimeBetween(DateTime.Now, "dawn-dusk"))
-            //{
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 06, 00, 00), "dusk-dawn");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 23, 00, 00), "dusk-dawn");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 07, 00, 00), "dusk-dawn");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 21, 00, 00), "dusk-dawn");
 
-            //}
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 06, 00, 00), "dawn-dusk");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 23, 00, 00), "dawn-dusk");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 07, 00, 00), "dawn-dusk");
+            //Global.IsTimeBetween(new DateTime(2021, 6, 13, 21, 00, 00), "dawn-dusk");
+
             //Rectangle img = new Rectangle(0, 0, 3840, 2160);
             //Rectangle prd = new Rectangle(0, 0, 155, 204);  // .38% of the original image
             //Rectangle prd = new Rectangle(0, 0, img.Width / 2, img.Height);  //half of the original image = 50%

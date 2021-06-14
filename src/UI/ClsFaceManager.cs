@@ -170,10 +170,11 @@ namespace AITool
         {
             using var Trace = new Trace();
 
+            int missingfiles = 0;
+            int addedfiles = 0;
+
             try
             {
-                int missingfiles = 0;
-                int addedfiles = 0;
 
                 Log("Debug: Updating faces...");
 
@@ -181,15 +182,17 @@ namespace AITool
                 if (!Directory.Exists(AppSettings.Settings.FacesPath))
                     Directory.CreateDirectory(AppSettings.Settings.FacesPath);
 
-                this.TryAddFace("Unknown");
-
-                //Add any existing subfolders as new faces if not already in the list
-                string[] facedirs = Directory.GetDirectories(AppSettings.Settings.FacesPath, "*", SearchOption.TopDirectoryOnly);
-                foreach (var facedir in facedirs)
-                    this.TryAddFace(facedir);
 
                 lock (FaceLock)
                 {
+
+                    this.TryAddFace("Unknown");
+
+                    //Add any existing subfolders as new faces if not already in the list
+                    string[] facedirs = Directory.GetDirectories(AppSettings.Settings.FacesPath, "*", SearchOption.TopDirectoryOnly);
+                    foreach (var facedir in facedirs)
+                        this.TryAddFace(facedir);
+
                     foreach (var Face in this.Faces)
                     {
 
@@ -213,7 +216,6 @@ namespace AITool
 
                 }
 
-                Log($"{this.Faces.Count} faces. Added {addedfiles} new files, Removed {missingfiles} missing files.");
 
 
             }
@@ -222,6 +224,10 @@ namespace AITool
 
                 Log($"Error: {ex.Msg()}");
             }
+
+            Log($"{this.Faces.Count} faces. Added {addedfiles} new files, Removed {missingfiles} missing files.");
+
+
         }
 
         public bool TryAddFile(string filename, string face = "")

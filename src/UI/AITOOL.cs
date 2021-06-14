@@ -3351,44 +3351,54 @@ namespace AITool
                         ///====================================================================================================================
 
                         ////lets sort the predictions so that lowest confidence are processed first so they are replaced with duplicates of higher confidence:
-                        initialpredictions = initialpredictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).OrderByDescending(p => p.Confidence).ToList();
+                        initialpredictions = initialpredictions.OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999)
+                                                               .ThenBy(p => p.ObjectPriority)
+                                                               .ThenByDescending(p => p.Confidence).ToList();
 
 
                         List<ClsPrediction> predictions = new List<ClsPrediction>();
 
-                        //take duplicates out of the queue as we go...
-                        while (initialpredictions.Count > 0)
+                        if (AppSettings.Settings.HistoryMergeDuplicatePredictions)
                         {
-                            ClsPrediction TestPred = initialpredictions[0];
-                            ClsPredMatch pm = ContainsPrediction(TestPred, initialpredictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
-                            if (pm.preds.Count > 1) //if only 1, then it is itself
+                            //take duplicates out of the queue as we go...
+                            while (initialpredictions.Count > 0)
                             {
-                                //We only want to keep the first one of any that look alike, it will already be sorted with high confidence
-                                for (int i = 0; i < pm.preds.Count; i++)
+                                ClsPrediction TestPred = initialpredictions[0];
+                                ClsPredMatch pm = ContainsPrediction(TestPred, initialpredictions, cam, ObjTypeMustMatch: true, TrueIfInsideOrPartiallyInside: false);
+                                if (pm.preds.Count > 1) //if only 1, then it is itself
                                 {
-                                    if (i > 0)
+                                    //We only want to keep the first one of any that look alike, it will already be sorted with high confidence
+                                    for (int i = 0; i < pm.preds.Count; i++)
                                     {
-                                        pm.preds[i].Result = pm.preds[i].Result == ResultType.Relevant || pm.preds[i].Result == ResultType.RelevantDuplicateObject ? ResultType.RelevantDuplicateObject : ResultType.DuplicateObject;
-                                        pm.preds[i].DupeCount++;
-                                        pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Detail, "; ");
-                                        if (!pm.preds[0].Label.EqualsIgnoreCase(pm.preds[i].Label))
+                                        if (i > 0)
                                         {
-                                            //add the dupe object name into the details column
-                                            pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Label, "; ");
+                                            pm.preds[i].Result = pm.preds[i].Result == ResultType.Relevant || pm.preds[i].Result == ResultType.RelevantDuplicateObject ? ResultType.RelevantDuplicateObject : ResultType.DuplicateObject;
+                                            pm.preds[i].DupeCount++;
+                                            pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Detail, "; ");
+                                            if (!pm.preds[0].Label.EqualsIgnoreCase(pm.preds[i].Label))
+                                            {
+                                                //add the dupe object name into the details column
+                                                pm.preds[0].Detail = pm.preds[0].Detail.Append(pm.preds[i].Label, "; ");
+                                            }
                                         }
+                                        predictions.Add(pm.preds[i]);
+                                        initialpredictions.Remove(pm.preds[i]);
                                     }
-                                    predictions.Add(pm.preds[i]);
-                                    initialpredictions.Remove(pm.preds[i]);
+
                                 }
+                                else
+                                {
+                                    predictions.Add(TestPred);
+                                    initialpredictions.Remove(TestPred);
+                                }
+                            }
 
-                            }
-                            else
-                            {
-                                predictions.Add(TestPred);
-                                initialpredictions.Remove(TestPred);
-                            }
+
                         }
-
+                        else
+                        {
+                            predictions.AddRange(initialpredictions);
+                        }
 
                         ///====================================================================================================================
                         ///Run dynamic mask check last so that it does not increase mask counts of duplicate objects===========================
@@ -3402,7 +3412,9 @@ namespace AITool
 
 
                         //sort predictions so most important are at the top
-                        predictions = predictions.Distinct().OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999).ThenBy(p => p.ObjectPriority).ThenByDescending(p => p.Confidence).ToList();
+                        predictions = predictions.Distinct().OrderBy(p => p.Result == ResultType.Relevant ? 1 : 999)
+                                                            .ThenBy(p => p.ObjectPriority)
+                                                            .ThenByDescending(p => p.Confidence).ToList();
 
                         //save any images with faces
                         foreach (ClsPrediction pred in predictions)

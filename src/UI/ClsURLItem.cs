@@ -450,13 +450,7 @@ namespace AITool
 
         public bool Equals(ClsURLItem other)
         {
-            return other != null &&
-                   (string.Equals(this.url, other.url, StringComparison.OrdinalIgnoreCase) &&
-                   this.Type == other.Type &&
-                   this.ActiveTimeRange == other.ActiveTimeRange &&
-                   this.Cameras == other.Cameras &&
-                   this.ImageAdjustProfile == other.ImageAdjustProfile &&
-                   this.RefinementObjects == other.RefinementObjects);
+            return other != null && this.url.EqualsIgnoreCase(other.url);
         }
 
     }

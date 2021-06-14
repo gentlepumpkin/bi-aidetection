@@ -479,7 +479,7 @@ namespace AITool
                             }
 
                             TimeZoneInfo localZone = TimeZoneInfo.Local;
-                            SolarTimes solarTimes = new SolarTimes(DateTime.Now.Date, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
+                            SolarTimes solarTimes = new SolarTimes(time, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
 
                             if (splt[0].Has("dusk"))
                             {
@@ -526,10 +526,24 @@ namespace AITool
 
                         // see if start comes before end
                         if (BeginSpan < EndSpan)
+                        {
                             ret = BeginSpan <= now && now <= EndSpan;
+                            if (ret)
+                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            else
+                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
+
+                        }
                         else
+                        {
                             // start is after end, so do the inverse comparison
                             ret = !(EndSpan < now && now < BeginSpan);
+                            if (ret)
+                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            else
+                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
+
+                        }
 
                         if (ret)
                             break;

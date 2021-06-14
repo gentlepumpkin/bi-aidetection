@@ -148,6 +148,7 @@ namespace AITool
             public bool HistoryFilterVehicles = false;
             public bool HistoryFilterSkipped = false;
             public bool HistoryFilterMasked = false;
+            public bool HistoryMergeDuplicatePredictions = true;
             public int MaxHistoryAgeDays = 14;
 
             public string ObjectPriority = "person, people, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
@@ -176,7 +177,7 @@ namespace AITool
             public int MaxWaitForAIServerMS = 5000;
             public bool MaxWaitForAIServerTimeoutError = true;
 
-            public double LocalLatitude = 39.809734;
+            public double LocalLatitude = 39.809734;  //mid USA lat long used as default value since BI also does this
             public double LocalLongitude = -98.555620;
 
             public List<ClsURLItem> AIURLList = new List<ClsURLItem>();
