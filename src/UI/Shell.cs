@@ -92,6 +92,9 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
+
+            //string test = CompressToBase64String(" er 2 35464353 4t f fg wefg wer gwe gw t345 y4 t4 rtw w egfgkfkkkk");
+            //bool isbase = IsBase64String(test);
             //TimeSpan ts = TimeSpan.FromDays(1.2);
             //Debug.Print(ts.FormatTS(true));
             //Debug.Print(ts);

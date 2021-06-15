@@ -32,6 +32,7 @@ using System.Net.Sockets;
 using NLog.Fluent;
 using System.Drawing.Imaging;
 using Innovative.SolarCalculator;
+using System.IO.Compression;
 
 namespace AITool
 {
@@ -1714,6 +1715,29 @@ namespace AITool
                             int Hei = GetNumberInt(RetVal.ToString().GetWord("Height=", "}"));
                             RetVal = new Size(Wid, Hei);
                         }
+                        else if (RetVal is string)
+                        {
+                            if (RetVal.ToString().Length > 256 && IsBase64String(RetVal.ToString()))
+                            {
+                                string base64 = "";
+                                try
+                                {
+                                    base64 = DeCompressFromBase64String(RetVal.ToString());
+                                }
+                                catch (Exception)
+                                {
+                                }
+
+                                if (base64.IsEmpty())  //maybe its not really base 64 + gzip compressed?
+                                    base64 = RetVal.ToString();
+
+                                RetVal = Convert.ChangeType(base64, DefaultValue.GetType());
+                            }
+                            else
+                            {
+                                RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
+                            }
+                        }
                         else if (DefaultValue != null)
                             RetVal = Convert.ChangeType(RetVal, DefaultValue.GetType());
                         //Else
@@ -1802,8 +1826,23 @@ namespace AITool
                             strlist.Add(obj.ToString());
                         reg.SetValue(name, strlist.ToArray(), RegistryValueKind.MultiString);
                     }
+                    else if (value is string)
+                    {
+                        //large strings may cause, so compress and base 64 encode
+                        //Insufficient system resources exist to complete the requested service.; [IOException]
+                        string compressed = value.ToString();
+
+                        if (compressed.Length > 2048)
+                            compressed = CompressToBase64String(compressed);
+
+                        reg.SetValue(name, compressed);
+
+                    }
                     else
+                    {
                         reg.SetValue(name, value);
+
+                    }
                     ret = true;
                 }
 
@@ -1811,7 +1850,7 @@ namespace AITool
             }
             catch (Exception ex)
             {
-                Log($"Error: {ex.Msg()}");
+                Log($"Error: ({name}={value.ToString().Length} bytes) {ex.Msg()}");
             }
             finally
             {
@@ -1819,6 +1858,104 @@ namespace AITool
             }
 
             return ret;
+        }
+
+        public static string CompressToBase64String(string strdata)
+        {
+            return Convert.ToBase64String(CompressGzip(Encoding.UTF8.GetBytes(strdata)));
+        }
+        public static string DeCompressFromBase64String(string strdata)
+        {
+            return Encoding.UTF8.GetString(DecompressGZ(Convert.FromBase64String(strdata)));
+        }
+
+        public static bool IsBase64String(string value)
+        {
+            if (value == null || value.Length == 0 || value.Length % 4 != 0
+                || value.Contains(' ') || value.Contains('\t') || value.Contains('\r') || value.Contains('\n'))
+                return false;
+            var index = value.Length - 1;
+            if (value[index] == '=')
+                index--;
+            if (value[index] == '=')
+                index--;
+            for (var i = 0; i <= index; i++)
+                if (IsInvalid(value[i]))
+                    return false;
+            return true;
+        }
+        // Make it private as there is the name makes no sense for an outside caller
+        private static bool IsInvalid(char value)
+        {
+            var intValue = (Int32)value;
+            if (intValue >= 48 && intValue <= 57)
+                return false;
+            if (intValue >= 65 && intValue <= 90)
+                return false;
+            if (intValue >= 97 && intValue <= 122)
+                return false;
+            return intValue != 43 && intValue != 47;
+        }
+        public static byte[] CompressGzip(byte[] data)
+        {
+            try
+            {
+                using (MemoryStream output = new MemoryStream())
+                {
+                    using (GZipStream gzip = new GZipStream(output, CompressionMode.Compress, false))
+                    {
+                        gzip.Write(data, 0, data.Length);
+                        gzip.Close();
+                        return output.ToArray();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Error: " + ex.Msg());
+            }
+
+            return null;
+
+        }
+
+        public static byte[] DecompressGZ(byte[] data)
+        {
+            try
+            {
+                Stopwatch sw1 = new Stopwatch();
+                sw1.Start();
+                using (MemoryStream input = new MemoryStream())
+                {
+                    input.Write(data, 0, data.Length);
+                    input.Position = 0;
+                    using (GZipStream gzip = new GZipStream(input, CompressionMode.Decompress, false))
+                    {
+                        using (MemoryStream output = new MemoryStream())
+                        {
+                            byte[] buff = new byte[4097];
+                            int read = -1;
+                            read = gzip.Read(buff, 0, buff.Length);
+                            while (read > 0)
+                            {
+                                output.Write(buff, 0, read);
+                                read = gzip.Read(buff, 0, buff.Length);
+                            }
+                            gzip.Close();
+                            sw1.Stop();
+                            //Debug.Print(" (gz: " + sw1.ElapsedMilliseconds + "ms)");
+                            return output.ToArray();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Error: " + ex.Msg());
+            }
+
+            return null;
+
         }
 
         public static string ReplaceCaseInsensitive(string input, string search, string replacement)
