@@ -2271,6 +2271,7 @@ namespace AITool
             [MarshalAs(UnmanagedType.U4)] FileAttributes dwFlagsAndAttributes,
             IntPtr hTemplateFile);
 
+        private const int ERROR_ACCESS_DENIED = 5;
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
         public static async Task<WaitFileAccessResult> WaitForFileAccessAsync(string filename, FileAccess rights = FileAccess.Read, FileShare share = FileShare.Read, long WaitMS = 30000, int RetryDelayMS = 0)

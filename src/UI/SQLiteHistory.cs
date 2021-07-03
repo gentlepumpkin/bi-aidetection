@@ -46,8 +46,10 @@ namespace AITool
         public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
         public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
 
+        public int HoursBetweenCleaning { get; set; } = 24;
         public static object DBLock = new object();
 
+        private DateTime LastCleanTime = DateTime.MinValue;
         public SQLiteHistory(string Filename, bool ReadOnly)
         {
             if (string.IsNullOrEmpty(Filename))
@@ -537,12 +539,18 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             //because the dictionary doesnt give a proper sorted list
+            if ((DateTime.Now - this.LastCleanTime).Hours >= this.HoursBetweenCleaning)
+                this.CleanHistoryList();
+
             return this.HistoryDic.Values.OrderBy(c => c.Date).ToList();
         }
 
         public List<History> GetRecentlyAdded()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            if ((DateTime.Now - this.LastCleanTime).Hours >= this.HoursBetweenCleaning)
+                this.CleanHistoryList();
 
             List<History> ret = new List<History>();
             while (!this.RecentlyAdded.IsEmpty)
@@ -551,6 +559,8 @@ namespace AITool
                 if (this.RecentlyAdded.TryDequeue(out hist))
                     ret.Add(hist);
             }
+
+
             return ret;
         }
 
@@ -796,6 +806,8 @@ namespace AITool
 
                                     this.DeleteTimeCalc.AddToCalc(dsw.ElapsedMilliseconds);
 
+                                    this.RecentlyDeleted.Enqueue(hist);
+
                                     if (rowsdeleted != 1)
                                     {
                                         failedcnt++;
@@ -809,6 +821,7 @@ namespace AITool
                                 }
                                 rcnt = rcnt + rowsdeleted;
                             }
+
 
                             //this.DeletedCount.AtomicAddAndGet(rcnt);
 
@@ -846,6 +859,7 @@ namespace AITool
             finally
             {
                 Global.UpdateProgressBar("", 0, 0, 0);
+                this.LastCleanTime = DateTime.Now;
             }
 
             return ret;

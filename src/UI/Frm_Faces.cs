@@ -63,7 +63,7 @@ namespace AITool
                         pictureBoxCurrentFace.BackgroundImage = null;
                     }
 
-                    Global_GUI.UpdateFOLV(FOLV_FaceFiles, face.Files.Values.ToList(), FullRefresh: true);
+                    Global_GUI.UpdateFOLV(FOLV_FaceFiles, face.Files, FullRefresh: true);
                 }
                 else
                 {

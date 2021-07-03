@@ -204,7 +204,11 @@ namespace AITool
                     this.DefaultURL = "http://127.0.0.1:80/v1/vision/custom/YOUR_CUSTOM_MODEL_NAME_HERE";
                     this.HelpURL = "https://docs.deepstack.cc/custom-models/index.html";
                     this.Type = URLTypeEnum.DeepStack_Custom;
-                    this.UseOnlyAsLinkedServer = true;
+                    if (this.url.Has("dark"))
+                        this.UseOnlyAsLinkedServer = false;
+                    else
+                        this.UseOnlyAsLinkedServer = true;
+
                 }
                 else // assume deepstack //if (this.Type == URLTypeEnum.DeepStack || this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0)
                 {

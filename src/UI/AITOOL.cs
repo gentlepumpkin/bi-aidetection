@@ -1386,8 +1386,8 @@ namespace AITool
 
                                             if (url.ErrsInRowCount.ReadFullFence() > AppSettings.Settings.MaxErrorsInARowBeforeDisable)
                                             {
-                                                Log($"...Error: AI URL failed {url.ErrsInRowCount.ReadFullFence()} times in a row.  Permanently DISABLING: '{url}'", url.CurSrv, cam);
-                                                url.Enabled.WriteFullFence(false);
+                                                Log($"...Error: AI URL failed {url.ErrsInRowCount.ReadFullFence()} times in a row.  DISABLING: '{url}'", url.CurSrv, cam);
+                                                url.ErrDisabled.WriteFullFence(true);
                                             }
 
                                             if (url.ErrsInRowCount.ReadFullFence() >= AppSettings.Settings.deepstack_autorestart_fail_count &&
@@ -3420,7 +3420,7 @@ namespace AITool
                         foreach (ClsPrediction pred in predictions)
                         {
                             if (pred.ObjType == ObjectType.Face)
-                                FaceMan.TryAddFile(pred.Filename, pred.Label);
+                                FaceMan.TryAddFile(CurImg, pred.Label);
                         }
 
                         string PredictionsJSON = Global.GetJSONString(predictions);
@@ -4345,7 +4345,7 @@ namespace AITool
                                 cams.Add(AppSettings.Settings.CameraList[i]);
 
                             if (!ImageOrNameOrPrefix.EqualsIgnoreCase("none"))
-                                Log($"Debug:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
+                                Log($"Trace:(Found a DEFAULT camera for '{ImageOrNameOrPrefix}': '{AppSettings.Settings.CameraList[i].Name}')");
                         }
                         else
                         {
@@ -4373,7 +4373,7 @@ namespace AITool
                 cam = cams[0];
                 if (cams.Count > 1)
                 {
-                    Log($"Debug: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' {cams[0].LastGetCameraMatchResult} ***");
+                    Log($"Trace: *** Note: More than one configured camera matched '{ImageOrNameOrPrefix}', using the first one matched: '{cams[0].Name}' {cams[0].LastGetCameraMatchResult} ***");
                     for (int i = 0; i < cams.Count; i++)
                     {
                         Log($"Trace:    ----{i + 1}: Name='{cams[i].Name}', MatchResult={cams[i].LastGetCameraMatchResult}, BICamName={cams[i].BICamName}, Prefix='{cams[i].Prefix}', InputPath='{cams[i].input_path}'");

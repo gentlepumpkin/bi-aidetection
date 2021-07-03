@@ -8,6 +8,8 @@ using static AITool.Global;
 using static AITool.AITOOL;
 using Amazon.Rekognition.Model;
 using Newtonsoft.Json;
+using AITool.Properties;
+using System.Diagnostics;
 
 namespace AITool
 {
@@ -16,7 +18,9 @@ namespace AITool
         public string Name { get; set; } = "";
         public long Hits { get; set; } = 0;
         public string FaceStoragePath { get; set; } = "";
-        public Dictionary<string, ClsFaceFile> Files { get; set; } = new Dictionary<string, ClsFaceFile>();
+        public List<ClsFaceFile> Files { get; set; } = new List<ClsFaceFile>();
+        [JsonIgnore]
+        public Dictionary<string, ClsFaceFile> FilesDic { get; set; } = new Dictionary<string, ClsFaceFile>();
         //public List<ClsFaceFile> Files = new List<ClsFaceFile>();
 
         [JsonConstructor]
@@ -39,29 +43,55 @@ namespace AITool
 
         }
 
-        public bool TryAddFile(string Filename, out string Newfilename)
+
+        public bool TryAddFile(ClsImageQueueItem CurImg, out string Newfilename, int MaxFilesPerFace, int MaxFileAgeDays)
         {
             Newfilename = "";
 
-            if (Filename.IsEmpty() || !File.Exists(Filename))
+            if (!CurImg.IsValid())
                 return false;
 
-            string fname = Path.GetFileName(Filename);
+            string fname = Path.GetFileName(CurImg.image_path).ToLower();
             Newfilename = Path.Combine(this.FaceStoragePath, fname);
 
-            if (!this.Files.ContainsKey(fname.ToLower()))
+            if (!this.FilesDic.ContainsKey(fname))
             {
+                if (this.Files.Count > MaxFilesPerFace)
+                {
+                    //remove the first one
+                    string firstname = Path.GetFileName(this.Files[0].FilePath).ToLower();
+                    this.FilesDic.Remove(firstname);
+                    this.Files.RemoveAt(0);
+                    if (this.Files[0].Exists)
+                        File.Delete(this.Files[0].FilePath);
+                }
+
+                if (this.Files.Count > 1 && (DateTime.Now - this.Files[0].DateFileModified).TotalDays > MaxFileAgeDays)
+                {
+                    //remove the first one
+                    string firstname = Path.GetFileName(this.Files[0].FilePath).ToLower();
+                    this.FilesDic.Remove(firstname);
+                    this.Files.RemoveAt(0);
+                    if (this.Files[0].Exists)
+                        File.Delete(this.Files[0].FilePath);
+
+                }
+
                 //if in different location, copy it in
-                if (!Filename.EqualsIgnoreCase(Newfilename))
-                    File.Copy(Filename, Newfilename, true);
+                if (!CurImg.image_path.EqualsIgnoreCase(Newfilename))
+                {
+                    if (!CurImg.CopyFileTo(Newfilename))
+                        return false;
+                }
 
-                ClsFaceFile ff = new ClsFaceFile(Newfilename);
+                ClsFaceFile ff = new ClsFaceFile(Newfilename, this);
 
-                ff.OriginalPath = Filename;
+                ff.OriginalPath = CurImg.image_path;
 
                 ff.OriginalCamera = GetCamera(ff.OriginalPath, true).Name;
 
-                this.Files.Add(fname.ToLower(), ff);
+                this.Files.Add(ff);
+                this.FilesDic.Add(fname, ff);
 
                 return true;
             }
@@ -98,16 +128,29 @@ namespace AITool
 
     public class ClsFaceFile : IEquatable<ClsFaceFile>
     {
-        public ClsFaceFile(string filepath)
+        [JsonConstructor]
+        public ClsFaceFile()
+        {
+
+        }
+        public ClsFaceFile(string filepath, ClsFace face)
         {
             this.FilePath = filepath;
             this.Name = Path.GetFileName(filepath);
             this.DateAdded = DateTime.Now;
-            this.Update();
+            this.Update(face);
         }
 
-        public void Update()
+        public void Update(ClsFace face)
         {
+            //first make sure path is correct
+            string curpath = Path.GetDirectoryName(this.FilePath);
+            if (!curpath.EqualsIgnoreCase(face.FaceStoragePath))
+            {
+                string filename = Path.GetFileName(this.FilePath);
+                this.FilePath = Path.Combine(face.FaceStoragePath, filename);
+            }
+
             if (File.Exists(this.FilePath))
             {
                 this.Exists = true;
@@ -157,34 +200,55 @@ namespace AITool
     }
     public class ClsFaceManager
     {
+        public int MaxFilesPerFace { get; set; } = 1000;
+        public int MaxFileAgeDays { get; set; } = 182;
+        public bool SaveUnknownFaces { get; set; } = true;
+        public bool SaveKnownFaces { get; set; } = true;
+        public string FaceFile { get; set; } = "";
         public List<ClsFace> Faces { get; set; } = new List<ClsFace>();
-        public int MaxFilesPerFace = 512;
+        private bool NeedsSaving { get; set; } = true;
         private object FaceLock = new object();
         public ClsFaceManager()
         {
+            this.FaceFile = Path.Combine(AppSettings.Settings.FacesPath, "Faces.JSON");
             //update in background thread
-            Task.Run(this.Update);
+            Task.Run(this.UpdateFaces);
         }
+        public void Save()
+        {
+            using var Trace = new Trace();
 
-        public void Update()
+            lock (FaceLock)
+            {
+                if (NeedsSaving && this.Faces.IsNotEmpty())
+                {
+                    Global.WriteToJsonFile<ClsFaceManager>(this.FaceFile, this);
+                    NeedsSaving = false;
+                }
+            }
+        }
+        public void UpdateFaces()
         {
             using var Trace = new Trace();
 
             int missingfiles = 0;
+            int oldfiles = 0;
             int addedfiles = 0;
+            int totalfiles = 0;
+            int missingfaces = 0;
+            Stopwatch sw = Stopwatch.StartNew();
 
             try
             {
 
-                Log("Debug: Updating faces...");
-
-
-                if (!Directory.Exists(AppSettings.Settings.FacesPath))
-                    Directory.CreateDirectory(AppSettings.Settings.FacesPath);
-
-
                 lock (FaceLock)
                 {
+
+                    Log("Debug: Updating faces...");
+
+
+                    if (!Directory.Exists(AppSettings.Settings.FacesPath))
+                        Directory.CreateDirectory(AppSettings.Settings.FacesPath);
 
                     this.TryAddFace("Unknown");
 
@@ -193,24 +257,62 @@ namespace AITool
                     foreach (var facedir in facedirs)
                         this.TryAddFace(facedir);
 
-                    foreach (var Face in this.Faces)
+                    //delete any faces that dont have a folder
+                    for (int i = this.Faces.Count - 1; i >= 0; i--)
+                    {
+                        if (!this.Faces[i].Name.EqualsIgnoreCase("unknown") && !Directory.Exists(this.Faces[i].FaceStoragePath))
+                        {
+                            missingfaces++;
+                            this.Faces.RemoveAt(i);
+                        }
+                    }
+
+
+                    for (int i = 0; i < this.Faces.Count; i++)
                     {
 
-                        foreach (var file in Face.Files.Values)
-                            file.Update();
+                        foreach (var file in this.Faces[i].Files)
+                            file.Update(this.Faces[i]);
 
                         //remove any missing files
-                        var itemsToRemove = Face.Files.Where(f => !f.Value.Exists).ToArray();
+                        var itemsToRemove = this.Faces[i].Files.Where(f => !f.Exists).ToArray();
                         foreach (var item in itemsToRemove)
-                            Face.Files.Remove(item.Key);
+                        {
+                            string firstname = Path.GetFileName(item.FilePath).ToLower();
+                            this.Faces[i].Files.Remove(item);
+                            this.Faces[i].FilesDic.Remove(firstname);
 
+                        }
                         missingfiles += itemsToRemove.Length;
 
+                        //remove old files
+                        itemsToRemove = this.Faces[i].Files.Where(f => (DateTime.Now - f.DateFileModified).TotalDays > this.MaxFileAgeDays).ToArray();
+                        foreach (var item in itemsToRemove)
+                        {
+                            string firstname = Path.GetFileName(item.FilePath).ToLower();
+                            this.Faces[i].Files.Remove(item);
+                            this.Faces[i].FilesDic.Remove(firstname);
+                            //actually delete the file:
+                            File.Delete(item.FilePath);
+
+                        }
+                        oldfiles += itemsToRemove.Length;
+
+                        totalfiles = this.Faces[i].Files.Count;
+
                         //scan the folder for new files
-                        List<FileInfo> newfiles = Global.GetFiles(Face.FaceStoragePath, "*.jpg;*.jpeg;*.bmp;*.png", SearchOption.TopDirectoryOnly);
+                        List<FileInfo> newfiles = Global.GetFiles(this.Faces[i].FaceStoragePath, "*.jpg;*.jpeg;*.bmp;*.png", SearchOption.TopDirectoryOnly);
                         foreach (FileInfo fi in newfiles)
-                            if (Face.TryAddFile(fi.FullName, out string newfilename))
+                        {
+                            if ((DateTime.Now - fi.CreationTime).TotalDays > this.MaxFileAgeDays)
+                            {
+                                fi.Delete();
+                            }
+                            else if (this.Faces[i].TryAddFile(new ClsImageQueueItem(fi.FullName, 0), out string newfilename, this.MaxFilesPerFace, this.MaxFileAgeDays))
+                            {
                                 addedfiles++;
+                            }
+                        }
 
                     }
 
@@ -225,26 +327,47 @@ namespace AITool
                 Log($"Error: {ex.Msg()}");
             }
 
-            Log($"{this.Faces.Count} faces. Added {addedfiles} new files, Removed {missingfiles} missing files.");
+            Log($"Updated {this.Faces.Count} faces in {sw.ElapsedMilliseconds}ms. {missingfaces} faces removed. {totalfiles} files. Added {addedfiles} new files, Removed {missingfiles} missing files and {oldfiles} files that were too old.");
 
 
         }
 
-        public bool TryAddFile(string filename, string face = "")
+        public bool TryAddFile(ClsImageQueueItem CurImg, string face = "")
         {
-            if (filename.IsEmpty())
+            if (!CurImg.IsValid())
                 return false;
 
             if (face.IsEmpty())
                 face = "Unknown";
 
+            if (face.EqualsIgnoreCase("face"))
+                face = "Unknown";
+
+            if (face.EqualsIgnoreCase("unknown"))
+            {
+                if (!this.SaveUnknownFaces)
+                    return false;
+            }
+            else
+            {
+                if (!this.SaveKnownFaces)
+                    return false;
+            }
+
             ClsFace FoundFace = this.TryAddFace(face);
 
-            bool added = FoundFace.TryAddFile(filename, out string Outfilename);
+            bool added = FoundFace.TryAddFile(CurImg, out string Outfilename, this.MaxFilesPerFace, this.MaxFileAgeDays);
 
             //delete from unknown folder if it was originally from there and it moved
-            if (added && filename.Has("\\unknown\\") && !Outfilename.Has("\\unknown\\"))
-                Global.SafeFileDelete(filename);
+            if (added)
+            {
+                this.NeedsSaving = true;
+
+                if (CurImg.image_path.Has("\\unknown\\") && !Outfilename.Has("\\unknown\\") &&
+                    CurImg.image_path.Has("\\face\\") && !Outfilename.Has("\\face\\"))
+                    Global.SafeFileDelete(CurImg.image_path);
+
+            }
 
             return added;
         }
@@ -260,7 +383,10 @@ namespace AITool
             else
             {
                 lock (FaceLock)
+                {
                     this.Faces.Add(FoundFace);
+                    this.NeedsSaving = true;
+                }
             }
 
             return FoundFace;

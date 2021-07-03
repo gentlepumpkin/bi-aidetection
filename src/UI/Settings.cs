@@ -263,10 +263,9 @@ namespace AITool
                 }
 
 
-                if (!AITOOL.FaceMan.IsNull() && AITOOL.FaceMan.Faces.IsNotEmpty())
+                if (!AITOOL.FaceMan.IsNull())
                 {
-                    string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
-                    Global.WriteToJsonFile<ClsFaceManager>(facefile, AITOOL.FaceMan);
+                    AITOOL.FaceMan.Save();
                 }
 
                 //}
@@ -804,6 +803,9 @@ namespace AITool
                     if (await IsFileValidAsync(facefile, 400))
                         AITOOL.FaceMan = Global.ReadFromJsonFile<ClsFaceManager>(facefile);
                     else
+                        AITOOL.FaceMan = new ClsFaceManager();
+
+                    if (AITOOL.FaceMan == null)
                         AITOOL.FaceMan = new ClsFaceManager();
 
 

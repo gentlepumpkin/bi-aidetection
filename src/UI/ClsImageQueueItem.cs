@@ -232,7 +232,7 @@ namespace AITool
                                             this.FileSize = this.ImageByteArray.Length;
                                             this.FileLoadMS = sw.ElapsedMilliseconds;
                                             this._valid = true;
-                                            AITOOL.Log($"Debug: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
+                                            AITOOL.Log($"Trace: Image file is valid. Resolution={this.Width}x{this.Height}, LockMS={this.FileLockMS}ms (max={MaxWaitMS}ms), retries={this.FileLockErrRetryCnt}, size={Global.FormatBytes(ms.Length)}: {Path.GetFileName(this.image_path)}");
                                         }
                                         break;
                                     }

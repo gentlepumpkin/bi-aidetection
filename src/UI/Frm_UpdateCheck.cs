@@ -62,6 +62,8 @@ namespace AITool
             try
             {
 
+                this.ControlBox = false;
+
                 Assembly CurAssm = Assembly.GetExecutingAssembly();
                 string AssemVer = CurAssm.GetName().Version.Major + "." + CurAssm.GetName().Version.Minor + "." + CurAssm.GetName().Version.Build;
                 CurrentVerTime = Global.RetrieveLinkerTimestamp();
@@ -192,6 +194,7 @@ namespace AITool
             }
             finally
             {
+                this.ControlBox = true;
                 bt_check.Enabled = true;
                 bt_check.Text = "Check";
             }

@@ -85,7 +85,7 @@ namespace AITool
             }
         }
 
-
+        private string LastServerPortUser = "";
         public async Task<bool> Connect()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -93,6 +93,8 @@ namespace AITool
             bool ret = false;
             try
             {
+                if (this.mqttClient.IsConnected)
+                    await this.mqttClient.DisconnectAsync();
 
                 this.server = AppSettings.Settings.mqtt_serverandport.GetWord("", ":");
                 this.port = AppSettings.Settings.mqtt_serverandport.GetWord(":", "/");
@@ -274,8 +276,11 @@ namespace AITool
                 this.LastTopic = Guid.NewGuid().ToString();
             }
 
-            if (!this.IsConnected)
+            if (!this.IsConnected || this.LastServerPortUser != AppSettings.Settings.mqtt_serverandport + AppSettings.Settings.mqtt_password + AppSettings.Settings.mqtt_username + AppSettings.Settings.mqtt_clientid)
+            {
                 await this.Connect();
+                this.LastServerPortUser = AppSettings.Settings.mqtt_serverandport + AppSettings.Settings.mqtt_password + AppSettings.Settings.mqtt_username + AppSettings.Settings.mqtt_clientid;
+            }
 
             if (!this.IsConnected)
                 return res;
