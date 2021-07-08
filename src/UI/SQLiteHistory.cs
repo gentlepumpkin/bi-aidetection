@@ -815,7 +815,7 @@ namespace AITool
                                     if (rowsdeleted != 1)
                                     {
                                         failedcnt++;
-                                        Log($"Error: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
+                                        Log($"Trace: When trying to delete database entry, RowsDeleted count was {rowsdeleted} but we expected 1.");
                                     }
                                 }
                                 catch (Exception ex)
