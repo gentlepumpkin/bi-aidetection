@@ -1,29 +1,28 @@
-﻿using MQTTnet.Client.Publishing;
-using SixLabors.ImageSharp;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Media;
-using System.Net;
-using System.Security.AccessControl;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.InputFiles;
-using NPushover;
-using NPushover.Exceptions;
+
+using MQTTnet.Client.Publishing;
+
 using NPushover.RequestObjects;
 using NPushover.ResponseObjects;
+
+using SixLabors.ImageSharp;
+
+using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types.InputFiles;
+
 using static AITool.AITOOL;
-using System.Net.Http;
 
 namespace AITool
 {

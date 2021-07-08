@@ -149,6 +149,8 @@ namespace AITool
             public bool HistoryFilterSkipped = false;
             public bool HistoryFilterMasked = false;
             public bool HistoryMergeDuplicatePredictions = true;
+            public int HistoryHoursBetweenCleaning = 24;
+
             public int MaxHistoryAgeDays = 14;
 
             public string ObjectPriority = "person, people, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";

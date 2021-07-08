@@ -46,7 +46,6 @@ namespace AITool
         public MovingCalcs AddTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
         public MovingCalcs DeleteTimeCalc { get; set; } = new MovingCalcs(1000, "DB Items", true);
 
-        public int HoursBetweenCleaning { get; set; } = 24;
         public static object DBLock = new object();
 
         private DateTime LastCleanTime = DateTime.MinValue;
@@ -539,7 +538,7 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             //because the dictionary doesnt give a proper sorted list
-            if ((DateTime.Now - this.LastCleanTime).Hours >= this.HoursBetweenCleaning)
+            if ((DateTime.Now - this.LastCleanTime).Hours >= AppSettings.Settings.HistoryHoursBetweenCleaning)
                 this.CleanHistoryList();
 
             return this.HistoryDic.Values.OrderBy(c => c.Date).ToList();
@@ -549,7 +548,7 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            if ((DateTime.Now - this.LastCleanTime).Hours >= this.HoursBetweenCleaning)
+            if ((DateTime.Now - this.LastCleanTime).Hours >= AppSettings.Settings.HistoryHoursBetweenCleaning)
                 this.CleanHistoryList();
 
             List<History> ret = new List<History>();
@@ -739,6 +738,8 @@ namespace AITool
                     {
                         int missing = 0;
                         int tooold = 0;
+                        int failedcnt = 0;
+
                         int cnt = 0;
                         int HistCount = this.HistoryDic.Count;
                         long LastMS = sw.ElapsedMilliseconds;
@@ -764,11 +765,15 @@ namespace AITool
                                     missing++;
 
                                 removed.Add(hist);
+                                this.RecentlyDeleted.Enqueue(hist);
 
                                 History rhist;
 
                                 if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
+                                {
+                                    failedcnt++;
                                     Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
+                                }
                             }
 
                         }
@@ -780,7 +785,6 @@ namespace AITool
                             //the db should be thread safe due to opening with fullmutex flag
                             Stopwatch swr = Stopwatch.StartNew();
                             int rcnt = 0;
-                            int failedcnt = 0;
                             cnt = 0;
                             LastMS = sw.ElapsedMilliseconds;
                             int RemovedCount = removed.Count;
@@ -825,12 +829,12 @@ namespace AITool
 
                             //this.DeletedCount.AtomicAddAndGet(rcnt);
 
-                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} (Failed={failedcnt}) history file database items because file did not exist in {swr.ElapsedMilliseconds}ms (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Avg.ToString("#####")}ms)");
+                            Log($"Debug: ...Cleaned {rcnt} of {removed.Count} history file database items. {failedcnt} failed, {missing} missing, {tooold} too old.  Time={swr.ElapsedMilliseconds}ms (Count={this.DeleteTimeCalc.Count}, Min={this.DeleteTimeCalc.Min}ms, Max={this.DeleteTimeCalc.Max}ms, Avg={this.DeleteTimeCalc.Avg.ToString("#####")}ms)");
 
                         }
                         else
                         {
-                            Log("debug: No missing files to clean from database?");
+                            Log("debug: No missing or old files to clean from database.");
                         }
 
                     }
