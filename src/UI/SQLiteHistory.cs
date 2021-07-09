@@ -772,7 +772,7 @@ namespace AITool
                                 if (!this.HistoryDic.TryRemove(hist.Filename.ToLower(), out rhist))
                                 {
                                     failedcnt++;
-                                    Log($"Warning: Could not remove from in-memory database: {hist.Filename}");
+                                    Log($"Trace: Could not remove from in-memory database: {hist.Filename}");
                                 }
                             }
 
@@ -823,7 +823,7 @@ namespace AITool
                                     failedcnt++;
                                     Log($"Error: StackDepth={new StackTrace().FrameCount}, TID={Thread.CurrentThread.ManagedThreadId}, TCNT={Process.GetCurrentProcess().Threads.Count}: '{this.Filename}' - " + ex.Msg());
                                 }
-                                rcnt = rcnt + rowsdeleted;
+                                rcnt += rowsdeleted;
                             }
 
 
