@@ -3076,7 +3076,7 @@ namespace AITool
 
             this.LoadSettingsTab();
 
-            if (BlueIrisInfo.Result != BlueIrisResult.Valid)
+            if (BlueIrisInfo.Result != BlueIrisResult.Valid && BlueIrisInfo.Result != BlueIrisResult.NotInstalled)
                 MessageBox.Show($"Error: Could not connect to BlueIris server: '{BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
 
             BtnSettingsSave.Enabled = true;

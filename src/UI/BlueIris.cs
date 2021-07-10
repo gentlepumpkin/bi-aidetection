@@ -23,6 +23,7 @@ namespace AITool
         InvalidHostOrIP,
         HasFirewall,
         CouldNotOpenRemoteRegistry,
+        NotInstalled,
         Unknown
     }
 
@@ -88,6 +89,13 @@ namespace AITool
 
             try
             {
+                if (ServernameOrIP.IsEmpty())
+                {
+                    this.Result = BlueIrisResult.NotInstalled;
+                    Log($"Debug: No BlueIris server specified.");
+                    return this.Result;
+                }
+
                 Log($"Debug: Reading BlueIris settings from registry from '{ServernameOrIP}'...");
 
 
@@ -161,7 +169,10 @@ namespace AITool
                     }
                     else
                     {
+                        this.Result = BlueIrisResult.NotInstalled;
                         Log("Debug: Could not find BlueIris INSTALL info in the registry.");
+                        return this.Result;
+
                     }
 
 
