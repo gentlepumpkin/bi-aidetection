@@ -66,6 +66,9 @@ namespace AITool
 
         public Shell()
         {
+
+            double test = Global.GetNumberDbl("39.809734");
+
             this.StartupSW = Stopwatch.StartNew();
 
             this.InitializeComponent();
@@ -179,6 +182,7 @@ namespace AITool
                 this.storeMaskedAlertsToolStripMenuItem.Checked = AppSettings.Settings.HistoryStoreMaskedAlerts;
                 this.showOnlyRelevantObjectsToolStripMenuItem.Checked = AppSettings.Settings.HistoryOnlyDisplayRelevantObjects;
                 this.restrictThresholdAtSourceToolStripMenuItem.Checked = AppSettings.Settings.HistoryRestrictMinThresholdAtSource;
+                this.mergeDuplicatePredictionsToolStripMenuItem.Checked = AppSettings.Settings.HistoryMergeDuplicatePredictions;
                 this.cb_filter_animal.Checked = AppSettings.Settings.HistoryFilterAnimals;
                 this.cb_filter_masked.Checked = AppSettings.Settings.HistoryFilterMasked;
                 this.cb_filter_nosuccess.Checked = AppSettings.Settings.HistoryFilterNoSuccess;
@@ -2705,7 +2709,6 @@ namespace AITool
                         }
                     }
 
-
                     Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name, false);
 
                     if (cam == null)
@@ -2716,6 +2719,13 @@ namespace AITool
                         return;
                     }
 
+                    if (cam.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(cam.Action_network_folder.TrimEnd("\\".ToCharArray())))
+                    {
+                        //You dont want to watch, then copy the same file back to the same folder
+                        MessageBox.Show($"WARNING: Input path ({cam.input_path}) & 'Copy alert images to folder' path may not be the same.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.DisplayCameraSettings(); //reset displayed settings
+                        return;
+                    }
 
                     //1. GET SETTINGS INPUTTED
                     //all checkboxes in one array
@@ -3206,7 +3216,7 @@ namespace AITool
         {
 
             if (DeepStackServerControl == null)
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
             DeepStackServerControl.GetDeepStackRun();
 
@@ -3231,6 +3241,7 @@ namespace AITool
             AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
             AppSettings.Settings.deepstack_customModelName = this.Txt_CustomModelName.Text.Trim();
             AppSettings.Settings.deepstack_customModelPort = this.Txt_CustomModelPort.Text.Trim();
+            AppSettings.Settings.deepstack_customModelMode = this.Txt_CustomModelMode.Text.Trim();
             AppSettings.Settings.deepstack_customModelApiEnabled = this.Chk_CustomModelAPI.Checked;
 
             AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
@@ -3324,7 +3335,7 @@ namespace AITool
 
             }
 
-            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
+            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
         }
 
@@ -3334,7 +3345,7 @@ namespace AITool
             try
             {
                 if (DeepStackServerControl == null)
-                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
 
                 //first update the port in the deepstack_url if found
@@ -3379,6 +3390,7 @@ namespace AITool
                 this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
                 this.Txt_CustomModelName.Text = AppSettings.Settings.deepstack_customModelName;
                 this.Txt_CustomModelPort.Text = AppSettings.Settings.deepstack_customModelPort;
+                this.Txt_CustomModelMode.Text = AppSettings.Settings.deepstack_customModelMode;
                 this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
 
                 this.Chk_AutoReStart.Checked = AppSettings.Settings.deepstack_autorestart;
@@ -3771,9 +3783,12 @@ namespace AITool
                 frm.tbTriggerUrl.Text = cam.trigger_urls_as_string.SplitStr("\r\n|").JoinStr("\r\n");
                 frm.tbCancelUrl.Text = cam.cancel_urls_as_string.SplitStr("\r\n|").JoinStr("\r\n");
 
-
+                frm.tb_ActionDelayMS.Text = AppSettings.Settings.ActionDelayMS.ToString();
                 frm.tb_cooldown.Text = cam.cooldown_time_seconds.ToString(); //load cooldown time
                 frm.tb_sound_cooldown.Text = cam.sound_cooldown_time_seconds.ToString(); //load cooldown time
+
+                frm.tb_NetworkFolderCleanupDays.Text = cam.Action_network_folder_purge_older_than_days.ToString();
+
                 //load telegram image sending on/off option
                 frm.cb_telegram.Checked = cam.telegram_enabled;
                 frm.tb_telegram_caption.Text = cam.telegram_caption;
@@ -3809,6 +3824,8 @@ namespace AITool
                 frm.cb_pushover_active_time.Text = cam.Action_pushover_active_time_range;
 
                 frm.cb_queue_actions.Checked = cam.Action_queued;
+
+                frm.cb_ActivateBlueIrisWindow.Checked = cam.Action_ActivateBlueIrisWindow;
 
                 frm.cb_mergeannotations.Checked = cam.Action_image_merge_detections;
 
@@ -3855,11 +3872,14 @@ namespace AITool
                     if (cam.trigger_urls.Count() == 0)
                         cam.Action_TriggerURL_Enabled = false;
 
+                    AppSettings.Settings.ActionDelayMS = GetNumberInt(frm.tb_ActionDelayMS.Text.Trim());
                     cam.cooldown_time_seconds = GetNumberInt(frm.tb_cooldown.Text.Trim());
                     cam.sound_cooldown_time_seconds = GetNumberInt(frm.tb_sound_cooldown.Text.Trim());
                     cam.telegram_enabled = frm.cb_telegram.Checked;
                     cam.telegram_caption = frm.tb_telegram_caption.Text.Trim();
                     //cam.telegram_triggering_objects = frm.tb_telegram_triggering_objects.Text.Trim();
+
+                    cam.Action_network_folder_purge_older_than_days = GetNumberInt(frm.tb_NetworkFolderCleanupDays.Text.Trim());
 
                     cam.telegram_active_time_range = frm.cb_telegram_active_time.Text.Trim();
 
@@ -3895,6 +3915,7 @@ namespace AITool
                     cam.Action_image_merge_jpegquality = Convert.ToInt64(frm.tb_jpeg_merge_quality.Text);
 
                     cam.Action_queued = frm.cb_queue_actions.Checked;
+                    cam.Action_ActivateBlueIrisWindow = frm.cb_ActivateBlueIrisWindow.Checked;
 
                     AppSettings.Settings.ActionCancelSeconds = GetNumberInt(frm.tb_ActionCancelSecs.Text);
                     AppSettings.Settings.HistoryOnlyDisplayRelevantObjects = frm.cb_ShowOnlyRelevant.Checked;
@@ -5467,6 +5488,12 @@ namespace AITool
 
                 }
             }
+        }
+
+        private void mergeDuplicatePredictionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AppSettings.Settings.HistoryMergeDuplicatePredictions = this.mergeDuplicatePredictionsToolStripMenuItem.Checked;
+            AppSettings.SaveAsync();
         }
     }
 

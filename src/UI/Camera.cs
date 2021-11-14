@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows.Forms;
 
 using static AITool.MaskManager;
 
@@ -157,7 +158,7 @@ namespace AITool
         public bool Action_mqtt_retain_message { get; set; } = false;
         public bool Action_mqtt_send_image { get; set; } = false;
         public bool Action_queued { get; set; } = false;
-
+        public bool Action_ActivateBlueIrisWindow { get; set; } = false;
         public bool Action_pushover_enabled { get; set; } = false;
         public string Action_pushover_title { get; set; } = "AI Detection - [camera]";
         public string Action_pushover_message { get; set; } = "[SummaryNonEscaped]";
@@ -247,7 +248,7 @@ namespace AITool
         public String last_detections_summary; //summary text of last detection
         [JsonIgnore]
         private object CamLock { get; set; } = new object();
-        private Timer _pauseTimer = new Timer();
+        private System.Timers.Timer _pauseTimer = new System.Timers.Timer();
         private ElapsedEventHandler ev;
         [JsonConstructor]
         public Camera() { }
@@ -370,34 +371,14 @@ namespace AITool
                     this.trigger_urls = this.trigger_urls_as_string.SplitStr("\r\n|").ToArray();
                     this.cancel_urls = this.cancel_urls_as_string.SplitStr("\r\n|").ToArray();
 
-                    if (this.Action_image_copy_enabled &&
-                        !string.IsNullOrWhiteSpace(this.Action_network_folder) &&
-                        this.Action_network_folder_purge_older_than_days > 0 &&
-                        LastJPGCleanDay != DateTime.Now.DayOfYear &&
-                        Directory.Exists(this.Action_network_folder))
+                    this.CleanActionNetworkFolder();
+
+                    if (this.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(this.Action_network_folder.TrimEnd("\\".ToCharArray())))
                     {
-                        AITOOL.Log($"Debug: Cleaning out jpg files older than '{this.Action_network_folder_purge_older_than_days}' days in '{this.Action_network_folder}'...");
-
-                        List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(this.Action_network_folder, "*.jpg"));
-                        int deleted = 0;
-                        int errs = 0;
-                        foreach (FileInfo fi in filist)
-                        {
-                            if ((DateTime.Now - fi.LastWriteTime).TotalDays > this.Action_network_folder_purge_older_than_days)
-                            {
-                                try { fi.Delete(); deleted++; }
-                                catch { errs++; }
-                            }
-                        }
-                        if (errs == 0)
-                            AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
-                        else
-                            AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
-
-                        LastJPGCleanDay = DateTime.Now.DayOfYear;
-
-
+                        //You dont want to watch, then copy the same file back to the same folder
+                        AITOOL.Log($"WARNING: Input path ({this.input_path}) & 'Copy alert images to folder' path may not be the same.", "");
                     }
+
 
                 }
                 catch (Exception ex)
@@ -410,6 +391,37 @@ namespace AITool
 
         }
 
+        public void CleanActionNetworkFolder()
+        {
+            if (this.Action_image_copy_enabled &&
+                        !string.IsNullOrWhiteSpace(this.Action_network_folder) &&
+                        this.Action_network_folder_purge_older_than_days > 0 &&
+                        LastJPGCleanDay != DateTime.Now.DayOfYear &&
+                        Directory.Exists(this.Action_network_folder))
+            {
+                AITOOL.Log($"Debug: Cleaning out jpg files older than '{this.Action_network_folder_purge_older_than_days}' days in '{this.Action_network_folder}'...");
+
+                List<FileInfo> filist = new List<FileInfo>(Global.GetFiles(this.Action_network_folder, "*.jpg"));
+                int deleted = 0;
+                int errs = 0;
+                foreach (FileInfo fi in filist)
+                {
+                    if ((DateTime.Now - fi.LastWriteTime).TotalDays > this.Action_network_folder_purge_older_than_days)
+                    {
+                        try { fi.Delete(); deleted++; }
+                        catch { errs++; }
+                    }
+                }
+                if (errs == 0)
+                    AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files");
+                else
+                    AITOOL.Log($"Debug: ...Deleted {deleted} out of {filist.Count} files with {errs} errors.");
+
+                LastJPGCleanDay = DateTime.Now.DayOfYear;
+
+
+            }
+        }
         public void UpdateTriggeringObjects()
         {
             try

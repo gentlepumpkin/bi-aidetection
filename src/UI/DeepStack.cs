@@ -47,6 +47,7 @@ namespace AITool
         public string CustomModelPath = "";
         public string CustomModelName = "";
         public string CustomModelPort = "";
+        public string CustomModelMode = "";
         public bool IsStarted = false;
         public bool HasError = false;
         public bool IsInstalled = false;
@@ -66,14 +67,14 @@ namespace AITool
         public ThreadSafe.Boolean Stopping = new ThreadSafe.Boolean(false);
         public int ExpectedPythonCnt = 0;
 
-        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, bool CustomModelEnabled)
+        public DeepStack(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, string CustomModelMode, bool CustomModelEnabled)
         {
 
-            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath, StopBeforeStart, CustomModelName, CustomModelPort, CustomModelEnabled);
+            this.Update(AdminKey, APIKey, Mode, SceneAPIEnabled, FaceAPIEnabled, DetectionAPIEnabled, Port, CustomModelPath, StopBeforeStart, CustomModelName, CustomModelPort, CustomModelMode, CustomModelEnabled);
 
         }
 
-        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, bool CustomModelEnabled)
+        public void Update(string AdminKey, string APIKey, string Mode, bool SceneAPIEnabled, bool FaceAPIEnabled, bool DetectionAPIEnabled, string Port, string CustomModelPath, bool StopBeforeStart, string CustomModelName, string CustomModelPort, string CustomModelMode, bool CustomModelEnabled)
         {
             this.AdminKey = AdminKey.Trim();
             this.APIKey = APIKey.Trim();
@@ -84,6 +85,7 @@ namespace AITool
             this.CustomModelName = CustomModelName.Trim();
             this.CustomModelEnabled = CustomModelEnabled;
             this.CustomModelPort = CustomModelPort;
+            this.CustomModelMode = CustomModelMode;
             this.Port = Port;
             this.Mode = Mode;
             this.Count = this.Port.SplitStr(",|").Count;
@@ -496,10 +498,11 @@ namespace AITool
                         List<string> cports = this.CustomModelPort.SplitStr(",;|");
                         List<string> cpaths = this.CustomModelPath.SplitStr(",;|");
                         List<string> cnames = this.CustomModelName.SplitStr(",;|");
+                        List<string> cmodes = this.CustomModelMode.SplitStr(",;|");
 
                         this.Count = cports.Count;
 
-                        if (cports.Count > 0 && cpaths.Count > 0 && cnames.Count > 0 && cports.Count == cpaths.Count && cports.Count == cnames.Count)
+                        if (cports.Count > 0 && cpaths.Count > 0 && cnames.Count > 0 && cports.Count == cpaths.Count && cports.Count == cnames.Count && cmodes.Count == cnames.Count)
                         {
                             for (int i = 0; i < cports.Count; i++)
                             {
@@ -520,7 +523,7 @@ namespace AITool
                                 Global.ClsProcess prc = new Global.ClsProcess();
                                 prc.process.StartInfo.FileName = this.DeepStackEXE;
                                 prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
-                                prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{cpaths[i].Replace("\\", "/")}\" --PORT {cports[i]}";
+                                prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{cpaths[i].Replace("\\", "/")}\" --PORT {cports[i]} --MODE {cmodes[i].ToUpper()}";
 
                                 if (!AppSettings.Settings.deepstack_debug)
                                 {
@@ -571,7 +574,7 @@ namespace AITool
                                     AppSettings.Settings.AIURLList.Add(url);
                                 }
 
-                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+                                ExpectedPythonCnt += 2;
 
                                 Thread.Sleep(100);
 

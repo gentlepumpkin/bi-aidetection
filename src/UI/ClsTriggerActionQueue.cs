@@ -8,8 +8,12 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Forms.DataVisualization.Charting;
 
 using MQTTnet.Client.Publishing;
 
@@ -23,6 +27,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.InputFiles;
 
 using static AITool.AITOOL;
+//using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 
 namespace AITool
 {
@@ -169,7 +174,7 @@ namespace AITool
                     try
                     {
                         await this.RunTriggers(AQI);
-                        await Task.Delay(250); //very short wait between trigger events
+                        await Task.Delay(50); //very short wait between trigger queue events
                     }
                     catch (Exception ex)
                     {
@@ -383,6 +388,7 @@ namespace AITool
                 if (cooltime >= AQI.cam.cooldown_time_seconds)
                 {
 
+                    //merge annotations
                     if (AQI.cam.Action_image_merge_detections && AQI.Trigger)
                     {
                         tmpfile = await this.MergeImageAnnotations(AQI);
@@ -395,6 +401,7 @@ namespace AITool
                         }
                     }
 
+                    //copy image
                     if (AQI.cam.Action_image_copy_enabled && AQI.Trigger)
                     {
                         Log($"Debug:   Copying image to network folder...", this.CurSrv, AQI.cam, AQI.CurImg);
@@ -415,9 +422,13 @@ namespace AITool
 
                     }
 
+                    // Activate BI window
+                    if (AQI.cam.Action_ActivateBlueIrisWindow && AQI.Trigger)
+                        Global.ShowProcessWindow("blueiris.exe", "Blue Iris", Global.ShowWindowEnum.SW_SHOWMAXIMIZED);
+
+                    //call trigger urls
                     if (!(AQI.cam.Paused && AQI.cam.PauseURL))
                     {
-                        //call trigger urls
                         if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
                         {
                             //replace url paramters with according values
@@ -434,7 +445,7 @@ namespace AITool
                         }
                         else if (!AQI.Trigger && AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0)
                         {
-                            //replace url paramters with according values
+                            //replace url parameters with according values
                             List<string> urls = new List<string>();
                             //call urls
                             foreach (string url in AQI.cam.cancel_urls)
@@ -460,7 +471,13 @@ namespace AITool
                             run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString, Global.IPType.Path);
                             param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString, Global.IPType.Path);
                             Log($"Debug:   Starting external app - Camera={AQI.camname} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
+
                             Process.Start(run, param);
+
+                            if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                                Log($"Debug: ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                            await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
                         }
                         catch (Exception ex)
                         {
@@ -518,7 +535,16 @@ namespace AITool
                                 }
 
                                 if (wasplayed)
+                                {
+
                                     AQI.cam.last_sound_time.Write(DateTime.Now);
+
+                                    if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                                        Log($"Debug:  ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                                    await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
+
+                                }
 
                             }
                             catch (Exception ex)
@@ -575,6 +601,10 @@ namespace AITool
                                     if (pr == null || pr.ReasonCode != MqttClientPublishReasonCode.Success)
                                         ret = false;
 
+                                    if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                                        Log($"Debug:  ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                                    await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
                                 }
 
                             }
@@ -591,8 +621,6 @@ namespace AITool
                             ret = true;   //dont return false unless actual error
                         }
 
-
-
                     }
 
                     //upload to pushover
@@ -608,6 +636,11 @@ namespace AITool
                         {
                             Log($"Debug:   -> Sent message or image to Pushover.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
+
+                        if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                            Log($"Debug:  ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                        await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
 
                     }
 
@@ -626,8 +659,11 @@ namespace AITool
                             Log($"Debug:   -> Sent image to Telegram.", this.CurSrv, AQI.cam, AQI.CurImg);
                         }
 
-                    }
+                        if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                            Log($"Debug:  ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
 
+                        await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
+                    }
 
                     if (AQI.Trigger)
                     {
@@ -645,9 +681,9 @@ namespace AITool
                 }
 
 
-                if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.IndexOf(Environment.GetEnvironmentVariable("TEMP"), StringComparison.OrdinalIgnoreCase) >= 0 && System.IO.File.Exists(tmpfile))
+                if (AQI.cam.Action_image_merge_detections && AQI.Trigger && !string.IsNullOrEmpty(tmpfile) && tmpfile.IndexOf(Global.GetTempFolder(), StringComparison.OrdinalIgnoreCase) >= 0 && System.IO.File.Exists(tmpfile))
                 {
-                    Global.SafeFileDeleteAsync(tmpfile);
+                    Global.SafeFileDeleteAsync(tmpfile, "TriggerActionQueue");
                 }
 
 
@@ -923,7 +959,7 @@ namespace AITool
 
                                 Global.WaitFileAccessResult result = new Global.WaitFileAccessResult();
                                 result.Success = true; //assume true
-                                string tmpfolder = Path.GetTempPath();
+                                string tmpfolder = Global.GetTempFolder();  //Path.GetTempPath();
                                 if (AQI.cam.Action_image_merge_detections_makecopy && !(AQI.CurImg.image_path.IndexOf(tmpfolder, StringComparison.OrdinalIgnoreCase) >= 0))
                                     OutputImageFile = Path.Combine(tmpfolder, Path.GetFileName(AQI.CurImg.image_path));
                                 else
@@ -1006,9 +1042,11 @@ namespace AITool
                 }
 
                 if (!Directory.Exists(netfld))
-                {
                     Directory.CreateDirectory(netfld);
-                }
+
+                //check to see if we need to clean the network folder out yet:
+                //It will only check once a day, and will only clean if it has been over cam.Action_network_folder_purge_older_than_days  (defaults to 30 days)
+                AQI.cam.CleanActionNetworkFolder();
 
                 string ext = Path.GetExtension(AQI.CurImg.image_path);
                 string filename = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_network_folder_filename, Global.IPType.Path).Trim().Replace(ext, "") + ext;
@@ -1047,7 +1085,14 @@ namespace AITool
             {
                 AITOOL.triggerHttpClient = new System.Net.Http.HttpClient();
                 AITOOL.triggerHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds);
+
+                //lets give it a user agent unique to this machine and product version...
+                AssemblyName ASN = Assembly.GetExecutingAssembly().GetName();
+                string Version = ASN.Version.ToString();
+                ProductInfoHeaderValue PIH = new ProductInfoHeaderValue("AITool-BATMAN-" + Global.GetMacAddress(), Version);
+                AITOOL.triggerHttpClient.DefaultRequestHeaders.UserAgent.Add(PIH);
             }
+
 
             for (int i = 0; i < trigger_urls.Count; i++)
             {
@@ -1098,6 +1143,10 @@ namespace AITool
                     Log($"ERROR: {type}: In {sw.ElapsedMilliseconds}ms, Could not {type} Error='{ex.Msg()}', URL='{url}'");
                 }
 
+                if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                    Log($"Debug: ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
             }
 
 
@@ -1130,75 +1179,77 @@ namespace AITool
                         double cooltime = Math.Round((now - this.last_Pushover_trigger_time.Read()).TotalSeconds, 4);
                         if (cooltime >= AppSettings.Settings.pushover_cooldown_seconds)
                         {
+                            string title = "";
+                            string message = "";
+                            string device = "";
 
-                            if (Global.IsTimeBetween(now, AQI.cam.Action_pushover_active_time_range))
+                            if (AQI.Trigger)
                             {
-                                string title = "";
-                                string message = "";
-                                string device = "";
 
-                                if (AQI.Trigger)
+                                if (!string.IsNullOrEmpty(AQI.Text))
                                 {
-
-                                    if (!string.IsNullOrEmpty(AQI.Text))
-                                    {
-                                        if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
-                                            title = "Error";
-                                        else
-                                            title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
-
-                                        message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
-
-                                    }
+                                    if (AQI.Text.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0)
+                                        title = "Error";
                                     else
-                                    {
                                         title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
-                                        message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
-                                    }
 
-                                    device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
+                                    message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.Text, Global.IPType.Path);
+
                                 }
-                                else  //TODO: Add cancel if requested
+                                else
                                 {
                                     title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
                                     message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
-                                    device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
                                 }
 
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
+                            }
+                            else  //TODO: Add cancel if requested
+                            {
+                                title = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_title, Global.IPType.Path);
+                                message = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_message, Global.IPType.Path);
+                                device = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_pushover_device, Global.IPType.Path);
+                            }
 
-                                List<string> titles = title.SplitStr("|");
-                                List<string> messages = message.SplitStr("|");
-                                List<string> devices = device.SplitStr("|");
-                                List<string> sounds = AQI.cam.Action_pushover_Sound.SplitStr("|");
 
-                                if (AITOOL.pushoverClient == null)
-                                    AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
+                            List<string> titles = title.SplitStr("|");
+                            List<string> messages = message.SplitStr("|");
+                            List<string> devices = device.SplitStr("|");
+                            List<string> sounds = AQI.cam.Action_pushover_Sound.SplitStr("|");
+                            List<string> priorities = AQI.cam.Action_pushover_Priority.SplitStr("|");
+                            List<string> times = AQI.cam.Action_pushover_active_time_range.SplitStr("|");
 
-                                string imginfo = "";
-                                if (AQI.CurImg != null && AQI.CurImg.IsValid())
+                            for (int t = 0; t < times.Count; t++)
+                            {
+                                string time = times.GetStrAtIndex(t);
+
+                                if (Global.IsTimeBetween(now, time))
                                 {
-                                    imginfo = $"Attached Image: {Path.GetFileName(AQI.CurImg.image_path)}";
-                                }
 
-                                for (int i = 0; i < titles.Count; i++)
-                                {
+                                    if (AITOOL.pushoverClient == null)
+                                        AITOOL.pushoverClient = new NPushover.Pushover(AppSettings.Settings.pushover_APIKey); //new PushoverClient.Pushover(, AppSettings.Settings.pushover_UserKey);
+
+                                    string imginfo = "";
+                                    if (AQI.CurImg != null && AQI.CurImg.IsValid())
+                                    {
+                                        imginfo = $"Attached Image: {Path.GetFileName(AQI.CurImg.image_path)}";
+                                    }
+
                                     PushoverUserResponse response = null;
 
                                     Stopwatch sw = Stopwatch.StartNew();
 
                                     try
                                     {
-                                        string pushtitle = titles[i];
-                                        string pushmessage = messages[i];
-                                        string pushsound = "";
-                                        string pushdevice = "";
-                                        if (i <= devices.Count - 1)
-                                            pushdevice = devices[i];
-                                        if (i <= sounds.Count - 1)
-                                            pushsound = sounds[i];
+                                        string pushtitle = titles.GetStrAtIndex(t);
+                                        string pushmessage = messages.GetStrAtIndex(t);
+                                        string pushsound = sounds.GetStrAtIndex(t);
+                                        string pushdevice = devices.GetStrAtIndex(t);
 
-                                        NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), AQI.cam.Action_pushover_Priority);
+                                        if (times.Count != priorities.Count)
+                                            Log($"Warn: You should have the same number of Pushover priorities and times specified.");
 
+                                        NPushover.RequestObjects.Priority pri = (NPushover.RequestObjects.Priority)Enum.Parse(typeof(NPushover.RequestObjects.Priority), priorities.GetStrAtIndex(t));
 
                                         //fix a bug where pushover expire was set to hours rather than seconds
                                         if (AQI.cam.Action_pushover_expire_seconds >= TimeSpan.FromHours(24).TotalSeconds)
@@ -1226,9 +1277,11 @@ namespace AITool
                                         List<string> userkeys = AppSettings.Settings.pushover_UserKey.SplitStr("|,;");
                                         foreach (string userkey in userkeys)
                                         {
-                                            Log($"Debug: Sending pushover message '{pushmessage}' to user '{userkey}' {imginfo}...");
+                                            Log($"Debug: Sending pushover message '{pushmessage}', priority '{pri.ToString()}', sound '{pushsound}' to user '{userkey}' {imginfo}...");
                                             response = await AITOOL.pushoverClient.SendPushoverMessageAsync(msg, userkey, pushdevice, AQI.CurImg);
+                                            await Task.Delay(AppSettings.Settings.loop_delay_ms);
                                         }
+                                        this.last_Pushover_trigger_time.Write(now);
                                         sw.Stop();
                                     }
                                     catch (Exception ex)
@@ -1272,13 +1325,16 @@ namespace AITool
                                     else
                                         this.PushoverRetryTime.Write(DateTime.MinValue);
 
+
+
+                                }
+                                else
+                                {
+                                    Log($"Debug: Skipping pushover because time is not between {time}");
                                 }
 
                             }
-                            else
-                            {
-                                Log($"Debug: Skipping pushover because time is not between {AQI.cam.Action_pushover_active_time_range}");
-                            }
+
 
                         }
                         else
@@ -1363,6 +1419,15 @@ namespace AITool
                             {
                                 if (AITOOL.telegramBot == null || AITOOL.telegramHttpClient == null)
                                 {
+                                    //try to prevent telegram Could not create SSL/TLS secure channel exception on Win7.
+                                    //This may also need TLS 1.2 and 1.3 checked in Internet Options > Advanced tab....
+                                    ServicePointManager.Expect100Continue = true;
+                                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+
+                                    //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+                                    //ServicePointManager.Expect100Continue = true;
+                                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
                                     AITOOL.telegramHttpClient = new System.Net.Http.HttpClient();
                                     AITOOL.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
                                     AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, AITOOL.telegramHttpClient);

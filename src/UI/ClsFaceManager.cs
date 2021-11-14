@@ -44,7 +44,7 @@ namespace AITool
         }
 
 
-        public bool TryAddFile(ClsImageQueueItem CurImg, out string Newfilename, int MaxFilesPerFace, int MaxFileAgeDays)
+        public bool TryAddFaceFile(ClsImageQueueItem CurImg, out string Newfilename, int MaxFilesPerFace, int MaxFileAgeDays)
         {
             Newfilename = "";
 
@@ -181,7 +181,8 @@ namespace AITool
         public string Name { get; set; } = "";
         public int RegisterTimeMS { get; set; } = 0;
         public string FilePath { get; set; } = "";
-        public bool Exists = false;
+        public bool Exists { get; set; } = false;
+        public bool Keep { get; set; } = false;
         public DateTime DateRegistered { get; set; } = DateTime.MinValue;
         public DateTime DateAdded { get; set; } = DateTime.MinValue;
         public DateTime DateFileModified { get; set; } = DateTime.MinValue;
@@ -214,7 +215,7 @@ namespace AITool
             //update in background thread
             Task.Run(this.UpdateFaces);
         }
-        public void Save()
+        public void SaveFaces()
         {
             using var Trace = new Trace();
 
@@ -286,7 +287,7 @@ namespace AITool
                         missingfiles += itemsToRemove.Length;
 
                         //remove old files
-                        itemsToRemove = this.Faces[i].Files.Where(f => (DateTime.Now - f.DateFileModified).TotalDays > this.MaxFileAgeDays).ToArray();
+                        itemsToRemove = this.Faces[i].Files.Where(f => (DateTime.Now - f.DateFileModified).TotalDays > this.MaxFileAgeDays && !f.Keep).ToArray();
                         foreach (var item in itemsToRemove)
                         {
                             string firstname = Path.GetFileName(item.FilePath).ToLower();
@@ -308,7 +309,7 @@ namespace AITool
                             {
                                 fi.Delete();
                             }
-                            else if (this.Faces[i].TryAddFile(new ClsImageQueueItem(fi.FullName, 0), out string newfilename, this.MaxFilesPerFace, this.MaxFileAgeDays))
+                            else if (this.Faces[i].TryAddFaceFile(new ClsImageQueueItem(fi.FullName, 0), out string newfilename, this.MaxFilesPerFace, this.MaxFileAgeDays))
                             {
                                 addedfiles++;
                             }
@@ -332,7 +333,7 @@ namespace AITool
 
         }
 
-        public bool TryAddFile(ClsImageQueueItem CurImg, string face = "")
+        public bool TryAddFaceFile(ClsImageQueueItem CurImg, string face = "")
         {
             if (!CurImg.IsValid())
                 return false;
@@ -356,7 +357,7 @@ namespace AITool
 
             ClsFace FoundFace = this.TryAddFace(face);
 
-            bool added = FoundFace.TryAddFile(CurImg, out string Outfilename, this.MaxFilesPerFace, this.MaxFileAgeDays);
+            bool added = FoundFace.TryAddFaceFile(CurImg, out string Outfilename, this.MaxFilesPerFace, this.MaxFileAgeDays);
 
             //delete from unknown folder if it was originally from there and it moved
             if (added)
@@ -365,7 +366,7 @@ namespace AITool
 
                 if (CurImg.image_path.Has("\\unknown\\") && !Outfilename.Has("\\unknown\\") &&
                     CurImg.image_path.Has("\\face\\") && !Outfilename.Has("\\face\\"))
-                    Global.SafeFileDelete(CurImg.image_path);
+                    Global.SafeFileDelete(CurImg.image_path, "TryAddFaceFile");
 
             }
 

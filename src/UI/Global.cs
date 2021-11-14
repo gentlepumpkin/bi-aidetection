@@ -88,12 +88,12 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
-        public static async Task<bool> SafeFileDeleteAsync(string Filename)
+        public static async Task<bool> SafeFileDeleteAsync(string Filename, string Source)
         {
             //run the function in another thread
-            return await Task.Run(() => SafeFileDelete(Filename));
+            return await Task.Run(() => SafeFileDelete(Filename, Source));
         }
-        public static bool SafeFileDelete(string Filename)
+        public static bool SafeFileDelete(string Filename, string Source)
         {
             bool ret = false;
 
@@ -110,19 +110,39 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log($"Error: Could not delete file after {result.TimeMS} ms: {ex.Msg()}");
+                    Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {ex.Msg()}");
                 }
             }
             else
             {
-                Log($"Error: Could not delete file after {result.TimeMS} ms: {Filename}");
+                Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {Filename}");
             }
 
             return ret;
 
         }
 
+        public static string GetTempFolder(bool Clear = false)
+        {
+            string ret = Path.GetTempPath();
 
+            try
+            {
+                ret = Path.Combine(Path.GetTempPath(), "_AITOOL");
+
+                if (Clear && Directory.Exists(ret))
+                    try { Directory.Delete(ret, true); } catch { }
+
+                if (!Directory.Exists(ret))
+                    Directory.CreateDirectory(ret);
+            }
+            catch (Exception ex)
+            {
+                Log("Error: Could not get temp folder? " + ex.Msg());
+            }
+
+            return ret;
+        }
 
         public static string SafeLoadTextFile(string Filename)
         {
@@ -470,10 +490,13 @@ namespace AITool
                         TimeSpan BeginSpan = now;
                         TimeSpan EndSpan = now;
 
+                        //sunset-sunrise
+                        //sunrise-sunset
+                        //sunset_5-sunrise+5
 
                         if (splt[0].EqualsIgnoreCase("sunset") || splt[0].EqualsIgnoreCase("sunrise") || splt[0].Has("dusk") || splt[0].Has("dawn"))
                         {
-                            if (AppSettings.Settings.LocalLatitude == 39.809734 && (DateTime.Now - lastlatwarn).TotalMinutes >= 60)
+                            if (AppSettings.Settings.LocalLatitude == 39.809734 && (DateTime.Now - lastlatwarn).TotalMinutes >= 30)
                             {
                                 Log("Warn: The 'LocalLatitude' and 'LocalLongitude' settings in AITOOL.Settings.JSON need to be set.  If you set those settings in a locally running copy of BlueIris > Settings > Schedule tab, they will be AUTOMATICALLY used.");
                                 lastlatwarn = DateTime.Now;
@@ -529,20 +552,20 @@ namespace AITool
                         if (BeginSpan < EndSpan)
                         {
                             ret = BeginSpan <= now && now <= EndSpan;
-                            if (ret)
-                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
-                            else
-                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            //if (ret)
+                            //    Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            //else
+                            //    Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is LESS THAN EndSpan ({EndSpan.TotalHours.Round()})");
 
                         }
                         else
                         {
                             // start is after end, so do the inverse comparison
                             ret = !(EndSpan < now && now < BeginSpan);
-                            if (ret)
-                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
-                            else
-                                Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            //if (ret)
+                            //    Console.WriteLine($"Time ({now.TotalHours.Round()}) IS       BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
+                            //else
+                            //    Console.WriteLine($"Time ({now.TotalHours.Round()}) IS *NOT* BETWEEN [{span}] BeginSpan ({BeginSpan.TotalHours.Round()}) is GREATER THAN EndSpan ({EndSpan.TotalHours.Round()})");
 
                         }
 
@@ -1757,7 +1780,55 @@ namespace AITool
             return RetVal;
 
         }
+        public static Double GetNumberDbl(object Obj)
+        {
+            //gets a number from anywhere within a string
+            double Ret = 0;
+            if (!Obj.IsNull())
+            {
+                if (Obj is string)
+                {
+                    string o = System.Convert.ToString(Obj).Trim();
+                    double outdbl = 0;
 
+                    //Take into account that some countries may use 123,45 vs 123.45
+                    if (double.TryParse(o, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out outdbl))
+                        Ret = outdbl;
+                    else //try to extract the number from a larger string
+                    {
+                        try
+                        {
+                            //this can grab anything even "The number is 69,9 dude"
+                            string outstrnum = Regex.Match(o.Replace(",", "."), @"[-+]?(?:\b[0-9]+(?:\.[0-9]*)?|\.[0-9]+\b)(?:[eE][-+]?[0-9]+\b)?").Value;
+                            if (double.TryParse(outstrnum, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out outdbl))
+                                Ret = outdbl;
+                            else
+                            {
+                                Log($"Error: Could not parse to double? '{o}'");
+                            }
+                        }
+                        catch { }
+
+                    }
+
+
+                    //if (OnlyNums != o)
+                    //{
+                    //    //debug
+                    //    int brkpt = 0;
+                    //}
+
+                }
+                else if (Obj is int)
+                    Ret = Convert.ToDouble(Obj);
+                else if (Obj is double)
+                    Ret = ((double)Obj);
+                else if (Obj is float)
+                    Ret = (float)Obj;
+            }
+            return Ret;
+
+        }
         public static int GetNumberInt(object Obj)
         {
             //gets a number from anywhere within a string
@@ -3096,6 +3167,168 @@ namespace AITool
             }
         }
 
+        public static Process[] GetProcesses(string processname)
+        {
+            try
+            {
+                if (Path.HasExtension(processname))
+                    processname = Path.GetFileNameWithoutExtension(processname);
+                Process[] aProc = Process.GetProcessesByName(processname);
+                if (aProc.Length > 0)
+                    return aProc;
+                else
+                    return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public enum ShowWindowEnum : int
+        {
+            /// <summary>
+            ///        Hides the window and activates another window.
+            /// </summary>
+            SW_HIDE = 0,
+            // <summary>
+            ///        Activates and displays a window. If the window is minimized or maximized, the system restores it to its original size and position. An application should specify this flag when displaying the window for the first time.
+            /// </summary>
+            SW_SHOWNORMAL = 1,
+
+            /// <summary>
+            ///        Activates the window and displays it as a minimized window.
+            /// </summary>
+            SW_SHOWMINIMIZED = 2,
+
+            /// <summary>
+            ///        Activates the window and displays it as a maximized window.
+            /// </summary>
+            SW_SHOWMAXIMIZED = 3,
+
+            /// <summary>
+            ///        Maximizes the specified window.
+            /// </summary>
+            SW_MAXIMIZE = 3,
+
+            /// <summary>
+            ///        Displays a window in its most recent size and position. This value is similar to <see cref="ShowWindowCommands.SW_SHOWNORMAL"/>, except the window is not activated.
+            /// </summary>
+            SW_SHOWNOACTIVATE = 4,
+
+            /// <summary>
+            ///        Activates the window and displays it in its current size and position.
+            /// </summary>
+            SW_SHOW = 5,
+
+            /// <summary>
+            ///        Minimizes the specified window and activates the next top-level window in the z-order.
+            /// </summary>
+            SW_MINIMIZE = 6,
+
+            /// <summary>
+            ///        Displays the window as a minimized window. This value is similar to <see cref="ShowWindowCommands.SW_SHOWMINIMIZED"/>, except the window is not activated.
+            /// </summary>
+            SW_SHOWMINNOACTIVE = 7,
+
+            /// <summary>
+            ///        Displays the window in its current size and position. This value is similar to <see cref="ShowWindowCommands.SW_SHOW"/>, except the window is not activated.
+            /// </summary>
+            SW_SHOWNA = 8,
+
+            /// <summary>
+            ///        Activates and displays the window. If the window is minimized or maximized, the system restores it to its original size and position. An application should specify this flag when restoring a minimized window.
+            /// </summary>
+            SW_RESTORE = 9,
+
+            /// <summary>
+            ///        Items 10, 11 and 11 existed in the VB definition but not the c# definition - so I am assuming this was a mistake and have added them here.
+            ///         Please forgive me if this is wrong!  I don't think it should have any negative impact.
+            ///         According to what I have read elsewhere: The SW_SHOWDEFAULT makes sure the window is restored prior to showing, then activating.
+            ///         And the 11's try to coerce a window to minimized or maximized.
+            /// </summary>
+            SW_SHOWDEFAULT = 10,
+            SW_FORCEMINIMIZE = 11,
+            SW_MAX = 11
+        }
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+        [System.Runtime.InteropServices.DllImport("User32.dll")]
+        private static extern bool IsIconic(IntPtr handle);
+
+        [DllImport("User32.dll", SetLastError = true)]
+        static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);
+        [DllImport("user32.dll", EntryPoint = "FindWindow")]
+        private extern static IntPtr FindWindow(string lpClassName, string lpWindowName);
+        public static bool ShowProcessWindow(string processname, string WindowTitle, ShowWindowEnum WindowStyle)
+        {
+            bool ret = false;
+
+            Process[] Procs = Global.GetProcesses(processname);
+            if (Procs.IsNotEmpty())
+            {
+                foreach (var proc in Procs)
+                {
+                    if (!proc.HasExited)
+                    {
+                        bool RefreshFound = false;
+
+                        if (proc.MainWindowHandle.IsNull())
+                            proc.Refresh();
+
+                        IntPtr hwnd = proc.MainWindowHandle;
+
+                        if (hwnd.IsNull())
+                        {
+                            //get the window a different way
+                            hwnd = FindWindow(null, WindowTitle);
+                        }
+                        else
+                        {
+                            RefreshFound = true;
+                        }
+
+                        if (hwnd.IsNotNull())
+                        {
+                            bool IsIconicResult = IsIconic(hwnd);
+
+                            if (IsIconicResult)  //check if the window is minimized. If it is not, then you don't want to restore it, you only need to activate it.
+                                SwitchToThisWindow(hwnd, true);   //SendMessageW(p.MainWindowHandle, WM_SYSCOMMAND, SC_RESTORE, 0) 'restore the window from it's minimized state
+
+                            //true or nonzero if the window was brought to the foreground,
+                            //false or zero If the window was not
+                            bool SetForegroundResult = SetForegroundWindow(hwnd);
+                            //Return value
+                            //If the window was previously visible, the return value is nonzero.
+                            //If the window was previously hidden, the return value is zero.
+                            bool ShowWindowResult = ShowWindow(hwnd, ((int)WindowStyle));
+                            ret = true;
+                            Log($"Debug: Set '{processname}' ({proc.Id}, {hwnd.ToString()}) to '{WindowStyle.ToString()}' - RefreshFound = '{RefreshFound}', IsIconicResult = '{IsIconicResult}', SetForgroundWindow result = '{SetForegroundResult}', ShowWindowResult='{ShowWindowResult}'");
+
+                        }
+                        else
+                        {
+                            Log($"Debug: Could not get MainWindowHandle for process '{processname}, {WindowTitle}' ({proc.Id}).  It may be running as a service without GUI?");
+                        }
+
+                    }
+                    else
+                    {
+                        Log($"Debug: process not valid '{processname}'.");
+                    }
+
+                }
+            }
+            else
+            {
+                Log($"Debug: Could not find running process? '{processname}'.");
+            }
+
+            return ret;
+        }
         public static bool KillProcesses(string ProcessPath)
         {
             List<ClsProcess> prc = GetProcessesByPath(ProcessPath);

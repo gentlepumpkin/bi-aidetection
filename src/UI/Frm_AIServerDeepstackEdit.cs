@@ -209,7 +209,7 @@ namespace AITool
                         cam = new Camera("TEST_CAM");
 
                     string ext = Path.GetExtension(pth);
-                    string tpth = Path.Combine(Path.GetTempPath(), $"{cam.Name}.URLTEST.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}{ext}");
+                    string tpth = Path.Combine(Global.GetTempFolder(), $"{cam.Name}.URLTEST.{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}{ext}");
                     File.Copy(pth, tpth, true);
 
                     btTest.Enabled = false;

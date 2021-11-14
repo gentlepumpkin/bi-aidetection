@@ -32,7 +32,7 @@ namespace AITool
         MqttFactory factory = null;
         IMqttClient mqttClient = null;
         IMqttClientOptions options = null;
-        MqttClientAuthenticateResult cres = null;
+        MqttClientConnectResult cres = null;
 
         public async void Dispose()
         {
@@ -223,7 +223,7 @@ namespace AITool
                 mqttClient.UseConnectedHandler(async e =>
                 {
                     IsConnected = true;
-                    Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.AuthenticateResult.ResultCode}, '{e.AuthenticateResult.ReasonString}'");
+                    Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.ConnectResult.ResultCode}, '{e.ConnectResult.ReasonString}'");
 
 
                     MqttApplicationMessage ma = new MqttApplicationMessageBuilder()

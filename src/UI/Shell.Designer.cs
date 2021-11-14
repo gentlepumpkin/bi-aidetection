@@ -90,6 +90,7 @@
             this.storeFalseAlertsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.storeMaskedAlertsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.restrictThresholdAtSourceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mergeDuplicatePredictionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButtonDetails = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonMaskDetails = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonEditImageMask = new System.Windows.Forms.ToolStripButton();
@@ -314,6 +315,8 @@
             this.toolStripStatusLabelInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.LogUpdateListTimer = new System.Windows.Forms.Timer(this.components);
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.Txt_CustomModelMode = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabOverview.SuspendLayout();
             this.tableLayoutPanel14.SuspendLayout();
@@ -977,7 +980,8 @@
             this.automaticallyRefreshToolStripMenuItem,
             this.storeFalseAlertsToolStripMenuItem,
             this.storeMaskedAlertsToolStripMenuItem,
-            this.restrictThresholdAtSourceToolStripMenuItem});
+            this.restrictThresholdAtSourceToolStripMenuItem,
+            this.mergeDuplicatePredictionsToolStripMenuItem});
             this.toolStripDropDownButtonOptions.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButtonOptions.Image")));
             this.toolStripDropDownButtonOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButtonOptions.Name = "toolStripDropDownButtonOptions";
@@ -989,7 +993,7 @@
             this.cb_showMask.CheckOnClick = true;
             this.cb_showMask.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_showMask.Name = "cb_showMask";
-            this.cb_showMask.Size = new System.Drawing.Size(222, 22);
+            this.cb_showMask.Size = new System.Drawing.Size(223, 22);
             this.cb_showMask.Text = "Show Mask";
             this.cb_showMask.Click += new System.EventHandler(this.cb_showMask_Click);
             // 
@@ -1000,7 +1004,7 @@
             this.cb_showObjects.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cb_showObjects.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_showObjects.Name = "cb_showObjects";
-            this.cb_showObjects.Size = new System.Drawing.Size(222, 22);
+            this.cb_showObjects.Size = new System.Drawing.Size(223, 22);
             this.cb_showObjects.Text = "Show Objects";
             this.cb_showObjects.CheckedChanged += new System.EventHandler(this.cb_showObjects_CheckedChanged);
             this.cb_showObjects.Click += new System.EventHandler(this.cb_showObjects_Click);
@@ -1010,7 +1014,7 @@
             this.showOnlyRelevantObjectsToolStripMenuItem.CheckOnClick = true;
             this.showOnlyRelevantObjectsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.showOnlyRelevantObjectsToolStripMenuItem.Name = "showOnlyRelevantObjectsToolStripMenuItem";
-            this.showOnlyRelevantObjectsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.showOnlyRelevantObjectsToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
             this.showOnlyRelevantObjectsToolStripMenuItem.Text = "Show Only Relevant Objects";
             this.showOnlyRelevantObjectsToolStripMenuItem.ToolTipText = resources.GetString("showOnlyRelevantObjectsToolStripMenuItem.ToolTipText");
             this.showOnlyRelevantObjectsToolStripMenuItem.Click += new System.EventHandler(this.showOnlyRelevantObjectsToolStripMenuItem_Click);
@@ -1020,7 +1024,7 @@
             this.cb_follow.CheckOnClick = true;
             this.cb_follow.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.cb_follow.Name = "cb_follow";
-            this.cb_follow.Size = new System.Drawing.Size(222, 22);
+            this.cb_follow.Size = new System.Drawing.Size(223, 22);
             this.cb_follow.Text = "Follow History List";
             this.cb_follow.ToolTipText = "Automatically select the latest history item in the list for every update";
             this.cb_follow.Click += new System.EventHandler(this.cb_follow_Click);
@@ -1032,7 +1036,7 @@
             this.automaticallyRefreshToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.automaticallyRefreshToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.automaticallyRefreshToolStripMenuItem.Name = "automaticallyRefreshToolStripMenuItem";
-            this.automaticallyRefreshToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.automaticallyRefreshToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
             this.automaticallyRefreshToolStripMenuItem.Text = "Automatically Refresh";
             this.automaticallyRefreshToolStripMenuItem.Click += new System.EventHandler(this.automaticallyRefreshToolStripMenuItem_Click);
             // 
@@ -1042,7 +1046,7 @@
             this.storeFalseAlertsToolStripMenuItem.DoubleClickEnabled = true;
             this.storeFalseAlertsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.storeFalseAlertsToolStripMenuItem.Name = "storeFalseAlertsToolStripMenuItem";
-            this.storeFalseAlertsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.storeFalseAlertsToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
             this.storeFalseAlertsToolStripMenuItem.Text = "Store False Alerts";
             this.storeFalseAlertsToolStripMenuItem.ToolTipText = resources.GetString("storeFalseAlertsToolStripMenuItem.ToolTipText");
             this.storeFalseAlertsToolStripMenuItem.Click += new System.EventHandler(this.storeFalseAlertsToolStripMenuItem_Click);
@@ -1053,7 +1057,7 @@
             this.storeMaskedAlertsToolStripMenuItem.DoubleClickEnabled = true;
             this.storeMaskedAlertsToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.storeMaskedAlertsToolStripMenuItem.Name = "storeMaskedAlertsToolStripMenuItem";
-            this.storeMaskedAlertsToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.storeMaskedAlertsToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
             this.storeMaskedAlertsToolStripMenuItem.Text = "Store Masked Alerts";
             this.storeMaskedAlertsToolStripMenuItem.ToolTipText = "If disabled the database will be smaller, leave enabled for better troubleshootin" +
     "g";
@@ -1064,10 +1068,17 @@
             this.restrictThresholdAtSourceToolStripMenuItem.CheckOnClick = true;
             this.restrictThresholdAtSourceToolStripMenuItem.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.restrictThresholdAtSourceToolStripMenuItem.Name = "restrictThresholdAtSourceToolStripMenuItem";
-            this.restrictThresholdAtSourceToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.restrictThresholdAtSourceToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
             this.restrictThresholdAtSourceToolStripMenuItem.Text = "Restrict Threshold at Source";
             this.restrictThresholdAtSourceToolStripMenuItem.ToolTipText = resources.GetString("restrictThresholdAtSourceToolStripMenuItem.ToolTipText");
             this.restrictThresholdAtSourceToolStripMenuItem.Click += new System.EventHandler(this.restrictThresholdAtSourceToolStripMenuItem_Click);
+            // 
+            // mergeDuplicatePredictionsToolStripMenuItem
+            // 
+            this.mergeDuplicatePredictionsToolStripMenuItem.Name = "mergeDuplicatePredictionsToolStripMenuItem";
+            this.mergeDuplicatePredictionsToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
+            this.mergeDuplicatePredictionsToolStripMenuItem.Text = "Merge Duplicate Predictions";
+            this.mergeDuplicatePredictionsToolStripMenuItem.Click += new System.EventHandler(this.mergeDuplicatePredictionsToolStripMenuItem_Click);
             // 
             // toolStripButtonDetails
             // 
@@ -1261,7 +1272,7 @@
             this.lbl_objects.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.lbl_objects.Size = new System.Drawing.Size(803, 20);
+            this.lbl_objects.Size = new System.Drawing.Size(807, 20);
             this.lbl_objects.TabIndex = 14;
             this.lbl_objects.Text = "No selection";
             this.lbl_objects.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1274,7 +1285,7 @@
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(4, 23);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(799, 416);
+            this.pictureBox1.Size = new System.Drawing.Size(803, 416);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -2626,7 +2637,7 @@
             this.dbLayoutPanel9.ColumnCount = 3;
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26.82635F));
             this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 73.17365F));
-            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 84F));
+            this.dbLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 87F));
             this.dbLayoutPanel9.Controls.Add(this.cbStartWithWindows, 0, 0);
             this.dbLayoutPanel9.Controls.Add(this.cbMinimizeToTray, 1, 0);
             this.dbLayoutPanel9.Location = new System.Drawing.Point(167, 277);
@@ -2652,7 +2663,7 @@
             // 
             this.cbMinimizeToTray.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.cbMinimizeToTray.AutoSize = true;
-            this.cbMinimizeToTray.Location = new System.Drawing.Point(226, 15);
+            this.cbMinimizeToTray.Location = new System.Drawing.Point(225, 15);
             this.cbMinimizeToTray.Name = "cbMinimizeToTray";
             this.cbMinimizeToTray.Size = new System.Drawing.Size(102, 17);
             this.cbMinimizeToTray.TabIndex = 16;
@@ -2770,7 +2781,7 @@
             // chk_AutoAdd
             // 
             this.chk_AutoAdd.AutoSize = true;
-            this.chk_AutoAdd.Location = new System.Drawing.Point(97, 333);
+            this.chk_AutoAdd.Location = new System.Drawing.Point(93, 361);
             this.chk_AutoAdd.Name = "chk_AutoAdd";
             this.chk_AutoAdd.Size = new System.Drawing.Size(70, 17);
             this.chk_AutoAdd.TabIndex = 27;
@@ -2782,7 +2793,7 @@
             // label34
             // 
             this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(463, 361);
+            this.label34.Location = new System.Drawing.Point(459, 389);
             this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(29, 13);
             this.label34.TabIndex = 26;
@@ -2791,7 +2802,7 @@
             // label33
             // 
             this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(311, 362);
+            this.label33.Location = new System.Drawing.Point(307, 390);
             this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(98, 13);
             this.label33.TabIndex = 25;
@@ -2800,7 +2811,7 @@
             // label32
             // 
             this.label32.AutoSize = true;
-            this.label32.Location = new System.Drawing.Point(176, 362);
+            this.label32.Location = new System.Drawing.Point(172, 390);
             this.label32.Name = "label32";
             this.label32.Size = new System.Drawing.Size(111, 13);
             this.label32.TabIndex = 24;
@@ -2808,14 +2819,14 @@
             // 
             // txt_DeepstackNoMoreOftenThanMins
             // 
-            this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(415, 358);
+            this.txt_DeepstackNoMoreOftenThanMins.Location = new System.Drawing.Point(411, 386);
             this.txt_DeepstackNoMoreOftenThanMins.Name = "txt_DeepstackNoMoreOftenThanMins";
             this.txt_DeepstackNoMoreOftenThanMins.Size = new System.Drawing.Size(42, 20);
             this.txt_DeepstackNoMoreOftenThanMins.TabIndex = 17;
             // 
             // txt_DeepstackRestartFailCount
             // 
-            this.txt_DeepstackRestartFailCount.Location = new System.Drawing.Point(128, 358);
+            this.txt_DeepstackRestartFailCount.Location = new System.Drawing.Point(124, 386);
             this.txt_DeepstackRestartFailCount.Name = "txt_DeepstackRestartFailCount";
             this.txt_DeepstackRestartFailCount.Size = new System.Drawing.Size(42, 20);
             this.txt_DeepstackRestartFailCount.TabIndex = 16;
@@ -2823,7 +2834,7 @@
             // Chk_AutoReStart
             // 
             this.Chk_AutoReStart.AutoSize = true;
-            this.Chk_AutoReStart.Location = new System.Drawing.Point(13, 361);
+            this.Chk_AutoReStart.Location = new System.Drawing.Point(9, 389);
             this.Chk_AutoReStart.Name = "Chk_AutoReStart";
             this.Chk_AutoReStart.Size = new System.Drawing.Size(109, 17);
             this.Chk_AutoReStart.TabIndex = 15;
@@ -2834,7 +2845,7 @@
             // Btn_ViewLog
             // 
             this.Btn_ViewLog.ForeColor = System.Drawing.Color.Maroon;
-            this.Btn_ViewLog.Location = new System.Drawing.Point(363, 388);
+            this.Btn_ViewLog.Location = new System.Drawing.Point(359, 416);
             this.Btn_ViewLog.Name = "Btn_ViewLog";
             this.Btn_ViewLog.Size = new System.Drawing.Size(70, 30);
             this.Btn_ViewLog.TabIndex = 22;
@@ -2845,7 +2856,7 @@
             // 
             // Btn_DeepstackReset
             // 
-            this.Btn_DeepstackReset.Location = new System.Drawing.Point(275, 388);
+            this.Btn_DeepstackReset.Location = new System.Drawing.Point(271, 416);
             this.Btn_DeepstackReset.Name = "Btn_DeepstackReset";
             this.Btn_DeepstackReset.Size = new System.Drawing.Size(70, 30);
             this.Btn_DeepstackReset.TabIndex = 21;
@@ -2986,7 +2997,7 @@
             // chk_stopbeforestart
             // 
             this.chk_stopbeforestart.AutoSize = true;
-            this.chk_stopbeforestart.Location = new System.Drawing.Point(360, 333);
+            this.chk_stopbeforestart.Location = new System.Drawing.Point(356, 361);
             this.chk_stopbeforestart.Margin = new System.Windows.Forms.Padding(2);
             this.chk_stopbeforestart.Name = "chk_stopbeforestart";
             this.chk_stopbeforestart.Size = new System.Drawing.Size(138, 17);
@@ -2998,7 +3009,7 @@
             // chk_HighPriority
             // 
             this.chk_HighPriority.AutoSize = true;
-            this.chk_HighPriority.Location = new System.Drawing.Point(247, 333);
+            this.chk_HighPriority.Location = new System.Drawing.Point(243, 361);
             this.chk_HighPriority.Margin = new System.Windows.Forms.Padding(2);
             this.chk_HighPriority.Name = "chk_HighPriority";
             this.chk_HighPriority.Size = new System.Drawing.Size(102, 17);
@@ -3011,7 +3022,7 @@
             // Chk_DSDebug
             // 
             this.Chk_DSDebug.AutoSize = true;
-            this.Chk_DSDebug.Location = new System.Drawing.Point(178, 333);
+            this.Chk_DSDebug.Location = new System.Drawing.Point(174, 361);
             this.Chk_DSDebug.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_DSDebug.Name = "Chk_DSDebug";
             this.Chk_DSDebug.Size = new System.Drawing.Size(58, 17);
@@ -3034,7 +3045,7 @@
             // 
             // Btn_Save
             // 
-            this.Btn_Save.Location = new System.Drawing.Point(187, 388);
+            this.Btn_Save.Location = new System.Drawing.Point(183, 416);
             this.Btn_Save.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Save.Name = "Btn_Save";
             this.Btn_Save.Size = new System.Drawing.Size(70, 30);
@@ -3062,7 +3073,7 @@
             this.groupBox1.Controls.Add(this.Chk_DetectionAPI);
             this.groupBox1.Controls.Add(this.Chk_FaceAPI);
             this.groupBox1.Controls.Add(this.Chk_SceneAPI);
-            this.groupBox1.Location = new System.Drawing.Point(11, 230);
+            this.groupBox1.Location = new System.Drawing.Point(7, 258);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
@@ -3107,7 +3118,7 @@
             this.groupBox2.Controls.Add(this.RB_High);
             this.groupBox2.Controls.Add(this.RB_Medium);
             this.groupBox2.Controls.Add(this.RB_Low);
-            this.groupBox2.Location = new System.Drawing.Point(178, 230);
+            this.groupBox2.Location = new System.Drawing.Point(174, 258);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
@@ -3176,7 +3187,7 @@
             // 
             this.groupBox3.Controls.Add(this.label27);
             this.groupBox3.Controls.Add(this.Txt_Port);
-            this.groupBox3.Location = new System.Drawing.Point(345, 230);
+            this.groupBox3.Location = new System.Drawing.Point(341, 258);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
@@ -3209,7 +3220,7 @@
             // Chk_AutoStart
             // 
             this.Chk_AutoStart.AutoSize = true;
-            this.Chk_AutoStart.Location = new System.Drawing.Point(13, 333);
+            this.Chk_AutoStart.Location = new System.Drawing.Point(9, 361);
             this.Chk_AutoStart.Margin = new System.Windows.Forms.Padding(2);
             this.Chk_AutoStart.Name = "Chk_AutoStart";
             this.Chk_AutoStart.Size = new System.Drawing.Size(73, 17);
@@ -3220,7 +3231,7 @@
             // 
             // Btn_Start
             // 
-            this.Btn_Start.Location = new System.Drawing.Point(11, 388);
+            this.Btn_Start.Location = new System.Drawing.Point(7, 416);
             this.Btn_Start.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Start.Name = "Btn_Start";
             this.Btn_Start.Size = new System.Drawing.Size(70, 30);
@@ -3231,7 +3242,7 @@
             // 
             // Btn_Stop
             // 
-            this.Btn_Stop.Location = new System.Drawing.Point(99, 388);
+            this.Btn_Stop.Location = new System.Drawing.Point(95, 416);
             this.Btn_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.Btn_Stop.Name = "Btn_Stop";
             this.Btn_Stop.Size = new System.Drawing.Size(70, 30);
@@ -3244,9 +3255,11 @@
             // 
             this.groupBoxCustomModel.Controls.Add(this.Chk_CustomModelAPI);
             this.groupBoxCustomModel.Controls.Add(this.label38);
+            this.groupBoxCustomModel.Controls.Add(this.label9);
             this.groupBoxCustomModel.Controls.Add(this.label37);
             this.groupBoxCustomModel.Controls.Add(this.label36);
             this.groupBoxCustomModel.Controls.Add(this.label35);
+            this.groupBoxCustomModel.Controls.Add(this.Txt_CustomModelMode);
             this.groupBoxCustomModel.Controls.Add(this.Txt_CustomModelPort);
             this.groupBoxCustomModel.Controls.Add(this.Txt_CustomModelName);
             this.groupBoxCustomModel.Controls.Add(this.Txt_CustomModelPath);
@@ -3254,7 +3267,7 @@
             this.groupBoxCustomModel.Margin = new System.Windows.Forms.Padding(2);
             this.groupBoxCustomModel.Name = "groupBoxCustomModel";
             this.groupBoxCustomModel.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBoxCustomModel.Size = new System.Drawing.Size(483, 130);
+            this.groupBoxCustomModel.Size = new System.Drawing.Size(483, 158);
             this.groupBoxCustomModel.TabIndex = 17;
             this.groupBoxCustomModel.TabStop = false;
             // 
@@ -3278,9 +3291,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label38.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label38.ForeColor = System.Drawing.Color.DarkGray;
-            this.label38.Location = new System.Drawing.Point(8, 88);
+            this.label38.Location = new System.Drawing.Point(8, 113);
             this.label38.Name = "label38";
-            this.label38.Size = new System.Drawing.Size(470, 39);
+            this.label38.Size = new System.Drawing.Size(469, 43);
             this.label38.TabIndex = 2;
             this.label38.Text = "If needed, specify more than one custom model instance by supplying an equal numb" +
     "er of items for PATH/NAME/PORT.    For example PATH=C:\\PTH1, C:\\PTH2, NAME=DOGS," +
@@ -3793,6 +3806,26 @@
             this.LogUpdateListTimer.Interval = 2000;
             this.LogUpdateListTimer.Tick += new System.EventHandler(this.LogUpdateListTimer_Tick);
             // 
+            // Txt_CustomModelMode
+            // 
+            this.Txt_CustomModelMode.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt_CustomModelMode.Location = new System.Drawing.Point(56, 91);
+            this.Txt_CustomModelMode.Margin = new System.Windows.Forms.Padding(2);
+            this.Txt_CustomModelMode.Name = "Txt_CustomModelMode";
+            this.Txt_CustomModelMode.Size = new System.Drawing.Size(423, 20);
+            this.Txt_CustomModelMode.TabIndex = 3;
+            this.Txt_CustomModelMode.TextChanged += new System.EventHandler(this.Txt_CustomModelName_TextChanged);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(3, 94);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(48, 13);
+            this.label9.TabIndex = 1;
+            this.label9.Text = "Mode(s):";
+            // 
             // Shell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -4190,6 +4223,9 @@
         private System.Windows.Forms.Label lbl_blueirisserver;
         private System.Windows.Forms.Button bt_CheckUpdates;
         private System.Windows.Forms.CheckBox chk_AutoAdd;
+        private System.Windows.Forms.ToolStripMenuItem mergeDuplicatePredictionsToolStripMenuItem;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox Txt_CustomModelMode;
     }
 }
 

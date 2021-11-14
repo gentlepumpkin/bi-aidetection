@@ -63,6 +63,7 @@ namespace AITool
             public string deepstack_customModelPath = "";
             public string deepstack_customModelName = "";
             public string deepstack_customModelPort = "82";
+            public string deepstack_customModelMode = "Medium";
             public bool deepstack_stopbeforestart = true;
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
@@ -173,6 +174,7 @@ namespace AITool
             public string SightHoundAPIKey = "";   //https://accounts.sighthound.com/#/sighthound-cloud
 
             public int ActionCancelSeconds = 30;
+            public int ActionDelayMS = 500;
 
             public bool MinimizeToTray = true;
 
@@ -256,7 +258,7 @@ namespace AITool
                     AppSettings.LastSettingsJSON = CurSettingsJSON;
                     //save a backup of settings to the registry since I've had a few times my raid array was going bad and I lost both backup and json files
                     Global.SaveRegSetting("BackupSettingsJSON", CurSettingsJSON);
-                    Log($"Debug: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
+                    Log($"Trace: JSON Settings saved to REGISTRY and {AppSettings.Settings.SettingsFileName}");
                 }
                 else
                 {
@@ -267,7 +269,7 @@ namespace AITool
 
                 if (!AITOOL.FaceMan.IsNull())
                 {
-                    AITOOL.FaceMan.Save();
+                    AITOOL.FaceMan.SaveFaces();
                 }
 
                 //}

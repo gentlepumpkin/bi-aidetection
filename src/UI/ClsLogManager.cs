@@ -500,7 +500,7 @@ namespace AITool
 
                         if (Filename.EndsWith("zip", StringComparison.OrdinalIgnoreCase))
                         {
-                            ExtractZipPath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), "_" + file);
+                            ExtractZipPath = Path.Combine(Global.GetTempFolder(), "_" + file);
                             if (!Directory.Exists(ExtractZipPath))
                                 Directory.CreateDirectory(ExtractZipPath);
 

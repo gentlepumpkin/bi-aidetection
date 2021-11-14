@@ -32,6 +32,7 @@ using Rectangle = System.Drawing.Rectangle;
 using static AITool.Global;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using Amazon.Runtime.Internal.Util;
 
 namespace AITool
 {
@@ -126,7 +127,7 @@ namespace AITool
                 int TempDefSize = ((1024 * 1024) * 20); //20mb
                 LogMan = new ClsLogManager(!Global.IsService, exe);
 
-                await LogMan.UpdateNLog(LogLevel.Debug, Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"), TempDefSize, 120, AppSettings.Settings.MaxGUILogItems);
+                await LogMan.UpdateNLog(LogLevel.Debug, Path.Combine(Global.GetTempFolder(true), Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + $"{srv}LOG"), TempDefSize, 120, AppSettings.Settings.MaxGUILogItems);
 
                 //load settings
                 await AppSettings.LoadAsync();
@@ -224,7 +225,7 @@ namespace AITool
 
                 //initialize the deepstack class - it collects info from running deepstack processes, detects install location, and
                 //allows for stopping and starting of its service
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelApiEnabled);
+                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
                 if (DeepStackServerControl.IsInstalled && AppSettings.Settings.deepstack_autostart)
                 {
@@ -3420,7 +3421,7 @@ namespace AITool
                         foreach (ClsPrediction pred in predictions)
                         {
                             if (pred.ObjType == ObjectType.Face)
-                                FaceMan.TryAddFile(CurImg, pred.Label);
+                                FaceMan.TryAddFaceFile(CurImg, pred.Label);
                         }
 
                         string PredictionsJSON = Global.GetJSONString(predictions);

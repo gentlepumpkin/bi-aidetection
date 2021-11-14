@@ -7,6 +7,8 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Win32.SafeHandles;
+
 namespace AITool
 {
     public static class StringExtensions
@@ -172,7 +174,22 @@ namespace AITool
             if (obj is string && string.IsNullOrWhiteSpace((string)obj))
                 return true;
 
+            if (obj is IntPtr && (IntPtr)obj == IntPtr.Zero)
+                return true;
+
+            if (obj is UIntPtr && (UIntPtr)obj == UIntPtr.Zero)
+                return true;
+
+            if (obj is SafeFileHandle && ((SafeFileHandle)obj).IsInvalid)
+                return true;
+
             return false;
+        }
+
+        [DebuggerStepThrough]
+        public static bool IsNotNull(this object obj)
+        {
+            return !obj.IsNull();
         }
         [DebuggerStepThrough]
         public static string CleanString(this string inp, string ReplaceStr = " ")

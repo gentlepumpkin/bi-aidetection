@@ -2,6 +2,7 @@
 using OSVersionExt.Environment;
 using OSVersionExt.MajorVersion10;
 using OSVersionExt.Win32API;
+
 using System;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -65,7 +66,9 @@ namespace OSVersionExtension
         /// <remarks>detection based on https://docs.microsoft.com/de-de/windows-hardware/drivers/ddi/wdm/ns-wdm-_osversioninfoexw#remarks </remarks>
         public static OperatingSystem GetOperatingSystem()
         {
-            if (MajorVersion == 10 && MinorVersion == 0 && IsWorkstation)
+            if (MajorVersion == 11 || MajorVersion == 10 && MinorVersion == 0 && BuildNumber >= 21990 && IsWorkstation)  //22000, 21996, 21990, 
+                return OperatingSystem.Windows11;
+            else if (MajorVersion == 10 && MinorVersion == 0 && IsWorkstation)
                 return OperatingSystem.Windows10;
             else if (MajorVersion == 10 && MinorVersion == 0 && IsServer)
                 return OperatingSystem.WindowsServer20162019;
@@ -246,7 +249,8 @@ namespace OSVersionExtension
         Windows81,
         WindowsServer2012R2,    // tested
         WindowsServer20162019,  // tested Server 2019
-        Windows10               // tested
+        Windows10,               // tested
+        Windows11
     }
 
 }

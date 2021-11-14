@@ -280,5 +280,15 @@ namespace AITool
             Global_GUI.GroupboxEnableDisable(groupBoxUrlCancel, cb_UrlCancelEnabled);
 
         }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cb_queue_actions_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

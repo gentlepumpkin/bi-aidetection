@@ -23,6 +23,18 @@ namespace AITool
             return sequence != null && sequence.Any();
         }
 
+        public static string GetStrAtIndex<T>(this IEnumerable<T> sequence, int idx)
+        {
+            //This is to make sure we return at lest the first element if the requested index is too high
+            if (sequence.IsEmpty())
+                return "";
+            int maxidx = sequence.Count() - 1;
+            if (idx <= maxidx)
+                return sequence.ElementAt(idx).ToString();
+            else
+                return sequence.ElementAt(0).ToString();
+
+        }
         public static void Move<T>(this List<T> list, int oldIndex, int newIndex)
         {
             // exit if positions are equal or outside array

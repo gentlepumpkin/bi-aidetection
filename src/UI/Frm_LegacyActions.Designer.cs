@@ -56,6 +56,7 @@
             this.label15 = new System.Windows.Forms.Label();
             this.tb_network_folder = new System.Windows.Forms.TextBox();
             this.groupBoxPushover = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
             this.LnkPushoverObjects = new System.Windows.Forms.LinkLabel();
             this.cb_Pushover_Enabled = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -98,12 +99,17 @@
             this.tb_cooldown = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.bt_variables = new System.Windows.Forms.Button();
+            this.tb_ActionDelayMS = new System.Windows.Forms.TextBox();
+            this.tb_NetworkFolderCleanupDays = new System.Windows.Forms.TextBox();
             this.btTest = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBoxUrlCancel = new System.Windows.Forms.GroupBox();
             this.cb_UrlCancelEnabled = new System.Windows.Forms.CheckBox();
             this.groupBoxUrlTrigger = new System.Windows.Forms.GroupBox();
             this.cb_UrlTriggerEnabled = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cb_ActivateBlueIrisWindow = new System.Windows.Forms.CheckBox();
             this.groupBoxMQTT.SuspendLayout();
             this.groupBoxTelegram.SuspendLayout();
             this.groupBoxPushover.SuspendLayout();
@@ -117,7 +123,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCancel.Location = new System.Drawing.Point(810, 670);
+            this.btnCancel.Location = new System.Drawing.Point(810, 701);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
@@ -130,7 +136,7 @@
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSave.Location = new System.Drawing.Point(732, 670);
+            this.btnSave.Location = new System.Drawing.Point(732, 701);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
@@ -153,7 +159,7 @@
             this.groupBoxMQTT.Controls.Add(this.tb_MQTT_Payload_cancel);
             this.groupBoxMQTT.Controls.Add(this.label12);
             this.groupBoxMQTT.Controls.Add(this.label13);
-            this.groupBoxMQTT.Location = new System.Drawing.Point(6, 273);
+            this.groupBoxMQTT.Location = new System.Drawing.Point(6, 296);
             this.groupBoxMQTT.Name = "groupBoxMQTT";
             this.groupBoxMQTT.Size = new System.Drawing.Size(852, 87);
             this.groupBoxMQTT.TabIndex = 53;
@@ -179,7 +185,6 @@
             this.cb_MQTT_enabled.Size = new System.Drawing.Size(138, 19);
             this.cb_MQTT_enabled.TabIndex = 17;
             this.cb_MQTT_enabled.Text = "Send MQTT Message:";
-            this.toolTip1.SetToolTip(this.cb_MQTT_enabled, "For now, see JSON config file for server, port, username, password settings");
             this.cb_MQTT_enabled.UseVisualStyleBackColor = true;
             this.cb_MQTT_enabled.CheckedChanged += new System.EventHandler(this.cb_MQTT_enabled_CheckedChanged);
             // 
@@ -299,7 +304,7 @@
             this.groupBoxTelegram.Controls.Add(this.tb_telegram_caption);
             this.groupBoxTelegram.Controls.Add(this.label20);
             this.groupBoxTelegram.Controls.Add(this.cb_telegram_active_time);
-            this.groupBoxTelegram.Location = new System.Drawing.Point(6, 102);
+            this.groupBoxTelegram.Location = new System.Drawing.Point(6, 125);
             this.groupBoxTelegram.Name = "groupBoxTelegram";
             this.groupBoxTelegram.Size = new System.Drawing.Size(852, 58);
             this.groupBoxTelegram.TabIndex = 52;
@@ -372,7 +377,7 @@
             this.tb_RunExternalProgram.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_RunExternalProgram.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.tb_RunExternalProgram.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_RunExternalProgram.Location = new System.Drawing.Point(191, 596);
+            this.tb_RunExternalProgram.Location = new System.Drawing.Point(191, 619);
             this.tb_RunExternalProgram.Name = "tb_RunExternalProgram";
             this.tb_RunExternalProgram.Size = new System.Drawing.Size(295, 20);
             this.tb_RunExternalProgram.TabIndex = 27;
@@ -381,7 +386,7 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(488, 569);
+            this.label15.Location = new System.Drawing.Point(488, 591);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(58, 15);
             this.label15.TabIndex = 44;
@@ -392,13 +397,14 @@
             this.tb_network_folder.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tb_network_folder.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.tb_network_folder.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_network_folder.Location = new System.Drawing.Point(191, 565);
+            this.tb_network_folder.Location = new System.Drawing.Point(191, 588);
             this.tb_network_folder.Name = "tb_network_folder";
             this.tb_network_folder.Size = new System.Drawing.Size(295, 20);
             this.tb_network_folder.TabIndex = 24;
             // 
             // groupBoxPushover
             // 
+            this.groupBoxPushover.Controls.Add(this.label11);
             this.groupBoxPushover.Controls.Add(this.LnkPushoverObjects);
             this.groupBoxPushover.Controls.Add(this.cb_Pushover_Enabled);
             this.groupBoxPushover.Controls.Add(this.label8);
@@ -413,11 +419,22 @@
             this.groupBoxPushover.Controls.Add(this.label16);
             this.groupBoxPushover.Controls.Add(this.label18);
             this.groupBoxPushover.Controls.Add(this.label19);
-            this.groupBoxPushover.Location = new System.Drawing.Point(6, 166);
+            this.groupBoxPushover.Location = new System.Drawing.Point(6, 189);
             this.groupBoxPushover.Name = "groupBoxPushover";
             this.groupBoxPushover.Size = new System.Drawing.Size(852, 101);
             this.groupBoxPushover.TabIndex = 51;
             this.groupBoxPushover.TabStop = false;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.ForeColor = System.Drawing.Color.Gray;
+            this.label11.Location = new System.Drawing.Point(5, 79);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(657, 15);
+            this.label11.TabIndex = 47;
+            this.label11.Text = "Specify more than one Sound, Prioirty and Time by using the PIPE symbol.   Use of" +
+    " SUNRISE-SUNSET is allowed for all TIMES";
             // 
             // LnkPushoverObjects
             // 
@@ -568,7 +585,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(682, 627);
+            this.label3.Location = new System.Drawing.Point(682, 650);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(112, 15);
             this.label3.TabIndex = 40;
@@ -577,7 +594,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(497, 600);
+            this.label14.Location = new System.Drawing.Point(497, 623);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(49, 15);
             this.label14.TabIndex = 40;
@@ -627,8 +644,8 @@
             this.cb_ShowOnlyRelevant.Size = new System.Drawing.Size(174, 19);
             this.cb_ShowOnlyRelevant.TabIndex = 1;
             this.cb_ShowOnlyRelevant.Text = "Show Only Relevant Objects";
-            this.toolTip1.SetToolTip(this.cb_ShowOnlyRelevant, "If checked, only Relevant Objects will be shown for actions.  Note this also effe" +
-        "cts the History tab.");
+            this.toolTip1.SetToolTip(this.cb_ShowOnlyRelevant, "(Applies to ALL cameras) - If checked, only Relevant Objects will be shown for ac" +
+        "tions.  Note this also effects the History tab.");
             this.cb_ShowOnlyRelevant.UseVisualStyleBackColor = true;
             // 
             // cb_queue_actions
@@ -642,6 +659,7 @@
             this.cb_queue_actions.Text = "Queue Actions";
             this.toolTip1.SetToolTip(this.cb_queue_actions, resources.GetString("cb_queue_actions.ToolTip"));
             this.cb_queue_actions.UseVisualStyleBackColor = true;
+            this.cb_queue_actions.CheckedChanged += new System.EventHandler(this.cb_queue_actions_CheckedChanged);
             // 
             // cb_mergeannotations
             // 
@@ -659,9 +677,9 @@
             // tb_network_folder_filename
             // 
             this.tb_network_folder_filename.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_network_folder_filename.Location = new System.Drawing.Point(549, 566);
+            this.tb_network_folder_filename.Location = new System.Drawing.Point(549, 588);
             this.tb_network_folder_filename.Name = "tb_network_folder_filename";
-            this.tb_network_folder_filename.Size = new System.Drawing.Size(295, 20);
+            this.tb_network_folder_filename.Size = new System.Drawing.Size(156, 20);
             this.tb_network_folder_filename.TabIndex = 25;
             this.toolTip1.SetToolTip(this.tb_network_folder_filename, "The filename to be created in the network folder NOT including file extension.  F" +
         "or example, [camera] would be saved as MYCAMERA.JPG");
@@ -669,7 +687,7 @@
             // tb_Sounds
             // 
             this.tb_Sounds.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_Sounds.Location = new System.Drawing.Point(191, 624);
+            this.tb_Sounds.Location = new System.Drawing.Point(191, 647);
             this.tb_Sounds.Name = "tb_Sounds";
             this.tb_Sounds.Size = new System.Drawing.Size(465, 20);
             this.tb_Sounds.TabIndex = 30;
@@ -679,7 +697,7 @@
             // 
             this.cb_PlaySound.AutoSize = true;
             this.cb_PlaySound.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.cb_PlaySound.Location = new System.Drawing.Point(9, 626);
+            this.cb_PlaySound.Location = new System.Drawing.Point(9, 649);
             this.cb_PlaySound.Name = "cb_PlaySound";
             this.cb_PlaySound.Size = new System.Drawing.Size(88, 19);
             this.cb_PlaySound.TabIndex = 29;
@@ -690,7 +708,7 @@
             // tb_RunExternalProgramArgs
             // 
             this.tb_RunExternalProgramArgs.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_RunExternalProgramArgs.Location = new System.Drawing.Point(549, 597);
+            this.tb_RunExternalProgramArgs.Location = new System.Drawing.Point(549, 620);
             this.tb_RunExternalProgramArgs.Name = "tb_RunExternalProgramArgs";
             this.tb_RunExternalProgramArgs.Size = new System.Drawing.Size(295, 20);
             this.tb_RunExternalProgramArgs.TabIndex = 28;
@@ -700,7 +718,7 @@
             // 
             this.cb_RunProgram.AutoSize = true;
             this.cb_RunProgram.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.cb_RunProgram.Location = new System.Drawing.Point(9, 597);
+            this.cb_RunProgram.Location = new System.Drawing.Point(9, 620);
             this.cb_RunProgram.Name = "cb_RunProgram";
             this.cb_RunProgram.Size = new System.Drawing.Size(144, 19);
             this.cb_RunProgram.TabIndex = 26;
@@ -713,7 +731,7 @@
             this.cb_copyAlertImages.AutoSize = true;
             this.cb_copyAlertImages.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cb_copyAlertImages.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.cb_copyAlertImages.Location = new System.Drawing.Point(9, 566);
+            this.cb_copyAlertImages.Location = new System.Drawing.Point(9, 589);
             this.cb_copyAlertImages.Margin = new System.Windows.Forms.Padding(40, 8, 7, 8);
             this.cb_copyAlertImages.Name = "cb_copyAlertImages";
             this.cb_copyAlertImages.Size = new System.Drawing.Size(172, 19);
@@ -757,7 +775,7 @@
             // 
             this.label24.AutoSize = true;
             this.label24.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label24.Location = new System.Drawing.Point(9, 71);
+            this.label24.Location = new System.Drawing.Point(13, 98);
             this.label24.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(118, 15);
@@ -769,7 +787,7 @@
             // 
             this.label22.AutoSize = true;
             this.label22.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label22.Location = new System.Drawing.Point(19, 43);
+            this.label22.Location = new System.Drawing.Point(23, 70);
             this.label22.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(108, 15);
@@ -793,7 +811,7 @@
             // 
             this.lbl_Confidence.AutoSize = true;
             this.lbl_Confidence.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_Confidence.Location = new System.Drawing.Point(353, 71);
+            this.lbl_Confidence.Location = new System.Drawing.Point(357, 98);
             this.lbl_Confidence.Margin = new System.Windows.Forms.Padding(2, 0, 5, 0);
             this.lbl_Confidence.Name = "lbl_Confidence";
             this.lbl_Confidence.Size = new System.Drawing.Size(10, 15);
@@ -804,7 +822,7 @@
             // 
             this.lbl_DetectionFormat.AutoSize = true;
             this.lbl_DetectionFormat.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lbl_DetectionFormat.Location = new System.Drawing.Point(353, 43);
+            this.lbl_DetectionFormat.Location = new System.Drawing.Point(357, 70);
             this.lbl_DetectionFormat.Margin = new System.Windows.Forms.Padding(2, 0, 5, 0);
             this.lbl_DetectionFormat.Name = "lbl_DetectionFormat";
             this.lbl_DetectionFormat.Size = new System.Drawing.Size(10, 15);
@@ -815,17 +833,18 @@
             // tb_ConfidenceFormat
             // 
             this.tb_ConfidenceFormat.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_ConfidenceFormat.Location = new System.Drawing.Point(130, 68);
+            this.tb_ConfidenceFormat.Location = new System.Drawing.Point(134, 95);
             this.tb_ConfidenceFormat.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_ConfidenceFormat.Name = "tb_ConfidenceFormat";
             this.tb_ConfidenceFormat.Size = new System.Drawing.Size(211, 20);
             this.tb_ConfidenceFormat.TabIndex = 5;
+            this.toolTip1.SetToolTip(this.tb_ConfidenceFormat, "(Applies to ALL cameras)");
             this.tb_ConfidenceFormat.TextChanged += new System.EventHandler(this.tb_ConfidenceFormat_TextChanged);
             // 
             // tb_DetectionFormat
             // 
             this.tb_DetectionFormat.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_DetectionFormat.Location = new System.Drawing.Point(130, 40);
+            this.tb_DetectionFormat.Location = new System.Drawing.Point(134, 67);
             this.tb_DetectionFormat.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_DetectionFormat.Name = "tb_DetectionFormat";
             this.tb_DetectionFormat.Size = new System.Drawing.Size(211, 20);
@@ -836,7 +855,7 @@
             // tb_sound_cooldown
             // 
             this.tb_sound_cooldown.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tb_sound_cooldown.Location = new System.Drawing.Point(800, 624);
+            this.tb_sound_cooldown.Location = new System.Drawing.Point(800, 647);
             this.tb_sound_cooldown.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
             this.tb_sound_cooldown.Name = "tb_sound_cooldown";
             this.tb_sound_cooldown.Size = new System.Drawing.Size(44, 20);
@@ -857,7 +876,7 @@
             this.bt_variables.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.bt_variables.BackColor = System.Drawing.SystemColors.Info;
             this.bt_variables.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.bt_variables.Location = new System.Drawing.Point(8, 669);
+            this.bt_variables.Location = new System.Drawing.Point(8, 700);
             this.bt_variables.Name = "bt_variables";
             this.bt_variables.Size = new System.Drawing.Size(70, 30);
             this.bt_variables.TabIndex = 34;
@@ -867,10 +886,32 @@
             this.bt_variables.UseVisualStyleBackColor = false;
             this.bt_variables.Click += new System.EventHandler(this.bt_variables_Click);
             // 
+            // tb_ActionDelayMS
+            // 
+            this.tb_ActionDelayMS.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_ActionDelayMS.Location = new System.Drawing.Point(803, 97);
+            this.tb_ActionDelayMS.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.tb_ActionDelayMS.Name = "tb_ActionDelayMS";
+            this.tb_ActionDelayMS.Size = new System.Drawing.Size(44, 20);
+            this.tb_ActionDelayMS.TabIndex = 0;
+            this.toolTip1.SetToolTip(this.tb_ActionDelayMS, "(Applies to ALL cameras) - Millisecond delay between each Action, including betwe" +
+        "en each trigger URL if you have more than one.");
+            // 
+            // tb_NetworkFolderCleanupDays
+            // 
+            this.tb_NetworkFolderCleanupDays.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_NetworkFolderCleanupDays.Location = new System.Drawing.Point(800, 588);
+            this.tb_NetworkFolderCleanupDays.Margin = new System.Windows.Forms.Padding(10, 6, 10, 6);
+            this.tb_NetworkFolderCleanupDays.Name = "tb_NetworkFolderCleanupDays";
+            this.tb_NetworkFolderCleanupDays.Size = new System.Drawing.Size(44, 20);
+            this.tb_NetworkFolderCleanupDays.TabIndex = 31;
+            this.toolTip1.SetToolTip(this.tb_NetworkFolderCleanupDays, "Files in this folder than this many days will be deleted.   This cleanup will hap" +
+        "pen only once a day.");
+            // 
             // btTest
             // 
             this.btTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btTest.Location = new System.Drawing.Point(655, 670);
+            this.btTest.Location = new System.Drawing.Point(655, 701);
             this.btTest.Name = "btTest";
             this.btTest.Size = new System.Drawing.Size(70, 30);
             this.btTest.TabIndex = 35;
@@ -880,17 +921,20 @@
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.AutoScroll = true;
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel1.Controls.Add(this.groupBoxUrlCancel);
             this.panel1.Controls.Add(this.groupBoxUrlTrigger);
+            this.panel1.Controls.Add(this.cb_ActivateBlueIrisWindow);
             this.panel1.Controls.Add(this.cb_ShowOnlyRelevant);
             this.panel1.Controls.Add(this.groupBoxMQTT);
+            this.panel1.Controls.Add(this.tb_ActionDelayMS);
             this.panel1.Controls.Add(this.tb_cooldown);
             this.panel1.Controls.Add(this.groupBoxTelegram);
+            this.panel1.Controls.Add(this.tb_NetworkFolderCleanupDays);
             this.panel1.Controls.Add(this.tb_sound_cooldown);
             this.panel1.Controls.Add(this.tb_RunExternalProgram);
             this.panel1.Controls.Add(this.tb_DetectionFormat);
@@ -899,8 +943,10 @@
             this.panel1.Controls.Add(this.tb_network_folder);
             this.panel1.Controls.Add(this.lbl_DetectionFormat);
             this.panel1.Controls.Add(this.groupBoxPushover);
+            this.panel1.Controls.Add(this.label6);
             this.panel1.Controls.Add(this.lbl_Confidence);
             this.panel1.Controls.Add(this.label3);
+            this.panel1.Controls.Add(this.label4);
             this.panel1.Controls.Add(this.label5);
             this.panel1.Controls.Add(this.label14);
             this.panel1.Controls.Add(this.label22);
@@ -919,14 +965,14 @@
             this.panel1.Controls.Add(this.cb_PlaySound);
             this.panel1.Location = new System.Drawing.Point(12, 12);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(867, 650);
+            this.panel1.Size = new System.Drawing.Size(867, 681);
             this.panel1.TabIndex = 54;
             // 
             // groupBoxUrlCancel
             // 
             this.groupBoxUrlCancel.Controls.Add(this.tbCancelUrl);
             this.groupBoxUrlCancel.Controls.Add(this.cb_UrlCancelEnabled);
-            this.groupBoxUrlCancel.Location = new System.Drawing.Point(6, 464);
+            this.groupBoxUrlCancel.Location = new System.Drawing.Point(6, 487);
             this.groupBoxUrlCancel.Name = "groupBoxUrlCancel";
             this.groupBoxUrlCancel.Size = new System.Drawing.Size(852, 92);
             this.groupBoxUrlCancel.TabIndex = 55;
@@ -948,7 +994,7 @@
             // 
             this.groupBoxUrlTrigger.Controls.Add(this.tbTriggerUrl);
             this.groupBoxUrlTrigger.Controls.Add(this.cb_UrlTriggerEnabled);
-            this.groupBoxUrlTrigger.Location = new System.Drawing.Point(6, 366);
+            this.groupBoxUrlTrigger.Location = new System.Drawing.Point(6, 389);
             this.groupBoxUrlTrigger.Name = "groupBoxUrlTrigger";
             this.groupBoxUrlTrigger.Size = new System.Drawing.Size(852, 92);
             this.groupBoxUrlTrigger.TabIndex = 54;
@@ -966,13 +1012,48 @@
             this.cb_UrlTriggerEnabled.UseVisualStyleBackColor = true;
             this.cb_UrlTriggerEnabled.CheckedChanged += new System.EventHandler(this.cb_TriggerURLEnabled_CheckedChanged);
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(711, 591);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(90, 15);
+            this.label6.TabIndex = 40;
+            this.label6.Text = "Max age (days):";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.label4.Location = new System.Drawing.Point(647, 100);
+            this.label4.Margin = new System.Windows.Forms.Padding(35, 0, 5, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(150, 15);
+            this.label4.TabIndex = 0;
+            this.label4.Text = "Delay Between Actions MS:";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // cb_ActivateBlueIrisWindow
+            // 
+            this.cb_ActivateBlueIrisWindow.AutoSize = true;
+            this.cb_ActivateBlueIrisWindow.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.cb_ActivateBlueIrisWindow.Location = new System.Drawing.Point(14, 38);
+            this.cb_ActivateBlueIrisWindow.Name = "cb_ActivateBlueIrisWindow";
+            this.cb_ActivateBlueIrisWindow.Size = new System.Drawing.Size(160, 19);
+            this.cb_ActivateBlueIrisWindow.TabIndex = 1;
+            this.cb_ActivateBlueIrisWindow.Text = "Activate Blue Iris Window";
+            this.toolTip1.SetToolTip(this.cb_ActivateBlueIrisWindow, "If BlueIris is installed on the same machine it will activate  its window and max" +
+        "imize it.");
+            this.cb_ActivateBlueIrisWindow.UseVisualStyleBackColor = true;
+            this.cb_ActivateBlueIrisWindow.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
             // Frm_LegacyActions
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.WhiteSmoke;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(888, 708);
+            this.ClientSize = new System.Drawing.Size(888, 739);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.bt_variables);
             this.Controls.Add(this.btnCancel);
@@ -1078,5 +1159,11 @@
         public System.Windows.Forms.CheckBox cb_UrlTriggerEnabled;
         public System.Windows.Forms.GroupBox groupBoxUrlCancel;
         public System.Windows.Forms.GroupBox groupBoxUrlTrigger;
+        public System.Windows.Forms.TextBox tb_ActionDelayMS;
+        private System.Windows.Forms.Label label4;
+        public System.Windows.Forms.TextBox tb_NetworkFolderCleanupDays;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label11;
+        public System.Windows.Forms.CheckBox cb_ActivateBlueIrisWindow;
     }
 }
