@@ -1853,8 +1853,9 @@ namespace AITool
                         watcher.Path = path;
                         watcher.Filter = filter;
                         watcher.IncludeSubdirectories = IncludeSubdirectories;
+                        watcher.InternalBufferSize = 65536;  //defaults to 8k, we are going max it out to try to prevent "too many changes at once in directory"
 
-                        //The 'default' is the bitwise OR combination of LastWrite, FileName, and DirectoryName'
+                        //The 'default' is the bitwise OR combination of NotifyFilters.LastWrite | NotifyFilters.LastAccess | NotifyFilters.CreationTime | NotifyFilters.FileName | NotifyFilters.DirectoryName
                         watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
 
                         //fswatcher events
@@ -1862,7 +1863,6 @@ namespace AITool
                         watcher.Renamed += new RenamedEventHandler(OnRenamed);
                         watcher.Deleted += new FileSystemEventHandler(OnDeleted);
                         watcher.Error += new ErrorEventHandler(OnError);
-
 
                     }
                     else

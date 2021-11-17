@@ -272,7 +272,7 @@ namespace AITool
                 }
                 else
                 {
-                    LastError = "Error: File has been deleted: " + this.image_path;
+                    LastError = "Debug: File has been deleted: " + this.image_path;
                 }
             }
             catch (Exception ex)

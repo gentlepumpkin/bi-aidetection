@@ -355,16 +355,16 @@ namespace AITool
                     if (!AITOOL.BlueIrisInfo.IsNull() && AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
                     {
                         if (this.trigger_urls_as_string.IsEmpty())
-                            this.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                            this.trigger_urls_as_string = "[BlueIrisURL]/admin?camera=[camera]&trigger&user=[Username]&pw=[Password]&flagalert=2&memo=[summary]&jpeg=[ImagePathEscaped]";
                         if (this.cancel_urls_as_string.IsEmpty())
-                            this.cancel_urls_as_string = "[BlueIrisURL]/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
+                            this.cancel_urls_as_string = "[BlueIrisURL]/admin?&camera=[camera]&user=[Username]&pw=[Password]&flagalert=0&memo=(Canceled)";
                     }
                     else
                     {
                         if (this.trigger_urls_as_string.IsEmpty())
-                            this.trigger_urls_as_string = "http://127.0.0.1:81/admin?trigger&flagalert=1&camera=[camera]&user=[Username]&pw=[Password]&memo=[summary]&jpeg=[ImagePathEscaped]";
+                            this.trigger_urls_as_string = "http://127.0.0.1:81/admin?camera=[camera]&trigger&user=[Username]&pw=[Password]&flagalert=2&memo=[summary]&jpeg=[ImagePathEscaped]";
                         if (this.cancel_urls_as_string.IsEmpty())
-                            this.cancel_urls_as_string = "http://127.0.0.1:81/admin?flagalert=0&camera=[camera]&user=[Username]&pw=[Password]&memo=(Canceled)";
+                            this.cancel_urls_as_string = "http://127.0.0.1:81/admin?&camera=[camera]&user=[Username]&pw=[Password]&flagalert=0&memo=(Canceled)";
 
                     }
 
@@ -373,10 +373,10 @@ namespace AITool
 
                     this.CleanActionNetworkFolder();
 
-                    if (this.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(this.Action_network_folder.TrimEnd("\\".ToCharArray())))
+                    if (this.input_path.IsNotNull() && this.Action_network_folder.IsNotNull() && this.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(this.Action_network_folder.TrimEnd("\\".ToCharArray())))
                     {
                         //You dont want to watch, then copy the same file back to the same folder
-                        AITOOL.Log($"WARNING: Input path ({this.input_path}) & 'Copy alert images to folder' path may not be the same.", "");
+                        AITOOL.Log($"WARNING: Input path ({this.input_path}) & 'Copy alert images to folder' path may not be the same for camera '{this.Name}'.", "");
                     }
 
 

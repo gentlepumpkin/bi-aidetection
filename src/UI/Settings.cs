@@ -63,7 +63,7 @@ namespace AITool
             public string deepstack_customModelPath = "";
             public string deepstack_customModelName = "";
             public string deepstack_customModelPort = "82";
-            public string deepstack_customModelMode = "Medium";
+            public string deepstack_customModelMode = "Medium";  //might be case sensitive
             public bool deepstack_stopbeforestart = true;
             public bool deepstack_urls_are_queued = true;
             public bool deepstack_autostart = false;
@@ -174,7 +174,7 @@ namespace AITool
             public string SightHoundAPIKey = "";   //https://accounts.sighthound.com/#/sighthound-cloud
 
             public int ActionCancelSeconds = 30;
-            public int ActionDelayMS = 500;
+            public int ActionDelayMS = 250;
 
             public bool MinimizeToTray = true;
 

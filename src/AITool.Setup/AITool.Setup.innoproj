@@ -1,46 +1,46 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>1.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>977e04cc-69c8-4ca9-b599-89b5e5b25772</ProjectGuid>
-    <AssemblyName>AITool.Setup</AssemblyName>
-    <Name>AITool.Setup</Name>
-    <RootNamespace>AITool.Setup</RootNamespace>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>
-    </OutputPath>
-    <CompilerOutput />
-    <CompilerBaseFileName />
-    <CompilerSignTool />
-    <DirectivesSymbol />
-    <DirectivesOption />
-    <DirectivesParseOption />
-    <DirectivesInclude />
-    <DirectivesIncludeFile />
-    <DirectivesInlineStart />
-    <DirectivesInlineEnd />
-    <LaunchToolBeforeBuild>
-    </LaunchToolBeforeBuild>
-    <LaunchToolAfterBuild>
-    </LaunchToolAfterBuild>
-    <RunInstaller>No</RunInstaller>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <OutputPath>
-    </OutputPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Script.iss">
-    </Compile>
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\VisualInstaller\InnoSetupProject.targets" />
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+		<ProductVersion>1.0</ProductVersion>
+		<SchemaVersion>2.0</SchemaVersion>
+		<ProjectGuid>977e04cc-69c8-4ca9-b599-89b5e5b25772</ProjectGuid>
+		<AssemblyName>AITool.Setup</AssemblyName>
+		<Name>AITool.Setup</Name>
+		<RootNamespace>AITool.Setup</RootNamespace>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<OutputPath>
+		</OutputPath>
+		<CompilerOutput />
+		<CompilerBaseFileName />
+		<CompilerSignTool />
+		<DirectivesSymbol />
+		<DirectivesOption />
+		<DirectivesParseOption />
+		<DirectivesInclude />
+		<DirectivesIncludeFile />
+		<DirectivesInlineStart />
+		<DirectivesInlineEnd />
+		<LaunchToolBeforeBuild>
+		</LaunchToolBeforeBuild>
+		<LaunchToolAfterBuild>
+		</LaunchToolAfterBuild>
+		<RunInstaller>No</RunInstaller>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<OutputPath>
+		</OutputPath>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PreBuildEvent>
+		</PreBuildEvent>
+		<PostBuildEvent>
+		</PostBuildEvent>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="Script.iss">
+		</Compile>
+	</ItemGroup>
+	<Import Project="$(MSBuildExtensionsPath)\VisualInstaller64\InnoSetupProject.targets" />
 </Project>

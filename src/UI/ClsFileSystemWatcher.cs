@@ -15,6 +15,7 @@ namespace AITool
             this.Path = Path;
             this.watcher = Watcher;
             this.IncludeSubdirectories = IncludeSubFolders;
+            this.watcher.InternalBufferSize = 65536;  //defaults to 8k, we are going max it out to try to prevent "too many changes at once in directory"
         }
     }
 }

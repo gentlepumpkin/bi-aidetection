@@ -2414,7 +2414,7 @@ namespace AITool
             if (BlueIrisInfo.Result == BlueIrisResult.Valid)
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
-                cam.trigger_urls_as_string = "[BlueIrisURL]/admin?trigger&camera=[camera]&user=[Username]&pw=[Password]&flagalert=1&memo=[summary]&jpeg=[ImagePathEscaped]";
+                cam.trigger_urls_as_string = "[BlueIrisURL]/admin?camera=[camera]&trigger&user=[Username]&pw=[Password]&flagalert=2&memo=[summary]&jpeg=[ImagePathEscaped]";
             }
 
             //I dont think this is used anywhere
@@ -2719,10 +2719,10 @@ namespace AITool
                         return;
                     }
 
-                    if (cam.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(cam.Action_network_folder.TrimEnd("\\".ToCharArray())))
+                    if (cam.input_path.IsNotNull() && cam.Action_network_folder.IsNotNull() && cam.input_path.TrimEnd("\\".ToCharArray()).EqualsIgnoreCase(cam.Action_network_folder.TrimEnd("\\".ToCharArray())))
                     {
                         //You dont want to watch, then copy the same file back to the same folder
-                        MessageBox.Show($"WARNING: Input path ({cam.input_path}) & 'Copy alert images to folder' path may not be the same.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"WARNING: Input path ({cam.input_path}) & 'Copy alert images to folder' path may not be the same for camera '{cam.Name}'", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         this.DisplayCameraSettings(); //reset displayed settings
                         return;
                     }
@@ -5308,7 +5308,16 @@ namespace AITool
             if (File.Exists(errfile))
             {
                 if (new FileInfo(errfile).Length > 4)
-                    Process.Start(errfile);
+                {
+                    try
+                    {
+                        Process.Start(errfile);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Error:  Please correct the WINDOWS File Association for .TXT files.");
+                    }
+                }
                 else
                     MessageBox.Show("File has no lines " + errfile);
             }

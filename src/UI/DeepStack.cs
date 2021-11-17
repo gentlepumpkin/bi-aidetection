@@ -523,7 +523,11 @@ namespace AITool
                                 Global.ClsProcess prc = new Global.ClsProcess();
                                 prc.process.StartInfo.FileName = this.DeepStackEXE;
                                 prc.process.StartInfo.WorkingDirectory = Path.GetDirectoryName(this.DeepStackEXE);
-                                prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{cpaths[i].Replace("\\", "/")}\" --PORT {cports[i]} --MODE {cmodes[i].ToUpper()}";
+                                string mode = cmodes.GetStrAtIndex(i).ToLower().UpperFirst();   //mode appears to be case sensitive in the Sept 21 version of deepstack
+                                if (mode.IsNotNull())
+                                    mode = "--MODE " + mode + " ";
+
+                                prc.process.StartInfo.Arguments = $"--MODELSTORE-DETECTION \"{cpaths[i].Replace("\\", "/")}\" {mode}--PORT {cports[i]}";
 
                                 if (!AppSettings.Settings.deepstack_debug)
                                 {
