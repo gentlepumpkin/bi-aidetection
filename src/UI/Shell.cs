@@ -27,7 +27,8 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 using static AITool.Global;
 using static AITool.AITOOL;
-
+using System.Text.RegularExpressions;
+using System.Speech.Synthesis;
 
 namespace AITool
 {
@@ -67,7 +68,6 @@ namespace AITool
         public Shell()
         {
 
-            double test = Global.GetNumberDbl("39.809734");
 
             this.StartupSW = Stopwatch.StartNew();
 
@@ -95,7 +95,12 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
-
+            //using var synth = new SpeechSynthesizer();
+            //foreach (InstalledVoice voice in synth.GetInstalledVoices())
+            //{
+            //    VoiceInfo info = voice.VoiceInfo;
+            //    Console.WriteLine(" Voice Name: " + info.Name);
+            //}
             //string test = CompressToBase64String(" er 2 35464353 4t f fg wefg wer gwe gw t345 y4 t4 rtw w egfgkfkkkk");
             //bool isbase = IsBase64String(test);
             //TimeSpan ts = TimeSpan.FromDays(1.2);
@@ -3078,6 +3083,8 @@ namespace AITool
             AITOOL.UpdateLatLong();
 
             Application.DoEvents();
+
+            await AITOOL.Telegram.TryStartTelegram();
 
             this.cmbInput.Items.Clear();
             foreach (string pth in BlueIrisInfo.ClipPaths)

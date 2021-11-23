@@ -1,0 +1,290 @@
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
+
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using static AITool.AITOOL;
+
+namespace AITool
+{
+    public class ClsTelegramMessages : IDisposable
+    {
+        public TelegramBotClient telegramBot { get; set; } = null;
+
+        private HttpClient telegramHttpClient = null;
+        private User BotUser = null;
+        private ThreadSafe.Boolean Started = new ThreadSafe.Boolean(false);
+        private ThreadSafe.Boolean StartingReceive = new ThreadSafe.Boolean(false);
+        private bool disposedValue;
+        public ClsTelegramMessages()
+        {
+            TryStartTelegram();
+        }
+
+        public async Task<bool> TryStartTelegram()
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            bool ret = true;
+
+            try
+            {
+                if (AppSettings.Settings.telegram_token.IsNotNull() && AppSettings.Settings.telegram_chatids.IsNotEmpty())
+                {
+                    if (!this.Started.ReadFullFence())
+                    {
+                        Log("Debug: Initializing Telegram Bot...");
+
+                        Stopwatch sw = Stopwatch.StartNew();
+
+                        //try to prevent telegram Could not create SSL/TLS secure channel exception on Win7.
+                        //This may also need TLS 1.2 and 1.3 checked in Internet Options > Advanced tab....
+                        ServicePointManager.Expect100Continue = true;
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+
+                        this.telegramHttpClient = new System.Net.Http.HttpClient();
+                        this.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+
+                        this.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, this.telegramHttpClient);
+
+                        //this may be redundant:
+                        this.telegramBot.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
+
+                        //for debugging, remove later...
+                        this.telegramBot.OnApiResponseReceived += TelegramBot_OnApiResponseReceived;
+                        this.telegramBot.OnMakingApiRequest += TelegramBot_OnMakingApiRequest;
+
+                        //start another thread to initialize listening for commands (said it was non blocking but was having weird issues with it)
+                        if (!this.StartingReceive.ReadFullFence())
+                            Task.Run(TelegramStartReceiving);
+                        else
+                            Log($"Debug: Already initializing StartReceiving?");
+
+                        Log($"Debug: ...Done in {sw.ElapsedMilliseconds}ms.");
+
+                        this.Started.WriteFullFence(true);
+                    }
+
+                }
+                else
+                {
+                    Log("Debug: Telegram Bot cannot initialize because of missing token or chatid.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ret = false;
+                this.Started.WriteFullFence(false);
+                throw;
+            }
+
+            return ret;
+        }
+
+        private async void TelegramStartReceiving()
+        {
+            //put this on another thread because it seemed to freeze even though it was supposed to be non blocking?
+
+            try
+            {
+                this.StartingReceive.WriteFullFence(true);
+
+                Log("Debug: (Initializing StartReceiving)...");
+
+                Stopwatch sw = Stopwatch.StartNew();
+
+                // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
+                var receiverOptions = new ReceiverOptions { AllowedUpdates = { } }; // receive all update types 
+
+                this.telegramBot.StartReceiving(
+                    TelegramHandleUpdateAsync,
+                    TelegramHandleErrorAsync,
+                    receiverOptions,
+                    cancellationToken: AITOOL.MasterCTS.Token);
+
+                Log("Debug: (Getting User Info)...");
+
+                BotUser = await this.telegramBot.GetMeAsync();
+
+                if (AppSettings.Settings.telegram_chatids.GetStrAtIndex(0).IsNotEmpty())
+                {
+                    Log("Debug: (Sending intro message)...");
+                    Message message = await this.telegramBot.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), "AITOOL Initialized.  To send Telegram commands, first ask BotFather to disable '/setprivacy'.  Command Usage: \n\r PAUSE|STOP|START|RESUME [CAMNAME] [MINUTES].\n\r   If you use 'PAUSE 1' it will pause all cameras for 1 minute.");
+                }
+                else
+                {
+                    Log("Debug: (Skipping intro message because no ChatID configured)...");
+                }
+
+                Log($"Debug: Ready to receive control messages. Done in {sw.ElapsedMilliseconds}ms.  Listening for Telegram messages from {BotUser.Username} ({BotUser.Id}, {BotUser.FirstName} {BotUser.LastName}), IsBot={BotUser.IsBot}, CanJoinGroups={BotUser.CanJoinGroups}, CanReadAllGroupMessages={BotUser.CanReadAllGroupMessages}...");
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+            finally
+            {
+                this.StartingReceive.WriteFullFence(false);
+            }
+
+        }
+
+        private ValueTask TelegramBot_OnMakingApiRequest(ITelegramBotClient botClient, Telegram.Bot.Args.ApiRequestEventArgs args, CancellationToken cancellationToken = default)
+        {
+            Log($"Trace: API request: {args.MethodName}");
+            return default;
+        }
+
+        private ValueTask TelegramBot_OnApiResponseReceived(ITelegramBotClient botClient, Telegram.Bot.Args.ApiResponseEventArgs args, CancellationToken cancellationToken = default)
+        {
+            Log($"Trace: API response: {args.ResponseMessage}");
+            return default;
+        }
+
+        public async Task<Message> SendTextMessageAsync(string ChatID, string Caption)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            Message message = null;
+
+            await this.TryStartTelegram();
+
+            if (Started.ReadFullFence())
+            {
+                message = await this.telegramBot.SendTextMessageAsync(ChatID, Caption);
+            }
+
+            return message;
+
+        }
+        public async Task<Message> SendPhotoAsync(string ChatID, Stream FileStream, string file_id, string Filename, string Caption)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            Message message = null;
+
+            await this.TryStartTelegram();
+
+            if (Started.ReadFullFence())
+            {
+                await this.telegramBot.SendChatActionAsync(ChatID, ChatAction.UploadPhoto);
+
+                if (Filename.Contains("\\"))
+                    Filename = Path.GetFileName(Filename);
+
+                if (file_id.IsNull())
+                    message = await this.telegramBot.SendPhotoAsync(ChatID, new InputOnlineFile(FileStream, Filename), Caption);
+                else
+                    message = await this.telegramBot.SendPhotoAsync(ChatID, file_id, Caption);
+            }
+
+            return message;
+
+        }
+
+        async Task TelegramHandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            try
+            {
+                // Only process Message updates: https://core.telegram.org/bots/api#message
+                if (update.Type != UpdateType.Message)
+                {
+                    Log($"Debug: Telegram: Received an unsupported update.type '{update.Type}'");
+                    return;
+                }
+
+                // Only process text messages
+                if (update.Message!.Type != Telegram.Bot.Types.Enums.MessageType.Text)
+                {
+                    Log($"Debug: Telegram: Received an unsupported update.Message.type '{update.Message!.Type}'");
+                    return;
+                }
+
+
+                var chatId = update.Message.Chat.Id;
+                var messageText = update.Message.Text;
+
+                Log($"Debug: Telegram: Received a '{update.Type}' with content '{messageText}' in chat {chatId}.");
+
+                Global.TelegramControlMessage(messageText);
+
+                // Echo received message text
+                //Telegram.Bot.Types.Message sentMessage = await botClient.SendTextMessageAsync(
+                //    chatId: chatId,
+                //    text: "You said:\n" + messageText,
+                //    cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+        }
+
+        Task TelegramHandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        {
+            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            var ErrorMessage = exception switch
+            {
+                ApiRequestException apiRequestException
+                    => $"Telegram API Error: [{apiRequestException.ErrorCode}] {apiRequestException.Message}",
+                _ => exception.ToString()
+            };
+
+            Log($"Error: {ErrorMessage}");
+            return Task.CompletedTask;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    if (this.telegramHttpClient.IsNotNull())
+                        this.telegramHttpClient.Dispose();
+
+                    if (this.telegramBot.IsNotNull())
+                        this.telegramBot = null;
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~ClsTelegramMessages()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+}

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Microsoft.Win32.SafeHandles;
@@ -13,6 +14,12 @@ namespace AITool
 {
     public static class StringExtensions
     {
+        public static bool IsNumeric(this string theValue)
+        {
+            double retNum;
+            return double.TryParse(theValue.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out retNum);
+        }
+
         [DebuggerStepThrough]
         public static string JoinStr(this List<string> values, string separator)
         {
@@ -133,8 +140,11 @@ namespace AITool
         [DebuggerStepThrough]
         public static double ToDouble(this string value)
         {
-            if (!value.IsNull())
-                return Convert.ToDouble(value.Trim());
+            double outdbl = 0;
+
+            //Take into account that some countries may use 123,45 vs 123.45
+            if (!value.IsNull() && double.TryParse(value.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out outdbl))
+                return outdbl;
             else
                 return 0;
         }

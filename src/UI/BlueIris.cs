@@ -344,7 +344,7 @@ namespace AITool
             {
                 if (ex.Message.IndexOf("The network path was not found", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    Log($"Error: The remote machine needs the 'Remote Registry' service enabled (automatic) + started on '{ServernameOrIP}': " + ex.Msg());
+                    Log($"Error: In order to connect to the remote Windows machine, it needs the 'Remote Registry' service enabled (automatic) + started on '{ServernameOrIP}': " + ex.Msg());
                     this.Result = BlueIrisResult.NeedsRemoteRegistryServiceEnabled;
                 }
                 //System.UnauthorizedAccessException: 'Attempted to perform an unauthorized operation.'

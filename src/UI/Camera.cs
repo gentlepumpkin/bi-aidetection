@@ -148,7 +148,7 @@ namespace AITool
         public string Action_RunProgramString { get; set; } = "C:\\TOOLS\\SomeTool.exe";
         public string Action_RunProgramArgsString { get; set; } = "/switch1 /description=[Summary]";
         public bool Action_PlaySounds { get; set; } = false;
-        public string Action_Sounds { get; set; } = @"person ; C:\example\YOYO.WAV | bird ; C:\example\TWEET.WAV";
+        public string Action_Sounds { get; set; } = @"doorbell.wav | talk:There is a [Label] at the door";
 
         public bool Action_mqtt_enabled { get; set; } = false;
         public string Action_mqtt_topic { get; set; } = "ai/[camera]/motion";
@@ -302,6 +302,10 @@ namespace AITool
 
                 try
                 {
+
+                    //check to see if camera needs to be resumed
+                    this.PauseEvent(null, new EventArgs());
+
                     this.UpdateTriggeringObjects();
 
                     if (string.IsNullOrEmpty(this.DetectionDisplayFormat))

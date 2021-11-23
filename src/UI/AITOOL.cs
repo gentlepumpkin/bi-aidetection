@@ -97,8 +97,7 @@ namespace AITool
 
         public static Pushover pushoverClient = null;
 
-        public static TelegramBotClient telegramBot = null;
-        public static HttpClient telegramHttpClient = null;
+        public static ClsTelegramMessages Telegram = null;
         public static HttpClient triggerHttpClient = null;
 
         public static string srv = "";
@@ -229,7 +228,6 @@ namespace AITool
 
                 if (DeepStackServerControl.IsInstalled && AppSettings.Settings.deepstack_autostart)
                 {
-                    Global.UpdateProgressBar("Starting Deepstack...", 1, 1, 1);
                     await DeepStackServerControl.StartDeepstackAsync();
                 }
 
@@ -252,6 +250,8 @@ namespace AITool
                 if (!AppSettings.AlreadyRunning)
                     Task.Run(ImageQueueLoop);
 
+
+                Telegram = new ClsTelegramMessages();
 
                 if (AppSettings.LastShutdownState.StartsWith("checkpoint") && !AppSettings.AlreadyRunning)
                     Log($"Error: Program did not shutdown gracefully.  Last log entry was '{AppSettings.LastLogEntry}', '{AppSettings.LastShutdownState}'");

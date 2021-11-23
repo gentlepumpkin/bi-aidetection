@@ -12,6 +12,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Speech.Synthesis;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -24,6 +26,8 @@ using SixLabors.ImageSharp;
 
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.InputFiles;
 
 using static AITool.AITOOL;
@@ -57,7 +61,7 @@ namespace AITool
                 this.cam = new Camera("None");
 
             if (this.CurImg.IsNull())
-                this.CurImg = new ClsImageQueueItem("C:\test.jpg", 0);
+                this.CurImg = new ClsImageQueueItem(Path.Combine(Global.GetTempFolder(), "test.jpg"), 0);
 
             if (this.Hist.IsNull())
                 this.Hist = new History().Create(this.CurImg.image_path, DateTime.Now, this.cam.Name, Text, "", Trigger, "", "None", 0, Trigger);
@@ -497,41 +501,111 @@ namespace AITool
                             try
                             {
 
-                                //object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
+                                //Examples:
+                                //Simple sound play:
+                                //    C:\BlueIris\sounds\are-you-kidding.wav
+                                //    are-you-kidding.wav   <-- No need to specify path if in AITOOL, BlueIris folder or Windows Media folder
+                                //    are-you-kidding
+                                //    C:\Windows\Media\Ring10.wav
+                                //    Ring10.wav
+                                //Conditional:
+                                //    cat ; catsound.wav
+                                //    cat,dog,sheep ; animalsound.wav
+                                //    bear ; fuuuuck.wav
+                                //Talk:
+                                //    Talk:There is a [Label] outside
+                                //    person ; talk:There is a mother f'in person in the driveway
+                                //Combine any with pipe symbols
+                                //    Talk:There is a [Label] outside | object1, object2 ; soundfile.wav | object1, object2 ; anotherfile.wav | * ; defaultsound.wav
                                 string snds = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_Sounds, Global.IPType.Path);
 
-                                List<string> items = snds.SplitStr("|");
                                 bool wasplayed = false;
 
-                                foreach (string itm in items)
+                                List<string> prms = snds.SplitStr("|");
+                                foreach (string prm in prms)
                                 {
-                                    //object1, object2 ; soundfile.wav
-                                    int played = 0;
-                                    List<string> prms = itm.SplitStr("|");
-                                    foreach (string prm in prms)
+                                    if (prm.Contains(";"))
                                     {
                                         //prm0 - object1, object2
                                         //prm1 - soundfile.wav
                                         List<string> splt = prm.SplitStr(";");
-                                        string soundfile = splt[1];
 
-                                        //List<string> objects = splt[0].Split(",");
-                                        //if (AITOOL.ArePredictionObjectsRelevant(splt[0], "Sound", AQI.Hist.Predictions(), false) != ResultType.Relevant)
                                         ClsRelevantObjectManager rom = new ClsRelevantObjectManager(splt[0], "Sound", AQI.cam);
 
                                         if (!AQI.Hist.IsNull() && rom.IsRelevant(AQI.Hist.Predictions(), false, out bool IgnoreImageMask, out bool IgnoreDynamicMask) == ResultType.Relevant)
                                         {
-                                            Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
-                                            SoundPlayer sp = new SoundPlayer(soundfile);
-                                            sp.Play();
-                                            played++;
+
+                                            if (splt[1].StartsWith("talk:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                string speech = splt[1].GetWord("talk:", "");
+
+                                                if (speech.IsNotNull())
+                                                {
+                                                    //if you would like to change the default voice used, you have to change it in the OLD control panel, not the new Windows 10/11 version?
+                                                    //Start menu > type 'Control Panel' > Easy of use > Speech Recognition > Advanced speech options > Text to speech tab.
+
+                                                    using var synth = new SpeechSynthesizer();
+
+                                                    synth.SetOutputToDefaultAudioDevice();
+                                                    Log($"Debug:   Talking using system default Windows voice '{synth.Voice.Name}': '{speech}'...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                                    synth.Speak(speech);
+                                                    wasplayed = true;
+                                                }
+
+                                            }
+                                            else
+                                            {
+                                                string soundfile = Global.FindSoundFile(splt[1].Trim());
+                                                if (soundfile.IsNotNull())
+                                                {
+
+                                                    Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                                    using SoundPlayer sp = new SoundPlayer(soundfile);
+                                                    sp.PlaySync();
+                                                    wasplayed = true;
+                                                }
+                                                else
+                                                {
+                                                    Log($"Error: Sound file not found: {soundfile}");
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                    else if (prm.StartsWith("talk:", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        string speech = prm.GetWord("talk:", "");
+
+                                        if (speech.IsNotNull())
+                                        {
+                                            using var synth = new SpeechSynthesizer();
+
+                                            synth.SetOutputToDefaultAudioDevice();
+                                            Log($"Debug:   Talking using system default Windows voice '{synth.Voice.Name}': '{speech}'...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                            synth.Speak(speech);
                                             wasplayed = true;
                                         }
                                     }
-                                    if (played == 0)
+                                    else   //assume it is JUST a sound file
                                     {
-                                        Log($"Debug: No object matched sound to play or no detections.", this.CurSrv, AQI.cam, AQI.CurImg);
+                                        string soundfile = Global.FindSoundFile(prm);
+                                        if (soundfile.IsNotNull())
+                                        {
+
+                                            Log($"Debug:   Playing sound: {soundfile}...", this.CurSrv, AQI.cam, AQI.CurImg);
+                                            using SoundPlayer sp = new SoundPlayer(soundfile);
+                                            sp.PlaySync();
+                                            wasplayed = true;
+                                        }
+                                        else
+                                        {
+                                            Log($"Error: Sound file not found: {prm}");
+                                        }
                                     }
+
+                                    if (wasplayed && prms.Count > 1)
+                                        await Task.Delay(50); //very short wait between sound events
+
                                 }
 
                                 if (wasplayed)
@@ -544,6 +618,10 @@ namespace AITool
 
                                     await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
 
+                                }
+                                else
+                                {
+                                    Log($"Debug: No object matched sound to play.", this.CurSrv, AQI.cam, AQI.CurImg);
                                 }
 
                             }
@@ -1417,24 +1495,6 @@ namespace AITool
 
                             if (Global.IsTimeBetween(now, AQI.cam.telegram_active_time_range))
                             {
-                                if (AITOOL.telegramBot == null || AITOOL.telegramHttpClient == null)
-                                {
-                                    //try to prevent telegram Could not create SSL/TLS secure channel exception on Win7.
-                                    //This may also need TLS 1.2 and 1.3 checked in Internet Options > Advanced tab....
-                                    ServicePointManager.Expect100Continue = true;
-                                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
-
-                                    //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-                                    //ServicePointManager.Expect100Continue = true;
-                                    //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-                                    AITOOL.telegramHttpClient = new System.Net.Http.HttpClient();
-                                    AITOOL.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
-                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, AITOOL.telegramHttpClient);
-                                    //this may be redundant:
-                                    AITOOL.telegramBot.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
-                                }
-
                                 string chatid = "";
                                 bool overrideid = (!string.IsNullOrWhiteSpace(AQI.cam.telegram_chatid));
                                 if (overrideid)
@@ -1445,7 +1505,7 @@ namespace AITool
                                 //upload image to Telegram servers and send to first chat
                                 Log($"Debug:      uploading image to chat \"{chatid.ReplaceChars('*')}\"", this.CurSrv, AQI.cam, AQI.CurImg);
                                 lastchatid = chatid;
-                                Telegram.Bot.Types.Message message = await AITOOL.telegramBot.SendPhotoAsync(chatid, new InputOnlineFile(AQI.CurImg.ToStream(), Path.GetFileName(AQI.CurImg.image_path)), Caption);
+                                Telegram.Bot.Types.Message message = await AITOOL.Telegram.SendPhotoAsync(chatid, AQI.CurImg.ToStream(), "", AQI.CurImg.image_path, Caption);
 
                                 string file_id = message.Photo[0].FileId; //get file_id of uploaded image
 
@@ -1456,7 +1516,7 @@ namespace AITool
                                     {
                                         Log($"Debug:      uploading image to chat \"{curchatid.ReplaceChars('*')}\"...", this.CurSrv, AQI.cam, AQI.CurImg);
                                         lastchatid = curchatid;
-                                        message = await AITOOL.telegramBot.SendPhotoAsync(curchatid, file_id, Caption);
+                                        message = await AITOOL.Telegram.SendPhotoAsync(curchatid, null, file_id, "", Caption);
                                     }
                                 }
                                 ret = message != null;
@@ -1500,8 +1560,8 @@ namespace AITool
 
                     if (!ex.Parameters.IsNull() && !ex.Parameters.RetryAfter.IsNull())
                     {
-                        this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
-                        Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
+                        this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(Convert.ToDouble(ex.Parameters.RetryAfter)));
+                        Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime.Read()}", this.CurSrv, AQI.cam, AQI.CurImg);
                     }
 
                     AppSettings.Settings.send_telegram_errors = se;
@@ -1593,19 +1653,11 @@ namespace AITool
                                 else
                                     chatid = AppSettings.Settings.telegram_chatids[0];
 
-                                if (AITOOL.telegramBot == null || AITOOL.telegramHttpClient == null)
-                                {
-                                    AITOOL.telegramHttpClient = new System.Net.Http.HttpClient();
-                                    AITOOL.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
-                                    AITOOL.telegramBot = new TelegramBotClient(AppSettings.Settings.telegram_token, AITOOL.telegramHttpClient);
-                                    //this may be redundant:
-                                    AITOOL.telegramBot.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
-                                }
 
                                 if (overrideid)
                                 {
                                     lastchatid = chatid;
-                                    Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(chatid, Caption);
+                                    Telegram.Bot.Types.Message msg = await AITOOL.Telegram.SendTextMessageAsync(chatid, Caption);
 
                                 }
                                 else
@@ -1613,7 +1665,7 @@ namespace AITool
                                     foreach (string curchatid in AppSettings.Settings.telegram_chatids)
                                     {
                                         lastchatid = curchatid;
-                                        Telegram.Bot.Types.Message msg = await AITOOL.telegramBot.SendTextMessageAsync(curchatid, Caption);
+                                        Telegram.Bot.Types.Message msg = await AITOOL.Telegram.SendTextMessageAsync(curchatid, Caption);
 
                                     }
 
@@ -1656,7 +1708,7 @@ namespace AITool
                     bool se = AppSettings.Settings.send_telegram_errors;
                     AppSettings.Settings.send_telegram_errors = false;
                     Log($"ERROR: Could not upload text '{AQI.Text}' with chatid '{lastchatid}' to Telegram: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
-                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(ex.Parameters.RetryAfter));
+                    this.TelegramRetryTime.Write(DateTime.Now.AddSeconds(Convert.ToDouble(ex.Parameters.RetryAfter)));
                     Log($"...BOT API returned 'RetryAfter' value '{ex.Parameters.RetryAfter} seconds', so not retrying until {this.TelegramRetryTime}", this.CurSrv, AQI.cam, AQI.CurImg);
                     AppSettings.Settings.send_telegram_errors = se;
                     Global.UpdateLabel($"Can't upload error message to Telegram!", "lbl_errors");
@@ -1681,6 +1733,8 @@ namespace AITool
 
             return ret;
         }
+
+        //Handle telegram return messages...
 
 
 

@@ -122,6 +122,63 @@ namespace AITool
 
         }
 
+        public static string FindSoundFile(string InputFile)
+        {
+            //only return the sound file if we found it
+            string ret = "";
+            try
+            {
+                //If the file passed contains a full path, just verify it exists
+                if (InputFile.Contains("\\"))
+                {
+                    if (File.Exists(InputFile))
+                    {
+                        ret = InputFile;
+                    }
+                }
+                else  //Assume it is just a filename and look for it...
+                {
+                    //add extension if not found
+                    if (!Path.HasExtension(InputFile))
+                        InputFile = InputFile.Trim() + ".wav";
+
+                    //generate a list of known media paths
+                    List<string> paths = new List<string>();
+                    paths.Add(AppDomain.CurrentDomain.BaseDirectory);
+                    paths.Add(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName));
+
+                    if (BlueIrisInfo.IsNotNull() && BlueIrisInfo.AppPath.IsNotNull() && Directory.Exists(BlueIrisInfo.AppPath))
+                        paths.Add(Path.Combine(BlueIrisInfo.AppPath, "sounds"));
+
+                    paths.Add(Environment.ExpandEnvironmentVariables("%SYSTEMROOT%\\Media"));
+
+                    if (Directory.Exists(Environment.ExpandEnvironmentVariables("%PROGRAMFILES%\\Microsoft Office\\root\\Office16\\Media")))
+                        paths.Add(Environment.ExpandEnvironmentVariables("%PROGRAMFILES%\\Microsoft Office\\root\\Office16\\Media"));
+
+                    if (Directory.Exists(Environment.ExpandEnvironmentVariables("%PROGRAMFILES%\\Microsoft Office\\root\\Office15\\Media")))
+                        paths.Add(Environment.ExpandEnvironmentVariables("%PROGRAMFILES%\\Microsoft Office\\root\\Office15\\Media"));
+
+                    //search each path for the sound file
+                    foreach (var fldr in paths)
+                    {
+                        string file = Path.Combine(fldr, InputFile);
+                        if (File.Exists(file))
+                        {
+                            ret = file;
+                            break;
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+
+            return ret;
+        }
+
         public static string GetTempFolder(bool Clear = false)
         {
             string ret = Path.GetTempPath();
@@ -2069,6 +2126,123 @@ namespace AITool
 
         }
 
+        public static void TelegramControlMessage(string Message, [CallerMemberName] string memberName = null)
+        {
+
+            try
+            {
+                //PAUSE|STOP [CAMNAME] [MINUTES]
+                //STOP 30   <<---Stops/pauses all cameras for 30 minutes
+                //PAUSE CAMERANAME 30
+                //START|RESUME [CAMNAME]
+                //RESUME
+                //RESUME CAMERANAME
+
+                List<string> parts = Message.SplitStr(" ");
+
+                bool pause = false;
+                bool resume = false;
+                double howlong = 525600;  //let it default to the number of minutes in a year
+                string camname = "";
+
+                if (parts.Count > 0)
+                {
+                    if (parts[0].EqualsIgnoreCase("pause") || parts[0].EqualsIgnoreCase("stop"))
+                        pause = true;
+                    else if (parts[0].EqualsIgnoreCase("resume") || parts[0].EqualsIgnoreCase("start"))
+                        resume = true;
+                    else
+                        Log($"Debug: Unknown Telegram control command '{parts[0]}'");
+
+                    //check if the second parameter is a camera name or number
+                    if (parts.Count > 1)
+                    {
+                        if (parts[1].IsNumeric())
+                        {
+                            howlong = parts[1].ToDouble();
+                        }
+                        else
+                        {
+                            camname = parts[1];
+                        }
+                    }
+
+                    if (parts.Count > 2 && parts[2].IsNumeric())
+                    {
+                        howlong = parts[2].ToDouble();
+                    }
+
+                    if (camname.IsNotEmpty())
+                    {
+                        Camera cam = AITOOL.GetCamera(camname);
+                        if (cam != null)
+                        {
+                            if (pause)
+                            {
+                                cam.PauseMinutes = howlong;
+                                cam.PauseFileMon = true;
+                                cam.PauseMQTT = true;
+                                cam.PausePushover = true;
+                                cam.PauseTelegram = true;
+                                cam.PauseURL = true;
+                                cam.Pause();
+                            }
+                            else
+                            {
+                                cam.PauseFileMon = false;
+                                cam.PauseMQTT = false;
+                                cam.PausePushover = false;
+                                cam.PauseTelegram = false;
+                                cam.PauseURL = false;
+                                cam.Resume();
+                            }
+                        }
+                        else
+                        {
+                            Log($"Error: Camera '{camname}' not found.");
+                        }
+                    }
+                    else
+                    {
+                        foreach (var cam in AppSettings.Settings.CameraList)
+                        {
+                            if (pause)
+                            {
+                                cam.PauseMinutes = howlong;
+                                cam.PauseFileMon = true;
+                                cam.PauseMQTT = true;
+                                cam.PausePushover = true;
+                                cam.PauseTelegram = true;
+                                cam.PauseURL = true;
+                                cam.Pause();
+                            }
+                            else
+                            {
+                                cam.PauseFileMon = false;
+                                cam.PauseMQTT = false;
+                                cam.PausePushover = false;
+                                cam.PauseTelegram = false;
+                                cam.PauseURL = false;
+                                cam.Resume();
+                            }
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    Log("Debug: empty Telegram control message?");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+
+
+        }
         public static void DeleteHistoryItem(string filename, [CallerMemberName] string memberName = null)
         {
             if (progress == null)

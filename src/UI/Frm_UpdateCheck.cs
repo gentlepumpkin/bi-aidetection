@@ -79,6 +79,49 @@ namespace AITool
                 if (client.IsNull())
                     client = new GitHubClient(new ProductHeaderValue("AITOOL-VORLONCD"));
 
+                Log("Getting Github rate limits...");
+
+                var miscellaneousRateLimit = await client.Miscellaneous.GetRateLimits();
+
+                //  The "core" object provides your rate limit status except for the Search API.
+                var coreRateLimit = miscellaneousRateLimit.Resources.Core;
+
+                var howManyCoreRequestsCanIMakePerHour = coreRateLimit?.Limit;
+                var howManyCoreRequestsDoIHaveLeft = coreRateLimit?.Remaining;
+                var whenDoesTheCoreLimitReset = coreRateLimit?.Reset.ToLocalTime(); // UTC time
+
+                // the "search" object provides your rate limit status for the Search API.
+                var searchRateLimit = miscellaneousRateLimit.Resources.Search;
+
+                var howManySearchRequestsCanIMakePerMinute = searchRateLimit?.Limit;
+                var howManySearchRequestsDoIHaveLeft = searchRateLimit?.Remaining;
+                var whenDoesTheSearchLimitReset = searchRateLimit?.Reset.ToLocalTime(); // UTC time
+
+                Log($"Github>>     Max Core Requests per hour: {howManyCoreRequestsCanIMakePerHour}  (remaining={howManyCoreRequestsDoIHaveLeft} left)");
+                Log($"Github>> Max Search Requests per minute: {howManySearchRequestsCanIMakePerMinute}  (remaining={howManySearchRequestsDoIHaveLeft} left)");
+
+                //------------------------------
+                //Max Core=60/hr
+                //Max search=10/min
+                //WE USE ABOUT 20 CORE REQUESTS EACH UPDATE CHECK
+                //doesnt look like we actually use "SEARCH" requests for this update check -Vorlon
+                //------------------------------
+
+                if (howManyCoreRequestsDoIHaveLeft <= 1 && whenDoesTheCoreLimitReset.IsNotNull())
+                {
+                    string err = $"GitHub>> Please wait until after {whenDoesTheSearchLimitReset} to check for updates again.\r\n\r\n(CORE Limit={howManyCoreRequestsCanIMakePerHour}/hr, remaining={howManyCoreRequestsDoIHaveLeft})";
+                    Log(err);
+                    MessageBox.Show(err, "GITHUB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (howManySearchRequestsDoIHaveLeft <= 1 && whenDoesTheSearchLimitReset.IsNotNull())
+                {
+                    string err = $"GitHub>> Please wait until after {whenDoesTheSearchLimitReset} to check for updates again.\r\n\r\n(SEARCH Limit={howManySearchRequestsCanIMakePerMinute}/min, remaining={howManySearchRequestsDoIHaveLeft})";
+                    Log(err);
+                    MessageBox.Show(err, "GITHUB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 Log("Loading latest Github release...");
 
@@ -190,7 +233,7 @@ namespace AITool
             {
 
                 Log("Error: " + ex.Msg());
-                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Error: " + ex.Message, "GITHUB API Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {

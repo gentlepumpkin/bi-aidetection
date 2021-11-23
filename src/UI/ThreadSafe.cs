@@ -287,6 +287,7 @@ namespace AITool
                 this._value = value ? True : False;
             }
 
+
             public bool ReadUnfenced()
             {
                 return ToBool(this._value);

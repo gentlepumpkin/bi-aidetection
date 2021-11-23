@@ -158,9 +158,9 @@ namespace AITool
                     Log("Debug: DeepStack Desktop NOT running.");
                 }
             }
-            else
+            else if (this.IsInstalled)
             {
-                Log("Error: Deepstack v3.4 not supported.  Install version 2020. https://docs.deepstack.cc/windows/index.html");
+                Log("Error: Deepstack v3.4 for Windows is not supported.  Install latest version, or uninstall the windows version on this machine to stop seeing this message.   https://docs.deepstack.cc/windows/index.html");
             }
 
             return Ret;
@@ -340,7 +340,7 @@ namespace AITool
                         this.IsNewVersion = false;
                         this.Type = DeepStackTypeEnum.CPU;
                         this.DisplayVersion = "3.4";
-                        Log("Error: Deepstack v3.4 not supported.  Install version 2020.");
+                        Log("Error: Deepstack v3.4 not supported.  Install version 2020+");
 
 
                     }
@@ -470,6 +470,7 @@ namespace AITool
                         if (this.StopBeforeStart || ForceRestart)
                         {
                             Log("Debug: Stopping already running DeepStack instance...");
+                            Global.UpdateProgressBar("Stopping Deepstack...", 1, 1, 1);
                             this.StopDeepstack();
                             Thread.Sleep(250);
                         }
@@ -481,6 +482,8 @@ namespace AITool
                     }
 
                     Log("Starting DeepStack...");
+                    Global.UpdateProgressBar("Starting Deepstack...", 1, 1, 1);
+
                 }
 
                 Stopwatch SW = Stopwatch.StartNew();
