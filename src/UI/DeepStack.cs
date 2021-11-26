@@ -798,7 +798,7 @@ namespace AITool
                         if (PythonCnt >= ExpectedPythonCnt)
                         {
 
-                            Log("Started in " + SW.ElapsedMilliseconds + "ms");
+                            Log("Debug: Started in " + SW.ElapsedMilliseconds + "ms");
                         }
                         else
                         {

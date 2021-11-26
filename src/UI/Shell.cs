@@ -95,6 +95,8 @@ namespace AITool
 
         private async void Shell_Load(object sender, EventArgs e)
         {
+            //PlayOOG("D:\\TEMP\\AwACAgEAAxkBAAI7OGGhP0AhP-aBlubv3Vbq4OahTbkAAy4CAAJ59AlFMssC4x5Yy3wiBA.ogg");
+
             //using var synth = new SpeechSynthesizer();
             //foreach (InstalledVoice voice in synth.GetInstalledVoices())
             //{

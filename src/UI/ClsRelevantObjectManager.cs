@@ -25,6 +25,9 @@ namespace AITool
         public bool? IgnoreDynamicMask { get; set; } = null;
         public double PredSizeMinPercentOfImage { get; set; } = 0;   //prediction must be at least this % of the image
         public double PredSizeMaxPercentOfImage { get; set; } = 95;
+        public MovingCalcs PercentSizeStats { get; set; } = new MovingCalcs(50, "RelevantObject.PercentSize", false, "##0.00");
+        public MovingCalcs WidthStats { get; set; } = new MovingCalcs(50, "RelevantObject.Width", false);
+        public MovingCalcs HeightStats { get; set; } = new MovingCalcs(50, "RelevantObject.Height", false);
         public long Hits { get; set; } = 0;
         public DateTime LastHitTime { get; set; } = DateTime.MinValue;
         public DateTime CreatedTime { get; set; } = DateTime.MinValue;
@@ -712,6 +715,14 @@ namespace AITool
 
                         if (!ro.IsNull())
                         {
+                            //Add the PercentOfImage size stats in any case:
+                            if (pred.Confidence == 0 || pred.Confidence.Round() >= ro.Threshold_lower)
+                            {
+                                ro.PercentSizeStats.AddToCalc(pred.PercentOfImage);
+                                ro.HeightStats.AddToCalc(pred.RectHeight);
+                                ro.WidthStats.AddToCalc(pred.RectWidth);
+                            }
+
                             if (ro.Enabled)
                             {
                                 if (Global.IsTimeBetween(DateTime.Now, ro.ActiveTimeRange))

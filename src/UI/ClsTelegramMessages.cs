@@ -9,6 +9,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Amazon.Rekognition.Model;
+
+using Newtonsoft.Json.Linq;
+
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
@@ -70,7 +74,11 @@ namespace AITool
 
                         //start another thread to initialize listening for commands (said it was non blocking but was having weird issues with it)
                         if (!this.StartingReceive.ReadFullFence())
-                            Task.Run(TelegramStartReceiving);
+                        {
+                            //Only start listening if another instance is not running
+                            if (!AppSettings.AlreadyRunning && AppSettings.Settings.telegram_monitor_commands)
+                                Task.Run(TelegramStartReceiving);
+                        }
                         else
                             Log($"Debug: Already initializing StartReceiving?");
 
@@ -124,7 +132,15 @@ namespace AITool
                 if (AppSettings.Settings.telegram_chatids.GetStrAtIndex(0).IsNotEmpty())
                 {
                     Log("Debug: (Sending intro message)...");
-                    Message message = await this.telegramBot.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), "AITOOL Initialized.  To send Telegram commands, first ask BotFather to disable '/setprivacy'.  Command Usage: \n\r PAUSE|STOP|START|RESUME [CAMNAME] [MINUTES].\n\r   If you use 'PAUSE 1' it will pause all cameras for 1 minute.");
+                    string AssemVer = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                    Message message = await this.telegramBot.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0),
+                        $"AITOOL {AssemVer} Initialized.  " +
+                        $"\nTo send Telegram commands, first ask BotFather to disable '/setprivacy'.  " +
+                        $"\nCommand Usage: " +
+                        $"\n  PAUSE|STOP|START|RESUME [CAMNAME] [MINUTES]." +
+                        $"\n     Ex. 'PAUSE 1' will pause all cameras for 1 min." +
+                        $"\n  MUTE, UNMUTE, VOLUMEUP, VOLUMEDOWN, VOLUMESET Level," +
+                        $"\n  RESTARTCOMPUTER");
                 }
                 else
                 {
@@ -212,7 +228,7 @@ namespace AITool
                 }
 
                 // Only process text messages
-                if (update.Message!.Type != Telegram.Bot.Types.Enums.MessageType.Text)
+                if (update.Message!.Type != Telegram.Bot.Types.Enums.MessageType.Text && update.Message!.Type != Telegram.Bot.Types.Enums.MessageType.Voice)
                 {
                     Log($"Debug: Telegram: Received an unsupported update.Message.type '{update.Message!.Type}'");
                     return;
@@ -220,11 +236,28 @@ namespace AITool
 
 
                 var chatId = update.Message.Chat.Id;
-                var messageText = update.Message.Text;
+                var messageText = update.Message.Text.IsNotEmpty() ? update.Message.Text : "";
 
                 Log($"Debug: Telegram: Received a '{update.Type}' with content '{messageText}' in chat {chatId}.");
 
-                Global.TelegramControlMessage(messageText);
+                if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Voice)
+                {
+                    var filePath = Path.Combine(Global.GetTempFolder(), update.Message.Voice.FileId + ".ogg");
+                    Log($"Debug: Telegram: Downloading a {update.Message.Voice.FileSize} byte Voice recording to {filePath}...");
+
+                    Stopwatch sw = Stopwatch.StartNew();
+                    using (FileStream fileStream = System.IO.File.OpenWrite(filePath))
+                    {
+                        Telegram.Bot.Types.File file = await this.telegramBot.GetInfoAndDownloadFileAsync(fileId: update.Message.Voice.FileId, destination: fileStream);
+                    }
+                    Log($"Debug: ...Done in {sw.ElapsedMilliseconds}ms");
+                    Global.TelegramControlMessage($"play:{filePath}");
+                }
+                else
+                {
+                    Global.TelegramControlMessage(messageText);
+                }
+
 
                 // Echo received message text
                 //Telegram.Bot.Types.Message sentMessage = await botClient.SendTextMessageAsync(
@@ -238,18 +271,35 @@ namespace AITool
             }
         }
 
+        string lasterr = "";
+        DateTime lasterrtime = DateTime.MinValue;
+        int repeated = 0;
         Task TelegramHandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             var ErrorMessage = exception switch
             {
-                ApiRequestException apiRequestException
-                    => $"Telegram API Error: [{apiRequestException.ErrorCode}] {apiRequestException.Message}",
-                _ => exception.ToString()
+                ApiRequestException apiRequestException => $"Telegram API Error: [{apiRequestException.ErrorCode}] {apiRequestException.Message}",
+                _ => exception.Msg()
             };
 
-            Log($"Error: {ErrorMessage}");
+            //rate limit since I've seen 100 of these in a few seconds?
+            double lastsecs = Math.Abs((DateTime.Now - lasterrtime).TotalSeconds);
+            if (!ErrorMessage.EqualsIgnoreCase(lasterr) || ErrorMessage.EqualsIgnoreCase(lasterr) && lastsecs >= 120)
+            {
+                string rep = "";
+                if (this.repeated > 0)
+                    rep = $"(Repeated {this.repeated} times)";
+                Log($"Error: {rep}{ErrorMessage}");
+                this.lasterr = ErrorMessage;
+                this.lasterrtime = DateTime.Now;
+                this.repeated = 0;
+            }
+            else
+            {
+                repeated++;
+            }
+
             return Task.CompletedTask;
         }
 

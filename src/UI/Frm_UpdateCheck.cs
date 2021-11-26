@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 using Octokit;
 using Octokit.Helpers;
@@ -215,7 +216,11 @@ namespace AITool
                 }
 
                 var html = Markdig.Markdown.ToHtml(Markup.ToString());
+
+
                 webBrowser1.DocumentText = html;
+
+
 
                 // get the download URL for this file on a specific branch
                 //var file = await client.Repository.Content.GetAllContentsByRef(repo.Id, path, branch);
@@ -362,6 +367,22 @@ namespace AITool
         private void btn_Donate_Click(object sender, EventArgs e)
         {
             Process.Start("https://github.com/sponsors/VorlonCD");
+        }
+
+        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+
+        }
+
+        private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
+        {
+            //var doc = webBrowser1.Document;
+
+            //if (doc != null)
+            //{
+            //    doc.ExecCommand("FontSize", false, 10);
+            //    doc.ExecCommand("FontFamily", false, "consolas");
+            //}
         }
     }
 }

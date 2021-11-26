@@ -46,7 +46,7 @@ namespace AITool
         }
 
         [DebuggerStepThrough]
-        public static List<string> SplitStr(this string InList, string Separators, bool RemoveEmpty = true, bool TrimStr = true, bool ToLower = false)
+        public static List<string> SplitStr(this string InList, string Separators, bool RemoveEmpty = true, bool TrimStr = true, bool ToLower = false, string TrimChars = " ")
         {
             List<string> Ret = new List<string>();
             if (!string.IsNullOrWhiteSpace(InList))
@@ -65,7 +65,7 @@ namespace AITool
                     if (RemoveEmpty && !string.IsNullOrWhiteSpace(splt[i]))
                     {
                         if (TrimStr)
-                            Ret.Add(splt[i].Trim());
+                            Ret.Add(splt[i].Trim(TrimChars));
                         else
                             Ret.Add(splt[i]);
                     }
@@ -148,6 +148,16 @@ namespace AITool
             else
                 return 0;
         }
+        public static float ToFloat(this string value)
+        {
+            float outdbl = 0;
+
+            //Take into account that some countries may use 123,45 vs 123.45
+            if (!value.IsNull() && float.TryParse(value.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out outdbl))
+                return outdbl;
+            else
+                return 0;
+        }
 
         [DebuggerStepThrough]
         public static int ToInt(this string value)
@@ -158,13 +168,6 @@ namespace AITool
                 return 0;
         }
 
-        public static float ToFloat(this string value)
-        {
-            if (!value.IsNull())
-                return Convert.ToSingle(value.Trim());
-            else
-                return 0;
-        }
         [DebuggerStepThrough]
         public static bool IsEmpty(this string value)
         {

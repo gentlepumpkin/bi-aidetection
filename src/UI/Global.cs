@@ -1,24 +1,23 @@
-﻿using Microsoft.Win32;
-using Microsoft.Win32.SafeHandles;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Management;
+using System.Media;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security;
-using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,13 +25,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using System.Globalization;
-using static AITool.AITOOL;
-using System.Net.Sockets;
-using NLog.Fluent;
-using System.Drawing.Imaging;
+
 using Innovative.SolarCalculator;
-using System.IO.Compression;
+
+using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
+
+using NAudio.Wave;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
+
+using static AITool.AITOOL;
 
 namespace AITool
 {
@@ -2126,7 +2131,7 @@ namespace AITool
 
         }
 
-        public static void TelegramControlMessage(string Message, [CallerMemberName] string memberName = null)
+        public static async void TelegramControlMessage(string Message, [CallerMemberName] string memberName = null)
         {
 
             try
@@ -2138,7 +2143,34 @@ namespace AITool
                 //RESUME
                 //RESUME CAMERANAME
 
-                List<string> parts = Message.SplitStr(" ");
+                if (Message.StartsWith("play:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string file = Message.GetWord("play:", "");
+                    string soundfile = Global.FindSoundFile(file);
+                    if (soundfile.IsNotNull())
+                    {
+                        AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Playing voice file {soundfile}...");
+
+                        if (soundfile.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase))
+                        {
+                            PlayOOG(soundfile);
+                        }
+                        else
+                        {
+                            Log($"Debug:   Playing sound: {soundfile}...");
+                            using SoundPlayer sp = new SoundPlayer(soundfile);
+                            sp.PlaySync();
+                        }
+                    }
+                    else
+                    {
+                        Log($"Error: Sound file not found: {soundfile}");
+                        AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Error: Could not find {soundfile}...");
+                    }
+                    return;
+                }
+
+                List<string> parts = Message.SplitStr(" ", TrimChars: " []");
 
                 bool pause = false;
                 bool resume = false;
@@ -2151,80 +2183,131 @@ namespace AITool
                         pause = true;
                     else if (parts[0].EqualsIgnoreCase("resume") || parts[0].EqualsIgnoreCase("start"))
                         resume = true;
-                    else
-                        Log($"Debug: Unknown Telegram control command '{parts[0]}'");
-
-                    //check if the second parameter is a camera name or number
-                    if (parts.Count > 1)
+                    else if (parts[0].EqualsIgnoreCase("restartcomputer") || parts[0].EqualsIgnoreCase("restartpc") || parts[0].EqualsIgnoreCase("reboot") || parts[0].EqualsIgnoreCase("rebootcomputer") || parts[0].EqualsIgnoreCase("rebootpc"))
                     {
-                        if (parts[1].IsNumeric())
-                        {
-                            howlong = parts[1].ToDouble();
-                        }
-                        else
-                        {
-                            camname = parts[1];
-                        }
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Computer restarting in 5 seconds...");
+
+                        using (Process prc = System.Diagnostics.Process.Start("shutdown.exe", "-r -f -t 10")) { }
+
+                        Application.Exit();
                     }
-
-                    if (parts.Count > 2 && parts[2].IsNumeric())
+                    else if (parts[0].EqualsIgnoreCase("mute"))
                     {
-                        howlong = parts[2].ToDouble();
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Muting.");
+                        Log("Muting.");
+                        Mute();
                     }
-
-                    if (camname.IsNotEmpty())
+                    else if (parts[0].EqualsIgnoreCase("unmute"))
                     {
-                        Camera cam = AITOOL.GetCamera(camname);
-                        if (cam != null)
-                        {
-                            if (pause)
-                            {
-                                cam.PauseMinutes = howlong;
-                                cam.PauseFileMon = true;
-                                cam.PauseMQTT = true;
-                                cam.PausePushover = true;
-                                cam.PauseTelegram = true;
-                                cam.PauseURL = true;
-                                cam.Pause();
-                            }
-                            else
-                            {
-                                cam.PauseFileMon = false;
-                                cam.PauseMQTT = false;
-                                cam.PausePushover = false;
-                                cam.PauseTelegram = false;
-                                cam.PauseURL = false;
-                                cam.Resume();
-                            }
-                        }
-                        else
-                        {
-                            Log($"Error: Camera '{camname}' not found.");
-                        }
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"UnMuting.");
+                        Log("UnMuting");
+                        UnMute();
+                    }
+                    else if (parts[0].EqualsIgnoreCase("volumeup"))
+                    {
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"VolumeUp.");
+                        Log("Volume Up");
+                        VolUp();
+                    }
+                    else if (parts[0].EqualsIgnoreCase("volumedown"))
+                    {
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"VolumeDown.");
+                        Log("Volume Down");
+                        VolDown();
+                    }
+                    else if (parts[0].EqualsIgnoreCase("volumeset"))
+                    {
+                        float num = parts.GetStrAtIndex(1).ToFloat();
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"VolumeSet {num}");
+                        Log($"Volume set {num}");
+                        VolSet(num);
                     }
                     else
                     {
-                        foreach (var cam in AppSettings.Settings.CameraList)
+                        Log($"Debug: Unknown AITOOL Telegram control command '{parts[0]}'");
+                        AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Debug: Unknown Telegram control command '{parts[0]}'");
+                    }
+
+                    if (pause || resume)
+                    {
+                        //check if the second parameter is a camera name or number
+                        if (parts.Count > 1)
                         {
-                            if (pause)
+                            if (parts[1].IsNumeric())
                             {
-                                cam.PauseMinutes = howlong;
-                                cam.PauseFileMon = true;
-                                cam.PauseMQTT = true;
-                                cam.PausePushover = true;
-                                cam.PauseTelegram = true;
-                                cam.PauseURL = true;
-                                cam.Pause();
+                                howlong = parts[1].ToDouble();
                             }
                             else
                             {
-                                cam.PauseFileMon = false;
-                                cam.PauseMQTT = false;
-                                cam.PausePushover = false;
-                                cam.PauseTelegram = false;
-                                cam.PauseURL = false;
-                                cam.Resume();
+                                camname = parts[1];
                             }
+                        }
+
+                        if (parts.Count > 2 && parts[2].IsNumeric())
+                        {
+                            howlong = parts[2].ToDouble();
+                        }
+
+                        if (camname.IsNotEmpty())
+                        {
+                            Camera cam = AITOOL.GetCamera(camname);
+                            if (cam != null)
+                            {
+                                if (pause)
+                                {
+                                    cam.PauseMinutes = howlong;
+                                    cam.PauseFileMon = true;
+                                    cam.PauseMQTT = true;
+                                    cam.PausePushover = true;
+                                    cam.PauseTelegram = true;
+                                    cam.PauseURL = true;
+                                    cam.Pause();
+                                    AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Camera '{camname}' paused {howlong} minutes.");
+                                }
+                                else
+                                {
+                                    cam.PauseFileMon = false;
+                                    cam.PauseMQTT = false;
+                                    cam.PausePushover = false;
+                                    cam.PauseTelegram = false;
+                                    cam.PauseURL = false;
+                                    cam.Resume();
+                                    AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Camera '{camname}' resumed.");
+                                }
+                            }
+                            else
+                            {
+                                Log($"Error: Camera '{camname}' not found.");
+                                AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Error: Camera '{camname}' not found.");
+                            }
+                        }
+                        else
+                        {
+                            foreach (var cam in AppSettings.Settings.CameraList)
+                            {
+                                if (pause)
+                                {
+                                    cam.PauseMinutes = howlong;
+                                    cam.PauseFileMon = true;
+                                    cam.PauseMQTT = true;
+                                    cam.PausePushover = true;
+                                    cam.PauseTelegram = true;
+                                    cam.PauseURL = true;
+                                    cam.Pause();
+                                }
+                                else
+                                {
+                                    cam.PauseFileMon = false;
+                                    cam.PauseMQTT = false;
+                                    cam.PausePushover = false;
+                                    cam.PauseTelegram = false;
+                                    cam.PauseURL = false;
+                                    cam.Resume();
+                                }
+                            }
+
+                            AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"All cameras paused {howlong} minutes.");
+
                         }
 
                     }
@@ -2263,6 +2346,109 @@ namespace AITool
             ClsMessage msg = new ClsMessage(MessageType.DeleteHistoryItem, filename, null, memberName);
 
             progress.Report(msg);
+
+        }
+
+        public static void PlayOOG(string filename)
+        {
+            //This cannot play .OGG files created by the Telegram.Bot engine?
+            //Could not load stream 1483939711 due to error: Found OPUS bitstream.
+            //'System.ArgumentException' in NAudio.Vorbis.dll
+            //Could not initialize container!
+            using NAudio.Vorbis.VorbisWaveReader vorbis = new NAudio.Vorbis.VorbisWaveReader(filename);
+            using NAudio.Wave.WaveOut waveOut = new NAudio.Wave.WaveOut();
+            waveOut.Init(vorbis);
+            waveOut.Play();
+            while (waveOut.PlaybackState == PlaybackState.Playing)
+            {
+                if (MasterCTS.IsNotNull() && MasterCTS.Token.IsCancellationRequested)
+                    break;
+
+                Task.Delay(100, MasterCTS.Token);
+            }
+
+        }
+
+        public static void Mute()
+        {
+
+            //SendMessageW(hand, WM_APPCOMMAND, hand, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+
+            using (var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+            {
+                foreach (var device in enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
+                {
+                    if (device.AudioEndpointVolume?.HardwareSupport.HasFlag(NAudio.CoreAudioApi.EEndpointHardwareSupport.Mute) == true)
+                    {
+                        Console.WriteLine(device.FriendlyName);
+                        device.AudioEndpointVolume.Mute = true;
+                    }
+                }
+            }
+        }
+        public static void UnMute()
+        {
+            using (var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+            {
+                foreach (var device in enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
+                {
+                    if (device.AudioEndpointVolume?.HardwareSupport.HasFlag(NAudio.CoreAudioApi.EEndpointHardwareSupport.Mute) == true)
+                    {
+                        device.AudioEndpointVolume.Mute = false;
+                    }
+                }
+            }
+        }
+
+        public static void VolDown()
+        {
+            //SendMessageW(hand, WM_APPCOMMAND, hand, (IntPtr)APPCOMMAND_VOLUME_DOWN);
+
+            using (var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+            {
+                foreach (var device in enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
+                {
+                    if (device.AudioEndpointVolume?.HardwareSupport.HasFlag(NAudio.CoreAudioApi.EEndpointHardwareSupport.Volume) == true)
+                    {
+                        device.AudioEndpointVolume.VolumeStepDown();
+                    }
+                }
+            }
+
+        }
+
+        public static void VolUp()
+        {
+            //SendMessageW(hand, WM_APPCOMMAND, hand, (IntPtr)APPCOMMAND_VOLUME_UP);
+            using (var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+            {
+                foreach (var device in enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
+                {
+                    if (device.AudioEndpointVolume?.HardwareSupport.HasFlag(NAudio.CoreAudioApi.EEndpointHardwareSupport.Volume) == true)
+                    {
+                        device.AudioEndpointVolume.VolumeStepUp();
+                    }
+                }
+            }
+
+        }
+
+        public static void VolSet(float Level)
+        {
+            //SendMessageW(hand, WM_APPCOMMAND, hand, (IntPtr)APPCOMMAND_VOLUME_UP);
+            using (var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+            {
+                foreach (var device in enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
+                {
+                    if (device.AudioEndpointVolume?.HardwareSupport.HasFlag(NAudio.CoreAudioApi.EEndpointHardwareSupport.Volume) == true)
+                    {
+                        //device.AudioEndpointVolume.VolumeRange.MaxDecibels
+                        //device.AudioEndpointVolume.VolumeRange.MinDecibels
+                        //The new master volume level. The level is expressed as a normalized value in the range from 0.0 to 1.0.
+                        device.AudioEndpointVolume.MasterVolumeLevelScalar = Level / 100f;
+                    }
+                }
+            }
 
         }
         public static void UpdateProgressBar(string label, int CurVal = -1, int MinVal = -1, int MaxVal = -1, [CallerMemberName] string memberName = null)
@@ -3603,8 +3789,12 @@ namespace AITool
                     }
                     sw.Stop();
                     ret = prc == null || prc.HasExited;
+                    int exitcode = 0;
+                    if (prc.IsNotNull())
+                        exitcode = prc.ExitCode;
+
                     if (ret)
-                        Log($"Debug: Process closed after {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath} to close.");
+                        Log($"Debug: Process closed after {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath} to close with exit code '{exitcode}'");
                     else
                         Log($"Debug: Process was still open after {sw.ElapsedMilliseconds}ms (cnt={cnt}) for {fullpath}");
 

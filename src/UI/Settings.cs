@@ -41,6 +41,7 @@ namespace AITool
             public string telegram_token = "";
             public double telegram_cooldown_minutes = -1;  //Default to no more often than 5 seconds.   In minutes (How many minutes must have passed since the last detection. Used to separate event to ensure that every event only causes one telegram message.)
             public int telegram_cooldown_seconds = 5;
+            public bool telegram_monitor_commands = true;
             public int Telegram_RetryAfterFailSeconds = 300;  //default to 5 minutes if telegram exception
             public string input_path = "";
             public bool input_path_includesubfolders = false;

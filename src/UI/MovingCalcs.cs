@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 
@@ -10,7 +11,7 @@ namespace AITool
 
         [JsonIgnore]
         public Queue<Decimal> samples = new Queue<Decimal>();
-        public int windowSize = 16;
+        public int windowSize = 250;
         public int lastDayOfYear = 0;
         public int lastMonth = 0;
         [JsonIgnore]
@@ -34,10 +35,12 @@ namespace AITool
         public DateTime TimeInitialized { get; set; } = DateTime.Now;
         public string ItemName { get; set; } = "Items";
         public bool IsTime { get; set; } = false;
+        public string ToStringFormat { get; set; } = "#####0";
         [JsonConstructor]
         public MovingCalcs() { this.UpdateDate(true); }
-        public MovingCalcs(int windowSize, string itemName, bool IsTime)
+        public MovingCalcs(int windowSize, string itemName, bool IsTime, string ToStringFormat = "#####0")
         {
+            this.ToStringFormat = ToStringFormat;
             this.windowSize = windowSize;
             this.ItemName = ItemName;
             this.IsTime = IsTime;
@@ -100,14 +103,15 @@ namespace AITool
         public void AddToCalc(Decimal newSample)
         {
 
-            this.Current = newSample;
 
             if (newSample > 0)
             {
+                this.Current = newSample;
+
                 this.Count++;
                 this.CountToday++;
                 this.CountMonth++;
-                
+
                 this.UpdateDate(false);
 
                 this.sampleAccumulator += newSample;
@@ -137,10 +141,11 @@ namespace AITool
 
         public override string ToString()
         {
+            string ms = "";
             if (this.IsTime)
-                return $"{this.Count} {this.ItemName} | {this.CountToday} today | {this.CountMonth} Month | {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min.ToString("#####0")}ms,Max={this.Max.ToString("#####0")}ms,Avg={this.Avg.ToString("#####0")}ms)";
-            else
-                return $"{this.Count} {this.ItemName} | {this.CountToday} today | {this.CountMonth} Month | {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min.ToString("#####0")},Max={this.Max.ToString("#####0")},Avg={this.Avg.ToString("#####0")})";
+                ms = "ms";
+
+            return $"{this.Count} {this.ItemName} | {this.CountToday} today | {this.CountMonth} Month | {this.ItemsPerMinute().ToString("#####0")}/MIN (Min={this.Min.ToString(this.ToStringFormat)}{ms},Max={this.Max.ToString(this.ToStringFormat)}{ms},Avg={this.Avg.ToString(this.ToStringFormat)}{ms},Last={this.Current.ToString(this.ToStringFormat)}{ms})";
         }
     }
 
