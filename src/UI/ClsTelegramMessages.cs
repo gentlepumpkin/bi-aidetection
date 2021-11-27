@@ -33,6 +33,7 @@ namespace AITool
         private User BotUser = null;
         private ThreadSafe.Boolean Started = new ThreadSafe.Boolean(false);
         private ThreadSafe.Boolean StartingReceive = new ThreadSafe.Boolean(false);
+        private CancellationTokenSource TelegramCTS = new CancellationTokenSource();
         private bool disposedValue;
         public ClsTelegramMessages()
         {
@@ -123,7 +124,7 @@ namespace AITool
                     TelegramHandleUpdateAsync,
                     TelegramHandleErrorAsync,
                     receiverOptions,
-                    cancellationToken: AITOOL.MasterCTS.Token);
+                    cancellationToken: this.TelegramCTS.Token);
 
                 Log("Debug: (Getting User Info)...");
 
@@ -138,9 +139,9 @@ namespace AITool
                         $"\nTo send Telegram commands, first ask BotFather to disable '/setprivacy'.  " +
                         $"\nCommand Usage: " +
                         $"\n  PAUSE|STOP|START|RESUME [CAMNAME] [MINUTES]." +
-                        $"\n     Ex. 'PAUSE 1' will pause all cameras for 1 min." +
-                        $"\n  MUTE, UNMUTE, VOLUMEUP, VOLUMEDOWN, VOLUMESET Level," +
-                        $"\n  RESTARTCOMPUTER");
+                        $"\n     'PAUSE 1' will pause all cams for 1 min." +
+                        $"\n  MUTE, UNMUTE, VOLUMEUP, VOLUMEDOWN, " +
+                        $"\n  VOLUMESET Level, RESTARTCOMPUTER");
                 }
                 else
                 {
@@ -274,6 +275,7 @@ namespace AITool
         string lasterr = "";
         DateTime lasterrtime = DateTime.MinValue;
         int repeated = 0;
+        int inuse = 0;
         Task TelegramHandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
 
@@ -285,6 +287,10 @@ namespace AITool
 
             //rate limit since I've seen 100 of these in a few seconds?
             double lastsecs = Math.Abs((DateTime.Now - lasterrtime).TotalSeconds);
+
+            if (lasterr.Contains("409"))
+                inuse++;
+
             if (!ErrorMessage.EqualsIgnoreCase(lasterr) || ErrorMessage.EqualsIgnoreCase(lasterr) && lastsecs >= 120)
             {
                 string rep = "";
@@ -300,6 +306,15 @@ namespace AITool
                 repeated++;
             }
 
+            //this happens if more than one client is listening at a time
+            //Telegram API [409] Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+            if (inuse >= 6)
+            {
+                //give up and stop listening after three repeat errors
+                Log("Error: Canceling receive Updates because another Telegram client is using the same token.");
+                this.TelegramCTS.Cancel();
+            }
+
             return Task.CompletedTask;
         }
 
@@ -310,11 +325,11 @@ namespace AITool
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
-                    if (this.telegramHttpClient.IsNotNull())
-                        this.telegramHttpClient.Dispose();
-
                     if (this.telegramBot.IsNotNull())
                         this.telegramBot = null;
+
+                    if (this.telegramHttpClient.IsNotNull())
+                        this.telegramHttpClient.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

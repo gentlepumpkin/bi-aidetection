@@ -646,13 +646,16 @@ namespace AITool
             return ret;
         }
 
-        public static async Task<bool> DirectoryExistsAsync(string filename, int TimeoutMS = 20000)
+        public static async Task<bool> DirectoryExistsAsync(string directory, int TimeoutMS = 20000)
         {
             //run the function in another thread
             CancellationTokenSource cts = new CancellationTokenSource(TimeoutMS);
             try
             {
-                return await Task.Run(() => Directory.Exists(filename), cts.Token);
+                Stopwatch sw = Stopwatch.StartNew();
+                bool result = await Task.Run(() => Directory.Exists(directory), cts.Token);
+                Log($"Trace: Directory exists for '{directory}' took {sw.ElapsedMilliseconds}ms");
+                return result;
             }
             catch (Exception ex)
             {
@@ -716,7 +719,9 @@ namespace AITool
                             {
                                 string mappedserver = remotepath.GetWord(@"\\", @"\");
 
-                                if (string.Equals(mappedserver, ip, StringComparison.OrdinalIgnoreCase) || string.Equals(mappedserver, hostname, StringComparison.OrdinalIgnoreCase))
+                                if (mappedserver.EqualsIgnoreCase(ip) ||
+                                    mappedserver.EqualsIgnoreCase(hostname) ||
+                                    mappedserver.EqualsIgnoreCase(hostname.GetWord("", ".")))  //lop off the SERVER.DOMAIN
                                 {
                                     MappedDrive md = new MappedDrive();
                                     md.DriveLetter = drv;
@@ -925,12 +930,17 @@ namespace AITool
             return Ret;
         }
 
+        private static string CachedMacAddress = "";
         /// <summary>
         /// Finds the MAC address of the NIC with maximum speed.
         /// </summary>
         /// <returns>The MAC address.</returns>
         public static string GetMacAddress()
         {
+
+            if (CachedMacAddress.IsNotNull())
+                return CachedMacAddress;
+
             const int MIN_MAC_ADDR_LENGTH = 12;
             string macAddress = string.Empty;
             long maxSpeed = -1;
@@ -946,7 +956,7 @@ namespace AITool
 
                         if (nic.Speed > maxSpeed && !string.IsNullOrEmpty(tempMac) && tempMac.Length >= MIN_MAC_ADDR_LENGTH)
                         {
-                            //log.Debug("New Max Speed = " + nic.Speed + ", MAC: " + tempMac);
+                            Log("Trace: New Max Speed = " + nic.Speed + ", MAC: " + tempMac);
                             maxSpeed = nic.Speed;
                             macAddress = tempMac;
                         }
@@ -963,6 +973,8 @@ namespace AITool
 
             if (sw.ElapsedMilliseconds > 500)  //should it really take this long??
                 Log($"Warn: It tool {sw.ElapsedMilliseconds}ms to get the MAC address?");
+
+            CachedMacAddress = macAddress;
 
             return macAddress;
         }
@@ -1038,25 +1050,41 @@ namespace AITool
             return ret;
         }
 
+        private static Dictionary<string, string> HostNameCache = new Dictionary<string, string>();
         public static async Task<string> GetHostNameAsync(string IPAddressOrHostName)
         {
+
+            if (HostNameCache.ContainsKey(IPAddressOrHostName.ToLower()))
+                return HostNameCache[IPAddressOrHostName.ToLower()];
+
+            Stopwatch sw = Stopwatch.StartNew();
+            string ret = IPAddressOrHostName;
+
             try
             {
                 if (!IsValidIPAddress(IPAddressOrHostName, out IPAddress FoundIP))
                     return IPAddressOrHostName;  //assume valid hostname if it doesnt look like an ip address
 
+                //why is this taking close to 5 seconds for an internal network dns call??
+
                 IPHostEntry entry = await Dns.GetHostEntryAsync(IPAddressOrHostName);
                 if (entry != null)
                 {
-                    return entry.HostName;
+                    ret = entry.HostName;
                 }
             }
             catch (Exception ex)
             {
                 Log("Error: " + ex.Message);
             }
+            finally
+            {
+                Log($"Trace: Resolved Host name '{IPAddressOrHostName}' to '{ret}' in {sw.ElapsedMilliseconds}ms");
+            }
 
-            return IPAddressOrHostName;
+            HostNameCache.Add(IPAddressOrHostName.ToLower(), ret);
+
+            return ret;
 
         }
 
@@ -1397,6 +1425,8 @@ namespace AITool
         public static async Task<IPAddress> GetIPAddressFromHostnameAsync(string HostNameOrIPAddress = "")
         {
             IPAddress ret = IPAddress.None;
+            Stopwatch sw = Stopwatch.StartNew();
+
             try
             {
                 //stop any errors from happening more than once:
@@ -1443,6 +1473,11 @@ namespace AITool
                     DNSErrCache.Add(HostNameOrIPAddress.ToLower(), ex.Message);
 
                 Log($"Error: Hostname '{HostNameOrIPAddress}': {ex.Msg()}");
+            }
+            finally
+            {
+                if (ret != IPAddress.None)
+                    Log($"Trace: Resolved host '{HostNameOrIPAddress}' to IP {ret.ToString()} in {sw.ElapsedMilliseconds}ms");
             }
 
             return ret;
