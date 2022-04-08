@@ -30,6 +30,7 @@ namespace AITool
         public string DisplayVersion = "Unknown";
         public DeepStackTypeEnum Type = DeepStackTypeEnum.Unknown;
         public bool IsNewVersion = false;
+        public bool Is2022OrLaterVersion = false;
         public string AdminKey = "";
         public string APIKey = "";
         public string Port = "81";
@@ -120,14 +121,32 @@ namespace AITool
 
                 if (this.ExpectedPythonCnt == 0)
                 {
-                    if (this.FaceAPIEnabled)
-                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 3);
-                    if (this.CustomModelEnabled)
-                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
-                    if (this.DetectionAPIEnabled)
-                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
-                    if (this.SceneAPIEnabled)
-                        ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+
+                    if (this.Is2022OrLaterVersion)
+                    {
+                        if (this.FaceAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+                        if (this.CustomModelEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 1);
+                        if (this.DetectionAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 1);
+                        if (this.SceneAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 1);
+
+                    }
+                    else
+                    {
+                        if (this.FaceAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 3);
+                        if (this.CustomModelEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+                        if (this.DetectionAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+                        if (this.SceneAPIEnabled)
+                            ExpectedPythonCnt = ExpectedPythonCnt + (this.Count * 2);
+
+                    }
+
 
                 }
 
@@ -196,7 +215,8 @@ namespace AITool
                     this.DisplayName = (string)key.GetValue("DisplayName");
                     this.DisplayVersion = (string)key.GetValue("DisplayVersion");
                     this.IsNewVersion = this.DisplayName.Contains("202") || this.DisplayVersion.Contains("202");
-
+                    int year = this.DisplayVersion.GetWord("", ".").ToInt();
+                    this.Is2022OrLaterVersion = year >= 2022;
 
                     string dspath = (string)key.GetValue("Inno Setup: App Path");
                     if (!string.IsNullOrWhiteSpace(dspath))
@@ -581,7 +601,10 @@ namespace AITool
                                     AppSettings.Settings.AIURLList.Add(url);
                                 }
 
-                                ExpectedPythonCnt += 2;
+                                if (this.Is2022OrLaterVersion)
+                                    ExpectedPythonCnt += 1;  //1 per port 
+                                else
+                                    ExpectedPythonCnt += 2;
 
                                 Thread.Sleep(100);
 
@@ -688,7 +711,11 @@ namespace AITool
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
                                 }
-                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+                                if (this.Is2022OrLaterVersion)
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 1;
+                                else
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 2;
+
 
                             }
 
@@ -701,7 +728,10 @@ namespace AITool
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
                                 }
-                                ExpectedPythonCnt = ExpectedPythonCnt + 3;
+                                if (this.Is2022OrLaterVersion)
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 2;
+                                else
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 3;
 
                             }
 
@@ -714,7 +744,10 @@ namespace AITool
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
                                 }
-                                ExpectedPythonCnt = ExpectedPythonCnt + 2;
+                                if (this.Is2022OrLaterVersion)
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 1;
+                                else
+                                    ExpectedPythonCnt = ExpectedPythonCnt + 2;
                             }
 
                             Thread.Sleep(100);

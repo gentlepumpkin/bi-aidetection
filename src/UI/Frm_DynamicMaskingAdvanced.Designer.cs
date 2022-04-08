@@ -81,7 +81,6 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnCancel.Location = new System.Drawing.Point(722, 6);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(6);
             this.btnCancel.Name = "btnCancel";
@@ -93,7 +92,6 @@
             // btnOk
             // 
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnOk.Location = new System.Drawing.Point(640, 6);
             this.btnOk.Margin = new System.Windows.Forms.Padding(6);
             this.btnOk.Name = "btnOk";
@@ -135,14 +133,14 @@
             this.numericUpDown2.Location = new System.Drawing.Point(6, 6);
             this.numericUpDown2.Margin = new System.Windows.Forms.Padding(6);
             this.numericUpDown2.Name = "numericUpDown2";
-            this.numericUpDown2.Size = new System.Drawing.Size(0, 20);
+            this.numericUpDown2.Size = new System.Drawing.Size(0, 22);
             this.numericUpDown2.TabIndex = 10;
             // 
             // label3
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 9);
+            this.label3.Location = new System.Drawing.Point(12, 10);
             this.label3.Margin = new System.Windows.Forms.Padding(0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(0, 13);
@@ -152,18 +150,17 @@
             // 
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label1.Location = new System.Drawing.Point(12, 8);
+            this.label1.Location = new System.Drawing.Point(12, 10);
             this.label1.Margin = new System.Windows.Forms.Padding(0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(110, 15);
+            this.label1.Size = new System.Drawing.Size(109, 13);
             this.label1.TabIndex = 21;
             this.label1.Text = "If object is less than";
             // 
             // numSmallObjMax
             // 
             this.numSmallObjMax.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numSmallObjMax.Location = new System.Drawing.Point(122, 6);
+            this.numSmallObjMax.Location = new System.Drawing.Point(121, 6);
             this.numSmallObjMax.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
             this.numSmallObjMax.Maximum = new decimal(new int[] {
             50,
@@ -176,7 +173,7 @@
             0,
             0});
             this.numSmallObjMax.Name = "numSmallObjMax";
-            this.numSmallObjMax.Size = new System.Drawing.Size(40, 20);
+            this.numSmallObjMax.Size = new System.Drawing.Size(40, 22);
             this.numSmallObjMax.TabIndex = 1;
             this.numSmallObjMax.Value = new decimal(new int[] {
             1,
@@ -190,18 +187,17 @@
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label2.Location = new System.Drawing.Point(162, 8);
+            this.label2.Location = new System.Drawing.Point(161, 10);
             this.label2.Margin = new System.Windows.Forms.Padding(0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(179, 15);
+            this.label2.Size = new System.Drawing.Size(172, 13);
             this.label2.TabIndex = 27;
             this.label2.Text = "% of image set percent match to";
             // 
             // numSmallObjPercent
             // 
             this.numSmallObjPercent.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numSmallObjPercent.Location = new System.Drawing.Point(341, 6);
+            this.numSmallObjPercent.Location = new System.Drawing.Point(333, 6);
             this.numSmallObjPercent.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
             this.numSmallObjPercent.Minimum = new decimal(new int[] {
             1,
@@ -209,7 +205,7 @@
             0,
             0});
             this.numSmallObjPercent.Name = "numSmallObjPercent";
-            this.numSmallObjPercent.Size = new System.Drawing.Size(40, 20);
+            this.numSmallObjPercent.Size = new System.Drawing.Size(40, 22);
             this.numSmallObjPercent.TabIndex = 2;
             this.numSmallObjPercent.Value = new decimal(new int[] {
             5,
@@ -222,11 +218,10 @@
             // 
             this.label11.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label11.Location = new System.Drawing.Point(381, 8);
+            this.label11.Location = new System.Drawing.Point(373, 10);
             this.label11.Margin = new System.Windows.Forms.Padding(0);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(17, 15);
+            this.label11.Size = new System.Drawing.Size(16, 13);
             this.label11.TabIndex = 28;
             this.label11.Text = "%";
             // 
@@ -253,14 +248,14 @@
             this.numericUpDown1.Location = new System.Drawing.Point(6, 6);
             this.numericUpDown1.Margin = new System.Windows.Forms.Padding(6);
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(0, 20);
+            this.numericUpDown1.Size = new System.Drawing.Size(0, 22);
             this.numericUpDown1.TabIndex = 10;
             // 
             // label12
             // 
             this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(12, 9);
+            this.label12.Location = new System.Drawing.Point(12, 10);
             this.label12.Margin = new System.Windows.Forms.Padding(0);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(0, 13);
@@ -270,18 +265,17 @@
             // 
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label7.Location = new System.Drawing.Point(12, 8);
+            this.label7.Location = new System.Drawing.Point(12, 10);
             this.label7.Margin = new System.Windows.Forms.Padding(0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(112, 15);
+            this.label7.Size = new System.Drawing.Size(111, 13);
             this.label7.TabIndex = 35;
             this.label7.Text = "If object is between ";
             // 
             // numMidObjMin
             // 
             this.numMidObjMin.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMidObjMin.Location = new System.Drawing.Point(124, 6);
+            this.numMidObjMin.Location = new System.Drawing.Point(123, 6);
             this.numMidObjMin.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
             this.numMidObjMin.Maximum = new decimal(new int[] {
             99,
@@ -294,7 +288,7 @@
             0,
             0});
             this.numMidObjMin.Name = "numMidObjMin";
-            this.numMidObjMin.Size = new System.Drawing.Size(40, 20);
+            this.numMidObjMin.Size = new System.Drawing.Size(40, 22);
             this.numMidObjMin.TabIndex = 3;
             this.numMidObjMin.Value = new decimal(new int[] {
             1,
@@ -308,18 +302,17 @@
             // 
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label10.Location = new System.Drawing.Point(164, 8);
+            this.label10.Location = new System.Drawing.Point(163, 10);
             this.label10.Margin = new System.Windows.Forms.Padding(0);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(27, 15);
+            this.label10.Size = new System.Drawing.Size(27, 13);
             this.label10.TabIndex = 38;
             this.label10.Text = "and";
             // 
             // numMidObjMax
             // 
             this.numMidObjMax.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMidObjMax.Location = new System.Drawing.Point(191, 6);
+            this.numMidObjMax.Location = new System.Drawing.Point(190, 6);
             this.numMidObjMax.Margin = new System.Windows.Forms.Padding(0, 6, 0, 6);
             this.numMidObjMax.Maximum = new decimal(new int[] {
             99,
@@ -332,7 +325,7 @@
             0,
             0});
             this.numMidObjMax.Name = "numMidObjMax";
-            this.numMidObjMax.Size = new System.Drawing.Size(40, 20);
+            this.numMidObjMax.Size = new System.Drawing.Size(40, 22);
             this.numMidObjMax.TabIndex = 4;
             this.numMidObjMax.Value = new decimal(new int[] {
             1,
@@ -345,21 +338,20 @@
             // 
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label6.Location = new System.Drawing.Point(231, 8);
+            this.label6.Location = new System.Drawing.Point(230, 10);
             this.label6.Margin = new System.Windows.Forms.Padding(0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(182, 15);
+            this.label6.Size = new System.Drawing.Size(175, 13);
             this.label6.TabIndex = 39;
             this.label6.Text = "% of image set percent match to ";
             // 
             // numMidObjPercent
             // 
             this.numMidObjPercent.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMidObjPercent.Location = new System.Drawing.Point(413, 6);
+            this.numMidObjPercent.Location = new System.Drawing.Point(405, 6);
             this.numMidObjPercent.Margin = new System.Windows.Forms.Padding(0, 6, 2, 6);
             this.numMidObjPercent.Name = "numMidObjPercent";
-            this.numMidObjPercent.Size = new System.Drawing.Size(40, 20);
+            this.numMidObjPercent.Size = new System.Drawing.Size(40, 22);
             this.numMidObjPercent.TabIndex = 5;
             this.numMidObjPercent.Value = new decimal(new int[] {
             1,
@@ -372,17 +364,15 @@
             // 
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label5.Location = new System.Drawing.Point(455, 8);
+            this.label5.Location = new System.Drawing.Point(447, 10);
             this.label5.Margin = new System.Windows.Forms.Padding(0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(17, 15);
+            this.label5.Size = new System.Drawing.Size(16, 13);
             this.label5.TabIndex = 37;
             this.label5.Text = "%";
             // 
             // label4
             // 
-            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.label4.Location = new System.Drawing.Point(22, 17);
             this.label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label4.Name = "label4";
@@ -394,11 +384,10 @@
             // cbEnableScaling
             // 
             this.cbEnableScaling.AutoSize = true;
-            this.cbEnableScaling.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cbEnableScaling.Location = new System.Drawing.Point(25, 45);
             this.cbEnableScaling.Margin = new System.Windows.Forms.Padding(6);
             this.cbEnableScaling.Name = "cbEnableScaling";
-            this.cbEnableScaling.Size = new System.Drawing.Size(137, 19);
+            this.cbEnableScaling.Size = new System.Drawing.Size(135, 17);
             this.cbEnableScaling.TabIndex = 0;
             this.cbEnableScaling.Text = "Enable object scaling";
             this.cbEnableScaling.UseVisualStyleBackColor = true;
@@ -424,6 +413,7 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cbEnableScaling);
             this.Controls.Add(this.flowLayoutButtons);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Frm_DynamicMaskingAdvanced";
             this.Text = "Dynamic Masking Advanced";

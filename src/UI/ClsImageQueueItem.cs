@@ -159,7 +159,7 @@ namespace AITool
         }
         public void LoadImage()
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            //using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             //since having a lot of trouble with image access problems, try to wait for image to become available, validate the image and load
             //a single time rather than multiple

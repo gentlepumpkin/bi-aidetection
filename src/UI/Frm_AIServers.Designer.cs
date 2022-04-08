@@ -61,11 +61,10 @@ namespace AITool
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FOLV_AIServers.HideSelection = false;
-            this.FOLV_AIServers.Location = new System.Drawing.Point(0, 52);
-            this.FOLV_AIServers.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.FOLV_AIServers.Location = new System.Drawing.Point(0, 34);
             this.FOLV_AIServers.Name = "FOLV_AIServers";
             this.FOLV_AIServers.ShowGroups = false;
-            this.FOLV_AIServers.Size = new System.Drawing.Size(884, 186);
+            this.FOLV_AIServers.Size = new System.Drawing.Size(591, 122);
             this.FOLV_AIServers.TabIndex = 0;
             this.FOLV_AIServers.UseCompatibleStateImageBehavior = false;
             this.FOLV_AIServers.View = System.Windows.Forms.View.Details;
@@ -89,8 +88,8 @@ namespace AITool
             this.toolStripButtonDown});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(886, 34);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(591, 31);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -109,7 +108,7 @@ namespace AITool
             this.toolStripSplitButtonAdd.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButtonAdd.Image")));
             this.toolStripSplitButtonAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripSplitButtonAdd.Name = "toolStripSplitButtonAdd";
-            this.toolStripSplitButtonAdd.Size = new System.Drawing.Size(91, 29);
+            this.toolStripSplitButtonAdd.Size = new System.Drawing.Size(69, 28);
             this.toolStripSplitButtonAdd.Text = "Add";
             this.toolStripSplitButtonAdd.ButtonClick += new System.EventHandler(this.toolStripSplitButtonAdd_ButtonClick);
             // 
@@ -117,7 +116,7 @@ namespace AITool
             // 
             this.deepstackObjectsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackObjectsToolStripMenuItem.Image")));
             this.deepstackObjectsToolStripMenuItem.Name = "deepstackObjectsToolStripMenuItem";
-            this.deepstackObjectsToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.deepstackObjectsToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.deepstackObjectsToolStripMenuItem.Text = "Deepstack (Objects) AI Server";
             this.deepstackObjectsToolStripMenuItem.ToolTipText = "Detect regular objects such as person, car, truck, etc.";
             this.deepstackObjectsToolStripMenuItem.Click += new System.EventHandler(this.deepstackToolStripMenuItem_Click);
@@ -126,7 +125,7 @@ namespace AITool
             // 
             this.deepstackCustomToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackCustomToolStripMenuItem.Image")));
             this.deepstackCustomToolStripMenuItem.Name = "deepstackCustomToolStripMenuItem";
-            this.deepstackCustomToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.deepstackCustomToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.deepstackCustomToolStripMenuItem.Text = "Deepstack (Custom) AI Server";
             this.deepstackCustomToolStripMenuItem.ToolTipText = "Use a custom trained model for detection";
             this.deepstackCustomToolStripMenuItem.Click += new System.EventHandler(this.deepstackCustomToolStripMenuItem_Click);
@@ -135,7 +134,7 @@ namespace AITool
             // 
             this.deepstackSceneToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackSceneToolStripMenuItem.Image")));
             this.deepstackSceneToolStripMenuItem.Name = "deepstackSceneToolStripMenuItem";
-            this.deepstackSceneToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.deepstackSceneToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.deepstackSceneToolStripMenuItem.Text = "Deepstack (Scene) AI Server";
             this.deepstackSceneToolStripMenuItem.ToolTipText = "Detect the scene such as \"conference_room\".";
             this.deepstackSceneToolStripMenuItem.Click += new System.EventHandler(this.deepstackSceneToolStripMenuItem_Click);
@@ -144,7 +143,7 @@ namespace AITool
             // 
             this.deepstackFacesToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("deepstackFacesToolStripMenuItem.Image")));
             this.deepstackFacesToolStripMenuItem.Name = "deepstackFacesToolStripMenuItem";
-            this.deepstackFacesToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.deepstackFacesToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.deepstackFacesToolStripMenuItem.Text = "Deepstack (Faces) AI Server";
             this.deepstackFacesToolStripMenuItem.ToolTipText = "Face detection";
             this.deepstackFacesToolStripMenuItem.Click += new System.EventHandler(this.deepstackFacesToolStripMenuItem_Click);
@@ -153,7 +152,7 @@ namespace AITool
             // 
             this.addDoodsServerToolStripMenuItem.Image = global::AITool.Properties.Resources.network_server;
             this.addDoodsServerToolStripMenuItem.Name = "addDoodsServerToolStripMenuItem";
-            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.addDoodsServerToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.addDoodsServerToolStripMenuItem.Text = "DOODS AI Server";
             this.addDoodsServerToolStripMenuItem.Click += new System.EventHandler(this.addDoodsServerToolStripMenuItem_Click);
             // 
@@ -161,7 +160,7 @@ namespace AITool
             // 
             this.addAmazonObjectsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonObjectsToolStripMenuItem.Image")));
             this.addAmazonObjectsToolStripMenuItem.Name = "addAmazonObjectsToolStripMenuItem";
-            this.addAmazonObjectsToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.addAmazonObjectsToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.addAmazonObjectsToolStripMenuItem.Text = "AWS Rekognition (Objects) AI Server";
             this.addAmazonObjectsToolStripMenuItem.ToolTipText = "Detect regular objects such as person, car, truck, etc.";
             this.addAmazonObjectsToolStripMenuItem.Click += new System.EventHandler(this.addAmazonReToolStripMenuItem_Click);
@@ -170,7 +169,7 @@ namespace AITool
             // 
             this.addAmazonFaceToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("addAmazonFaceToolStripMenuItem.Image")));
             this.addAmazonFaceToolStripMenuItem.Name = "addAmazonFaceToolStripMenuItem";
-            this.addAmazonFaceToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.addAmazonFaceToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.addAmazonFaceToolStripMenuItem.Text = "AWS Rekognition (Faces) AI Server";
             this.addAmazonFaceToolStripMenuItem.ToolTipText = "Person age, emotion and gender";
             this.addAmazonFaceToolStripMenuItem.Click += new System.EventHandler(this.addAmazonFaceToolStripMenuItem_Click);
@@ -179,7 +178,7 @@ namespace AITool
             // 
             this.sightHoundVehicleAIServerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("sightHoundVehicleAIServerToolStripMenuItem.Image")));
             this.sightHoundVehicleAIServerToolStripMenuItem.Name = "sightHoundVehicleAIServerToolStripMenuItem";
-            this.sightHoundVehicleAIServerToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.sightHoundVehicleAIServerToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.sightHoundVehicleAIServerToolStripMenuItem.Text = "SightHound (Vehicle) AI Server";
             this.sightHoundVehicleAIServerToolStripMenuItem.ToolTipText = "Car make model and license plate";
             this.sightHoundVehicleAIServerToolStripMenuItem.Click += new System.EventHandler(this.sightHoundAIServerToolStripMenuItem_Click);
@@ -188,7 +187,7 @@ namespace AITool
             // 
             this.sightHoundPersonAIServerToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("sightHoundPersonAIServerToolStripMenuItem.Image")));
             this.sightHoundPersonAIServerToolStripMenuItem.Name = "sightHoundPersonAIServerToolStripMenuItem";
-            this.sightHoundPersonAIServerToolStripMenuItem.Size = new System.Drawing.Size(403, 34);
+            this.sightHoundPersonAIServerToolStripMenuItem.Size = new System.Drawing.Size(273, 30);
             this.sightHoundPersonAIServerToolStripMenuItem.Text = "SightHound (Person) AI Server";
             this.sightHoundPersonAIServerToolStripMenuItem.ToolTipText = "Person age, emotion, gender";
             this.sightHoundPersonAIServerToolStripMenuItem.Click += new System.EventHandler(this.sightHoundPersonAIServerToolStripMenuItem_Click);
@@ -196,7 +195,7 @@ namespace AITool
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 34);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripButtonEdit
             // 
@@ -204,14 +203,14 @@ namespace AITool
             this.toolStripButtonEdit.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonEdit.Image")));
             this.toolStripButtonEdit.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonEdit.Name = "toolStripButtonEdit";
-            this.toolStripButtonEdit.Size = new System.Drawing.Size(70, 29);
+            this.toolStripButtonEdit.Size = new System.Drawing.Size(55, 28);
             this.toolStripButtonEdit.Text = "Edit";
             this.toolStripButtonEdit.Click += new System.EventHandler(this.toolStripButtonEdit_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 34);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripButtonDelete
             // 
@@ -219,14 +218,14 @@ namespace AITool
             this.toolStripButtonDelete.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDelete.Image")));
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(90, 29);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(68, 28);
             this.toolStripButtonDelete.Text = "Delete";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 34);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripButtonUp
             // 
@@ -234,7 +233,7 @@ namespace AITool
             this.toolStripButtonUp.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonUp.Image")));
             this.toolStripButtonUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonUp.Name = "toolStripButtonUp";
-            this.toolStripButtonUp.Size = new System.Drawing.Size(63, 29);
+            this.toolStripButtonUp.Size = new System.Drawing.Size(50, 28);
             this.toolStripButtonUp.Text = "Up";
             this.toolStripButtonUp.Click += new System.EventHandler(this.toolStripButtonUp_Click);
             // 
@@ -244,7 +243,7 @@ namespace AITool
             this.toolStripButtonDown.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDown.Image")));
             this.toolStripButtonDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDown.Name = "toolStripButtonDown";
-            this.toolStripButtonDown.Size = new System.Drawing.Size(87, 29);
+            this.toolStripButtonDown.Size = new System.Drawing.Size(66, 28);
             this.toolStripButtonDown.Text = "Down";
             this.toolStripButtonDown.Click += new System.EventHandler(this.toolStripButtonDown_Click);
             // 
@@ -259,12 +258,11 @@ namespace AITool
             // 
             // Frm_AIServers
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(886, 245);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.ClientSize = new System.Drawing.Size(591, 159);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.FOLV_AIServers);
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_AIServers";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Tag = "SAVE";

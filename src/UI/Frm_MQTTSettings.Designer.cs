@@ -39,19 +39,19 @@
             this.label5 = new System.Windows.Forms.Label();
             this.tb_LWTPayload = new System.Windows.Forms.TextBox();
             this.tb_Password = new System.Windows.Forms.TextBox();
+            this.tb_ClientID = new System.Windows.Forms.TextBox();
             this.tb_LWTTopic = new System.Windows.Forms.TextBox();
             this.tb_Username = new System.Windows.Forms.TextBox();
             this.tb_ServerPort = new System.Windows.Forms.TextBox();
+            this.cb_Retain = new System.Windows.Forms.CheckBox();
             this.cb_UseTLS = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.btTest = new System.Windows.Forms.Button();
-            this.cb_Retain = new System.Windows.Forms.CheckBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.tb_ClientID = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -60,7 +60,6 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnCancel.Location = new System.Drawing.Point(431, 322);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
@@ -73,7 +72,6 @@
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnSave.Location = new System.Drawing.Point(353, 322);
             this.btnSave.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSave.Name = "btnSave";
@@ -132,7 +130,7 @@
             // 
             // tb_Payload
             // 
-            this.tb_Payload.Font = new System.Drawing.Font("Consolas", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tb_Payload.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tb_Payload.Location = new System.Drawing.Point(69, 69);
             this.tb_Payload.Multiline = true;
             this.tb_Payload.Name = "tb_Payload";
@@ -178,6 +176,13 @@
             this.tb_Password.Size = new System.Drawing.Size(169, 23);
             this.tb_Password.TabIndex = 2;
             // 
+            // tb_ClientID
+            // 
+            this.tb_ClientID.Location = new System.Drawing.Point(78, 107);
+            this.tb_ClientID.Name = "tb_ClientID";
+            this.tb_ClientID.Size = new System.Drawing.Size(161, 23);
+            this.tb_ClientID.TabIndex = 1;
+            // 
             // tb_LWTTopic
             // 
             this.tb_LWTTopic.Location = new System.Drawing.Point(78, 79);
@@ -198,6 +203,17 @@
             this.tb_ServerPort.Name = "tb_ServerPort";
             this.tb_ServerPort.Size = new System.Drawing.Size(402, 23);
             this.tb_ServerPort.TabIndex = 0;
+            // 
+            // cb_Retain
+            // 
+            this.cb_Retain.AutoSize = true;
+            this.cb_Retain.Location = new System.Drawing.Point(77, 143);
+            this.cb_Retain.Name = "cb_Retain";
+            this.cb_Retain.Size = new System.Drawing.Size(59, 19);
+            this.cb_Retain.TabIndex = 3;
+            this.cb_Retain.Text = "Retain";
+            this.cb_Retain.UseVisualStyleBackColor = true;
+            this.cb_Retain.CheckedChanged += new System.EventHandler(this.cb_UseTLS_CheckedChanged);
             // 
             // cb_UseTLS
             // 
@@ -228,10 +244,19 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Password:";
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(18, 110);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(55, 15);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Client ID:";
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 82);
+            this.label7.Location = new System.Drawing.Point(10, 82);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(63, 15);
             this.label7.TabIndex = 0;
@@ -240,7 +265,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 54);
+            this.label2.Location = new System.Drawing.Point(10, 54);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(63, 15);
             this.label2.TabIndex = 0;
@@ -266,33 +291,6 @@
             this.btTest.UseVisualStyleBackColor = true;
             this.btTest.Click += new System.EventHandler(this.btTest_ClickAsync);
             // 
-            // cb_Retain
-            // 
-            this.cb_Retain.AutoSize = true;
-            this.cb_Retain.Location = new System.Drawing.Point(77, 143);
-            this.cb_Retain.Name = "cb_Retain";
-            this.cb_Retain.Size = new System.Drawing.Size(59, 19);
-            this.cb_Retain.TabIndex = 3;
-            this.cb_Retain.Text = "Retain";
-            this.cb_Retain.UseVisualStyleBackColor = true;
-            this.cb_Retain.CheckedChanged += new System.EventHandler(this.cb_UseTLS_CheckedChanged);
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(14, 110);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(55, 15);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Client ID:";
-            // 
-            // tb_ClientID
-            // 
-            this.tb_ClientID.Location = new System.Drawing.Point(78, 107);
-            this.tb_ClientID.Name = "tb_ClientID";
-            this.tb_ClientID.Size = new System.Drawing.Size(161, 23);
-            this.tb_ClientID.TabIndex = 1;
-            // 
             // Frm_MQTTSettings
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
@@ -302,7 +300,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnSave);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_MQTTSettings";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "MQTT Settings";

@@ -38,11 +38,9 @@
             // btnApply
             // 
             this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApply.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnApply.Location = new System.Drawing.Point(267, 502);
-            this.btnApply.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnApply.Location = new System.Drawing.Point(192, 326);
             this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(105, 46);
+            this.btnApply.Size = new System.Drawing.Size(70, 30);
             this.btnApply.TabIndex = 26;
             this.btnApply.Text = "Add";
             this.btnApply.UseVisualStyleBackColor = true;
@@ -50,15 +48,14 @@
             // 
             // checkedListBoxCameras
             // 
-            this.checkedListBoxCameras.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.checkedListBoxCameras.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.checkedListBoxCameras.CheckOnClick = true;
             this.checkedListBoxCameras.FormattingEnabled = true;
-            this.checkedListBoxCameras.Location = new System.Drawing.Point(4, 48);
-            this.checkedListBoxCameras.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.checkedListBoxCameras.Location = new System.Drawing.Point(3, 31);
             this.checkedListBoxCameras.Name = "checkedListBoxCameras";
-            this.checkedListBoxCameras.Size = new System.Drawing.Size(366, 303);
+            this.checkedListBoxCameras.Size = new System.Drawing.Size(259, 191);
             this.checkedListBoxCameras.TabIndex = 27;
             this.checkedListBoxCameras.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxCameras_ItemCheck);
             this.checkedListBoxCameras.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxCameras_SelectedIndexChanged);
@@ -67,49 +64,45 @@
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.label1.Location = new System.Drawing.Point(0, 14);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(0, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(372, 29);
+            this.label1.Size = new System.Drawing.Size(262, 19);
             this.label1.TabIndex = 28;
             this.label1.Text = "Select the Blue Iris cameras you want to add";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(0, 358);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(0, 233);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(366, 20);
+            this.label2.Size = new System.Drawing.Size(261, 13);
             this.label2.TabIndex = 29;
             this.label2.Text = "Or type new camera names seperated by commas:";
             // 
             // tb_Cameras
             // 
-            this.tb_Cameras.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.tb_Cameras.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_Cameras.Location = new System.Drawing.Point(2, 383);
-            this.tb_Cameras.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tb_Cameras.Location = new System.Drawing.Point(1, 249);
             this.tb_Cameras.Multiline = true;
             this.tb_Cameras.Name = "tb_Cameras";
-            this.tb_Cameras.Size = new System.Drawing.Size(368, 101);
+            this.tb_Cameras.Size = new System.Drawing.Size(261, 67);
             this.tb_Cameras.TabIndex = 30;
             this.tb_Cameras.Leave += new System.EventHandler(this.tb_Cameras_Leave);
             // 
             // Frm_CameraAdd
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(376, 566);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.ClientSize = new System.Drawing.Size(265, 368);
             this.Controls.Add(this.tb_Cameras);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.checkedListBoxCameras);
             this.Controls.Add(this.btnApply);
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_CameraAdd";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Add Cameras";

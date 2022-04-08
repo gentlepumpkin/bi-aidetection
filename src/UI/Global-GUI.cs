@@ -1,4 +1,5 @@
 ﻿using BrightIdeasSoftware;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -601,45 +603,128 @@ namespace AITool
             return ret;
         }
 
+        // Create the FontConverter.
+        private static System.ComponentModel.TypeConverter Fontconverter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(Font));
+
+        public static void SetAppDefaultFont(bool firsttime, Control currentform)
+        {
+            try
+            {
+
+                string fnt = AppSettings.Settings.DefaultFont.Trim();
+                Font font1;
+
+                if (fnt.IsNotEmpty())
+                {
+                    font1 = (Font)Fontconverter.ConvertFromString(fnt);
+                }
+                else
+                {
+                    Log("Debug: Default font not set yet, using Segoe UI, 8.5pt");
+                    font1 = (Font)Fontconverter.ConvertFromString("Segoe UI, 8.5pt");
+                }
+
+#if NET6_0_OR_GREATER
+                if (firsttime)
+                    Application.SetDefaultFont(font1);
+                else
+                {
+                    if (currentform.IsNotNull())
+                    {
+                        currentform.Font = font1;
+                    }
+                }
+#else
+                if (currentform.IsNotNull())
+                {
+                    currentform.Font = font1;
+                }
+#endif
+
+            }
+            catch (Exception ex)
+            {
+
+                Log($"Error: {ex.Msg()}");
+            }
+
+
+        }
+
+        public static string GetStringFromFont(Font font)
+        {
+
+            string ret = "";
+
+            try
+            {
+                if (font.IsNotNull())
+                {
+                    ret = Fontconverter.ConvertToString(font);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+
+            return ret;
+        }
+        public static bool IsFontStringValid(string FontString)
+        {
+            bool ret = false;
+            try
+            {
+                if (FontString.IsNotEmpty())
+                {
+                    using Font font1 = (Font)Fontconverter.ConvertFromString(AppSettings.Settings.DefaultFont.Trim());
+
+                    if (font1.IsNotNull())
+                        ret = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+
+            return ret;
+        }
+        public static Font GetFontFromString(string FontString)
+        {
+            Font ret = new Font("Segoe UI", 8.25f);
+            try
+            {
+                if (FontString.IsNotEmpty())
+                {
+                    ret = (Font)Fontconverter.ConvertFromString(FontString);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error: {ex.Msg()}");
+            }
+
+            return ret;
+        }
 
         public static void RestoreWindowState(Form Frm)
         {
 
             try
             {
-                //private void MyForm_Load(object sender, EventArgs e)
+                //Global_GUI.InvokeIFRequired(Frm, () =>
                 //{
-                //    if (Properties.Settings.Default.IsMaximized)
-                //        WindowState = FormWindowState.Maximized;
-                //    else if (Screen.AllScreens.Any(screen => screen.WorkingArea.IntersectsWith(Properties.Settings.Default.WindowPosition)))
-                //    {
-                //        StartPosition = FormStartPosition.Manual;
-                //        DesktopBounds = Properties.Settings.Default.WindowPosition;
-                //        WindowState = FormWindowState.Normal;
-                //    }
-                //}
-                //
-                //private void MyForm_FormClosing(object sender, FormClosingEventArgs e)
-                //{
-                //    Properties.Settings.Default.IsMaximized = WindowState == FormWindowState.Maximized;
-                //    Properties.Settings.Default.WindowPosition = DesktopBounds;
-                //    Properties.Settings.Default.Save();
-                //}
-
                 Point SavLocation = (Point)(Global.GetRegSetting(Frm.Name + "_Location", new Point())); //Frm.RestoreBounds.Location
 
                 if (SavLocation.IsEmpty)
-                    goto endOfTry; //we did not previously save settings
+                    return; //we did not previously save settings
 
                 bool SavMaximized = System.Convert.ToBoolean(Global.GetRegSetting(Frm.Name + "_Maximized", false));
                 bool SavMinimized = System.Convert.ToBoolean(Global.GetRegSetting(Frm.Name + "_Minimized", false));
                 object ObjSize = Global.GetRegSetting(Frm.Name + "_Size", Frm.RestoreBounds.Size);
                 Size SavSize = (Size)ObjSize; //CType(ObjSize, System.Drawing.Size)
-
-                //Debug.Print("Size before: " & Me.Size.ToString)
-                //Debug.Print("Loc before: " & Me.Location.ToString)
-                //Debug.Print("WindowState Before: " & Me.WindowState.ToString)
-                //DetectScreenName()
 
                 //============================================================================================================
                 //No reliable way of detecting if a screen has been turned off!   This will only detect if fully disconnected
@@ -670,8 +755,21 @@ namespace AITool
                     foreach (Control ctl in ctls)
                         if (ctl is SplitContainer)
                         {
+                            //SplitContainer sc = (SplitContainer)ctl;
+                            //sc.SplitterDistance = System.Convert.ToInt32(Global.GetRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
                             SplitContainer sc = (SplitContainer)ctl;
-                            sc.SplitterDistance = System.Convert.ToInt32(Global.GetRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
+
+                            string name = sc.Name;
+
+                            var fullDistance = new Func<SplitContainer, int>(c => c.Orientation == Orientation.Horizontal ? c.Size.Height : c.Size.Width);
+                            // calculate splitter distance with regard to current control size
+                            int storedDistance = System.Convert.ToInt32(Global.GetRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance));
+                            //int distanceToRestore =
+                            //   sc.FixedPanel == FixedPanel.Panel1 ? storedDistance :
+                            //   sc.FixedPanel == FixedPanel.Panel2 ? fullDistance(sc) - storedDistance :
+                            //   storedDistance * fullDistance(sc) / 100;
+
+                            sc.SplitterDistance = storedDistance;
                         }
                         else if (ctl is TabControl)
                         {
@@ -707,6 +805,9 @@ namespace AITool
                     //}
 
                 }
+
+                Global_GUI.SetAppDefaultFont(false, Frm);
+
                 //If Screen.AllScreens.Any(Function(screen__1) screen__1.WorkingArea.IntersectsWith(Properties.Settings.[Default].WindowPosition)) Then
                 //    StartPosition = FormStartPosition.Manual
                 //    DesktopBounds = Properties.Settings.[Default].WindowPosition
@@ -717,18 +818,12 @@ namespace AITool
                 //Debug.Print("Loc After: " & Me.Location.ToString)
                 //Debug.Print("WindowState After: " & Me.WindowState.ToString)
 
+                //});
             }
             catch (Exception)
             {
 
             }
-            finally
-            {
-
-
-            }
-        endOfTry:
-            1.GetHashCode(); //VBConversions note: C# requires an executable line here, so a dummy line was added.
         }
 
         public static void SaveWindowState(Form Frm)
@@ -737,6 +832,9 @@ namespace AITool
 
             try
             {
+
+                //Global_GUI.InvokeIFRequired(Frm, () =>
+                //{
 
                 if (Frm.WindowState == FormWindowState.Maximized)
                 {
@@ -768,7 +866,20 @@ namespace AITool
                     {
                         if (ctl is SplitContainer)
                         {
+                            //SplitContainer sc = (SplitContainer)ctl;
+                            //Global.SaveRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
                             SplitContainer sc = (SplitContainer)ctl;
+
+                            string name = sc.Name;
+
+                            var fullDistance = new Func<SplitContainer, int>(c => c.Orientation == Orientation.Horizontal ? c.Size.Height : c.Size.Width);
+
+                            // Store as percentage if FixedPanel.None
+                            //int distanceToStore =
+                            //   sc.FixedPanel == FixedPanel.Panel1 ? sc.SplitterDistance :
+                            //   sc.FixedPanel == FixedPanel.Panel2 ? fullDistance(sc) - sc.SplitterDistance :
+                            //   (int)(((double)sc.SplitterDistance) / ((double)fullDistance(sc))) * 100;
+
                             Global.SaveRegSetting($"{Frm.Name}.SplitContainer.{sc.Name}.SplitterDistance", sc.SplitterDistance);
                         }
                         else if (ctl is TabControl)
@@ -784,34 +895,13 @@ namespace AITool
 
                     }
 
-                    //else if (ctl is ComboBox)
-                    //{
-                    //	ComboBox cc = (ComboBox)ctl;
-                    //	List<string> lst = new List<string>();
-                    //	foreach (object cbi in cc.Items)
-                    //		lst.Add(cbi.ToString());
-                    //	SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Items", lst);
-                    //	SaveSetting($"{Frm.Name}.ComboBox.{cc.Name}.Text", cc.Text);
-                    //}
-                    //else if (ctl is TextBox)
-                    //{
-                    //	TextBox tc = (TextBox)ctl;
-                    //	SaveSetting($"{Frm.Name}.TextBox.{tc.Name}.Text", tc.Text);
-                    //}
-                    //else if (ctl is CheckBox)
-                    //{
-                    //	CheckBox tc = (CheckBox)ctl;
-                    //	SaveSetting($"{Frm.Name}.CheckBox.{tc.Name}.Checked", tc.Checked);
-                    //}
-
                 }
+
+
+                //});
 
             }
             catch (Exception)
-            {
-
-            }
-            finally
             {
 
             }

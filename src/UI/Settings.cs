@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Security.AccessControl;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -24,6 +25,9 @@ namespace AITool
         public static string LastLogEntry = "";
         private static string LastSettingsJSON = "";
         private static ClsDeepstackDetection ThreadLock = new ClsDeepstackDetection();
+        private static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+        private static ThreadSafe.Datetime _LastSaveTime = new ThreadSafe.Datetime(DateTime.MinValue);
+        private static ThreadSafe.Boolean _AlreadySaving = new ThreadSafe.Boolean(false);
         public class ClsSettings
         {
             [JsonIgnore]
@@ -102,7 +106,9 @@ namespace AITool
             public int RectBorderWidth = 3;
 
             public int RectDetectionTextSize = 14;
-            public string RectDetectionTextFont = "Segoe UI Semibold";
+            public string RectDetectionTextFont = "Segoe UI";
+
+            public string DefaultFont = "Segoe UI, 8.25pt";
 
             public System.Drawing.Color RectDetectionTextBackColor = System.Drawing.Color.Gainsboro;  //a magic color randomly picked that means "Use Relevant or Irrelevant colors"
             public System.Drawing.Color RectDetectionTextForeColor = System.Drawing.Color.Black;
@@ -189,10 +195,9 @@ namespace AITool
 
             public List<ClsImageAdjust> ImageAdjustProfiles = new List<ClsImageAdjust> { new ClsImageAdjust("Default") };
 
-
+            public int SaveSettingsIntervalSeconds = 30;
         }
 
-        static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         public static ClsURLItem GetURL(string url = "", URLTypeEnum type = URLTypeEnum.Unknown)
         {
             ClsURLItem ret = null;
@@ -207,12 +212,25 @@ namespace AITool
 
         }
 
-        public static async Task<bool> SaveAsync()
+
+        public static async Task<bool> SaveAsync(bool force = false)
         {
+            //using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            await semaphoreSlim.WaitAsync();
+            double lastsecs = (DateTime.Now - _LastSaveTime.Read()).TotalSeconds;
 
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            if (!force && lastsecs < AppSettings.Settings.SaveSettingsIntervalSeconds)
+                return false;
+
+
+            if (_AlreadySaving.ReadFullFence())
+            {
+                Log("Trace: *** Had to exit from save? ***");
+                return false;
+            }
+
+            //await semaphoreSlim.WaitAsync();
+            _AlreadySaving.WriteFullFence(true);
 
             bool Ret = false;
             try
@@ -222,10 +240,14 @@ namespace AITool
                 //keep a backup file in case of corruption
                 if (await IsFileValidAsync(AppSettings.Settings.SettingsFileName))
                 {
-                    if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
-                        File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
-                    if (File.Exists(AppSettings.Settings.SettingsFileName))
-                        File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
+                    // Only create the backup if we are forcing settings to be saved (like a regular setting is changed)
+                    if (force)
+                    {
+                        if (File.Exists(AppSettings.Settings.SettingsFileName + ".bak"))
+                            File.Delete(AppSettings.Settings.SettingsFileName + ".bak");
+                        if (File.Exists(AppSettings.Settings.SettingsFileName))
+                            File.Move(AppSettings.Settings.SettingsFileName, AppSettings.Settings.SettingsFileName + ".bak");
+                    }
                 }
                 else
                 {
@@ -317,7 +339,11 @@ namespace AITool
                 }
             }
 
-            semaphoreSlim.Release();
+            //semaphoreSlim.Release();
+
+            _AlreadySaving.WriteFullFence(false);
+
+            _LastSaveTime.Write(DateTime.Now);
 
             return Ret;
         }
@@ -797,13 +823,15 @@ namespace AITool
                         }
                     }
 
-                    if (Settings.FacesPath.IsEmpty())
+                    string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
+
+                    if (Settings.FacesPath.IsEmpty() || !Global.IsDirWritable(Settings.FacesPath, true) || !File.Exists(facefile))
                     {
                         string pth = Path.GetDirectoryName(Settings.SettingsFileName);
                         Settings.FacesPath = Path.Combine(pth, "FaceStorage");
+                        facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
                     }
 
-                    string facefile = Path.Combine(Settings.FacesPath, "Faces.JSON");
 
                     if (await IsFileValidAsync(facefile, 400))
                         AITOOL.FaceMan = Global.ReadFromJsonFile<ClsFaceManager>(facefile);
@@ -824,7 +852,7 @@ namespace AITool
                 if (Resave)
                 {
                     //we imported old settings, save them
-                    SaveAsync();
+                    SaveAsync(true);
                 }
 
                 //}

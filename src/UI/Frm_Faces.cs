@@ -27,7 +27,7 @@ namespace AITool
             Global_GUI.ConfigureFOLV(FOLV_Faces, typeof(ClsFace));
             Global_GUI.ConfigureFOLV(FOLV_FaceFiles, typeof(ClsFaceFile));
 
-            Global_GUI.UpdateFOLV(FOLV_Faces, AITOOL.FaceMan.Faces, FullRefresh: true);
+            Global_GUI.UpdateFOLV(FOLV_Faces, AITOOL.FaceMan.FacesDic.Values.OrderByDescending(f => f.Name).ToList(), FullRefresh: true);
 
             Global_GUI.RestoreWindowState(this);
         }
@@ -63,7 +63,7 @@ namespace AITool
                         pictureBoxCurrentFace.BackgroundImage = null;
                     }
 
-                    Global_GUI.UpdateFOLV(FOLV_FaceFiles, face.Files, FullRefresh: true);
+                    Global_GUI.UpdateFOLV(FOLV_FaceFiles, face.FilesDic.Values.OrderByDescending(ff => ff.DateFileModified).ToList(), FullRefresh: true);
                 }
                 else
                 {

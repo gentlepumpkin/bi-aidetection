@@ -125,6 +125,7 @@ namespace AITool
         public string telegram_triggering_objects { get; set; } = "";
 
         public string telegram_chatid { get; set; } = "";
+        //public string telegram_token { get; set; } = "";   //It would take some work to have each camera use a unique token because the bot has to be fully re-initialized to change the token.
         public string telegram_active_time_range { get; set; } = "00:00:00-23:59:59";
         public bool enabled { get; set; } = true;
         public double cooldown_time { get; set; } = -1;

@@ -52,10 +52,9 @@ namespace AITool
             // 
             this.cmb_cameras.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmb_cameras.FormattingEnabled = true;
-            this.cmb_cameras.Location = new System.Drawing.Point(108, 18);
-            this.cmb_cameras.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmb_cameras.Location = new System.Drawing.Point(72, 12);
             this.cmb_cameras.Name = "cmb_cameras";
-            this.cmb_cameras.Size = new System.Drawing.Size(230, 28);
+            this.cmb_cameras.Size = new System.Drawing.Size(155, 21);
             this.cmb_cameras.TabIndex = 0;
             this.cmb_cameras.SelectedIndexChanged += new System.EventHandler(this.cmb_cameras_SelectedIndexChanged);
             this.cmb_cameras.SelectionChangeCommitted += new System.EventHandler(this.cmb_cameras_SelectionChangeCommitted);
@@ -63,38 +62,34 @@ namespace AITool
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(34, 23);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(23, 15);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(65, 20);
+            this.label1.Size = new System.Drawing.Size(45, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "Camera";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(21, 65);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(14, 42);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(77, 20);
+            this.label2.Size = new System.Drawing.Size(55, 13);
             this.label2.TabIndex = 3;
             this.label2.Text = "Pause for";
             // 
             // tb_minutes
             // 
-            this.tb_minutes.Location = new System.Drawing.Point(108, 60);
-            this.tb_minutes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tb_minutes.Location = new System.Drawing.Point(72, 39);
             this.tb_minutes.Name = "tb_minutes";
-            this.tb_minutes.Size = new System.Drawing.Size(80, 26);
+            this.tb_minutes.Size = new System.Drawing.Size(55, 22);
             this.tb_minutes.TabIndex = 4;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(200, 65);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Location = new System.Drawing.Point(133, 42);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(65, 20);
+            this.label3.Size = new System.Drawing.Size(49, 13);
             this.label3.TabIndex = 3;
             this.label3.Text = "Minutes";
             // 
@@ -107,11 +102,9 @@ namespace AITool
             this.groupBox1.Controls.Add(this.cb_MQTT);
             this.groupBox1.Controls.Add(this.cb_Telegram);
             this.groupBox1.Controls.Add(this.cb_FileMonitoring);
-            this.groupBox1.Location = new System.Drawing.Point(28, 108);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Location = new System.Drawing.Point(19, 70);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox1.Size = new System.Drawing.Size(452, 112);
+            this.groupBox1.Size = new System.Drawing.Size(301, 73);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Pause the following Services";
@@ -119,10 +112,9 @@ namespace AITool
             // cb_URL
             // 
             this.cb_URL.AutoSize = true;
-            this.cb_URL.Location = new System.Drawing.Point(207, 69);
-            this.cb_URL.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_URL.Location = new System.Drawing.Point(146, 45);
             this.cb_URL.Name = "cb_URL";
-            this.cb_URL.Size = new System.Drawing.Size(182, 24);
+            this.cb_URL.Size = new System.Drawing.Size(129, 17);
             this.cb_URL.TabIndex = 0;
             this.cb_URL.Text = "Trigger / Cancel URL";
             this.toolTip1.SetToolTip(this.cb_URL, "Prevent URL actions");
@@ -131,10 +123,9 @@ namespace AITool
             // cb_Pushover
             // 
             this.cb_Pushover.AutoSize = true;
-            this.cb_Pushover.Location = new System.Drawing.Point(321, 34);
-            this.cb_Pushover.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_Pushover.Location = new System.Drawing.Point(222, 22);
             this.cb_Pushover.Name = "cb_Pushover";
-            this.cb_Pushover.Size = new System.Drawing.Size(101, 24);
+            this.cb_Pushover.Size = new System.Drawing.Size(73, 17);
             this.cb_Pushover.TabIndex = 0;
             this.cb_Pushover.Text = "Pushover";
             this.toolTip1.SetToolTip(this.cb_Pushover, "Prevent pushover actions");
@@ -143,10 +134,9 @@ namespace AITool
             // cb_MQTT
             // 
             this.cb_MQTT.AutoSize = true;
-            this.cb_MQTT.Location = new System.Drawing.Point(20, 69);
-            this.cb_MQTT.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_MQTT.Location = new System.Drawing.Point(13, 45);
             this.cb_MQTT.Name = "cb_MQTT";
-            this.cb_MQTT.Size = new System.Drawing.Size(78, 24);
+            this.cb_MQTT.Size = new System.Drawing.Size(56, 17);
             this.cb_MQTT.TabIndex = 0;
             this.cb_MQTT.Text = "MQTT";
             this.toolTip1.SetToolTip(this.cb_MQTT, "Prevent MQTT actions");
@@ -155,10 +145,9 @@ namespace AITool
             // cb_Telegram
             // 
             this.cb_Telegram.AutoSize = true;
-            this.cb_Telegram.Location = new System.Drawing.Point(207, 34);
-            this.cb_Telegram.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_Telegram.Location = new System.Drawing.Point(146, 22);
             this.cb_Telegram.Name = "cb_Telegram";
-            this.cb_Telegram.Size = new System.Drawing.Size(101, 24);
+            this.cb_Telegram.Size = new System.Drawing.Size(72, 17);
             this.cb_Telegram.TabIndex = 0;
             this.cb_Telegram.Text = "Telegram";
             this.toolTip1.SetToolTip(this.cb_Telegram, "Prevent Telegram actions");
@@ -167,10 +156,9 @@ namespace AITool
             // cb_FileMonitoring
             // 
             this.cb_FileMonitoring.AutoSize = true;
-            this.cb_FileMonitoring.Location = new System.Drawing.Point(20, 34);
-            this.cb_FileMonitoring.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_FileMonitoring.Location = new System.Drawing.Point(13, 22);
             this.cb_FileMonitoring.Name = "cb_FileMonitoring";
-            this.cb_FileMonitoring.Size = new System.Drawing.Size(181, 24);
+            this.cb_FileMonitoring.Size = new System.Drawing.Size(132, 17);
             this.cb_FileMonitoring.TabIndex = 0;
             this.cb_FileMonitoring.Text = "ALL (File Monitoring)";
             this.toolTip1.SetToolTip(this.cb_FileMonitoring, "This will prevent any new images from being processed by the AI server");
@@ -180,10 +168,9 @@ namespace AITool
             // 
             this.lbl_resumingtime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lbl_resumingtime.AutoSize = true;
-            this.lbl_resumingtime.Location = new System.Drawing.Point(24, 240);
-            this.lbl_resumingtime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_resumingtime.Location = new System.Drawing.Point(16, 156);
             this.lbl_resumingtime.Name = "lbl_resumingtime";
-            this.lbl_resumingtime.Size = new System.Drawing.Size(175, 20);
+            this.lbl_resumingtime.Size = new System.Drawing.Size(128, 13);
             this.lbl_resumingtime.TabIndex = 6;
             this.lbl_resumingtime.Text = "Resuming in xx minutes";
             // 
@@ -196,9 +183,10 @@ namespace AITool
             // cb_paused
             // 
             this.cb_paused.Appearance = System.Windows.Forms.Appearance.Button;
-            this.cb_paused.Location = new System.Drawing.Point(371, 228);
+            this.cb_paused.Location = new System.Drawing.Point(247, 148);
+            this.cb_paused.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cb_paused.Name = "cb_paused";
-            this.cb_paused.Size = new System.Drawing.Size(109, 48);
+            this.cb_paused.Size = new System.Drawing.Size(73, 31);
             this.cb_paused.TabIndex = 9;
             this.cb_paused.Text = "Pause";
             this.cb_paused.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -207,9 +195,8 @@ namespace AITool
             // 
             // Frm_Pause
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 288);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.ClientSize = new System.Drawing.Size(333, 187);
             this.Controls.Add(this.cb_paused);
             this.Controls.Add(this.lbl_resumingtime);
             this.Controls.Add(this.groupBox1);
@@ -218,7 +205,7 @@ namespace AITool
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cmb_cameras);
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_Pause";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Pause";

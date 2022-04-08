@@ -65,7 +65,7 @@ namespace AITool
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(42, 44);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(38, 13);
+            this.label1.Size = new System.Drawing.Size(42, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Min %:";
             // 
@@ -89,7 +89,7 @@ namespace AITool
             this.label3.ForeColor = System.Drawing.Color.DimGray;
             this.label3.Location = new System.Drawing.Point(9, 20);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(189, 13);
+            this.label3.Size = new System.Drawing.Size(203, 13);
             this.label3.TabIndex = 2;
             this.label3.Text = "Percentage of prediction size vs image";
             // 
@@ -97,7 +97,7 @@ namespace AITool
             // 
             this.tb_maxpercent.Location = new System.Drawing.Point(199, 41);
             this.tb_maxpercent.Name = "tb_maxpercent";
-            this.tb_maxpercent.Size = new System.Drawing.Size(33, 20);
+            this.tb_maxpercent.Size = new System.Drawing.Size(33, 22);
             this.tb_maxpercent.TabIndex = 3;
             this.tb_maxpercent.Text = "100";
             // 
@@ -106,7 +106,7 @@ namespace AITool
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(157, 44);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(41, 13);
+            this.label2.Size = new System.Drawing.Size(43, 13);
             this.label2.TabIndex = 0;
             this.label2.Text = "Max %:";
             // 
@@ -114,7 +114,7 @@ namespace AITool
             // 
             this.tb_MinPercent.Location = new System.Drawing.Point(86, 41);
             this.tb_MinPercent.Name = "tb_MinPercent";
-            this.tb_MinPercent.Size = new System.Drawing.Size(33, 20);
+            this.tb_MinPercent.Size = new System.Drawing.Size(33, 22);
             this.tb_MinPercent.TabIndex = 2;
             this.tb_MinPercent.Text = "100";
             // 
@@ -140,7 +140,7 @@ namespace AITool
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(134, 50);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(64, 13);
+            this.label7.Size = new System.Drawing.Size(69, 13);
             this.label7.TabIndex = 0;
             this.label7.Text = "Max Height:";
             // 
@@ -149,7 +149,7 @@ namespace AITool
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(19, 50);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(61, 13);
+            this.label5.Size = new System.Drawing.Size(68, 13);
             this.label5.TabIndex = 0;
             this.label5.Text = "Min Height:";
             // 
@@ -158,7 +158,7 @@ namespace AITool
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(137, 26);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(61, 13);
+            this.label6.Size = new System.Drawing.Size(66, 13);
             this.label6.TabIndex = 0;
             this.label6.Text = "Max Width:";
             // 
@@ -166,7 +166,7 @@ namespace AITool
             // 
             this.tb_maxheight.Location = new System.Drawing.Point(201, 47);
             this.tb_maxheight.Name = "tb_maxheight";
-            this.tb_maxheight.Size = new System.Drawing.Size(33, 20);
+            this.tb_maxheight.Size = new System.Drawing.Size(33, 22);
             this.tb_maxheight.TabIndex = 7;
             this.tb_maxheight.Text = "100";
             // 
@@ -175,7 +175,7 @@ namespace AITool
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(22, 26);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(58, 13);
+            this.label4.Size = new System.Drawing.Size(65, 13);
             this.label4.TabIndex = 0;
             this.label4.Text = "Min Width:";
             // 
@@ -183,7 +183,7 @@ namespace AITool
             // 
             this.tb_maxwidth.Location = new System.Drawing.Point(201, 23);
             this.tb_maxwidth.Name = "tb_maxwidth";
-            this.tb_maxwidth.Size = new System.Drawing.Size(33, 20);
+            this.tb_maxwidth.Size = new System.Drawing.Size(33, 22);
             this.tb_maxwidth.TabIndex = 5;
             this.tb_maxwidth.Text = "100";
             // 
@@ -191,7 +191,7 @@ namespace AITool
             // 
             this.tb_minheight.Location = new System.Drawing.Point(86, 47);
             this.tb_minheight.Name = "tb_minheight";
-            this.tb_minheight.Size = new System.Drawing.Size(33, 20);
+            this.tb_minheight.Size = new System.Drawing.Size(33, 22);
             this.tb_minheight.TabIndex = 6;
             this.tb_minheight.Text = "100";
             // 
@@ -199,7 +199,7 @@ namespace AITool
             // 
             this.tb_minwidth.Location = new System.Drawing.Point(86, 23);
             this.tb_minwidth.Name = "tb_minwidth";
-            this.tb_minwidth.Size = new System.Drawing.Size(33, 20);
+            this.tb_minwidth.Size = new System.Drawing.Size(33, 22);
             this.tb_minwidth.TabIndex = 4;
             this.tb_minwidth.Text = "100";
             // 
@@ -220,7 +220,7 @@ namespace AITool
             this.label8.ForeColor = System.Drawing.Color.DimGray;
             this.label8.Location = new System.Drawing.Point(12, 132);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(238, 13);
+            this.label8.Size = new System.Drawing.Size(261, 13);
             this.label8.TabIndex = 2;
             this.label8.Text = "(See History tab > Prediction Details, for size info)";
             // 
@@ -242,7 +242,7 @@ namespace AITool
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(157, 19);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(39, 13);
+            this.label10.Size = new System.Drawing.Size(42, 13);
             this.label10.TabIndex = 0;
             this.label10.Text = "Upper:";
             // 
@@ -251,7 +251,7 @@ namespace AITool
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(41, 19);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(39, 13);
+            this.label9.Size = new System.Drawing.Size(41, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "Lower:";
             // 
@@ -259,7 +259,7 @@ namespace AITool
             // 
             this.tb_ConfidenceUpper.Location = new System.Drawing.Point(199, 16);
             this.tb_ConfidenceUpper.Name = "tb_ConfidenceUpper";
-            this.tb_ConfidenceUpper.Size = new System.Drawing.Size(33, 20);
+            this.tb_ConfidenceUpper.Size = new System.Drawing.Size(33, 22);
             this.tb_ConfidenceUpper.TabIndex = 1;
             this.tb_ConfidenceUpper.Text = "100";
             // 
@@ -267,7 +267,7 @@ namespace AITool
             // 
             this.tb_ConfidenceLower.Location = new System.Drawing.Point(86, 16);
             this.tb_ConfidenceLower.Name = "tb_ConfidenceLower";
-            this.tb_ConfidenceLower.Size = new System.Drawing.Size(33, 20);
+            this.tb_ConfidenceLower.Size = new System.Drawing.Size(33, 22);
             this.tb_ConfidenceLower.TabIndex = 0;
             this.tb_ConfidenceLower.Text = "100";
             // 
@@ -287,7 +287,7 @@ namespace AITool
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(6, 22);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(74, 13);
+            this.label11.Size = new System.Drawing.Size(77, 13);
             this.label11.TabIndex = 2;
             this.label11.Text = "Match Size %:";
             // 
@@ -295,14 +295,13 @@ namespace AITool
             // 
             this.tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
             this.tb_duplicatepercent.Name = "tb_duplicatepercent";
-            this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 20);
+            this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 22);
             this.tb_duplicatepercent.TabIndex = 8;
             this.tb_duplicatepercent.Text = "100";
             // 
             // Frm_PredSizeLimits
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(289, 332);
             this.Controls.Add(this.groupBox4);
@@ -311,6 +310,7 @@ namespace AITool
             this.Controls.Add(this.BtnSave);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_PredSizeLimits";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Prediction Tolerances";

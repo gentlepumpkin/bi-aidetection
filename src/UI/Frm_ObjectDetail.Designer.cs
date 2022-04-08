@@ -149,6 +149,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(962, 512);
             this.Controls.Add(this.splitContainer1);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_ObjectDetail";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Tag = "SAVE";

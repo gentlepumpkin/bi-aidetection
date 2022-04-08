@@ -76,7 +76,7 @@
             this.btnSave.Margin = new System.Windows.Forms.Padding(4);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(70, 30);
-            this.btnSave.TabIndex = 8;
+            this.btnSave.TabIndex = 9;
             this.btnSave.Text = "OK";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
@@ -89,14 +89,14 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(70, 30);
-            this.btnCancel.TabIndex = 9;
+            this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // tableLayoutAdvancedMasking
             // 
-            this.tableLayoutAdvancedMasking.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.tableLayoutAdvancedMasking.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutAdvancedMasking.ColumnCount = 3;
             this.tableLayoutAdvancedMasking.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.81959F));
@@ -133,11 +133,10 @@
             // 
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label4.Location = new System.Drawing.Point(175, 184);
+            this.label4.Location = new System.Drawing.Point(175, 185);
             this.label4.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(202, 15);
+            this.label4.Size = new System.Drawing.Size(198, 13);
             this.label4.TabIndex = 12;
             this.label4.Text = "days if static mask has not been used";
             // 
@@ -145,43 +144,39 @@
             // 
             this.label16.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label16.Location = new System.Drawing.Point(5, 97);
+            this.label16.Location = new System.Drawing.Point(5, 98);
             this.label16.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(108, 15);
-            this.label16.TabIndex = 3;
+            this.label16.Size = new System.Drawing.Size(106, 13);
+            this.label16.TabIndex = 33;
             this.label16.Text = "Remove mask after ";
             // 
             // label17
             // 
             this.label17.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label17.Location = new System.Drawing.Point(5, 13);
+            this.label17.Location = new System.Drawing.Point(5, 14);
             this.label17.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(86, 15);
-            this.label17.TabIndex = 2;
+            this.label17.Size = new System.Drawing.Size(84, 13);
+            this.label17.TabIndex = 34;
             this.label17.Text = "Clear history in";
             // 
             // label18
             // 
             this.label18.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.label18.Location = new System.Drawing.Point(5, 55);
             this.label18.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(99, 15);
-            this.label18.TabIndex = 1;
+            this.label18.TabIndex = 22;
             this.label18.Text = "Create mask after";
             // 
             // num_history_mins
             // 
             this.num_history_mins.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_history_mins.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_history_mins.Location = new System.Drawing.Point(119, 9);
+            this.num_history_mins.Location = new System.Drawing.Point(119, 10);
             this.num_history_mins.Margin = new System.Windows.Forms.Padding(4);
             this.num_history_mins.Maximum = new decimal(new int[] {
             300,
@@ -194,7 +189,7 @@
             0,
             0});
             this.num_history_mins.Name = "num_history_mins";
-            this.num_history_mins.Size = new System.Drawing.Size(49, 23);
+            this.num_history_mins.Size = new System.Drawing.Size(49, 22);
             this.num_history_mins.TabIndex = 0;
             this.num_history_mins.Value = new decimal(new int[] {
             1,
@@ -206,8 +201,7 @@
             // num_mask_create
             // 
             this.num_mask_create.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_mask_create.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_mask_create.Location = new System.Drawing.Point(119, 51);
+            this.num_mask_create.Location = new System.Drawing.Point(119, 52);
             this.num_mask_create.Margin = new System.Windows.Forms.Padding(4);
             this.num_mask_create.Maximum = new decimal(new int[] {
             20,
@@ -220,7 +214,7 @@
             0,
             0});
             this.num_mask_create.Name = "num_mask_create";
-            this.num_mask_create.Size = new System.Drawing.Size(49, 23);
+            this.num_mask_create.Size = new System.Drawing.Size(49, 22);
             this.num_mask_create.TabIndex = 1;
             this.num_mask_create.Value = new decimal(new int[] {
             1,
@@ -232,19 +226,17 @@
             // 
             this.label20.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label20.AutoSize = true;
-            this.label20.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label20.Location = new System.Drawing.Point(175, 13);
+            this.label20.Location = new System.Drawing.Point(175, 14);
             this.label20.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(317, 15);
+            this.label20.Size = new System.Drawing.Size(307, 13);
             this.label20.TabIndex = 9;
             this.label20.Text = "minute(s).   Clears list of objects detected in same location ";
             // 
             // num_mask_remove
             // 
             this.num_mask_remove.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_mask_remove.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_mask_remove.Location = new System.Drawing.Point(119, 93);
+            this.num_mask_remove.Location = new System.Drawing.Point(119, 94);
             this.num_mask_remove.Margin = new System.Windows.Forms.Padding(4);
             this.num_mask_remove.Maximum = new decimal(new int[] {
             300,
@@ -257,7 +249,7 @@
             0,
             0});
             this.num_mask_remove.Name = "num_mask_remove";
-            this.num_mask_remove.Size = new System.Drawing.Size(49, 23);
+            this.num_mask_remove.Size = new System.Drawing.Size(49, 22);
             this.num_mask_remove.TabIndex = 2;
             this.num_mask_remove.Value = new decimal(new int[] {
             1,
@@ -270,19 +262,17 @@
             // 
             this.label22.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label22.AutoSize = true;
-            this.label22.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label22.Location = new System.Drawing.Point(5, 139);
+            this.label22.Location = new System.Drawing.Point(5, 140);
             this.label22.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(84, 15);
+            this.label22.Size = new System.Drawing.Size(79, 13);
             this.label22.TabIndex = 12;
             this.label22.Text = "Percent match";
             // 
             // num_percent_var
             // 
             this.num_percent_var.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_percent_var.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.num_percent_var.Location = new System.Drawing.Point(119, 135);
+            this.num_percent_var.Location = new System.Drawing.Point(119, 136);
             this.num_percent_var.Margin = new System.Windows.Forms.Padding(4);
             this.num_percent_var.Minimum = new decimal(new int[] {
             1,
@@ -290,8 +280,8 @@
             0,
             0});
             this.num_percent_var.Name = "num_percent_var";
-            this.num_percent_var.Size = new System.Drawing.Size(49, 23);
-            this.num_percent_var.TabIndex = 3;
+            this.num_percent_var.Size = new System.Drawing.Size(49, 22);
+            this.num_percent_var.TabIndex = 4;
             this.num_percent_var.Value = new decimal(new int[] {
             1,
             0,
@@ -302,11 +292,10 @@
             // 
             this.label19.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label19.Location = new System.Drawing.Point(175, 55);
+            this.label19.Location = new System.Drawing.Point(175, 56);
             this.label19.Margin = new System.Windows.Forms.Padding(1, 0, 2, 0);
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(365, 15);
+            this.label19.Size = new System.Drawing.Size(354, 13);
             this.label19.TabIndex = 8;
             this.label19.Text = "detection(s).  Number of history detections needed to create a mask";
             this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -326,19 +315,17 @@
             // 
             this.label21.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label21.AutoSize = true;
-            this.label21.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.label21.Location = new System.Drawing.Point(1, 13);
             this.label21.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(218, 15);
+            this.label21.Size = new System.Drawing.Size(212, 13);
             this.label21.TabIndex = 12;
             this.label21.Text = "minute(s) if object not visible in the last ";
             // 
             // numMaskThreshold
             // 
             this.numMaskThreshold.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numMaskThreshold.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.numMaskThreshold.Location = new System.Drawing.Point(220, 10);
+            this.numMaskThreshold.Location = new System.Drawing.Point(214, 10);
             this.numMaskThreshold.Margin = new System.Windows.Forms.Padding(1, 10, 0, 4);
             this.numMaskThreshold.Maximum = new decimal(new int[] {
             300,
@@ -346,8 +333,8 @@
             0,
             0});
             this.numMaskThreshold.Name = "numMaskThreshold";
-            this.numMaskThreshold.Size = new System.Drawing.Size(49, 23);
-            this.numMaskThreshold.TabIndex = 13;
+            this.numMaskThreshold.Size = new System.Drawing.Size(49, 22);
+            this.numMaskThreshold.TabIndex = 3;
             this.numMaskThreshold.Value = new decimal(new int[] {
             1,
             0,
@@ -359,11 +346,10 @@
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label2.Location = new System.Drawing.Point(273, 13);
+            this.label2.Location = new System.Drawing.Point(267, 13);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 4, 0, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(62, 15);
+            this.label2.Size = new System.Drawing.Size(61, 13);
             this.label2.TabIndex = 14;
             this.label2.Text = "detections";
             // 
@@ -381,21 +367,20 @@
             // 
             this.label23.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label23.AutoSize = true;
-            this.label23.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label23.Location = new System.Drawing.Point(1, 12);
+            this.label23.Location = new System.Drawing.Point(1, 13);
             this.label23.Margin = new System.Windows.Forms.Padding(1, 0, 4, 0);
             this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(143, 15);
+            this.label23.Size = new System.Drawing.Size(141, 13);
             this.label23.TabIndex = 15;
             this.label23.Text = "% to be considered equal.";
             // 
             // btnAdvanced
             // 
-            this.btnAdvanced.Location = new System.Drawing.Point(153, 5);
+            this.btnAdvanced.Location = new System.Drawing.Point(151, 5);
             this.btnAdvanced.Margin = new System.Windows.Forms.Padding(5);
             this.btnAdvanced.Name = "btnAdvanced";
             this.btnAdvanced.Size = new System.Drawing.Size(70, 29);
-            this.btnAdvanced.TabIndex = 4;
+            this.btnAdvanced.TabIndex = 5;
             this.btnAdvanced.Text = "Advanced";
             this.btnAdvanced.UseVisualStyleBackColor = true;
             this.btnAdvanced.Click += new System.EventHandler(this.btnAdvanced_Click);
@@ -404,21 +389,20 @@
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.label3.Location = new System.Drawing.Point(5, 182);
+            this.label3.Location = new System.Drawing.Point(5, 183);
             this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(108, 15);
-            this.label3.TabIndex = 3;
+            this.label3.Size = new System.Drawing.Size(106, 13);
+            this.label3.TabIndex = 36;
             this.label3.Text = "Remove mask after ";
             // 
             // num_max_unused
             // 
             this.num_max_unused.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.num_max_unused.Location = new System.Drawing.Point(118, 178);
+            this.num_max_unused.Location = new System.Drawing.Point(118, 179);
             this.num_max_unused.Name = "num_max_unused";
-            this.num_max_unused.Size = new System.Drawing.Size(49, 23);
-            this.num_max_unused.TabIndex = 5;
+            this.num_max_unused.Size = new System.Drawing.Size(49, 22);
+            this.num_max_unused.TabIndex = 6;
             this.num_max_unused.Value = new decimal(new int[] {
             60,
             0,
@@ -440,12 +424,11 @@
             // cb_enabled
             // 
             this.cb_enabled.AutoSize = true;
-            this.cb_enabled.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cb_enabled.Location = new System.Drawing.Point(16, 289);
             this.cb_enabled.Margin = new System.Windows.Forms.Padding(4);
             this.cb_enabled.Name = "cb_enabled";
             this.cb_enabled.Size = new System.Drawing.Size(68, 19);
-            this.cb_enabled.TabIndex = 7;
+            this.cb_enabled.TabIndex = 8;
             this.cb_enabled.Text = "Enabled";
             this.cb_enabled.UseVisualStyleBackColor = true;
             // 
@@ -454,8 +437,8 @@
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.Location = new System.Drawing.Point(9, 254);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(103, 15);
-            this.linkLabel1.TabIndex = 22;
+            this.linkLabel1.Size = new System.Drawing.Size(102, 13);
+            this.linkLabel1.TabIndex = 7;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "Triggering Objects";
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
@@ -463,7 +446,6 @@
             // lbl_objects
             // 
             this.lbl_objects.AutoSize = true;
-            this.lbl_objects.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_objects.Location = new System.Drawing.Point(118, 256);
             this.lbl_objects.Name = "lbl_objects";
             this.lbl_objects.Size = new System.Drawing.Size(10, 13);
@@ -482,7 +464,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnSave);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Frm_DynamicMasking";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

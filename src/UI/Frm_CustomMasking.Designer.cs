@@ -102,27 +102,27 @@
             this.flowLayoutPanel1.Controls.Add(this.rbBrush);
             this.flowLayoutPanel1.Controls.Add(this.rbRectangle);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(6, 19);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(6, 21);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(6, 15, 6, 6);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(409, 33);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(409, 31);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // label1
             // 
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(22, 9);
+            this.label1.Location = new System.Drawing.Point(22, 10);
             this.label1.Margin = new System.Windows.Forms.Padding(22, 0, 6, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(57, 13);
+            this.label1.Size = new System.Drawing.Size(59, 13);
             this.label1.TabIndex = 3;
             this.label1.Text = "Brush Size";
             // 
             // numBrushSize
             // 
             this.numBrushSize.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numBrushSize.Location = new System.Drawing.Point(91, 6);
+            this.numBrushSize.Location = new System.Drawing.Point(93, 6);
             this.numBrushSize.Margin = new System.Windows.Forms.Padding(6);
             this.numBrushSize.Maximum = new decimal(new int[] {
             200,
@@ -135,7 +135,7 @@
             0,
             0});
             this.numBrushSize.Name = "numBrushSize";
-            this.numBrushSize.Size = new System.Drawing.Size(48, 20);
+            this.numBrushSize.Size = new System.Drawing.Size(48, 22);
             this.numBrushSize.TabIndex = 0;
             this.numBrushSize.Value = new decimal(new int[] {
             20,
@@ -151,10 +151,10 @@
             this.rbBrush.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.rbBrush.AutoSize = true;
             this.rbBrush.Checked = true;
-            this.rbBrush.Location = new System.Drawing.Point(200, 7);
+            this.rbBrush.Location = new System.Drawing.Point(202, 8);
             this.rbBrush.Margin = new System.Windows.Forms.Padding(55, 6, 6, 6);
             this.rbBrush.Name = "rbBrush";
-            this.rbBrush.Size = new System.Drawing.Size(52, 17);
+            this.rbBrush.Size = new System.Drawing.Size(54, 17);
             this.rbBrush.TabIndex = 1;
             this.rbBrush.TabStop = true;
             this.rbBrush.Text = "Brush";
@@ -164,10 +164,10 @@
             // 
             this.rbRectangle.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.rbRectangle.AutoSize = true;
-            this.rbRectangle.Location = new System.Drawing.Point(264, 7);
+            this.rbRectangle.Location = new System.Drawing.Point(268, 8);
             this.rbRectangle.Margin = new System.Windows.Forms.Padding(6, 6, 55, 6);
             this.rbRectangle.Name = "rbRectangle";
-            this.rbRectangle.Size = new System.Drawing.Size(74, 17);
+            this.rbRectangle.Size = new System.Drawing.Size(76, 17);
             this.rbRectangle.TabIndex = 2;
             this.rbRectangle.Text = "Rectangle";
             this.rbRectangle.UseVisualStyleBackColor = true;
@@ -214,7 +214,7 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(426, 442);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(60, 13);
+            this.label2.Size = new System.Drawing.Size(66, 13);
             this.label2.TabIndex = 8;
             this.label2.Text = "Resolution:";
             // 
@@ -236,7 +236,7 @@
             this.linkLabelScan.AutoSize = true;
             this.linkLabelScan.Location = new System.Drawing.Point(598, 442);
             this.linkLabelScan.Name = "linkLabelScan";
-            this.linkLabelScan.Size = new System.Drawing.Size(32, 13);
+            this.linkLabelScan.Size = new System.Drawing.Size(31, 13);
             this.linkLabelScan.TabIndex = 4;
             this.linkLabelScan.TabStop = true;
             this.linkLabelScan.Text = "Scan";
@@ -256,6 +256,7 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.panel1);
             this.DoubleBuffered = true;
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Frm_CustomMasking";
             this.Text = "Custom Masking";

@@ -138,10 +138,11 @@ namespace AITool
                         $"AITOOL {AssemVer} Initialized.  " +
                         $"\nTo send Telegram commands, first ask BotFather to disable '/setprivacy'.  " +
                         $"\nCommand Usage: " +
-                        $"\n  PAUSE|STOP|START|RESUME [CAMNAME] [MINUTES]." +
-                        $"\n     'PAUSE 1' will pause all cams for 1 min." +
-                        $"\n  MUTE, UNMUTE, VOLUMEUP, VOLUMEDOWN, " +
-                        $"\n  VOLUMESET Level, RESTARTCOMPUTER");
+                        $"\nPAUSE|STOP|START|RESUME [CAMNAME] [MINUTES]" +
+                        $"\n'PAUSE 1' will pause all cams for 1 min." +
+                        $"\nMUTE, UNMUTE, VOLUMEUP, VOLUMEDOWN, " +
+                        $"\nVOLUMESET Level" +
+                        $"\nSHUTDOWNCOMPUTER\nRESTARTCOMPUTER\nRESTARTAITOOL\nSCREENSHOT");
                 }
                 else
                 {

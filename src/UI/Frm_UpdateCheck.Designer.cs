@@ -56,9 +56,10 @@ namespace AITool
             // 
             // bt_check
             // 
-            this.bt_check.Location = new System.Drawing.Point(14, 145);
+            this.bt_check.Location = new System.Drawing.Point(9, 94);
+            this.bt_check.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bt_check.Name = "bt_check";
-            this.bt_check.Size = new System.Drawing.Size(128, 37);
+            this.bt_check.Size = new System.Drawing.Size(85, 24);
             this.bt_check.TabIndex = 0;
             this.bt_check.Text = "Check";
             this.bt_check.UseVisualStyleBackColor = true;
@@ -67,27 +68,30 @@ namespace AITool
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(75, 22);
+            this.label1.Location = new System.Drawing.Point(50, 14);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(124, 20);
+            this.label1.Size = new System.Drawing.Size(90, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "Current Version:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(18, 102);
+            this.label2.Location = new System.Drawing.Point(12, 66);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(181, 20);
+            this.label2.Size = new System.Drawing.Size(131, 13);
             this.label2.TabIndex = 1;
             this.label2.Text = "Current Official Release:";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(32, 60);
+            this.label3.Location = new System.Drawing.Point(21, 39);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(167, 20);
+            this.label3.Size = new System.Drawing.Size(116, 13);
             this.label3.TabIndex = 1;
             this.label3.Text = "Current Beta Release:";
             // 
@@ -95,9 +99,10 @@ namespace AITool
             // 
             this.lbl_CurrentVersion.AutoSize = true;
             this.lbl_CurrentVersion.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_CurrentVersion.Location = new System.Drawing.Point(206, 22);
+            this.lbl_CurrentVersion.Location = new System.Drawing.Point(141, 14);
+            this.lbl_CurrentVersion.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lbl_CurrentVersion.Name = "lbl_CurrentVersion";
-            this.lbl_CurrentVersion.Size = new System.Drawing.Size(135, 20);
+            this.lbl_CurrentVersion.Size = new System.Drawing.Size(91, 13);
             this.lbl_CurrentVersion.TabIndex = 2;
             this.lbl_CurrentVersion.Text = "1.1.1 (2/2/22)";
             // 
@@ -105,9 +110,10 @@ namespace AITool
             // 
             this.bt_InstallBeta.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.bt_InstallBeta.Enabled = false;
-            this.bt_InstallBeta.Location = new System.Drawing.Point(234, 51);
+            this.bt_InstallBeta.Location = new System.Drawing.Point(271, 33);
+            this.bt_InstallBeta.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bt_InstallBeta.Name = "bt_InstallBeta";
-            this.bt_InstallBeta.Size = new System.Drawing.Size(104, 35);
+            this.bt_InstallBeta.Size = new System.Drawing.Size(69, 23);
             this.bt_InstallBeta.TabIndex = 0;
             this.bt_InstallBeta.Text = "Install";
             this.toolTip1.SetToolTip(this.bt_InstallBeta, "Download latest beta installer");
@@ -118,9 +124,10 @@ namespace AITool
             // 
             this.linkLabelRelease.AutoSize = true;
             this.linkLabelRelease.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.linkLabelRelease.Location = new System.Drawing.Point(206, 102);
+            this.linkLabelRelease.Location = new System.Drawing.Point(141, 66);
+            this.linkLabelRelease.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.linkLabelRelease.Name = "linkLabelRelease";
-            this.linkLabelRelease.Size = new System.Drawing.Size(18, 20);
+            this.linkLabelRelease.Size = new System.Drawing.Size(13, 13);
             this.linkLabelRelease.TabIndex = 3;
             this.linkLabelRelease.TabStop = true;
             this.linkLabelRelease.Text = ".";
@@ -131,9 +138,10 @@ namespace AITool
             // 
             this.linkLabelBeta.AutoSize = true;
             this.linkLabelBeta.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.linkLabelBeta.Location = new System.Drawing.Point(206, 60);
+            this.linkLabelBeta.Location = new System.Drawing.Point(141, 39);
+            this.linkLabelBeta.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.linkLabelBeta.Name = "linkLabelBeta";
-            this.linkLabelBeta.Size = new System.Drawing.Size(18, 20);
+            this.linkLabelBeta.Size = new System.Drawing.Size(13, 13);
             this.linkLabelBeta.TabIndex = 3;
             this.linkLabelBeta.TabStop = true;
             this.linkLabelBeta.Text = ".";
@@ -144,9 +152,10 @@ namespace AITool
             // 
             this.bt_installRelease.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.bt_installRelease.Enabled = false;
-            this.bt_installRelease.Location = new System.Drawing.Point(234, 94);
+            this.bt_installRelease.Location = new System.Drawing.Point(271, 61);
+            this.bt_installRelease.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bt_installRelease.Name = "bt_installRelease";
-            this.bt_installRelease.Size = new System.Drawing.Size(104, 34);
+            this.bt_installRelease.Size = new System.Drawing.Size(69, 22);
             this.bt_installRelease.TabIndex = 4;
             this.bt_installRelease.Text = "Install";
             this.toolTip1.SetToolTip(this.bt_installRelease, "Download latest official release version");
@@ -159,7 +168,6 @@ namespace AITool
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -183,19 +191,17 @@ namespace AITool
             // 
             this.splitContainer1.Panel2.Controls.Add(this.webBrowser1);
             this.splitContainer1.Panel2.Controls.Add(this.label4);
-            this.splitContainer1.Size = new System.Drawing.Size(1128, 423);
+            this.splitContainer1.Size = new System.Drawing.Size(752, 275);
             this.splitContainer1.SplitterDistance = 348;
-            this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 5;
             // 
             // btn_Donate
             // 
             this.btn_Donate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btn_Donate.Image = global::AITool.Properties.Resources.donate_button;
-            this.btn_Donate.Location = new System.Drawing.Point(14, 322);
-            this.btn_Donate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btn_Donate.Location = new System.Drawing.Point(9, 208);
             this.btn_Donate.Name = "btn_Donate";
-            this.btn_Donate.Size = new System.Drawing.Size(118, 45);
+            this.btn_Donate.Size = new System.Drawing.Size(79, 29);
             this.btn_Donate.TabIndex = 9;
             this.btn_Donate.UseVisualStyleBackColor = true;
             this.btn_Donate.Click += new System.EventHandler(this.btn_Donate_Click);
@@ -204,10 +210,9 @@ namespace AITool
             // 
             this.linkLabelGithub.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabelGithub.AutoSize = true;
-            this.linkLabelGithub.Location = new System.Drawing.Point(339, 388);
-            this.linkLabelGithub.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.linkLabelGithub.Location = new System.Drawing.Point(226, 251);
             this.linkLabelGithub.Name = "linkLabelGithub";
-            this.linkLabelGithub.Size = new System.Drawing.Size(142, 20);
+            this.linkLabelGithub.Size = new System.Drawing.Size(104, 13);
             this.linkLabelGithub.TabIndex = 8;
             this.linkLabelGithub.TabStop = true;
             this.linkLabelGithub.Text = "Github Discussion ";
@@ -216,10 +221,9 @@ namespace AITool
             // 
             this.linkLabelIPCam.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabelIPCam.AutoSize = true;
-            this.linkLabelIPCam.Location = new System.Drawing.Point(160, 388);
-            this.linkLabelIPCam.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.linkLabelIPCam.Location = new System.Drawing.Point(107, 251);
             this.linkLabelIPCam.Name = "linkLabelIPCam";
-            this.linkLabelIPCam.Size = new System.Drawing.Size(136, 20);
+            this.linkLabelIPCam.Size = new System.Drawing.Size(94, 13);
             this.linkLabelIPCam.TabIndex = 7;
             this.linkLabelIPCam.TabStop = true;
             this.linkLabelIPCam.Text = "IPCamTalk Forum";
@@ -229,10 +233,9 @@ namespace AITool
             // 
             this.linkLabelReportIssue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabelReportIssue.AutoSize = true;
-            this.linkLabelReportIssue.Location = new System.Drawing.Point(18, 388);
-            this.linkLabelReportIssue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.linkLabelReportIssue.Location = new System.Drawing.Point(12, 251);
             this.linkLabelReportIssue.Name = "linkLabelReportIssue";
-            this.linkLabelReportIssue.Size = new System.Drawing.Size(101, 20);
+            this.linkLabelReportIssue.Size = new System.Drawing.Size(71, 13);
             this.linkLabelReportIssue.TabIndex = 6;
             this.linkLabelReportIssue.TabStop = true;
             this.linkLabelReportIssue.Text = "Report Issue";
@@ -240,12 +243,11 @@ namespace AITool
             // 
             // lbl_message
             // 
-            this.lbl_message.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_message.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_message.ForeColor = System.Drawing.Color.Green;
-            this.lbl_message.Location = new System.Drawing.Point(206, 154);
-            this.lbl_message.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_message.Location = new System.Drawing.Point(137, 100);
             this.lbl_message.Name = "lbl_message";
-            this.lbl_message.Size = new System.Drawing.Size(304, 80);
+            this.lbl_message.Size = new System.Drawing.Size(203, 52);
             this.lbl_message.TabIndex = 5;
             this.lbl_message.Text = "A newer version is available. ";
             this.lbl_message.Visible = false;
@@ -255,11 +257,10 @@ namespace AITool
             this.webBrowser1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.webBrowser1.Location = new System.Drawing.Point(4, 45);
-            this.webBrowser1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.webBrowser1.MinimumSize = new System.Drawing.Size(30, 31);
+            this.webBrowser1.Location = new System.Drawing.Point(3, 29);
+            this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.Size = new System.Drawing.Size(761, 370);
+            this.webBrowser1.Size = new System.Drawing.Size(389, 239);
             this.webBrowser1.TabIndex = 1;
             this.webBrowser1.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.webBrowser1_DocumentCompleted);
             this.webBrowser1.Navigated += new System.Windows.Forms.WebBrowserNavigatedEventHandler(this.webBrowser1_Navigated);
@@ -269,21 +270,22 @@ namespace AITool
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.BackColor = System.Drawing.SystemColors.Info;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(4, 0);
-            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(3, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(768, 40);
+            this.label4.Size = new System.Drawing.Size(394, 26);
             this.label4.TabIndex = 0;
             this.label4.Text = "Release Notes";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Frm_UpdateCheck
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1128, 423);
+            this.ClientSize = new System.Drawing.Size(752, 275);
             this.Controls.Add(this.splitContainer1);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "Frm_UpdateCheck";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Tag = "SAVE";

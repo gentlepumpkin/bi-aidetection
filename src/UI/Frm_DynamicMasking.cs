@@ -75,7 +75,7 @@ namespace AITool
                     this.cam.maskManager.ScaleConfig.MediumObjectMaxPercent = midObjMax;
                     this.cam.maskManager.ScaleConfig.MediumObjectMatchPercent = midObjPercent;
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
                 }
             }
 

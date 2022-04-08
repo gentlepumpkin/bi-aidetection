@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -93,19 +94,19 @@ namespace AITool
 
         private static Nullable<bool> _isService = default(Boolean?);
 
-        public static async Task<bool> SafeFileDeleteAsync(string Filename, string Source)
+        public static async Task<bool> SafeFileDeleteAsync(string Filename, string Source, long MaxWaitMS = 30000, bool Quiet = false)
         {
             //run the function in another thread
-            return await Task.Run(() => SafeFileDelete(Filename, Source));
+            return await Task.Run(() => SafeFileDelete(Filename, Source, MaxWaitMS, Quiet));
         }
-        public static bool SafeFileDelete(string Filename, string Source)
+        public static bool SafeFileDelete(string Filename, string Source, long MaxWaitMS = 30000, bool Quiet = false)
         {
             bool ret = false;
 
             if (!File.Exists(Filename))
                 return true;
 
-            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, 30000, AppSettings.Settings.loop_delay_ms, true, 0);
+            WaitFileAccessResult result = Global.WaitForFileAccess(Filename, FileAccess.ReadWrite, FileShare.None, MaxWaitMS, AppSettings.Settings.loop_delay_ms, true, 0);
             if (result.Success)
             {
                 try
@@ -115,12 +116,14 @@ namespace AITool
                 }
                 catch (Exception ex)
                 {
-                    Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {ex.Msg()}");
+                    if (!Quiet)
+                        Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {ex.Msg()}");
                 }
             }
             else
             {
-                Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {Filename}");
+                if (!Quiet)
+                    Log($"Error: Could not delete file after {result.TimeMS} ms. Source='{Source}': {Filename}");
             }
 
             return ret;
@@ -510,6 +513,19 @@ namespace AITool
             StrFormatByteSize(filesize, sb, sb.Capacity);
             return sb.ToString();
         }
+        public static bool IsLatLongValid(string lat, string lng)
+        {
+            return IsLatLongValid(lat.ToDouble(), lng.ToDouble());
+        }
+        public static bool IsLatLongValid(double lat, double lng)
+        {
+            bool ret = false;
+            if (lat == 0 || lat == 39.809734 || lat < -90 || lat > 90 || lng == 0 || lng == -98.555620 || lng < -180 || lng > 180)
+                ret = false;
+            else
+                ret = true;
+            return ret;
+        }
         private static DateTime lastlatwarn = DateTime.Now;
         public static bool IsTimeBetween(DateTime time, string span)
         {
@@ -558,49 +574,54 @@ namespace AITool
 
                         if (splt[0].EqualsIgnoreCase("sunset") || splt[0].EqualsIgnoreCase("sunrise") || splt[0].Has("dusk") || splt[0].Has("dawn"))
                         {
-                            if (AppSettings.Settings.LocalLatitude == 39.809734 && (DateTime.Now - lastlatwarn).TotalMinutes >= 30)
+                            if (!IsLatLongValid(AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude))
                             {
-                                Log("Warn: The 'LocalLatitude' and 'LocalLongitude' settings in AITOOL.Settings.JSON need to be set.  If you set those settings in a locally running copy of BlueIris > Settings > Schedule tab, they will be AUTOMATICALLY used.");
-                                lastlatwarn = DateTime.Now;
+                                if ((DateTime.Now - lastlatwarn).TotalMinutes >= 30)
+                                {
+                                    Log($"Warn: The 'LocalLatitude' and 'LocalLongitude' settings in AITOOL.Settings.JSON file is incorrect and needs to be set to your local area.  Latitude is currently '{AppSettings.Settings.LocalLatitude}' and Longitude is '{AppSettings.Settings.LocalLongitude}'.  If you set those settings in a locally running copy of BlueIris > Settings > Schedule tab, they will be AUTOMATICALLY used.");
+                                    lastlatwarn = DateTime.Now;
+                                }
                             }
+                            else
+                            {
+                                TimeZoneInfo localZone = TimeZoneInfo.Local;
+                                SolarTimes solarTimes = new SolarTimes(time, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
 
-                            TimeZoneInfo localZone = TimeZoneInfo.Local;
-                            SolarTimes solarTimes = new SolarTimes(time, AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude);
+                                if (splt[0].Has("dusk"))
+                                {
+                                    BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[0].EqualsIgnoreCase("sunset"))
+                                {
+                                    BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[0].EqualsIgnoreCase("sunrise"))
+                                {
+                                    BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[0].Has("dawn"))
+                                {
+                                    BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
+                                }
 
-                            if (splt[0].Has("dusk"))
-                            {
-                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-                            else if (splt[0].EqualsIgnoreCase("sunset"))
-                            {
-                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-                            else if (splt[0].EqualsIgnoreCase("sunrise"))
-                            {
-                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-                            else if (splt[0].Has("dawn"))
-                            {
-                                BeginSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
-                            }
+                                if (splt[1].Has("dusk"))
+                                {
+                                    EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[1].EqualsIgnoreCase("sunset"))
+                                {
+                                    EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[1].EqualsIgnoreCase("sunrise"))
+                                {
+                                    EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
+                                }
+                                else if (splt[1].Has("dawn"))
+                                {
+                                    EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
+                                }
 
-                            if (splt[1].Has("dusk"))
-                            {
-                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DuskCivil.ToUniversalTime(), localZone).TimeOfDay;
                             }
-                            else if (splt[1].EqualsIgnoreCase("sunset"))
-                            {
-                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunset.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-                            else if (splt[1].EqualsIgnoreCase("sunrise"))
-                            {
-                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.Sunrise.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-                            else if (splt[1].Has("dawn"))
-                            {
-                                EndSpan = TimeZoneInfo.ConvertTimeFromUtc(solarTimes.DawnCivil.ToUniversalTime(), localZone).TimeOfDay;
-                            }
-
 
                         }
                         else
@@ -640,7 +661,7 @@ namespace AITool
             catch (Exception ex)
             {
 
-                Log($"Error: Range Invalid: '{span}': " + ex.Msg());
+                Log($"Error: Range Invalid: '{span}'. Lat='{AppSettings.Settings.LocalLatitude}', Long='{AppSettings.Settings.LocalLongitude}': " + ex.Msg());
             }
 
             return ret;
@@ -1673,35 +1694,36 @@ namespace AITool
                 if (ndpKey != null)
                 {
                     int value = (int)(ndpKey.GetValue("Release") ?? 0);
+                    string ver = ndpKey.GetValue("Version", "Unknown").ToString();
                     if (value >= 528040)
-                        return new Version(4, 8, 0).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 8, 0).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 461808)
-                        return new Version(4, 7, 2).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 7, 2).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 461308)
-                        return new Version(4, 7, 1).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 7, 1).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 460798)
-                        return new Version(4, 7, 0).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 7, 0).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 394802)
-                        return new Version(4, 6, 2).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 6, 2).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 394254)
-                        return new Version(4, 6, 1).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 6, 1).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 393295)
-                        return new Version(4, 6, 0).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 6, 0).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 379893)
-                        return new Version(4, 5, 2).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 5, 2).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 378675)
-                        return new Version(4, 5, 1).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 5, 1).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     if (value >= 378389)
-                        return new Version(4, 5, 0).ToString() + $" (Release {value.ToString()})";
+                        return new Version(4, 5, 0).ToString() + $" (v{ver}, Release {value.ToString()})";
 
                     return $"Unknown release {value}";
                 }
@@ -1788,7 +1810,7 @@ namespace AITool
             Version AN = Assembly.GetExecutingAssembly().GetName().Version;
             string Cname = System.Windows.Forms.Application.CompanyName;
             string Pname = System.Windows.Forms.Application.ProductName;
-            string version = AN.Major + ".0";
+            string version = AN.Major + "." + AN.Minor;
             object RetVal = DefaultValue;
             string SKey = "";
             if (!string.IsNullOrWhiteSpace(SubKey))
@@ -2220,11 +2242,24 @@ namespace AITool
                         resume = true;
                     else if (parts[0].EqualsIgnoreCase("restartcomputer") || parts[0].EqualsIgnoreCase("restartpc") || parts[0].EqualsIgnoreCase("reboot") || parts[0].EqualsIgnoreCase("rebootcomputer") || parts[0].EqualsIgnoreCase("rebootpc"))
                     {
-                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Computer restarting in 5 seconds...");
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Computer restarting in 10 seconds...");
 
                         using (Process prc = System.Diagnostics.Process.Start("shutdown.exe", "-r -f -t 10")) { }
+                        Application.Exit();
+                    }
+                    else if (parts[0].EqualsIgnoreCase("shutdowncomputer") || parts[0].EqualsIgnoreCase("shutdownpc"))
+                    {
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Computer shutting down in 10 seconds...");
+                        using (Process prc = System.Diagnostics.Process.Start("shutdown.exe", "-s -f -t 10")) { }
 
                         Application.Exit();
+                    }
+                    else if (parts[0].EqualsIgnoreCase("restart") || parts[0].EqualsIgnoreCase("restartaitool"))
+                    {
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Restarting AITOOL...");
+                        Restart.WriteFullFence(true);
+                        Application.Exit();
+
                     }
                     else if (parts[0].EqualsIgnoreCase("mute"))
                     {
@@ -2256,6 +2291,32 @@ namespace AITool
                         await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"VolumeSet {num}");
                         Log($"Volume set {num}");
                         VolSet(num);
+                    }
+                    else if (parts[0].EqualsIgnoreCase("screenshot"))
+                    {
+                        await AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"Taking screenshot...");
+                        Log($"Debug: Taking screenshot of primary screen @ {Screen.PrimaryScreen.Bounds.Width}x{Screen.PrimaryScreen.Bounds.Height}");
+
+                        using (Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height))
+                        {
+                            using (Graphics g = Graphics.FromImage(bitmap))
+                            {
+                                g.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
+                            }
+
+                            //string outfile = Path.Combine(GetTempFolder(), $"Screenshot_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.jpg");
+
+
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                bitmap.Save(ms, ImageFormat.Jpeg);
+                                ms.Seek(0, SeekOrigin.Begin); //go back to start
+                                await AITOOL.Telegram.SendPhotoAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), ms, "", "screenshot.jpg", "");
+                            }
+
+                            //ClsImageQueueItem img = new ClsImageQueueItem(outfile, 0, false);
+
+                        }
                     }
                     else
                     {
@@ -2766,7 +2827,7 @@ namespace AITool
                                                               int MaxErrRetryCnt = 2000)
         {
 
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            //using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             WaitFileAccessResult ret = new WaitFileAccessResult();
             string LastFailReason = "";
@@ -3153,6 +3214,58 @@ namespace AITool
 
             return httpContent;
         }
+
+
+
+        public static bool IsDirWritable(string FolderName, bool CreateIfNotExist)
+        {
+            bool Ret = false;
+            try
+            {
+                if (FolderName.IsEmpty())
+                    return Ret;
+
+                // if actually passed a filename, get folder
+                string pth = FolderName;
+                //if (PathEndsWithFilename(FolderName))
+                //{
+                //    pth = Path.GetDirectoryName(pth);
+                //}
+
+                if (!Directory.Exists(pth))
+                {
+                    if (CreateIfNotExist)
+                    {
+                        Directory.CreateDirectory(pth);
+                        Ret = true;
+                        return Ret;
+                    }
+                    else
+                    {
+                        return Ret;
+                    }
+                }
+
+                string Filename = Path.Combine(pth, Path.GetRandomFileName());
+                using (var fs = File.Create(Filename, 1, FileOptions.DeleteOnClose))
+                {
+                }
+                // make sure temp file really did get deleted...
+                if (File.Exists(Filename))
+                {
+                    Log("Trace: Failed to remove temp file? " + Filename);
+                    File.Delete(Filename);
+                }
+
+                Ret = true;
+            }
+            catch
+            {
+            }
+
+            return Ret;
+        }
+
         /// <summary>
         /// Writes the given object instance to a Json file.
         /// <para>Object type must have a parameterless constructor.</para>

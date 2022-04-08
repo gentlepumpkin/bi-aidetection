@@ -55,7 +55,7 @@ namespace AITool
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(-1, 6);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(198, 13);
+            this.label1.Size = new System.Drawing.Size(210, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "CTRL-Click copies variables to clipboard";
             // 
@@ -66,6 +66,7 @@ namespace AITool
             this.ClientSize = new System.Drawing.Size(386, 476);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.FOLV_Vars);
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Name = "Frm_Variables";
             this.Tag = "SAVE";
             this.Text = "Variables";

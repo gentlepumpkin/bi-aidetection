@@ -497,14 +497,14 @@ namespace AITool
         {
             this.cam.maskManager.MaskedPositions.Clear();
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void lblClearHistory_Click(object sender, EventArgs e)
         {
             this.cam.maskManager.LastPositionsHistory.Clear();
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void FOLV_MaskHistory_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
@@ -526,7 +526,7 @@ namespace AITool
                 this.cam.maskManager.CreateDynamicMask(op, true);
             }
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void FOLV_Masks_CellRightClick(object sender, BrightIdeasSoftware.CellRightClickEventArgs e)
@@ -544,7 +544,7 @@ namespace AITool
                 this.cam.maskManager.RemoveActiveMask(op);
             }
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void Frm_DynamicMaskDetails_FormClosing(object sender, FormClosingEventArgs e)
@@ -594,7 +594,7 @@ namespace AITool
                 op.Counter = 0;
             }
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void FOLV_MaskHistory_SelectedIndexChanged(object sender, EventArgs e)
@@ -658,7 +658,7 @@ namespace AITool
                     this.cam.maskManager.MaxMaskUnusedDays = frm.num_max_unused.Text.ToInt();
                     this.cam.maskManager.MaskingEnabled = frm.cb_enabled.Checked;
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
 
                 }
             }
@@ -676,7 +676,7 @@ namespace AITool
                 this.cam.maskManager.CreateDynamicMask(op, false, true);
             }
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void removeHistoryMaskToolStripMenuItem_Click(object sender, EventArgs e)
@@ -687,7 +687,7 @@ namespace AITool
 
             }
             this.Refresh();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
     }
 }

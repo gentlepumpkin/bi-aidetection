@@ -324,8 +324,8 @@ namespace AITool
                 {
                     if (key != null)
                     {
-                        this.Latitude = Global.GetNumberDbl(key.GetValue("latitude", "39.809734").ToString());
-                        this.Longitude = Global.GetNumberDbl(key.GetValue("longitude", "-98.555620").ToString());
+                        this.Latitude = key.GetValue("latitude", "39.809734").ToString().ToDouble();
+                        this.Longitude = key.GetValue("longitude", "-98.555620").ToString().ToDouble();
                     }
                     else
                     {

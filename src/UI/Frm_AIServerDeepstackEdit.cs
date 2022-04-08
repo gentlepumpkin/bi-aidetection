@@ -120,7 +120,7 @@ namespace AITool
         {
             this.UpdateURL();
             AITOOL.UpdateAIURLs();
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

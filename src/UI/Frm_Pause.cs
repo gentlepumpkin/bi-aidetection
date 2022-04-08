@@ -24,13 +24,17 @@ namespace AITool
             this.cmb_cameras.Items.Add("All Cameras"); //add all cameras stats entry
             int i = 0;
             int oldidxstats = 0;
-            foreach (Camera cam in AppSettings.Settings.CameraList)
-            {
-                this.cmb_cameras.Items.Add($"   {cam.Name}");
-                if (this.CurrentCam.Name.EqualsIgnoreCase(cam.Name))
-                    oldidxstats = i + 1;
-                i++;
 
+            if (CurrentCam != null)
+            {
+                foreach (Camera cam in AppSettings.Settings.CameraList)
+                {
+                    this.cmb_cameras.Items.Add($"   {cam.Name}");
+                    if (this.CurrentCam.Name.EqualsIgnoreCase(cam.Name))
+                        oldidxstats = i + 1;
+                    i++;
+
+                }
             }
 
             if (this.cmb_cameras.Items.Count > 0)

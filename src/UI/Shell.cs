@@ -61,9 +61,7 @@ namespace AITool
         Stopwatch StartupSW = null;
 
 
-        private bool CloseImmediately = false;
 
-        private bool ResetSettings = false;
 
         public Shell()
         {
@@ -149,7 +147,7 @@ namespace AITool
                 {
                     this.SplashScreen.Close();
                     this.SplashScreen = null;
-                    this.CloseImmediately = true;
+                    CloseImmediately.WriteFullFence(true);
                     Application.Exit();
                 }
             }
@@ -233,7 +231,7 @@ namespace AITool
                     if (DeepStackServerControl.NeedsSaving)
                     {
                         //this may happen if the already running instance has a different port, etc, so we update the config
-                        this.SaveDeepStackTab();
+                        this.SaveDeepStackTabAsync();
                     }
                     this.LoadDeepStackTab();
                 }
@@ -297,6 +295,8 @@ namespace AITool
                     this.mnu_log_filter_trace.Checked = true;
                 }
 
+                folv_log.MouseWheel += ListScrollZoom;
+                folv_history.MouseWheel += ListScrollZoom;
 
                 //---------------------------------------------------------------------------
                 // finish up
@@ -330,6 +330,15 @@ namespace AITool
 
         }
 
+        private void ListScrollZoom(object sender, MouseEventArgs e)
+        {
+            if (Control.ModifierKeys != Keys.Control)
+                return;
+            float delta = (e.Delta > 0 ? 2f : -2f);
+            FastObjectListView folv = ((FastObjectListView)sender);
+            folv.Font = new Font(folv.Font.FontFamily, folv.Font.Size + delta);
+            folv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+        }
         private void LoadSettingsTab()
         {
 
@@ -2458,7 +2467,7 @@ namespace AITool
             }
             if (this.FOLV_Cameras.Items.Count > 0)
                 this.FOLV_Cameras.SelectedIndex = 0;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.LoadCameras();
 
         }
@@ -2936,7 +2945,7 @@ namespace AITool
 
                     this.LoadCameras();
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
 
                     UpdateWatchers(true);
 
@@ -3025,8 +3034,13 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
-            BtnSettingsSave.Enabled = false;
-            BtnSettingsSave.Text = "Saving...";
+            Global_GUI.InvokeIFRequired(this.BtnSettingsSave, () =>
+            {
+                BtnSettingsSave.Enabled = false;
+                BtnSettingsSave.Text = "Saving...";
+            });
+
+
             Application.DoEvents();
 
             Log($"Saving settings to {AppSettings.Settings.SettingsFileName}");
@@ -3055,7 +3069,7 @@ namespace AITool
 
             UpdateAIURLs();
 
-            if (await AppSettings.SaveAsync())
+            if (await AppSettings.SaveAsync(true))
             {
                 Log("...Saved.");
             }
@@ -3098,8 +3112,12 @@ namespace AITool
             if (BlueIrisInfo.Result != BlueIrisResult.Valid && BlueIrisInfo.Result != BlueIrisResult.NotInstalled)
                 MessageBox.Show($"Error: Could not connect to BlueIris server: '{BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
 
-            BtnSettingsSave.Enabled = true;
-            BtnSettingsSave.Text = "Save";
+            Global_GUI.InvokeIFRequired(this.BtnSettingsSave, () =>
+            {
+                BtnSettingsSave.Enabled = true;
+                BtnSettingsSave.Text = "Save";
+            });
+
             Application.DoEvents();
 
 
@@ -3143,7 +3161,7 @@ namespace AITool
 
             try
             {
-                if (!ResetSettings && !this.CloseImmediately && e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
+                if (!Restart.ReadFullFence() && !ResetSettings.ReadFullFence() && !CloseImmediately.ReadFullFence() && e.CloseReason != CloseReason.WindowsShutDown && AppSettings.Settings.close_instantly <= 0) //if it's either enabled or not set  -1 = not set | 0 = ask for confirmation | 1 = don't ask
                 {
                     using (var form = new InputForm($"Stop and close AI Tool?", "AI Tool", false))
                     {
@@ -3173,9 +3191,10 @@ namespace AITool
                 if (!e.Cancel)
                 {
 
-                    Global_GUI.SaveWindowState(this);
+                    if (!Restart.ReadFullFence())
+                        Global_GUI.SaveWindowState(this);
 
-                    AppSettings.SaveAsync();  //save settings in any case
+                    AppSettings.SaveAsync(true);  //save settings in any case
 
                     //if (AITOOL.DeepStackServerControl.IsInstalled && AITOOL.DeepStackServerControl.IsStarted && AppSettings.Settings.deepstack_autostart)
                     //    await AITOOL.DeepStackServerControl.StopAsync();
@@ -3190,7 +3209,10 @@ namespace AITool
                     //wait a bit for the loops to cancel to avoid other threading errors on shutdown and to allow the logs to finish updating if we need to reset settings
                     Global.ResponsiveSleep(1000);
 
-                    if (ResetSettings)
+                    if (Restart.ReadFullFence())
+                        Application.Restart();
+
+                    if (ResetSettings.ReadFullFence())
                     {
                         //make a backup copy:
                         string cursettingsfolder = Path.GetDirectoryName(AppSettings.Settings.SettingsFileName);
@@ -3221,130 +3243,119 @@ namespace AITool
 
         }
 
-        private void SaveDeepStackTab()
+        private async Task SaveDeepStackTabAsync()
         {
 
-            if (DeepStackServerControl == null)
-                DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
-
-            DeepStackServerControl.GetDeepStackRun();
-
-            if (this.RB_Medium.Checked)
-                AppSettings.Settings.deepstack_mode = "Medium";
-            if (this.RB_Low.Checked)
-                AppSettings.Settings.deepstack_mode = "Low";
-            if (this.RB_High.Checked)
-                AppSettings.Settings.deepstack_mode = "High";
-
-            AppSettings.Settings.deepstack_detectionapienabled = this.Chk_DetectionAPI.Checked;
-            AppSettings.Settings.deepstack_faceapienabled = this.Chk_FaceAPI.Checked;
-            AppSettings.Settings.deepstack_sceneapienabled = this.Chk_SceneAPI.Checked;
-            AppSettings.Settings.deepstack_autostart = this.Chk_AutoStart.Checked;
-            AppSettings.Settings.deepstack_autoadd = this.chk_AutoAdd.Checked;
-            AppSettings.Settings.deepstack_debug = this.Chk_DSDebug.Checked;
-            AppSettings.Settings.deepstack_highpriority = this.chk_HighPriority.Checked;
-            //AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
-            //AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
-            AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
-            AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
-            AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
-            AppSettings.Settings.deepstack_customModelName = this.Txt_CustomModelName.Text.Trim();
-            AppSettings.Settings.deepstack_customModelPort = this.Txt_CustomModelPort.Text.Trim();
-            AppSettings.Settings.deepstack_customModelMode = this.Txt_CustomModelMode.Text.Trim();
-            AppSettings.Settings.deepstack_customModelApiEnabled = this.Chk_CustomModelAPI.Checked;
-
-            AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
-
-            AppSettings.Settings.deepstack_autorestart = this.Chk_AutoReStart.Checked;
-            AppSettings.Settings.deepstack_autorestart_fail_count = GetNumberInt(this.txt_DeepstackRestartFailCount.Text);
-            AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = this.txt_DeepstackNoMoreOftenThanMins.Text.ToDouble();
-
-            if (AppSettings.Settings.deepstack_autorestart_fail_count >= AppSettings.Settings.MaxQueueItemRetries)
+            Global_GUI.InvokeIFRequired(this, async () =>
             {
-                MessageBox.Show($"Note: Deepstack restart fail count is '{AppSettings.Settings.deepstack_autorestart_fail_count}' but the maximum \r\nnumber of times a URL can fail before being disabled is '{AppSettings.Settings.MaxQueueItemRetries}'\r\nTo change, see 'MaxQueueItemRetries' in AITOOL.SETTINGS.JSON file.");
-            }
 
-            AppSettings.SaveAsync();
+                if (DeepStackServerControl == null)
+                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
+                DeepStackServerControl.GetDeepStackRun();
 
-            if (DeepStackServerControl.IsInstalled)
-            {
-                if (DeepStackServerControl.IsStarted)
+                if (this.RB_Medium.Checked)
+                    AppSettings.Settings.deepstack_mode = "Medium";
+                if (this.RB_Low.Checked)
+                    AppSettings.Settings.deepstack_mode = "Low";
+                if (this.RB_High.Checked)
+                    AppSettings.Settings.deepstack_mode = "High";
+
+                AppSettings.Settings.deepstack_detectionapienabled = this.Chk_DetectionAPI.Checked;
+                AppSettings.Settings.deepstack_faceapienabled = this.Chk_FaceAPI.Checked;
+                AppSettings.Settings.deepstack_sceneapienabled = this.Chk_SceneAPI.Checked;
+                AppSettings.Settings.deepstack_autostart = this.Chk_AutoStart.Checked;
+                AppSettings.Settings.deepstack_autoadd = this.chk_AutoAdd.Checked;
+                AppSettings.Settings.deepstack_debug = this.Chk_DSDebug.Checked;
+                AppSettings.Settings.deepstack_highpriority = this.chk_HighPriority.Checked;
+                //AppSettings.Settings.deepstack_adminkey = this.Txt_AdminKey.Text.Trim();
+                //AppSettings.Settings.deepstack_apikey = this.Txt_APIKey.Text.Trim();
+                AppSettings.Settings.deepstack_installfolder = this.Txt_DeepStackInstallFolder.Text.Trim();
+                AppSettings.Settings.deepstack_port = this.Txt_Port.Text.Trim();
+                AppSettings.Settings.deepstack_customModelPath = this.Txt_CustomModelPath.Text.Trim();
+                AppSettings.Settings.deepstack_customModelName = this.Txt_CustomModelName.Text.Trim();
+                AppSettings.Settings.deepstack_customModelPort = this.Txt_CustomModelPort.Text.Trim();
+                AppSettings.Settings.deepstack_customModelMode = this.Txt_CustomModelMode.Text.Trim();
+                AppSettings.Settings.deepstack_customModelApiEnabled = this.Chk_CustomModelAPI.Checked;
+
+                AppSettings.Settings.deepstack_stopbeforestart = this.chk_stopbeforestart.Checked;
+
+                AppSettings.Settings.deepstack_autorestart = this.Chk_AutoReStart.Checked;
+                AppSettings.Settings.deepstack_autorestart_fail_count = GetNumberInt(this.txt_DeepstackRestartFailCount.Text);
+                AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts = this.txt_DeepstackNoMoreOftenThanMins.Text.ToDouble();
+
+                if (AppSettings.Settings.deepstack_autorestart_fail_count >= AppSettings.Settings.MaxQueueItemRetries)
                 {
+                    MessageBox.Show($"Note: Deepstack restart fail count is '{AppSettings.Settings.deepstack_autorestart_fail_count}' but the maximum \r\nnumber of times a URL can fail before being disabled is '{AppSettings.Settings.MaxQueueItemRetries}'\r\nTo change, see 'MaxQueueItemRetries' in AITOOL.SETTINGS.JSON file.");
+                }
+
+                await AppSettings.SaveAsync(true);
 
 
-                    if (DeepStackServerControl.IsActivated)
+                if (DeepStackServerControl.IsInstalled)
+                {
+                    if (DeepStackServerControl.IsStarted)
                     {
-                        MethodInvoker LabelUpdate = delegate
+
+
+                        if (DeepStackServerControl.IsActivated)
                         {
                             this.Lbl_BlueStackRunning.Text = "*RUNNING*";
                             this.Lbl_BlueStackRunning.ForeColor = Color.Green;
 
-                        };
-                        this.Invoke(LabelUpdate);
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
+                        }
+                        else
+                        {
+                            this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
 
-                        this.Btn_Start.Enabled = false;
-                        this.Btn_Stop.Enabled = true;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
+                        }
                     }
                     else
                     {
-                        MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
-                        this.Invoke(LabelUpdate);
+                        if (DeepStackServerControl.Starting.ReadFullFence())
+                        {
+                            this.Lbl_BlueStackRunning.Text = "STARTING...";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = true;
 
-                        this.Btn_Start.Enabled = false;
-                        this.Btn_Stop.Enabled = true;
+                        }
+                        else if (DeepStackServerControl.Stopping.ReadFullFence())
+                        {
+                            this.Lbl_BlueStackRunning.Text = "STOPPING...";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                            this.Btn_Start.Enabled = false;
+                            this.Btn_Stop.Enabled = false;
+
+                        }
+                        else
+                        {
+                            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
+                            this.Lbl_BlueStackRunning.ForeColor = Color.Black;
+
+                            this.Btn_Start.Enabled = true;
+                            this.Btn_Stop.Enabled = false;
+
+                        }
                     }
                 }
                 else
                 {
-                    if (DeepStackServerControl.Starting.ReadFullFence())
-                    {
-                        MethodInvoker LabelUpdate = delegate
-                        {
-                            this.Lbl_BlueStackRunning.Text = "STARTING...";
-                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
-                        };
-                        this.Btn_Start.Enabled = false;
-                        this.Btn_Stop.Enabled = true;
+                    this.Btn_Start.Enabled = false;
+                    this.Btn_Stop.Enabled = false;
+                    this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
 
-                    }
-                    else if (DeepStackServerControl.Stopping.ReadFullFence())
-                    {
-                        MethodInvoker LabelUpdate = delegate
-                        {
-                            this.Lbl_BlueStackRunning.Text = "STOPPING...";
-                            this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
-                        };
-                        this.Btn_Start.Enabled = false;
-                        this.Btn_Stop.Enabled = false;
 
-                    }
-                    else
-                    {
-                        MethodInvoker LabelUpdate = delegate
-                        {
-                            this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
-                            this.Lbl_BlueStackRunning.ForeColor = Color.Black;
-                        };
-                        this.Invoke(LabelUpdate);
-
-                        this.Btn_Start.Enabled = true;
-                        this.Btn_Stop.Enabled = false;
-
-                    }
                 }
-            }
-            else
-            {
-                this.Btn_Start.Enabled = false;
-                this.Btn_Stop.Enabled = false;
-                MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
-                this.Invoke(LabelUpdate);
+
+                DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
 
-            }
-
-            DeepStackServerControl.Update(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
+            });
 
         }
 
@@ -3353,213 +3364,198 @@ namespace AITool
 
             try
             {
-                if (DeepStackServerControl == null)
-                    DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
-
-                //first update the port in the deepstack_url if found
-                //string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
-                //if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
-                //{
-                //    DeepStackServerControl.Port = prt;
-                //}
-
-                //This will OVERRIDE the port if the deepstack processes found running already have a different port, mode, etc:
-                DeepStackServerControl.GetDeepStackRun();
-
-                if (string.Equals(DeepStackServerControl.Mode, "medium", StringComparison.OrdinalIgnoreCase))
-                    this.RB_Medium.Checked = true;
-                if (string.Equals(DeepStackServerControl.Mode, "low", StringComparison.OrdinalIgnoreCase))
-                    this.RB_Low.Checked = true;
-                if (string.Equals(DeepStackServerControl.Mode, "high", StringComparison.OrdinalIgnoreCase))
-                    this.RB_High.Checked = true;
-
-                this.Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
-                this.Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
-                this.Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
-                this.Chk_CustomModelAPI.Checked = DeepStackServerControl.CustomModelEnabled;
-
-                Global_GUI.GroupboxEnableDisable(groupBoxCustomModel, Chk_CustomModelAPI);
-
-                //have seen a few cases nothing is checked but it is required
-                if (!this.Chk_DetectionAPI.Checked && !this.Chk_FaceAPI.Checked && !this.Chk_SceneAPI.Checked)
+                Global_GUI.InvokeIFRequired(this, () =>
                 {
-                    this.Chk_DetectionAPI.Checked = true;
-                    DeepStackServerControl.DetectionAPIEnabled = true;
-                }
 
-                this.Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
-                this.chk_AutoAdd.Checked = AppSettings.Settings.deepstack_autoadd;
-                this.Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
-                this.chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
-                //this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
-                //this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
-                this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
-                this.Txt_Port.Text = DeepStackServerControl.Port;
-                this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
-                this.Txt_CustomModelName.Text = AppSettings.Settings.deepstack_customModelName;
-                this.Txt_CustomModelPort.Text = AppSettings.Settings.deepstack_customModelPort;
-                this.Txt_CustomModelMode.Text = AppSettings.Settings.deepstack_customModelMode;
-                this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
+                    if (DeepStackServerControl == null)
+                        DeepStackServerControl = new DeepStack(AppSettings.Settings.deepstack_adminkey, AppSettings.Settings.deepstack_apikey, AppSettings.Settings.deepstack_mode, AppSettings.Settings.deepstack_sceneapienabled, AppSettings.Settings.deepstack_faceapienabled, AppSettings.Settings.deepstack_detectionapienabled, AppSettings.Settings.deepstack_port, AppSettings.Settings.deepstack_customModelPath, AppSettings.Settings.deepstack_stopbeforestart, AppSettings.Settings.deepstack_customModelName, AppSettings.Settings.deepstack_customModelPort, AppSettings.Settings.deepstack_customModelMode, AppSettings.Settings.deepstack_customModelApiEnabled);
 
-                this.Chk_AutoReStart.Checked = AppSettings.Settings.deepstack_autorestart;
-                this.txt_DeepstackRestartFailCount.Text = AppSettings.Settings.deepstack_autorestart_fail_count.ToString();
-                this.txt_DeepstackNoMoreOftenThanMins.Text = AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts.ToString();
 
-                if (!DeepStackServerControl.IsNewVersion)
-                {
-                    this.Txt_CustomModelPath.Enabled = false;
-                    this.Txt_CustomModelName.Enabled = false;
-                    this.Txt_CustomModelPort.Enabled = false;
-                }
+                    //first update the port in the deepstack_url if found
+                    //string prt = Global.GetWordBetween(AppSettings.Settings.deepstack_url, ":", " |/");
+                    //if (!string.IsNullOrEmpty(prt) && (Convert.ToInt32(prt) > 0))
+                    //{
+                    //    DeepStackServerControl.Port = prt;
+                    //}
 
-                this.tb_DeepstackCommandLine.Text = DeepStackServerControl.CommandLine;
-                this.tb_DeepStackURLs.Text = DeepStackServerControl.URLS;
+                    //This will OVERRIDE the port if the deepstack processes found running already have a different port, mode, etc:
+                    DeepStackServerControl.GetDeepStackRun();
 
-                //if (prt != Txt_Port.Text)
-                //{
-                //    //server:port/maybe/more/path
-                //    string serv = Global.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
-                //    if (!string.IsNullOrEmpty(serv))
-                //    {
-                //        tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
-                //        //AppSettings.Settings.deepstack_url = serv + ":" + Txt_Port.Text;
-                //        //AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
-                //        //AppSettings.Save();
-                //    }
-                //}
+                    if (string.Equals(DeepStackServerControl.Mode, "medium", StringComparison.OrdinalIgnoreCase))
+                        this.RB_Medium.Checked = true;
+                    if (string.Equals(DeepStackServerControl.Mode, "low", StringComparison.OrdinalIgnoreCase))
+                        this.RB_Low.Checked = true;
+                    if (string.Equals(DeepStackServerControl.Mode, "high", StringComparison.OrdinalIgnoreCase))
+                        this.RB_High.Checked = true;
 
-                if (DeepStackServerControl.IsInstalled)
-                {
-                    lbl_deepstackname.Text = DeepStackServerControl.DisplayName;
-                    lbl_Deepstackversion.Text = DeepStackServerControl.DisplayVersion;
-                    lbl_DeepstackType.Text = DeepStackServerControl.Type.ToString();
+                    this.Chk_DetectionAPI.Checked = DeepStackServerControl.DetectionAPIEnabled;
+                    this.Chk_FaceAPI.Checked = DeepStackServerControl.FaceAPIEnabled;
+                    this.Chk_SceneAPI.Checked = DeepStackServerControl.SceneAPIEnabled;
+                    this.Chk_CustomModelAPI.Checked = DeepStackServerControl.CustomModelEnabled;
 
-                    if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                    Global_GUI.GroupboxEnableDisable(groupBoxCustomModel, Chk_CustomModelAPI);
+
+                    //have seen a few cases nothing is checked but it is required
+                    if (!this.Chk_DetectionAPI.Checked && !this.Chk_FaceAPI.Checked && !this.Chk_SceneAPI.Checked && !this.Chk_CustomModelAPI.Checked)
                     {
-                        if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled || DeepStackServerControl.CustomModelEnabled || DeepStackServerControl.FaceAPIEnabled))
-                        {
+                        //If NOTHING else is enabled, force regular detection to be enabled
+                        this.Chk_DetectionAPI.Checked = true;
+                        DeepStackServerControl.DetectionAPIEnabled = true;
+                    }
 
-                            MethodInvoker LabelUpdate = delegate
+                    this.Chk_AutoStart.Checked = AppSettings.Settings.deepstack_autostart;
+                    this.chk_AutoAdd.Checked = AppSettings.Settings.deepstack_autoadd;
+                    this.Chk_DSDebug.Checked = AppSettings.Settings.deepstack_debug;
+                    this.chk_HighPriority.Checked = AppSettings.Settings.deepstack_highpriority;
+                    //this.Txt_AdminKey.Text = DeepStackServerControl.AdminKey;
+                    //this.Txt_APIKey.Text = DeepStackServerControl.APIKey;
+                    this.Txt_DeepStackInstallFolder.Text = DeepStackServerControl.DeepStackFolder;
+                    this.Txt_Port.Text = DeepStackServerControl.Port;
+                    this.Txt_CustomModelPath.Text = AppSettings.Settings.deepstack_customModelPath;
+                    this.Txt_CustomModelName.Text = AppSettings.Settings.deepstack_customModelName;
+                    this.Txt_CustomModelPort.Text = AppSettings.Settings.deepstack_customModelPort;
+                    this.Txt_CustomModelMode.Text = AppSettings.Settings.deepstack_customModelMode;
+                    this.chk_stopbeforestart.Checked = AppSettings.Settings.deepstack_stopbeforestart;
+
+                    this.Chk_AutoReStart.Checked = AppSettings.Settings.deepstack_autorestart;
+                    this.txt_DeepstackRestartFailCount.Text = AppSettings.Settings.deepstack_autorestart_fail_count.ToString();
+                    this.txt_DeepstackNoMoreOftenThanMins.Text = AppSettings.Settings.deepstack_autorestart_minutes_between_restart_attempts.ToString();
+
+                    if (!DeepStackServerControl.IsNewVersion)
+                    {
+                        this.Txt_CustomModelPath.Enabled = false;
+                        this.Txt_CustomModelName.Enabled = false;
+                        this.Txt_CustomModelPort.Enabled = false;
+                    }
+
+                    this.tb_DeepstackCommandLine.Text = DeepStackServerControl.CommandLine;
+                    this.tb_DeepStackURLs.Text = DeepStackServerControl.URLS;
+
+                    //if (prt != Txt_Port.Text)
+                    //{
+                    //    //server:port/maybe/more/path
+                    //    string serv = Global.GetWordBetween(AppSettings.Settings.deepstack_url, "", ":");
+                    //    if (!string.IsNullOrEmpty(serv))
+                    //    {
+                    //        tbDeepstackUrl.Text = serv + ":" + Txt_Port.Text;
+                    //        //AppSettings.Settings.deepstack_url = serv + ":" + Txt_Port.Text;
+                    //        //AppSettings.Settings.deepstack_url = tbDeepstackUrl.Text;
+                    //        //AppSettings.Save();
+                    //    }
+                    //}
+
+                    if (DeepStackServerControl.IsInstalled)
+                    {
+                        lbl_deepstackname.Text = DeepStackServerControl.DisplayName;
+                        lbl_Deepstackversion.Text = DeepStackServerControl.DisplayVersion;
+                        lbl_DeepstackType.Text = DeepStackServerControl.Type.ToString();
+
+                        if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                        {
+                            if (DeepStackServerControl.IsActivated && (DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled || DeepStackServerControl.CustomModelEnabled || DeepStackServerControl.FaceAPIEnabled))
                             {
+
                                 this.Lbl_BlueStackRunning.Text = "*RUNNING*";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.Green;
-                            };
-                            this.Invoke(LabelUpdate);
 
-                            this.Btn_Start.Enabled = false;
-                            this.Btn_Stop.Enabled = true;
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = true;
+                            }
+                            else if (!DeepStackServerControl.IsActivated)
+                            {
+                                this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*";
+
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = true;
+                            }
+                            else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
+                            {
+                                this.Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*";
+
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = true;
+                            }
+
                         }
-                        else if (!DeepStackServerControl.IsActivated)
-                        {
-                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT ACTIVATED, RUNNING*"; };
-                            this.Invoke(LabelUpdate);
-
-                            this.Btn_Start.Enabled = false;
-                            this.Btn_Stop.Enabled = true;
-                        }
-                        else if (!DeepStackServerControl.VisionDetectionRunning || DeepStackServerControl.DetectionAPIEnabled)
-                        {
-                            MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*DETECTION API NOT RUNNING*"; };
-                            this.Invoke(LabelUpdate);
-
-                            this.Btn_Start.Enabled = false;
-                            this.Btn_Stop.Enabled = true;
-                        }
-
-                    }
-                    else if (DeepStackServerControl.HasError)
-                    {
-                        MethodInvoker LabelUpdate = delegate
+                        else if (DeepStackServerControl.HasError)
                         {
                             this.Lbl_BlueStackRunning.Text = "*ERROR*";
                             this.Lbl_BlueStackRunning.ForeColor = Color.Red;
-                        };
-                        this.Invoke(LabelUpdate);
 
-                        this.Btn_Start.Enabled = true;
-                        this.Btn_Stop.Enabled = true;
-                    }
-                    else
-                    {
-                        if (DeepStackServerControl.Starting.ReadFullFence())
-                        {
-                            MethodInvoker LabelUpdate = delegate
-                            {
-                                this.Lbl_BlueStackRunning.Text = "STARTING...";
-                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
-                            };
-                            this.Invoke(LabelUpdate);
-                            this.Btn_Start.Enabled = false;
+                            this.Btn_Start.Enabled = true;
                             this.Btn_Stop.Enabled = true;
-
-                        }
-                        else if (DeepStackServerControl.Stopping.ReadFullFence())
-                        {
-                            MethodInvoker LabelUpdate = delegate
-                            {
-                                this.Lbl_BlueStackRunning.Text = "STOPPING...";
-                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
-                            };
-                            this.Invoke(LabelUpdate);
-                            this.Btn_Start.Enabled = false;
-                            this.Btn_Stop.Enabled = false;
-
                         }
                         else
                         {
-                            MethodInvoker LabelUpdate = delegate
+                            if (DeepStackServerControl.Starting.ReadFullFence())
+                            {
+                                this.Lbl_BlueStackRunning.Text = "STARTING...";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = true;
+
+                            }
+                            else if (DeepStackServerControl.Stopping.ReadFullFence())
+                            {
+                                this.Lbl_BlueStackRunning.Text = "STOPPING...";
+                                this.Lbl_BlueStackRunning.ForeColor = Color.DodgerBlue;
+                                this.Btn_Start.Enabled = false;
+                                this.Btn_Stop.Enabled = false;
+
+                            }
+                            else
                             {
                                 this.Lbl_BlueStackRunning.Text = "*NOT RUNNING*";
                                 this.Lbl_BlueStackRunning.ForeColor = Color.Black;
-                            };
-                            this.Invoke(LabelUpdate);
 
-                            this.Btn_Start.Enabled = true;
-                            this.Btn_Stop.Enabled = false;
+                                this.Btn_Start.Enabled = true;
+                                this.Btn_Stop.Enabled = false;
 
+                            }
+                            //if (this.Chk_AutoStart.Checked && StartIfNeeded)
+                            //{
+                            //    if (await DeepStackServerControl.StartDeepstackAsync())
+                            //    {
+                            //        if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
+                            //        {
+                            //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
+                            //            this.Invoke(LabelUpdate);
+                            //            this.Btn_Start.Enabled = false;
+                            //            this.Btn_Stop.Enabled = true;
+                            //        }
+                            //        else if (DeepStackServerControl.HasError)
+                            //        {
+                            //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                            //            this.Invoke(LabelUpdate);
+
+                            //            this.Btn_Start.Enabled = false;
+                            //            this.Btn_Stop.Enabled = true;
+                            //        }
+
+                            //    }
+                            //    else
+                            //    {
+                            //        LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
+                            //        this.Invoke(LabelUpdate);
+
+                            //        this.Btn_Start.Enabled = false;
+                            //        this.Btn_Stop.Enabled = true;
+                            //    }
+                            //}
                         }
-                        //if (this.Chk_AutoStart.Checked && StartIfNeeded)
-                        //{
-                        //    if (await DeepStackServerControl.StartDeepstackAsync())
-                        //    {
-                        //        if (DeepStackServerControl.IsStarted && !DeepStackServerControl.HasError)
-                        //        {
-                        //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*RUNNING*"; };
-                        //            this.Invoke(LabelUpdate);
-                        //            this.Btn_Start.Enabled = false;
-                        //            this.Btn_Stop.Enabled = true;
-                        //        }
-                        //        else if (DeepStackServerControl.HasError)
-                        //        {
-                        //            LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                        //            this.Invoke(LabelUpdate);
-
-                        //            this.Btn_Start.Enabled = false;
-                        //            this.Btn_Stop.Enabled = true;
-                        //        }
-
-                        //    }
-                        //    else
-                        //    {
-                        //        LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*ERROR*"; };
-                        //        this.Invoke(LabelUpdate);
-
-                        //        this.Btn_Start.Enabled = false;
-                        //        this.Btn_Stop.Enabled = true;
-                        //    }
-                        //}
                     }
-                }
-                else
-                {
-                    this.Btn_Start.Enabled = false;
-                    this.Btn_Stop.Enabled = false;
-                    MethodInvoker LabelUpdate = delegate { this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*"; };
-                    this.Invoke(LabelUpdate);
+                    else
+                    {
+                        this.Btn_Start.Enabled = false;
+                        this.Btn_Stop.Enabled = false;
+                        this.Lbl_BlueStackRunning.Text = "*NOT INSTALLED*";
 
 
-                }
+                    }
+
+                });
+
 
             }
             catch (Exception ex)
@@ -3571,29 +3567,38 @@ namespace AITool
 
         private async void Btn_Start_Click(object sender, EventArgs e)
         {
-            this.Lbl_BlueStackRunning.Text = "STARTING...";
-            this.Btn_Start.Enabled = false;
-            this.Btn_Stop.Enabled = false;
-            this.SaveDeepStackTab();
+            Global_GUI.InvokeIFRequired(this, () =>
+            {
+                this.Lbl_BlueStackRunning.Text = "STARTING...";
+                this.Btn_Start.Enabled = false;
+                this.Btn_Stop.Enabled = false;
+
+            });
+            await this.SaveDeepStackTabAsync();
             await DeepStackServerControl.StartDeepstackAsync();
             //MessageBox.Show("Started");
-            this.LoadDeepStackTab();
+            await this.LoadDeepStackTab();
+
         }
 
-        private void Btn_Save_Click(object sender, EventArgs e)
+        private async void Btn_Save_Click(object sender, EventArgs e)
         {
-            this.SaveDeepStackTab();
+            await this.SaveDeepStackTabAsync();
         }
 
         private async void Btn_Stop_Click(object sender, EventArgs e)
         {
-            this.Lbl_BlueStackRunning.Text = "STOPPING...";
-            this.Btn_Start.Enabled = false;
-            this.Btn_Stop.Enabled = false;
-            this.SaveDeepStackTab();
+            Global_GUI.InvokeIFRequired(this, () =>
+            {
+                this.Lbl_BlueStackRunning.Text = "STOPPING...";
+                this.Btn_Start.Enabled = false;
+                this.Btn_Stop.Enabled = false;
+
+            });
+            await this.SaveDeepStackTabAsync();
             await DeepStackServerControl.StopDeepstackAsync();
             //MessageBox.Show("Stopped");
-            this.LoadDeepStackTab();
+            await this.LoadDeepStackTab();
         }
 
 
@@ -3671,7 +3676,7 @@ namespace AITool
                     cam.maskManager.MaskingEnabled = this.cb_masking_enabled.Checked;
                     //cam.maskManager.Objects = frm.tb_objects.Text.Trim();
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
                 }
             }
         }
@@ -3934,7 +3939,7 @@ namespace AITool
 
                     UpdateActionsLabel(cam);
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
 
                 }
             }
@@ -4147,7 +4152,7 @@ namespace AITool
 
             LogMan.ErrorCount.WriteFullFence(0);
 
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
 
             this.UpdatePieChart(); this.UpdateTimeline(); this.UpdateConfidenceChart();
 
@@ -4223,7 +4228,7 @@ namespace AITool
             AppSettings.Settings.HistoryFilterRelevant = cb_filter_success.Checked;
             AppSettings.Settings.HistoryFilterVehicles = cb_filter_vehicle.Checked;
 
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private async void cb_filter_success_Click(object sender, EventArgs e)
@@ -4236,14 +4241,14 @@ namespace AITool
         {
             SaveFilters();
             await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private async void cb_filter_person_Click(object sender, EventArgs e)
         {
             SaveFilters();
             await this.LoadHistoryAsync(true, AppSettings.Settings.HistoryFollow).ConfigureAwait(false);
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private async void cb_filter_animal_Click(object sender, EventArgs e)
@@ -4279,7 +4284,7 @@ namespace AITool
         private void cb_showMask_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryShowMask = this.cb_showMask.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.showHideMask();
         }
 
@@ -4294,7 +4299,7 @@ namespace AITool
         private void automaticallyRefreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryAutoRefresh = this.automaticallyRefreshToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.HistoryStartStop();
 
         }
@@ -4302,14 +4307,14 @@ namespace AITool
         private void cb_showObjects_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryShowObjects = this.cb_showObjects.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.pictureBox1.Refresh();
         }
 
         private void cb_follow_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryFollow = this.cb_follow.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void toolStripButtonDetails_Click(object sender, EventArgs e)
@@ -4455,7 +4460,7 @@ namespace AITool
                     Log($"Enabled Pushover on camera '{cam.Name}'.");
                 }
             }
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void btn_disabletelegram_Click(object sender, EventArgs e)
@@ -4476,26 +4481,26 @@ namespace AITool
                     Log($"Disabled Pushover on camera '{cam.Name}'.");
                 }
             }
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void storeFalseAlertsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryStoreFalseAlerts = this.storeFalseAlertsToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void storeMaskedAlertsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryStoreMaskedAlerts = this.storeMaskedAlertsToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
 
         }
 
         private void showOnlyRelevantObjectsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryOnlyDisplayRelevantObjects = this.showOnlyRelevantObjectsToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
             this.pictureBox1.Refresh();
 
         }
@@ -5273,7 +5278,7 @@ namespace AITool
         private void restrictThresholdAtSourceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryRestrictMinThresholdAtSource = this.restrictThresholdAtSourceToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -5305,7 +5310,7 @@ namespace AITool
             this.Btn_Start.Enabled = false;
             this.Btn_Stop.Enabled = false;
             this.Btn_DeepstackReset.Enabled = false;
-            this.SaveDeepStackTab();
+            this.SaveDeepStackTabAsync();
             DeepStackServerControl.ResetDeepstack();
             this.Btn_DeepstackReset.Enabled = true;
             this.LoadDeepStackTab();
@@ -5365,7 +5370,7 @@ namespace AITool
 
             if (MessageBox.Show("Are you sure you want to reset ALL settings?", "RESET?", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                ResetSettings = true;
+                ResetSettings.WriteFullFence(true);
                 this.Close();
             }
 
@@ -5439,7 +5444,7 @@ namespace AITool
 
                     Lbl_PredictionTolerances.Text = $"Threshold: {cam.threshold_lower}-{cam.threshold_upper}, Size: {cam.PredSizeMinPercentOfImage.ToPercent()}-{cam.PredSizeMaxPercentOfImage.ToPercent()} ; Width: {cam.PredSizeMinWidth}-{cam.PredSizeMaxWidth}, Height: {cam.PredSizeMinHeight}-{cam.PredSizeMaxHeight}, PredictionMatch: {cam.MergePredictionsMinMatchPercent.ToPercent()}";
 
-                    AppSettings.SaveAsync();
+                    AppSettings.SaveAsync(true);
                 }
             }
 
@@ -5489,8 +5494,8 @@ namespace AITool
             using (Frm_Pause frm = new Frm_Pause())
             {
 
-                Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
-                frm.CurrentCam = cam;
+                //Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
+                //frm.CurrentCam = cam;
                 frm.ShowDialog(this);
             }
         }
@@ -5501,7 +5506,7 @@ namespace AITool
             {
                 if (frm.ShowDialog(this) == DialogResult.OK)
                 {
-                    this.CloseImmediately = true;
+                    CloseImmediately.WriteFullFence(true);
                     Application.Exit();
 
                 }
@@ -5511,7 +5516,7 @@ namespace AITool
         private void mergeDuplicatePredictionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AppSettings.Settings.HistoryMergeDuplicatePredictions = this.mergeDuplicatePredictionsToolStripMenuItem.Checked;
-            AppSettings.SaveAsync();
+            AppSettings.SaveAsync(true);
         }
     }
 

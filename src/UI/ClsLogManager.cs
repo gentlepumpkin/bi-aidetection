@@ -422,7 +422,7 @@ namespace AITool
                 this.NLogFileWriter.Log(Level, this.LastLogItm.ToString());
 
                 if (Debugger.IsAttached)
-                    Console.WriteLine(this.LastLogItm.ToDetailString());
+                    Debug.WriteLine(this.LastLogItm.ToDetailString());  //change from Console. to Debug. so it would appear in Immediate window?
 
                 string itm = this.LastLogItm.ToString();
 

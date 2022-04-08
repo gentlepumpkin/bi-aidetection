@@ -104,6 +104,12 @@ namespace AITool
 
         public static ThreadSafe.Integer AIURLListAvailableRefineServerCount = new ThreadSafe.Integer(0);
 
+        public static ThreadSafe.Boolean CloseImmediately = new ThreadSafe.Boolean(false);
+
+        public static ThreadSafe.Boolean ResetSettings = new ThreadSafe.Boolean(false);
+
+        public static ThreadSafe.Boolean Restart = new ThreadSafe.Boolean(false);
+
         public static async Task InitializeBackend()
         {
 
@@ -270,7 +276,9 @@ namespace AITool
         public static void UpdateLatLong()
         {
             //use blueiris lat/long setting if found, and not already set to something different in :
-            if (BlueIrisInfo.Result == BlueIrisResult.Valid && BlueIrisInfo.Latitude != 39.809734)  //default is middle of USA
+            if (BlueIrisInfo.Result == BlueIrisResult.Valid &&
+                !Global.IsLatLongValid(AppSettings.Settings.LocalLatitude, AppSettings.Settings.LocalLongitude) &&
+                Global.IsLatLongValid(BlueIrisInfo.Latitude, BlueIrisInfo.Longitude))  //default is middle of USA, assume that is not a valid lat/long
             {
                 AppSettings.Settings.LocalLatitude = BlueIrisInfo.Latitude;
                 AppSettings.Settings.LocalLongitude = BlueIrisInfo.Longitude;
@@ -4175,7 +4183,7 @@ namespace AITool
 
         public static Camera GetCamera(String ImageOrNameOrPrefix, bool ReturnDefault = true)
         {
-            using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+            //using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
 
             //we got here too early, no warning messages
