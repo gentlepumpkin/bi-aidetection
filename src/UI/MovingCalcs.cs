@@ -45,6 +45,23 @@ namespace AITool
             this.ItemName = ItemName;
             this.IsTime = IsTime;
         }
+
+        public void Clear()
+        {
+            this.lastDayOfYear = 0;
+            this.lastMonth = 0;
+            this.samples.Clear();
+            this.Min = 0;
+            this.Max = 0;
+            this.Avg = 0;
+            this.Count = 0;
+            this.CountMonth = 0;
+            this.CountToday = 0;
+            this.Current = 0;
+            this.TimeInitialized = DateTime.Now;
+            this.sampleAccumulator = 0;
+
+        }
         public double ItemsPerMinute()
         {
 

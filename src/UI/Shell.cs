@@ -4150,6 +4150,13 @@ namespace AITool
                 }
             }
 
+            fcalc.Clear();
+            icalc.Clear();
+            lcalc.Clear();
+            qcalc.Clear();
+            scalc.Clear();
+            tcalc.Clear();
+
             LogMan.ErrorCount.WriteFullFence(0);
 
             AppSettings.SaveAsync(true);
