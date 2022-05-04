@@ -3,7 +3,8 @@ Alarm system for Blue Iris based on Artificial Intellience. Can send alerts to T
 
 This is the VorlonCD fork of gentlepumpkins awesome AITool project.   
 
-Changes are listed on releases page:
+Changes are listed in the commit history (hit ... for each to expand):
+https://github.com/VorlonCD/bi-aidetection/commits/master
 
 ### Download
 https://github.com/VorlonCD/bi-aidetection/tree/master/src/UI/Installer
