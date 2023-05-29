@@ -46,7 +46,7 @@ namespace AITool
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
             bool ret = true;
-
+            //
             try
             {
                 if (AppSettings.Settings.telegram_token.IsNotNull() && AppSettings.Settings.telegram_chatids.IsNotEmpty())
