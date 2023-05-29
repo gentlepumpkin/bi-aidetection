@@ -17,8 +17,8 @@ namespace AITool
 
         private void Frm_WizardBIServer_Load(object sender, EventArgs e)
         {
-            this.txt_BlueIrisServer.Text = BlueIrisInfo.ServerName;
-            this.lblURL.Text = BlueIrisInfo.URL;
+            this.txt_BlueIrisServer.Text = AITOOL.BlueIrisInfo.ServerName;
+            this.lblURL.Text = AITOOL.BlueIrisInfo.URL;
         }
 
         private async void bt_validate_Click(object sender, EventArgs e)
@@ -29,7 +29,7 @@ namespace AITool
                 return;
             }
 
-            BlueIris bi = new BlueIris();
+            BlueIrisInfo bi = new BlueIrisInfo();
 
             lblStatus.Text = "Validating...";
 
@@ -39,7 +39,7 @@ namespace AITool
             {
                 lblStatus.ForeColor = Color.DodgerBlue;
                 lblStatus.Text = $"Validated.  Result={bir}.  {bi.ClipPaths.Count} clip paths, {bi.Users.Count} users, {bi.Cameras} cameras.";
-                BlueIrisInfo = bi;
+                AITOOL.BlueIrisInfo = bi;
                 this.Valid = true;
             }
             else

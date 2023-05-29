@@ -6,7 +6,7 @@ namespace AITool
     class MessageManager
     {
 
-        public IProgress<ClsMessage> progress = null;
+        public IProgress<ClsMessage> progress { get; set; } = null;
 
         public MessageManager()
         {

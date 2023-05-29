@@ -17,7 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 
-using MQTTnet.Client.Publishing;
+using MQTTnet.Client;
 
 using NPushover.RequestObjects;
 using NPushover.ResponseObjects;
@@ -28,7 +28,7 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.InputFiles;
+//using Telegram.Bot.Types.InputFiles;
 
 using static AITool.AITOOL;
 //using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
@@ -81,7 +81,7 @@ namespace AITool
     {
         BlockingCollection<ClsTriggerActionQueueItem> TriggerActionQueue = new BlockingCollection<ClsTriggerActionQueueItem>();
         ConcurrentDictionary<string, ClsTriggerActionQueueItem> CancelActionDict = new ConcurrentDictionary<string, ClsTriggerActionQueueItem>();
-
+        ConcurrentDictionary<string, ThreadSafe.Datetime> GroupsLastTriggerDict = new ConcurrentDictionary<string, ThreadSafe.Datetime>();
         public ThreadSafe.Datetime last_telegram_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ThreadSafe.Datetime last_Pushover_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public ThreadSafe.Datetime TelegramRetryTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
@@ -358,6 +358,21 @@ namespace AITool
             return res;
         }
 
+        //public bool IsNotInCooldown(Camera cam, out double cooltime)
+        //{
+        //    if (cam.CameraGroup.IsEmpty())
+        //    {
+        //        cooltime = (DateTime.Now - cam.last_trigger_time.Read()).TotalSeconds;
+        //        return cooltime >= cam.cooldown_time_seconds;
+        //    }
+        //    else
+        //    {
+        //        ThreadSafe.Datetime last_trigger_time = new ThreadSafe.Datetime(DateTime.MinValue);
+
+        //        if (GroupsLastTriggerDict.)
+        //    }
+        //}
+
         //trigger actions
         public async Task<bool> Trigger(ClsTriggerActionQueueItem AQI)
         {
@@ -435,7 +450,7 @@ namespace AITool
                     {
                         if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
                         {
-                            //replace url paramters with according values
+                            //replace url parameters with according values
                             List<string> urls = new List<string>();
                             //call urls
                             foreach (string url in AQI.cam.trigger_urls)
@@ -1167,7 +1182,7 @@ namespace AITool
                 //lets give it a user agent unique to this machine and product version...
                 AssemblyName ASN = Assembly.GetExecutingAssembly().GetName();
                 string Version = ASN.Version.ToString();
-                ProductInfoHeaderValue PIH = new ProductInfoHeaderValue("AITool-BATMAN-" + Global.GetMacAddress(), Version);
+                ProductInfoHeaderValue PIH = new ProductInfoHeaderValue("AI-Tool-MANBAT-" + Global.GetMacAddress(), Version);
                 AITOOL.triggerHttpClient.DefaultRequestHeaders.UserAgent.Add(PIH);
             }
 
@@ -1459,6 +1474,7 @@ namespace AITool
                 Stopwatch sw = Stopwatch.StartNew();
                 try
                 {
+
                     if (AppSettings.Settings.telegram_cooldown_seconds < 2)
                         AppSettings.Settings.telegram_cooldown_seconds = 2;  //force to be at least 2 seconds
 
@@ -1483,6 +1499,7 @@ namespace AITool
                     {
                         AITOOL.Log("Warn: Hist is null?");
                     }
+
 
                     DateTime now = DateTime.Now;
 

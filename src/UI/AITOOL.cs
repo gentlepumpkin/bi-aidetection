@@ -32,7 +32,7 @@ using Rectangle = System.Drawing.Rectangle;
 using static AITool.Global;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using Amazon.Runtime.Internal.Util;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace AITool
 {
@@ -48,7 +48,7 @@ namespace AITool
         //public static LogFileWriter LogWriter = null;
         //public static LogFileWriter HistoryWriter = null;
 
-        public static BlueIris BlueIrisInfo = null;
+        public static BlueIrisInfo BlueIrisInfo = null;
         //public static List<ClsURLItem> DeepStackURLList = new List<ClsURLItem>();
 
         //keep track of timing
@@ -140,10 +140,8 @@ namespace AITool
                 //reset log settings if different:
                 await LogMan.UpdateNLog(LogLevel.FromString(AppSettings.Settings.LogLevel), AppSettings.Settings.LogFileName, AppSettings.Settings.MaxLogFileSize, AppSettings.Settings.MaxLogFileAgeDays, AppSettings.Settings.MaxGUILogItems);
 
-                //HistoryWriter.MaxLogFileAgeDays = AppSettings.Settings.MaxLogFileAgeDays;
-                //HistoryWriter.MaxLogSize = AppSettings.Settings.MaxLogFileSize;
 
-                Assembly CurAssm = Assembly.GetExecutingAssembly();
+                Assembly CurAssm = Assembly.GetEntryAssembly();
                 string AssemNam = CurAssm.GetName().Name;
                 string AssemVer = CurAssm.GetName().Version.ToString();
 
@@ -207,7 +205,7 @@ namespace AITool
                 Global.SaveRegSetting("LastRunPath", Directory.GetCurrentDirectory());
 
                 //initialize blueiris info class to get camera names, clip paths, etc
-                BlueIrisInfo = new BlueIris();
+                BlueIrisInfo = new BlueIrisInfo();
 
                 await BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
 
@@ -498,13 +496,14 @@ namespace AITool
             {
                 try
                 {
-                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(img.ImageByteArray, out IImageFormat format))
+                    DecoderOptions dc = new DecoderOptions();
+                    using (SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(img.ImageByteArray))  //, out IImageFormat format))
                     {
                         image.Mutate(i => i.Crop(SixLabors.ImageSharp.Rectangle.FromLTRB(cropArea.Left, cropArea.Top, cropArea.Right, cropArea.Bottom)));
 
                         using (MemoryStream ms = new MemoryStream())
                         {
-                            image.Save(ms, format);
+                            image.Save(ms, image.Metadata.DecodedImageFormat);
                             System.Drawing.Image newimg = System.Drawing.Image.FromStream(ms);
                             return newimg;
                         }
@@ -1441,7 +1440,7 @@ namespace AITool
                                                 cam.stats_skipped_images_session++;
                                                 int timems = (int)(DateTime.Now - CurImg.TimeAdded).TotalMilliseconds;
 
-                                                Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session }", url.CurSrv, cam, CurImg);
+                                                Log($"...Error: Removing image from queue. Image RetryCount={CurImg.RetryCount}, URL ErrCount='{url.CurErrCount}': {url}', Image: '{CurImg.image_path}', ImageProcessQueue.Count={ImageProcessQueue.Count}, Skipped this session={cam.stats_skipped_images_session}", url.CurSrv, cam, CurImg);
                                                 Global.CreateHistoryItem(new History().Create(CurImg.image_path, DateTime.Now, cam.Name, $"Skipped image, {CurImg.RetryCount.ReadFullFence()} errors processing.", "", false, "", url.CurSrv, timems, false));
 
                                             }
@@ -1990,8 +1989,14 @@ namespace AITool
                     //Save the image using the specified jpeg compression
                     Log($"Compressing jpeg to {IAProfile.JPEGQualityPercent}% quality...");
                     SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder encoder = new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder();
-                    encoder.Quality = IAProfile.JPEGQualityPercent;
+                    //encoder.Quality = IAProfile.JPEGQualityPercent;
 
+                    // lets switch out the default encoder for jpeg to one
+                    // that saves at 90 quality
+                    Configuration.Default.ImageFormatsManager.SetEncoder(JpegFormat.Instance, new JpegEncoder()
+                    {
+                        Quality = IAProfile.JPEGQualityPercent
+                    });
 
                     if (SaveToFile)
                     {

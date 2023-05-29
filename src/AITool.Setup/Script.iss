@@ -14,7 +14,7 @@
 ; This Is Full App Version Major.Minor.Build.Revision
 ; Store First 3 Parts of Version in ShortAppVersion to be used for SBS Assembly Installation Major.Minor.Build
 #dim Version[4]
-#expr ParseVersion("..\UI\bin\Debug\AITOOL.exe", Version[0], Version[1], Version[2], Version[3])
+#expr ParseVersion("..\UI\bin\Debug\net6.0-windows\AITOOL.exe", Version[0], Version[1], Version[2], Version[3])
 #define AppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 #define ShortAppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2])
 #define ShorterAppVersion Str(Version[0]) + "." + Str(Version[1])
@@ -54,14 +54,7 @@ Filename: "{app}\AITOOL.exe"; Flags: nowait postinstall skipifsilent
 
 [Files]
 //Source: "Script.iss"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\*.exe"; DestDir: "{app}";Flags: ignoreversion;Excludes: "AIToolSetup*"
-Source: "..\UI\bin\Debug\*.dll"; DestDir: "{app}";Flags: ignoreversion
-Source: "..\UI\bin\Debug\*.pdb"; DestDir: "{app}";Flags: ignoreversion
-Source: "..\UI\bin\Debug\*.config"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\*.manifest"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\*.xml"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\*.jpg"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\Runtimes\*"; DestDir: "{app}\Runtimes";Flags: ignoreversion recursesubdirs
+Source: "..\UI\bin\Debug\net6.0-windows\*"; DestDir: "{app}";Flags: recursesubdirs ignoreversion;Excludes: "AIToolSetup*,_Settings"
 [Icons]
 Name: "{group}\AITOOL"; Filename: "{app}\AITOOL.exe" ; Components: full; Tasks: startmenu
 Name: "{userdesktop}\AITOOL"; Filename: "{app}\AITOOL.exe" ; Components: full; Tasks: desktopicon
@@ -96,95 +89,56 @@ begin
   end;
 end;
 
-function IsDotNetDetected(version: string; service: cardinal): boolean;
-// Indicates whether the specified version and service pack of the .NET Framework is installed.
-//
-// version -- Specify one of these strings for the required .NET Framework version:
-//    'v1.1'          .NET Framework 1.1
-//    'v2.0'          .NET Framework 2.0
-//    'v3.0'          .NET Framework 3.0
-//    'v3.5'          .NET Framework 3.5
-//    'v4\Client'     .NET Framework 4.0 Client Profile
-//    'v4\Full'       .NET Framework 4.0 Full Installation
-//    'v4.5'          .NET Framework 4.5
-//    'v4.5.1'        .NET Framework 4.5.1
-//    'v4.5.2'        .NET Framework 4.5.2
-//    'v4.6'          .NET Framework 4.6
-//    'v4.6.1'        .NET Framework 4.6.1
-//    'v4.6.2'        .NET Framework 4.6.2
-//    'v4.7'          .NET Framework 4.7
-//    'v4.7.1'        .NET Framework 4.7.1
-//    'v4.7.2'        .NET Framework 4.7.2
-//    'v4.8'          .NET Framework 4.8
-//
-// service -- Specify any non-negative integer for the required service pack level:
-//    0               No service packs required
-//    1, 2, etc.      Service pack 1, 2, etc. required
+function IsDotNetInstalled(DotNetName: string): Boolean;
 var
-    key, versionKey: string;
-    install, release, serviceCount, versionRelease: cardinal;
-    success: boolean;
+  Cmd, Args: string;
+  FileName: string;
+  Output: AnsiString;
+  Command: string;
+  ResultCode: Integer;
 begin
-    versionKey := version;
-    versionRelease := 0;
-
-    // .NET 1.1 and 2.0 embed release number in version key
-    if version = 'v1.1' then begin
-        versionKey := 'v1.1.4322';
-    end else if version = 'v2.0' then begin
-        versionKey := 'v2.0.50727';
+  FileName := ExpandConstant('{tmp}\dotnet.txt');
+  Cmd := ExpandConstant('{cmd}');
+  Command := 'dotnet --list-runtimes';
+  Args := '/C ' + Command + ' > "' + FileName + '" 2>&1';
+  if Exec(Cmd, Args, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and
+     (ResultCode = 0) then
+  begin
+    if LoadStringFromFile(FileName, Output) then
+    begin
+      if Pos(DotNetName, Output) > 0 then
+      begin
+        Log('"' + DotNetName + '" found in output of "' + Command + '"');
+        Result := True;
+      end
+        else
+      begin
+        Log('"' + DotNetName + '" not found in output of "' + Command + '"');
+        Result := False;
+      end;
     end
-
-    // .NET 4.5 and newer install as update to .NET 4.0 Full
-    else if Pos('v4.', version) = 1 then begin
-        versionKey := 'v4\Full';
-        case version of
-          'v4.5':   versionRelease := 378389;
-          'v4.5.1': versionRelease := 378675; // 378758 on Windows 8 and older
-          'v4.5.2': versionRelease := 379893;
-          'v4.6':   versionRelease := 393295; // 393297 on Windows 8.1 and older
-          'v4.6.1': versionRelease := 394254; // 394271 before Win10 November Update
-          'v4.6.2': versionRelease := 394802; // 394806 before Win10 Anniversary Update
-          'v4.7':   versionRelease := 460798; // 460805 before Win10 Creators Update
-          'v4.7.1': versionRelease := 461308; // 461310 before Win10 Fall Creators Update
-          'v4.7.2': versionRelease := 461808; // 461814 before Win10 April 2018 Update
-          'v4.8':   versionRelease := 528040; // 528049 before Win10 May 2019 Update
-        end;
+      else
+    begin
+      Log('Failed to read output of "' + Command + '"');
     end;
-
-    // installation key group for all .NET versions
-    key := 'SOFTWARE\Microsoft\NET Framework Setup\NDP\' + versionKey;
-
-    // .NET 3.0 uses value InstallSuccess in subkey Setup
-    if Pos('v3.0', version) = 1 then begin
-        success := RegQueryDWordValue(HKLM, key + '\Setup', 'InstallSuccess', install);
-    end else begin
-        success := RegQueryDWordValue(HKLM, key, 'Install', install);
-    end;
-
-    // .NET 4.0 and newer use value Servicing instead of SP
-    if Pos('v4', version) = 1 then begin
-        success := success and RegQueryDWordValue(HKLM, key, 'Servicing', serviceCount);
-    end else begin
-        success := success and RegQueryDWordValue(HKLM, key, 'SP', serviceCount);
-    end;
-
-    // .NET 4.5 and newer use additional value Release
-    if versionRelease > 0 then begin
-        success := success and RegQueryDWordValue(HKLM, key, 'Release', release);
-        success := success and (release >= versionRelease);
-    end;
-
-    result := success and (install = 1) and (serviceCount >= service);
+  end
+    else
+  begin
+    Log('Failed to execute "' + Command + '"');
+    Result := False;
+  end;
+  DeleteFile(FileName);
 end;
 
-
 function InitializeSetup(): Boolean;
+var
+  ErrorCode: Integer;
 begin
-    if not IsDotNetDetected('v4.7.2', 0) then begin
-        MsgBox('AITOOL requires Microsoft .NET Framework 4.7.2'#13#13
-            'Please use Windows Update to install this version,'#13
-            'and then re-run the MyApp setup program.', mbInformation, MB_OK);
+    if not IsDotNetInstalled('Microsoft.NETCore.App 6.0.') then begin
+        MsgBox('AITOOL requires Microsoft .NET 6.0'#13#13
+            'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.16-windows-x64-installer,'#13
+            '...and then re-run the MyApp setup program.', mbInformation, MB_OK);
+		Exec('explorer', 'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.16-windows-x64-installer', '', SW_SHOW, ewNoWait, ErrorCode);
         result := false;
     end else
         result := true;

@@ -161,7 +161,11 @@ namespace AITool
 
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, people, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+            public string ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel";
+            public string ObjectsExcluded = "Airplane, apple, backpack, banana, baseball bat, baseball glove, bed, bench, book, bottle, bowl, broccoli, cake, carrot, cell phone, chair, clock, couch, cup, dining table, donut, fire hydrant, fork, frisbee, handbag, hot dog, keyboard, kite, laptop, microwave, mouse, orange, oven, parking meter, pizza, potted plant, refrigerator, remote, sandwich, scissors, sink, skateboard, skis, snowboard, spoon, sports ball, stop sign, suitcase, surfboard, table, teddy bear, tennis racket, tie, toilet, toothbrush, traffic light, tv, umbrella,vase, wine glass";
+            [JsonIgnore]
+            //make the following dictionary case insensitive, and do not store it
+            public Dictionary<string, string> ObjectsExcludedDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             public string DefaultUserName = "Username";
             public string DefaultPasswordEncrypted = "";
@@ -425,9 +429,13 @@ namespace AITool
                 string OldFolder = !string.IsNullOrEmpty(Settings.SettingsFileName) ? Path.GetDirectoryName(Settings.SettingsFileName) : OrigFolder;
                 string OldSettingsFile = Settings.SettingsFileName;
 
-                string OrigSettingsFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON";
-                string OrigLogFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".LOG";
-                string OrigHistoryDBFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Database.SQLITE3";
+                string ExePath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(@"\".ToCharArray());
+                string FullExePath = System.IO.Path.Combine(System.AppContext.BaseDirectory, System.Reflection.Assembly.GetEntryAssembly().GetName().Name + ".exe");
+
+                //string OrigSettingsFilename = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location) + ".Settings.JSON";
+                string OrigSettingsFilename = Path.GetFileNameWithoutExtension(FullExePath) + ".Settings.JSON";
+                string OrigLogFilename = Path.GetFileNameWithoutExtension(FullExePath) + ".LOG";
+                string OrigHistoryDBFilename = Path.GetFileNameWithoutExtension(FullExePath) + ".Database.SQLITE3";
 
                 //Just always look in original location for legacy import
                 Settings.HistoryFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cameras\\history.csv");
@@ -788,8 +796,18 @@ namespace AITool
                         Settings.CameraList.Add(cam);
                     }
 
-                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people"))
-                        Settings.ObjectPriority = "person, people, bear, elephant, car, truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+                    //make sure we have the updated default object list
+                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people") || !Settings.ObjectPriority.Has("fox") || !Settings.ObjectPriority.Has("raccoon"))
+                        Settings.ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel"; ;
+
+                    //convert comma delimited list of objects stored in Settings.ObjectsExcluded to a dictionary
+                    List<string> splt = Settings.ObjectsExcluded.SplitStr(",", true);
+                    foreach (string obj in splt)
+                    {
+                        if (!Settings.ObjectsExcludedDict.ContainsKey(obj))
+                            Settings.ObjectsExcludedDict.Add(obj, obj);
+                    }
+
 
                     //make sure everything in the cameras look correct:
                     foreach (Camera cam in Settings.CameraList)

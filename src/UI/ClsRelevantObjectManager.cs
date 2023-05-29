@@ -130,6 +130,7 @@ namespace AITool
         public string TypeName { get; set; } = "";
         public int EnabledCount { get; set; } = 0;
         public string CameraName { get; set; } = "";
+
         [JsonIgnore]
         private Camera cam = null;
         [JsonIgnore]
@@ -142,6 +143,8 @@ namespace AITool
         public ClsRelevantObjectManager()
         {
             //this.Init();
+            ExcludeObjects();
+
         }
 
         public ClsRelevantObjectManager(ClsRelevantObjectManager manager)
@@ -261,6 +264,22 @@ namespace AITool
                 }
                 this.ObjectList[i].Priority = i + 1;
 
+            }
+
+            ExcludeObjects();
+
+        }
+
+        void ExcludeObjects()
+        {
+            if (this.ObjectList.IsEmpty() || AppSettings.Settings.ObjectsExcludedDict.IsEmpty())
+                return;
+
+            //erase anything in ObjectList that is in AppSettings.Settings.ObjectsExcludedDic
+            for (int i = this.ObjectList.Count - 1; i >= 0; i--)
+            {
+                if (AppSettings.Settings.ObjectsExcludedDict.ContainsKey(this.ObjectList[i].Name))
+                    this.ObjectList.RemoveAt(i);
             }
 
         }
@@ -387,7 +406,8 @@ namespace AITool
             List<ClsRelevantObject> ret = new List<ClsRelevantObject>();
             foreach (var ro in this.ObjectList)
             {
-                ret.Add(ro.CloneJson());  //cloning so that when we add default settings from another object manager instance we dont change the original
+                if (!AppSettings.Settings.ObjectsExcludedDict.ContainsKey(ro.Name))
+                    ret.Add(ro.CloneJson());  //cloning so that when we add default settings from another object manager instance we dont change the original
             }
             return ret;
         }
@@ -427,6 +447,9 @@ namespace AITool
 
             foreach (var ro in InList)
             {
+                if (AppSettings.Settings.ObjectsExcludedDict.ContainsKey(ro.Name))
+                    continue;
+
                 ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, ExactMatchOnly, ret);
 
                 if (rofound.IsNull())
@@ -504,6 +527,10 @@ namespace AITool
 
                 foreach (var obj in lst)
                 {
+
+                    if (AppSettings.Settings.ObjectsExcludedDict.ContainsKey(obj))
+                        continue;
+
                     ClsRelevantObject ro = new ClsRelevantObject(obj);
 
                     ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, ExactMatchonly, ret);
@@ -545,6 +572,9 @@ namespace AITool
             AddedIDX = -1;
 
             if (ro.IsNull())
+                return false;
+
+            if (AppSettings.Settings.ObjectsExcludedDict.ContainsKey(ro.Name))
                 return false;
 
             ClsRelevantObject rofound = this.Get(ro, false, out int FoundIDX, true);

@@ -347,7 +347,7 @@ namespace AITool
             this.cmbInput.Text = AppSettings.Settings.input_path;
             this.cb_inputpathsubfolders.Checked = AppSettings.Settings.input_path_includesubfolders;
             this.cmbInput.Items.Clear();
-            foreach (string pth in BlueIrisInfo.ClipPaths)
+            foreach (string pth in AITOOL.BlueIrisInfo.ClipPaths)
             {
                 this.cmbInput.Items.Add(pth);
 
@@ -373,19 +373,19 @@ namespace AITool
             this.tb_BlueIrisServer.Text = AppSettings.Settings.BlueIrisServer;
 
 
-            if (BlueIrisInfo.Result == BlueIrisResult.Valid)
+            if (AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
             {
-                lbl_blueirisserver.Text = "BI Config: " + BlueIrisInfo.Result;
-                lbl_blueirisserver.Text += $";  WebServer is configured for {BlueIrisInfo.URL}";
+                lbl_blueirisserver.Text = "BI Config: " + AITOOL.BlueIrisInfo.Result;
+                lbl_blueirisserver.Text += $";  WebServer is configured for {AITOOL.BlueIrisInfo.URL}";
                 lbl_blueirisserver.ForeColor = Color.DodgerBlue;
-                if (Global.IsValidIPAddress(AppSettings.Settings.BlueIrisServer, out IPAddress foundip) && !AppSettings.Settings.BlueIrisServer.EqualsIgnoreCase(BlueIrisInfo.ServerName) && AppSettings.Settings.BlueIrisServer != "127.0.0.1")
+                if (Global.IsValidIPAddress(AppSettings.Settings.BlueIrisServer, out IPAddress foundip) && !AppSettings.Settings.BlueIrisServer.EqualsIgnoreCase(AITOOL.BlueIrisInfo.ServerName) && AppSettings.Settings.BlueIrisServer != "127.0.0.1")
                 {
-                    Log($"Warning: BlueIris Settings > Web Server > Local IP address is set to a different IP: AITOOL={AppSettings.Settings.BlueIrisServer}, BI={BlueIrisInfo.ServerName}");
+                    Log($"Warning: BlueIris Settings > Web Server > Local IP address is set to a different IP: AITOOL={AppSettings.Settings.BlueIrisServer}, BI={AITOOL.BlueIrisInfo.ServerName}");
                 }
             }
             else if (!AppSettings.Settings.BlueIrisServer.IsEmpty())
             {
-                lbl_blueirisserver.Text = "BI Config: Error - " + BlueIrisInfo.Result;
+                lbl_blueirisserver.Text = "BI Config: Error - " + AITOOL.BlueIrisInfo.Result;
                 lbl_blueirisserver.ForeColor = Color.MediumPurple;
             }
             else
@@ -2427,7 +2427,7 @@ namespace AITool
             }
 
 
-            if (BlueIrisInfo.Result == BlueIrisResult.Valid)
+            if (AITOOL.BlueIrisInfo.Result == BlueIrisResult.Valid)
             {
                 //http://10.0.1.99:81/admin?trigger&camera=BACKFOSCAM&user=AITools&pw=haha&memo=[summary]
                 cam.trigger_urls_as_string = "[BlueIrisURL]/admin?camera=[camera]&trigger&user=[Username]&pw=[Password]&flagalert=2&memo=[summary]&jpeg=[ImagePathEscaped]";
@@ -2528,7 +2528,7 @@ namespace AITool
 
                     this.cmbcaminput.Text = cam.input_path;
                     this.cmbcaminput.Items.Clear();
-                    foreach (string pth in BlueIrisInfo.ClipPaths)
+                    foreach (string pth in AITOOL.BlueIrisInfo.ClipPaths)
                     {
                         this.cmbcaminput.Items.Add(pth);
                     }
@@ -2601,7 +2601,7 @@ namespace AITool
             {
 
                 //add only cameras not already installed
-                foreach (string camstr in BlueIrisInfo.Cameras)
+                foreach (string camstr in AITOOL.BlueIrisInfo.Cameras)
                 {
                     if (GetCamera(camstr, false) == null)
                         frm.checkedListBoxCameras.Items.Add(camstr, false);
@@ -3094,7 +3094,7 @@ namespace AITool
             //Update blue iris info
             Application.DoEvents();
 
-            await BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
+            await AITOOL.BlueIrisInfo.RefreshBIInfoAsync(AppSettings.Settings.BlueIrisServer);
 
             AITOOL.UpdateLatLong();
 
@@ -3103,14 +3103,14 @@ namespace AITool
             await AITOOL.Telegram.TryStartTelegram();
 
             this.cmbInput.Items.Clear();
-            foreach (string pth in BlueIrisInfo.ClipPaths)
+            foreach (string pth in AITOOL.BlueIrisInfo.ClipPaths)
                 this.cmbInput.Items.Add(pth);
 
 
             this.LoadSettingsTab();
 
-            if (BlueIrisInfo.Result != BlueIrisResult.Valid && BlueIrisInfo.Result != BlueIrisResult.NotInstalled)
-                MessageBox.Show($"Error: Could not connect to BlueIris server: '{BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
+            if (AITOOL.BlueIrisInfo.Result != BlueIrisResult.Valid && AITOOL.BlueIrisInfo.Result != BlueIrisResult.NotInstalled)
+                MessageBox.Show($"Error: Could not connect to BlueIris server: '{AITOOL.BlueIrisInfo.Result}'.  See log for more detail.", "Error", MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
 
             Global_GUI.InvokeIFRequired(this.BtnSettingsSave, () =>
             {
@@ -4381,8 +4381,10 @@ namespace AITool
                         //test by copying the file as a new file into the watched folder'
                         string folder = Path.GetDirectoryName(hist.Filename);
                         string filename = Path.GetFileNameWithoutExtension(hist.Filename);
+                        //strip out anything after the first _AITOOLTEST_ in the filename
+                        filename = filename.GetWord("", "_AITOOLTEST_");
                         string ext = Path.GetExtension(hist.Filename);
-                        string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds}{ext}");
+                        string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds.Round(0)}{ext}");
                         File.Copy(hist.Filename, testfile, true);
                         string str = "Created test image file based on last detected object for the camera: " + testfile;
                         Log(str);

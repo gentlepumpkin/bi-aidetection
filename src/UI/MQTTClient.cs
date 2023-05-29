@@ -1,9 +1,9 @@
 ﻿using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Subscribing;
+//using MQTTnet.Client.Connecting;
+//using MQTTnet.Client.Options;
+//using MQTTnet.Client.Publishing;
+//using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
 
 using System;
@@ -31,7 +31,7 @@ namespace AITool
 
         MqttFactory factory = null;
         IMqttClient mqttClient = null;
-        IMqttClientOptions options = null;
+        MqttClientOptions options = null;
         MqttClientConnectResult cres = null;
 
         public async void Dispose()
@@ -136,7 +136,6 @@ namespace AITool
                     Retain = true
                 };
 
-
                 if (UseTLS)
                 {
                     if (IsWebSocket)
@@ -147,7 +146,10 @@ namespace AITool
                             .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
                             .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
                             .WithTls()
-                            .WithWillMessage(lw)
+                            .WithWillTopic(AppSettings.Settings.mqtt_LastWillTopic)
+                            .WithWillPayload(Encoding.UTF8.GetBytes(AppSettings.Settings.mqtt_LastWillPayload))
+                            .WithWillRetain(true)
+                            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                             .WithCleanSession()
                             .Build();
 
@@ -159,7 +161,10 @@ namespace AITool
                             .WithTcpServer(server, portint)
                             .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
                             .WithTls()
-                            .WithWillMessage(lw)
+                            .WithWillTopic(AppSettings.Settings.mqtt_LastWillTopic)
+                            .WithWillPayload(Encoding.UTF8.GetBytes(AppSettings.Settings.mqtt_LastWillPayload))
+                            .WithWillRetain(true)
+                            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                             .WithCleanSession()
                             .Build();
                     }
@@ -174,7 +179,10 @@ namespace AITool
                         .WithClientId(AppSettings.Settings.mqtt_clientid)
                         .WithWebSocketServer(AppSettings.Settings.mqtt_serverandport)
                         .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                        .WithWillMessage(lw)
+                            .WithWillTopic(AppSettings.Settings.mqtt_LastWillTopic)
+                            .WithWillPayload(Encoding.UTF8.GetBytes(AppSettings.Settings.mqtt_LastWillPayload))
+                            .WithWillRetain(true)
+                            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                         .WithCleanSession()
                         .Build();
                     }
@@ -184,7 +192,10 @@ namespace AITool
                         .WithClientId(AppSettings.Settings.mqtt_clientid)
                         .WithTcpServer(server, portint)
                         .WithCredentials(AppSettings.Settings.mqtt_username, AppSettings.Settings.mqtt_password)
-                        .WithWillMessage(lw)
+                            .WithWillTopic(AppSettings.Settings.mqtt_LastWillTopic)
+                            .WithWillPayload(Encoding.UTF8.GetBytes(AppSettings.Settings.mqtt_LastWillPayload))
+                            .WithWillRetain(true)
+                            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                         .WithCleanSession()
                         .Build();
 
@@ -194,7 +205,9 @@ namespace AITool
 
                 }
 
-                mqttClient.UseDisconnectedHandler(async e =>
+                //mqttClient.UseDisconnectedHandler(async e =>
+
+                mqttClient.DisconnectedAsync += async e =>
                 {
                     IsConnected = false;
                     string excp = "";
@@ -205,10 +218,11 @@ namespace AITool
                     Log($"Debug: MQTT: ### DISCONNECTED FROM SERVER ### - Reason: {e.Reason}, ClientWasDisconnected: {e.ClientWasConnected}, {excp}");
 
                     //reconnect here if needed?
-                });
+                };
 
 
-                mqttClient.UseApplicationMessageReceivedHandler(async e =>
+                //mqttClient.UseApplicationMessageReceivedHandler(async e =>
+                mqttClient.ApplicationMessageReceivedAsync += async e =>
                 {
                     Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
                     Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
@@ -217,10 +231,11 @@ namespace AITool
                     Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                     Log("");
 
-                });
+                };
 
 
-                mqttClient.UseConnectedHandler(async e =>
+                //mqttClient.UseConnectedHandler(async e =>
+                mqttClient.ConnectedAsync += async e =>
                 {
                     IsConnected = true;
                     Log($"Debug: MQTT: ### CONNECTED WITH SERVER '{AppSettings.Settings.mqtt_serverandport}' ### - Result: {e.ConnectResult.ResultCode}, '{e.ConnectResult.ReasonString}'");
@@ -229,7 +244,7 @@ namespace AITool
                     MqttApplicationMessage ma = new MqttApplicationMessageBuilder()
                                                     .WithTopic(AppSettings.Settings.mqtt_LastWillTopic)
                                                     .WithPayload(AppSettings.Settings.mqtt_OnlinePayload)
-                                                    .WithAtLeastOnceQoS()
+                                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                                                     .WithRetainFlag(true)
                                                     .Build();
 
@@ -245,7 +260,7 @@ namespace AITool
 
                     //    Log($"Debug: MQTT: ### SUBSCRIBED to topic '{this.LastTopic}'");
                     //}
-                });
+                };
 
                 Log($"Debug: MQTT: Connecting to server '{this.server}:{this.portint}' with ClientID '{AppSettings.Settings.mqtt_clientid}', Username '{AppSettings.Settings.mqtt_username}', Password '{AppSettings.Settings.mqtt_username.ReplaceChars('*')}'...");
 
@@ -309,7 +324,7 @@ namespace AITool
                                         ma = new MqttApplicationMessageBuilder()
                                              .WithTopic(this.LastTopic)
                                              .WithPayload(CurImg.ToStream())
-                                             .WithAtLeastOnceQoS()
+                                             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                                              .WithRetainFlag(this.LastRetain)
                                              .Build();
 
@@ -331,7 +346,7 @@ namespace AITool
                                         ma = new MqttApplicationMessageBuilder()
                                                 .WithTopic(this.LastTopic)
                                                 .WithPayload(this.LastPayload)
-                                                .WithAtLeastOnceQoS()
+                                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                                                 .WithRetainFlag(this.LastRetain)
                                                 .Build();
 

@@ -98,8 +98,10 @@ namespace AITool
                         //test by copying the file as a new file into the watched folder'
                         string folder = Path.GetDirectoryName(this.cam.last_image_file_with_detections);
                         string filename = Path.GetFileNameWithoutExtension(this.cam.last_image_file_with_detections);
+                        filename = filename.GetWord("", "_AITOOLTEST_");
+
                         string ext = Path.GetExtension(this.cam.last_image_file_with_detections);
-                        string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds}{ext}");
+                        string testfile = Path.Combine(folder, $"{filename}_AITOOLTEST_{DateTime.Now.TimeOfDay.TotalSeconds.Round(0)}{ext}");
                         File.Copy(this.cam.last_image_file_with_detections, testfile, true);
                         string str = "Created test image file based on last detected object for the camera: " + testfile;
                         Log(str);

@@ -155,8 +155,8 @@ namespace AITool
                     paths.Add(AppDomain.CurrentDomain.BaseDirectory);
                     paths.Add(Path.GetDirectoryName(AppSettings.Settings.SettingsFileName));
 
-                    if (BlueIrisInfo.IsNotNull() && BlueIrisInfo.AppPath.IsNotNull() && Directory.Exists(BlueIrisInfo.AppPath))
-                        paths.Add(Path.Combine(BlueIrisInfo.AppPath, "sounds"));
+                    if (AITOOL.BlueIrisInfo.IsNotNull() && AITOOL.BlueIrisInfo.AppPath.IsNotNull() && Directory.Exists(AITOOL.BlueIrisInfo.AppPath))
+                        paths.Add(Path.Combine(AITOOL.BlueIrisInfo.AppPath, "sounds"));
 
                     paths.Add(Environment.ExpandEnvironmentVariables("%SYSTEMROOT%\\Media"));
 

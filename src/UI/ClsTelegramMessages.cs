@@ -15,10 +15,11 @@ using Newtonsoft.Json.Linq;
 
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Polling;
+//using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InputFiles;
+//using Telegram.Bot.Types.InputFiles;
 
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using static AITool.AITOOL;
@@ -59,7 +60,7 @@ namespace AITool
                         //try to prevent telegram Could not create SSL/TLS secure channel exception on Win7.
                         //This may also need TLS 1.2 and 1.3 checked in Internet Options > Advanced tab....
                         ServicePointManager.Expect100Continue = true;
-                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls; //| SecurityProtocolType.Tls13;
 
                         this.telegramHttpClient = new System.Net.Http.HttpClient();
                         this.telegramHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientRemoteTimeoutSeconds);
@@ -165,7 +166,7 @@ namespace AITool
 
         private ValueTask TelegramBot_OnMakingApiRequest(ITelegramBotClient botClient, Telegram.Bot.Args.ApiRequestEventArgs args, CancellationToken cancellationToken = default)
         {
-            Log($"Trace: API request: {args.MethodName}");
+            Log($"Trace: API request: {args.Request.MethodName}");
             return default;
         }
 
@@ -207,9 +208,10 @@ namespace AITool
                     Filename = Path.GetFileName(Filename);
 
                 if (file_id.IsNull())
-                    message = await this.telegramBot.SendPhotoAsync(ChatID, new InputOnlineFile(FileStream, Filename), Caption);
+                    //message = await this.telegramBot.SendPhotoAsync(ChatID, new InputOnlineFile(FileStream, Filename), Caption);
+                    message = await this.telegramBot.SendPhotoAsync(ChatID, new InputFileStream(FileStream, Filename), caption: Caption);
                 else
-                    message = await this.telegramBot.SendPhotoAsync(ChatID, file_id, Caption);
+                    message = await this.telegramBot.SendPhotoAsync(ChatID, InputFile.FromFileId(file_id), caption: Caption);
             }
 
             return message;

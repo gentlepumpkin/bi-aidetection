@@ -228,6 +228,7 @@ namespace AITool
         public bool PausePushover { get; set; } = false;
         public bool PauseMQTT { get; set; } = false;
         public bool PauseURL { get; set; } = false;
+        public string CameraGroup { get; set; } = "";
 
         [JsonIgnore]
         public ThreadSafe.Datetime last_trigger_time { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
