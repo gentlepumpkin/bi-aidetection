@@ -339,5 +339,95 @@ namespace AITool
             UpdateButtons();
 
         }
+
+        private void codeProjectAIObjectsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+        }
+
+        private void codeProjectAILicensePlateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Plate);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAICustomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Custom);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+
+        private void codeProjectAIIPCAMCombinedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Combined);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAIIPCAMGeneralToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_General);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAIIPCAMDarkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Dark);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAIIPCAMAnimalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Animal);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAIFacesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Faces);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
+
+        private void codeProjectAISceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Scene);
+            this.CurURL = url;
+            AppSettings.Settings.AIURLList.Add(url);
+            Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+            UpdateButtons();
+
+        }
     }
 }

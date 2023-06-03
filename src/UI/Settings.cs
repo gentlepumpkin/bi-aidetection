@@ -161,7 +161,7 @@ namespace AITool
 
             public int MaxHistoryAgeDays = 14;
 
-            public string ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel";
+            public string ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, license plate, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel";
             public string ObjectsExcluded = "Airplane, apple, backpack, banana, baseball bat, baseball glove, bed, bench, book, bottle, bowl, broccoli, cake, carrot, cell phone, chair, clock, couch, cup, dining table, donut, fire hydrant, fork, frisbee, handbag, hot dog, keyboard, kite, laptop, microwave, mouse, orange, oven, parking meter, pizza, potted plant, refrigerator, remote, sandwich, scissors, sink, skateboard, skis, snowboard, spoon, sports ball, stop sign, suitcase, surfboard, table, teddy bear, tennis racket, tie, toilet, toothbrush, traffic light, tv, umbrella,vase, wine glass";
             [JsonIgnore]
             //make the following dictionary case insensitive, and do not store it
@@ -797,8 +797,8 @@ namespace AITool
                     }
 
                     //make sure we have the updated default object list
-                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people") || !Settings.ObjectPriority.Has("fox") || !Settings.ObjectPriority.Has("raccoon"))
-                        Settings.ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel"; ;
+                    if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people") || !Settings.ObjectPriority.Has("fox") || !Settings.ObjectPriority.Has("raccoon") | !Settings.ObjectPriority.Has("license plate"))
+                        Settings.ObjectPriority = "person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, license plate, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel"; ;
 
                     //convert comma delimited list of objects stored in Settings.ObjectsExcluded to a dictionary
                     List<string> splt = Settings.ObjectsExcluded.SplitStr(",", true);

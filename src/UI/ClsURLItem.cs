@@ -11,6 +11,15 @@ namespace AITool
 {
     public enum URLTypeEnum
     {
+        CodeProject_AI,
+        CodeProject_AI_Faces,
+        CodeProject_AI_Custom,
+        CodeProject_AI_Scene,
+        CodeProject_AI_Plate,
+        CodeProject_AI_IPCAM_Animal,
+        CodeProject_AI_IPCAM_Dark,
+        CodeProject_AI_IPCAM_General,
+        CodeProject_AI_IPCAM_Combined,
         DeepStack,
         DeepStack_Faces,
         DeepStack_Custom,
@@ -27,6 +36,7 @@ namespace AITool
     {
         private bool isValid = false;
 
+        public string Name { get; set; } = "";
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Unknown;
         public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(true);
         public bool IsValid
@@ -105,6 +115,7 @@ namespace AITool
 
         public ClsURLItem(String url, int Order, URLTypeEnum type)
         {
+            //this.Name = name.Trim();
             this.UrlFixed = false;
             this.url = url.Trim();
             this.Type = type;
@@ -120,6 +131,28 @@ namespace AITool
             bool HadError = false;
 
             Uri uri = null;
+            //  CodeProject_AI,
+            //  CodeProject_AI_Faces,
+            //  CodeProject_AI_Custom,
+            //  CodeProject_AI_Scene,
+            //  CodeProject_AI_Plate,
+            //  CodeProject_AI_IPCAM_Animal,
+            //  CodeProject_AI_IPCAM_Dark,
+            //  CodeProject_AI_IPCAM_General,
+            //  CodeProject_AI_IPCAM_Combined,
+            //  CodeProject_AI_IPCAM_Plate,
+
+            bool HasCP = this.url.Has(":32168/v1/vision/detection");
+            bool HasCPPlate = this.url.Has(":32168/v1/image/alpr");
+            bool HasCPCustom = this.url.Has(":32168/v1/vision/custom");
+            bool HasCPAnimal = this.url.Has(":32168/v1/vision/custom/ipcam-animal");
+            bool HasCPDark = this.url.Has(":32168/v1/vision/custom/ipcam-dark");
+            bool HasCPGeneral = this.url.Has(":32168/v1/vision/custom/ipcam-general");
+            bool HasCPCombined = this.url.Has(":32168/v1/vision/custom/ipcam-combined");
+            bool HasCPIPCamPlate = this.url.Has(":32168/v1/vision/custom/ipcam-license-plate");
+            bool HasCPScene = this.url.Has(":32168/v1/vision/scene");
+            bool HasCPFace = this.url.Has(":32168/v1/vision/face/recognize");
+
 
             bool HasDoods = this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase);
             bool HasAWSObj = this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase) || this.url.Equals("amazon_objects", StringComparison.OrdinalIgnoreCase);
@@ -131,6 +164,7 @@ namespace AITool
             bool HasDSCus = this.url.IndexOf("/v1/vision/custom", StringComparison.OrdinalIgnoreCase) >= 0;
             bool HasDSScn = this.url.IndexOf("/v1/vision/scene", StringComparison.OrdinalIgnoreCase) >= 0;
             bool HasDSDet = this.url.IndexOf("/v1/vision/detection", StringComparison.OrdinalIgnoreCase) >= 0;
+
 
 
             bool ShouldInit = Init || !this.isValid || string.IsNullOrWhiteSpace(this.url) || (!this.url.Contains("/") && !this.url.Contains("_")) || this.Type == URLTypeEnum.Unknown;
@@ -166,7 +200,7 @@ namespace AITool
                     this.Type = URLTypeEnum.SightHound_Vehicle;
                     this.MaxImagesPerMonth = 5000;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate";
+                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
                     this.IsLocalHost = false;
                     this.IsLocalNetwork = false;
                     this.HttpClient = null;
@@ -183,6 +217,68 @@ namespace AITool
                     this.HttpClient = null;
                     this.MaxImagesPerMonth = 5000;
                 }
+                else if (this.Type == URLTypeEnum.CodeProject_AI || HasCP)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/detection";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_Faces || HasCPFace)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/face/recognize";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_Faces;
+                    this.UseAsRefinementServer = true;
+                    this.RefinementObjects = "Person, People, Face";
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_IPCAM_Animal || HasCPAnimal)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/custom/ipcam-animal";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_IPCAM_Animal;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_IPCAM_Combined || HasCPCombined)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/custom/ipcam-combined";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_IPCAM_Combined;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_IPCAM_Dark || HasCPDark)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/custom/ipcam-dark";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_IPCAM_Dark;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_IPCAM_General || HasCPGeneral)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/custom/ipcam-general";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_IPCAM_General;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_Plate || HasCPPlate)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/image/alpr";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_Plate;
+                    this.UseAsRefinementServer = true;
+                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
+
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_Scene || HasCPScene)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/scene";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_Scene;
+                }
+                else if (this.Type == URLTypeEnum.CodeProject_AI_Custom || HasCPCustom)
+                {
+                    this.DefaultURL = "http://127.0.0.1:32168/v1/vision/custom";
+                    this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
+                    this.Type = URLTypeEnum.CodeProject_AI_Custom;
+                }
+
+
+
                 else if (this.Type == URLTypeEnum.DeepStack_Faces || HasDSFacRec)
                 {
                     this.DefaultURL = "http://127.0.0.1:80/v1/vision/face/recognize";
@@ -222,6 +318,17 @@ namespace AITool
             if (string.IsNullOrWhiteSpace(this.url))
                 this.url = this.DefaultURL;
 
+            HasCP = this.url.Has(":32168/v1/vision/detection");
+            HasCPPlate = this.url.Has(":32168/v1/image/alpr");
+            HasCPAnimal = this.url.Has(":32168/v1/vision/custom/ipcam-animal");
+            HasCPDark = this.url.Has(":32168/v1/vision/custom/ipcam-dark");
+            HasCPGeneral = this.url.Has(":32168/v1/vision/custom/ipcam-general");
+            HasCPCombined = this.url.Has(":32168/v1/vision/custom/ipcam-combined");
+            HasCPIPCamPlate = this.url.Has(":32168/v1/vision/custom/ipcam-license-plate");
+            HasCPCustom = this.url.Has(":32168/v1/vision/custom");
+            HasCPScene = this.url.Has(":32168/v1/vision/scene");
+            HasCPFace = this.url.Has(":32168/v1/vision/face/recognize");
+
             HasDoods = this.url.EndsWith("/detect", StringComparison.OrdinalIgnoreCase);
             HasAWSObj = this.url.Equals("amazon", StringComparison.OrdinalIgnoreCase) || this.url.Equals("amazon_objects", StringComparison.OrdinalIgnoreCase);
             HasAWSFac = this.url.Equals("amazon_faces", StringComparison.OrdinalIgnoreCase);
@@ -236,7 +343,11 @@ namespace AITool
             //================================================================================
             // Try to correct any servers without a full URL
             //================================================================================
-            if (this.Type == URLTypeEnum.DOODS || HasDoods)
+            if (this.url.Has(":32168"))
+            {
+                //do nothing for now - this is a codeproject server
+            }
+            else if (this.Type == URLTypeEnum.DOODS || HasDoods)
             {
 
 
@@ -340,7 +451,11 @@ namespace AITool
                         this.url = Global.UpdateURL(this.url, 0, "", "127.0.0.1", ref WasFixed, ref HadError);
                     }
 
-                    if (this.Type == URLTypeEnum.DeepStack)
+                    if (url.Has(":32168"))
+                    {
+                        this.CurSrv = this.Type.ToString() + ":" + uri.Host + ":" + uri.Port;
+                    }
+                    else if (this.Type == URLTypeEnum.DeepStack)
                     {
                         this.CurSrv = "Deepstack_Objects:" + uri.Host + ":" + uri.Port;
                     }

@@ -2048,6 +2048,7 @@ namespace AITool
             public List<ClsPrediction> Predictions = new List<ClsPrediction>();
             public bool Success = false;
             public string JsonString = "";
+            public string Message = "";
             public string Error = "";
             public long SWPostTime = 0;
             public HttpStatusCode StatusCode = HttpStatusCode.Unused;
@@ -2069,7 +2070,7 @@ namespace AITool
             //==============================================================================================================
             //==============================================================================================================
             //==============================================================================================================
-            if (AiUrl.Type == URLTypeEnum.DeepStack || AiUrl.Type == URLTypeEnum.DeepStack_Custom || AiUrl.Type == URLTypeEnum.DeepStack_Faces || AiUrl.Type == URLTypeEnum.DeepStack_Scene)
+            if (AiUrl.Type.ToString().Has("codeproject") || AiUrl.Type == URLTypeEnum.DeepStack || AiUrl.Type == URLTypeEnum.DeepStack_Custom || AiUrl.Type == URLTypeEnum.DeepStack_Faces || AiUrl.Type == URLTypeEnum.DeepStack_Scene)
             {
                 Stopwatch swposttime = new Stopwatch();
 
@@ -2149,11 +2150,13 @@ namespace AITool
                         {
                             if (response != null)
                             {
-                                if (!response.success || !string.IsNullOrWhiteSpace(response.error))
+                                if (!response.success || !string.IsNullOrWhiteSpace(response.error) || response.message.EqualsIgnoreCase("no plates found"))
                                 {
                                     string err = "";
                                     if (!string.IsNullOrWhiteSpace(response.error))
                                         err = response.error;
+                                    if (response.message.EqualsIgnoreCase("no plates found"))
+                                        err = response.message;
                                     ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. Error='{err}'. JSON: '{cleanjsonString}'";
                                     AiUrl.IncrementError();
                                     AiUrl.LastResultMessage = ret.Error;
@@ -3078,6 +3081,7 @@ namespace AITool
         {
             public bool Success = false;
             public string Error = "";
+            public string Message = "";
             public List<ClsURLItem> OutURLs = new List<ClsURLItem>();
             public List<ClsPrediction> OutPredictions = new List<ClsPrediction>();
         }

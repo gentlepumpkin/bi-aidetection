@@ -22,7 +22,7 @@ namespace AITool.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace AITool.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AITool.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace AITool.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap arrow_down_double_3 {
+        public static System.Drawing.Bitmap arrow_down_double_3 {
             get {
                 object obj = ResourceManager.GetObject("arrow-down-double-3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +73,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap arrow_up_double_3 {
+        public static System.Drawing.Bitmap arrow_up_double_3 {
             get {
                 object obj = ResourceManager.GetObject("arrow-up-double-3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -83,7 +83,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap camera_webcam {
+        public static System.Drawing.Bitmap camera_webcam {
             get {
                 object obj = ResourceManager.GetObject("camera-webcam", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -93,7 +93,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap camera_webcam_add {
+        public static System.Drawing.Bitmap camera_webcam_add {
             get {
                 object obj = ResourceManager.GetObject("camera-webcam_add", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -103,7 +103,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap camera_webcam_delete {
+        public static System.Drawing.Bitmap camera_webcam_delete {
             get {
                 object obj = ResourceManager.GetObject("camera-webcam_delete", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -113,7 +113,17 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap color_wheel {
+        public static System.Drawing.Bitmap Codeproject_2023_06_03_15_45_28 {
+            get {
+                object obj = ResourceManager.GetObject("Codeproject 2023-06-03_15-45-28", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap color_wheel {
             get {
                 object obj = ResourceManager.GetObject("color-wheel", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -123,7 +133,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap donate_button {
+        public static System.Drawing.Bitmap donate_button {
             get {
                 object obj = ResourceManager.GetObject("donate_button", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -133,7 +143,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap edit_delete_5 {
+        public static System.Drawing.Bitmap edit_delete_5 {
             get {
                 object obj = ResourceManager.GetObject("edit-delete-5", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -143,7 +153,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap image_x_generic {
+        public static System.Drawing.Bitmap image_x_generic {
             get {
                 object obj = ResourceManager.GetObject("image-x-generic", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -153,7 +163,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap logo {
+        public static System.Drawing.Bitmap logo {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -163,7 +173,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon Logo_Error {
+        public static System.Drawing.Icon Logo_Error {
             get {
                 object obj = ResourceManager.GetObject("Logo_Error", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
@@ -173,7 +183,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon Logo1 {
+        public static System.Drawing.Icon Logo1 {
             get {
                 object obj = ResourceManager.GetObject("Logo1", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
@@ -183,7 +193,7 @@ namespace AITool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap network_server {
+        public static System.Drawing.Bitmap network_server {
             get {
                 object obj = ResourceManager.GetObject("network-server", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));

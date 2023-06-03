@@ -120,7 +120,7 @@ namespace AITool
                         else
                         {
                             //only select something if nothing is already selected 
-                            if (SelectObject != null && (ForcedSelection || (UseSelected && olv.SelectedObject == null)))
+                            if (SelectObject != null && (ForcedSelection || (UseSelected && olv.SelectedObject != null)))
                             {
                                 //use the given object as selected
                                 olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
@@ -1024,6 +1024,10 @@ namespace AITool
                 else if (url.Type == URLTypeEnum.SightHound_Person || url.Type == URLTypeEnum.SightHound_Vehicle)
                 {
                     RetKey = "SightHound" + png;
+                }
+                else if (url.Type.ToString().Has("codeproject"))
+                {
+                    RetKey = "Codeproject" + png;
                 }
 
 

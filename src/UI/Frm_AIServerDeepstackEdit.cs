@@ -27,6 +27,7 @@ namespace AITool
 
             this.tb_URL.Text = this.CurURL.url;
             this.lbl_type.Text = this.CurURL.Type.ToString();
+            this.tb_Name.Text = this.CurURL.Name;
 
             if (this.CurURL.Type == URLTypeEnum.AWSRekognition_Objects || this.CurURL.Type == URLTypeEnum.AWSRekognition_Faces)
                 this.tb_URL.Enabled = false;
@@ -128,6 +129,7 @@ namespace AITool
         private void UpdateURL()
         {
             this.CurURL.url = this.tb_URL.Text.Trim();
+            this.CurURL.Name = this.tb_Name.Text.Trim();
             this.CurURL.ActiveTimeRange = this.tb_ActiveTimeRange.Text.Trim();
             this.CurURL.Enabled.WriteFullFence(this.chk_Enabled.Checked);
             this.CurURL.Cameras = this.tb_ApplyToCams.Text.Trim();

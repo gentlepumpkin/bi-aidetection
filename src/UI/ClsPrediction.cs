@@ -1117,14 +1117,26 @@ namespace AITool
             else if (tmp.Contains("license") || tmp.Contains("plate"))
             {
                 this.ObjType = ObjectType.LicensePlate;
-                this.Label = "License Plate";
+                //Plate: ddddddddd
+                if (tmp.StartsWith("plate:"))
+                {
+                    this.Detail = this.Label.GetWord("plate:", "");
+                    this.Label = "License Plate";
+                }
             }
             else if (tmp.Equals("dog") ||
                      tmp.Equals("cat") ||
                      tmp.Equals("bird") ||
                      tmp.Equals("bear") ||
                      tmp.Equals("sheep") ||
+                     tmp.Equals("deer") ||
                      tmp.Equals("cow") ||
+                     tmp.Equals("rabbit") ||
+                     tmp.Equals("raccoon") ||
+                     tmp.Equals("fox") ||
+                     tmp.Equals("skunk") ||
+                     tmp.Equals("squirrel") ||
+                     tmp.Equals("pig") ||
                      tmp.Equals("horse") ||
                      tmp.Equals("elephant") ||
                      tmp.Equals("zebra") ||
@@ -1137,7 +1149,6 @@ namespace AITool
                      tmp.Equals("suv") ||
                      tmp.Equals("bicycle") ||
                      tmp.Equals("motorcycle") ||
-                     tmp.Equals("horse") ||
                      tmp.Equals("boat") ||
                      tmp.Equals("train") ||
                      tmp.Equals("airplane"))
