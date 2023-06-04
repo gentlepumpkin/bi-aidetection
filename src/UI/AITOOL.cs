@@ -2150,13 +2150,13 @@ namespace AITool
                         {
                             if (response != null)
                             {
-                                if (!response.success || !string.IsNullOrWhiteSpace(response.error) || response.message.EqualsIgnoreCase("no plates found"))
+                                if (!response.success || !string.IsNullOrWhiteSpace(response.error)) // || )
                                 {
                                     string err = "";
                                     if (!string.IsNullOrWhiteSpace(response.error))
                                         err = response.error;
-                                    if (response.message.EqualsIgnoreCase("no plates found"))
-                                        err = response.message;
+                                    //if (response.message.EqualsIgnoreCase("no plates found"))
+                                    //    err = response.message;
                                     ret.Error = $"ERROR: Failure response from '{AiUrl.Type.ToString()}'. Error='{err}'. JSON: '{cleanjsonString}'";
                                     AiUrl.IncrementError();
                                     AiUrl.LastResultMessage = ret.Error;
@@ -2196,6 +2196,8 @@ namespace AITool
 
                                     ret.Success = true;
                                     AiUrl.LastResultMessage = $"{ret.Predictions.Count} predictions found.";
+                                    if (response.message.IsNotEmpty())
+                                        AiUrl.LastResultMessage += $" Message: '{response.message}'";
 
                                 }
 
