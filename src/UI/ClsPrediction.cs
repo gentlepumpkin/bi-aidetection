@@ -1143,6 +1143,7 @@ namespace AITool
                      tmp.Equals("giraffe"))
                 this.ObjType = ObjectType.Animal;
             else if (tmp.Equals("car") ||
+                     tmp.Contains("Ambulance") ||
                      tmp.Contains("truck") ||
                      tmp.Equals("bus") ||
                      tmp.Equals("van") ||

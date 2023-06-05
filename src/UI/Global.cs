@@ -2379,6 +2379,13 @@ namespace AITool
                         }
                         else
                         {
+                            string pausemsg = "";
+                            if (pause)
+                                pausemsg = $"All cameras paused {howlong} minutes.";
+                            else
+                                pausemsg = $"All cameras resumed.";
+
+
                             foreach (var cam in AppSettings.Settings.CameraList)
                             {
                                 if (pause)
@@ -2402,7 +2409,7 @@ namespace AITool
                                 }
                             }
 
-                            AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), $"All cameras paused {howlong} minutes.");
+                            AITOOL.Telegram.SendTextMessageAsync(AppSettings.Settings.telegram_chatids.GetStrAtIndex(0), pausemsg);
 
                         }
 

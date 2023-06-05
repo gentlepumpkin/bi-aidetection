@@ -200,7 +200,7 @@ namespace AITool
                     this.Type = URLTypeEnum.SightHound_Vehicle;
                     this.MaxImagesPerMonth = 5000;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
+                    this.RefinementObjects = "Ambulance, Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
                     this.IsLocalHost = false;
                     this.IsLocalNetwork = false;
                     this.HttpClient = null;
@@ -261,7 +261,7 @@ namespace AITool
                     this.HelpURL = "https://www.codeproject.com/AI/docs/api/api_reference.html";
                     this.Type = URLTypeEnum.CodeProject_AI_Plate;
                     this.UseAsRefinementServer = true;
-                    this.RefinementObjects = "Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
+                    this.RefinementObjects = "Ambulance, Car, Truck, Pickup Truck, Bus, SUV, Van, Motorcycle, Motorbike, License Plate, Plate";
 
                 }
                 else if (this.Type == URLTypeEnum.CodeProject_AI_Scene || HasCPScene)
