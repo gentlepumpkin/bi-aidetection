@@ -34,24 +34,30 @@ namespace AITool
     }
     public class ClsURLItem : IEquatable<ClsURLItem>
     {
-        private bool isValid = false;
 
-        public string Name { get; set; } = "";
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Unknown;
-        public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(true);
-        public bool IsValid
-        {
-            get { return isValid; }
-            set { isValid = value; }
-        }
-        public int Order { get; set; } = 0;
-        public string url { get; set; } = "";
+        public string Name { get; set; } = "";
         [JsonIgnore]
+        public bool IsValid { get; set; } = false;
+        public string LastResultMessage { get; set; } = "";
+        public int Order { get; set; } = 0;
+        public long LastTimeMS { get; set; } = 0;
+        public long AvgTimeMS
+        {
+            get { return Convert.ToInt64(this.AITimeCalcs.Avg); }
+        }
+
+        public string url { get; set; } = "";
+        public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(true);
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
-        public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
+        [JsonIgnore]
+        public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
+        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
+        public ThreadSafe.Integer ErrsInRowCount { get; set; } = new ThreadSafe.Integer(0);
+
         public string Cameras { get; set; } = "";
         public int MaxImagesPerMonth { get; set; } = 0;
-        public string ImageAdjustProfile { get; set; } = "Default";
         public int Threshold_Lower { get; set; } = 0;   //override the cameras threshold since different AI servers may need to be tuned to different values
         public int Threshold_Upper { get; set; } = 100;
         public bool UseAsRefinementServer { get; set; } = false;
@@ -61,21 +67,16 @@ namespace AITool
         public bool UseOnlyAsLinkedServer { get; set; } = false;
         public bool LinkServerResults { get; set; } = false;
         public string LinkedResultsServerList { get; set; } = "";
+        public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
+        public string ImageAdjustProfile { get; set; } = "Default";
         [JsonIgnore]
         public int CurOrder { get; set; } = 0;
         [JsonIgnore]
-        public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
-        [JsonIgnore]
-        public ThreadSafe.Boolean ErrDisabled { get; set; } = new ThreadSafe.Boolean(false);
-        public ThreadSafe.Integer ErrCount { get; set; } = new ThreadSafe.Integer(0);
-        public ThreadSafe.Integer ErrsInRowCount { get; set; } = new ThreadSafe.Integer(0);
         public bool IsLocalHost { get; set; } = false;
         public bool IsLocalNetwork { get; set; } = false;
         public string HelpURL { get; set; } = "";
         public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
         public bool LastResultSuccess { get; set; } = false;
-        public string LastResultMessage { get; set; } = "";
-        public long LastTimeMS { get; set; } = 0;
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
         public int Port { get; set; } = 0;
@@ -167,7 +168,7 @@ namespace AITool
 
 
 
-            bool ShouldInit = Init || !this.isValid || string.IsNullOrWhiteSpace(this.url) || (!this.url.Contains("/") && !this.url.Contains("_")) || this.Type == URLTypeEnum.Unknown;
+            bool ShouldInit = Init || !this.IsValid || string.IsNullOrWhiteSpace(this.url) || (!this.url.Contains("/") && !this.url.Contains("_")) || this.Type == URLTypeEnum.Unknown;
 
             if (ShouldInit)
             {
@@ -537,7 +538,7 @@ namespace AITool
                 AITOOL.Log($"Error: '{this.Type.ToString()}' URL is not known/valid: '{this.url}'");
             }
 
-            if (!IsAWS && this.isValid && this.HttpClient == null)
+            if (!IsAWS && this.IsValid && this.HttpClient == null)
             {
                 this.HttpClient = new HttpClient();
                 this.HttpClient.Timeout = this.GetTimeout();
@@ -569,7 +570,7 @@ namespace AITool
 
         public bool Equals(ClsURLItem other)
         {
-            return other != null && this.url.EqualsIgnoreCase(other.url);
+            return other != null && this.url.EqualsIgnoreCase(other.url) && this.Name.EqualsIgnoreCase(other.Name) && this.Type == other.Type;
         }
 
     }

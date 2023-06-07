@@ -4352,7 +4352,7 @@ namespace AITool
                 }
 
                 Frm_ObjectDetail frm = new Frm_ObjectDetail();
-                frm.PredictionObjectDetails = allpredictions;
+                frm.PredictionObjectDetailsList = allpredictions;
                 frm.ImageFileName = filename;
                 frm.Show();
 
@@ -5479,6 +5479,9 @@ namespace AITool
 
         private void BtnRelevantObjects_Click(object sender, EventArgs e)
         {
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+                return;
+
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);

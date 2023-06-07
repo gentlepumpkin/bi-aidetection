@@ -798,7 +798,7 @@ namespace AITool
 
                     //make sure we have the updated default object list
                     if (!Settings.ObjectPriority.Has("suv") || !Settings.ObjectPriority.Has("van") || !Settings.ObjectPriority.Has("people") || !Settings.ObjectPriority.Has("fox") || !Settings.ObjectPriority.Has("raccoon") | !Settings.ObjectPriority.Has("license plate"))
-                        Settings.ObjectPriority = "Ambulance, person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, license plate, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel"; ;
+                        Settings.ObjectPriority = "Ambulance, person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, license plate, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat, bird, squirrel";
 
                     //convert comma delimited list of objects stored in Settings.ObjectsExcluded to a dictionary
                     List<string> splt = Settings.ObjectsExcluded.SplitStr(",", true);

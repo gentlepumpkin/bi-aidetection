@@ -67,6 +67,7 @@ namespace AITool
             // FOLV_AIServers
             // 
             FOLV_AIServers.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            FOLV_AIServers.CheckBoxes = true;
             FOLV_AIServers.Location = new System.Drawing.Point(0, 34);
             FOLV_AIServers.Name = "FOLV_AIServers";
             FOLV_AIServers.ShowGroups = false;

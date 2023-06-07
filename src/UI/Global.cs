@@ -1174,7 +1174,17 @@ namespace AITool
                 bool ret = false;
 
                 if (CurrentIP.IsEmpty())
-                    CurrentIP = GetAllLocalIPs(NetworkInterfaceType.Ethernet)[0].ToString();
+                {
+                    List<IPAddress> ips = GetAllLocalIPs(NetworkInterfaceType.Ethernet);
+                    //was getting index out of bounds on one machine that has never had AITOOL installed
+                    if (ips.Count > 0)
+                        CurrentIP = ips[0].ToString();
+                    else
+                    {
+                        CurrentIP = "127.0.0.1";  //this should not happen - antivirus/firewall blocking?
+                    }
+                }
+
 
                 if (CurrentHost.IsEmpty())
                     CurrentHost = Dns.GetHostName();
@@ -1432,6 +1442,9 @@ namespace AITool
                     }
 
                 }
+
+                if (ipAddrList.Count == 0)
+                    Log($"Error: No IP addresses found for NetworkInterfaceType '{_type}' with Operational status = UP????");
 
             }
             catch (Exception ex)

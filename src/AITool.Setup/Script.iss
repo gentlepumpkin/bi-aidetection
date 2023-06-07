@@ -14,7 +14,7 @@
 ; This Is Full App Version Major.Minor.Build.Revision
 ; Store First 3 Parts of Version in ShortAppVersion to be used for SBS Assembly Installation Major.Minor.Build
 #dim Version[4]
-#expr ParseVersion("..\UI\bin\Debug\net6.0-windows\AITOOL.exe", Version[0], Version[1], Version[2], Version[3])
+#expr ParseVersion("..\UI\bin\Debug\net6.0-windows10.0.19041.0\AITOOL.exe", Version[0], Version[1], Version[2], Version[3])
 #define AppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 #define ShortAppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2])
 #define ShorterAppVersion Str(Version[0]) + "." + Str(Version[1])
@@ -54,7 +54,7 @@ Filename: "{app}\AITOOL.exe"; Flags: nowait postinstall skipifsilent
 
 [Files]
 //Source: "Script.iss"; DestDir: "{app}"
-Source: "..\UI\bin\Debug\net6.0-windows\*"; DestDir: "{app}";Flags: recursesubdirs ignoreversion;Excludes: "AIToolSetup*,_Settings"
+Source: "..\UI\bin\Debug\net6.0-windows10.0.19041.0\*"; DestDir: "{app}";Flags: recursesubdirs ignoreversion;Excludes: "AIToolSetup*,_Settings"
 [Icons]
 Name: "{group}\AITOOL"; Filename: "{app}\AITOOL.exe" ; Components: full; Tasks: startmenu
 Name: "{userdesktop}\AITOOL"; Filename: "{app}\AITOOL.exe" ; Components: full; Tasks: desktopicon

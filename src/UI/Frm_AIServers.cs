@@ -25,6 +25,20 @@ namespace AITool
         {
             Global_GUI.RestoreWindowState(this);
             Global_GUI.ConfigureFOLV(FOLV_AIServers, typeof(ClsURLItem), null, this.imageList1);
+
+            this.FOLV_AIServers.BooleanCheckStateGetter = delegate (Object rowObject)
+            {
+                return !rowObject.IsNull() && ((ClsURLItem)rowObject).Enabled.ReadFullFence();
+            };
+
+            this.FOLV_AIServers.BooleanCheckStatePutter = delegate (Object rowObject, bool newValue)
+            {
+                if (rowObject.IsNull())
+                    return false;
+                ((ClsURLItem)rowObject).Enabled.WriteFullFence(newValue);
+                return newValue;
+            };
+
             Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList);
         }
 

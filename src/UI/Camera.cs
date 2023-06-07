@@ -100,9 +100,9 @@ namespace AITool
         public string Prefix { get; set; } = "";
         public string BICamName { get; set; } = "";
         public string MaskFileName { get; set; } = "";
-        public string triggering_objects_as_string { get; set; } = "person, people, face, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
+        public string triggering_objects_as_string { get; set; } = ""; //"person, people, face, bear, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle, motorbike, bus, dog, horse, boat, train, airplane, zebra, giraffe, cow, sheep, cat, bird";
 
-        public string additional_triggering_objects_as_string { get; set; } = "SUV, VAN, Pickup Truck, Meat Popsicle";
+        public string additional_triggering_objects_as_string { get; set; } = ""; //"SUV, VAN, Pickup Truck, Meat Popsicle";
         public ClsRelevantObjectManager DefaultTriggeringObjects { get; set; } = null;
         public ClsRelevantObjectManager TelegramTriggeringObjects { get; set; } = null;
         public ClsRelevantObjectManager PushoverTriggeringObjects { get; set; } = null;

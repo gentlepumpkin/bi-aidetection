@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using static AITool.AITOOL;
 
 namespace AITool
@@ -168,16 +169,27 @@ namespace AITool
             //hair dryer, toothbrush.
 
 
-            this.IsPerson = tmp.Contains("person") || tmp.Contains("face");
+            this.IsPerson = tmp.Contains("person") || tmp.Contains("people");
+
+            this.IsFace = tmp.Contains("face");
+
+            //Ambulance, person, people, bear, fox, elephant, car, truck, pickup truck, SUV, van, bicycle, motorcycle,
+            //motorbike, bus, license plate, dog, horse, boat, train, zebra, giraffe, cow, pig, skunk, raccoon, sheep, rabbit, cat
 
             this.IsVehicle = tmp.Contains("car") ||
                              tmp.Contains("truck") ||
                              tmp.Contains("bus") ||
                              tmp.Contains("bicycle") ||
                              tmp.Contains("motorcycle") ||
-                             tmp.Contains("horse") ||
+                             tmp.Contains("motorbike") ||
                              tmp.Contains("boat") ||
-                             tmp.Contains("airplane");
+                             tmp.Contains("suv") ||
+                             tmp.Contains("van") ||
+                             tmp.Contains("bus") ||
+                             tmp.Contains("train") ||
+                             tmp.Contains("boat") ||
+                             tmp.Contains("airplane") ||
+                             tmp.Contains("ambulance");
 
             this.IsAnimal = tmp.Contains("dog") ||
                             tmp.Contains("cat") ||
@@ -188,6 +200,11 @@ namespace AITool
                             tmp.Contains("horse") ||
                             tmp.Contains("elephant") ||
                             tmp.Contains("zebra") ||
+                            tmp.Contains("pig") ||
+                            tmp.Contains("skunk") ||
+                            tmp.Contains("raccoon") ||
+                            tmp.Contains("rabbit") ||
+                            tmp.Contains("fox") ||
                             tmp.Contains("giraffe");
 
             this.WasMasked = tmp.Contains("mask");

@@ -852,6 +852,9 @@ namespace AITool
             }
             AppSettings.Settings.AIURLList = newlist;
 
+            //sort AIURLList so that all items enabled are at the top. Use OrderbyDescending so that the order is preserved
+            AppSettings.Settings.AIURLList = AppSettings.Settings.AIURLList.OrderByDescending(x => x.Enabled.ReadFullFence()).ToList();
+
             //Check to see if we need to get updated URL list - In theory this should only happen once
             bool hasold = !string.IsNullOrEmpty(AppSettings.Settings.deepstack_url);
             if (((AppSettings.Settings.AIURLList.Count == 0 || Force) && hasold) || hasold)
@@ -937,6 +940,7 @@ namespace AITool
                 //AIURLSettingsChanged.WriteFullFence(false);
 
             }
+
 
             //add a default DeepStack server if none found
             //if (AppSettings.Settings.AIURLList.Count == 0)
@@ -3711,7 +3715,7 @@ namespace AITool
                     else
                     {
                         //could not access the file for 30 seconds??   Or unexpected error
-                        ret.Error = $"Error: {CurImg.LastError}.  ({CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries)";
+                        ret.Error = $"Error: Last Image message: '{CurImg.LastError}'.  ({CurImg.FileLockMS}ms, with {CurImg.FileLockErrRetryCnt} retries)";
                         CurImg.ErrCount.AtomicIncrementAndGet();
                         CurImg.ResultMessage = ret.Error;
                         Log(ret.Error, AISRV, cam, CurImg);

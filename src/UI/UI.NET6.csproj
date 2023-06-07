@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <RootNamespace>AITool</RootNamespace>
     <AssemblyName>AITool</AssemblyName>
@@ -213,5 +212,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>CALL "$(SolutionDir)UI\CleanOldInstalls.bat"</PreBuildEvent>
+    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
   </PropertyGroup>
 </Project>

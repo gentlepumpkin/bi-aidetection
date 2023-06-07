@@ -244,7 +244,7 @@ namespace AITool
                     {
 
                         Frm_ObjectDetail frm = new Frm_ObjectDetail();
-                        frm.PredictionObjectDetails = result.OutPredictions;
+                        frm.PredictionObjectDetailsList = result.OutPredictions;
                         frm.ImageFileName = tpth;
                         frm.Show();
 

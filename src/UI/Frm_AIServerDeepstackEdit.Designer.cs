@@ -41,6 +41,7 @@ namespace AITool
             tb_ApplyToCams = new System.Windows.Forms.TextBox();
             chk_Enabled = new System.Windows.Forms.CheckBox();
             groupBox1 = new System.Windows.Forms.GroupBox();
+            tb_Name = new System.Windows.Forms.TextBox();
             label14 = new System.Windows.Forms.Label();
             cb_OnlyLinked = new System.Windows.Forms.CheckBox();
             cb_TimeoutError = new System.Windows.Forms.CheckBox();
@@ -62,6 +63,7 @@ namespace AITool
             tb_ImagesPerMonth = new System.Windows.Forms.TextBox();
             btn_ImageAdjustEdit = new System.Windows.Forms.Button();
             cb_ImageAdjustProfile = new System.Windows.Forms.ComboBox();
+            label15 = new System.Windows.Forms.Label();
             label9 = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
             labelTimeout = new System.Windows.Forms.Label();
@@ -71,8 +73,6 @@ namespace AITool
             linkHelpURL = new System.Windows.Forms.LinkLabel();
             btTest = new System.Windows.Forms.Button();
             bt_clear = new System.Windows.Forms.Button();
-            label15 = new System.Windows.Forms.Label();
-            tb_Name = new System.Windows.Forms.TextBox();
             groupBox1.SuspendLayout();
             groupBoxLinked.SuspendLayout();
             groupBoxRefine.SuspendLayout();
@@ -112,7 +112,7 @@ namespace AITool
             tb_URL.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tb_URL.Location = new System.Drawing.Point(121, 60);
             tb_URL.Name = "tb_URL";
-            tb_URL.Size = new System.Drawing.Size(484, 20);
+            tb_URL.Size = new System.Drawing.Size(512, 20);
             tb_URL.TabIndex = 1;
             tb_URL.TextChanged += tb_URL_TextChanged;
             // 
@@ -120,7 +120,7 @@ namespace AITool
             // 
             bt_Save.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             bt_Save.DialogResult = System.Windows.Forms.DialogResult.OK;
-            bt_Save.Location = new System.Drawing.Point(555, 405);
+            bt_Save.Location = new System.Drawing.Point(575, 405);
             bt_Save.Name = "bt_Save";
             bt_Save.Size = new System.Drawing.Size(70, 30);
             bt_Save.TabIndex = 17;
@@ -161,7 +161,7 @@ namespace AITool
             tb_ApplyToCams.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tb_ApplyToCams.Location = new System.Drawing.Point(121, 86);
             tb_ApplyToCams.Name = "tb_ApplyToCams";
-            tb_ApplyToCams.Size = new System.Drawing.Size(484, 20);
+            tb_ApplyToCams.Size = new System.Drawing.Size(512, 20);
             tb_ApplyToCams.TabIndex = 2;
             toolTip1.SetToolTip(tb_ApplyToCams, "A comma separated list of cameras that this AI server will work with.\r\n\r\nLeave empty for ALL.");
             // 
@@ -212,9 +212,17 @@ namespace AITool
             groupBox1.Controls.Add(label5);
             groupBox1.Location = new System.Drawing.Point(5, 6);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new System.Drawing.Size(612, 393);
+            groupBox1.Size = new System.Drawing.Size(640, 393);
             groupBox1.TabIndex = 7;
             groupBox1.TabStop = false;
+            // 
+            // tb_Name
+            // 
+            tb_Name.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            tb_Name.Location = new System.Drawing.Point(121, 33);
+            tb_Name.Name = "tb_Name";
+            tb_Name.Size = new System.Drawing.Size(512, 22);
+            tb_Name.TabIndex = 21;
             // 
             // label14
             // 
@@ -278,7 +286,7 @@ namespace AITool
             groupBoxLinked.Controls.Add(checkedComboBoxLinked);
             groupBoxLinked.Location = new System.Drawing.Point(8, 288);
             groupBoxLinked.Name = "groupBoxLinked";
-            groupBoxLinked.Size = new System.Drawing.Size(595, 63);
+            groupBoxLinked.Size = new System.Drawing.Size(623, 63);
             groupBoxLinked.TabIndex = 17;
             groupBoxLinked.TabStop = false;
             // 
@@ -314,7 +322,7 @@ namespace AITool
             checkedComboBoxLinked.IntegralHeight = false;
             checkedComboBoxLinked.Location = new System.Drawing.Point(6, 36);
             checkedComboBoxLinked.Name = "checkedComboBoxLinked";
-            checkedComboBoxLinked.Size = new System.Drawing.Size(583, 21);
+            checkedComboBoxLinked.Size = new System.Drawing.Size(611, 21);
             checkedComboBoxLinked.TabIndex = 12;
             checkedComboBoxLinked.Text = "Click dropdown to select";
             checkedComboBoxLinked.ValueSeparator = ", ";
@@ -327,7 +335,7 @@ namespace AITool
             groupBoxRefine.Controls.Add(tb_RefinementObjects);
             groupBoxRefine.Location = new System.Drawing.Point(8, 196);
             groupBoxRefine.Name = "groupBoxRefine";
-            groupBoxRefine.Size = new System.Drawing.Size(595, 63);
+            groupBoxRefine.Size = new System.Drawing.Size(623, 63);
             groupBoxRefine.TabIndex = 16;
             groupBoxRefine.TabStop = false;
             // 
@@ -358,7 +366,7 @@ namespace AITool
             tb_RefinementObjects.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tb_RefinementObjects.Location = new System.Drawing.Point(8, 36);
             tb_RefinementObjects.Name = "tb_RefinementObjects";
-            tb_RefinementObjects.Size = new System.Drawing.Size(581, 20);
+            tb_RefinementObjects.Size = new System.Drawing.Size(609, 20);
             tb_RefinementObjects.TabIndex = 9;
             // 
             // tb_Upper
@@ -405,7 +413,7 @@ namespace AITool
             tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tb_timeout.Location = new System.Drawing.Point(525, 137);
             tb_timeout.Name = "tb_timeout";
-            tb_timeout.Size = new System.Drawing.Size(80, 20);
+            tb_timeout.Size = new System.Drawing.Size(108, 20);
             tb_timeout.TabIndex = 5;
             tb_timeout.Text = "0";
             toolTip1.SetToolTip(tb_timeout, "If you set this to any value other than 0 it will override the default timeout");
@@ -416,7 +424,7 @@ namespace AITool
             tb_ImagesPerMonth.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tb_ImagesPerMonth.Location = new System.Drawing.Point(525, 112);
             tb_ImagesPerMonth.Name = "tb_ImagesPerMonth";
-            tb_ImagesPerMonth.Size = new System.Drawing.Size(80, 20);
+            tb_ImagesPerMonth.Size = new System.Drawing.Size(108, 20);
             tb_ImagesPerMonth.TabIndex = 4;
             tb_ImagesPerMonth.Text = "0";
             toolTip1.SetToolTip(tb_ImagesPerMonth, "Max images per month - 0 for unlimited.    Amazon has 5000 free images a month");
@@ -442,6 +450,16 @@ namespace AITool
             cb_ImageAdjustProfile.Size = new System.Drawing.Size(152, 21);
             cb_ImageAdjustProfile.TabIndex = 5;
             cb_ImageAdjustProfile.TabStop = false;
+            // 
+            // label15
+            // 
+            label15.AllowDrop = true;
+            label15.AutoSize = true;
+            label15.Location = new System.Drawing.Point(78, 36);
+            label15.Name = "label15";
+            label15.Size = new System.Drawing.Size(39, 13);
+            label15.TabIndex = 0;
+            label15.Text = "Name:";
             // 
             // label9
             // 
@@ -504,7 +522,7 @@ namespace AITool
             // btTest
             // 
             btTest.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btTest.Location = new System.Drawing.Point(479, 405);
+            btTest.Location = new System.Drawing.Point(499, 405);
             btTest.Name = "btTest";
             btTest.Size = new System.Drawing.Size(70, 30);
             btTest.TabIndex = 16;
@@ -515,7 +533,7 @@ namespace AITool
             // bt_clear
             // 
             bt_clear.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            bt_clear.Location = new System.Drawing.Point(403, 405);
+            bt_clear.Location = new System.Drawing.Point(423, 405);
             bt_clear.Name = "bt_clear";
             bt_clear.Size = new System.Drawing.Size(70, 30);
             bt_clear.TabIndex = 15;
@@ -523,28 +541,11 @@ namespace AITool
             bt_clear.UseVisualStyleBackColor = true;
             bt_clear.Click += bt_clear_Click;
             // 
-            // label15
-            // 
-            label15.AllowDrop = true;
-            label15.AutoSize = true;
-            label15.Location = new System.Drawing.Point(78, 36);
-            label15.Name = "label15";
-            label15.Size = new System.Drawing.Size(39, 13);
-            label15.TabIndex = 0;
-            label15.Text = "Name:";
-            // 
-            // tb_Name
-            // 
-            tb_Name.Location = new System.Drawing.Point(121, 33);
-            tb_Name.Name = "tb_Name";
-            tb_Name.Size = new System.Drawing.Size(482, 22);
-            tb_Name.TabIndex = 21;
-            // 
             // Frm_AIServerDeepstackEdit
             // 
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             AutoScroll = true;
-            ClientSize = new System.Drawing.Size(628, 442);
+            ClientSize = new System.Drawing.Size(648, 442);
             Controls.Add(bt_Save);
             Controls.Add(bt_clear);
             Controls.Add(btTest);

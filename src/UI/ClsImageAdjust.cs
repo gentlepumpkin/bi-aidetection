@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace AITool
         }
         public ClsImageAdjust(string name, string jpegqualitypercent, string imagesizepercent, string imagewidth, string imageheight, string brightness, string contrast)
         {
-            this.Update(name, jpegqualitypercent, imagesizepercent, imagewidth, imageheight, brightness, contrast);
+            this.Update(name.Trim(), jpegqualitypercent.Trim(), imagesizepercent.Trim(), imagewidth.Trim(), imageheight.Trim(), brightness.Trim(), contrast.Trim());
         }
 
         public void Update(string name, string jpegqualitypercent, string imagesizepercent, string imagewidth, string imageheight, string brightness, string contrast)

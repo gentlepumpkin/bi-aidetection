@@ -13,7 +13,8 @@ namespace AITool
 {
     public partial class Frm_ObjectDetail : Form
     {
-        public List<ClsPrediction> PredictionObjectDetails = null;
+        public List<ClsPrediction> PredictionObjectDetailsList = null;
+        public ClsPrediction CurPred = null;
         public string ImageFileName = "";
         // this tracks the transformation applied to the PictureBox's Graphics
         private Matrix transform = new Matrix();
@@ -42,19 +43,32 @@ namespace AITool
             {
                 Global_GUI.ConfigureFOLV(this.folv_ObjectDetail, typeof(ClsPrediction), null, null);
 
-                Global_GUI.UpdateFOLV(this.folv_ObjectDetail, this.PredictionObjectDetails);
+                Global_GUI.UpdateFOLV(this.folv_ObjectDetail, this.PredictionObjectDetailsList);
 
-                if (!String.IsNullOrEmpty(this.ImageFileName) && this.ImageFileName.Contains("\\") && File.Exists(this.ImageFileName))
-                {
-                    OriginalBMP = new ClsImageQueueItem(this.ImageFileName, 0);
-                    this.pictureBox1.Image = Image.FromStream(OriginalBMP.ToStream()); //load actual image as background, so that an overlay can be added as the image
-                }
+                if (this.PredictionObjectDetailsList.Count > 0)
+                    CurPred = this.PredictionObjectDetailsList[0];
 
+                UpdateImage();
             }
             catch (Exception)
             {
 
                 throw;
+            }
+
+        }
+
+        private string _lastimage = "";
+        private void UpdateImage()
+        {
+            if (this.ImageFileName == _lastimage)
+                return;
+
+            if (!String.IsNullOrEmpty(this.ImageFileName) && this.ImageFileName.Contains("\\") && File.Exists(this.ImageFileName))
+            {
+                OriginalBMP = new ClsImageQueueItem(this.ImageFileName, 0);
+                this.pictureBox1.Image = Image.FromStream(OriginalBMP.ToStream()); //load actual image as background, so that an overlay can be added as the image
+                _lastimage = this.ImageFileName;
             }
 
         }
@@ -345,6 +359,12 @@ namespace AITool
 
         private void folv_ObjectDetail_SelectionChanged(object sender, EventArgs e)
         {
+            if (folv_ObjectDetail.SelectedObject != null)
+            {
+                CurPred = folv_ObjectDetail.SelectedObject as ClsPrediction;
+                this.ImageFileName = CurPred.Filename;
+                UpdateImage();
+            }
             this.pictureBox1.Refresh();
         }
         //protected override void OnMouseWheel(MouseEventArgs mea)
@@ -387,6 +407,11 @@ namespace AITool
         //}
 
         private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void folv_ObjectDetail_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

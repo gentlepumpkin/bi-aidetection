@@ -40,6 +40,17 @@ namespace AITool
 
             return 0;
         }
+        public static decimal Round(this decimal val, int Places = 1)
+        {
+            try
+            {
+                if (!val.IsNull())
+                    return Math.Round(val, Places);
+            }
+            catch { }
+
+            return 0;
+        }
         public static double Round(this double val, int Places = 1)
         {
             try

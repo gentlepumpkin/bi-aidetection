@@ -82,10 +82,14 @@ namespace AITool
         }
         public override string ToString()
         {
-            if (this.Trigger)
-                return this.Name;
-            else
-                return "-" + this.Name;
+            string ret = this.Name;
+            if (!this.Trigger)
+                ret = "-" + ret;
+
+            if (!this.Enabled)
+                ret = "(" + ret + ")";
+
+            return ret;
         }
 
         public override bool Equals(object obj)
@@ -246,6 +250,9 @@ namespace AITool
 
             bool restrict = !this.cam.IsNull() && !this.cam.DefaultTriggeringObjects.IsNull() && this.cam.DefaultTriggeringObjects.TypeName != this.TypeName;
 
+            //sort ObjectList so that enabled objects are first, then by priority
+            this.ObjectList = this.ObjectList.OrderByDescending(ro => ro.Enabled).ToList();
+
             //make sure no priority is in order and the minimum is not less than the main cameras list
             for (int i = 0; i < this.ObjectList.Count; i++)
             {
@@ -265,6 +272,7 @@ namespace AITool
                 this.ObjectList[i].Priority = i + 1;
 
             }
+
 
             ExcludeObjects();
 

@@ -29,304 +29,302 @@ namespace AITool
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.tb_maxpercent = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tb_MinPercent = new System.Windows.Forms.TextBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.tb_maxheight = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.tb_maxwidth = new System.Windows.Forms.TextBox();
-            this.tb_minheight = new System.Windows.Forms.TextBox();
-            this.tb_minwidth = new System.Windows.Forms.TextBox();
-            this.BtnSave = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.tb_ConfidenceUpper = new System.Windows.Forms.TextBox();
-            this.tb_ConfidenceLower = new System.Windows.Forms.TextBox();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.tb_duplicatepercent = new System.Windows.Forms.TextBox();
-            this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.SuspendLayout();
+            label1 = new System.Windows.Forms.Label();
+            groupBox1 = new System.Windows.Forms.GroupBox();
+            label3 = new System.Windows.Forms.Label();
+            tb_maxpercent = new System.Windows.Forms.TextBox();
+            label2 = new System.Windows.Forms.Label();
+            tb_MinPercent = new System.Windows.Forms.TextBox();
+            groupBox2 = new System.Windows.Forms.GroupBox();
+            label7 = new System.Windows.Forms.Label();
+            label5 = new System.Windows.Forms.Label();
+            label6 = new System.Windows.Forms.Label();
+            tb_maxheight = new System.Windows.Forms.TextBox();
+            label4 = new System.Windows.Forms.Label();
+            tb_maxwidth = new System.Windows.Forms.TextBox();
+            tb_minheight = new System.Windows.Forms.TextBox();
+            tb_minwidth = new System.Windows.Forms.TextBox();
+            BtnSave = new System.Windows.Forms.Button();
+            label8 = new System.Windows.Forms.Label();
+            groupBox3 = new System.Windows.Forms.GroupBox();
+            label10 = new System.Windows.Forms.Label();
+            label9 = new System.Windows.Forms.Label();
+            tb_ConfidenceUpper = new System.Windows.Forms.TextBox();
+            tb_ConfidenceLower = new System.Windows.Forms.TextBox();
+            groupBox4 = new System.Windows.Forms.GroupBox();
+            label11 = new System.Windows.Forms.Label();
+            tb_duplicatepercent = new System.Windows.Forms.TextBox();
+            groupBox1.SuspendLayout();
+            groupBox2.SuspendLayout();
+            groupBox3.SuspendLayout();
+            groupBox4.SuspendLayout();
+            SuspendLayout();
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(42, 44);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(62, 23);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Min %:";
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(42, 44);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(42, 13);
+            label1.TabIndex = 0;
+            label1.Text = "Min %:";
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.tb_maxpercent);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.tb_MinPercent);
-            this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Location = new System.Drawing.Point(14, 59);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(263, 70);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Limit Size Percentage";
+            groupBox1.Controls.Add(label3);
+            groupBox1.Controls.Add(tb_maxpercent);
+            groupBox1.Controls.Add(label2);
+            groupBox1.Controls.Add(tb_MinPercent);
+            groupBox1.Controls.Add(label1);
+            groupBox1.Location = new System.Drawing.Point(14, 59);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new System.Drawing.Size(263, 70);
+            groupBox1.TabIndex = 1;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Limit Size Percentage";
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.ForeColor = System.Drawing.Color.DimGray;
-            this.label3.Location = new System.Drawing.Point(9, 20);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(302, 23);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "Percentage of prediction size vs image";
+            label3.AutoSize = true;
+            label3.ForeColor = System.Drawing.Color.DimGray;
+            label3.Location = new System.Drawing.Point(9, 20);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(203, 13);
+            label3.TabIndex = 2;
+            label3.Text = "Percentage of prediction size vs image";
             // 
             // tb_maxpercent
             // 
-            this.tb_maxpercent.Location = new System.Drawing.Point(199, 41);
-            this.tb_maxpercent.Name = "tb_maxpercent";
-            this.tb_maxpercent.Size = new System.Drawing.Size(33, 29);
-            this.tb_maxpercent.TabIndex = 3;
-            this.tb_maxpercent.Text = "100";
+            tb_maxpercent.Location = new System.Drawing.Point(199, 41);
+            tb_maxpercent.Name = "tb_maxpercent";
+            tb_maxpercent.Size = new System.Drawing.Size(33, 22);
+            tb_maxpercent.TabIndex = 3;
+            tb_maxpercent.Text = "100";
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(157, 44);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(65, 23);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Max %:";
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(157, 44);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(43, 13);
+            label2.TabIndex = 0;
+            label2.Text = "Max %:";
             // 
             // tb_MinPercent
             // 
-            this.tb_MinPercent.Location = new System.Drawing.Point(86, 41);
-            this.tb_MinPercent.Name = "tb_MinPercent";
-            this.tb_MinPercent.Size = new System.Drawing.Size(33, 29);
-            this.tb_MinPercent.TabIndex = 2;
-            this.tb_MinPercent.Text = "100";
+            tb_MinPercent.Location = new System.Drawing.Point(86, 41);
+            tb_MinPercent.Name = "tb_MinPercent";
+            tb_MinPercent.Size = new System.Drawing.Size(33, 22);
+            tb_MinPercent.TabIndex = 2;
+            tb_MinPercent.Text = "100";
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.label7);
-            this.groupBox2.Controls.Add(this.label5);
-            this.groupBox2.Controls.Add(this.label6);
-            this.groupBox2.Controls.Add(this.tb_maxheight);
-            this.groupBox2.Controls.Add(this.label4);
-            this.groupBox2.Controls.Add(this.tb_maxwidth);
-            this.groupBox2.Controls.Add(this.tb_minheight);
-            this.groupBox2.Controls.Add(this.tb_minwidth);
-            this.groupBox2.Location = new System.Drawing.Point(12, 151);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(264, 77);
-            this.groupBox2.TabIndex = 2;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Limit Size in Pixels (0 disables)";
+            groupBox2.Controls.Add(label7);
+            groupBox2.Controls.Add(label5);
+            groupBox2.Controls.Add(label6);
+            groupBox2.Controls.Add(tb_maxheight);
+            groupBox2.Controls.Add(label4);
+            groupBox2.Controls.Add(tb_maxwidth);
+            groupBox2.Controls.Add(tb_minheight);
+            groupBox2.Controls.Add(tb_minwidth);
+            groupBox2.Location = new System.Drawing.Point(12, 151);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Size = new System.Drawing.Size(264, 77);
+            groupBox2.TabIndex = 2;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Limit Size in Pixels (0 disables)";
             // 
             // label7
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(134, 50);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(102, 23);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "Max Height:";
+            label7.AutoSize = true;
+            label7.Location = new System.Drawing.Point(134, 50);
+            label7.Name = "label7";
+            label7.Size = new System.Drawing.Size(69, 13);
+            label7.TabIndex = 0;
+            label7.Text = "Max Height:";
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(19, 50);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(99, 23);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "Min Height:";
+            label5.AutoSize = true;
+            label5.Location = new System.Drawing.Point(19, 50);
+            label5.Name = "label5";
+            label5.Size = new System.Drawing.Size(68, 13);
+            label5.TabIndex = 0;
+            label5.Text = "Min Height:";
             // 
             // label6
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(137, 26);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(97, 23);
-            this.label6.TabIndex = 0;
-            this.label6.Text = "Max Width:";
+            label6.AutoSize = true;
+            label6.Location = new System.Drawing.Point(137, 26);
+            label6.Name = "label6";
+            label6.Size = new System.Drawing.Size(66, 13);
+            label6.TabIndex = 0;
+            label6.Text = "Max Width:";
             // 
             // tb_maxheight
             // 
-            this.tb_maxheight.Location = new System.Drawing.Point(201, 47);
-            this.tb_maxheight.Name = "tb_maxheight";
-            this.tb_maxheight.Size = new System.Drawing.Size(33, 29);
-            this.tb_maxheight.TabIndex = 7;
-            this.tb_maxheight.Text = "100";
+            tb_maxheight.Location = new System.Drawing.Point(201, 47);
+            tb_maxheight.Name = "tb_maxheight";
+            tb_maxheight.Size = new System.Drawing.Size(33, 22);
+            tb_maxheight.TabIndex = 7;
+            tb_maxheight.Text = "100";
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(22, 26);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(94, 23);
-            this.label4.TabIndex = 0;
-            this.label4.Text = "Min Width:";
+            label4.AutoSize = true;
+            label4.Location = new System.Drawing.Point(22, 26);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(65, 13);
+            label4.TabIndex = 0;
+            label4.Text = "Min Width:";
             // 
             // tb_maxwidth
             // 
-            this.tb_maxwidth.Location = new System.Drawing.Point(201, 23);
-            this.tb_maxwidth.Name = "tb_maxwidth";
-            this.tb_maxwidth.Size = new System.Drawing.Size(33, 29);
-            this.tb_maxwidth.TabIndex = 5;
-            this.tb_maxwidth.Text = "100";
+            tb_maxwidth.Location = new System.Drawing.Point(201, 23);
+            tb_maxwidth.Name = "tb_maxwidth";
+            tb_maxwidth.Size = new System.Drawing.Size(33, 22);
+            tb_maxwidth.TabIndex = 5;
+            tb_maxwidth.Text = "100";
             // 
             // tb_minheight
             // 
-            this.tb_minheight.Location = new System.Drawing.Point(86, 47);
-            this.tb_minheight.Name = "tb_minheight";
-            this.tb_minheight.Size = new System.Drawing.Size(33, 29);
-            this.tb_minheight.TabIndex = 6;
-            this.tb_minheight.Text = "100";
+            tb_minheight.Location = new System.Drawing.Point(86, 47);
+            tb_minheight.Name = "tb_minheight";
+            tb_minheight.Size = new System.Drawing.Size(33, 22);
+            tb_minheight.TabIndex = 6;
+            tb_minheight.Text = "100";
             // 
             // tb_minwidth
             // 
-            this.tb_minwidth.Location = new System.Drawing.Point(86, 23);
-            this.tb_minwidth.Name = "tb_minwidth";
-            this.tb_minwidth.Size = new System.Drawing.Size(33, 29);
-            this.tb_minwidth.TabIndex = 4;
-            this.tb_minwidth.Text = "100";
+            tb_minwidth.Location = new System.Drawing.Point(86, 23);
+            tb_minwidth.Name = "tb_minwidth";
+            tb_minwidth.Size = new System.Drawing.Size(33, 22);
+            tb_minwidth.TabIndex = 4;
+            tb_minwidth.Text = "100";
             // 
             // BtnSave
             // 
-            this.BtnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.BtnSave.Location = new System.Drawing.Point(317, 264);
-            this.BtnSave.Name = "BtnSave";
-            this.BtnSave.Size = new System.Drawing.Size(70, 30);
-            this.BtnSave.TabIndex = 9;
-            this.BtnSave.Text = "Save";
-            this.BtnSave.UseVisualStyleBackColor = true;
-            this.BtnSave.Click += new System.EventHandler(this.BtnSave_Click);
+            BtnSave.Location = new System.Drawing.Point(211, 292);
+            BtnSave.Name = "BtnSave";
+            BtnSave.Size = new System.Drawing.Size(70, 30);
+            BtnSave.TabIndex = 9;
+            BtnSave.Text = "Save";
+            BtnSave.UseVisualStyleBackColor = true;
+            BtnSave.Click += BtnSave_Click;
             // 
             // label8
             // 
-            this.label8.AutoSize = true;
-            this.label8.ForeColor = System.Drawing.Color.DimGray;
-            this.label8.Location = new System.Drawing.Point(12, 132);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(387, 23);
-            this.label8.TabIndex = 2;
-            this.label8.Text = "(See History tab > Prediction Details, for size info)";
+            label8.AutoSize = true;
+            label8.ForeColor = System.Drawing.Color.DimGray;
+            label8.Location = new System.Drawing.Point(12, 132);
+            label8.Name = "label8";
+            label8.Size = new System.Drawing.Size(261, 13);
+            label8.TabIndex = 2;
+            label8.Text = "(See History tab > Prediction Details, for size info)";
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.label10);
-            this.groupBox3.Controls.Add(this.label9);
-            this.groupBox3.Controls.Add(this.tb_ConfidenceUpper);
-            this.groupBox3.Controls.Add(this.tb_ConfidenceLower);
-            this.groupBox3.Location = new System.Drawing.Point(14, 12);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(263, 43);
-            this.groupBox3.TabIndex = 4;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Object Confidence limits";
+            groupBox3.Controls.Add(label10);
+            groupBox3.Controls.Add(label9);
+            groupBox3.Controls.Add(tb_ConfidenceUpper);
+            groupBox3.Controls.Add(tb_ConfidenceLower);
+            groupBox3.Location = new System.Drawing.Point(14, 12);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new System.Drawing.Size(263, 43);
+            groupBox3.TabIndex = 4;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Object Confidence limits";
             // 
             // label10
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(157, 19);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(61, 23);
-            this.label10.TabIndex = 0;
-            this.label10.Text = "Upper:";
+            label10.AutoSize = true;
+            label10.Location = new System.Drawing.Point(157, 19);
+            label10.Name = "label10";
+            label10.Size = new System.Drawing.Size(42, 13);
+            label10.TabIndex = 0;
+            label10.Text = "Upper:";
             // 
             // label9
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(41, 19);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(59, 23);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Lower:";
+            label9.AutoSize = true;
+            label9.Location = new System.Drawing.Point(41, 19);
+            label9.Name = "label9";
+            label9.Size = new System.Drawing.Size(41, 13);
+            label9.TabIndex = 0;
+            label9.Text = "Lower:";
             // 
             // tb_ConfidenceUpper
             // 
-            this.tb_ConfidenceUpper.Location = new System.Drawing.Point(199, 16);
-            this.tb_ConfidenceUpper.Name = "tb_ConfidenceUpper";
-            this.tb_ConfidenceUpper.Size = new System.Drawing.Size(33, 29);
-            this.tb_ConfidenceUpper.TabIndex = 1;
-            this.tb_ConfidenceUpper.Text = "100";
+            tb_ConfidenceUpper.Location = new System.Drawing.Point(199, 16);
+            tb_ConfidenceUpper.Name = "tb_ConfidenceUpper";
+            tb_ConfidenceUpper.Size = new System.Drawing.Size(33, 22);
+            tb_ConfidenceUpper.TabIndex = 1;
+            tb_ConfidenceUpper.Text = "100";
             // 
             // tb_ConfidenceLower
             // 
-            this.tb_ConfidenceLower.Location = new System.Drawing.Point(86, 16);
-            this.tb_ConfidenceLower.Name = "tb_ConfidenceLower";
-            this.tb_ConfidenceLower.Size = new System.Drawing.Size(33, 29);
-            this.tb_ConfidenceLower.TabIndex = 0;
-            this.tb_ConfidenceLower.Text = "100";
+            tb_ConfidenceLower.Location = new System.Drawing.Point(86, 16);
+            tb_ConfidenceLower.Name = "tb_ConfidenceLower";
+            tb_ConfidenceLower.Size = new System.Drawing.Size(33, 22);
+            tb_ConfidenceLower.TabIndex = 0;
+            tb_ConfidenceLower.Text = "100";
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.label11);
-            this.groupBox4.Controls.Add(this.tb_duplicatepercent);
-            this.groupBox4.Location = new System.Drawing.Point(12, 234);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(265, 49);
-            this.groupBox4.TabIndex = 5;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Duplicate object detection";
+            groupBox4.Controls.Add(label11);
+            groupBox4.Controls.Add(tb_duplicatepercent);
+            groupBox4.Location = new System.Drawing.Point(12, 234);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Size = new System.Drawing.Size(265, 49);
+            groupBox4.TabIndex = 5;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Duplicate object detection";
             // 
             // label11
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 22);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(116, 23);
-            this.label11.TabIndex = 2;
-            this.label11.Text = "Match Size %:";
+            label11.AutoSize = true;
+            label11.Location = new System.Drawing.Point(6, 22);
+            label11.Name = "label11";
+            label11.Size = new System.Drawing.Size(77, 13);
+            label11.TabIndex = 2;
+            label11.Text = "Match Size %:";
             // 
             // tb_duplicatepercent
             // 
-            this.tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
-            this.tb_duplicatepercent.Name = "tb_duplicatepercent";
-            this.tb_duplicatepercent.Size = new System.Drawing.Size(33, 29);
-            this.tb_duplicatepercent.TabIndex = 8;
-            this.tb_duplicatepercent.Text = "100";
+            tb_duplicatepercent.Location = new System.Drawing.Point(86, 19);
+            tb_duplicatepercent.Name = "tb_duplicatepercent";
+            tb_duplicatepercent.Size = new System.Drawing.Size(33, 22);
+            tb_duplicatepercent.TabIndex = 8;
+            tb_duplicatepercent.Text = "100";
             // 
             // Frm_PredSizeLimits
             // 
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(289, 332);
-            this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.label8);
-            this.Controls.Add(this.BtnSave);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
-            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.Name = "Frm_PredSizeLimits";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Prediction Tolerances";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Frm_PredSizeLimits_FormClosed);
-            this.Load += new System.EventHandler(this.Frm_PredSizeLimits_Load);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            AutoScroll = true;
+            ClientSize = new System.Drawing.Size(288, 329);
+            Controls.Add(groupBox4);
+            Controls.Add(groupBox3);
+            Controls.Add(label8);
+            Controls.Add(BtnSave);
+            Controls.Add(groupBox2);
+            Controls.Add(groupBox1);
+            Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Name = "Frm_PredSizeLimits";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            Text = "Prediction Tolerances";
+            FormClosed += Frm_PredSizeLimits_FormClosed;
+            Load += Frm_PredSizeLimits_Load;
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

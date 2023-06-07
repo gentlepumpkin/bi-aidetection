@@ -1110,7 +1110,7 @@ namespace AITool
                 return;
             }
 
-            if (tmp.Equals("person"))
+            if (tmp.Equals("person") || tmp.Equals("people"))
                 this.ObjType = ObjectType.Person;
             else if (tmp.Equals("face") || this.Detail.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
                 this.ObjType = ObjectType.Face;
