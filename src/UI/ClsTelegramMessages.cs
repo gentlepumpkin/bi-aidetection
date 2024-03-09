@@ -24,9 +24,11 @@ using Telegram.Bot.Types.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using static AITool.AITOOL;
 
+using User = Telegram.Bot.Types.User;
+
 namespace AITool
 {
-    public class ClsTelegramMessages : IDisposable
+    public class ClsTelegramMessages:IDisposable
     {
         public TelegramBotClient telegramBot { get; set; } = null;
 

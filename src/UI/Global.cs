@@ -527,6 +527,7 @@ namespace AITool
             return ret;
         }
         private static DateTime lastlatwarn = DateTime.Now;
+        [DebuggerStepThrough]
         public static bool IsTimeBetween(DateTime time, string span)
         {
             if (span.IsEmpty())
@@ -1562,7 +1563,7 @@ namespace AITool
             public List<long> Pings = new List<long>();
         }
 
-        public static async Task<ClsPingOut> IsConnected(string HostOrIPToPing = "www.google.com", int TimeoutMS = 2000, int RetryCount = 3, int DelayMS = 25)
+        public static async Task<ClsPingOut> IsConnected(string HostOrIPToPing = "www.google.com", int TimeoutMS = 2000, int RetryCount = 3, int DelayMS = 25, bool AlwaysRetry = false)
         {
             ClsPingOut ret = new ClsPingOut();
             Stopwatch SW = Stopwatch.StartNew();
@@ -1579,7 +1580,7 @@ namespace AITool
                 if (!IsValidIPAddress(IP, out IP))
                     return ret;
 
-                Log($"Debug: Pinging {HostOrIPToPing} ({IP.ToString()}) With timeout:{TimeoutMS}ms And Ping Retry Count:{RetryCount}...");
+                Log($"Trace: Pinging {HostOrIPToPing} ({IP.ToString()}) With timeout:{TimeoutMS}ms And Ping Retry Count:{RetryCount}...");
                 for (int Tries = 1; Tries <= RetryCount; Tries++)
                 {
                     ret.Retries = Tries;
@@ -1607,7 +1608,9 @@ namespace AITool
                         if (ret.Success)
                         {
                             ret.Pings.Add(ret.PingReply.RoundtripTime);
-                            break;
+
+                            if (!AlwaysRetry) //If we want to get a true ping average, dont break out of the loop yet
+                                break;
                         }
                     }
 
@@ -1634,7 +1637,7 @@ namespace AITool
             SW.Stop();
             ret.TotalTimeMS = SW.ElapsedMilliseconds;
 
-            Log($"Debug: ...Result={ret.Success}, {ret.TotalTimeMS}ms, {ret.PingError}");
+            Log($"Trace: ...Result={ret.Success}, {ret.TotalTimeMS}ms, {ret.PingError}");
 
             return ret;
         }
@@ -2680,7 +2683,7 @@ namespace AITool
         /// Flags used by <see cref="WinError.FormatMessage"/> method.
         /// </summary>
         [Flags]
-        public enum FormatMessageFlags : uint
+        public enum FormatMessageFlags:uint
         {
             /// <summary>
             /// The function allocates a buffer large enough to hold the formatted message, and places a pointer to the
@@ -3064,6 +3067,7 @@ namespace AITool
 
             return IsInList(FindStrList, SearchList.SplitStr(Separators, true, true, true));
         }
+        [DebuggerStepThrough]
         public static bool IsInList(string FindStr, List<string> SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
             if (TrueIfEmpty && SearchList.Count == 0)
@@ -3071,6 +3075,7 @@ namespace AITool
 
             return IsInList(FindStr.SplitStr(Separators, true, true, true), SearchList);
         }
+        [DebuggerStepThrough]
         public static bool IsInList(string FindStr, string SearchList, string Separators = ",;|", bool TrueIfEmpty = true)
         {
             if (TrueIfEmpty && string.IsNullOrWhiteSpace(SearchList))
@@ -3079,6 +3084,7 @@ namespace AITool
 
             return IsInList(FindStr.SplitStr(Separators, true, true, true), SearchList.SplitStr(Separators, true, true, true));
         }
+        [DebuggerStepThrough]
         public static bool IsInList(List<string> FindStrsList, List<string> SearchList)
         {
             foreach (string findstr in FindStrsList)
@@ -3092,8 +3098,7 @@ namespace AITool
             return false;
         }
 
-
-
+        [DebuggerStepThrough]
         public static string ConvertToBase64(this Stream stream)
         {
             byte[] bytes;
@@ -3713,7 +3718,7 @@ namespace AITool
             }
         }
 
-        public enum ShowWindowEnum : int
+        public enum ShowWindowEnum:int
         {
             /// <summary>
             ///        Hides the window and activates another window.
@@ -3800,52 +3805,60 @@ namespace AITool
             {
                 foreach (var proc in Procs)
                 {
-                    if (!proc.HasExited)
+                    try
                     {
-                        bool RefreshFound = false;
-
-                        if (proc.MainWindowHandle.IsNull())
-                            proc.Refresh();
-
-                        IntPtr hwnd = proc.MainWindowHandle;
-
-                        if (hwnd.IsNull())
+                        if (!proc.HasExited)
                         {
-                            //get the window a different way
-                            hwnd = FindWindow(null, WindowTitle);
+                            bool RefreshFound = false;
+
+                            if (proc.MainWindowHandle.IsNull())
+                                proc.Refresh();
+
+                            IntPtr hwnd = proc.MainWindowHandle;
+
+                            if (hwnd.IsNull())
+                            {
+                                //get the window a different way
+                                hwnd = FindWindow(null, WindowTitle);
+                            }
+                            else
+                            {
+                                RefreshFound = true;
+                            }
+
+                            if (hwnd.IsNotNull())
+                            {
+                                bool IsIconicResult = IsIconic(hwnd);
+
+                                if (IsIconicResult)  //check if the window is minimized. If it is not, then you don't want to restore it, you only need to activate it.
+                                    SwitchToThisWindow(hwnd, true);   //SendMessageW(p.MainWindowHandle, WM_SYSCOMMAND, SC_RESTORE, 0) 'restore the window from it's minimized state
+
+                                //true or nonzero if the window was brought to the foreground,
+                                //false or zero If the window was not
+                                bool SetForegroundResult = SetForegroundWindow(hwnd);
+                                //Return value
+                                //If the window was previously visible, the return value is nonzero.
+                                //If the window was previously hidden, the return value is zero.
+                                bool ShowWindowResult = ShowWindow(hwnd, ((int)WindowStyle));
+                                ret = true;
+                                Log($"Debug: Set '{processname}' ({proc.Id}, {hwnd.ToString()}) to '{WindowStyle.ToString()}' - RefreshFound = '{RefreshFound}', IsIconicResult = '{IsIconicResult}', SetForgroundWindow result = '{SetForegroundResult}', ShowWindowResult='{ShowWindowResult}'");
+
+                            }
+                            else
+                            {
+                                Log($"Debug: Could not get MainWindowHandle for process '{processname}, {WindowTitle}' ({proc.Id}).  It may be running as a service without GUI?");
+                            }
+
                         }
                         else
                         {
-                            RefreshFound = true;
-                        }
-
-                        if (hwnd.IsNotNull())
-                        {
-                            bool IsIconicResult = IsIconic(hwnd);
-
-                            if (IsIconicResult)  //check if the window is minimized. If it is not, then you don't want to restore it, you only need to activate it.
-                                SwitchToThisWindow(hwnd, true);   //SendMessageW(p.MainWindowHandle, WM_SYSCOMMAND, SC_RESTORE, 0) 'restore the window from it's minimized state
-
-                            //true or nonzero if the window was brought to the foreground,
-                            //false or zero If the window was not
-                            bool SetForegroundResult = SetForegroundWindow(hwnd);
-                            //Return value
-                            //If the window was previously visible, the return value is nonzero.
-                            //If the window was previously hidden, the return value is zero.
-                            bool ShowWindowResult = ShowWindow(hwnd, ((int)WindowStyle));
-                            ret = true;
-                            Log($"Debug: Set '{processname}' ({proc.Id}, {hwnd.ToString()}) to '{WindowStyle.ToString()}' - RefreshFound = '{RefreshFound}', IsIconicResult = '{IsIconicResult}', SetForgroundWindow result = '{SetForegroundResult}', ShowWindowResult='{ShowWindowResult}'");
-
-                        }
-                        else
-                        {
-                            Log($"Debug: Could not get MainWindowHandle for process '{processname}, {WindowTitle}' ({proc.Id}).  It may be running as a service without GUI?");
+                            Log($"Debug: process not valid '{processname}'.");
                         }
 
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Log($"Debug: process not valid '{processname}'.");
+                        Log($"Trace: Error working with process: {ex.Msg()}");
                     }
 
                 }
@@ -4272,7 +4285,7 @@ namespace AITool
         }
 
         //I had to make this class since win32 apps cant access 64 bit command line and module info
-        public class ClsProcess : IEquatable<ClsProcess>
+        public class ClsProcess:IEquatable<ClsProcess>
         {
             public Process process = null;
             public string FileName = "";
@@ -4548,7 +4561,7 @@ namespace AITool
         // Flags used for opening a file handle (e.g. in a call to CreateFile), that determine the
         // requested permission level.
         [Flags]
-        public enum FileAccessFlags : uint
+        public enum FileAccessFlags:uint
         {
             GENERIC_WRITE = 0x40000000,
             GENERIC_READ = 0x80000000
@@ -4556,7 +4569,7 @@ namespace AITool
 
         // Value used for CreateFile to determine how to behave in the presence (or absence) of a
         // file with the requested name.  Used only for CreateFile.
-        public enum FileCreationDisposition : uint
+        public enum FileCreationDisposition:uint
         {
             CREATE_NEW = 1,
             CREATE_ALWAYS = 2,
@@ -4568,7 +4581,7 @@ namespace AITool
         // Flags that determine what level of sharing this application requests on the target file.
         // Used only for CreateFile.
         [Flags]
-        public enum FileShareFlags : uint
+        public enum FileShareFlags:uint
         {
             EXCLUSIVE_ACCESS = 0x0,
             SHARE_READ = 0x1,
@@ -4579,7 +4592,7 @@ namespace AITool
         // Flags that control caching and other behavior of the underlying file object.  Used only for
         // CreateFile.
         [Flags]
-        public enum FileFlagsAndAttributes : uint
+        public enum FileFlagsAndAttributes:uint
         {
             NORMAL = 0x80,
             OPEN_REPARSE_POINT = 0x200000,
@@ -4592,7 +4605,7 @@ namespace AITool
         // The target architecture of a given executable image.  The various values correspond to the
         // magic numbers defined by the PE Executable Image File Format.
         // http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
-        public enum MachineType : ushort
+        public enum MachineType:ushort
         {
             UNKNOWN = 0x0,
             X64 = 0x8664,
@@ -4602,7 +4615,7 @@ namespace AITool
 
         // A flag indicating the format of the path string that Windows returns from a call to
         // QueryFullProcessImageName().
-        public enum ProcessQueryImageNameMode : uint
+        public enum ProcessQueryImageNameMode:uint
         {
             WIN32_FORMAT = 0,
             NATIVE_SYSTEM_FORMAT = 1
@@ -4611,7 +4624,7 @@ namespace AITool
         // Flags indicating the level of permission requested when opening a handle to an external
         // process.  Used by OpenProcess().
         [Flags]
-        public enum ProcessAccessFlags : uint
+        public enum ProcessAccessFlags:uint
         {
             NONE = 0x0,
             ALL = 0x001F0FFF,
@@ -4622,20 +4635,20 @@ namespace AITool
         }
 
         // Defines return value codes used by various Win32 System APIs.
-        public enum NTSTATUS : int
+        public enum NTSTATUS:int
         {
             SUCCESS = 0,
         }
 
         // Determines the amount of information requested (and hence the type of structure returned)
         // by a call to NtQueryInformationProcess.
-        public enum PROCESSINFOCLASS : int
+        public enum PROCESSINFOCLASS:int
         {
             PROCESS_BASIC_INFORMATION = 0
         };
 
         [Flags]
-        public enum SHGFI : uint
+        public enum SHGFI:uint
         {
             Icon = 0x000000100,
             DisplayName = 0x000000200,
@@ -4813,7 +4826,7 @@ namespace AITool
                                                   uint cbFileInfo,
                                                   uint uFlags);
     }
-    internal class ProcessDetail : IDisposable
+    internal class ProcessDetail:IDisposable
     {
 
 

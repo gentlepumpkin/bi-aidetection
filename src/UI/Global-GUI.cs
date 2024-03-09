@@ -120,7 +120,7 @@ namespace AITool
                         else
                         {
                             //only select something if nothing is already selected 
-                            if (SelectObject != null && (ForcedSelection || (UseSelected && olv.SelectedObject != null)))
+                            if (SelectObject != null && (ForcedSelection || (UseSelected && olv.SelectedObject == null)))
                             {
                                 //use the given object as selected
                                 olv.SelectedObject = SelectObject;  //olv.Items.Count - 1;
@@ -219,7 +219,8 @@ namespace AITool
                                          Color Clr = new Color(),
                                          int RowHeight = 0,
                                          bool ShowGroups = false,
-                                         bool GridLines = true)
+                                         bool GridLines = true,
+                                         ObjectListView.CellEditActivateMode editmode = ObjectListView.CellEditActivateMode.DoubleClick)
         {
 
 
@@ -250,7 +251,7 @@ namespace AITool
                 FOLV.TintSortColumn = true;
                 FOLV.UseFiltering = true;
                 FOLV.UseHyperlinks = true; //may cause column save/restore error?
-                FOLV.CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick;
+                FOLV.CellEditActivation = editmode;
                 FOLV.UseCellFormatEvents = true;
                 FOLV.UseNotifyPropertyChanged = true;
 
@@ -944,7 +945,7 @@ namespace AITool
             return Ret;
         }
 
-        public static void InvokeIFRequired(Control control, MethodInvoker action)
+        public static void InvokeIFRequired(Control control, System.Windows.Forms.MethodInvoker action)
         {
             // This will let you update any control from another thread - It only invokes IF NEEDED for better performance 
             // See TextBoxLogger.Log for example
@@ -1110,6 +1111,10 @@ namespace AITool
                         {
                             RetKey = "horse" + png;
                         }
+                        else if (hist.Detections.IndexOf("kangaroo", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            RetKey = "horse" + png;
+                        }
                         else
                         {
                             RetKey = "alien" + png;
@@ -1151,7 +1156,7 @@ namespace AITool
         }
 
 
-        public class CursorWait : IDisposable
+        public class CursorWait:IDisposable
         {
             public CursorWait(bool appStarting = false, bool applicationCursor = true)
             {

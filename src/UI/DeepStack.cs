@@ -595,7 +595,7 @@ namespace AITool
 
                                 ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{cports[i]}/v1/vision/custom/{cnames[i]}", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Custom);
                                 this.URLS += $"{url.ToString()}\r\n";
-                                if (AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
+                                if (AppSettings.Settings.deepstack_autoadd && AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
                                 {
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
@@ -706,7 +706,7 @@ namespace AITool
                             {
                                 ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/detection", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
                                 this.URLS += $"{url.ToString()}\r\n";
-                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                if (AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
                                 {
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
@@ -723,7 +723,7 @@ namespace AITool
                             {
                                 ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/face/recognize", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Faces);
                                 this.URLS += $"{url.ToString()}\r\n";
-                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                if (AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
                                 {
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);
@@ -739,7 +739,7 @@ namespace AITool
                             {
                                 ClsURLItem url = new ClsURLItem($"http://127.0.0.1:{CurPort}/v1/vision/scene", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Scene);
                                 this.URLS += $"{url.ToString()}\r\n";
-                                if (!AppSettings.Settings.AIURLList.Contains(url))
+                                if (AppSettings.Settings.deepstack_autoadd && !AppSettings.Settings.AIURLList.Contains(url))
                                 {
                                     Log($"Debug: Automatically adding local Windows Deepstack URL Type='{url.Type.ToString()}': " + url.ToString());
                                     AppSettings.Settings.AIURLList.Add(url);

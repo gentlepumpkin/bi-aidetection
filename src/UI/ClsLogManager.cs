@@ -18,7 +18,7 @@ namespace AITool
 {
 
     //this is for UI logging only, not file logging directly
-    public class ClsLogManager : IDisposable
+    public class ClsLogManager:IDisposable
     {
         public bool Enabled { get; set; } = true;
         public List<ClsLogItm> Values { get; set; } = new List<ClsLogItm>();
@@ -333,19 +333,19 @@ namespace AITool
 
                 if (Level == null)
                 {
-                    if (this.LastLogItm.Detail.IndexOf("fatal:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (this.LastLogItm.Detail.Within("fatal:", 6))
                     {
                         Level = LogLevel.Fatal;
                     }
-                    else if (this.LastLogItm.Detail.IndexOf("error:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (this.LastLogItm.Detail.Within("error:", 6))
                         Level = LogLevel.Error;
-                    else if (this.LastLogItm.Detail.IndexOf("warning:", StringComparison.OrdinalIgnoreCase) >= 0 || this.LastLogItm.Detail.IndexOf("warn:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (this.LastLogItm.Detail.Within("warning:", 6) || this.LastLogItm.Detail.Within("warn:", 6))
                         Level = LogLevel.Warn;
-                    else if (this.LastLogItm.Detail.IndexOf("info:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (this.LastLogItm.Detail.Within("info:", 6))
                         Level = LogLevel.Info;
-                    else if (this.LastLogItm.Detail.IndexOf("debug:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (this.LastLogItm.Detail.Within("debug:", 6))
                         Level = LogLevel.Debug;
-                    else if (this.LastLogItm.Detail.IndexOf("trace:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (this.LastLogItm.Detail.Within("trace:", 6))
                         Level = LogLevel.Trace;
                     else
                         Level = LogLevel.Info;
@@ -426,31 +426,35 @@ namespace AITool
 
                 string itm = this.LastLogItm.ToString();
 
-                //Send telegram error message
-                if (AppSettings.Settings.send_telegram_errors &&
-                    (HasError) &&
-                    AppSettings.Settings.telegram_chatids.Count > 0 &&
-                    AITOOL.TriggerActionQueue != null &&
-                    !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) &&
-                    !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
-
+                if (AppSettings.Settings.IsNotNull())
                 {
-                    //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
-                    Camera cam = AITOOL.GetCamera(this._LastCamera);
-                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
-                }
+                    //Send telegram error message
+                    if (AppSettings.Settings.send_telegram_errors &&
+                        (HasError) &&
+                        AppSettings.Settings.telegram_chatids.Count > 0 &&
+                        AITOOL.TriggerActionQueue != null &&
+                        !(itm.IndexOf("telegram", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                        !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
 
-                //Send pushover error message
-                if (AppSettings.Settings.send_pushover_errors &&
-                    (HasError) &&
-                    !string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) &&
-                    !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey) &&
-                    AITOOL.TriggerActionQueue != null &&
-                    !(itm.IndexOf("pushover", StringComparison.OrdinalIgnoreCase) >= 0) &&
-                    !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
-                {
-                    Camera cam = AITOOL.GetCamera(this._LastCamera);
-                    AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.Pushover, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                    {
+                        //await TelegramText($"[{time}]: {text}"); //upload text to Telegram
+                        Camera cam = AITOOL.GetCamera(this._LastCamera);
+                        AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.TelegramText, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                    }
+
+                    //Send pushover error message
+                    if (AppSettings.Settings.send_pushover_errors &&
+                        (HasError) &&
+                        !string.IsNullOrEmpty(AppSettings.Settings.pushover_APIKey) &&
+                        !string.IsNullOrEmpty(AppSettings.Settings.pushover_UserKey) &&
+                        AITOOL.TriggerActionQueue != null &&
+                        !(itm.IndexOf("pushover", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                        !(itm.IndexOf("addtriggeraction", StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        Camera cam = AITOOL.GetCamera(this._LastCamera);
+                        AITOOL.TriggerActionQueue.AddTriggerActionAsync(TriggerType.Pushover, cam, null, null, true, false, null, this.LastLogItm.ToDetailString());
+                    }
+
                 }
 
                 if (HasError)

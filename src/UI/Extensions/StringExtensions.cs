@@ -14,6 +14,19 @@ namespace AITool
 {
     public static class StringExtensions
     {
+        public static bool Within(this string value, string findStr, int maxlen = 0, string trimStartChars = " .>-*")
+        {
+            if (value.IsEmpty() || findStr.IsEmpty())
+                return false;
+
+            if (maxlen > 0 && value.Length > maxlen)
+                value = value.Substring(0, maxlen);
+
+            //trim the start of the string to get rid of any leading spaces or periods
+            value = value.TrimStart(trimStartChars.ToCharArray());
+
+            return value.Contains(findStr, StringComparison.OrdinalIgnoreCase);
+        }
         public static bool IsNumeric(this string theValue)
         {
             double retNum;
@@ -23,7 +36,7 @@ namespace AITool
         [DebuggerStepThrough]
         public static string JoinStr(this List<string> values, string separator)
         {
-            //this custom join should not be used for CVS type output because it does not include empty items
+            //this custom join should not be used for CSV type output because it does not include empty items
             if (values == null)
                 throw new ArgumentNullException("values");
 
@@ -82,6 +95,32 @@ namespace AITool
             return Ret;
         }
 
+        //create a string extension that prepends a string to a string if it doesnt already have it.  If it does already have it then move it to the front.  The extension should have a parameter for the separator character.  The extension should be case insensitive 
+        //example:  "1,2,3,4,5"  prepend "3" with separator ","  result:  "3,1,2,4,5"
+
+
+
+        public static string Prepend(this string input, string valueToPrepend, int maxItems = 6, char separator = ',')
+        {
+            string val = valueToPrepend.Trim();
+            var inputValues = input.Split(separator).Select(s => s.Trim());
+
+            // Using StringBuilder for efficient string concatenation
+            var resultBuilder = new StringBuilder(val);
+
+            int itemCount = 1; // Start from 1 as we have already added the valueToPrepend
+            foreach (var item in inputValues)
+            {
+                if (!StringComparer.OrdinalIgnoreCase.Equals(item, val) && itemCount < maxItems)
+                {
+                    resultBuilder.Append(separator);
+                    resultBuilder.Append(item);
+                    itemCount++;
+                }
+            }
+
+            return resultBuilder.ToString();
+        }
 
         //[DebuggerStepThrough]
         public static string Append(this string value, string newvalue, string Separators, string ListSeparators = ",;")
@@ -109,7 +148,7 @@ namespace AITool
 
         }
         [DebuggerStepThrough]
-        public static string Truncate(this string value, int maxLength, bool ellipsis)
+        public static string Truncate(this string value, int maxLength = 256, bool ellipsis = true)
         {
             if (string.IsNullOrEmpty(value)) return value;
 
@@ -297,10 +336,9 @@ namespace AITool
         [DebuggerStepThrough]
         public static bool Has(this string value, string FindStr)
         {
-            if (value.IndexOf(FindStr, StringComparison.OrdinalIgnoreCase) >= 0)
-                return true;
-            else
-                return false;
+            return !string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(FindStr)
+                   && value.Contains(FindStr, StringComparison.OrdinalIgnoreCase);
+
         }
         [DebuggerStepThrough]
         public static bool EqualsIgnoreCase(this string value, string FindStr)

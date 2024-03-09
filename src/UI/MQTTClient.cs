@@ -17,7 +17,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public class MQTTClient : IDisposable
+    public class MQTTClient:IDisposable
     {
         public bool IsSubscribed = false;
         public bool IsConnected = false;
@@ -226,7 +226,7 @@ namespace AITool
                 {
                     Log($"Debug: MQTT: ### RECEIVED APPLICATION MESSAGE ###");
                     Log($"Debug: MQTT: + Topic = {e.ApplicationMessage.Topic}");
-                    Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload).Truncate(128, true)}");
+                    Log($"Debug: MQTT: + Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload).Truncate()}");
                     Log($"Debug: MQTT: + QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Log($"Debug: MQTT: + Retain = {e.ApplicationMessage.Retain}");
                     Log("");

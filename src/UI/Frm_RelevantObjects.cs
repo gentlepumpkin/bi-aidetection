@@ -16,7 +16,7 @@ using SQLite;
 
 namespace AITool
 {
-    public partial class Frm_RelevantObjects : Form
+    public partial class Frm_RelevantObjects:Form
     {
         private ClsRelevantObjectManager ObjectManager = null;
         private ClsRelevantObjectManager TempObjectManager = null;
@@ -391,6 +391,9 @@ namespace AITool
             try
             {
                 ClsRelevantObject ro = (ClsRelevantObject)e.Model;
+
+                if (ro.IsNull())
+                    return;
 
                 // If SPI IsNot Nothing Then
                 if (ro.Enabled && ro.Trigger)

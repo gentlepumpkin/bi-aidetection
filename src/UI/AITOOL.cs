@@ -98,7 +98,7 @@ namespace AITool
         public static Pushover pushoverClient = null;
 
         public static ClsTelegramMessages Telegram = null;
-        public static HttpClient triggerHttpClient = null;
+        public static ThrottledHttpClient triggerHttpClient = null;
 
         public static string srv = "";
 
@@ -852,8 +852,7 @@ namespace AITool
             }
             AppSettings.Settings.AIURLList = newlist;
 
-            //sort AIURLList so that all items enabled are at the top. Use OrderbyDescending so that the order is preserved
-            AppSettings.Settings.AIURLList = AppSettings.Settings.AIURLList.OrderByDescending(x => x.Enabled.ReadFullFence()).ToList();
+
 
             //Check to see if we need to get updated URL list - In theory this should only happen once
             bool hasold = !string.IsNullOrEmpty(AppSettings.Settings.deepstack_url);
@@ -951,7 +950,7 @@ namespace AITool
 
         }
 
-        public static async Task<List<ClsURLItem>> WaitForNextURL(Camera cam, bool GetRefinementServer, List<ClsPrediction> predictions = null, string RequiredURLList = "", List<ClsURLItem> MainURLs = null)
+        public static async Task<List<ClsURLItem>> WaitForNextURL(Camera cam, bool GetRefinementServer, List<ClsPrediction> predictions = null, string RequiredLinkURLList = "", List<ClsURLItem> MainURLs = null)
         {
             //lets wait in here forever until a URL is available...  Unless trying to get a refinement server
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
@@ -962,8 +961,8 @@ namespace AITool
             bool displayedbad = false;
             bool displayedretry = false;
             List<string> CurrentURLs = new List<string>();
-            List<string> RequiredURLs = RequiredURLList.SplitStr(",;|", ToLower: true);
-            bool HasRequiredList = RequiredURLs.Count > 0;
+            List<string> LinkedRequiredURLs = RequiredLinkURLList.SplitStr(",;|", ToLower: true);
+            bool GetLinkedRequiredList = LinkedRequiredURLs.Count > 0;
             int FoundRequiredCount = 0;
             int FoundRefinementCount = 0;
             int RefineNoMatchCount = 0;
@@ -980,14 +979,19 @@ namespace AITool
                 //preprocess a few things...
                 for (int i = 0; i < AppSettings.Settings.AIURLList.Count; i++)
                 {
-                    AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = false;  //assume false at start of each loop
+                    AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid.WriteFullFence(false);  //assume false at start of each loop
 
                     if (AppSettings.Settings.AIURLList[i].UseAsRefinementServer)
                     {
-                        if (!AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence() ||
-                            !Global.IsTimeBetween(now, AppSettings.Settings.AIURLList[i].ActiveTimeRange) ||
-                            !Global.IsInList(cam.Name, AppSettings.Settings.AIURLList[i].Cameras, TrueIfEmpty: true))
+                        bool notenabled = !AppSettings.Settings.AIURLList[i].Enabled.ReadFullFence();
+                        bool notintime = !Global.IsTimeBetween(now, AppSettings.Settings.AIURLList[i].ActiveTimeRange);
+                        bool notinlist = !Global.IsInList(cam.Name, AppSettings.Settings.AIURLList[i].Cameras, TrueIfEmpty: true);
+                        if (notenabled || notintime || notinlist)
+                        {
+                            AppSettings.Settings.AIURLList[i].LastTestedTime.Write(DateTime.Now);
+                            AppSettings.Settings.AIURLList[i].LastSkippedReason = $"Refine: NotEnabled={notenabled}, NotInTime={notintime}, NotInCamList={notinlist}";
                             continue;
+                        }
 
                         //dont let a refinement server be the same as the main server
                         if (MainURLs != null && MainURLs.Count > 0)
@@ -1002,7 +1006,11 @@ namespace AITool
                                 }
                             }
                             if (fnd)
+                            {
+                                AppSettings.Settings.AIURLList[i].LastTestedTime.Write(DateTime.Now);
+                                AppSettings.Settings.AIURLList[i].LastSkippedReason = $"Refine: FoundSameAsMainServer={fnd}";
                                 continue;
+                            }
                         }
 
                         AIURLListAvailableRefineServerCount.AtomicIncrementAndGet();
@@ -1012,22 +1020,37 @@ namespace AITool
                             //set temp flag to indicate if the server can be CURRENTLY used as a refinement server
                             foreach (ClsPrediction pred in predictions)
                             {
+                                bool fnd = false;
+
                                 if (pred.Result == ResultType.Relevant)
                                 {
                                     refinepreds += pred.Label + ",";
-                                    if (Global.IsInList(pred.Label, AppSettings.Settings.AIURLList[i].RefinementObjects))
+                                    if (AppSettings.Settings.AIURLList[i].RefinementObjects.Has("animal") && pred.ObjType == ObjectType.Animal)
+                                        fnd = true;
+                                    else if (AppSettings.Settings.AIURLList[i].RefinementObjects.Has("person") || AppSettings.Settings.AIURLList[i].RefinementObjects.Has("people") && pred.ObjType == ObjectType.Person)
+                                        fnd = true;
+                                    else if (AppSettings.Settings.AIURLList[i].RefinementObjects.Has("vehicle") && pred.ObjType == ObjectType.Vehicle)
+                                        fnd = true;
+                                    else if (Global.IsInList(pred.Label, AppSettings.Settings.AIURLList[i].RefinementObjects))
+                                        fnd = true;
+
+                                    if (fnd)
                                     {
                                         RefineMatchCount++;
-                                        AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid = true;
+                                        AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid.WriteFullFence(true);
                                         break;
                                     }
                                 }
+
                             }
 
 
-                            if (!AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid)
+                            if (!AppSettings.Settings.AIURLList[i].RefinementUseCurrentlyValid.ReadFullFence())
+                            {
+                                AppSettings.Settings.AIURLList[i].LastTestedTime.Write(DateTime.Now);
+                                AppSettings.Settings.AIURLList[i].LastSkippedReason = $"Refine: No matched refine objects";
                                 RefineNoMatchCount++;  //count number of failed tries to match refinement server objects
-
+                            }
                         }
 
                     }
@@ -1043,6 +1066,7 @@ namespace AITool
                     int notrefined = 0;
                     int notrequired = 0;
                     int onlylinked = 0;
+                    int notonline = 0;
 
                     //If no refinement servers or less than should be available were returned
                     if (GetRefinementServer && RefineMatchCount == 0)
@@ -1053,110 +1077,153 @@ namespace AITool
 
                     try
                     {
-
                         UpdateAIURLList();
 
-                        List<ClsURLItem> sorted = new List<ClsURLItem>();
+                        List<ClsURLItem> sortedurls = new List<ClsURLItem>();
 
                         if (AppSettings.Settings.deepstack_urls_are_queued)
                         {
                             //always use oldest first
-                            sorted = AppSettings.Settings.AIURLList.OrderBy((d) => d.LastUsedTime).ToList();
+                            sortedurls = AppSettings.Settings.AIURLList.OrderBy((d) => d.LastUsedTime.Read()).ToList();
                         }
                         else
                         {
                             //use original order
-                            sorted.AddRange(AppSettings.Settings.AIURLList);
+                            sortedurls.AddRange(AppSettings.Settings.AIURLList);
                         }
                         //sort by oldest last used
 
-                        for (int i = 0; i < sorted.Count; i++)
+                        for (int i = 0; i < sortedurls.Count; i++)
                         {
-                            if (!sorted[i].Enabled.ReadFullFence())
-                                continue;
+                            ClsURLItem url = sortedurls[i];
 
-                            if (!sorted[i].ErrDisabled.ReadFullFence())
+                            if (i > 0 && !GetRefinementServer && !GetLinkedRequiredList)
                             {
-                                if (!sorted[i].InUse.ReadFullFence())
-                                {
-                                    if (Global.IsInList(cam.Name, sorted[i].Cameras, TrueIfEmpty: true))
-                                    {
-                                        if (GetRefinementServer && sorted[i].UseAsRefinementServer || !sorted[i].UseAsRefinementServer)
-                                        {
-                                            if (sorted[i].MaxImagesPerMonth == 0 || sorted[i].AITimeCalcs.CountMonth <= sorted[i].MaxImagesPerMonth)
-                                            {
-                                                now = DateTime.Now;
+                                int debugging = 0;
+                            }
 
-                                                if (Global.IsTimeBetween(now, sorted[i].ActiveTimeRange))
+                            now = DateTime.Now;
+
+                            if (!url.Enabled.ReadFullFence())
+                            {
+                                url.LastTestedTime.Write(now);
+                                url.LastSkippedReason = url.LastSkippedReason.Prepend("NotEnabled");
+                                continue;
+                            }
+
+                            if (!url.ErrDisabled.ReadFullFence())
+                            {
+                                if (!url.InUse.ReadFullFence())
+                                {
+                                    if (Global.IsInList(cam.Name, url.Cameras, TrueIfEmpty: true))
+                                    {
+                                        if (GetRefinementServer && url.UseAsRefinementServer || !url.UseAsRefinementServer)
+                                        {
+                                            if (url.MaxImagesPerMonth == 0 || url.AITimeCalcs.CountMonth <= url.MaxImagesPerMonth)
+                                            {
+
+                                                if (Global.IsTimeBetween(now, url.ActiveTimeRange))
                                                 {
-                                                    if (sorted[i].CurErrCount.ReadFullFence() == 0)
+                                                    //if set to ignoreconnection errors do an extra ping check to see if the server is available.  If not, skip it
+                                                    if (url.IgnoreOfflineError)
+                                                    {
+                                                        if (!await url.CheckIfOnlineAsync())
+                                                        {
+                                                            url.LastTestedTime.Write(now);
+                                                            url.LastSkippedReason = url.LastSkippedReason.Prepend("NotOnline");
+                                                            notonline++;
+                                                            continue;
+                                                        }
+                                                    }
+                                                    if (url.CurErrCount.ReadFullFence() == 0)
                                                     {
 
-                                                        if (sorted[i].UseOnlyAsLinkedServer && (GetRefinementServer || (!HasRequiredList)))
+                                                        if (url.UseOnlyAsLinkedServer && (GetRefinementServer || (!GetLinkedRequiredList)))
                                                         {
+                                                            url.LastTestedTime.Write(now);
+                                                            url.LastSkippedReason = url.LastSkippedReason.Prepend("UseOnlyAsLinked");
                                                             onlylinked++;
                                                             continue;
                                                         }
 
                                                         if (GetRefinementServer)
                                                         {
-                                                            if (sorted[i].RefinementUseCurrentlyValid)
+                                                            if (url.RefinementUseCurrentlyValid.ReadFullFence())
                                                             {
-                                                                sorted[i].CurOrder = i + 1;
-                                                                sorted[i].InUse.WriteFullFence(true);
-                                                                sorted[i].LastUsedTime = DateTime.Now;
+                                                                url.LastResultMessage = "Working [refinement]...";
+                                                                url.CurOrder.WriteFullFence(i + 1);
+                                                                url.InUse.WriteFullFence(true);
+                                                                url.LastUsedTime.Write(now);
                                                                 FoundRefinementCount++;
-                                                                ret.Add(sorted[i]);
+                                                                ret.Add(url);
                                                                 // Dont break out of loop since we may need more than one refinement server
                                                             }
+                                                            else
+                                                            {
+                                                                url.LastTestedTime.Write(now);
+                                                                url.LastSkippedReason = url.LastSkippedReason.Prepend("RefineNotRequired");
+                                                            }
+
                                                         }
-                                                        else if (HasRequiredList)
+                                                        else if (GetLinkedRequiredList)
                                                         {
 
-                                                            if (Global.IsInList(sorted[i].ToString(), RequiredURLs, TrueIfEmpty: false))
+                                                            if (Global.IsInList(url.ToString(), LinkedRequiredURLs, TrueIfEmpty: false))
                                                             {
-                                                                sorted[i].CurOrder = i + 1;
-                                                                sorted[i].InUse.WriteFullFence(true);
-                                                                sorted[i].LastUsedTime = DateTime.Now;
+                                                                url.LastResultMessage = "Working [Linked]...";
+                                                                url.CurOrder.WriteFullFence(i + 1);
+                                                                url.InUse.WriteFullFence(true);
+                                                                url.LastUsedTime.Write(now);
                                                                 FoundRequiredCount++;
-                                                                ret.Add(sorted[i]);
+                                                                ret.Add(url);
                                                                 //dont break out of loop since we may need more than one linked/required URL
                                                             }
                                                             else
                                                             {
+                                                                url.LastTestedTime.Write(now);
+                                                                url.LastSkippedReason = url.LastSkippedReason.Prepend("RefineNotRequired");
                                                                 notrequired++;
                                                             }
                                                         }
-                                                        else if (!sorted[i].UseAsRefinementServer)
+                                                        else if (!url.UseAsRefinementServer)
                                                         {
-                                                            sorted[i].CurOrder = i + 1;
-                                                            sorted[i].InUse.WriteFullFence(true);
-                                                            sorted[i].LastUsedTime = DateTime.Now;
-                                                            ret.Add(sorted[i]);
+                                                            url.LastResultMessage = "Working...";
+                                                            url.CurOrder.WriteFullFence(i + 1);
+                                                            url.InUse.WriteFullFence(true);
+                                                            url.LastUsedTime.Write(now);
+                                                            ret.Add(url);
                                                             break;
+                                                        }
+                                                        else
+                                                        {
+                                                            url.LastTestedTime.Write(now);
+                                                            url.LastSkippedReason = url.LastSkippedReason.Prepend("NoConditionsMet?");
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        double secs = Math.Round((now - sorted[i].LastUsedTime).TotalSeconds, 0);
+                                                        double secs = Math.Round((now - url.LastUsedTime.Read()).TotalSeconds, 0);
                                                         if (secs >= AppSettings.Settings.MinSecondsBetweenFailedURLRetry)
                                                         {
-                                                            sorted[i].CurOrder = i + 1;
-                                                            sorted[i].InUse.WriteFullFence(true);
-                                                            sorted[i].LastUsedTime = DateTime.Now;
-                                                            ret.Add(sorted[i]);
+                                                            url.LastResultMessage = "Working...";
+                                                            url.CurOrder.WriteFullFence(i + 1);
+                                                            url.InUse.WriteFullFence(true);
+                                                            url.LastUsedTime.Write(now);
+                                                            ret.Add(url);
                                                             if (!displayedretry)  //if we get in a long loop waiting for URL
                                                             {
-                                                                Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={sorted[i].CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                                Log($"---- Trying previously failed URL again after {secs} seconds. (ErrCount={url.CurErrCount.ReadFullFence()}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {url}");
                                                                 displayedretry = true;
                                                             }
                                                             break;
                                                         }
                                                         else
                                                         {
+                                                            url.LastTestedTime.Write(now);
+                                                            url.LastSkippedReason = url.LastSkippedReason.Prepend("WaitingForRetry");
                                                             if (!displayedbad)  //if we get in a long loop waiting for URL
                                                             {
-                                                                Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={sorted[i].CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {sorted[i]}");
+                                                                Log($"---- Waiting {AppSettings.Settings.MinSecondsBetweenFailedURLRetry - secs} seconds before retrying bad URL. (ErrCount={url.CurErrCount.ReadFullFence()} of {AppSettings.Settings.MaxQueueItemRetries}, Setting 'MinSecondsBetweenFailedURLRetry'={AppSettings.Settings.MinSecondsBetweenFailedURLRetry}): {url}");
                                                                 displayedbad = true;
                                                             }
                                                         }
@@ -1165,48 +1232,67 @@ namespace AITool
                                                 }
                                                 else
                                                 {
+                                                    url.LastTestedTime.Write(now);
+                                                    url.LastSkippedReason = url.LastSkippedReason.Prepend("NotInTimeRange");
                                                     notintimerange++;
                                                 }
 
                                             }
                                             else
                                             {
+                                                url.LastTestedTime.Write(now);
+                                                url.LastSkippedReason = url.LastSkippedReason.Prepend("MaxImagesPerMonthMet");
                                                 maxpermonth++;
                                             }
 
                                         }
                                         else
                                         {
+                                            url.LastTestedTime.Write(now);
+                                            url.LastSkippedReason = url.LastSkippedReason.Prepend("NotRefinementServer");
                                             notrefined++;
                                         }
 
                                     }
                                     else
                                     {
+                                        url.LastTestedTime.Write(now);
+                                        url.LastSkippedReason = url.LastSkippedReason.Prepend("NotInCamList");
                                         incorrectcam++;
                                     }
 
                                 }
                                 else
                                 {
+                                    url.LastTestedTime.Write(now);
+                                    url.LastSkippedReason = url.LastSkippedReason.Prepend("InUse");
                                     inuse++;
+
+                                    if (!GetRefinementServer && !GetLinkedRequiredList) { int debugging = 0; }
+
                                 }
                             }
                             //disabled, but check to see if we need to reenable
                             else
                             {
+                                double mins = (DateTime.Now - url.LastUsedTime.Read()).TotalMinutes;
+                                url.LastTestedTime.Write(now);
+                                url.LastSkippedReason = url.LastSkippedReason.Prepend("Disabled");
+
                                 disabled++;
-                                if ((DateTime.Now - sorted[i].LastUsedTime).TotalMinutes >= AppSettings.Settings.URLResetAfterDisabledMinutes)
+                                if (mins >= AppSettings.Settings.URLResetAfterDisabledMinutes)
                                 {
                                     //check to see if can be re-enabled yet
-                                    sorted[i].ErrDisabled.WriteFullFence(false);
-                                    sorted[i].CurErrCount.WriteFullFence(0);
-                                    sorted[i].InUse.WriteFullFence(false);
-                                    Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + sorted[i]);
-                                    sorted[i].CurOrder = i + 1;
-                                    sorted[i].InUse.WriteFullFence(true);
-                                    sorted[i].LastUsedTime = DateTime.Now;
-                                    ret.Add(sorted[i]);
+                                    url.ErrDisabled.WriteFullFence(false);
+                                    url.CurErrCount.WriteFullFence(0);
+                                    url.InUse.WriteFullFence(false);
+                                    url.LastResultMessage = "(Re-enabled)";
+
+                                    Log($"---- Re-enabling disabled URL because {AppSettings.Settings.URLResetAfterDisabledMinutes} (URLResetAfterDisabledMinutes) minutes have passed: " + url);
+                                    url.CurOrder.WriteFullFence(i + 1);
+                                    url.InUse.WriteFullFence(true);
+                                    url.LastUsedTime.Write(DateTime.Now);
+                                    ret.Add(url);
                                     break;
                                 }
                             }
@@ -1219,13 +1305,13 @@ namespace AITool
                     }
 
 
-                    if ((HasRequiredList && (FoundRequiredCount >= RequiredURLs.Count)) ||
+                    if ((GetLinkedRequiredList && (FoundRequiredCount >= LinkedRequiredURLs.Count)) ||
                         (GetRefinementServer && (FoundRefinementCount >= RefineMatchCount)))
                     {
                         break;
                     }
 
-                    if ((GetRefinementServer || HasRequiredList) && sw.ElapsedMilliseconds >= AppSettings.Settings.MaxWaitForAIServerMS)
+                    if ((GetRefinementServer || GetLinkedRequiredList) && sw.ElapsedMilliseconds >= AppSettings.Settings.MaxWaitForAIServerMS)
                     {
                         string ew = "Debug:";
                         if (AppSettings.Settings.MaxWaitForAIServerTimeoutError)
@@ -1233,8 +1319,8 @@ namespace AITool
 
                         if (GetRefinementServer)
                             Log($"{ew} ---- URL request for REFINEMENT AI Server timed out, but only '{ret.Count}' of '{RefineMatchCount}' available. ({sw.ElapsedMilliseconds}ms - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
-                        else if (HasRequiredList)
-                            Log($"{ew} ---- URL request for LINKED AI Server timed out, but only '{ret.Count}' of '{RequiredURLs.Count}' available. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
+                        else if (GetLinkedRequiredList)
+                            Log($"{ew} ---- URL request for LINKED AI Server timed out, but only '{ret.Count}' of '{LinkedRequiredURLs.Count}' available. ({sw.ElapsedMilliseconds}ms) - Setting in AITOOL.SETTINGS.JSON 'MaxWaitForAIServerMS' and is set to {AppSettings.Settings.MaxWaitForAIServerMS})");
                         break;
                     }
 
@@ -1262,7 +1348,7 @@ namespace AITool
 
 
                 //see if any servers have 'LINKED' servers
-                if (!GetRefinementServer && !HasRequiredList && ret.Count > 0)
+                if (!GetRefinementServer && !GetLinkedRequiredList && ret.Count > 0)
                 {
                     List<ClsURLItem> linked = new List<ClsURLItem>();
                     foreach (ClsURLItem url in ret)
@@ -1295,6 +1381,9 @@ namespace AITool
 
 
         }
+
+        static ThreadSafe.Integer CurRunningDetectTasks = new ThreadSafe.Integer(0);
+
         public static async Task ImageQueueLoop()
         {
             //This runs in another thread, waiting for items to appear in the queue and process them one at a time
@@ -1311,18 +1400,21 @@ namespace AITool
                 await Task.Delay(5000);
 
                 //Start infinite loop waiting for images to come into queue
+                ThreadSafe.Integer MaxThreadCnt = new ThreadSafe.Integer(0);
 
                 while (true)
                 {
                     if (MasterCTS.IsCancellationRequested)
                         break;
 
+                    ThreadSafe.Integer ThreadCnt = new ThreadSafe.Integer(0);
+
                     while (!ImageProcessQueue.IsEmpty)
                     {
 
                         int ProcImgCnt = 0;
                         int ErrCnt = 0;
-                        int TskCnt = 0;
+                        long LastThreadInitTimeMS = 0;
                         ThreadSafe.Datetime NextDeepstackRestartTime = new ThreadSafe.Datetime(DateTime.MinValue);
 
                         while (!ImageProcessQueue.IsEmpty)
@@ -1334,6 +1426,11 @@ namespace AITool
 
                             if (ImageProcessQueue.TryDequeue(out CurImg))
                             {
+                                if (CurRunningDetectTasks.ReadFullFence() > 1)
+                                {
+                                    int testing = 0;
+                                }
+
                                 Camera cam = GetCamera(CurImg.image_path, true);
 
                                 if (cam == null)
@@ -1359,15 +1456,17 @@ namespace AITool
                                 //If we have any linked servers there may be more than one server that we send at the same time
                                 foreach (ClsURLItem url in urls)
                                 {
-                                    Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam, CurImg);
-
-                                    Interlocked.Increment(ref TskCnt);
+                                    Log($"Debug: Adding task for file '{Path.GetFileName(CurImg.image_path)}' (Image QueueTime='{(DateTime.Now - CurImg.TimeAdded).TotalMinutes.ToString("###0.0")}' mins, CurRunningTasks={CurRunningDetectTasks.ReadFullFence()}, URL Queue wait='{sw.ElapsedMilliseconds}ms', URLOrder={url.CurOrder}, URLOriginalOrder={url.Order}) on URL '{url}'", url.CurSrv, cam, CurImg);
 
                                 }
 
+                                sw.Start();
+
+                                //This *should* start detection on another thread and return control to this thread right away.
                                 Task.Run(async () =>
                                 {
 
+                                    CurRunningDetectTasks.AtomicIncrementAndGet();
                                     Global.SendMessage(MessageType.BeginProcessImage, CurImg.image_path);
 
                                     DetectObjectsResult result = await DetectObjects(CurImg, urls); //ai process image
@@ -1386,7 +1485,19 @@ namespace AITool
                                                 if (url.CurErrCount.ReadFullFence() < AppSettings.Settings.MaxQueueItemRetries)
                                                 {
                                                     //put url back in queue when done
-                                                    Log($"...Problem with AI URL: '{url.LastResultMessage}' - '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam);
+
+                                                    //Only send error if MaxWaitForAIServerTimeoutError is true
+                                                    string ew = "Debug:";
+                                                    if (AppSettings.Settings.MaxWaitForAIServerTimeoutError)
+                                                        ew = "Error:";
+                                                    if (url.LastResultMessage.Has("request timed out"))
+                                                    {
+                                                        Log($"{ew}...Problem with AI URL: '{url.LastResultMessage}' - '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam);
+                                                    }
+                                                    else
+                                                    {
+                                                        Log($"...Problem with AI URL: '{url.LastResultMessage}' - '{url}' (URL ErrCount={url.CurErrCount}, max allowed of {AppSettings.Settings.MaxQueueItemRetries})", url.CurSrv, cam);
+                                                    }
                                                 }
                                                 else
                                                 {
@@ -1458,14 +1569,15 @@ namespace AITool
                                         }
 
                                         url.InUse.WriteFullFence(false);
-
+                                        url.FullTimeMS = (int)(DateTime.Now - url.LastUsedTime.Read()).TotalMilliseconds;
 
                                     }
-                                    Interlocked.Decrement(ref TskCnt);
+                                    CurRunningDetectTasks.AtomicDecrementAndGet();
 
                                 });
 
-
+                                sw.Stop();
+                                LastThreadInitTimeMS = sw.ElapsedMilliseconds;
                             }
                             else
                             {
@@ -1475,9 +1587,9 @@ namespace AITool
 
                         }
 
-                        if (TskCnt > 0)
+                        if (CurRunningDetectTasks.ReadFullFence() > 0)
                         {
-                            Log($"Debug: Done adding {TskCnt} total threads, ErrCnt={ErrCnt}, ImageProcessQueue.Count={ImageProcessQueue.Count}");
+                            Log($"Debug: Done adding. {CurRunningDetectTasks.ReadFullFence()} total threads running, LastThreadInitTimeMS={LastThreadInitTimeMS}, ErrCnt={ErrCnt}, ImageProcessQueue.Count={ImageProcessQueue.Count}");
                         }
 
                         //Clean up old images in the dupe check dic
@@ -3197,7 +3309,7 @@ namespace AITool
                             else
                                 primdet = "[Linked]";
 
-                            Log($"Debug: (2/6) {primdet} Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                            Log($"Debug: (2/6) {primdet} Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate()}'", AiUrl.CurSrv, cam, CurImg);
                             Log($"Debug: (3/6) {primdet} Processing {asr.Predictions.Count} results...", AiUrl.CurSrv, cam, CurImg);
 
 
@@ -3222,7 +3334,18 @@ namespace AITool
                                 ret.Error = asr.Error;
                                 //AiUrl.IncrementError();
                                 //AiUrl.LastResultMessage = ret.Error;
-                                Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
+                                //Only send error if MaxWaitForAIServerTimeoutError is true
+                                string ew = "Debug:";
+                                if (AppSettings.Settings.MaxWaitForAIServerTimeoutError)
+                                    ew = "Error:";
+                                if (ret.Error.Has("request timed out"))
+                                {
+                                    Log(ew + ret.Error, AiUrl.CurSrv, cam, CurImg);
+                                }
+                                else
+                                {
+                                    Log(ret.Error, AiUrl.CurSrv, cam, CurImg);
+                                }
                             }
                         }
 
@@ -3267,7 +3390,7 @@ namespace AITool
                                     if (!ret.OutURLs.Contains(AiUrl))
                                         ret.OutURLs.Add(AiUrl);
 
-                                    Log($"Debug: (2.1/6) [Refinement Server] Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate(128, true)}'", AiUrl.CurSrv, cam, CurImg);
+                                    Log($"Debug: (2.1/6) [Refinement Server] Posted in {asr.SWPostTime}ms, StatusCode='{asr.StatusCode}', Received a {asr.JsonString.Length} byte JSON response: '{asr.JsonString.Truncate()}'", AiUrl.CurSrv, cam, CurImg);
                                     Log($"Debug: (3.1/6) [Refinement Server] Processing {asr.Predictions.Count} results...", AiUrl.CurSrv, cam, CurImg);
 
 
@@ -3780,7 +3903,11 @@ namespace AITool
 
             foreach (var url in ret.OutURLs)
             {
-                url.InUse.WriteFullFence(false);
+                if (url.InUse.ReadFullFence())
+                {
+                    url.InUse.WriteFullFence(false);
+                    url.FullTimeMS = (int)(DateTime.Now - url.LastUsedTime.Read()).TotalMilliseconds;
+                }
             }
 
             return ret;

@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Telegram.Bot.Requests;
+
 using static AITool.AITOOL;
 
 
@@ -25,7 +27,7 @@ namespace AITool
             this.hist = hist;
         }
     }
-    public class SQLiteHistory : IDisposable
+    public class SQLiteHistory:IDisposable
     {
         private bool disposedValue;
 
@@ -155,6 +157,10 @@ namespace AITool
 
         private void DisposeConnection()
         {
+
+            if (this.sqlite_conn == null)
+                return;
+
             try
             {
                 lock (DBLock)
@@ -169,10 +175,18 @@ namespace AITool
                 Log("Error: " + ex.Msg());
 
             }
+
         }
         private bool CreateConnection()
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
+
+            int retries = 0;
+            bool restorebackup = false;
+
+        RetryConnection:
+
+            retries++;
 
             bool ret = false;
             string sflags = "SharedCache";
@@ -211,22 +225,38 @@ namespace AITool
                 if (!Directory.Exists(fldr))
                     Directory.CreateDirectory(fldr);
 
-                //If the database file doesn't exist, the default behaviour is to create a new file
+                string backupfile = this.Filename + ".bak";
+                bool dbFileExisted = File.Exists(this.Filename);
+                bool bakFileExisted = File.Exists(backupfile);
+
+                if (restorebackup && bakFileExisted)
+                {
+                    Log($"Debug: Restoring backup database: {backupfile}...");
+                    File.Copy(backupfile, this.Filename, true);
+                    File.Delete(backupfile);
+                }
+
+                restorebackup = false;
+
+                //If the database file doesn't exist, the default behavior is to create a new file
                 this.sqlite_conn = new SQLiteConnection(this.Filename, flags, true);
 
                 if (!this.ReadOnly)
                 {
-                    //backup once a day
-                    this.sqlite_conn.Backup(this.Filename + ".bak");
-
                     //make sure table exists:
                     CreateTableResult ctr = this.sqlite_conn.CreateTable<History>();
-
                 }
 
                 this.sqlite_conn.ExecuteScalar<int>(@"PRAGMA journal_mode = 'WAL';", new object[] { });
                 this.sqlite_conn.ExecuteScalar<int>(@"PRAGMA busy_timeout = 30000;", new object[] { });
 
+                if (!this.ReadOnly && dbFileExisted)
+                {
+                    //backup if we didnt just create the main db file
+                    this.sqlite_conn.Backup(this.Filename + ".bak");
+                }
+
+                ret = true;
 
                 sw.Stop();
 
@@ -240,6 +270,32 @@ namespace AITool
                 Log($"Error: Flags='{sflags}', Error=" + ex.Msg(), "None", "None", "None");
             }
 
+            if (!ret)
+            {
+                if (retries > 3)
+                {
+                    Log($"Error: Retries exceeded, could not create history database? {this.Filename}");
+                    return false;
+                }
+
+                Log($"Debug: Retrying database connection #{retries} of 3...");
+
+                //close the database if open
+                DisposeConnection();
+
+                //first try to restore the backup
+                if (retries == 1)
+                {
+                    restorebackup = true;
+                }
+
+                //delete the database file and try again
+                Global.SafeFileDelete(this.Filename, "SQLiteHistoryError");
+                Global.SafeFileDelete(this.Filename + "-shm", "SQLiteHistoryError");
+                Global.SafeFileDelete(this.Filename + "-wal", "SQLiteHistoryError");
+
+                goto RetryConnection;
+            }
 
             return ret;
         }
@@ -622,7 +678,10 @@ namespace AITool
                     Stopwatch sw = Stopwatch.StartNew();
 
                     if (!this.IsSQLiteDBConnected())
-                        this.CreateConnection();
+                    {
+                        if (!this.CreateConnection())
+                            return false;
+                    }
 
                     TableQuery<History> query = this.sqlite_conn.Table<History>();
                     List<History> CurList = query.ToList();
@@ -725,7 +784,10 @@ namespace AITool
 
 
                 if (!this.IsSQLiteDBConnected())
-                    this.CreateConnection();
+                {
+                    if (!this.CreateConnection())
+                        return false;
+                }
 
                 ConcurrentBag<History> removed = new ConcurrentBag<History>();   //this may only need to be a list, but just being safe in threading
 

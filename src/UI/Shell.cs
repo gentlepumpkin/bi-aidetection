@@ -33,7 +33,7 @@ using System.Speech.Synthesis;
 namespace AITool
 {
 
-    public partial class Shell : Form
+    public partial class Shell:Form
     {
         private ThreadSafe.Datetime LastListUpdate = new ThreadSafe.Datetime(DateTime.MinValue);
 
@@ -1028,13 +1028,14 @@ namespace AITool
             {
                 //this.AllowShowDisplay = true;
                 this.Opacity = 100;
+                this.TopMost = true;
+                this.TopMost = false;
                 this.Show();
                 this.WindowState = FormWindowState.Normal;
                 this.ShowInTaskbar = true;
                 this.notifyIcon.Visible = false;
                 this.LoadHistoryAsync(true, true);
                 this.UpdateLogAddedRemovedAsync(true, true);
-                //Log($"Debug: Showing app. Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, trayicon={this.notifyIcon.Visible}");
                 this.Activate();
                 Application.DoEvents();
 
@@ -1855,16 +1856,16 @@ namespace AITool
                 //make tray icon red if there are errors
                 if (LogMan.ErrorCount.ReadFullFence() == 0 && !showingtrayok)
                 {
-                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo1;
-                    this.Icon = AITool.Properties.Resources.Logo1;
+                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo_old;
+                    this.Icon = AITool.Properties.Resources.Logo_old;
                     this.Refresh();
                     showingtrayok = true;
                     showingtrayerr = false;
                 }
                 else if (LogMan.ErrorCount.ReadFullFence() > 0 && !showingtrayerr)
                 {
-                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo_Error;
-                    this.Icon = AITool.Properties.Resources.Logo_Error;
+                    this.notifyIcon.Icon = AITool.Properties.Resources.Logo_Error_old;
+                    this.Icon = AITool.Properties.Resources.Logo_Error_old;
                     this.Refresh();
                     showingtrayok = false;
                     showingtrayerr = true;
@@ -1920,7 +1921,7 @@ namespace AITool
                     if (TriggerActionQueue != null)
                         TriggerActionQueueCount = TriggerActionQueue.Count.ReadFullFence();
 
-                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={scalc.Max},Avg={Math.Round(scalc.Avg, 0)}) | {TriggerActionQueueCount} Actions Queued";
+                    this.toolStripStatusLabel1.Text = $"| {alerts} Alerts | {irrelevantalerts} Irrelevant | {falsealerts} False | {skipped} Skipped ({newskipped} new) | {qcalc.Count} ImgProcessed ({qcalc.ItemsPerMinute().ToString("###0")}/MIN) | {ImageProcessQueue.Count} ImgQueued (Max={scalc.Max},Avg={Math.Round(scalc.Avg, 0)}) | {TriggerActionQueueCount} ActQueued (Min={TriggerActionQueue.ActionTimeCalc.Min.Round(0)}ms/Max={TriggerActionQueue.ActionTimeCalc.Max.Round(0)}ms)";
 
                     this.toolStripStatusErrors.Text = $"{LogMan.ErrorCount} Errors";
 
@@ -1960,7 +1961,7 @@ namespace AITool
 
                 Global_GUI.InvokeIFRequired(this.lblQueue, () =>
                 {
-                    this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {scalc.Max} ({qcalc.Max}ms), Average: {scalc.Avg.ToString("#####")} ({qcalc.Avg.ToString("#####")}ms queue wait time)";
+                    this.lblQueue.Text = $"Images in queue: {ImageProcessQueue.Count}, Max: {scalc.Max} ({qcalc.Max}ms), Average: {scalc.Avg.ToString("#####")} ({qcalc.Avg.ToString("#####")}ms queue wait time, Trigger Actions Min={TriggerActionQueue.ActionTimeCalc.Min.Round(0)}ms/Max={TriggerActionQueue.ActionTimeCalc.Max.Round(0)}ms/Avg={TriggerActionQueue.ActionTimeCalc.Avg.Round(0)}ms)";
 
                 });
                 Global_GUI.InvokeIFRequired(this.lbl_errors, () =>
@@ -2312,6 +2313,8 @@ namespace AITool
                 if (string.IsNullOrEmpty(oldnamecameras))
                     oldnamecameras = Global.GetRegSetting("LastSelectedCamera", "");
 
+                if (string.IsNullOrEmpty(oldnamecameras))
+                    oldnamecameras = "default";
 
                 string oldnamefilters = "";
                 if (this.comboBox_filter_camera.Items.Count > 0)
@@ -3169,7 +3172,7 @@ namespace AITool
                         if (AppSettings.Settings.close_instantly == -1)
                         {
                             //if it's the first time, ask if the confirmation dialog should ever appear again
-                            using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO, Never!", "YES"))
+                            using (var form1 = new InputForm($"Confirm closing AI Tool every time?", "AI Tool", false, "NO", "YES"))
                             {
                                 var result1 = form1.ShowDialog();
                                 if (result1 == DialogResult.Cancel)
@@ -3642,6 +3645,12 @@ namespace AITool
 
         private void BtnDynamicMaskingSettings_Click(object sender, EventArgs e)
         {
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
+                return;
+            }
+
             using (Frm_DynamicMasking frm = new Frm_DynamicMasking())
             {
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
@@ -3683,6 +3692,11 @@ namespace AITool
 
         private void btnDetails_Click(object sender, EventArgs e)
         {
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
+                return;
+            }
             this.ShowMaskDetailsDialog(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
         }
 
@@ -3708,6 +3722,11 @@ namespace AITool
 
         private void btnCustomMask_Click(object sender, EventArgs e)
         {
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
+                return;
+            }
             this.ShowEditImageMaskDialog(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
         }
 
@@ -3769,11 +3788,14 @@ namespace AITool
         {
             using var Trace = new Trace();  //This c# 8.0 using feature will auto dispose when the function is done.
 
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
+                return;
+            }
+
             using (Frm_LegacyActions frm = new Frm_LegacyActions())
             {
-
-                if (this.FOLV_Cameras.SelectedObjects.Count == 0)
-                    return;
 
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
 
@@ -5303,6 +5325,8 @@ namespace AITool
             {
 
                 frm.ShowDialog(this);
+                //sort AIURLList so that all items enabled are at the top. Use OrderbyDescending so that the order is preserved
+                AppSettings.Settings.AIURLList = AppSettings.Settings.AIURLList.OrderByDescending(x => x.Enabled.ReadFullFence()).ToList();
             }
 
             UpdateAIURLs();
@@ -5423,8 +5447,15 @@ namespace AITool
 
         private void BtnPredictionSize_Click(object sender, EventArgs e)
         {
+            if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
+                return;
+            }
+
             using (Frm_PredSizeLimits frm = new Frm_PredSizeLimits())
             {
+
                 Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
 
                 frm.tb_ConfidenceLower.Text = cam.threshold_lower.ToString();
@@ -5480,7 +5511,10 @@ namespace AITool
         private void BtnRelevantObjects_Click(object sender, EventArgs e)
         {
             if (this.FOLV_Cameras.SelectedObjects.Count == 0)
+            {
+                MessageBox.Show("Select a camera first");
                 return;
+            }
 
             using (Frm_RelevantObjects frm = new Frm_RelevantObjects())
             {
@@ -5530,10 +5564,72 @@ namespace AITool
             AppSettings.Settings.HistoryMergeDuplicatePredictions = this.mergeDuplicatePredictionsToolStripMenuItem.Checked;
             AppSettings.SaveAsync(true);
         }
+
+        private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                this.ShowForm();
+            }
+            else
+            {
+                this.notifyIcon.ContextMenuStrip.Show();
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (Frm_Pause frm = new Frm_Pause())
+            {
+
+                //Camera cam = AITOOL.GetCamera(((Camera)this.FOLV_Cameras.SelectedObjects[0]).Name);
+                //frm.CurrentCam = cam;
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void pauseAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double pausetime = 0;
+            foreach (var cam in AppSettings.Settings.CameraList)
+            {
+                pausetime = cam.PauseMinutes;
+                if (!cam.Paused)
+                    cam.Pause();
+            }
+            MessageBox.Show($"Paused all cameras for {pausetime} minutes");
+        }
+
+        private void resumeAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var cam in AppSettings.Settings.CameraList)
+            {
+                if (cam.Paused)
+                    cam.Resume();
+            }
+
+            MessageBox.Show("Resumed all cameras.");
+        }
+
+        private void Shell_Activated(object sender, EventArgs e)
+        {
+            //bring this form to the top of all other windows:
+            this.TopMost = true;
+            this.TopMost = false;
+            this.Show();
+            Log($"Trace: App Activated. TopMost={this.TopMost}, Visible={this.Visible}, state={this.WindowState}, tbicon={this.ShowInTaskbar}, trayicon={this.notifyIcon.Visible}");
+
+
+        }
     }
 
     //enhanced TableLayoutPanel loads faster
-    public partial class DBLayoutPanel : TableLayoutPanel
+    public partial class DBLayoutPanel:TableLayoutPanel
     {
         public DBLayoutPanel()
         {

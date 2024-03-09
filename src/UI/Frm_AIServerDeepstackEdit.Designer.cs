@@ -73,6 +73,7 @@ namespace AITool
             linkHelpURL = new System.Windows.Forms.LinkLabel();
             btTest = new System.Windows.Forms.Button();
             bt_clear = new System.Windows.Forms.Button();
+            cb_IgnoreOffline = new System.Windows.Forms.CheckBox();
             groupBox1.SuspendLayout();
             groupBoxLinked.SuspendLayout();
             groupBoxRefine.SuspendLayout();
@@ -109,7 +110,7 @@ namespace AITool
             // tb_URL
             // 
             tb_URL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            tb_URL.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_URL.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_URL.Location = new System.Drawing.Point(121, 60);
             tb_URL.Name = "tb_URL";
             tb_URL.Size = new System.Drawing.Size(512, 20);
@@ -139,7 +140,7 @@ namespace AITool
             // 
             // tb_ActiveTimeRange
             // 
-            tb_ActiveTimeRange.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_ActiveTimeRange.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_ActiveTimeRange.Location = new System.Drawing.Point(121, 112);
             tb_ActiveTimeRange.Name = "tb_ActiveTimeRange";
             tb_ActiveTimeRange.Size = new System.Drawing.Size(152, 20);
@@ -158,7 +159,7 @@ namespace AITool
             // tb_ApplyToCams
             // 
             tb_ApplyToCams.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            tb_ApplyToCams.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_ApplyToCams.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_ApplyToCams.Location = new System.Drawing.Point(121, 86);
             tb_ApplyToCams.Name = "tb_ApplyToCams";
             tb_ApplyToCams.Size = new System.Drawing.Size(512, 20);
@@ -179,6 +180,7 @@ namespace AITool
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(cb_IgnoreOffline);
             groupBox1.Controls.Add(tb_Name);
             groupBox1.Controls.Add(label14);
             groupBox1.Controls.Add(cb_OnlyLinked);
@@ -317,7 +319,7 @@ namespace AITool
             checkedComboBoxLinked.CheckOnClick = true;
             checkedComboBoxLinked.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             checkedComboBoxLinked.DropDownHeight = 1;
-            checkedComboBoxLinked.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            checkedComboBoxLinked.Font = new System.Drawing.Font("Consolas", 8.25F);
             checkedComboBoxLinked.FormattingEnabled = true;
             checkedComboBoxLinked.IntegralHeight = false;
             checkedComboBoxLinked.Location = new System.Drawing.Point(6, 36);
@@ -363,7 +365,7 @@ namespace AITool
             // tb_RefinementObjects
             // 
             tb_RefinementObjects.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            tb_RefinementObjects.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_RefinementObjects.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_RefinementObjects.Location = new System.Drawing.Point(8, 36);
             tb_RefinementObjects.Name = "tb_RefinementObjects";
             tb_RefinementObjects.Size = new System.Drawing.Size(609, 20);
@@ -371,7 +373,7 @@ namespace AITool
             // 
             // tb_Upper
             // 
-            tb_Upper.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_Upper.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_Upper.Location = new System.Drawing.Point(214, 165);
             tb_Upper.Name = "tb_Upper";
             tb_Upper.Size = new System.Drawing.Size(49, 20);
@@ -380,7 +382,7 @@ namespace AITool
             // 
             // tb_LinkedRefineTimeout
             // 
-            tb_LinkedRefineTimeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_LinkedRefineTimeout.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_LinkedRefineTimeout.Location = new System.Drawing.Point(446, 354);
             tb_LinkedRefineTimeout.Name = "tb_LinkedRefineTimeout";
             tb_LinkedRefineTimeout.Size = new System.Drawing.Size(49, 20);
@@ -390,7 +392,7 @@ namespace AITool
             // 
             // tb_Lower
             // 
-            tb_Lower.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_Lower.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_Lower.Location = new System.Drawing.Point(121, 165);
             tb_Lower.Name = "tb_Lower";
             tb_Lower.Size = new System.Drawing.Size(49, 20);
@@ -410,10 +412,10 @@ namespace AITool
             // tb_timeout
             // 
             tb_timeout.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_timeout.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_timeout.Location = new System.Drawing.Point(525, 137);
             tb_timeout.Name = "tb_timeout";
-            tb_timeout.Size = new System.Drawing.Size(108, 20);
+            tb_timeout.Size = new System.Drawing.Size(106, 20);
             tb_timeout.TabIndex = 5;
             tb_timeout.Text = "0";
             toolTip1.SetToolTip(tb_timeout, "If you set this to any value other than 0 it will override the default timeout");
@@ -421,7 +423,7 @@ namespace AITool
             // tb_ImagesPerMonth
             // 
             tb_ImagesPerMonth.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            tb_ImagesPerMonth.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tb_ImagesPerMonth.Font = new System.Drawing.Font("Consolas", 8.25F);
             tb_ImagesPerMonth.Location = new System.Drawing.Point(525, 112);
             tb_ImagesPerMonth.Name = "tb_ImagesPerMonth";
             tb_ImagesPerMonth.Size = new System.Drawing.Size(108, 20);
@@ -443,7 +445,7 @@ namespace AITool
             // cb_ImageAdjustProfile
             // 
             cb_ImageAdjustProfile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cb_ImageAdjustProfile.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cb_ImageAdjustProfile.Font = new System.Drawing.Font("Consolas", 8.25F);
             cb_ImageAdjustProfile.FormattingEnabled = true;
             cb_ImageAdjustProfile.Location = new System.Drawing.Point(121, 138);
             cb_ImageAdjustProfile.Name = "cb_ImageAdjustProfile";
@@ -541,6 +543,18 @@ namespace AITool
             bt_clear.UseVisualStyleBackColor = true;
             bt_clear.Click += bt_clear_Click;
             // 
+            // cb_IgnoreOffline
+            // 
+            cb_IgnoreOffline.AutoSize = true;
+            cb_IgnoreOffline.ForeColor = System.Drawing.Color.DodgerBlue;
+            cb_IgnoreOffline.Location = new System.Drawing.Point(342, 141);
+            cb_IgnoreOffline.Name = "cb_IgnoreOffline";
+            cb_IgnoreOffline.Size = new System.Drawing.Size(109, 17);
+            cb_IgnoreOffline.TabIndex = 22;
+            cb_IgnoreOffline.Text = "Ignore if Offline";
+            toolTip1.SetToolTip(cb_IgnoreOffline, "If we cant even ping the server (ie a machine is asleep part of the day) we ignore any errors and skip the URL.");
+            cb_IgnoreOffline.UseVisualStyleBackColor = true;
+            // 
             // Frm_AIServerDeepstackEdit
             // 
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
@@ -551,7 +565,7 @@ namespace AITool
             Controls.Add(btTest);
             Controls.Add(linkHelpURL);
             Controls.Add(groupBox1);
-            Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Font = new System.Drawing.Font("Segoe UI", 8.25F);
             Name = "Frm_AIServerDeepstackEdit";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "Edit AI Server";
@@ -612,5 +626,6 @@ namespace AITool
         private System.Windows.Forms.CheckBox cb_OnlyLinked;
         private System.Windows.Forms.TextBox tb_Name;
         private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.CheckBox cb_IgnoreOffline;
     }
 }

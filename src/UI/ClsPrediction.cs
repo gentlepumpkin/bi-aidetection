@@ -53,7 +53,7 @@ namespace AITool
         UnknownObject = 23,
 
     }
-    public class ClsPrediction : IEquatable<ClsPrediction>
+    public class ClsPrediction:IEquatable<ClsPrediction>
     {
         private ObjectType _defaultObjType;
         private Camera _cam;
@@ -1110,7 +1110,7 @@ namespace AITool
                 return;
             }
 
-            if (tmp.Equals("person") || tmp.Equals("people"))
+            if (tmp.Equals("person") || tmp.Equals("people") || tmp.Equals("male") || tmp.Equals("female"))
                 this.ObjType = ObjectType.Person;
             else if (tmp.Equals("face") || this.Detail.IndexOf("face", StringComparison.OrdinalIgnoreCase) >= 0)
                 this.ObjType = ObjectType.Face;
@@ -1129,6 +1129,7 @@ namespace AITool
                      tmp.Equals("bird") ||
                      tmp.Equals("bear") ||
                      tmp.Equals("sheep") ||
+                     tmp.Equals("kangaroo") ||
                      tmp.Equals("deer") ||
                      tmp.Equals("cow") ||
                      tmp.Equals("rabbit") ||

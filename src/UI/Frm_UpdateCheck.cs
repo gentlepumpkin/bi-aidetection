@@ -23,7 +23,7 @@ using static AITool.AITOOL;
 
 namespace AITool
 {
-    public partial class Frm_UpdateCheck : Form
+    public partial class Frm_UpdateCheck:Form
     {
         private DateTime CurrentVerTime = DateTime.MinValue;
         private GitHubClient client = null;

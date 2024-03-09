@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace AITool
 {
-    public partial class Frm_AIServers : Form
+    public partial class Frm_AIServers:Form
     {
 
         ClsURLItem CurURL = null;
@@ -23,8 +23,9 @@ namespace AITool
 
         private void Frm_AddAIServers_Load(object sender, EventArgs e)
         {
+            using Working w = new Working();
             Global_GUI.RestoreWindowState(this);
-            Global_GUI.ConfigureFOLV(FOLV_AIServers, typeof(ClsURLItem), null, this.imageList1);
+            Global_GUI.ConfigureFOLV(FOLV_AIServers, typeof(ClsURLItem), null, this.imageList1, editmode: BrightIdeasSoftware.ObjectListView.CellEditActivateMode.F2Only);
 
             this.FOLV_AIServers.BooleanCheckStateGetter = delegate (Object rowObject)
             {
@@ -44,6 +45,7 @@ namespace AITool
 
         private void Frm_AddAIServers_FormClosing(object sender, FormClosingEventArgs e)
         {
+            using Working w = new Working();
             Global_GUI.SaveWindowState(this);
         }
 
@@ -55,6 +57,7 @@ namespace AITool
 
         private void FOLV_AIServers_SelectionChanged(object sender, EventArgs e)
         {
+            using Working w = new Working();
             try
             {
                 if (this.FOLV_AIServers.SelectedObjects != null && this.FOLV_AIServers.SelectedObjects.Count > 0)
@@ -99,6 +102,7 @@ namespace AITool
 
         private void deepstackToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -109,6 +113,7 @@ namespace AITool
 
         private void addAmazonReToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.AWSRekognition_Objects);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
@@ -128,6 +133,7 @@ namespace AITool
 
         private void addDoodsServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DOODS);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
@@ -145,6 +151,7 @@ namespace AITool
 
         private void toolStripButtonDelete_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             if (AppSettings.Settings.AIURLList.Contains(this.CurURL))
             {
                 AppSettings.Settings.AIURLList.Remove(this.CurURL);
@@ -181,6 +188,7 @@ namespace AITool
 
         private void toolStripButtonUp_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             if (this.CurURL == null)
                 return;
 
@@ -195,13 +203,15 @@ namespace AITool
                     AppSettings.Settings.AIURLList[i].Order = i + 1;
                 }
 
-                Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
+                Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true, ForcedSelection: true);
 
             }
         }
 
         private void toolStripButtonDown_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
+
             if (this.CurURL == null)
                 return;
 
@@ -233,6 +243,7 @@ namespace AITool
 
         private void FormatURLRow(object Sender, BrightIdeasSoftware.FormatRowEventArgs e)
         {
+            using Working w = new Working();
             try
             {
                 ClsURLItem url = (ClsURLItem)e.Model;
@@ -275,6 +286,7 @@ namespace AITool
 
         private void sightHoundAIServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound_Vehicle);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
@@ -292,6 +304,7 @@ namespace AITool
 
         private void sightHoundPersonAIServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.SightHound_Person);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
@@ -309,6 +322,7 @@ namespace AITool
 
         private void addAmazonFaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.AWSRekognition_Faces);
             if (!AppSettings.Settings.AIURLList.Contains(url))
             {
@@ -327,6 +341,7 @@ namespace AITool
 
         private void deepstackCustomToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Custom);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -336,6 +351,7 @@ namespace AITool
 
         private void deepstackFacesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Faces);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -346,6 +362,7 @@ namespace AITool
 
         private void deepstackSceneToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.DeepStack_Scene);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -356,6 +373,7 @@ namespace AITool
 
         private void codeProjectAIObjectsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -365,6 +383,7 @@ namespace AITool
 
         private void codeProjectAILicensePlateToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Plate);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -375,6 +394,7 @@ namespace AITool
 
         private void codeProjectAICustomToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Custom);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -386,6 +406,7 @@ namespace AITool
 
         private void codeProjectAIIPCAMCombinedToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Combined);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -396,6 +417,7 @@ namespace AITool
 
         private void codeProjectAIIPCAMGeneralToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_General);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -406,6 +428,7 @@ namespace AITool
 
         private void codeProjectAIIPCAMDarkToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Dark);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -416,6 +439,7 @@ namespace AITool
 
         private void codeProjectAIIPCAMAnimalToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_IPCAM_Animal);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -426,6 +450,7 @@ namespace AITool
 
         private void codeProjectAIFacesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Faces);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
@@ -436,12 +461,45 @@ namespace AITool
 
         private void codeProjectAISceneToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using Working w = new Working();
+
             ClsURLItem url = new ClsURLItem("", AppSettings.Settings.AIURLList.Count + 1, URLTypeEnum.CodeProject_AI_Scene);
             this.CurURL = url;
             AppSettings.Settings.AIURLList.Add(url);
             Global_GUI.UpdateFOLV(FOLV_AIServers, AppSettings.Settings.AIURLList, UseSelected: true, SelectObject: this.CurURL, FullRefresh: true);
             UpdateButtons();
 
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (_Working)
+                return;
+
+            //this.FOLV_AIServers.RefreshObjects(AppSettings.Settings.AIURLList);
+            this.FOLV_AIServers.Refresh();
+            //this.FOLV_AIServers.Update();
+            //this.FOLV_AIServers.Invalidate();
+
+        }
+
+        private void FOLV_AIServers_DoubleClick(object sender, EventArgs e)
+        {
+            Edit();
+        }
+
+        public static bool _Working = true;
+        //create a class that is disposable that simply sets a working bool to false when disposed
+        public class Working:IDisposable
+        {
+            public Working()
+            {
+                _Working = true;
+            }
+            public void Dispose()
+            {
+                _Working = false;
+            }
         }
     }
 }

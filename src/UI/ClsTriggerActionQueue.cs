@@ -445,67 +445,6 @@ namespace AITool
                     if (AQI.cam.Action_ActivateBlueIrisWindow && AQI.Trigger)
                         Global.ShowProcessWindow("blueiris.exe", "Blue Iris", Global.ShowWindowEnum.SW_SHOWMAXIMIZED);
 
-                    //call trigger urls
-                    if (!(AQI.cam.Paused && AQI.cam.PauseURL))
-                    {
-                        if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
-                        {
-                            //replace url parameters with according values
-                            List<string> urls = new List<string>();
-                            //call urls
-                            foreach (string url in AQI.cam.trigger_urls)
-                            {
-                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
-                                urls.Add(tmp);
-
-                            }
-
-                            bool result = await this.CallTriggerURLs(urls, AQI);
-                        }
-                        else if (!AQI.Trigger && AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0)
-                        {
-                            //replace url parameters with according values
-                            List<string> urls = new List<string>();
-                            //call urls
-                            foreach (string url in AQI.cam.cancel_urls)
-                            {
-                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
-                                urls.Add(tmp);
-
-                            }
-
-                            bool result = await this.CallTriggerURLs(urls, AQI);
-
-                        }
-
-                    }
-
-                    //run external program
-                    if (AQI.cam.Action_RunProgram && AQI.Trigger)
-                    {
-                        string run = "";
-                        string param = "";
-                        try
-                        {
-                            run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString, Global.IPType.Path);
-                            param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString, Global.IPType.Path);
-                            Log($"Debug:   Starting external app - Camera={AQI.camname} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
-
-                            Process.Start(run, param);
-
-                            if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
-                                Log($"Debug: ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
-
-                            await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
-                        }
-                        catch (Exception ex)
-                        {
-
-                            ret = false;
-                            Log($"Error: while running program '{run}' with params '{param}', got: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
-                        }
-                    }
-
                     //Play sounds
                     if (AQI.cam.Action_PlaySounds && AQI.Trigger)
                     {
@@ -631,7 +570,8 @@ namespace AITool
                                     if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
                                         Log($"Debug:  ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
 
-                                    await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
+                                    //lets not wait after each sound
+                                    //await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
 
                                 }
                                 else
@@ -654,6 +594,68 @@ namespace AITool
 
                         }
                     }
+
+                    //run external program
+                    if (AQI.cam.Action_RunProgram && AQI.Trigger)
+                    {
+                        string run = "";
+                        string param = "";
+                        try
+                        {
+                            run = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramString, Global.IPType.Path);
+                            param = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, AQI.cam.Action_RunProgramArgsString, Global.IPType.Path);
+                            Log($"Debug:   Starting external app - Camera={AQI.camname} run='{run}', param='{param}'", this.CurSrv, AQI.cam, AQI.CurImg);
+
+                            Process.Start(run, param);
+
+                            if (AppSettings.Settings.ActionDelayMS >= 100)  //dont show for tiny delays
+                                Log($"Debug: ...Applying 'ActionDelayMS' delay of {AppSettings.Settings.ActionDelayMS}ms.");
+
+                            //await Task.Delay(AppSettings.Settings.ActionDelayMS); //very short wait between trigger events
+                        }
+                        catch (Exception ex)
+                        {
+
+                            ret = false;
+                            Log($"Error: while running program '{run}' with params '{param}', got: {ex.Msg()}", this.CurSrv, AQI.cam, AQI.CurImg);
+                        }
+                    }
+
+                    //call trigger urls
+                    if (!(AQI.cam.Paused && AQI.cam.PauseURL))
+                    {
+                        if (AQI.Trigger && AQI.cam.Action_TriggerURL_Enabled && AQI.cam.trigger_urls.Length > 0)
+                        {
+                            //replace url parameters with according values
+                            List<string> urls = new List<string>();
+                            //call urls
+                            foreach (string url in AQI.cam.trigger_urls)
+                            {
+                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
+                                urls.Add(tmp);
+
+                            }
+
+                            bool result = await this.CallTriggerURLs(urls, AQI);
+                        }
+                        else if (!AQI.Trigger && AQI.cam.Action_CancelURL_Enabled && AQI.cam.cancel_urls.Length > 0)
+                        {
+                            //replace url parameters with according values
+                            List<string> urls = new List<string>();
+                            //call urls
+                            foreach (string url in AQI.cam.cancel_urls)
+                            {
+                                string tmp = AITOOL.ReplaceParams(AQI.cam, AQI.Hist, AQI.CurImg, url, Global.IPType.URL);
+                                urls.Add(tmp);
+
+                            }
+
+                            bool result = await this.CallTriggerURLs(urls, AQI);
+
+                        }
+
+                    }
+
 
                     if (AQI.cam.Action_mqtt_enabled && !(AQI.cam.Paused && AQI.cam.PauseMQTT))
                     {
@@ -764,7 +766,6 @@ namespace AITool
                         Log($"Debug: {AQI.camname} last triggered at {AQI.cam.last_trigger_time.Read()}.", this.CurSrv, AQI.cam, AQI.CurImg);
                         Global.UpdateLabel($"{AQI.camname} last triggered at {AQI.cam.last_trigger_time.Read()}.", "lbl_info");
                     }
-
 
                 }
                 else
@@ -1176,13 +1177,13 @@ namespace AITool
 
             if (AITOOL.triggerHttpClient == null)
             {
-                AITOOL.triggerHttpClient = new System.Net.Http.HttpClient();
+                AITOOL.triggerHttpClient = new ThrottledHttpClient(TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds));  //new System.Net.Http.HttpClient();
                 AITOOL.triggerHttpClient.Timeout = TimeSpan.FromSeconds(AppSettings.Settings.HTTPClientLocalTimeoutSeconds);
 
                 //lets give it a user agent unique to this machine and product version...
                 AssemblyName ASN = Assembly.GetExecutingAssembly().GetName();
                 string Version = ASN.Version.ToString();
-                ProductInfoHeaderValue PIH = new ProductInfoHeaderValue("AI-Tool-MANBAT-" + Global.GetMacAddress(), Version);
+                ProductInfoHeaderValue PIH = new ProductInfoHeaderValue("AI_Tool_MANBAT_" + Global.GetMacAddress(), Version);
                 AITOOL.triggerHttpClient.DefaultRequestHeaders.UserAgent.Add(PIH);
             }
 
@@ -1218,15 +1219,23 @@ namespace AITool
 
                     HttpResponseMessage response = await triggerHttpClient.GetAsync(url);
 
-                    if (response.IsSuccessStatusCode)
+                    //If we get a null response it means the host+port was already in use.  In that case, we are just going to skip this URL call and call it good.
+                    if (response == null)
                     {
-                        string content = await response.Content.ReadAsStringAsync();
-                        Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: '{content.CleanString().Truncate(128, true)}'");
+                        Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: 'URL was in use, skipping.  Turn off 'queue actions' in camera settings to avoid this happening.'");
                     }
                     else
                     {
-                        ret = false;
-                        Log($"ERROR: {type}: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string content = await response.Content.ReadAsStringAsync();
+                            Log($"Debug:   -> {type} URL called in {sw.ElapsedMilliseconds}ms: {url}, response: '{content.CleanString().Truncate()}'");
+                        }
+                        else
+                        {
+                            ret = false;
+                            Log($"ERROR: {type}: In {sw.ElapsedMilliseconds}ms, got StatusCode='{response.StatusCode}', Reason='{response.ReasonPhrase}: Could not {type} URL '{url}', please check if correct");
+                        }
                     }
 
                 }

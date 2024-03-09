@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace AITool
 {
-    public partial class Frm_AIServerDeepstackEdit : Form
+    public partial class Frm_AIServerDeepstackEdit:Form
     {
         public ClsURLItem CurURL;
 
@@ -54,6 +54,8 @@ namespace AITool
             this.tb_LinkedRefineTimeout.Text = AppSettings.Settings.MaxWaitForAIServerMS.ToString();
 
             this.cb_OnlyLinked.Checked = this.CurURL.UseOnlyAsLinkedServer;
+
+            this.cb_IgnoreOffline.Checked = this.CurURL.IgnoreOfflineError;
 
             List<string> linked = this.CurURL.LinkedResultsServerList.SplitStr(",;|");
 
@@ -155,6 +157,8 @@ namespace AITool
 
             this.CurURL.HttpClientTimeoutSeconds = Convert.ToInt32(this.tb_timeout.Text.Trim());
 
+            this.CurURL.IgnoreOfflineError = this.cb_IgnoreOffline.Checked;
+
             if (!string.IsNullOrWhiteSpace(this.tb_LinkedRefineTimeout.Text) && Convert.ToInt32(this.tb_LinkedRefineTimeout.Text.Trim()) >= 20)
                 AppSettings.Settings.MaxWaitForAIServerMS = Convert.ToInt32(this.tb_LinkedRefineTimeout.Text.Trim());
 
@@ -235,7 +239,13 @@ namespace AITool
 
                     //make sure not stuck in use for the test:
                     foreach (var url in result.OutURLs)
-                        url.InUse.WriteFullFence(false);
+                    {
+                        if (url.InUse.ReadFullFence())
+                        {
+                            url.FullTimeMS = (int)(DateTime.Now - url.LastUsedTime.Read()).TotalMilliseconds;
+                            url.InUse.WriteFullFence(false);
+                        }
+                    }
 
                     btTest.Enabled = true;
                     bt_Save.Enabled = true;
@@ -273,7 +283,7 @@ namespace AITool
             this.CurURL.AITimeCalcs = new MovingCalcs(250, "Images", true);
             this.CurURL.LastResultMessage = "";
             this.CurURL.LastTimeMS = 0;
-            this.CurURL.LastUsedTime = DateTime.MinValue;
+            this.CurURL.LastUsedTime.Write(DateTime.MinValue);
             this.CurURL.LastResultSuccess = false;
             this.CurURL.InUse.WriteFullFence(false);
 

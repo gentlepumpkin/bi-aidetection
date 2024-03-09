@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "UI.NET6": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    },
+    "AITOOL-REMOTE": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Documents\\Projects\\_GIT\\VorlonCD\\bi-aidetection - NET6\\src\\UI\\bin\\Debug\\net8.0-windows10.0.19041.0\\AITool.exe",
+      "workingDirectory": "C:\\Documents\\Projects\\_GIT\\VorlonCD\\bi-aidetection - NET6\\src\\UI\\bin\\Debug\\net8.0-windows10.0.19041.0",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "k3:4026",
+      "authenticationMode": "Windows"
+    }
+  }
+}

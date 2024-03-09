@@ -60,6 +60,7 @@ namespace AITool
             toolStripButtonUp = new System.Windows.Forms.ToolStripButton();
             toolStripButtonDown = new System.Windows.Forms.ToolStripButton();
             imageList1 = new System.Windows.Forms.ImageList(components);
+            timer1 = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)FOLV_AIServers).BeginInit();
             toolStrip1.SuspendLayout();
             SuspendLayout();
@@ -71,6 +72,7 @@ namespace AITool
             FOLV_AIServers.Location = new System.Drawing.Point(0, 34);
             FOLV_AIServers.Name = "FOLV_AIServers";
             FOLV_AIServers.ShowGroups = false;
+            FOLV_AIServers.ShowImagesOnSubItems = true;
             FOLV_AIServers.Size = new System.Drawing.Size(591, 122);
             FOLV_AIServers.TabIndex = 0;
             FOLV_AIServers.UseCompatibleStateImageBehavior = false;
@@ -79,6 +81,7 @@ namespace AITool
             FOLV_AIServers.FormatRow += FOLV_AIServers_FormatRow;
             FOLV_AIServers.SelectionChanged += FOLV_AIServers_SelectionChanged;
             FOLV_AIServers.SelectedIndexChanged += FOLV_AIServers_SelectedIndexChanged;
+            FOLV_AIServers.DoubleClick += FOLV_AIServers_DoubleClick;
             // 
             // toolStrip1
             // 
@@ -86,7 +89,6 @@ namespace AITool
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripSplitButtonAdd, toolStripSeparator1, toolStripButtonEdit, toolStripSeparator2, toolStripButtonDelete, toolStripSeparator3, toolStripButtonUp, toolStripButtonDown });
             toolStrip1.Location = new System.Drawing.Point(0, 0);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
             toolStrip1.Size = new System.Drawing.Size(591, 31);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
@@ -319,13 +321,19 @@ namespace AITool
             imageList1.Images.SetKeyName(3, "SightHound.png");
             imageList1.Images.SetKeyName(4, "Codeproject.png");
             // 
+            // timer1
+            // 
+            timer1.Enabled = true;
+            timer1.Interval = 1000;
+            timer1.Tick += timer1_Tick;
+            // 
             // Frm_AIServers
             // 
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             ClientSize = new System.Drawing.Size(591, 159);
             Controls.Add(toolStrip1);
             Controls.Add(FOLV_AIServers);
-            Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Font = new System.Drawing.Font("Segoe UI", 8.25F);
             Name = "Frm_AIServers";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Tag = "SAVE";
@@ -369,5 +377,6 @@ namespace AITool
         private System.Windows.Forms.ToolStripMenuItem codeProjectAIIPCAMDarkToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem codeProjectAIIPCAMGeneralToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem codeProjectAIIPCAMCombinedToolStripMenuItem;
+        private System.Windows.Forms.Timer timer1;
     }
 }

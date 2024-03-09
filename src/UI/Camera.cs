@@ -36,7 +36,7 @@ namespace AITool
         public string LastResponse = "";
     }
 
-    public class ImageResItem : IEquatable<ImageResItem>
+    public class ImageResItem:IEquatable<ImageResItem>
     {
         public int Width = 0;
         public int Height = 0;
@@ -94,7 +94,7 @@ namespace AITool
             return !(left == right);
         }
     }
-    public class Camera : IEquatable<Camera>
+    public class Camera:IEquatable<Camera>
     {
         public string Name { get; set; } = "";
         public string Prefix { get; set; } = "";
@@ -433,7 +433,7 @@ namespace AITool
             try
             {
                 //Convert string Triggering objects to RelevantObjectManager instances
-                if (this.DefaultTriggeringObjects == null || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
+                if (this.DefaultTriggeringObjects == null || this.DefaultTriggeringObjects.ObjectList.IsEmpty() || !this.triggering_objects_as_string.IsEmpty() || !this.additional_triggering_objects_as_string.IsEmpty())
                 {
                     this.DefaultTriggeringObjects = new ClsRelevantObjectManager(this.triggering_objects_as_string + "," + this.additional_triggering_objects_as_string, "Default", this);
                     this.triggering_objects_as_string = "";
@@ -444,7 +444,7 @@ namespace AITool
                     this.DefaultTriggeringObjects.Init(this);
                 }
 
-                if (this.TelegramTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+                if (this.TelegramTriggeringObjects == null || this.TelegramTriggeringObjects.ObjectList.IsEmpty() || !this.telegram_triggering_objects.IsEmpty())
                 {
                     this.TelegramTriggeringObjects = new ClsRelevantObjectManager(this.telegram_triggering_objects, "Telegram", this);
                     this.telegram_triggering_objects = "";
@@ -454,7 +454,7 @@ namespace AITool
                     this.TelegramTriggeringObjects.Init(this);
                 }
 
-                if (this.PushoverTriggeringObjects == null || !this.telegram_triggering_objects.IsEmpty())
+                if (this.PushoverTriggeringObjects == null || this.PushoverTriggeringObjects.ObjectList.IsEmpty() || !this.telegram_triggering_objects.IsEmpty())
                 {
                     this.PushoverTriggeringObjects = new ClsRelevantObjectManager(this.Action_pushover_triggering_objects, "Pushover", this);
                     this.Action_pushover_triggering_objects = "";
@@ -464,7 +464,7 @@ namespace AITool
                     this.PushoverTriggeringObjects.Init(this);
                 }
 
-                if (this.MQTTTriggeringObjects == null)
+                if (this.MQTTTriggeringObjects == null || this.MQTTTriggeringObjects.ObjectList.IsEmpty())
                 {
                     this.MQTTTriggeringObjects = new ClsRelevantObjectManager(AppSettings.Settings.ObjectPriority, "MQTT", this);
                 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace AITool
 {
@@ -32,16 +33,19 @@ namespace AITool
         Other,
         Unknown
     }
-    public class ClsURLItem : IEquatable<ClsURLItem>
+    public class ClsURLItem:IEquatable<ClsURLItem>
     {
 
         public URLTypeEnum Type { get; set; } = URLTypeEnum.Unknown;
         public string Name { get; set; } = "";
         [JsonIgnore]
         public bool IsValid { get; set; } = false;
+        public bool IsOnline { get; set; } = false;
         public string LastResultMessage { get; set; } = "";
+        public string LastSkippedReason { get; set; } = "";
         public int Order { get; set; } = 0;
         public long LastTimeMS { get; set; } = 0;
+        public long FullTimeMS { get; set; } = 0;
         public long AvgTimeMS
         {
             get { return Convert.ToInt64(this.AITimeCalcs.Avg); }
@@ -49,6 +53,7 @@ namespace AITool
 
         public string url { get; set; } = "";
         public ThreadSafe.Boolean Enabled { get; set; } = new ThreadSafe.Boolean(true);
+        [JsonIgnore]
         public ThreadSafe.Boolean InUse { get; set; } = new ThreadSafe.Boolean(false);
         [JsonIgnore]
         public ThreadSafe.Integer CurErrCount { get; set; } = new ThreadSafe.Integer(0);
@@ -63,23 +68,27 @@ namespace AITool
         public bool UseAsRefinementServer { get; set; } = false;
         public string RefinementObjects { get; set; } = "";
         [JsonIgnore]
-        public bool RefinementUseCurrentlyValid { get; set; } = false;
+        public ThreadSafe.Boolean RefinementUseCurrentlyValid { get; set; } = new ThreadSafe.Boolean(false);
         public bool UseOnlyAsLinkedServer { get; set; } = false;
         public bool LinkServerResults { get; set; } = false;
         public string LinkedResultsServerList { get; set; } = "";
         public string ActiveTimeRange { get; set; } = "00:00:00-23:59:59";
         public string ImageAdjustProfile { get; set; } = "Default";
         [JsonIgnore]
-        public int CurOrder { get; set; } = 0;
+        public ThreadSafe.Integer CurOrder { get; set; } = new ThreadSafe.Integer(0);
         [JsonIgnore]
         public bool IsLocalHost { get; set; } = false;
         public bool IsLocalNetwork { get; set; } = false;
         public string HelpURL { get; set; } = "";
-        public DateTime LastUsedTime { get; set; } = DateTime.MinValue;
+        [JsonIgnore]
+        public ThreadSafe.Datetime LastUsedTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
+        [JsonIgnore]
+        public ThreadSafe.Datetime LastTestedTime { get; set; } = new ThreadSafe.Datetime(DateTime.MinValue);
         public bool LastResultSuccess { get; set; } = false;
         public MovingCalcs AITimeCalcs { get; set; } = new MovingCalcs(250, "Images", true);   //store deepstack time calc in the url
         public string CurSrv { get; set; } = "";
         public int Port { get; set; } = 0;
+        public string Host { get; set; } = "";
         public int HttpClientTimeoutSeconds { get; set; } = 0;
         public string DefaultURL { get; set; } = "";
         //[JsonIgnore]
@@ -89,6 +98,7 @@ namespace AITool
         //public int Count { get; set; } = 0;
         public bool UrlFixed { get; set; } = false;
         public bool ExternalSettingsValid { get; set; } = false;
+        public bool IgnoreOfflineError { get; set; } = false;  //if we cant even ping the server, we can skip it without giving an error.  This might be useful for servers that are only available at certain times of the day
 
         public override string ToString()
         {
@@ -122,6 +132,49 @@ namespace AITool
             this.Type = type;
             this.Order = Order;
             this.Update(true);
+        }
+
+        public async Task<bool> CheckIfOnlineAsync()
+        {
+
+            bool IsAWS = this.Type == URLTypeEnum.AWSRekognition_Objects || this.Type == URLTypeEnum.AWSRekognition_Faces;
+
+
+            if (this.IsValid && this.Host.IsNotEmpty() && !IsAWS)
+            {
+                if (this.IsLocalHost)
+                {
+                    this.IsOnline = true;  //assume true always for localhost
+                }
+                else
+                {
+                    Global.ClsPingOut po;
+
+                    if (this.IsLocalNetwork)
+                    {
+                        po = await Global.IsConnected(this.Host, 15);
+                    }
+                    else
+                    {
+                        po = await Global.IsConnected(this.Host, AppSettings.Settings.MaxWaitForAIServerMS);  //5000ms - overkill?
+
+                    }
+                    this.IsOnline = po.Success;
+                }
+            }
+            else
+            {
+                if (IsAWS)
+                {
+                    this.IsOnline = true;  //assume true for now
+                }
+                else
+                {
+                    this.IsOnline = false;
+                }
+            }
+
+            return this.IsOnline;
         }
 
         public bool Update(bool Init)
@@ -442,6 +495,7 @@ namespace AITool
 
 
                     this.Port = uri.Port;
+                    this.Host = uri.Host;
                     this.IsLocalHost = Global.IsLocalHost(uri.Host);
                     this.IsLocalNetwork = Global.IsLocalNetwork(uri.Host);
 
@@ -454,7 +508,7 @@ namespace AITool
 
                     if (url.Has(":32168"))
                     {
-                        this.CurSrv = this.Type.ToString() + ":" + uri.Host + ":" + uri.Port;
+                        this.CurSrv = this.Type.ToString() + ":" + this.Name + ":" + uri.Host + ":" + uri.Port;
                     }
                     else if (this.Type == URLTypeEnum.DeepStack)
                     {
@@ -530,6 +584,8 @@ namespace AITool
             }
 
             this.IsValid = ret;
+
+            this.CheckIfOnlineAsync();
 
             //disable if needed, but never try reenable if the user disabled by themselves 
             if (!this.IsValid)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -61,33 +62,38 @@ namespace AITool
         public class Datetime
         {
             public long _value;
-
+            [DebuggerStepThrough]
             public Datetime(DateTime value)
             {
                 this._value = value.ToBinary();
             }
-
+            [DebuggerStepThrough]
             public void Write(DateTime value)
             {
                 Interlocked.Exchange(ref this._value, value.ToBinary());
             }
+            [DebuggerStepThrough]
             public DateTime Read()
             {
                 long lastvalue = Interlocked.CompareExchange(ref this._value, 0, 0);
                 return DateTime.FromBinary(lastvalue);
 
             }
-
+            [DebuggerStepThrough]
+            public override string ToString()
+            {
+                return $"{this.Read().ToString(AppSettings.Settings.DateFormat)}";
+            }
         }
         public class Integer
         {
             public int _value;
-
+            [DebuggerStepThrough]
             public Integer(int value)
             {
                 this._value = value;
             }
-
+            [DebuggerStepThrough]
             public int ReadUnfenced()
             {
                 return this._value;
@@ -99,7 +105,7 @@ namespace AITool
                 Thread.MemoryBarrier();
                 return value;
             }
-
+            [DebuggerStepThrough]
             public int ReadFullFence()
             {
                 var value = this._value;
@@ -118,7 +124,7 @@ namespace AITool
                 this._value = newValue;
                 Thread.MemoryBarrier();
             }
-
+            [DebuggerStepThrough]
             public void WriteFullFence(int newValue)
             {
                 this._value = newValue;
@@ -130,7 +136,7 @@ namespace AITool
             {
                 this._value = newValue;
             }
-
+            [DebuggerStepThrough]
             public void WriteUnfenced(int newValue)
             {
                 this._value = newValue;
@@ -281,7 +287,7 @@ namespace AITool
             public int _value;
             private const int False = 0;
             private const int True = 1;
-
+            [DebuggerStepThrough]
             public Boolean(bool value)
             {
                 this._value = value ? True : False;
@@ -299,7 +305,7 @@ namespace AITool
                 Thread.MemoryBarrier();
                 return value;
             }
-
+            [DebuggerStepThrough]
             public bool ReadFullFence()
             {
                 var value = ToBool(this._value);
@@ -319,7 +325,7 @@ namespace AITool
                 Thread.MemoryBarrier();
                 this._value = newValueInt;
             }
-
+            [DebuggerStepThrough]
             public void WriteFullFence(bool newValue)
             {
                 var newValueInt = ToInt(newValue);
@@ -352,13 +358,12 @@ namespace AITool
                 var originalValue = Interlocked.Exchange(ref this._value, newValueInt);
                 return ToBool(originalValue);
             }
-
+            [DebuggerStepThrough]
             public override string ToString()
             {
-                var value = this.ReadFullFence();
-                return value.ToString();
+                return $"{this.ReadFullFence()}";
             }
-
+            [DebuggerStepThrough]
             private static bool ToBool(int value)
             {
                 if (value != False && value != True)
@@ -368,7 +373,7 @@ namespace AITool
 
                 return value == True;
             }
-
+            [DebuggerStepThrough]
             private static int ToInt(bool value)
             {
                 return value ? True : False;
